@@ -1,7 +1,11 @@
+#![feature(associated_type_bounds)]
+
 use std::fmt::Display;
 use winnow::{
+    bytes::{one_of, take_till1, take_until1, take_while1},
     multi::{many0, many1},
     prelude::*,
+    sequence::preceded,
 };
 
 // See https://github.com/YarnSpinnerTool/YarnSpinner/blob/v2.3.0/YarnSpinner.Compiler/YarnSpinnerParser.g4
@@ -15,14 +19,27 @@ pub fn parse(input: &str) -> Dialogue {
         ;
 */
 fn parse_dialogue(input: &str) -> IResult<&str, Dialogue> {
-    let (remainder, ()) = many0(parse_file_hashtag).parse_next(input).unwrap();
-    many1(parse_node)
+    preceded(parse_file_hashtags, many1(parse_node))
         .map(|nodes| Dialogue { nodes })
-        .parse_next(remainder)
+        .parse_next(input)
 }
 
+fn parse_file_hashtags(input: &str) -> IResult<&str, ()> {
+    many0(parse_file_hashtag).parse_next(input)
+}
+
+/*
+   file_hashtag
+       : HASHTAG text=HASHTAG_TEXT
+       ;
+*/
 fn parse_file_hashtag(input: &str) -> IResult<&str, ()> {
-    todo!()
+    ("#", hashtag_text).map(|_| ()).parse_next(input)
+}
+
+/* ~[ \t\r\n#$<]+ */
+fn hashtag_text(input: &str) -> IResult<&str, &str> {
+    take_till1(" \t\r\n#$<")(input)
 }
 
 fn parse_node(input: &str) -> IResult<&str, Node> {
