@@ -56,7 +56,10 @@ fn parse_node(input: &str) -> IResult<&str, Node> {
     // TODO: parse many1 header
     terminated(parse_header, newline)
         .context("Parse node error") // TODO: allow eof
-        .map(|(s, r)| Node { title: s }) // TODO handle r
+        .map(|(h, v)| Node {
+            header_key: h,
+            header_value: v,
+        }) // TODO handle r
         .parse_next(input)
 }
 
@@ -92,7 +95,8 @@ pub struct Dialogue<'a> {
 
 #[derive(Debug)]
 pub struct Node<'a> {
-    title: &'a str,
+    header_key: &'a str,
+    header_value: Option<&'a str>,
 }
 
 impl<'a> Display for Dialogue<'a> {

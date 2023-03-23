@@ -4,6 +4,6 @@ mod parser;
 
 fn main() {
     // TODO: allow non-newline at EOF
-    let input = "# hellocomment\ntitle:\n";
+    let input = "# hellocomment\ntitle: blub\n";
     println!("{}", parse(input));
 }
