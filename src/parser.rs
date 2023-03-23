@@ -1,11 +1,13 @@
-#![feature(associated_type_bounds)]
-
 use std::fmt::Display;
 use winnow::{
-    bytes::{one_of, take_till1, take_until1, take_while1},
+    branch::alt,
+    bytes::{any, take_till0, take_till1, take_until0, take_while1},
+    character::{alpha1, newline, space0},
+    combinator::{eof, opt, rest, Or},
     multi::{many0, many1},
     prelude::*,
-    sequence::preceded,
+    sequence::{preceded, separated_pair, terminated},
+    stream::AsChar,
 };
 
 // See https://github.com/YarnSpinnerTool/YarnSpinner/blob/v2.3.0/YarnSpinner.Compiler/YarnSpinnerParser.g4
@@ -19,8 +21,8 @@ pub fn parse(input: &str) -> Dialogue {
         ;
 */
 fn parse_dialogue(input: &str) -> IResult<&str, Dialogue> {
-    preceded(parse_file_hashtags, many1(parse_node))
-        .map(|nodes| Dialogue { nodes })
+    ((parse_file_hashtags, many1(parse_node)))
+        .map(|(hashtags, nodes)| Dialogue { nodes })
         .parse_next(input)
 }
 
@@ -37,25 +39,70 @@ fn parse_file_hashtag(input: &str) -> IResult<&str, ()> {
     ("#", hashtag_text).map(|_| ()).parse_next(input)
 }
 
+// TODO: forbid those as in g4 of reference or not needed as we do lex/parse in one step?
 /* ~[ \t\r\n#$<]+ */
 fn hashtag_text(input: &str) -> IResult<&str, &str> {
-    take_till1(" \t\r\n#$<")(input)
+    terminated(take_till1(AsChar::is_newline), newline).parse_next(input) // TODO: crlf?
 }
 
+/*
+   node
+       : header+  BODY_START  body BODY_END
+       ;
+*/
 fn parse_node(input: &str) -> IResult<&str, Node> {
-    todo!()
+    // print!("{} kabo", parse_header.parse_next(input).unwrap().0);
+
+    // TODO: parse many1 header
+    terminated(parse_header, newline)
+        .context("Parse node error") // TODO: allow eof
+        .map(|(s, r)| Node { title: s }) // TODO handle r
+        .parse_next(input)
+}
+
+/*
+   header
+       : header_key=ID HEADER_DELIMITER  header_value=REST_OF_LINE?
+       ;
+*/
+fn parse_header(input: &str) -> IResult<&str, (&str, Option<&str>)> {
+    separated_pair(
+        parse_identifier,
+        parse_header_delimiter,
+        opt(take_till0(AsChar::is_newline)),
+    )
+    .parse_next(input)
+}
+
+fn parse_identifier(input: &str) -> IResult<&str, &str> {
+    alpha1
+        .verify(|id: &str| id.chars().nth(0).map_or(false, AsChar::is_alpha))
+        .context("Could not parse identifer") // take_while1 guarantees 1 char
+        .parse_next(input)
+}
+
+fn parse_header_delimiter(input: &str) -> IResult<&str, &str> {
+    preceded(":", space0).parse_next(input)
 }
 
 #[derive(Debug)]
-pub struct Dialogue {
-    nodes: Vec<Node>,
+pub struct Dialogue<'a> {
+    nodes: Vec<Node<'a>>,
 }
 
 #[derive(Debug)]
-pub struct Node {}
+pub struct Node<'a> {
+    title: &'a str,
+}
 
-impl Display for Dialogue {
+impl<'a> Display for Dialogue<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        write!(f, "{:?}", self.nodes)
+    }
+}
+
+impl<'a> Display for Node<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", "empty node")
     }
 }

@@ -3,5 +3,7 @@ use crate::parser::parse;
 mod parser;
 
 fn main() {
-    println!("{}", parse(r#"# hello comment"#));
+    // TODO: allow non-newline at EOF
+    let input = "# hellocomment\ntitle:\n";
+    println!("{}", parse(input));
 }
