@@ -4,6 +4,8 @@ mod parser;
 
 fn main() {
     // TODO: allow non-newline at EOF
-    let input = "# hellocomment\ntitle: blub\n";
-    println!("{}", parse(input));
+    let input = "# hello comment any hashtag content\ntitle: blub i am going until the end\n";
+    let (hashtags, dialogue) = parse(input);
+    println!("File-Hashtags: {:?}", hashtags);
+    println!("Dialogue: {}", dialogue);
 }

@@ -11,7 +11,7 @@ use winnow::{
 };
 
 // See https://github.com/YarnSpinnerTool/YarnSpinner/blob/v2.3.0/YarnSpinner.Compiler/YarnSpinnerParser.g4
-pub fn parse(input: &str) -> Dialogue {
+pub fn parse(input: &str) -> (Vec<FileHashtag>, Dialogue) {
     parse_dialogue(input).finish().unwrap()
 }
 
@@ -20,13 +20,13 @@ pub fn parse(input: &str) -> Dialogue {
         : (file_hashtag*) node+
         ;
 */
-fn parse_dialogue(input: &str) -> IResult<&str, Dialogue> {
+fn parse_dialogue(input: &str) -> IResult<&str, (Vec<FileHashtag>, Dialogue)> {
     ((parse_file_hashtags, many1(parse_node)))
-        .map(|(hashtags, nodes)| Dialogue { nodes })
+        .map(|(hashtags, nodes)| (hashtags, Dialogue { nodes }))
         .parse_next(input)
 }
 
-fn parse_file_hashtags(input: &str) -> IResult<&str, ()> {
+fn parse_file_hashtags(input: &str) -> IResult<&str, Vec<FileHashtag>> {
     many0(parse_file_hashtag).parse_next(input)
 }
 
@@ -35,8 +35,10 @@ fn parse_file_hashtags(input: &str) -> IResult<&str, ()> {
        : HASHTAG text=HASHTAG_TEXT
        ;
 */
-fn parse_file_hashtag(input: &str) -> IResult<&str, ()> {
-    ("#", hashtag_text).map(|_| ()).parse_next(input)
+fn parse_file_hashtag(input: &str) -> IResult<&str, FileHashtag> {
+    ("#", hashtag_text)
+        .map(|(_, text)| FileHashtag { hashtag_text: text })
+        .parse_next(input)
 }
 
 // TODO: forbid those as in g4 of reference or not needed as we do lex/parse in one step?
@@ -51,9 +53,7 @@ fn hashtag_text(input: &str) -> IResult<&str, &str> {
        ;
 */
 fn parse_node(input: &str) -> IResult<&str, Node> {
-    // print!("{} kabo", parse_header.parse_next(input).unwrap().0);
-
-    // TODO: parse many1 header
+    // TODO: parse many1 header?
     terminated(parse_header, newline)
         .context("Parse node error") // TODO: allow eof
         .map(|(h, v)| Node {
@@ -94,6 +94,11 @@ pub struct Dialogue<'a> {
 }
 
 #[derive(Debug)]
+pub struct FileHashtag<'a> {
+    hashtag_text: &'a str,
+}
+
+#[derive(Debug)]
 pub struct Node<'a> {
     header_key: &'a str,
     header_value: Option<&'a str>,
@@ -107,6 +112,17 @@ impl<'a> Display for Dialogue<'a> {
 
 impl<'a> Display for Node<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", "empty node")
+        write!(
+            f,
+            "{}: {}",
+            self.header_key,
+            self.header_value.unwrap_or_default()
+        )
+    }
+}
+
+impl<'a> Display for FileHashtag<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "# {}", self.hashtag_text)
     }
 }
