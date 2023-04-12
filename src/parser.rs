@@ -1,12 +1,11 @@
 use std::fmt::Display;
 use winnow::{
-    branch::alt,
-    bytes::{any, take_till0, take_till1, take_until0, take_while1},
-    character::{alpha1, newline, space0},
-    combinator::{eof, opt, rest, Or},
+    bytes::{tag, take_till0, take_till1},
+    character::{alpha1, line_ending, space0},
+    combinator::todo,
     multi::{many0, many1},
     prelude::*,
-    sequence::{preceded, separated_pair, terminated},
+    sequence::{delimited, preceded, separated_pair, terminated},
     stream::AsChar,
 };
 
@@ -44,22 +43,56 @@ fn parse_file_hashtag(input: &str) -> IResult<&str, FileHashtag> {
 // TODO: forbid those as in g4 of reference or not needed as we do lex/parse in one step?
 /* ~[ \t\r\n#$<]+ */
 fn hashtag_text(input: &str) -> IResult<&str, &str> {
-    terminated(take_till1(AsChar::is_newline), newline).parse_next(input) // TODO: crlf?
+    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending).parse_next(input)
 }
 
+// Remark: Every node must have the title header, but that isn't verfied here, all that's done is ensuring at least one header ist present.
 /*
    node
        : header+  BODY_START  body BODY_END
        ;
 */
 fn parse_node(input: &str) -> IResult<&str, Node> {
-    // TODO: parse many1 header?
-    terminated(parse_header, newline)
-        .context("Parse node error") // TODO: allow eof
-        .map(|(h, v)| Node {
-            header_key: h,
-            header_value: v,
-        }) // TODO handle r
+    (many1(parse_header), parse_delimited_body)
+        .map(|(headers, body)| Node { headers, body })
+        .parse_next(input)
+}
+
+/*
+    node
+       : header+  BODY_START  body BODY_END
+       ;
+
+   body
+       : statement*
+       ;
+*/
+fn parse_delimited_body(input: &str) -> IResult<&str, Vec<Statement>> {
+    delimited(
+        parse_body_start_marker,
+        many0(parse_statement),
+        parse_body_end_marker,
+    )
+    .parse_next(input)
+}
+
+fn parse_statement(input: &str) -> IResult<&str, Statement> {
+    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending)
+        .map(|text| Statement {
+            line_statement: text,
+        })
+        .parse_next(input)
+}
+
+fn parse_body_start_marker(input: &str) -> IResult<&str, ()> {
+    terminated(tag("---"), line_ending)
+        .map(|_| ())
+        .parse_next(input)
+}
+
+fn parse_body_end_marker(input: &str) -> IResult<&str, ()> {
+    terminated(tag("==="), line_ending)
+        .map(|_| ())
         .parse_next(input)
 }
 
@@ -68,15 +101,23 @@ fn parse_node(input: &str) -> IResult<&str, Node> {
        : header_key=ID HEADER_DELIMITER  header_value=REST_OF_LINE?
        ;
 */
-fn parse_header(input: &str) -> IResult<&str, (&str, Option<&str>)> {
-    separated_pair(
-        parse_identifier,
-        parse_header_delimiter,
-        opt(take_till0(AsChar::is_newline)),
+fn parse_header(input: &str) -> IResult<&str, Header> {
+    terminated(
+        separated_pair(
+            parse_identifier,
+            parse_header_delimiter,
+            take_till1(|x| x == '\r' || x == '\n'),
+        ),
+        line_ending,
     )
+    .map(|(header_key, header_value)| Header {
+        header_key,
+        header_value,
+    })
     .parse_next(input)
 }
 
+// TODO: allow underscore as well?
 fn parse_identifier(input: &str) -> IResult<&str, &str> {
     alpha1
         .verify(|id: &str| id.chars().nth(0).map_or(false, AsChar::is_alpha))
@@ -100,8 +141,45 @@ pub struct FileHashtag<'a> {
 
 #[derive(Debug)]
 pub struct Node<'a> {
+    headers: Vec<Header<'a>>,
+    body: Vec<Statement<'a>>,
+}
+
+/*
+   statement
+       : line_statement
+       | if_statement
+       | set_statement
+       | shortcut_option_statement
+       | call_statement
+       | command_statement
+       | declare_statement
+       | jump_statement
+       | INDENT statement* DEDENT
+       ;
+*/
+#[derive(Debug)]
+pub struct Statement<'a> {
+    // TODO: all variants
+    line_statement: &'a str,
+}
+
+#[derive(Debug)]
+pub struct Header<'a> {
     header_key: &'a str,
-    header_value: Option<&'a str>,
+    header_value: &'a str,
+}
+
+impl<'a> Display for Header<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.header_key, self.header_value)
+    }
+}
+
+impl<'a> Display for Statement<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.line_statement)
+    }
 }
 
 impl<'a> Display for Dialogue<'a> {
@@ -112,12 +190,7 @@ impl<'a> Display for Dialogue<'a> {
 
 impl<'a> Display for Node<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}: {}",
-            self.header_key,
-            self.header_value.unwrap_or_default()
-        )
+        write!(f, "{:?}: {:?}", self.headers, self.body)
     }
 }
 
