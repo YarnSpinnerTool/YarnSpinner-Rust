@@ -2,6 +2,7 @@ use std::fmt::Display;
 use winnow::{
     bytes::{tag, take_till1},
     character::{alpha1, line_ending, space0},
+    error::Error,
     multi::{many0, many1},
     prelude::*,
     sequence::{delimited, preceded, separated_pair, terminated},
@@ -28,6 +29,15 @@ fn parse_file_hashtags(input: &str) -> IResult<&str, Vec<FileHashtag>> {
     many0(parse_file_hashtag).parse_next(input)
 }
 
+#[test]
+fn parse_file_hashtags_test() {
+    let (rest, file_hashtags) = parse_file_hashtags("#abc def \n# abc def ghi \nafter").unwrap();
+
+    assert_eq!(file_hashtags[0].hashtag_text, "abc def ");
+    assert_eq!(file_hashtags[1].hashtag_text, " abc def ghi ");
+    assert_eq!(rest, "after");
+}
+
 /*
    file_hashtag
        : HASHTAG text=HASHTAG_TEXT
@@ -40,6 +50,13 @@ fn parse_file_hashtag(input: &str) -> IResult<&str, FileHashtag> {
         .parse_next(input)
 }
 
+#[test]
+fn parse_file_hashtag_test() {
+    let (rest, file_hashtag) = parse_file_hashtag("#abc def \nafter").unwrap();
+    assert_eq!(file_hashtag.hashtag_text, "abc def ");
+    assert_eq!(rest, "after");
+}
+
 // TODO: forbid those as in g4 of reference or not needed as we do lex/parse in one step?
 /* ~[ \t\r\n#$<]+ */
 fn hashtag_text(input: &str) -> IResult<&str, &str> {
@@ -50,7 +67,7 @@ fn hashtag_text(input: &str) -> IResult<&str, &str> {
 
 #[test]
 fn hashtag_text_test() {
-    let (hashtag_text, rest) = hashtag_text("abc def \nafter").unwrap();
+    let (rest, hashtag_text) = hashtag_text("abc def \nafter").unwrap();
     assert_eq!(hashtag_text, "abc def ");
     assert_eq!(rest, "after");
 }
