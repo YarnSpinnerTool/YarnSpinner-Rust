@@ -104,12 +104,33 @@ fn parse_delimited_body(input: &str) -> IResult<&str, Vec<Statement>> {
     .parse_next(input)
 }
 
+#[test]
+fn parse_delimited_body_test() {
+    let (rest, statements) =
+        parse_delimited_body("---\nHere are some lines!\nWow!\n===\nafter").unwrap();
+    assert_eq!(statements[0].line_statement, "Here are some lines!");
+    assert_eq!(statements[1].line_statement, "Wow!");
+    assert_eq!(rest, "after");
+}
+
 fn parse_statement(input: &str) -> IResult<&str, Statement> {
     terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending)
+        .verify(|text: &str| text != "===")
         .map(|text| Statement {
             line_statement: text,
         })
         .parse_next(input)
+}
+
+#[test]
+fn parse_statement_test() {
+    let (rest, statement) =
+        parse_statement("whatever this is not done yet just an example\nafter").unwrap();
+    assert_eq!(
+        statement.line_statement,
+        "whatever this is not done yet just an example"
+    );
+    assert_eq!(rest, "after");
 }
 
 fn parse_body_start_marker(input: &str) -> IResult<&str, ()> {
@@ -143,6 +164,14 @@ fn parse_header(input: &str) -> IResult<&str, Header> {
         header_value,
     })
     .parse_next(input)
+}
+
+#[test]
+fn parse_header_test() {
+    let (rest, header) = parse_header("title: Node_Title\nafter").unwrap();
+    assert_eq!(header.header_key, "title");
+    assert_eq!(header.header_value, "Node_Title");
+    assert_eq!(rest, "after");
 }
 
 // TODO: allow underscore as well?
