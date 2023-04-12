@@ -37,7 +37,7 @@ jobs:
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
-        run: cargo fmt --check --workspace --all-features
+        run: cargo fmt --check --all
 
   test:
     runs-on: ubuntu-latest
