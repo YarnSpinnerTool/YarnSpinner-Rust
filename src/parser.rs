@@ -1,8 +1,7 @@
 use std::fmt::Display;
 use winnow::{
-    bytes::{tag, take_till0, take_till1},
+    bytes::{tag, take_till1},
     character::{alpha1, line_ending, space0},
-    combinator::todo,
     multi::{many0, many1},
     prelude::*,
     sequence::{delimited, preceded, separated_pair, terminated},
@@ -37,13 +36,23 @@ fn parse_file_hashtags(input: &str) -> IResult<&str, Vec<FileHashtag>> {
 fn parse_file_hashtag(input: &str) -> IResult<&str, FileHashtag> {
     ("#", hashtag_text)
         .map(|(_, text)| FileHashtag { hashtag_text: text })
+        .context("File Hashtag")
         .parse_next(input)
 }
 
 // TODO: forbid those as in g4 of reference or not needed as we do lex/parse in one step?
 /* ~[ \t\r\n#$<]+ */
 fn hashtag_text(input: &str) -> IResult<&str, &str> {
-    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending).parse_next(input)
+    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending)
+        .context("Hashtag Text")
+        .parse_next(input)
+}
+
+#[test]
+fn hashtag_text_test() {
+    let (hashtag_text, rest) = hashtag_text("abc def \nafter").unwrap();
+    assert_eq!(hashtag_text, "abc def ");
+    assert_eq!(rest, "after");
 }
 
 // Remark: Every node must have the title header, but that isn't verfied here, all that's done is ensuring at least one header ist present.
@@ -55,6 +64,7 @@ fn hashtag_text(input: &str) -> IResult<&str, &str> {
 fn parse_node(input: &str) -> IResult<&str, Node> {
     (many1(parse_header), parse_delimited_body)
         .map(|(headers, body)| Node { headers, body })
+        .context("Node")
         .parse_next(input)
 }
 
@@ -73,6 +83,7 @@ fn parse_delimited_body(input: &str) -> IResult<&str, Vec<Statement>> {
         many0(parse_statement),
         parse_body_end_marker,
     )
+    .context("Delimited body")
     .parse_next(input)
 }
 
@@ -121,7 +132,7 @@ fn parse_header(input: &str) -> IResult<&str, Header> {
 fn parse_identifier(input: &str) -> IResult<&str, &str> {
     alpha1
         .verify(|id: &str| id.chars().nth(0).map_or(false, AsChar::is_alpha))
-        .context("Could not parse identifer") // take_while1 guarantees 1 char
+        .context("Identifier")
         .parse_next(input)
 }
 
