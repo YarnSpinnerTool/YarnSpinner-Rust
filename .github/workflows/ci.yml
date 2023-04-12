@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  # Sparse cargo registry for faster updates
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  # Handle cargo check and cargo clippy warnings as errors
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+      - name: Cache Cargo build files
+        uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Run cargo clippy
+        run: cargo clippy --workspace --all-features
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Cache Cargo build files
+        uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Run cargo fmt
+        run: cargo fmt --check --workspace --all-features
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Cache Cargo build files
+        uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Run cargo test
+        run: cargo test --workspace --all-features
