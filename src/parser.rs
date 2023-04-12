@@ -19,7 +19,7 @@ pub fn parse(input: &str) -> (Vec<FileHashtag>, Dialogue) {
         ;
 */
 fn parse_dialogue(input: &str) -> IResult<&str, (Vec<FileHashtag>, Dialogue)> {
-    ((parse_file_hashtags, many1(parse_node)))
+    (parse_file_hashtags, many1(parse_node))
         .map(|(hashtags, nodes)| (hashtags, Dialogue { nodes }))
         .parse_next(input)
 }
@@ -176,7 +176,7 @@ fn parse_header_test() {
 // TODO: allow underscore as well?
 fn parse_identifier(input: &str) -> IResult<&str, &str> {
     alpha1
-        .verify(|id: &str| id.chars().nth(0).map_or(false, AsChar::is_alpha))
+        .verify(|id: &str| id.chars().next().map_or(false, AsChar::is_alpha))
         .context("Identifier")
         .parse_next(input)
 }
