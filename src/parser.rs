@@ -2,7 +2,6 @@ use std::fmt::Display;
 use winnow::{
     bytes::{tag, take_till1},
     character::{alpha1, line_ending, space0},
-    error::Error,
     multi::{many0, many1},
     prelude::*,
     sequence::{delimited, preceded, separated_pair, terminated},
