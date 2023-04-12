@@ -185,20 +185,20 @@ fn parse_header_delimiter(input: &str) -> IResult<&str, &str> {
     preceded(":", space0).parse_next(input)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Dialogue<'a> {
-    nodes: Vec<Node<'a>>,
+    pub nodes: Vec<Node<'a>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct FileHashtag<'a> {
-    hashtag_text: &'a str,
+    pub hashtag_text: &'a str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Node<'a> {
-    headers: Vec<Header<'a>>,
-    body: Vec<Statement<'a>>,
+    pub headers: Vec<Header<'a>>,
+    pub body: Vec<Statement<'a>>,
 }
 
 /*
@@ -214,16 +214,16 @@ pub struct Node<'a> {
        | INDENT statement* DEDENT
        ;
 */
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Statement<'a> {
     // TODO: all variants
-    line_statement: &'a str,
+    pub line_statement: &'a str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Header<'a> {
-    header_key: &'a str,
-    header_value: &'a str,
+    pub header_key: &'a str,
+    pub header_value: &'a str,
 }
 
 impl<'a> Display for Header<'a> {
