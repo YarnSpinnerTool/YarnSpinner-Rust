@@ -48,7 +48,8 @@ fn hashtag_text(input: &str) -> IResult<&str, &str> {
         .parse_next(input)
 }
 
-// Remark: Every node must have the title header, but that isn't verfied here, all that's done is ensuring at least one header ist present.
+// Remark: Every node must have the title header, but that isn't verified here,
+// all that's done is ensuring at least one header is present.
 /*
    node
        : header+  BODY_START  body BODY_END
