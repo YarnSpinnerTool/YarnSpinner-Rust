@@ -91,15 +91,11 @@ fn parse_statement(input: &str) -> IResult<&str, Statement> {
 }
 
 fn parse_body_start_marker(input: &str) -> IResult<&str, ()> {
-    terminated(tag("---"), line_ending)
-        .map(|_| ())
-        .parse_next(input)
+    (tag("---"), line_ending).map(|_| ()).parse_next(input)
 }
 
 fn parse_body_end_marker(input: &str) -> IResult<&str, ()> {
-    terminated(tag("==="), line_ending)
-        .map(|_| ())
-        .parse_next(input)
+    (tag("==="), line_ending).map(|_| ()).parse_next(input)
 }
 
 /*
