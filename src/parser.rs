@@ -43,7 +43,7 @@ fn parse_file_hashtag(input: &str) -> IResult<&str, FileHashtag> {
 // TODO: forbid those as in g4 of reference or not needed as we do lex/parse in one step?
 /* ~[ \t\r\n#$<]+ */
 fn hashtag_text(input: &str) -> IResult<&str, &str> {
-    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending)
+    take_till1_line_ending
         .context("Hashtag Text")
         .parse_next(input)
 }
@@ -82,7 +82,7 @@ fn parse_delimited_body(input: &str) -> IResult<&str, Vec<Statement>> {
 }
 
 fn parse_statement(input: &str) -> IResult<&str, Statement> {
-    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending)
+    take_till1_line_ending
         .verify(|text: &str| text != "===")
         .map(|text| Statement {
             line_statement: text,
@@ -108,13 +108,10 @@ fn parse_body_end_marker(input: &str) -> IResult<&str, ()> {
        ;
 */
 fn parse_header(input: &str) -> IResult<&str, Header> {
-    terminated(
-        separated_pair(
-            parse_identifier,
-            parse_header_delimiter,
-            take_till1(|x| x == '\r' || x == '\n'),
-        ),
-        line_ending,
+    separated_pair(
+        parse_identifier,
+        parse_header_delimiter,
+        take_till1_line_ending,
     )
     .map(|(header_key, header_value)| Header {
         header_key,
@@ -133,6 +130,10 @@ fn parse_identifier(input: &str) -> IResult<&str, &str> {
 
 fn parse_header_delimiter(input: &str) -> IResult<&str, &str> {
     preceded(":", space0).parse_next(input)
+}
+
+fn take_till1_line_ending(input: &str) -> IResult<&str, &str> {
+    terminated(take_till1(|x| x == '\r' || x == '\n'), line_ending).parse_next(input)
 }
 
 #[derive(Debug, PartialEq)]
