@@ -5,6 +5,7 @@
 #![allow(nonstandard_style)]
 #![allow(unused_imports)]
 #![allow(unused_mut)]
+#![allow(unused_braces)]
 use super::yarnspinnerparserlistener::*;
 use antlr_rust::atn::{ATN, INVALID_ALT};
 use antlr_rust::atn_deserializer::ATNDeserializer;
@@ -20,11 +21,11 @@ use antlr_rust::recognizer::{Actions, Recognizer};
 use antlr_rust::rule_context::{BaseRuleContext, CustomRuleContext, RuleContext};
 use antlr_rust::token::{OwningToken, Token, TOKEN_EOF};
 use antlr_rust::token_factory::{CommonTokenFactory, TokenAware, TokenFactory};
-use antlr_rust::token_source::TokenSource;
 use antlr_rust::token_stream::TokenStream;
 use antlr_rust::tree::*;
 use antlr_rust::vocabulary::{Vocabulary, VocabularyImpl};
 use antlr_rust::PredictionContextCache;
+use antlr_rust::TokenSource;
 use antlr_rust::{TidAble, TidExt};
 
 use std::any::{Any, TypeId};
@@ -352,7 +353,7 @@ lazy_static! {
 
 type BaseParserType<'input, I> = BaseParser<
     'input,
-    YarnSpinnerParserExt,
+    YarnSpinnerParserExt<'input>,
     I,
     YarnSpinnerParserContextType,
     dyn YarnSpinnerParserListener<'input> + 'input,
@@ -394,7 +395,7 @@ where
     }
 
     pub fn with_strategy(input: I, strategy: H) -> Self {
-        antlr_rust::recognizer::check_version("0", "2");
+        antlr_rust::recognizer::check_version("0", "3");
         let interpreter = Arc::new(ParserATNSimulator::new(
             _ATN.clone(),
             _decision_to_DFA.clone(),
@@ -404,7 +405,9 @@ where
             base: BaseParser::new_base_parser(
                 input,
                 Arc::clone(&interpreter),
-                YarnSpinnerParserExt {},
+                YarnSpinnerParserExt {
+                    _pd: Default::default(),
+                },
             ),
             interpreter,
             _shared_context_cache: Box::new(PredictionContextCache::new()),
@@ -441,20 +444,20 @@ pub trait YarnSpinnerParserContext<'input>:
 {
 }
 
+antlr_rust::coerce_from! { 'input : YarnSpinnerParserContext<'input> }
+
 impl<'input> YarnSpinnerParserContext<'input>
     for TerminalNode<'input, YarnSpinnerParserContextType>
 {
 }
 impl<'input> YarnSpinnerParserContext<'input> for ErrorNode<'input, YarnSpinnerParserContextType> {}
 
-#[antlr_rust::impl_tid]
-impl<'input> antlr_rust::TidAble<'input> for dyn YarnSpinnerParserContext<'input> + 'input {}
+antlr_rust::tid! { impl<'input> TidAble<'input> for dyn YarnSpinnerParserContext<'input> + 'input }
 
-#[antlr_rust::impl_tid]
-impl<'input> antlr_rust::TidAble<'input> for dyn YarnSpinnerParserListener<'input> + 'input {}
+antlr_rust::tid! { impl<'input> TidAble<'input> for dyn YarnSpinnerParserListener<'input> + 'input }
 
 pub struct YarnSpinnerParserContextType;
-antlr_rust::type_id! {YarnSpinnerParserContextType}
+antlr_rust::tid! {YarnSpinnerParserContextType}
 
 impl<'input> ParserNodeType<'input> for YarnSpinnerParserContextType {
     type TF = LocalTokenFactory<'input>;
@@ -483,21 +486,24 @@ where
     }
 }
 
-pub struct YarnSpinnerParserExt {}
+pub struct YarnSpinnerParserExt<'input> {
+    _pd: PhantomData<&'input str>,
+}
 
-impl YarnSpinnerParserExt {}
+impl<'input> YarnSpinnerParserExt<'input> {}
+antlr_rust::tid! { YarnSpinnerParserExt<'a> }
 
-impl<'input> TokenAware<'input> for YarnSpinnerParserExt {
+impl<'input> TokenAware<'input> for YarnSpinnerParserExt<'input> {
     type TF = LocalTokenFactory<'input>;
 }
 
 impl<'input, I: TokenStream<'input, TF = LocalTokenFactory<'input>> + TidAble<'input>>
-    ParserRecog<'input, BaseParserType<'input, I>> for YarnSpinnerParserExt
+    ParserRecog<'input, BaseParserType<'input, I>> for YarnSpinnerParserExt<'input>
 {
 }
 
 impl<'input, I: TokenStream<'input, TF = LocalTokenFactory<'input>> + TidAble<'input>>
-    Actions<'input, BaseParserType<'input, I>> for YarnSpinnerParserExt
+    Actions<'input, BaseParserType<'input, I>> for YarnSpinnerParserExt<'input>
 {
     fn get_grammar_file_name(&self) -> &str {
         "YarnSpinnerParser.g4"
@@ -566,6 +572,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_dialogue(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_dialogue(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for DialogueContextExt<'input> {
@@ -576,7 +586,7 @@ impl<'input> CustomRuleContext<'input> for DialogueContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_dialogue }
 }
-antlr_rust::type_id! {DialogueContextExt}
+antlr_rust::tid! {DialogueContextExt<'a>}
 
 impl<'input> DialogueContextExt<'input> {
     fn new(
@@ -633,8 +643,8 @@ where
         let mut _localctx = DialogueContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 0, RULE_dialogue);
         let mut _localctx: Rc<DialogueContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -674,7 +684,8 @@ where
                     }
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -710,6 +721,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_file_hashtag(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_file_hashtag(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for File_hashtagContextExt<'input> {
@@ -720,7 +735,7 @@ impl<'input> CustomRuleContext<'input> for File_hashtagContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_file_hashtag }
 }
-antlr_rust::type_id! {File_hashtagContextExt<'a>}
+antlr_rust::tid! {File_hashtagContextExt<'a>}
 
 impl<'input> File_hashtagContextExt<'input> {
     fn new(
@@ -774,7 +789,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 2, RULE_file_hashtag);
         let mut _localctx: Rc<File_hashtagContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -787,7 +802,8 @@ where
                     .match_token(HASHTAG_TEXT, &mut recog.err_handler)?;
                 cast_mut::<_, File_hashtagContext>(&mut _localctx).text = Some(tmp.clone());
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -819,6 +835,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Node
         listener.enter_every_rule(self);
         listener.enter_node(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_node(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for NodeContextExt<'input> {
@@ -829,7 +849,7 @@ impl<'input> CustomRuleContext<'input> for NodeContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_node }
 }
-antlr_rust::type_id! {NodeContextExt<'a>}
+antlr_rust::tid! {NodeContextExt<'a>}
 
 impl<'input> NodeContextExt<'input> {
     fn new(
@@ -896,8 +916,8 @@ where
         let mut _localctx = NodeContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 4, RULE_node);
         let mut _localctx: Rc<NodeContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -929,7 +949,8 @@ where
                 recog.base.set_state(73);
                 recog.base.match_token(BODY_END, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -963,6 +984,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Head
         listener.enter_every_rule(self);
         listener.enter_header(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_header(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for HeaderContextExt<'input> {
@@ -973,7 +998,7 @@ impl<'input> CustomRuleContext<'input> for HeaderContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_header }
 }
-antlr_rust::type_id! {HeaderContextExt<'a>}
+antlr_rust::tid! {HeaderContextExt<'a>}
 
 impl<'input> HeaderContextExt<'input> {
     fn new(
@@ -1034,8 +1059,8 @@ where
         let mut _localctx = HeaderContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 6, RULE_header);
         let mut _localctx: Rc<HeaderContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -1062,7 +1087,8 @@ where
                     }
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -1094,6 +1120,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Body
         listener.enter_every_rule(self);
         listener.enter_body(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_body(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for BodyContextExt<'input> {
@@ -1104,7 +1134,7 @@ impl<'input> CustomRuleContext<'input> for BodyContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_body }
 }
-antlr_rust::type_id! {BodyContextExt<'a>}
+antlr_rust::tid! {BodyContextExt<'a>}
 
 impl<'input> BodyContextExt<'input> {
     fn new(
@@ -1149,8 +1179,8 @@ where
         let mut _localctx = BodyContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 8, RULE_body);
         let mut _localctx: Rc<BodyContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -1178,7 +1208,8 @@ where
                     _la = recog.base.input.la(1);
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -1212,6 +1243,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for StatementContextExt<'input> {
@@ -1222,7 +1257,7 @@ impl<'input> CustomRuleContext<'input> for StatementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_statement }
 }
-antlr_rust::type_id! {StatementContextExt<'a>}
+antlr_rust::tid! {StatementContextExt<'a>}
 
 impl<'input> StatementContextExt<'input> {
     fn new(
@@ -1331,8 +1366,8 @@ where
         let mut _localctx = StatementContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 10, RULE_statement);
         let mut _localctx: Rc<StatementContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             recog.base.set_state(102);
             recog.err_handler.sync(&mut recog.base)?;
             match recog.interpreter.adaptive_predict(6, &mut recog.base)? {
@@ -1445,7 +1480,8 @@ where
 
                 _ => {}
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -1480,6 +1516,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_line_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_line_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Line_statementContextExt<'input> {
@@ -1490,7 +1530,7 @@ impl<'input> CustomRuleContext<'input> for Line_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_line_statement }
 }
-antlr_rust::type_id! {Line_statementContextExt<'a>}
+antlr_rust::tid! {Line_statementContextExt<'a>}
 
 impl<'input> Line_statementContextExt<'input> {
     fn new(
@@ -1558,8 +1598,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 12, RULE_line_statement);
         let mut _localctx: Rc<Line_statementContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -1596,7 +1636,8 @@ where
                 recog.base.set_state(114);
                 recog.base.match_token(NEWLINE, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -1631,6 +1672,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_line_formatted_text(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_line_formatted_text(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Line_formatted_textContextExt<'input> {
@@ -1641,7 +1686,7 @@ impl<'input> CustomRuleContext<'input> for Line_formatted_textContextExt<'input>
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_line_formatted_text }
 }
-antlr_rust::type_id! {Line_formatted_textContextExt<'a>}
+antlr_rust::tid! {Line_formatted_textContextExt<'a>}
 
 impl<'input> Line_formatted_textContextExt<'input> {
     fn new(
@@ -1742,8 +1787,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 14, RULE_line_formatted_text);
         let mut _localctx: Rc<Line_formatted_textContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -1812,7 +1857,8 @@ where
                     }
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -1845,6 +1891,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Hash
         listener.enter_every_rule(self);
         listener.enter_hashtag(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_hashtag(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for HashtagContextExt<'input> {
@@ -1855,7 +1905,7 @@ impl<'input> CustomRuleContext<'input> for HashtagContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_hashtag }
 }
-antlr_rust::type_id! {HashtagContextExt<'a>}
+antlr_rust::tid! {HashtagContextExt<'a>}
 
 impl<'input> HashtagContextExt<'input> {
     fn new(
@@ -1907,7 +1957,7 @@ where
         let mut _localctx = HashtagContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 16, RULE_hashtag);
         let mut _localctx: Rc<HashtagContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -1920,7 +1970,8 @@ where
                     .match_token(HASHTAG_TEXT, &mut recog.err_handler)?;
                 cast_mut::<_, HashtagContext>(&mut _localctx).text = Some(tmp.clone());
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -1955,6 +2006,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_line_condition(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_line_condition(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Line_conditionContextExt<'input> {
@@ -1965,7 +2020,7 @@ impl<'input> CustomRuleContext<'input> for Line_conditionContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_line_condition }
 }
-antlr_rust::type_id! {Line_conditionContextExt<'a>}
+antlr_rust::tid! {Line_conditionContextExt<'a>}
 
 impl<'input> Line_conditionContextExt<'input> {
     fn new(
@@ -2031,7 +2086,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 18, RULE_line_condition);
         let mut _localctx: Rc<Line_conditionContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -2052,7 +2107,8 @@ where
                     .base
                     .match_token(COMMAND_END, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -2081,11 +2137,11 @@ pub enum ExpressionContextAll<'input> {
     ExpEqualityContext(ExpEqualityContext<'input>),
     Error(ExpressionContext<'input>),
 }
-antlr_rust::type_id! {ExpressionContextAll<'a>}
+antlr_rust::tid! {ExpressionContextAll<'a>}
 
 impl<'input> antlr_rust::parser_rule_context::DerefSeal for ExpressionContextAll<'input> {}
 
-impl<'input> YarnSpinnerParserParserContext<'input> for ExpressionContextAll<'input> {}
+impl<'input> YarnSpinnerParserContext<'input> for ExpressionContextAll<'input> {}
 
 impl<'input> Deref for ExpressionContextAll<'input> {
     type Target = dyn ExpressionContextAttrs<'input> + 'input;
@@ -2138,7 +2194,7 @@ impl<'input> CustomRuleContext<'input> for ExpressionContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_expression }
 }
-antlr_rust::type_id! {ExpressionContextExt<'a>}
+antlr_rust::tid! {ExpressionContextExt<'a>}
 
 impl<'input> ExpressionContextExt<'input> {
     fn new(
@@ -2196,7 +2252,7 @@ pub struct ExpParensContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpParensContextExt<'a>}
+antlr_rust::tid! {ExpParensContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpParensContext<'input> {}
 
@@ -2301,7 +2357,7 @@ pub struct ExpMultDivModContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpMultDivModContextExt<'a>}
+antlr_rust::tid! {ExpMultDivModContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpMultDivModContext<'input> {}
 
@@ -2417,7 +2473,7 @@ pub struct ExpComparisonContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpComparisonContextExt<'a>}
+antlr_rust::tid! {ExpComparisonContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpComparisonContext<'input> {}
 
@@ -2496,7 +2552,7 @@ pub struct ExpNegativeContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpNegativeContextExt<'a>}
+antlr_rust::tid! {ExpNegativeContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpNegativeContext<'input> {}
 
@@ -2595,7 +2651,7 @@ pub struct ExpAndOrXorContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpAndOrXorContextExt<'a>}
+antlr_rust::tid! {ExpAndOrXorContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpAndOrXorContext<'input> {}
 
@@ -2690,7 +2746,7 @@ pub struct ExpAddSubContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpAddSubContextExt<'a>}
+antlr_rust::tid! {ExpAddSubContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpAddSubContext<'input> {}
 
@@ -2767,7 +2823,7 @@ pub struct ExpNotContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpNotContextExt<'a>}
+antlr_rust::tid! {ExpNotContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpNotContext<'input> {}
 
@@ -2833,7 +2889,7 @@ pub struct ExpValueContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpValueContextExt<'a>}
+antlr_rust::tid! {ExpValueContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpValueContext<'input> {}
 
@@ -2927,7 +2983,7 @@ pub struct ExpEqualityContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ExpEqualityContextExt<'a>}
+antlr_rust::tid! {ExpEqualityContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ExpEqualityContext<'input> {}
 
@@ -3000,8 +3056,8 @@ where
         let mut _localctx: Rc<ExpressionContextAll> = _localctx;
         let mut _prevctx = _localctx.clone();
         let _startState = 20;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -3140,11 +3196,14 @@ where
                                         }
                                         _la = recog.base.input.la(1);
                                         if {
-                                            !(((_la) & !0x3f) == 0
-                                                && ((1usize << _la)
-                                                    & ((1usize << OPERATOR_MATHS_MULTIPLICATION)
-                                                        | (1usize << OPERATOR_MATHS_DIVISION)
-                                                        | (1usize << OPERATOR_MATHS_MODULUS)))
+                                            !(((_la - 49) & !0x3f) == 0
+                                                && ((1usize << (_la - 49))
+                                                    & ((1usize
+                                                        << (OPERATOR_MATHS_MULTIPLICATION - 49))
+                                                        | (1usize
+                                                            << (OPERATOR_MATHS_DIVISION - 49))
+                                                        | (1usize
+                                                            << (OPERATOR_MATHS_MODULUS - 49))))
                                                     != 0)
                                         } {
                                             let tmp = recog
@@ -3259,13 +3318,18 @@ where
                                         }
                                         _la = recog.base.input.la(1);
                                         if {
-                                            !(((_la) & !0x3f) == 0
-                                                && ((1usize << _la)
-                                                    & ((1usize << OPERATOR_LOGICAL_LESS_THAN_EQUALS)
+                                            !(((_la - 32) & !0x3f) == 0
+                                                && ((1usize << (_la - 32))
+                                                    & ((1usize
+                                                        << (OPERATOR_LOGICAL_LESS_THAN_EQUALS
+                                                            - 32))
                                                         | (1usize
-                                                            << OPERATOR_LOGICAL_GREATER_THAN_EQUALS)
-                                                        | (1usize << OPERATOR_LOGICAL_LESS)
-                                                        | (1usize << OPERATOR_LOGICAL_GREATER)))
+                                                            << (OPERATOR_LOGICAL_GREATER_THAN_EQUALS
+                                                                - 32))
+                                                        | (1usize
+                                                            << (OPERATOR_LOGICAL_LESS - 32))
+                                                        | (1usize
+                                                            << (OPERATOR_LOGICAL_GREATER - 32))))
                                                     != 0)
                                         } {
                                             let tmp = recog
@@ -3381,11 +3445,11 @@ where
                                         }
                                         _la = recog.base.input.la(1);
                                         if {
-                                            !(((_la) & !0x3f) == 0
-                                                && ((1usize << _la)
-                                                    & ((1usize << OPERATOR_LOGICAL_AND)
-                                                        | (1usize << OPERATOR_LOGICAL_OR)
-                                                        | (1usize << OPERATOR_LOGICAL_XOR)))
+                                            !(((_la - 38) & !0x3f) == 0
+                                                && ((1usize << (_la - 38))
+                                                    & ((1usize << (OPERATOR_LOGICAL_AND - 38))
+                                                        | (1usize << (OPERATOR_LOGICAL_OR - 38))
+                                                        | (1usize << (OPERATOR_LOGICAL_XOR - 38))))
                                                     != 0)
                                         } {
                                             let tmp = recog
@@ -3420,7 +3484,8 @@ where
                     _alt = recog.interpreter.adaptive_predict(14, &mut recog.base)?;
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -3447,11 +3512,11 @@ pub enum ValueContextAll<'input> {
     ValueStringContext(ValueStringContext<'input>),
     Error(ValueContext<'input>),
 }
-antlr_rust::type_id! {ValueContextAll<'a>}
+antlr_rust::tid! {ValueContextAll<'a>}
 
 impl<'input> antlr_rust::parser_rule_context::DerefSeal for ValueContextAll<'input> {}
 
-impl<'input> YarnSpinnerParserParserContext<'input> for ValueContextAll<'input> {}
+impl<'input> YarnSpinnerParserContext<'input> for ValueContextAll<'input> {}
 
 impl<'input> Deref for ValueContextAll<'input> {
     type Target = dyn ValueContextAttrs<'input> + 'input;
@@ -3499,7 +3564,7 @@ impl<'input> CustomRuleContext<'input> for ValueContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_value }
 }
-antlr_rust::type_id! {ValueContextExt<'a>}
+antlr_rust::tid! {ValueContextExt<'a>}
 
 impl<'input> ValueContextExt<'input> {
     fn new(
@@ -3543,7 +3608,7 @@ pub struct ValueNullContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueNullContextExt<'a>}
+antlr_rust::tid! {ValueNullContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueNullContext<'input> {}
 
@@ -3612,7 +3677,7 @@ pub struct ValueNumberContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueNumberContextExt<'a>}
+antlr_rust::tid! {ValueNumberContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueNumberContext<'input> {}
 
@@ -3681,7 +3746,7 @@ pub struct ValueTrueContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueTrueContextExt<'a>}
+antlr_rust::tid! {ValueTrueContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueTrueContext<'input> {}
 
@@ -3750,7 +3815,7 @@ pub struct ValueFalseContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueFalseContextExt<'a>}
+antlr_rust::tid! {ValueFalseContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueFalseContext<'input> {}
 
@@ -3817,7 +3882,7 @@ pub struct ValueFuncContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueFuncContextExt<'a>}
+antlr_rust::tid! {ValueFuncContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueFuncContext<'input> {}
 
@@ -3884,7 +3949,7 @@ pub struct ValueVarContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueVarContextExt<'a>}
+antlr_rust::tid! {ValueVarContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueVarContext<'input> {}
 
@@ -3953,7 +4018,7 @@ pub struct ValueStringContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {ValueStringContextExt<'a>}
+antlr_rust::tid! {ValueStringContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for ValueStringContext<'input> {}
 
@@ -4013,7 +4078,7 @@ where
         let mut _localctx = ValueContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 22, RULE_value);
         let mut _localctx: Rc<ValueContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             recog.base.set_state(176);
             recog.err_handler.sync(&mut recog.base)?;
             match recog.base.input.la(1) {
@@ -4099,7 +4164,8 @@ where
                     &mut recog.base,
                 )))?,
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -4133,6 +4199,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_variable(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_variable(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for VariableContextExt<'input> {
@@ -4143,7 +4213,7 @@ impl<'input> CustomRuleContext<'input> for VariableContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_variable }
 }
-antlr_rust::type_id! {VariableContextExt<'a>}
+antlr_rust::tid! {VariableContextExt<'a>}
 
 impl<'input> VariableContextExt<'input> {
     fn new(
@@ -4184,14 +4254,15 @@ where
         let mut _localctx = VariableContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 24, RULE_variable);
         let mut _localctx: Rc<VariableContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
                 recog.base.set_state(178);
                 recog.base.match_token(VAR_ID, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -4226,6 +4297,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_function_call(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_function_call(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Function_callContextExt<'input> {
@@ -4236,7 +4311,7 @@ impl<'input> CustomRuleContext<'input> for Function_callContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_function_call }
 }
-antlr_rust::type_id! {Function_callContextExt<'a>}
+antlr_rust::tid! {Function_callContextExt<'a>}
 
 impl<'input> Function_callContextExt<'input> {
     fn new(
@@ -4323,8 +4398,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 26, RULE_function_call);
         let mut _localctx: Rc<Function_callContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -4341,15 +4416,18 @@ where
                     && ((1usize << _la)
                         & ((1usize << KEYWORD_TRUE)
                             | (1usize << KEYWORD_FALSE)
-                            | (1usize << KEYWORD_NULL)
-                            | (1usize << OPERATOR_LOGICAL_NOT)
-                            | (1usize << OPERATOR_MATHS_SUBTRACTION)
-                            | (1usize << LPAREN)
-                            | (1usize << STRING)
-                            | (1usize << FUNC_ID)
-                            | (1usize << VAR_ID)
-                            | (1usize << NUMBER)))
+                            | (1usize << KEYWORD_NULL)))
                         != 0)
+                    || (((_la - 41) & !0x3f) == 0
+                        && ((1usize << (_la - 41))
+                            & ((1usize << (OPERATOR_LOGICAL_NOT - 41))
+                                | (1usize << (OPERATOR_MATHS_SUBTRACTION - 41))
+                                | (1usize << (LPAREN - 41))
+                                | (1usize << (STRING - 41))
+                                | (1usize << (FUNC_ID - 41))
+                                | (1usize << (VAR_ID - 41))
+                                | (1usize << (NUMBER - 41))))
+                            != 0)
                 {
                     {
                         /*InvokeRule expression*/
@@ -4379,7 +4457,8 @@ where
                 recog.base.set_state(192);
                 recog.base.match_token(RPAREN, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -4414,6 +4493,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_if_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_if_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for If_statementContextExt<'input> {
@@ -4424,7 +4507,7 @@ impl<'input> CustomRuleContext<'input> for If_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_if_statement }
 }
-antlr_rust::type_id! {If_statementContextExt<'a>}
+antlr_rust::tid! {If_statementContextExt<'a>}
 
 impl<'input> If_statementContextExt<'input> {
     fn new(
@@ -4507,7 +4590,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 28, RULE_if_statement);
         let mut _localctx: Rc<If_statementContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -4561,7 +4644,8 @@ where
                     .base
                     .match_token(COMMAND_END, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -4595,6 +4679,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_if_clause(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_if_clause(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for If_clauseContextExt<'input> {
@@ -4605,7 +4693,7 @@ impl<'input> CustomRuleContext<'input> for If_clauseContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_if_clause }
 }
-antlr_rust::type_id! {If_clauseContextExt<'a>}
+antlr_rust::tid! {If_clauseContextExt<'a>}
 
 impl<'input> If_clauseContextExt<'input> {
     fn new(
@@ -4680,7 +4768,7 @@ where
         let mut _localctx = If_clauseContextExt::new(_parentctx.clone(), recog.base.get_state());
         recog.base.enter_rule(_localctx.clone(), 30, RULE_if_clause);
         let mut _localctx: Rc<If_clauseContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -4720,7 +4808,8 @@ where
                     _alt = recog.interpreter.adaptive_predict(20, &mut recog.base)?;
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -4755,6 +4844,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_else_if_clause(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_else_if_clause(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Else_if_clauseContextExt<'input> {
@@ -4765,7 +4858,7 @@ impl<'input> CustomRuleContext<'input> for Else_if_clauseContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_else_if_clause }
 }
-antlr_rust::type_id! {Else_if_clauseContextExt<'a>}
+antlr_rust::tid! {Else_if_clauseContextExt<'a>}
 
 impl<'input> Else_if_clauseContextExt<'input> {
     fn new(
@@ -4843,7 +4936,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 32, RULE_else_if_clause);
         let mut _localctx: Rc<Else_if_clauseContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -4885,7 +4978,8 @@ where
                     _alt = recog.interpreter.adaptive_predict(21, &mut recog.base)?;
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -4919,6 +5013,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_else_clause(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_else_clause(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Else_clauseContextExt<'input> {
@@ -4929,7 +5027,7 @@ impl<'input> CustomRuleContext<'input> for Else_clauseContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_else_clause }
 }
-antlr_rust::type_id! {Else_clauseContextExt<'a>}
+antlr_rust::tid! {Else_clauseContextExt<'a>}
 
 impl<'input> Else_clauseContextExt<'input> {
     fn new(
@@ -5000,7 +5098,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 34, RULE_else_clause);
         let mut _localctx: Rc<Else_clauseContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -5038,7 +5136,8 @@ where
                     _alt = recog.interpreter.adaptive_predict(22, &mut recog.base)?;
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -5074,6 +5173,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_set_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_set_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Set_statementContextExt<'input> {
@@ -5084,7 +5187,7 @@ impl<'input> CustomRuleContext<'input> for Set_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_set_statement }
 }
-antlr_rust::type_id! {Set_statementContextExt<'a>}
+antlr_rust::tid! {Set_statementContextExt<'a>}
 
 impl<'input> Set_statementContextExt<'input> {
     fn new(
@@ -5217,8 +5320,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 36, RULE_set_statement);
         let mut _localctx: Rc<Set_statementContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -5242,14 +5345,14 @@ where
 
                 _la = recog.base.input.la(1);
                 if {
-                    !(((_la) & !0x3f) == 0
-                        && ((1usize << _la)
-                            & ((1usize << OPERATOR_ASSIGNMENT)
-                                | (1usize << OPERATOR_MATHS_ADDITION_EQUALS)
-                                | (1usize << OPERATOR_MATHS_SUBTRACTION_EQUALS)
-                                | (1usize << OPERATOR_MATHS_MULTIPLICATION_EQUALS)
-                                | (1usize << OPERATOR_MATHS_MODULUS_EQUALS)
-                                | (1usize << OPERATOR_MATHS_DIVISION_EQUALS)))
+                    !(((_la - 31) & !0x3f) == 0
+                        && ((1usize << (_la - 31))
+                            & ((1usize << (OPERATOR_ASSIGNMENT - 31))
+                                | (1usize << (OPERATOR_MATHS_ADDITION_EQUALS - 31))
+                                | (1usize << (OPERATOR_MATHS_SUBTRACTION_EQUALS - 31))
+                                | (1usize << (OPERATOR_MATHS_MULTIPLICATION_EQUALS - 31))
+                                | (1usize << (OPERATOR_MATHS_MODULUS_EQUALS - 31))
+                                | (1usize << (OPERATOR_MATHS_DIVISION_EQUALS - 31))))
                             != 0)
                 } {
                     let tmp = recog.err_handler.recover_inline(&mut recog.base)?;
@@ -5270,7 +5373,8 @@ where
                     .base
                     .match_token(COMMAND_END, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -5305,6 +5409,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_call_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_call_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Call_statementContextExt<'input> {
@@ -5315,7 +5423,7 @@ impl<'input> CustomRuleContext<'input> for Call_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_call_statement }
 }
-antlr_rust::type_id! {Call_statementContextExt<'a>}
+antlr_rust::tid! {Call_statementContextExt<'a>}
 
 impl<'input> Call_statementContextExt<'input> {
     fn new(
@@ -5381,7 +5489,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 38, RULE_call_statement);
         let mut _localctx: Rc<Call_statementContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -5404,7 +5512,8 @@ where
                     .base
                     .match_token(COMMAND_END, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -5439,6 +5548,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_command_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_command_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Command_statementContextExt<'input> {
@@ -5449,7 +5562,7 @@ impl<'input> CustomRuleContext<'input> for Command_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_command_statement }
 }
-antlr_rust::type_id! {Command_statementContextExt<'a>}
+antlr_rust::tid! {Command_statementContextExt<'a>}
 
 impl<'input> Command_statementContextExt<'input> {
     fn new(
@@ -5521,8 +5634,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 40, RULE_command_statement);
         let mut _localctx: Rc<Command_statementContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -5558,7 +5671,8 @@ where
                     }
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -5593,6 +5707,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_command_formatted_text(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_command_formatted_text(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Command_formatted_textContextExt<'input> {
@@ -5603,7 +5721,7 @@ impl<'input> CustomRuleContext<'input> for Command_formatted_textContextExt<'inp
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_command_formatted_text }
 }
-antlr_rust::type_id! {Command_formatted_textContextExt<'a>}
+antlr_rust::tid! {Command_formatted_textContextExt<'a>}
 
 impl<'input> Command_formatted_textContextExt<'input> {
     fn new(
@@ -5709,8 +5827,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 42, RULE_command_formatted_text);
         let mut _localctx: Rc<Command_formatted_textContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -5758,7 +5876,8 @@ where
                     _la = recog.base.input.la(1);
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -5793,6 +5912,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_shortcut_option_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_shortcut_option_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Shortcut_option_statementContextExt<'input> {
@@ -5803,7 +5926,7 @@ impl<'input> CustomRuleContext<'input> for Shortcut_option_statementContextExt<'
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_shortcut_option_statement }
 }
-antlr_rust::type_id! {Shortcut_option_statementContextExt<'a>}
+antlr_rust::tid! {Shortcut_option_statementContextExt<'a>}
 
 impl<'input> Shortcut_option_statementContextExt<'input> {
     fn new(
@@ -5866,8 +5989,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 44, RULE_shortcut_option_statement);
         let mut _localctx: Rc<Shortcut_option_statementContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             let mut _alt: isize;
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
@@ -5907,7 +6030,8 @@ where
                     }
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -5942,6 +6066,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_shortcut_option(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_shortcut_option(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Shortcut_optionContextExt<'input> {
@@ -5952,7 +6080,7 @@ impl<'input> CustomRuleContext<'input> for Shortcut_optionContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_shortcut_option }
 }
-antlr_rust::type_id! {Shortcut_optionContextExt<'a>}
+antlr_rust::tid! {Shortcut_optionContextExt<'a>}
 
 impl<'input> Shortcut_optionContextExt<'input> {
     fn new(
@@ -6030,8 +6158,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 46, RULE_shortcut_option);
         let mut _localctx: Rc<Shortcut_optionContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -6083,7 +6211,8 @@ where
                     _ => {}
                 }
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -6119,6 +6248,10 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_declare_statement(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_declare_statement(self);
+        listener.exit_every_rule(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for Declare_statementContextExt<'input> {
@@ -6129,7 +6262,7 @@ impl<'input> CustomRuleContext<'input> for Declare_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_declare_statement }
 }
-antlr_rust::type_id! {Declare_statementContextExt<'a>}
+antlr_rust::tid! {Declare_statementContextExt<'a>}
 
 impl<'input> Declare_statementContextExt<'input> {
     fn new(
@@ -6230,8 +6363,8 @@ where
             .base
             .enter_rule(_localctx.clone(), 48, RULE_declare_statement);
         let mut _localctx: Rc<Declare_statementContextAll> = _localctx;
-        let mut _la: isize;
-        let result: Result<(), ANTLRError> = try {
+        let mut _la: isize = -1;
+        let result: Result<(), ANTLRError> = (|| {
             //recog.base.enter_outer_alt(_localctx.clone(), 1);
             recog.base.enter_outer_alt(None, 1);
             {
@@ -6280,7 +6413,8 @@ where
                     .base
                     .match_token(COMMAND_END, &mut recog.err_handler)?;
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
@@ -6302,11 +6436,11 @@ pub enum Jump_statementContextAll<'input> {
     JumpToExpressionContext(JumpToExpressionContext<'input>),
     Error(Jump_statementContext<'input>),
 }
-antlr_rust::type_id! {Jump_statementContextAll<'a>}
+antlr_rust::tid! {Jump_statementContextAll<'a>}
 
 impl<'input> antlr_rust::parser_rule_context::DerefSeal for Jump_statementContextAll<'input> {}
 
-impl<'input> YarnSpinnerParserParserContext<'input> for Jump_statementContextAll<'input> {}
+impl<'input> YarnSpinnerParserContext<'input> for Jump_statementContextAll<'input> {}
 
 impl<'input> Deref for Jump_statementContextAll<'input> {
     type Target = dyn Jump_statementContextAttrs<'input> + 'input;
@@ -6353,7 +6487,7 @@ impl<'input> CustomRuleContext<'input> for Jump_statementContextExt<'input> {
     }
     //fn type_rule_index() -> usize where Self: Sized { RULE_jump_statement }
 }
-antlr_rust::type_id! {Jump_statementContextExt<'a>}
+antlr_rust::tid! {Jump_statementContextExt<'a>}
 
 impl<'input> Jump_statementContextExt<'input> {
     fn new(
@@ -6423,7 +6557,7 @@ pub struct JumpToNodeNameContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {JumpToNodeNameContextExt<'a>}
+antlr_rust::tid! {JumpToNodeNameContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for JumpToNodeNameContext<'input> {}
 
@@ -6532,7 +6666,7 @@ pub struct JumpToExpressionContextExt<'input> {
     ph: PhantomData<&'input str>,
 }
 
-antlr_rust::type_id! {JumpToExpressionContextExt<'a>}
+antlr_rust::tid! {JumpToExpressionContextExt<'a>}
 
 impl<'input> YarnSpinnerParserContext<'input> for JumpToExpressionContext<'input> {}
 
@@ -6595,7 +6729,7 @@ where
             .base
             .enter_rule(_localctx.clone(), 50, RULE_jump_statement);
         let mut _localctx: Rc<Jump_statementContextAll> = _localctx;
-        let result: Result<(), ANTLRError> = try {
+        let result: Result<(), ANTLRError> = (|| {
             recog.base.set_state(312);
             recog.err_handler.sync(&mut recog.base)?;
             match recog.interpreter.adaptive_predict(31, &mut recog.base)? {
@@ -6668,7 +6802,8 @@ where
 
                 _ => {}
             }
-        };
+            Ok(())
+        })();
         match result {
             Ok(_) => {}
             Err(e @ ANTLRError::FallThrough(_)) => return Err(e),
