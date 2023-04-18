@@ -5,4 +5,5 @@ Currently copied from [YarnSpinnerTool](https://github.com/YarnSpinnerTool/YarnS
 * [Lexer](https://raw.githubusercontent.com/YarnSpinnerTool/YarnSpinner/v2.3.0/YarnSpinner.Compiler/YarnSpinnerLexer.g4)
 
 ## Adjustments
-* `type` replaced with ``
+* `YarnSpinnerParserParserContext` replaced with `YarnSpinnerParserContext` - no idea what happened there during generation
+* Autoformat files
