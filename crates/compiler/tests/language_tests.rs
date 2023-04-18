@@ -20,10 +20,10 @@ fn test_merging_nodes() {
 fn test_end_of_notes_with_options_not_added() {
     todo!()
 }
-/*
+
 #[test]
 fn test_node_headers() {
-    let path = Path.Combine(TestDataPath, "Headers.yarn");
+    let path = TestBase::test_data_path().join("Headers.yarn");
     let result = Compiler.Compile(CompilationJob.CreateFromFiles(path));
 
     result.Diagnostics.Should().BeEmpty();
@@ -95,7 +95,7 @@ fn test_node_headers() {
     result.FileTags[path].Should().ContainSingle();
     result.FileTags[path].Should().Contain("file_header");
 }
-*/
+
 
 #[test]
 #[ignore]
