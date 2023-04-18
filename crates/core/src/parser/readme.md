@@ -10,3 +10,4 @@ and the command `java -jar "path/to/antlr4-4.8-2-SNAPSHOT-complete.jar" -Dlangua
 ## Adjustments
 * `YarnSpinnerParserParserContext` replaced with `YarnSpinnerParserContext` - no idea what happened there during generation
 * Autoformat files
+* `parser.rs` now contains a `#![allow(warnings)]`
