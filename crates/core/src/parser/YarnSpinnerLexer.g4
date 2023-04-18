@@ -305,9 +305,8 @@ COMMAND_WS: WS -> channel(HIDDEN);
 COMMAND_IF: 'if' [\p{White_Space}] -> pushMode(ExpressionMode);
 COMMAND_ELSEIF:
 	'elseif' [\p{White_Space}] -> pushMode(ExpressionMode);
-COMMAND_ELSE:
-	'else' [\p{White_Space}]?;
-	// next expected token after 'else' is '>>' so no whitespace is strictly needed 
+COMMAND_ELSE: 'else' [\p{White_Space}]?;
+// next expected token after 'else' is '>>' so no whitespace is strictly needed 
 COMMAND_SET:
 	'set' [\p{White_Space}] -> pushMode(ExpressionMode);
 COMMAND_ENDIF: 'endif';

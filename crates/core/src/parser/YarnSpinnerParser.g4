@@ -124,7 +124,7 @@ shortcut_option:
 
 declare_statement:
 	COMMAND_START COMMAND_DECLARE variable OPERATOR_ASSIGNMENT value (
-		'as' type = FUNC_ID
+		'as' declaration_type = FUNC_ID
 	)? COMMAND_END;
 
 jump_statement:
