@@ -12,7 +12,15 @@
 ///     ;
 /// ```
 #[derive(Debug, PartialEq)]
-pub struct Statement<'a> {
-    // TODO: all variants
-    pub line_statement: &'a str,
+#[allow(dead_code)]
+pub enum Statement<'a> {
+    LineStatement(&'a str),
+    IfStatement(),
+    SetStatement(),
+    ShortcutOptionStatement(),
+    CallStatement(),
+    CommandStatement(),
+    DeclareStatement(),
+    JumpStatement(),
+    SubStatements(),
 }

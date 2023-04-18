@@ -34,12 +34,8 @@ Wow!
                         header_value: "Node_Title"
                     }],
                     body: vec![
-                        Statement {
-                            line_statement: "Here are some lines!"
-                        },
-                        Statement {
-                            line_statement: "Wow!"
-                        }
+                        Statement::LineStatement("Here are some lines!"),
+                        Statement::LineStatement("Wow!"),
                     ]
                 }]
             },

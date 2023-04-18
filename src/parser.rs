@@ -85,9 +85,7 @@ fn parse_delimited_body(input: &str) -> IResult<&str, Vec<Statement>> {
 fn parse_statement(input: &str) -> IResult<&str, Statement> {
     take_till1_line_ending
         .verify(|text: &str| text != "===")
-        .map(|text| Statement {
-            line_statement: text,
-        })
+        .map(|text| Statement::LineStatement(text))
         .parse_next(input)
 }
 
@@ -163,7 +161,21 @@ impl<'a> Display for Header<'a> {
 
 impl<'a> Display for Statement<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.line_statement)
+        write!(
+            f,
+            "{}",
+            match self {
+                Statement::LineStatement(text) => text,
+                Statement::IfStatement() => todo!(),
+                Statement::SetStatement() => todo!(),
+                Statement::ShortcutOptionStatement() => todo!(),
+                Statement::CallStatement() => todo!(),
+                Statement::CommandStatement() => todo!(),
+                Statement::DeclareStatement() => todo!(),
+                Statement::JumpStatement() => todo!(),
+                Statement::SubStatements() => todo!(),
+            }
+        )
     }
 }
 
@@ -217,8 +229,11 @@ mod tests {
     fn parse_delimited_body_test() {
         let (rest, statements) =
             parse_delimited_body("---\nHere are some lines!\nWow!\n===\nafter").unwrap();
-        assert_eq!(statements[0].line_statement, "Here are some lines!");
-        assert_eq!(statements[1].line_statement, "Wow!");
+        assert_eq!(
+            statements[0],
+            Statement::LineStatement("Here are some lines!")
+        );
+        assert_eq!(statements[1], Statement::LineStatement("Wow!"));
         assert_eq!(rest, "after");
     }
 
@@ -227,8 +242,8 @@ mod tests {
         let (rest, statement) =
             parse_statement("whatever this is not done yet just an example\nafter").unwrap();
         assert_eq!(
-            statement.line_statement,
-            "whatever this is not done yet just an example"
+            statement,
+            Statement::LineStatement("whatever this is not done yet just an example")
         );
         assert_eq!(rest, "after");
     }
