@@ -1,8 +1,7 @@
-[package]
-name = "rusty-yarn-spinner"
-version = "0.1.0"
-edition = "2021"
-license = "MIT OR Apache-2.0"
+[workspace]
+resolver = "2"
 
-[dependencies]
-winnow = "0.4.1"
+members = [
+    "crates/core",
+    "crates/bevy",
+]
