@@ -1,6 +1,7 @@
 use crate::parser::parse;
 
 mod parser;
+mod statement;
 
 fn main() {
     let input = "# hello comment any hashtag content\ntitle: blub i am going until the end\n---\nHello Line of Text\n===\n";
@@ -11,7 +12,8 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use crate::parser::{parse, Dialogue, Header, Node, Statement};
+    use crate::parser::{parse, Dialogue, Header, Node};
+    use crate::statement::Statement;
 
     #[test]
     fn yarn_spinner_example() {
