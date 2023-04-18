@@ -1,3 +1,3 @@
 #![feature(try_blocks)]
 
-mod parser;
+pub mod parser;
