@@ -85,7 +85,7 @@ fn parse_delimited_body(input: &str) -> IResult<&str, Vec<Statement>> {
 fn parse_statement(input: &str) -> IResult<&str, Statement> {
     take_till1_line_ending
         .verify(|text: &str| text != "===")
-        .map(|text| Statement::LineStatement(text))
+        .map(Statement::LineStatement)
         .parse_next(input)
 }
 

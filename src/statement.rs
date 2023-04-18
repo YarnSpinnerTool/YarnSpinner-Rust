@@ -13,6 +13,7 @@
 /// ```
 #[derive(Debug, PartialEq)]
 #[allow(dead_code)]
+#[allow(clippy::enum_variant_names)]
 pub enum Statement<'a> {
     LineStatement(&'a str),
     IfStatement(),
