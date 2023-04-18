@@ -10,7 +10,7 @@ use winnow::{
 
 // See https://github.com/YarnSpinnerTool/YarnSpinner/blob/v2.3.0/YarnSpinner.Compiler/YarnSpinnerParser.g4
 pub fn parse(input: &str) -> (Vec<FileHashtag>, Dialogue) {
-    parse_dialogue(input).finish().unwrap()
+    parse_dialogue.parse(input).unwrap()
 }
 
 /// ```txt
