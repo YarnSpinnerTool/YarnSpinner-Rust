@@ -10,4 +10,4 @@ and the command `java -jar "path/to/antlr4-4.8-2-SNAPSHOT-complete.jar" -Dlangua
 ## Adjustments
 * `YarnSpinnerParserParserContext` replaced with `YarnSpinnerParserContext` - no idea what happened there during generation
 * Autoformat files
-* `parser.rs` now contains a `#![allow(warnings)]`
+* `parser.rs` now contains allows for `warnings` and `clippy` together with `#![cfg_attr(rustfmt, rustfmt_skip)]`
