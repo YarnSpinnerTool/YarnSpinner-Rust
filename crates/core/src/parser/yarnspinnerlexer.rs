@@ -4,237 +4,456 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 use antlr_rust::atn::ATN;
+use antlr_rust::atn_deserializer::ATNDeserializer;
 use antlr_rust::char_stream::CharStream;
+use antlr_rust::dfa::DFA;
+use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::int_stream::IntStream;
 use antlr_rust::lexer::{BaseLexer, Lexer, LexerRecog};
-use antlr_rust::atn_deserializer::ATNDeserializer;
-use antlr_rust::dfa::DFA;
-use antlr_rust::lexer_atn_simulator::{LexerATNSimulator, ILexerATNSimulator};
-use antlr_rust::PredictionContextCache;
-use antlr_rust::recognizer::{Recognizer,Actions};
-use antlr_rust::error_listener::ErrorListener;
-use antlr_rust::TokenSource;
-use antlr_rust::token_factory::{TokenFactory,CommonTokenFactory,TokenAware};
+use antlr_rust::lexer_atn_simulator::{ILexerATNSimulator, LexerATNSimulator};
+use antlr_rust::parser_rule_context::{cast, BaseParserRuleContext, ParserRuleContext};
+use antlr_rust::recognizer::{Actions, Recognizer};
+use antlr_rust::rule_context::{BaseRuleContext, EmptyContext, EmptyCustomRuleContext};
 use antlr_rust::token::*;
-use antlr_rust::rule_context::{BaseRuleContext,EmptyCustomRuleContext,EmptyContext};
-use antlr_rust::parser_rule_context::{ParserRuleContext,BaseParserRuleContext,cast};
-use antlr_rust::vocabulary::{Vocabulary,VocabularyImpl};
+use antlr_rust::token_factory::{CommonTokenFactory, TokenAware, TokenFactory};
+use antlr_rust::vocabulary::{Vocabulary, VocabularyImpl};
+use antlr_rust::PredictionContextCache;
+use antlr_rust::TokenSource;
 
-use antlr_rust::{lazy_static,Tid,TidAble,TidExt};
+use antlr_rust::{lazy_static, Tid, TidAble, TidExt};
 
-use std::sync::Arc;
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
+use std::sync::Arc;
 
+pub const INDENT: isize = 1;
+pub const DEDENT: isize = 2;
+pub const BLANK_LINE_FOLLOWING_OPTION: isize = 3;
+pub const WS: isize = 4;
+pub const COMMENT: isize = 5;
+pub const NEWLINE: isize = 6;
+pub const ID: isize = 7;
+pub const BODY_START: isize = 8;
+pub const HEADER_DELIMITER: isize = 9;
+pub const HASHTAG: isize = 10;
+pub const REST_OF_LINE: isize = 11;
+pub const BODY_WS: isize = 12;
+pub const BODY_END: isize = 13;
+pub const SHORTCUT_ARROW: isize = 14;
+pub const COMMAND_START: isize = 15;
+pub const EXPRESSION_START: isize = 16;
+pub const ESCAPED_ANY: isize = 17;
+pub const TEXT_ESCAPE: isize = 18;
+pub const TEXT_COMMENT: isize = 19;
+pub const TEXT: isize = 20;
+pub const UNESCAPABLE_CHARACTER: isize = 21;
+pub const TEXT_COMMANDHASHTAG_WS: isize = 22;
+pub const TEXT_COMMANDHASHTAG_COMMENT: isize = 23;
+pub const TEXT_COMMANDHASHTAG_ERROR: isize = 24;
+pub const HASHTAG_WS: isize = 25;
+pub const HASHTAG_TEXT: isize = 26;
+pub const EXPR_WS: isize = 27;
+pub const KEYWORD_TRUE: isize = 28;
+pub const KEYWORD_FALSE: isize = 29;
+pub const KEYWORD_NULL: isize = 30;
+pub const OPERATOR_ASSIGNMENT: isize = 31;
+pub const OPERATOR_LOGICAL_LESS_THAN_EQUALS: isize = 32;
+pub const OPERATOR_LOGICAL_GREATER_THAN_EQUALS: isize = 33;
+pub const OPERATOR_LOGICAL_EQUALS: isize = 34;
+pub const OPERATOR_LOGICAL_LESS: isize = 35;
+pub const OPERATOR_LOGICAL_GREATER: isize = 36;
+pub const OPERATOR_LOGICAL_NOT_EQUALS: isize = 37;
+pub const OPERATOR_LOGICAL_AND: isize = 38;
+pub const OPERATOR_LOGICAL_OR: isize = 39;
+pub const OPERATOR_LOGICAL_XOR: isize = 40;
+pub const OPERATOR_LOGICAL_NOT: isize = 41;
+pub const OPERATOR_MATHS_ADDITION_EQUALS: isize = 42;
+pub const OPERATOR_MATHS_SUBTRACTION_EQUALS: isize = 43;
+pub const OPERATOR_MATHS_MULTIPLICATION_EQUALS: isize = 44;
+pub const OPERATOR_MATHS_MODULUS_EQUALS: isize = 45;
+pub const OPERATOR_MATHS_DIVISION_EQUALS: isize = 46;
+pub const OPERATOR_MATHS_ADDITION: isize = 47;
+pub const OPERATOR_MATHS_SUBTRACTION: isize = 48;
+pub const OPERATOR_MATHS_MULTIPLICATION: isize = 49;
+pub const OPERATOR_MATHS_DIVISION: isize = 50;
+pub const OPERATOR_MATHS_MODULUS: isize = 51;
+pub const LPAREN: isize = 52;
+pub const RPAREN: isize = 53;
+pub const COMMA: isize = 54;
+pub const EXPRESSION_AS: isize = 55;
+pub const STRING: isize = 56;
+pub const FUNC_ID: isize = 57;
+pub const EXPRESSION_END: isize = 58;
+pub const VAR_ID: isize = 59;
+pub const DOT: isize = 60;
+pub const NUMBER: isize = 61;
+pub const COMMAND_WS: isize = 62;
+pub const COMMAND_IF: isize = 63;
+pub const COMMAND_ELSEIF: isize = 64;
+pub const COMMAND_ELSE: isize = 65;
+pub const COMMAND_SET: isize = 66;
+pub const COMMAND_ENDIF: isize = 67;
+pub const COMMAND_CALL: isize = 68;
+pub const COMMAND_DECLARE: isize = 69;
+pub const COMMAND_JUMP: isize = 70;
+pub const COMMAND_ENUM: isize = 71;
+pub const COMMAND_CASE: isize = 72;
+pub const COMMAND_ENDENUM: isize = 73;
+pub const COMMAND_LOCAL: isize = 74;
+pub const COMMAND_END: isize = 75;
+pub const COMMAND_TEXT_END: isize = 76;
+pub const COMMAND_EXPRESSION_START: isize = 77;
+pub const COMMAND_TEXT: isize = 78;
+pub const TYPE_STRING: isize = 79;
+pub const TYPE_NUMBER: isize = 80;
+pub const TYPE_BOOL: isize = 81;
+pub const WHITESPACE: usize = 2;
+pub const COMMENTS: usize = 3;
+pub const HeaderMode: usize = 1;
+pub const BodyMode: usize = 2;
+pub const TextMode: usize = 3;
+pub const TextEscapedMode: usize = 4;
+pub const TextCommandOrHashtagMode: usize = 5;
+pub const HashtagMode: usize = 6;
+pub const ExpressionMode: usize = 7;
+pub const CommandMode: usize = 8;
+pub const CommandTextMode: usize = 9;
+pub const CommandIDMode: usize = 10;
+pub const CommandIDOrExpressionMode: usize = 11;
+pub const channelNames: [&'static str; 2 + 2] =
+    ["DEFAULT_TOKEN_CHANNEL", "HIDDEN", "WHITESPACE", "COMMENTS"];
 
-	pub const INDENT:isize=1; 
-	pub const DEDENT:isize=2; 
-	pub const BLANK_LINE_FOLLOWING_OPTION:isize=3; 
-	pub const WS:isize=4; 
-	pub const COMMENT:isize=5; 
-	pub const NEWLINE:isize=6; 
-	pub const ID:isize=7; 
-	pub const BODY_START:isize=8; 
-	pub const HEADER_DELIMITER:isize=9; 
-	pub const HASHTAG:isize=10; 
-	pub const REST_OF_LINE:isize=11; 
-	pub const BODY_WS:isize=12; 
-	pub const BODY_END:isize=13; 
-	pub const SHORTCUT_ARROW:isize=14; 
-	pub const COMMAND_START:isize=15; 
-	pub const EXPRESSION_START:isize=16; 
-	pub const ESCAPED_ANY:isize=17; 
-	pub const TEXT_ESCAPE:isize=18; 
-	pub const TEXT_COMMENT:isize=19; 
-	pub const TEXT:isize=20; 
-	pub const UNESCAPABLE_CHARACTER:isize=21; 
-	pub const TEXT_COMMANDHASHTAG_WS:isize=22; 
-	pub const TEXT_COMMANDHASHTAG_COMMENT:isize=23; 
-	pub const TEXT_COMMANDHASHTAG_ERROR:isize=24; 
-	pub const HASHTAG_WS:isize=25; 
-	pub const HASHTAG_TEXT:isize=26; 
-	pub const EXPR_WS:isize=27; 
-	pub const KEYWORD_TRUE:isize=28; 
-	pub const KEYWORD_FALSE:isize=29; 
-	pub const KEYWORD_NULL:isize=30; 
-	pub const OPERATOR_ASSIGNMENT:isize=31; 
-	pub const OPERATOR_LOGICAL_LESS_THAN_EQUALS:isize=32; 
-	pub const OPERATOR_LOGICAL_GREATER_THAN_EQUALS:isize=33; 
-	pub const OPERATOR_LOGICAL_EQUALS:isize=34; 
-	pub const OPERATOR_LOGICAL_LESS:isize=35; 
-	pub const OPERATOR_LOGICAL_GREATER:isize=36; 
-	pub const OPERATOR_LOGICAL_NOT_EQUALS:isize=37; 
-	pub const OPERATOR_LOGICAL_AND:isize=38; 
-	pub const OPERATOR_LOGICAL_OR:isize=39; 
-	pub const OPERATOR_LOGICAL_XOR:isize=40; 
-	pub const OPERATOR_LOGICAL_NOT:isize=41; 
-	pub const OPERATOR_MATHS_ADDITION_EQUALS:isize=42; 
-	pub const OPERATOR_MATHS_SUBTRACTION_EQUALS:isize=43; 
-	pub const OPERATOR_MATHS_MULTIPLICATION_EQUALS:isize=44; 
-	pub const OPERATOR_MATHS_MODULUS_EQUALS:isize=45; 
-	pub const OPERATOR_MATHS_DIVISION_EQUALS:isize=46; 
-	pub const OPERATOR_MATHS_ADDITION:isize=47; 
-	pub const OPERATOR_MATHS_SUBTRACTION:isize=48; 
-	pub const OPERATOR_MATHS_MULTIPLICATION:isize=49; 
-	pub const OPERATOR_MATHS_DIVISION:isize=50; 
-	pub const OPERATOR_MATHS_MODULUS:isize=51; 
-	pub const LPAREN:isize=52; 
-	pub const RPAREN:isize=53; 
-	pub const COMMA:isize=54; 
-	pub const EXPRESSION_AS:isize=55; 
-	pub const STRING:isize=56; 
-	pub const FUNC_ID:isize=57; 
-	pub const EXPRESSION_END:isize=58; 
-	pub const VAR_ID:isize=59; 
-	pub const DOT:isize=60; 
-	pub const NUMBER:isize=61; 
-	pub const COMMAND_WS:isize=62; 
-	pub const COMMAND_IF:isize=63; 
-	pub const COMMAND_ELSEIF:isize=64; 
-	pub const COMMAND_ELSE:isize=65; 
-	pub const COMMAND_SET:isize=66; 
-	pub const COMMAND_ENDIF:isize=67; 
-	pub const COMMAND_CALL:isize=68; 
-	pub const COMMAND_DECLARE:isize=69; 
-	pub const COMMAND_JUMP:isize=70; 
-	pub const COMMAND_ENUM:isize=71; 
-	pub const COMMAND_CASE:isize=72; 
-	pub const COMMAND_ENDENUM:isize=73; 
-	pub const COMMAND_LOCAL:isize=74; 
-	pub const COMMAND_END:isize=75; 
-	pub const COMMAND_TEXT_END:isize=76; 
-	pub const COMMAND_EXPRESSION_START:isize=77; 
-	pub const COMMAND_TEXT:isize=78; 
-	pub const TYPE_STRING:isize=79; 
-	pub const TYPE_NUMBER:isize=80; 
-	pub const TYPE_BOOL:isize=81;
-	pub const WHITESPACE: usize=2; 
-	 pub const COMMENTS: usize=3;
-	pub const HeaderMode: usize=1; 
-	pub const BodyMode: usize=2; 
-	pub const TextMode: usize=3; 
-	pub const TextEscapedMode: usize=4; 
-	pub const TextCommandOrHashtagMode: usize=5; 
-	pub const HashtagMode: usize=6; 
-	pub const ExpressionMode: usize=7; 
-	pub const CommandMode: usize=8; 
-	pub const CommandTextMode: usize=9; 
-	pub const CommandIDMode: usize=10; 
-	pub const CommandIDOrExpressionMode: usize=11;
-	pub const channelNames: [&'static str;2+2] = [
-		"DEFAULT_TOKEN_CHANNEL", "HIDDEN", "WHITESPACE", "COMMENTS"
-	];
+pub const modeNames: [&'static str; 12] = [
+    "DEFAULT_MODE",
+    "HeaderMode",
+    "BodyMode",
+    "TextMode",
+    "TextEscapedMode",
+    "TextCommandOrHashtagMode",
+    "HashtagMode",
+    "ExpressionMode",
+    "CommandMode",
+    "CommandTextMode",
+    "CommandIDMode",
+    "CommandIDOrExpressionMode",
+];
 
-	pub const modeNames: [&'static str;12] = [
-		"DEFAULT_MODE", "HeaderMode", "BodyMode", "TextMode", "TextEscapedMode", 
-		"TextCommandOrHashtagMode", "HashtagMode", "ExpressionMode", "CommandMode", 
-		"CommandTextMode", "CommandIDMode", "CommandIDOrExpressionMode"
-	];
+pub const ruleNames: [&'static str; 106] = [
+    "WS",
+    "COMMENT",
+    "NEWLINE",
+    "ID",
+    "IDENTIFIER_HEAD",
+    "IDENTIFIER_CHARACTER",
+    "IDENTIFIER_CHARACTERS",
+    "BODY_START",
+    "HEADER_DELIMITER",
+    "HASHTAG",
+    "REST_OF_LINE",
+    "HEADER_NEWLINE",
+    "BODY_WS",
+    "BODY_NEWLINE",
+    "BODY_COMMENT",
+    "BODY_END",
+    "SHORTCUT_ARROW",
+    "COMMAND_START",
+    "BODY_HASHTAG",
+    "EXPRESSION_START",
+    "ESCAPED_ANY",
+    "ANY",
+    "TEXT_NEWLINE",
+    "TEXT_ESCAPED_MARKUP_BRACKET",
+    "TEXT_ESCAPE",
+    "TEXT_HASHTAG",
+    "TEXT_EXPRESSION_START",
+    "TEXT_COMMAND_START",
+    "TEXT_COMMENT",
+    "TEXT",
+    "TEXT_FRAG",
+    "TEXT_ESCAPED_CHARACTER",
+    "UNESCAPABLE_CHARACTER",
+    "TEXT_COMMANDHASHTAG_WS",
+    "TEXT_COMMANDHASHTAG_COMMENT",
+    "TEXT_COMMANDHASHTAG_COMMAND_START",
+    "TEXT_COMMANDHASHTAG_HASHTAG",
+    "TEXT_COMMANDHASHTAG_NEWLINE",
+    "TEXT_COMMANDHASHTAG_ERROR",
+    "HASHTAG_WS",
+    "HASHTAG_TAG",
+    "HASHTAG_TEXT",
+    "EXPR_WS",
+    "KEYWORD_TRUE",
+    "KEYWORD_FALSE",
+    "KEYWORD_NULL",
+    "OPERATOR_ASSIGNMENT",
+    "OPERATOR_LOGICAL_LESS_THAN_EQUALS",
+    "OPERATOR_LOGICAL_GREATER_THAN_EQUALS",
+    "OPERATOR_LOGICAL_EQUALS",
+    "OPERATOR_LOGICAL_LESS",
+    "OPERATOR_LOGICAL_GREATER",
+    "OPERATOR_LOGICAL_NOT_EQUALS",
+    "OPERATOR_LOGICAL_AND",
+    "OPERATOR_LOGICAL_OR",
+    "OPERATOR_LOGICAL_XOR",
+    "OPERATOR_LOGICAL_NOT",
+    "OPERATOR_MATHS_ADDITION_EQUALS",
+    "OPERATOR_MATHS_SUBTRACTION_EQUALS",
+    "OPERATOR_MATHS_MULTIPLICATION_EQUALS",
+    "OPERATOR_MATHS_MODULUS_EQUALS",
+    "OPERATOR_MATHS_DIVISION_EQUALS",
+    "OPERATOR_MATHS_ADDITION",
+    "OPERATOR_MATHS_SUBTRACTION",
+    "OPERATOR_MATHS_MULTIPLICATION",
+    "OPERATOR_MATHS_DIVISION",
+    "OPERATOR_MATHS_MODULUS",
+    "LPAREN",
+    "RPAREN",
+    "COMMA",
+    "EXPRESSION_AS",
+    "TYPE_STRING",
+    "TYPE_NUMBER",
+    "TYPE_BOOL",
+    "STRING",
+    "FUNC_ID",
+    "EXPRESSION_END",
+    "EXPRESSION_COMMAND_END",
+    "VAR_ID",
+    "DOT",
+    "NUMBER",
+    "INT",
+    "DIGIT",
+    "COMMAND_WS",
+    "COMMAND_IF",
+    "COMMAND_ELSEIF",
+    "COMMAND_ELSE",
+    "COMMAND_SET",
+    "COMMAND_ENDIF",
+    "COMMAND_CALL",
+    "COMMAND_DECLARE",
+    "COMMAND_JUMP",
+    "COMMAND_ENUM",
+    "COMMAND_CASE",
+    "COMMAND_ENDENUM",
+    "COMMAND_LOCAL",
+    "COMMAND_END",
+    "COMMAND_ARBITRARY",
+    "COMMAND_TEXT_END",
+    "COMMAND_EXPRESSION_START",
+    "COMMAND_TEXT",
+    "COMMAND_ID",
+    "COMMAND_ID_END",
+    "COMMAND_ID_OR_EXPRESSION_ID",
+    "COMMAND_ID_OR_EXPRESSION_START",
+    "COMMAND_ID_OR_EXPRESSION_END",
+];
 
-	pub const ruleNames: [&'static str;106] = [
-		"WS", "COMMENT", "NEWLINE", "ID", "IDENTIFIER_HEAD", "IDENTIFIER_CHARACTER", 
-		"IDENTIFIER_CHARACTERS", "BODY_START", "HEADER_DELIMITER", "HASHTAG", 
-		"REST_OF_LINE", "HEADER_NEWLINE", "BODY_WS", "BODY_NEWLINE", "BODY_COMMENT", 
-		"BODY_END", "SHORTCUT_ARROW", "COMMAND_START", "BODY_HASHTAG", "EXPRESSION_START", 
-		"ESCAPED_ANY", "ANY", "TEXT_NEWLINE", "TEXT_ESCAPED_MARKUP_BRACKET", "TEXT_ESCAPE", 
-		"TEXT_HASHTAG", "TEXT_EXPRESSION_START", "TEXT_COMMAND_START", "TEXT_COMMENT", 
-		"TEXT", "TEXT_FRAG", "TEXT_ESCAPED_CHARACTER", "UNESCAPABLE_CHARACTER", 
-		"TEXT_COMMANDHASHTAG_WS", "TEXT_COMMANDHASHTAG_COMMENT", "TEXT_COMMANDHASHTAG_COMMAND_START", 
-		"TEXT_COMMANDHASHTAG_HASHTAG", "TEXT_COMMANDHASHTAG_NEWLINE", "TEXT_COMMANDHASHTAG_ERROR", 
-		"HASHTAG_WS", "HASHTAG_TAG", "HASHTAG_TEXT", "EXPR_WS", "KEYWORD_TRUE", 
-		"KEYWORD_FALSE", "KEYWORD_NULL", "OPERATOR_ASSIGNMENT", "OPERATOR_LOGICAL_LESS_THAN_EQUALS", 
-		"OPERATOR_LOGICAL_GREATER_THAN_EQUALS", "OPERATOR_LOGICAL_EQUALS", "OPERATOR_LOGICAL_LESS", 
-		"OPERATOR_LOGICAL_GREATER", "OPERATOR_LOGICAL_NOT_EQUALS", "OPERATOR_LOGICAL_AND", 
-		"OPERATOR_LOGICAL_OR", "OPERATOR_LOGICAL_XOR", "OPERATOR_LOGICAL_NOT", 
-		"OPERATOR_MATHS_ADDITION_EQUALS", "OPERATOR_MATHS_SUBTRACTION_EQUALS", 
-		"OPERATOR_MATHS_MULTIPLICATION_EQUALS", "OPERATOR_MATHS_MODULUS_EQUALS", 
-		"OPERATOR_MATHS_DIVISION_EQUALS", "OPERATOR_MATHS_ADDITION", "OPERATOR_MATHS_SUBTRACTION", 
-		"OPERATOR_MATHS_MULTIPLICATION", "OPERATOR_MATHS_DIVISION", "OPERATOR_MATHS_MODULUS", 
-		"LPAREN", "RPAREN", "COMMA", "EXPRESSION_AS", "TYPE_STRING", "TYPE_NUMBER", 
-		"TYPE_BOOL", "STRING", "FUNC_ID", "EXPRESSION_END", "EXPRESSION_COMMAND_END", 
-		"VAR_ID", "DOT", "NUMBER", "INT", "DIGIT", "COMMAND_WS", "COMMAND_IF", 
-		"COMMAND_ELSEIF", "COMMAND_ELSE", "COMMAND_SET", "COMMAND_ENDIF", "COMMAND_CALL", 
-		"COMMAND_DECLARE", "COMMAND_JUMP", "COMMAND_ENUM", "COMMAND_CASE", "COMMAND_ENDENUM", 
-		"COMMAND_LOCAL", "COMMAND_END", "COMMAND_ARBITRARY", "COMMAND_TEXT_END", 
-		"COMMAND_EXPRESSION_START", "COMMAND_TEXT", "COMMAND_ID", "COMMAND_ID_END", 
-		"COMMAND_ID_OR_EXPRESSION_ID", "COMMAND_ID_OR_EXPRESSION_START", "COMMAND_ID_OR_EXPRESSION_END"
-	];
+pub const _LITERAL_NAMES: [Option<&'static str>; 82] = [
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some("'---'"),
+    None,
+    Some("'#'"),
+    None,
+    None,
+    Some("'==='"),
+    Some("'->'"),
+    Some("'<<'"),
+    None,
+    None,
+    Some("'\\'"),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some("'true'"),
+    Some("'false'"),
+    Some("'null'"),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some("'+='"),
+    Some("'-='"),
+    Some("'*='"),
+    Some("'%='"),
+    Some("'/='"),
+    Some("'+'"),
+    Some("'-'"),
+    Some("'*'"),
+    Some("'/'"),
+    Some("'%'"),
+    Some("'('"),
+    Some("')'"),
+    Some("','"),
+    Some("'as'"),
+    None,
+    None,
+    Some("'}'"),
+    None,
+    Some("'.'"),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some("'endif'"),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some("'{'"),
+    None,
+    Some("'string'"),
+    Some("'number'"),
+    Some("'bool'"),
+];
+pub const _SYMBOLIC_NAMES: [Option<&'static str>; 82] = [
+    None,
+    Some("INDENT"),
+    Some("DEDENT"),
+    Some("BLANK_LINE_FOLLOWING_OPTION"),
+    Some("WS"),
+    Some("COMMENT"),
+    Some("NEWLINE"),
+    Some("ID"),
+    Some("BODY_START"),
+    Some("HEADER_DELIMITER"),
+    Some("HASHTAG"),
+    Some("REST_OF_LINE"),
+    Some("BODY_WS"),
+    Some("BODY_END"),
+    Some("SHORTCUT_ARROW"),
+    Some("COMMAND_START"),
+    Some("EXPRESSION_START"),
+    Some("ESCAPED_ANY"),
+    Some("TEXT_ESCAPE"),
+    Some("TEXT_COMMENT"),
+    Some("TEXT"),
+    Some("UNESCAPABLE_CHARACTER"),
+    Some("TEXT_COMMANDHASHTAG_WS"),
+    Some("TEXT_COMMANDHASHTAG_COMMENT"),
+    Some("TEXT_COMMANDHASHTAG_ERROR"),
+    Some("HASHTAG_WS"),
+    Some("HASHTAG_TEXT"),
+    Some("EXPR_WS"),
+    Some("KEYWORD_TRUE"),
+    Some("KEYWORD_FALSE"),
+    Some("KEYWORD_NULL"),
+    Some("OPERATOR_ASSIGNMENT"),
+    Some("OPERATOR_LOGICAL_LESS_THAN_EQUALS"),
+    Some("OPERATOR_LOGICAL_GREATER_THAN_EQUALS"),
+    Some("OPERATOR_LOGICAL_EQUALS"),
+    Some("OPERATOR_LOGICAL_LESS"),
+    Some("OPERATOR_LOGICAL_GREATER"),
+    Some("OPERATOR_LOGICAL_NOT_EQUALS"),
+    Some("OPERATOR_LOGICAL_AND"),
+    Some("OPERATOR_LOGICAL_OR"),
+    Some("OPERATOR_LOGICAL_XOR"),
+    Some("OPERATOR_LOGICAL_NOT"),
+    Some("OPERATOR_MATHS_ADDITION_EQUALS"),
+    Some("OPERATOR_MATHS_SUBTRACTION_EQUALS"),
+    Some("OPERATOR_MATHS_MULTIPLICATION_EQUALS"),
+    Some("OPERATOR_MATHS_MODULUS_EQUALS"),
+    Some("OPERATOR_MATHS_DIVISION_EQUALS"),
+    Some("OPERATOR_MATHS_ADDITION"),
+    Some("OPERATOR_MATHS_SUBTRACTION"),
+    Some("OPERATOR_MATHS_MULTIPLICATION"),
+    Some("OPERATOR_MATHS_DIVISION"),
+    Some("OPERATOR_MATHS_MODULUS"),
+    Some("LPAREN"),
+    Some("RPAREN"),
+    Some("COMMA"),
+    Some("EXPRESSION_AS"),
+    Some("STRING"),
+    Some("FUNC_ID"),
+    Some("EXPRESSION_END"),
+    Some("VAR_ID"),
+    Some("DOT"),
+    Some("NUMBER"),
+    Some("COMMAND_WS"),
+    Some("COMMAND_IF"),
+    Some("COMMAND_ELSEIF"),
+    Some("COMMAND_ELSE"),
+    Some("COMMAND_SET"),
+    Some("COMMAND_ENDIF"),
+    Some("COMMAND_CALL"),
+    Some("COMMAND_DECLARE"),
+    Some("COMMAND_JUMP"),
+    Some("COMMAND_ENUM"),
+    Some("COMMAND_CASE"),
+    Some("COMMAND_ENDENUM"),
+    Some("COMMAND_LOCAL"),
+    Some("COMMAND_END"),
+    Some("COMMAND_TEXT_END"),
+    Some("COMMAND_EXPRESSION_START"),
+    Some("COMMAND_TEXT"),
+    Some("TYPE_STRING"),
+    Some("TYPE_NUMBER"),
+    Some("TYPE_BOOL"),
+];
+lazy_static! {
+    static ref _shared_context_cache: Arc<PredictionContextCache> =
+        Arc::new(PredictionContextCache::new());
+    static ref VOCABULARY: Box<dyn Vocabulary> = Box::new(VocabularyImpl::new(
+        _LITERAL_NAMES.iter(),
+        _SYMBOLIC_NAMES.iter(),
+        None
+    ));
+}
 
-
-	pub const _LITERAL_NAMES: [Option<&'static str>;82] = [
-		None, None, None, None, None, None, None, None, Some("'---'"), None, Some("'#'"), 
-		None, None, Some("'==='"), Some("'->'"), Some("'<<'"), None, None, Some("'\\'"), 
-		None, None, None, None, None, None, None, None, None, Some("'true'"), 
-		Some("'false'"), Some("'null'"), None, None, None, None, None, None, None, 
-		None, None, None, None, Some("'+='"), Some("'-='"), Some("'*='"), Some("'%='"), 
-		Some("'/='"), Some("'+'"), Some("'-'"), Some("'*'"), Some("'/'"), Some("'%'"), 
-		Some("'('"), Some("')'"), Some("','"), Some("'as'"), None, None, Some("'}'"), 
-		None, Some("'.'"), None, None, None, None, None, None, Some("'endif'"), 
-		None, None, None, None, None, None, None, None, None, Some("'{'"), None, 
-		Some("'string'"), Some("'number'"), Some("'bool'")
-	];
-	pub const _SYMBOLIC_NAMES: [Option<&'static str>;82]  = [
-		None, Some("INDENT"), Some("DEDENT"), Some("BLANK_LINE_FOLLOWING_OPTION"), 
-		Some("WS"), Some("COMMENT"), Some("NEWLINE"), Some("ID"), Some("BODY_START"), 
-		Some("HEADER_DELIMITER"), Some("HASHTAG"), Some("REST_OF_LINE"), Some("BODY_WS"), 
-		Some("BODY_END"), Some("SHORTCUT_ARROW"), Some("COMMAND_START"), Some("EXPRESSION_START"), 
-		Some("ESCAPED_ANY"), Some("TEXT_ESCAPE"), Some("TEXT_COMMENT"), Some("TEXT"), 
-		Some("UNESCAPABLE_CHARACTER"), Some("TEXT_COMMANDHASHTAG_WS"), Some("TEXT_COMMANDHASHTAG_COMMENT"), 
-		Some("TEXT_COMMANDHASHTAG_ERROR"), Some("HASHTAG_WS"), Some("HASHTAG_TEXT"), 
-		Some("EXPR_WS"), Some("KEYWORD_TRUE"), Some("KEYWORD_FALSE"), Some("KEYWORD_NULL"), 
-		Some("OPERATOR_ASSIGNMENT"), Some("OPERATOR_LOGICAL_LESS_THAN_EQUALS"), 
-		Some("OPERATOR_LOGICAL_GREATER_THAN_EQUALS"), Some("OPERATOR_LOGICAL_EQUALS"), 
-		Some("OPERATOR_LOGICAL_LESS"), Some("OPERATOR_LOGICAL_GREATER"), Some("OPERATOR_LOGICAL_NOT_EQUALS"), 
-		Some("OPERATOR_LOGICAL_AND"), Some("OPERATOR_LOGICAL_OR"), Some("OPERATOR_LOGICAL_XOR"), 
-		Some("OPERATOR_LOGICAL_NOT"), Some("OPERATOR_MATHS_ADDITION_EQUALS"), 
-		Some("OPERATOR_MATHS_SUBTRACTION_EQUALS"), Some("OPERATOR_MATHS_MULTIPLICATION_EQUALS"), 
-		Some("OPERATOR_MATHS_MODULUS_EQUALS"), Some("OPERATOR_MATHS_DIVISION_EQUALS"), 
-		Some("OPERATOR_MATHS_ADDITION"), Some("OPERATOR_MATHS_SUBTRACTION"), Some("OPERATOR_MATHS_MULTIPLICATION"), 
-		Some("OPERATOR_MATHS_DIVISION"), Some("OPERATOR_MATHS_MODULUS"), Some("LPAREN"), 
-		Some("RPAREN"), Some("COMMA"), Some("EXPRESSION_AS"), Some("STRING"), 
-		Some("FUNC_ID"), Some("EXPRESSION_END"), Some("VAR_ID"), Some("DOT"), 
-		Some("NUMBER"), Some("COMMAND_WS"), Some("COMMAND_IF"), Some("COMMAND_ELSEIF"), 
-		Some("COMMAND_ELSE"), Some("COMMAND_SET"), Some("COMMAND_ENDIF"), Some("COMMAND_CALL"), 
-		Some("COMMAND_DECLARE"), Some("COMMAND_JUMP"), Some("COMMAND_ENUM"), Some("COMMAND_CASE"), 
-		Some("COMMAND_ENDENUM"), Some("COMMAND_LOCAL"), Some("COMMAND_END"), Some("COMMAND_TEXT_END"), 
-		Some("COMMAND_EXPRESSION_START"), Some("COMMAND_TEXT"), Some("TYPE_STRING"), 
-		Some("TYPE_NUMBER"), Some("TYPE_BOOL")
-	];
-	lazy_static!{
-	    static ref _shared_context_cache: Arc<PredictionContextCache> = Arc::new(PredictionContextCache::new());
-		static ref VOCABULARY: Box<dyn Vocabulary> = Box::new(VocabularyImpl::new(_LITERAL_NAMES.iter(), _SYMBOLIC_NAMES.iter(), None));
-	}
-
-
-pub type LexerContext<'input> = BaseRuleContext<'input,EmptyCustomRuleContext<'input,LocalTokenFactory<'input> >>;
+pub type LexerContext<'input> =
+    BaseRuleContext<'input, EmptyCustomRuleContext<'input, LocalTokenFactory<'input>>>;
 pub type LocalTokenFactory<'input> = CommonTokenFactory;
 
-type From<'a> = <LocalTokenFactory<'a> as TokenFactory<'a> >::From;
+type From<'a> = <LocalTokenFactory<'a> as TokenFactory<'a>>::From;
 
-pub struct YarnSpinnerLexer<'input, Input:CharStream<From<'input> >> {
-	base: BaseLexer<'input,YarnSpinnerLexerActions,Input,LocalTokenFactory<'input>>,
+pub struct YarnSpinnerLexer<'input, Input: CharStream<From<'input>>> {
+    base: BaseLexer<'input, YarnSpinnerLexerActions, Input, LocalTokenFactory<'input>>,
 }
 
 antlr_rust::tid! { impl<'input,Input> TidAble<'input> for YarnSpinnerLexer<'input,Input> where Input:CharStream<From<'input> > }
 
-impl<'input, Input:CharStream<From<'input> >> Deref for YarnSpinnerLexer<'input,Input>{
-	type Target = BaseLexer<'input,YarnSpinnerLexerActions,Input,LocalTokenFactory<'input>>;
+impl<'input, Input: CharStream<From<'input>>> Deref for YarnSpinnerLexer<'input, Input> {
+    type Target = BaseLexer<'input, YarnSpinnerLexerActions, Input, LocalTokenFactory<'input>>;
 
-	fn deref(&self) -> &Self::Target {
-		&self.base
-	}
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
 }
 
-impl<'input, Input:CharStream<From<'input> >> DerefMut for YarnSpinnerLexer<'input,Input>{
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.base
-	}
+impl<'input, Input: CharStream<From<'input>>> DerefMut for YarnSpinnerLexer<'input, Input> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
 }
 
-
-impl<'input, Input:CharStream<From<'input> >> YarnSpinnerLexer<'input,Input>{
+impl<'input, Input: CharStream<From<'input>>> YarnSpinnerLexer<'input, Input> {
     fn get_rule_names(&self) -> &'static [&'static str] {
         &ruleNames
     }
@@ -250,50 +469,60 @@ impl<'input, Input:CharStream<From<'input> >> YarnSpinnerLexer<'input,Input>{
         "YarnSpinnerLexer.g4"
     }
 
-	pub fn new_with_token_factory(input: Input, tf: &'input LocalTokenFactory<'input>) -> Self {
-		antlr_rust::recognizer::check_version("0","3");
-    	Self {
-			base: BaseLexer::new_base_lexer(
-				input,
-				LexerATNSimulator::new_lexer_atnsimulator(
-					_ATN.clone(),
-					_decision_to_DFA.clone(),
-					_shared_context_cache.clone(),
-				),
-				YarnSpinnerLexerActions{},
-				tf
-			)
-	    }
-	}
+    pub fn new_with_token_factory(input: Input, tf: &'input LocalTokenFactory<'input>) -> Self {
+        antlr_rust::recognizer::check_version("0", "3");
+        Self {
+            base: BaseLexer::new_base_lexer(
+                input,
+                LexerATNSimulator::new_lexer_atnsimulator(
+                    _ATN.clone(),
+                    _decision_to_DFA.clone(),
+                    _shared_context_cache.clone(),
+                ),
+                YarnSpinnerLexerActions {},
+                tf,
+            ),
+        }
+    }
 }
 
-impl<'input, Input:CharStream<From<'input> >> YarnSpinnerLexer<'input,Input> where &'input LocalTokenFactory<'input>:Default{
-	pub fn new(input: Input) -> Self{
-		YarnSpinnerLexer::new_with_token_factory(input, <&LocalTokenFactory<'input> as Default>::default())
-	}
+impl<'input, Input: CharStream<From<'input>>> YarnSpinnerLexer<'input, Input>
+where
+    &'input LocalTokenFactory<'input>: Default,
+{
+    pub fn new(input: Input) -> Self {
+        YarnSpinnerLexer::new_with_token_factory(
+            input,
+            <&LocalTokenFactory<'input> as Default>::default(),
+        )
+    }
 }
 
-pub struct YarnSpinnerLexerActions {
+pub struct YarnSpinnerLexerActions {}
+
+impl YarnSpinnerLexerActions {}
+
+impl<'input, Input: CharStream<From<'input>>>
+    Actions<'input, BaseLexer<'input, YarnSpinnerLexerActions, Input, LocalTokenFactory<'input>>>
+    for YarnSpinnerLexerActions
+{
 }
 
-impl YarnSpinnerLexerActions{
+impl<'input, Input: CharStream<From<'input>>> YarnSpinnerLexer<'input, Input> {}
+
+impl<'input, Input: CharStream<From<'input>>>
+    LexerRecog<'input, BaseLexer<'input, YarnSpinnerLexerActions, Input, LocalTokenFactory<'input>>>
+    for YarnSpinnerLexerActions
+{
+}
+impl<'input> TokenAware<'input> for YarnSpinnerLexerActions {
+    type TF = LocalTokenFactory<'input>;
 }
 
-impl<'input, Input:CharStream<From<'input> >> Actions<'input,BaseLexer<'input,YarnSpinnerLexerActions,Input,LocalTokenFactory<'input>>> for YarnSpinnerLexerActions{
-	}
-
-	impl<'input, Input:CharStream<From<'input> >> YarnSpinnerLexer<'input,Input>{
-
-}
-
-impl<'input, Input:CharStream<From<'input> >> LexerRecog<'input,BaseLexer<'input,YarnSpinnerLexerActions,Input,LocalTokenFactory<'input>>> for YarnSpinnerLexerActions{
-}
-impl<'input> TokenAware<'input> for YarnSpinnerLexerActions{
-	type TF = LocalTokenFactory<'input>;
-}
-
-impl<'input, Input:CharStream<From<'input> >> TokenSource<'input> for YarnSpinnerLexer<'input,Input>{
-	type TF = LocalTokenFactory<'input>;
+impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
+    for YarnSpinnerLexer<'input, Input>
+{
+    type TF = LocalTokenFactory<'input>;
 
     fn next_token(&mut self) -> <Self::TF as TokenFactory<'input>>::Tok {
         self.base.next_token()
@@ -311,38 +540,30 @@ impl<'input, Input:CharStream<From<'input> >> TokenSource<'input> for YarnSpinne
         self.base.get_input_stream()
     }
 
-	fn get_source_name(&self) -> String {
-		self.base.get_source_name()
-	}
+    fn get_source_name(&self) -> String {
+        self.base.get_source_name()
+    }
 
     fn get_token_factory(&self) -> &'input Self::TF {
         self.base.get_token_factory()
     }
 }
 
+lazy_static! {
+    static ref _ATN: Arc<ATN> =
+        Arc::new(ATNDeserializer::new(None).deserialize(_serializedATN.chars()));
+    static ref _decision_to_DFA: Arc<Vec<antlr_rust::RwLock<DFA>>> = {
+        let mut dfa = Vec::new();
+        let size = _ATN.decision_to_state.len();
+        for i in 0..size {
+            dfa.push(DFA::new(_ATN.clone(), _ATN.get_decision_state(i), i as isize).into())
+        }
+        Arc::new(dfa)
+    };
+}
 
-
-	lazy_static! {
-	    static ref _ATN: Arc<ATN> =
-	        Arc::new(ATNDeserializer::new(None).deserialize(_serializedATN.chars()));
-	    static ref _decision_to_DFA: Arc<Vec<antlr_rust::RwLock<DFA>>> = {
-	        let mut dfa = Vec::new();
-	        let size = _ATN.decision_to_state.len();
-	        for i in 0..size {
-	            dfa.push(DFA::new(
-	                _ATN.clone(),
-	                _ATN.get_decision_state(i),
-	                i as isize,
-	            ).into())
-	        }
-	        Arc::new(dfa)
-	    };
-	}
-
-
-
-	const _serializedATN:&'static str =
-		"\x03\u{608b}\u{a72a}\u{8133}\u{b9ed}\u{417c}\u{3be7}\u{7786}\u{5964}\x02\
+const _serializedATN: &'static str =
+    "\x03\u{608b}\u{a72a}\u{8133}\u{b9ed}\u{417c}\u{3be7}\u{7786}\u{5964}\x02\
 		\x53\u{328}\x08\x01\x08\x01\x08\x01\x08\x01\x08\x01\x08\x01\x08\x01\x08\
 		\x01\x08\x01\x08\x01\x08\x01\x08\x01\x04\x02\x09\x02\x04\x03\x09\x03\x04\
 		\x04\x09\x04\x04\x05\x09\x05\x04\x06\x09\x06\x04\x07\x09\x07\x04\x08\x09\
