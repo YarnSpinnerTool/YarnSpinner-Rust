@@ -3,7 +3,7 @@
 
 use crate::prelude::Value;
 use rusty_yarn_spinner_macros::all_tuples;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{format, Debug, Formatter};
 use std::marker::PhantomData;
 
 pub trait YarnFnWithMarker<Marker> {
@@ -11,9 +11,15 @@ pub trait YarnFnWithMarker<Marker> {
     fn call(&self, input: Vec<Value>) -> Self::Out;
 }
 
-pub trait YarnFn {
+pub trait YarnFn: Debug {
     fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
     fn clone_box(&self) -> Box<dyn YarnFn>;
+}
+
+impl Clone for Box<dyn YarnFn> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
 
 impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
@@ -69,15 +75,15 @@ where
     }
 }
 
-impl Debug for dyn YarnFn {
+impl<Marker, F> Debug for YarnFnWrapper<Marker, F>
+where
+    F: YarnFnWithMarker<Marker>,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("YarnFn").finish()
-    }
-}
-
-impl Clone for Box<dyn YarnFn> {
-    fn clone(&self) -> Self {
-        self.clone_box()
+        let params = std::any::type_name::<Marker>();
+        let function_path = std::any::type_name::<F>();
+        let debug_message = format!("{function_path}: YarnFn{params} -> Box<dyn IntoValue>");
+        f.debug_struct(&debug_message).finish()
     }
 }
 
