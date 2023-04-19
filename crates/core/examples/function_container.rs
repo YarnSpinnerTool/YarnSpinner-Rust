@@ -1,26 +1,41 @@
 use rusty_yarn_spinner_core::prelude::*;
 use std::collections::HashMap;
+use std::convert::TryInto;
+use std::marker::PhantomData;
 
 fn main() {
     let mut container = FunctionContainer::default();
     container.add("foo", || true);
+    container.add("foo", |a: f32| a);
 }
 
 trait ContainedFunction {
     type Out: Into<Value>;
-    fn call(&self, input: &[Value]) -> Self::Out;
+    fn call(&self, input: Vec<Value>) -> Self::Out;
+}
+
+trait ContainedFunctionWithMarker<Marker> {
+    type Out: Into<Value>;
+    fn call(&self, input: Vec<Value>) -> Self::Out;
 }
 
 trait BoxedContainedFunction {
-    fn call(&self, input: &[Value]) -> Box<dyn IntoValue>;
+    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
 }
 
-impl<F> BoxedContainedFunction for F
+trait BoxedContainedFunctionWithMarker<Marker> {
+    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
+}
+
+impl<Marker, F> BoxedContainedFunction for FunctionWrapper<Marker, F>
 where
-    F: BoxedContainedFunctionWithMarker<()>,
+    Marker: 'static,
+    F: ContainedFunctionWithMarker<Marker> + 'static,
+    F::Out: Into<Value> + 'static,
 {
-    fn call(&self, input: &[Value]) -> Box<dyn IntoValue> {
-        self.call(input)
+    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue> {
+        let output = self.function.call(input);
+        Box::new(output)
     }
 }
 
@@ -37,19 +52,50 @@ where
     }
 }
 
-trait BoxedContainedFunctionWithMarker<Marker> {
-    fn call(&self, input: &[Value]) -> Box<dyn IntoValue>;
+struct FunctionWrapper<Marker, F>
+where
+    F: ContainedFunctionWithMarker<Marker>,
+{
+    function: F,
+
+    // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
+    _marker: PhantomData<fn() -> Marker>,
 }
 
-impl<F, I, Marker> BoxedContainedFunctionWithMarker<Marker> for F
+impl<F, I> ContainedFunctionWithMarker<()> for F
 where
     F: Fn() -> I,
     I: Into<Value> + 'static,
 {
-    fn call(&self, input: &[Value]) -> Box<dyn IntoValue + 'static> {
-        if let [] = &input[..] {
-            let output = self();
-            Box::new(output)
+    type Out = I;
+    #[allow(non_snake_case)]
+    fn call(&self, input: Vec<Value>) -> Self::Out {
+        if let [] = input[..] {
+            let input = ();
+            let () = input;
+            self()
+        } else {
+            panic!("Wrong number of arguments")
+        }
+    }
+}
+
+impl<F, I, T0> ContainedFunctionWithMarker<(T0,)> for F
+where
+    F: Fn(T0) -> I,
+    I: Into<Value> + 'static,
+    T0: TryFrom<Value> + 'static,
+{
+    type Out = I;
+    #[allow(non_snake_case)]
+    fn call(&self, input: Vec<Value>) -> Self::Out {
+        if let [T0] = &input[..] {
+            let input = (T0
+                .clone()
+                .try_into()
+                .unwrap_or_else(|_| panic!("Failed to convert")),);
+            let (T0,) = input;
+            self(T0)
         } else {
             panic!("Wrong number of arguments")
         }
@@ -62,11 +108,15 @@ struct FunctionContainer {
 }
 
 impl FunctionContainer {
-    fn add<F, I>(&mut self, name: &str, function: F)
+    fn add<Marker, F>(&mut self, name: &str, function: F)
     where
-        F: Fn() -> I + BoxedContainedFunction + 'static,
-        I: Into<Value>,
+        Marker: 'static,
+        F: ContainedFunctionWithMarker<Marker> + 'static,
     {
-        self.functions.insert(name.to_string(), Box::new(function));
+        let wrapped = FunctionWrapper {
+            function,
+            _marker: PhantomData,
+        };
+        self.functions.insert(name.to_string(), Box::new(wrapped));
     }
 }
