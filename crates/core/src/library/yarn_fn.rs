@@ -1,6 +1,8 @@
 //! Inspired by how Bevy stores [`FnSystem`](https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/struct.FnSystem.html)s.
+//! This is all here just to emulate the `Dictionary<string, Delegate>` used in Yarn Spinner's `Library` class.
 
 use crate::prelude::Value;
+use rusty_yarn_spinner_macros::all_tuples;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
@@ -67,46 +69,6 @@ where
     }
 }
 
-impl<F, I> YarnFnWithMarker<()> for F
-where
-    F: Fn() -> I,
-    I: Into<Value> + 'static,
-{
-    type Out = I;
-    #[allow(non_snake_case)]
-    fn call(&self, input: Vec<Value>) -> Self::Out {
-        if let [] = input[..] {
-            let input = ();
-            let () = input;
-            self()
-        } else {
-            panic!("Wrong number of arguments")
-        }
-    }
-}
-
-impl<F, I, T0> YarnFnWithMarker<(T0,)> for F
-where
-    F: Fn(T0) -> I,
-    I: Into<Value> + 'static,
-    T0: TryFrom<Value> + 'static,
-{
-    type Out = I;
-    #[allow(non_snake_case)]
-    fn call(&self, input: Vec<Value>) -> Self::Out {
-        if let [T0] = &input[..] {
-            let input = (T0
-                .clone()
-                .try_into()
-                .unwrap_or_else(|_| panic!("Failed to convert")),);
-            let (T0,) = input;
-            self(T0)
-        } else {
-            panic!("Wrong number of arguments")
-        }
-    }
-}
-
 impl Debug for dyn YarnFn {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("YarnFn").finish()
@@ -118,3 +80,35 @@ impl Clone for Box<dyn YarnFn> {
         self.clone_box()
     }
 }
+
+/// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
+macro_rules! impl_system_param_tuple {
+    ($($param: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<F, I, $($param,)*> YarnFnWithMarker<($($param,)*)> for F
+            where
+                F: Fn($($param,)*) -> I,
+                I: Into<Value> + 'static,
+                $($param: TryFrom<Value> + 'static,)*
+            {
+                type Out = I;
+                #[allow(non_snake_case)]
+                fn call(&self, input: Vec<Value>) -> Self::Out {
+                    if let [$($param,)*] = &input[..] {
+                        let input = (
+                            $($param
+                            .clone()
+                            .try_into()
+                            .unwrap_or_else(|_| panic!("Failed to convert")),)*
+                        );
+                        let ($($param,)*) = input;
+                        self($($param,)*)
+                    } else {
+                        panic!("Wrong number of arguments")
+                    }
+                }
+            }
+    };
+}
+
+all_tuples!(impl_system_param_tuple, 0, 16, P);

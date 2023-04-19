@@ -52,8 +52,7 @@ pub struct CompilationOutput {
     ///
     /// The keys of this dictionary are the file names (as
     /// indicated by the [`CompilationJob.File.FileName`] property
-    /// of the [`CompilationJob`]'s <see
-    /// cref="CompilationJob.Files`] collection), and the values are the
+    /// of the [`CompilationJob`]'s [`CompilationJob.Files`] collection), and the values are the
     /// file tags associated with that file.
     pub file_tags: HashMap<String, Vec<String>>,
 
