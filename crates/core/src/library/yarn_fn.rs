@@ -1,14 +1,15 @@
 //! Inspired by <https://docs.rs/bevy/latest/bevy/ecs/prelude/trait.SystemParamFunction.html> and <https://docs.rs/bevy_app/latest/bevy_app/struct.App.html>
 
+use crate::prelude::Value;
 use rusty_yarn_spinner_macros::all_tuples;
 use std::any::TypeId;
 use std::borrow::Cow;
 use std::marker::PhantomData;
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/type.BoxedSystem.html>
-pub type BoxedYarnFn<Out = ()> = Box<dyn YarnFnSystem<Out = Out>>;
+pub type BoxedYarnFn<Out = Value> = Box<dyn YarnFnSystem<Out = Out>>;
 
-pub struct ProvidedValues {}
+pub struct ProvidedValues(Vec<Value>);
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.System.html>
 pub trait YarnFnSystem {
@@ -43,7 +44,7 @@ where
     }
 
     #[inline]
-    unsafe fn run(&mut self, provided_values: &ProvidedValues) -> Self::Out {
+    fn run(&mut self, provided_values: &ProvidedValues) -> Self::Out {
         let params = F::Param::get_param(&self.system_meta, provided_values);
         self.func.run(params)
     }
