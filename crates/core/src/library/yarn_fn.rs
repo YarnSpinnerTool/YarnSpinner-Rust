@@ -18,7 +18,7 @@ pub trait YarnFnSystem {
     fn type_id(&self) -> TypeId;
     fn is_send(&self) -> bool;
 
-    fn run(&mut self, provided_values: &ProvidedValues) -> Value;
+    fn run(&self, provided_values: &ProvidedValues) -> Value;
 }
 
 impl<Marker, F> YarnFnSystem for YarnFnContainer<Marker, F>
@@ -42,47 +42,35 @@ where
     }
 
     #[inline]
-    fn run(&mut self, provided_values: &ProvidedValues) -> Value {
+    fn run(&self, provided_values: &ProvidedValues) -> Value {
         let params = F::Param::get_param(&self.system_meta, provided_values);
         self.func.run(params)
     }
 }
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.SystemParamFunction.html>
-pub trait YarnFn<Marker>: Send + Sync + 'static {
-    type Param: YarnFnParam;
+pub trait YarnFn<Item>: Send + Sync + 'static {
+    type Param: YarnFnParam<Item>;
 
-    fn run(&mut self, param_value: YarnFnParamItem<Self::Param>) -> Value;
+    fn run(&self, param_value: Item) -> Value;
 }
 
-/// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/type.SystemParamItem.html>
-pub type YarnFnParamItem<P> = <P as YarnFnParam>::Item;
-
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.SystemParam.html>
-pub trait YarnFnParam {
-    type Item: YarnFnParam;
-
-    fn get_param(system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Self::Item;
+pub trait YarnFnParam<Item> {
+    fn get_param(system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Item;
 }
 
 macro_rules! impl_yarn_fn_param_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<T, $($param: YarnFnParam),*> YarnFnParam for T
+        impl<P, $($param),*> YarnFnParam<($($param,)*)> for P
         where
             $($param: TryInto<Value>),*
         {
-            type Item = ($($param::Item,)*);
             #[inline]
-             fn get_param(_system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Self::Item {
-                let casted_values: Vec<_> = provided_values
-                    .0
-                    .iter()
-                    .map(|value| {
-                        value.try_into().expect("Failed to cast provided value to expected type") // TODO: Read error
-                    }).collect();
-                if let [$($param),*] = casted_values[..] {
-                    ($($param(),)*)
+            fn get_param(_system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> ($($param,)*) {
+                if let [$($param),*] = &provided_values[..] {
+                    ($($param.try_into().expect("Failed to cast provided value to expected type"),)*)
                 } else {
                     panic!("Expected {} parameters, but got {}", stringify!($($param),*), provided_values.0.len()) // TODO: Add more info like name of function
                 }
@@ -144,15 +132,14 @@ impl YarnFnMeta {
 macro_rules! impl_system_function {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<Func: Send + Sync + 'static, $($param: YarnFnParam),*> YarnFn<fn($($param,)*) -> Value> for Func
+        impl<Func: Send + Sync + 'static, $($param),*> YarnFn<fn($($param,)*) -> Value> for Func
         where
-        for <'a> &'a mut Func:
-                Fn($($param),*) -> Value +
-                Fn($(YarnFnParamItem<$param>),*) -> Value,
+        for <'a> &'a Func:
+                Fn($($param),*) -> Value
         {
             type Param = ($($param,)*);
             #[inline]
-            fn run(&mut self, param_value: YarnFnParamItem< ($($param,)*)>) -> Value {
+            fn run(&self, param_value: ($($param,)*)) -> Value {
                 // Yes, this is strange, but `rustc` fails to compile this impl
                 // without using this function. It fails to recognise that `func`
                 // is a function, potentially because of the multiple impls of `Fn`
@@ -172,4 +159,4 @@ macro_rules! impl_system_function {
 
 // Note that we rely on the highest impl to be <= the highest order of the tuple impls
 // of `SystemParam` created.
-all_tuples!(impl_system_function, 0, 16, F);
+all_tuples!(impl_system_function, 0, 1, F);
