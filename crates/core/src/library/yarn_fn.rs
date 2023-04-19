@@ -82,7 +82,7 @@ impl Clone for Box<dyn YarnFn> {
 }
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
-macro_rules! impl_system_param_tuple {
+macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
         impl<F, I, $($param,)*> YarnFnWithMarker<($($param,)*)> for F
@@ -111,4 +111,4 @@ macro_rules! impl_system_param_tuple {
     };
 }
 
-all_tuples!(impl_system_param_tuple, 0, 16, P);
+all_tuples!(impl_yarn_fn_tuple, 0, 16, P);
