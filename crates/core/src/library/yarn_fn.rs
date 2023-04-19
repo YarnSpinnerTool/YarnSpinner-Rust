@@ -61,16 +61,36 @@ pub type YarnFnParamItem<P> = <P as YarnFnParam>::Item;
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.SystemParam.html>
 pub trait YarnFnParam {
     type Item: YarnFnParam;
+
     fn get_param(system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Self::Item;
 }
 
-impl<T> YarnFnParam for T {
-    type Item = T;
-
-    fn get_param(system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Self::Item {
-        todo!()
-    }
+macro_rules! impl_yarn_fn_param_tuple {
+    ($($param: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<T, $($param: YarnFnParam),*> YarnFnParam for T
+        where
+            $($param: TryInto<Value>),*
+        {
+            type Item = ($($param::Item,)*);
+            #[inline]
+             fn get_param(_system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Self::Item {
+                let casted_values: Vec<_> = provided_values
+                    .0
+                    .iter()
+                    .map(|value| {
+                        value.try_into().expect("Failed to cast provided value to expected type") // TODO: Read error
+                    }).collect();
+                if let [$($param),*] = casted_values[..] {
+                    ($($param(),)*)
+                } else {
+                    panic!("Expected {} parameters, but got {}", stringify!($($param),*), provided_values.0.len()) // TODO: Add more info like name of function
+                }
+            }
+        }
+    };
 }
+all_tuples!(impl_yarn_fn_param_tuple, 0, 1, T);
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/struct.FunctionSystem.html>
 pub struct YarnFnContainer<Marker, F>
@@ -127,18 +147,18 @@ macro_rules! impl_system_function {
         impl<Func: Send + Sync + 'static, $($param: YarnFnParam),*> YarnFn<fn($($param,)*) -> Value> for Func
         where
         for <'a> &'a mut Func:
-                FnMut($($param),*) -> Value +
-                FnMut($(YarnFnParamItem<$param>),*) -> Value,
+                Fn($($param),*) -> Value +
+                Fn($(YarnFnParamItem<$param>),*) -> Value,
         {
             type Param = ($($param,)*);
             #[inline]
             fn run(&mut self, param_value: YarnFnParamItem< ($($param,)*)>) -> Value {
                 // Yes, this is strange, but `rustc` fails to compile this impl
                 // without using this function. It fails to recognise that `func`
-                // is a function, potentially because of the multiple impls of `FnMut`
+                // is a function, potentially because of the multiple impls of `Fn`
                 #[allow(clippy::too_many_arguments)]
                 fn call_inner<$($param,)*>(
-                    mut f: impl FnMut($($param,)*)->Value,
+                    mut f: impl Fn($($param,)*)->Value,
                     $($param: $param,)*
                 )->Value{
                     f($($param,)*)
