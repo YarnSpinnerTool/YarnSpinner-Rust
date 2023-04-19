@@ -87,4 +87,38 @@ mod tests {
         assert_eq!(result1.as_value(), Value::Bool(true));
         assert_eq!(result2.as_value(), Value::Number(1.0));
     }
+
+    #[test]
+    fn can_call_multiple_fns_with_many_params() {
+        let mut library = Library::default();
+        library.add("test1", || true);
+        library.add("test2", |a: f32, b: f32| a + b);
+        library.add("test3", |a: f32, b: f32, c: f32| a + b * c);
+        library.add(
+            "test4",
+            |a: String, b: String, c: String, d: bool, e: f32| format!("{}{}{}{}{}", a, b, c, d, e),
+        );
+        let function1 = library.get("test1").unwrap();
+        let function2 = library.get("test2").unwrap();
+        let function3 = library.get("test3").unwrap();
+        let function4 = library.get("test4").unwrap();
+        let result1 = function1.call(vec![]);
+        let result2 = function2.call(vec![Value::Number(1.0), Value::Number(2.0)]);
+        let result3 = function3.call(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+            Value::Number(3.0),
+        ]);
+        let result4 = function4.call(vec![
+            Value::String("a".to_string()),
+            Value::String("b".to_string()),
+            Value::String("c".to_string()),
+            Value::Bool(true),
+            Value::Number(1.0),
+        ]);
+        assert_eq!(result1.as_value(), Value::Bool(true));
+        assert_eq!(result2.as_value(), Value::Number(3.0));
+        assert_eq!(result3.as_value(), Value::Number(7.0));
+        assert_eq!(result4.as_value(), Value::String("abc1".to_string()));
+    }
 }
