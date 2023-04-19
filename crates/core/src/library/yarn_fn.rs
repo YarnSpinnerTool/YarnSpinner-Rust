@@ -1,162 +1,109 @@
-//! Inspired by <https://docs.rs/bevy/latest/bevy/ecs/prelude/trait.SystemParamFunction.html> and <https://docs.rs/bevy_app/latest/bevy_app/struct.App.html>
+//! Inspired by how Bevy stores [`FnSystem`](https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/struct.FnSystem.html)s.
 
 use crate::prelude::Value;
-use rusty_yarn_spinner_macros::all_tuples;
-use std::any::TypeId;
-use std::borrow::Cow;
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
-/// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/type.BoxedSystem.html>
-pub type BoxedYarnFn = Box<dyn YarnFnSystem>;
-
-#[derive(Debug, Clone)]
-pub struct ProvidedValues(Vec<Value>);
-
-/// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.System.html>
-pub trait YarnFnSystem {
-    fn name(&self) -> Cow<'static, str>;
-    fn type_id(&self) -> TypeId;
-    fn is_send(&self) -> bool;
-
-    fn run(&self, provided_values: &ProvidedValues) -> Value;
+pub trait YarnFnWithMarker<Marker> {
+    type Out: Into<Value>;
+    fn call(&self, input: Vec<Value>) -> Self::Out;
 }
 
-impl<Marker, F> YarnFnSystem for YarnFnContainer<Marker, F>
+pub trait YarnFn {
+    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
+}
+
+impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static,
-    F: YarnFn<Marker>,
+    F: YarnFnWithMarker<Marker> + 'static,
+    F::Out: Into<Value> + 'static + Clone,
 {
-    #[inline]
-    fn name(&self) -> Cow<'static, str> {
-        self.system_meta.name.clone()
-    }
-
-    #[inline]
-    fn type_id(&self) -> TypeId {
-        TypeId::of::<F>()
-    }
-
-    #[inline]
-    fn is_send(&self) -> bool {
-        self.system_meta.is_send
-    }
-
-    #[inline]
-    fn run(&self, provided_values: &ProvidedValues) -> Value {
-        let params = F::Param::get_param(&self.system_meta, provided_values);
-        self.func.run(params)
+    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue> {
+        let output = self.function.call(input);
+        Box::new(output)
     }
 }
 
-/// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.SystemParamFunction.html>
-pub trait YarnFn<Item>: Send + Sync + 'static {
-    type Param: YarnFnParam<Item>;
-
-    fn run(&self, param_value: Item) -> Value;
+/// Necessary because [`Into`] requires `self` to be consumed and thus be [`Sized`], which in turn means no trait objects.
+pub trait IntoValue {
+    fn as_value(&self) -> Value;
 }
 
-/// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.SystemParam.html>
-pub trait YarnFnParam<Item> {
-    fn get_param(system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> Item;
-}
-
-macro_rules! impl_yarn_fn_param_tuple {
-    ($($param: ident),*) => {
-        #[allow(non_snake_case)]
-        impl<P, $($param),*> YarnFnParam<($($param,)*)> for P
-        where
-            $($param: TryInto<Value>),*
-        {
-            #[inline]
-            fn get_param(_system_meta: &YarnFnMeta, provided_values: &ProvidedValues) -> ($($param,)*) {
-                if let [$($param),*] = &provided_values[..] {
-                    ($($param.try_into().expect("Failed to cast provided value to expected type"),)*)
-                } else {
-                    panic!("Expected {} parameters, but got {}", stringify!($($param),*), provided_values.0.len()) // TODO: Add more info like name of function
-                }
-            }
-        }
-    };
-}
-all_tuples!(impl_yarn_fn_param_tuple, 0, 1, T);
-
-/// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/struct.FunctionSystem.html>
-pub struct YarnFnContainer<Marker, F>
+impl<T> IntoValue for T
 where
-    F: YarnFn<Marker>,
+    T: Into<Value> + Clone,
 {
-    func: F,
-    system_meta: YarnFnMeta,
-    // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
-    marker: PhantomData<fn() -> Marker>,
+    fn as_value(&self) -> Value {
+        self.clone().into()
+    }
 }
 
-/// Analogue to <https://docs.rs/bevy_ecs/latest/bevy_ecs/system/struct.SystemMeta.html>
 #[derive(Clone)]
-pub struct YarnFnMeta {
-    pub(crate) name: Cow<'static, str>,
-    // NOTE: this must be kept private. making a YarnFnMeta non-send is irreversible to prevent
-    // SystemParams from overriding each other
-    is_send: bool,
+pub struct YarnFnWrapper<Marker, F>
+where
+    F: YarnFnWithMarker<Marker>,
+{
+    function: F,
+
+    // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
+    _marker: PhantomData<fn() -> Marker>,
 }
 
-impl YarnFnMeta {
-    pub(crate) fn new<T>() -> Self {
+impl<Marker, F> YarnFnWrapper<Marker, F>
+where
+    F: YarnFnWithMarker<Marker>,
+{
+    pub fn new(function: F) -> Self {
         Self {
-            name: std::any::type_name::<T>().into(),
-            is_send: true,
+            function,
+            _marker: PhantomData,
         }
-    }
-    /// Returns the system's name
-    #[inline]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    /// Returns true if the system is [`Send`].
-    #[inline]
-    pub fn is_send(&self) -> bool {
-        self.is_send
-    }
-
-    /// Sets the system to be not [`Send`].
-    ///
-    /// This is irreversible.
-    #[inline]
-    pub fn set_non_send(&mut self) {
-        self.is_send = false;
     }
 }
 
-/// Taken from <https://docs.rs/bevy_ecs/0.10.1/src/bevy_ecs/system/function_system.rs.html#607>
-macro_rules! impl_system_function {
-    ($($param: ident),*) => {
-        #[allow(non_snake_case)]
-        impl<Func: Send + Sync + 'static, $($param),*> YarnFn<fn($($param,)*) -> Value> for Func
-        where
-        for <'a> &'a Func:
-                Fn($($param),*) -> Value
-        {
-            type Param = ($($param,)*);
-            #[inline]
-            fn run(&self, param_value: ($($param,)*)) -> Value {
-                // Yes, this is strange, but `rustc` fails to compile this impl
-                // without using this function. It fails to recognise that `func`
-                // is a function, potentially because of the multiple impls of `Fn`
-                #[allow(clippy::too_many_arguments)]
-                fn call_inner<$($param,)*>(
-                    mut f: impl Fn($($param,)*)->Value,
-                    $($param: $param,)*
-                )->Value{
-                    f($($param,)*)
-                }
-                let ($($param,)*) = param_value;
-                call_inner(self, $($param),*)
-            }
+impl<F, I> YarnFnWithMarker<()> for F
+where
+    F: Fn() -> I,
+    I: Into<Value> + 'static,
+{
+    type Out = I;
+    #[allow(non_snake_case)]
+    fn call(&self, input: Vec<Value>) -> Self::Out {
+        if let [] = input[..] {
+            let input = ();
+            let () = input;
+            self()
+        } else {
+            panic!("Wrong number of arguments")
         }
-    };
+    }
 }
 
-// Note that we rely on the highest impl to be <= the highest order of the tuple impls
-// of `SystemParam` created.
-all_tuples!(impl_system_function, 0, 1, F);
+impl<F, I, T0> YarnFnWithMarker<(T0,)> for F
+where
+    F: Fn(T0) -> I,
+    I: Into<Value> + 'static,
+    T0: TryFrom<Value> + 'static,
+{
+    type Out = I;
+    #[allow(non_snake_case)]
+    fn call(&self, input: Vec<Value>) -> Self::Out {
+        if let [T0] = &input[..] {
+            let input = (T0
+                .clone()
+                .try_into()
+                .unwrap_or_else(|_| panic!("Failed to convert")),);
+            let (T0,) = input;
+            self(T0)
+        } else {
+            panic!("Wrong number of arguments")
+        }
+    }
+}
+
+impl Debug for dyn YarnFn {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("YarnFn").finish()
+    }
+}

@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationJob.cs>
 
 use crate::output::Declaration;
+use rusty_yarn_spinner_core::prelude::Library;
 
 /// An object that contains Yarn source code to compile, and instructions on
 /// how to compile it.
