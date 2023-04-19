@@ -7,18 +7,18 @@ use std::borrow::Cow;
 use std::marker::PhantomData;
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/type.BoxedSystem.html>
-pub type BoxedYarnFn<Out = Value> = Box<dyn YarnFnSystem<Out = Out>>;
+pub type BoxedYarnFn = Box<dyn YarnFnSystem>;
 
+#[derive(Debug, Clone)]
 pub struct ProvidedValues(Vec<Value>);
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.System.html>
 pub trait YarnFnSystem {
-    type Out;
     fn name(&self) -> Cow<'static, str>;
     fn type_id(&self) -> TypeId;
     fn is_send(&self) -> bool;
 
-    fn run(&mut self, provided_values: &ProvidedValues) -> Self::Out;
+    fn run(&mut self, provided_values: &ProvidedValues) -> Value;
 }
 
 impl<Marker, F> YarnFnSystem for YarnFnContainer<Marker, F>
@@ -26,8 +26,6 @@ where
     Marker: 'static,
     F: YarnFn<Marker>,
 {
-    type Out = F::Out;
-
     #[inline]
     fn name(&self) -> Cow<'static, str> {
         self.system_meta.name.clone()
@@ -44,7 +42,7 @@ where
     }
 
     #[inline]
-    fn run(&mut self, provided_values: &ProvidedValues) -> Self::Out {
+    fn run(&mut self, provided_values: &ProvidedValues) -> Value {
         let params = F::Param::get_param(&self.system_meta, provided_values);
         self.func.run(params)
     }
@@ -53,9 +51,8 @@ where
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/trait.SystemParamFunction.html>
 pub trait YarnFn<Marker>: Send + Sync + 'static {
     type Param: YarnFnParam;
-    type Out;
 
-    fn run(&mut self, param_value: YarnFnParamItem<Self::Param>) -> Self::Out;
+    fn run(&mut self, param_value: YarnFnParamItem<Self::Param>) -> Value;
 }
 
 /// Analogue to <https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/type.SystemParamItem.html>
@@ -127,24 +124,23 @@ impl YarnFnMeta {
 macro_rules! impl_system_function {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<Out, Func: Send + Sync + 'static, $($param: YarnFnParam),*> YarnFn<fn($($param,)*) -> Out> for Func
+        impl<Func: Send + Sync + 'static, $($param: YarnFnParam),*> YarnFn<fn($($param,)*) -> Value> for Func
         where
         for <'a> &'a mut Func:
-                FnMut($($param),*) -> Out +
-                FnMut($(YarnFnParamItem<$param>),*) -> Out, Out: 'static
+                FnMut($($param),*) -> Value +
+                FnMut($(YarnFnParamItem<$param>),*) -> Value,
         {
-            type Out = Out;
             type Param = ($($param,)*);
             #[inline]
-            fn run(&mut self, param_value: YarnFnParamItem< ($($param,)*)>) -> Out {
+            fn run(&mut self, param_value: YarnFnParamItem< ($($param,)*)>) -> Value {
                 // Yes, this is strange, but `rustc` fails to compile this impl
                 // without using this function. It fails to recognise that `func`
                 // is a function, potentially because of the multiple impls of `FnMut`
                 #[allow(clippy::too_many_arguments)]
-                fn call_inner<Out, $($param,)*>(
-                    mut f: impl FnMut($($param,)*)->Out,
+                fn call_inner<$($param,)*>(
+                    mut f: impl FnMut($($param,)*)->Value,
                     $($param: $param,)*
-                )->Out{
+                )->Value{
                     f($($param,)*)
                 }
                 let ($($param,)*) = param_value;
