@@ -9,21 +9,12 @@ fn main() {
     container.add("foo", |a: f32| a);
 }
 
-trait ContainedFunction {
-    type Out: Into<Value>;
-    fn call(&self, input: Vec<Value>) -> Self::Out;
-}
-
 trait ContainedFunctionWithMarker<Marker> {
     type Out: Into<Value>;
     fn call(&self, input: Vec<Value>) -> Self::Out;
 }
 
 trait BoxedContainedFunction {
-    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
-}
-
-trait BoxedContainedFunctionWithMarker<Marker> {
     fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
 }
 
