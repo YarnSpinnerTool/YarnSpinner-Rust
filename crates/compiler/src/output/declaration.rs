@@ -1,3 +1,5 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Declaration.cs>
+
 /*
    [Serializable]
    public class Declaration
@@ -167,9 +169,9 @@ pub struct Declaration {
     /// If `false`, this declaration appears in the source code.
     pub is_implicit: bool,
 
-    /// The type of the variable, as represented by an object that
-    /// implements [`IType`].
-    pub r#type: Box<dyn IType>,
+    /// The type of the variable, as represented by an object found
+    /// in a variant of [`DeclarationType`].
+    pub r#type: DeclarationType, // TODO
 
     /// The range of text at which this declaration occurs.
     ///
@@ -179,6 +181,9 @@ pub struct Declaration {
     /// symbol.
     pub range: RangeInclusive<Position>,
 }
+
+#[derive(Debug, Clone)]
+pub enum DeclarationType {}
 
 #[derive(Debug, Clone)]
 pub enum DeclarationSource {

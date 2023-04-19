@@ -1,3 +1,5 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/DebugInfo.cs>
+
 use crate::output::Position;
 use std::collections::HashMap;
 

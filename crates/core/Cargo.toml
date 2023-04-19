@@ -1,0 +1,13 @@
+[package]
+name = "rusty-yarn-spinner-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+bytes = "1.4.0"
+prost = "0.11.9"
+rusty-yarn-spinner-macros = { path = "../macros" }
+
+[build-dependencies]
+prost-build = "0.11.9"

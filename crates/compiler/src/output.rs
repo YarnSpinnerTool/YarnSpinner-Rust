@@ -1,13 +1,12 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationResult.cs>
 //! Renamed to `CompilationOutput` because the term [`Result`] means something else in Rust.
 
-pub use crate::output::{debug_info::*, declaration::*, generated::*, string_info::*};
+pub use crate::output::{debug_info::*, declaration::*, string_info::*};
+use rusty_yarn_spinner_core::prelude::Program;
 use std::collections::HashMap;
-use std::ops::RangeInclusive;
 
 mod debug_info;
 mod declaration;
-mod generated;
 mod string_info;
 
 /// The result of a compilation.
