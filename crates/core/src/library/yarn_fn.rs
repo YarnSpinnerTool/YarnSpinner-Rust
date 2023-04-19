@@ -11,17 +11,22 @@ pub trait YarnFnWithMarker<Marker> {
 
 pub trait YarnFn {
     fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
+    fn clone_box(&self) -> Box<dyn YarnFn>;
 }
 
 impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
 where
-    Marker: 'static,
-    F: YarnFnWithMarker<Marker> + 'static,
+    Marker: 'static + Clone,
+    F: YarnFnWithMarker<Marker> + 'static + Clone,
     F::Out: Into<Value> + 'static + Clone,
 {
     fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue> {
         let output = self.function.call(input);
         Box::new(output)
+    }
+
+    fn clone_box(&self) -> Box<dyn YarnFn> {
+        Box::new(self.clone())
     }
 }
 
@@ -105,5 +110,11 @@ where
 impl Debug for dyn YarnFn {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("YarnFn").finish()
+    }
+}
+
+impl Clone for Box<dyn YarnFn> {
+    fn clone(&self) -> Self {
+        self.clone_box()
     }
 }
