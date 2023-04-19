@@ -1,11 +1,10 @@
 use std::path::Path;
 
 mod compiler;
-mod intermediate;
+//mod intermediate;
 mod output;
-pub mod parser;
+mod parser;
 
 pub mod prelude {
-    pub use crate::compiler::*;
-    pub use crate::output::*;
+    pub use crate::parser::generated::*;
 }

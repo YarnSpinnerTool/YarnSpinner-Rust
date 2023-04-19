@@ -1,6 +1,6 @@
 use crate::output::*;
-use crate::parser::yarnspinnerlexer::YarnSpinnerLexer;
-use crate::parser::yarnspinnerparser::{
+use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
+use crate::parser::generated::yarnspinnerparser::{
     DialogueContext, DialogueContextAll, LocalTokenFactory, YarnSpinnerParser,
 };
 use antlr_rust::char_stream::CharStream;

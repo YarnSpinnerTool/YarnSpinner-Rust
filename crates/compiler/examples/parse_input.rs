@@ -1,5 +1,5 @@
 use antlr_rust::{common_token_stream::CommonTokenStream, *};
-use rusty_yarn_spinner::parser::{yarnspinnerlexer::*, yarnspinnerparser::*};
+use rusty_yarn_spinner_compiler::prelude::{yarnspinnerlexer::*, yarnspinnerparser::*};
 
 fn main() {
     let lexer = YarnSpinnerLexer::new(InputStream::new(

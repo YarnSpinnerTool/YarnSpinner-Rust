@@ -1,5 +1,5 @@
 syntax = "proto3";
-package compiler.output;
+package Yarn;
 
 // A complete Yarn program.
 message Program {
