@@ -6,7 +6,16 @@ use std::marker::PhantomData;
 fn main() {
     let mut container = FunctionContainer::default();
     container.add("foo", || true);
-    container.add("foo", |a: f32| a);
+    container.add("bar", |a: f32| a);
+
+    let first_fn = container.get("foo").unwrap();
+    let first_result = first_fn.call(vec![]);
+    assert_eq!(first_result.as_value(), true.into());
+
+    let second_fn = container.get("bar").unwrap();
+    let second_result = second_fn.call(vec![1.0.into()]);
+    assert_eq!(second_result.as_value(), 1.0.into());
+    println!("Great Success!");
 }
 
 trait ContainedFunctionWithMarker<Marker> {
@@ -22,7 +31,7 @@ impl<Marker, F> BoxedContainedFunction for FunctionWrapper<Marker, F>
 where
     Marker: 'static,
     F: ContainedFunctionWithMarker<Marker> + 'static,
-    F::Out: Into<Value> + 'static,
+    F::Out: Into<Value> + 'static + Clone,
 {
     fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue> {
         let output = self.function.call(input);
@@ -31,15 +40,15 @@ where
 }
 
 trait IntoValue {
-    fn into_value(self) -> Value;
+    fn as_value(&self) -> Value;
 }
 
 impl<T> IntoValue for T
 where
-    T: Into<Value>,
+    T: Into<Value> + Clone,
 {
-    fn into_value(self) -> Value {
-        self.into()
+    fn as_value(&self) -> Value {
+        self.clone().into()
     }
 }
 
@@ -103,11 +112,16 @@ impl FunctionContainer {
     where
         Marker: 'static,
         F: ContainedFunctionWithMarker<Marker> + 'static,
+        F::Out: Into<Value> + 'static + Clone,
     {
         let wrapped = FunctionWrapper {
             function,
             _marker: PhantomData,
         };
         self.functions.insert(name.to_string(), Box::new(wrapped));
+    }
+
+    fn get(&self, name: &str) -> Option<&dyn BoxedContainedFunction> {
+        self.functions.get(name).map(|f| f.as_ref())
     }
 }
