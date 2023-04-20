@@ -4,7 +4,7 @@ fn main() -> Result<()> {
     let crate_dir = env!("CARGO_MANIFEST_DIR");
     let include_dir_path: PathBuf = [crate_dir, "src", "generated"].iter().collect();
     let include_dir = include_dir_path.to_str().unwrap();
-    let proto_file_path: PathBuf = [include_dir.into(), "yarn_spinner.proto"].iter().collect();
+    let proto_file_path: PathBuf = [include_dir, "yarn_spinner.proto"].iter().collect();
     let proto_file = proto_file_path.to_str().unwrap();
     println!("cargo:rerun-if-changed={proto_file}");
     prost_build::compile_protos(&[proto_file], &[include_dir])?;
