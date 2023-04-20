@@ -25,13 +25,8 @@ jobs:
         uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
-      - name: Run cargo build (needed for build.rs to run)
-        run: cargo build -p rusty-yarn-spinner-core
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
-      - name: Find generated files
-        if: failure()
-        run: find /home/runner/work/rusty-yarn-spinner/rusty-yarn-spinner/target/debug/build/*/**/Yarn.rs
 
   format:
     runs-on: ubuntu-latest
@@ -47,9 +42,6 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
         run: cargo fmt --check --all
-      - name: Find generated files
-        if: failure()
-        run: find /home/runner/work/rusty-yarn-spinner/rusty-yarn-spinner/target/debug/build/*/**/Yarn.rs
 
   test:
     runs-on: ubuntu-latest
@@ -62,10 +54,5 @@ jobs:
         uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
-      - name: Run cargo build (needed for build.rs to run)
-        run: cargo build -p rusty-yarn-spinner-core
       - name: Run cargo test
         run: cargo test --workspace --all-features
-      - name: Find generated files
-        if: failure()
-        run: find /home/runner/work/rusty-yarn-spinner/rusty-yarn-spinner/target/debug/build/*/**/Yarn.rs

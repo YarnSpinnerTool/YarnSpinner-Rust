@@ -3,6 +3,7 @@ name = "rusty-yarn-spinner-core"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+# Don't mind me, just invalidating the cache
 
 [dependencies]
 bytes = "1.4.0"
