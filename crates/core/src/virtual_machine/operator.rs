@@ -1,10 +1,11 @@
 use std::borrow::Cow;
-use strum_macros;
 
 /// The available operators that can be used with Yarn values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, strum_macros::Display)]
 pub(crate) enum Operator {
     /// A unary operator that returns its input.
+    // TODO: Check if this is actually used.
+    #[allow(dead_code)]
     None,
 
     /// A binary operator that represents equality.
