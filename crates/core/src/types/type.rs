@@ -1,8 +1,7 @@
 use crate::prelude::types::*;
-use crate::prelude::{Library, YarnFn};
+use crate::prelude::YarnFnHashMap;
 use paste::paste;
 use std::any::Any;
-use std::collections::HashMap;
 use std::fmt::Debug;
 
 /// All types in the virtual machine, both built-in, i.e. usable in yarn scripts, and internal.
@@ -35,11 +34,7 @@ pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
     const DESCRIPTION: &'static str = Self::NAME;
 
     /// The collection of methods that are available on this types.
-    ///
-    /// ## Implementation Notes
-    ///
-    /// This was an `IDictionary<string, Delegate>` in the original implementation, but using this
-    const METHODS: Library = Default::default();
+    const METHODS: YarnFnHashMap = Default::default();
 }
 
 // The following is implemented on [`BuiltinTypes`] in the original implementation, but implementing it

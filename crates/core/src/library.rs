@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Library.cs>
 
-use crate::prelude::yarn_fn::YarnFnHashMap;
+use crate::prelude::YarnFnHashMap;
 
 /// A collection of functions that can be called from Yarn scripts.
 ///

@@ -1,22 +1,27 @@
-use crate::prelude::{yarn_fn::*, Value};
+use crate::prelude::*;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
+/// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
+/// Necessary because of Rust's type system, as every function signature comes with a distinct type,
+/// so we cannot simply hold a collection of different functions without all this effort.
 pub struct YarnFnHashMap(pub HashMap<String, Box<dyn YarnFn>>);
 
 impl YarnFnHashMap {
-    fn add<Marker, F>(&mut self, name: &str, function: F)
+    pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
     where
         Marker: 'static + Clone,
         F: YarnFnWithMarker<Marker> + 'static + Clone,
         F::Out: Into<Value> + 'static + Clone,
     {
+        let name = name.into().to_string();
         let wrapped = YarnFnWrapper::from(function);
-        self.insert(name.to_string(), Box::new(wrapped));
+        self.insert(name, Box::new(wrapped));
     }
 
-    fn get(&self, name: &str) -> Option<&dyn YarnFn> {
+    pub fn get(&self, name: &str) -> Option<&dyn YarnFn> {
         self.0.get(name).map(|f| f.as_ref())
     }
 }
@@ -33,6 +38,20 @@ impl DerefMut for YarnFnHashMap {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
+}
+
+/// Create a [`YarnFnHashMap`] from a list of named functions.
+#[macro_export]
+macro_rules! yarn_fn_hash_map {
+    ($($name:expr => $function:expr,)*) => {
+        {
+            let mut map = YarnFnHashMap::default();
+            $(
+                map.add($name, $function);
+            )*
+            map
+        }
+    };
 }
 
 #[cfg(test)]

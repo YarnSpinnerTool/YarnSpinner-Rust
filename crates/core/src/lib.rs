@@ -3,9 +3,9 @@ mod library;
 pub mod types;
 mod value;
 mod virtual_machine;
-pub mod yarn_fn;
+mod yarn_fn;
 
 pub mod prelude {
     pub(crate) use crate::virtual_machine::*;
-    pub use crate::{generated::*, library::*, types, value::*, yarn_fn};
+    pub use crate::{generated::*, library::*, types, value::*, yarn_fn::*};
 }
