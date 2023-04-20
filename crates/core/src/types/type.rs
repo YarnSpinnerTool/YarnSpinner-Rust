@@ -19,7 +19,7 @@ pub enum Type {
     String(StringType),
 }
 
-/// Defines properties that describe a types in the Yarn language.
+/// Defines properties that describe a type in the Yarn language.
 ///
 /// ## Implementation Notes
 ///
@@ -27,7 +27,7 @@ pub enum Type {
 /// - `Parent` is not implemented because it is set to `AnyType` everywhere anyways.
 ///
 pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
-    /// The Rust type that this types represents. Since the [`Value`] type converts freely between
+    /// The Rust type that this type represents. Since the [`Value`] type converts freely between
     /// most types, Yarn scripts accept inputs that Rust wouldn't accept for this type.
     ///
     /// ## Implementation Notes
@@ -35,20 +35,20 @@ pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
     /// Not part of the original implementation, but added for clearer code.
     type RustType;
 
-    /// The name of this types.
+    /// The name of this type.
     const NAME: &'static str;
 
-    /// A more verbose description of this types.
+    /// A more verbose description of this type.
     const DESCRIPTION: &'static str = Self::NAME;
 
-    /// The collection of methods that are available on this types.
+    /// The collection of methods that are available on this type.
     fn methods() -> YarnFnRegistry {
         Default::default()
     }
 }
 
 // The following is implemented on [`BuiltinTypes`] in the original implementation, but implementing it
-// on [`Type`] results in more compile time safety.
+// on [`Type`] results in more compile-time safety.
 
 macro_rules! impl_type {
     ($($yarn_type:pat => [$($base_type:path,)*] ,)*) => {
@@ -56,7 +56,7 @@ macro_rules! impl_type {
             $(
 
                 paste! {
-                    /// Convenience trait for getting a [`Type`] out of a base types.
+                    /// Convenience trait for getting a [`Type`] out of a base type.
                     #[allow(non_camel_case_types)]
                     pub trait [<$base_type Ext>] {
                         /// Get the corresponding [`Type`]

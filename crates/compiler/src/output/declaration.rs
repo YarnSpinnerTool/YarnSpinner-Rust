@@ -52,7 +52,7 @@ pub struct Declaration {
     /// If `false`, this declaration appears in the source code.
     pub is_implicit: bool,
 
-    /// The types of the variable, as represented by an object found
+    /// The type of the variable, as represented by an object found
     /// in a variant of [`Type`].
     pub r#type: Type,
 

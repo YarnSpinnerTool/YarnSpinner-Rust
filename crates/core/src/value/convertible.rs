@@ -1,9 +1,9 @@
-//! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) types.
+//! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
 use thiserror::Error;
 
-#[derive(Debug, Clone, PartialEq)]
 /// Implements meaningful conversions, i.e. impls for [`TryFrom`] and [`From`] from the variants to Rust's base types.
 /// A failure to convert one variant to another will result in an [`InvalidCastError`].
+#[derive(Debug, Clone, PartialEq)]
 pub enum Convertible {
     Number(f32),
     String(String),
@@ -117,7 +117,7 @@ impl From<bool> for Convertible {
 }
 
 #[derive(Error, Debug)]
-/// Represents a failure to convert one variant of [`Convertible`] to a base types.
+/// Represents a failure to convert one variant of [`Convertible`] to a base type.
 pub enum InvalidCastError {
     #[error(transparent)]
     ParseFloatError(#[from] std::num::ParseFloatError),
