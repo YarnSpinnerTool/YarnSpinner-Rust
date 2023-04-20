@@ -29,13 +29,13 @@ jobs:
         run: cargo clippy --workspace --all-features --tests --examples
       - name: Run diagnostics
         if: failure()
-        run: find */**/*.proto
+        run: find . -print | grep -i "yarn_spinner.proto"
       - name: Run diagnostics II
         if: failure()
-        run: find */**/Yarn.rs
+        run: find . -print | grep -i "Yarn.rs"
       - name: Run diagnostics III
         if: failure()
-        run: find */**/mod.rs
+        run: find . -print | grep -i "mod.rs"
       - name: Run diagnostics IV
         if: failure()
         run: pwd
