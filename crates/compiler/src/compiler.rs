@@ -1,5 +1,6 @@
 use antlr_rust::tree::ParseTreeListener;
 
+use super::*;
 pub use crate::compiler::compilation_job::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::{
@@ -31,6 +32,22 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     compiler_steps
         .into_iter()
         .fold(initial, |acc, curr| curr.run(&compilation_job, &acc))
+}
+
+#[cfg(test)]
+mod test {
+    use super::CompilationJob;
+    use super::*;
+
+    #[test]
+    fn can_call_compile_without_crash() {
+        compile(CompilationJob {
+            files: vec![],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+    }
 }
 
 trait CompilerStep {
