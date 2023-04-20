@@ -9,12 +9,13 @@ env:
   CARGO_TERM_COLOR: always
   # Sparse cargo registry for faster updates
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-  # Handle cargo check and cargo clippy warnings as errors
-  RUSTFLAGS: "-D warnings"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      # Handle cargo check and cargo clippy warnings as errors
+      RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@master
@@ -30,6 +31,8 @@ jobs:
 
   format:
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@master
