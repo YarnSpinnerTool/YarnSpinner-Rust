@@ -23,17 +23,10 @@ jobs:
           components: clippy
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
+      - name: Cache Cargo build files
+        uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
-      - name: Run diagnostics
-        if: failure()
-        run: find . -print | grep -i "yarn_spinner.proto"
-      - name: Run diagnostics II
-        if: failure()
-        run: find . -print | grep -i "Yarn.rs"
-      - name: Run diagnostics II
-        if: failure()
-        run: protoc --version
 
   format:
     runs-on: ubuntu-latest
