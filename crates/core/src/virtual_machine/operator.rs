@@ -81,8 +81,8 @@ pub(crate) enum Operator {
 /// Implementing this is probably bad practice, but
 /// - This greatly reduced boilerplate when used with [`yarn_fn_registry!`] and
 /// - This type is only `pub(crate)`, so the user will not fall into any traps
-impl Into<Cow<'static, str>> for Operator {
-    fn into(self) -> Cow<'static, str> {
-        self.to_string().into()
+impl From<Operator> for Cow<'static, str> {
+    fn from(value: Operator) -> Self {
+        value.to_string().into()
     }
 }
