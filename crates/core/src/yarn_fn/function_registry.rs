@@ -41,7 +41,6 @@ impl DerefMut for YarnFnRegistry {
 }
 
 /// Create a [`YarnFnRegistry`] from a list of named functions.
-#[macro_export]
 macro_rules! yarn_fn_registry {
     ($($name:expr => $function:expr,)*) => {
         {
@@ -53,6 +52,7 @@ macro_rules! yarn_fn_registry {
         }
     };
 }
+pub(crate) use yarn_fn_registry;
 
 #[cfg(test)]
 mod tests {
