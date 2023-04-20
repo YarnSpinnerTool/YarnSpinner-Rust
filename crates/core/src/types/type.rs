@@ -34,7 +34,9 @@ pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
     const DESCRIPTION: &'static str = Self::NAME;
 
     /// The collection of methods that are available on this types.
-    const METHODS: YarnFnHashMap = Default::default();
+    fn methods() -> YarnFnHashMap {
+        Default::default()
+    }
 }
 
 // The following is implemented on [`BuiltinTypes`] in the original implementation, but implementing it

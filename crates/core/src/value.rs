@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Value.cs>
 
-use crate::prelude::types::Type;
+use crate::prelude::{convertible::InvalidCastError, types::Type};
 
 pub mod convertible;
 
@@ -19,6 +19,14 @@ macro_rules! impl_from {
                         r#type: (&value).into(),
                         internal_value: value.into(),
                     }
+                }
+            }
+
+            impl TryFrom<Value> for $from_type {
+                type Error = InvalidCastError;
+
+                fn try_from(value: Value) -> Result<Self, Self::Error> {
+                    value.internal_value.try_into()
                 }
             }
         )*

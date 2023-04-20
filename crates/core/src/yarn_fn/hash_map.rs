@@ -76,9 +76,9 @@ mod tests {
 
         library.add("test", || true);
         let function = library.get("test").unwrap();
-        let result = function.call(vec![]);
+        let result: bool = function.call(vec![]).as_value().try_into().unwrap();
 
-        assert_eq!(result.as_value(), Value::Bool(true));
+        assert_eq!(result, true);
     }
 
     #[test]
@@ -87,9 +87,13 @@ mod tests {
 
         library.add("test", |a: f32| a);
         let function = library.get("test").unwrap();
-        let result = function.call(vec![Value::Number(1.0)]);
+        let result: f32 = function
+            .call(vec![1.0.into()])
+            .as_value()
+            .try_into()
+            .unwrap();
 
-        assert_eq!(result.as_value(), Value::Number(1.0));
+        assert_eq!(result, 1.0);
     }
 
     #[test]
@@ -109,11 +113,15 @@ mod tests {
         let function1 = library.get("test1").unwrap();
         let function2 = library.get("test2").unwrap();
 
-        let result1 = function1.call(vec![]);
-        let result2 = function2.call(vec![Value::Number(1.0)]);
+        let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
+        let result2: f32 = function2
+            .call(vec![1.0.into()])
+            .as_value()
+            .try_into()
+            .unwrap();
 
-        assert_eq!(result1.as_value(), Value::Bool(true));
-        assert_eq!(result2.as_value(), Value::Number(1.0));
+        assert_eq!(result1, true);
+        assert_eq!(result2, 1.0);
     }
 
     #[test]
@@ -133,24 +141,32 @@ mod tests {
         let function3 = library.get("test3").unwrap();
         let function4 = library.get("test4").unwrap();
 
-        let result1 = function1.call(vec![]);
-        let result2 = function2.call(vec![Value::Number(1.0), Value::Number(2.0)]);
-        let result3 = function3.call(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-            Value::Number(3.0),
-        ]);
-        let result4 = function4.call(vec![
-            Value::String("a".to_string()),
-            Value::String("b".to_string()),
-            Value::String("c".to_string()),
-            Value::Bool(true),
-            Value::Number(1.0),
-        ]);
+        let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
+        let result2: f32 = function2
+            .call(vec![1.0.into(), 2.0.into()])
+            .as_value()
+            .try_into()
+            .unwrap();
+        let result3: f32 = function3
+            .call(vec![1.0.into(), 2.0.into(), 3.0.into()])
+            .as_value()
+            .try_into()
+            .unwrap();
+        let result4: String = function4
+            .call(vec![
+                "a".into(),
+                "b".into(),
+                "c".into(),
+                true.into(),
+                1.0.into(),
+            ])
+            .as_value()
+            .try_into()
+            .unwrap();
 
-        assert_eq!(result1.as_value(), Value::Bool(true));
-        assert_eq!(result2.as_value(), Value::Number(3.0));
-        assert_eq!(result3.as_value(), Value::Number(7.0));
-        assert_eq!(result4.as_value(), Value::String("abctrue1".to_string()));
+        assert_eq!(result1, true);
+        assert_eq!(result2, 3.0);
+        assert_eq!(result3, 7.0);
+        assert_eq!(result4, "abctrue1".to_string());
     }
 }
