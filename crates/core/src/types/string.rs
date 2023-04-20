@@ -14,6 +14,7 @@ impl TypeProperties for StringType {
         yarn_fn_registry! {
             Operator::EqualTo => Value::eq_by_value::<Self::RustType>,
             Operator::NotEqualTo => Value::ne_by_value::<Self::RustType>,
+            Operator::Add => Value::combine(|a: Self::RustType, b: Self::RustType| a + &b),
         }
     }
 }

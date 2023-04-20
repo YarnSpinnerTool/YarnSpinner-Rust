@@ -2,10 +2,13 @@
 
 use crate::prelude::types::TypeProperties;
 use crate::prelude::YarnFn;
+use crate::types::Type;
 
 /// Todo
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct FunctionType;
+pub struct FunctionType {
+    parameters: Vec<Type>,
+}
 
 impl TypeProperties for FunctionType {
     type RustType = Box<dyn YarnFn>;
