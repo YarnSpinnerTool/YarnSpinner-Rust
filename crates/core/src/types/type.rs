@@ -27,6 +27,14 @@ pub enum Type {
 /// - `Parent` is not implemented because it is set to `AnyType` everywhere anyways.
 ///
 pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
+    /// The Rust type that this types represents. Since the [`Value`] type converts freely between
+    /// most types, Yarn scripts accept inputs that Rust wouldn't accept for this type.
+    ///
+    /// ## Implementation Notes
+    ///
+    /// Not part of the original implementation, but added for clearer code.
+    type RustType;
+
     /// The name of this types.
     const NAME: &'static str;
 

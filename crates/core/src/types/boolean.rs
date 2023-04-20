@@ -9,15 +9,16 @@ use std::ops::{BitAnd, BitOr, BitXor, Not};
 pub struct BooleanType;
 
 impl TypeProperties for BooleanType {
+    type RustType = bool;
     const NAME: &'static str = "Bool";
     fn methods() -> YarnFnRegistry {
         yarn_fn_registry! {
-            Operator::EqualTo => bool::eq_by_value,
-            Operator::NotEqualTo => bool::ne_by_value,
-            Operator::And => <bool as BitAnd>::bitand,
-            Operator::Or => <bool as BitOr>::bitor,
-            Operator::Xor => <bool as BitXor>::bitxor,
-            Operator::Not => bool::not,
+            Operator::EqualTo => Value::eq_by_value::<Self::RustType>,
+            Operator::NotEqualTo => Value::ne_by_value::<Self::RustType>,
+            Operator::And => Value::and::<Self::RustType>,
+            Operator::Or => Value::or::<Self::RustType>,
+            Operator::Xor => Value::xor::<Self::RustType>,
+            Operator::Not => Value::not::<Self::RustType>,
         }
     }
 }

@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Types/AnyType.cs>
 
 use crate::prelude::types::TypeProperties;
+use std::any::Any;
 
 /// Represents any types. This types is used in circumstances when a types
 /// is known to have a value, but the specific types is not known or
@@ -9,6 +10,7 @@ use crate::prelude::types::TypeProperties;
 pub struct AnyType;
 
 impl TypeProperties for AnyType {
+    type RustType = Box<dyn Any>;
     const NAME: &'static str = "Any";
     const DESCRIPTION: &'static str = "Any type.";
 }
