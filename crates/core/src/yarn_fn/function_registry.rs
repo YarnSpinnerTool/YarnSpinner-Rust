@@ -158,4 +158,20 @@ mod tests {
         assert_eq!(result3, 7.0);
         assert_eq!(result4, "abctrue1".to_string());
     }
+
+    #[test]
+    fn debug_prints_signature() {
+        let mut functions = YarnFnRegistry::default();
+
+        functions.add("test", |a: f32, b: f32| a + b);
+        let debug_string = format!("{:?}", functions);
+
+        let element_start = debug_string.find("{").unwrap();
+        // This looks like an off-by-one error on closer inspection,
+        // but on even closer inspection it's correct because there's a space before the second '{' that we don't want to include.
+        let element_end = element_start + debug_string[element_start + 1..].find("{").unwrap();
+        let element = &debug_string[element_start..element_end];
+
+        assert_eq!(element, "{\"test\": fn(f32, f32) -> f32");
+    }
 }

@@ -77,9 +77,9 @@ where
     F: YarnFnWithMarker<Marker>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let params = std::any::type_name::<Marker>();
+        let signature = std::any::type_name::<Marker>();
         let function_path = std::any::type_name::<F>();
-        let debug_message = format!("YarnFn{params} -> Box<dyn IntoValue> {{{function_path}}}");
+        let debug_message = format!("{signature} {{{function_path}}}");
         f.debug_struct(&debug_message).finish()
     }
 }
