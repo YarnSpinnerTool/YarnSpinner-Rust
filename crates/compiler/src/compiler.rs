@@ -17,9 +17,37 @@ pub fn compile(_compilation_job: CompilationJob) -> CompilationResult {
     }
 }
 
-struct ImplicitStringTagGenerator {}
+struct ImplicitStringTagGenerator {
+    generated_implicit_string_tag: bool,
+}
 
 impl yarnspinnerparserlistener::YarnSpinnerParserListener for ImplicitStringTagGenerator {
+    fn generate_string_tag_if_absent(
+        &mut self,
+        _ctx: &crate::prelude::generated::yarnspinnerparser::DialogueContext<'input>,
+    ) {
+        if (!&self.has_string_tag(_ctx)) {
+            &self.generate_string_tag(_ctx);
+            self.generated_implicit_string_tag = true;
+        }
+
+        todo!()
+    }
+
+    fn has_string_tag(
+        &mut self,
+        _ctx: &crate::prelude::generated::yarnspinnerparser::DialogueContext<'input>,
+    ) -> bool {
+        todo!()
+    }
+
+    fn generate_string_tag(
+        &mut self,
+        _ctx: &crate::prelude::generated::yarnspinnerparser::DialogueContext<'input>,
+    ) {
+        todo!()
+    }
+
     fn enter_dialogue(
         &mut self,
         _ctx: &crate::prelude::generated::yarnspinnerparser::DialogueContext<'input>,
