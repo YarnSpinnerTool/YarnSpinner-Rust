@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use strum_macros;
 
 /// The available operators that can be used with Yarn values.
@@ -46,14 +47,24 @@ pub(crate) enum Operator {
     Not,
 
     /// A unary operator that represents negation.
-    UnaryMinus,
+    ///
+    /// ## Implementation note
+    ///
+    /// This is called `UnaryMinus` in the original implementation, but was
+    /// renamed for consistency with the other operators.
+    UnarySubtract,
 
     /// A binary operator that represents addition.
     Add,
 
     /// A binary operator that represents
     /// subtraction.
-    Minus,
+    ///
+    /// ## Implementation note
+    ///
+    /// This is called `Minus` in the original implementation, but was
+    /// renamed for consistency with the other operators.
+    Subtract,
 
     /// A binary operator that represents
     /// multiplication.
@@ -65,4 +76,13 @@ pub(crate) enum Operator {
     /// A binary operator that represents the remainder
     /// operation.
     Modulo,
+}
+
+/// Implementing this is probably bad practice, but
+/// - This greatly reduced boilerplate when used with [`yarn_fn_registry!`] and
+/// - This type is only `pub(crate)`, so the user will not fall into any traps
+impl Into<Cow<'static, str>> for Operator {
+    fn into(self) -> Cow<'static, str> {
+        self.to_string().into()
+    }
 }

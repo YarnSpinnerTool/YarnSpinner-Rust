@@ -7,7 +7,7 @@ use std::ops::{Deref, DerefMut};
 /// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
-pub struct YarnFnRegistry(pub HashMap<String, Box<dyn YarnFn>>);
+pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn YarnFn>>);
 
 impl YarnFnRegistry {
     pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
@@ -16,18 +16,19 @@ impl YarnFnRegistry {
         F: YarnFnWithMarker<Marker> + 'static + Clone,
         F::Out: Into<Value> + 'static + Clone,
     {
-        let name = name.into().to_string();
+        let name = name.into();
         let wrapped = YarnFnWrapper::from(function);
         self.insert(name, Box::new(wrapped));
     }
 
-    pub fn get(&self, name: &str) -> Option<&dyn YarnFn> {
-        self.0.get(name).map(|f| f.as_ref())
+    pub fn get(&self, name: impl Into<Cow<'static, str>>) -> Option<&dyn YarnFn> {
+        let name = name.into();
+        self.0.get(&name).map(|f| f.as_ref())
     }
 }
 
 impl Deref for YarnFnRegistry {
-    type Target = HashMap<String, Box<dyn YarnFn>>;
+    type Target = HashMap<Cow<'static, str>, Box<dyn YarnFn>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
