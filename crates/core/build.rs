@@ -1,5 +1,6 @@
 use std::io::Result;
 use std::path::PathBuf;
+
 fn main() -> Result<()> {
     let include_dir_path: PathBuf = ["src", "generated"].iter().collect();
     let include_dir = include_dir_path.to_str().unwrap();
