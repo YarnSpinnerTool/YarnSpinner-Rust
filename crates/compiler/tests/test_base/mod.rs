@@ -12,6 +12,6 @@ impl TestBase {
     }
 
     pub fn test_data_path() -> PathBuf {
-        Self::project_root_path().join("assets")
+        Self::project_root_path().join("test_assets")
     }
 }
