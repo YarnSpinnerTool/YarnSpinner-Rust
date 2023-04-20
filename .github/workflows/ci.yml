@@ -33,6 +33,9 @@ jobs:
       - name: Run diagnostics II
         if: failure()
         run: find */**/Yarn.rs
+      - name: Run diagnostics III
+        if: failure()
+        run: find */**/mod.rs
 
   format:
     runs-on: ubuntu-latest
