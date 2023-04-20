@@ -1,65 +1,49 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Value.cs>
 
+use crate::prelude::types::Type;
+
+pub mod convertible;
+
 #[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    Number(f32),
-    String(String),
-    Bool(bool),
+pub struct Value {
+    pub r#type: Type,
+    internal_value: convertible::Convertible,
 }
 
-impl From<f32> for Value {
-    fn from(value: f32) -> Self {
-        Self::Number(value)
+macro_rules! impl_from {
+    ($($from_type:ty,)*) => {
+        $(
+            impl From<$from_type> for Value {
+                fn from(value: $from_type) -> Self {
+                    Self {
+                        r#type: (&value).into(),
+                        internal_value: value.into(),
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl<T> From<&T> for Value
+where
+    T: Copy,
+    Value: From<T>,
+{
+    fn from(value: &T) -> Self {
+        Self::from(*value)
     }
 }
 
-impl From<String> for Value {
-    fn from(value: String) -> Self {
-        Self::String(value)
-    }
-}
+impl_from![f32, f64, usize, String, bool,];
+
+// The macro above doesn't work for &str because it's trying to work with &&str
 
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
-        Self::String(value.to_string())
-    }
-}
-
-impl From<bool> for Value {
-    fn from(value: bool) -> Self {
-        Self::Bool(value)
-    }
-}
-
-impl TryFrom<Value> for f32 {
-    type Error = ();
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        match value {
-            Value::Number(value) => Ok(value),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryFrom<Value> for String {
-    type Error = ();
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        match value {
-            Value::String(value) => Ok(value),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryFrom<Value> for bool {
-    type Error = ();
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        match value {
-            Value::Bool(value) => Ok(value),
-            _ => Err(()),
+        Self {
+            r#type: value.into(),
+            internal_value: value.into(),
         }
     }
 }

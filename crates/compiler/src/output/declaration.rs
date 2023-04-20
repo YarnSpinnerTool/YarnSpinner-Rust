@@ -11,10 +11,10 @@
 
        /// <summary>
        /// Creates a new instance of the <see cref="Declaration"/> class,
-       /// using the given name, type and default value.
+       /// using the given name, types and default value.
        /// </summary>
        /// <param name="name">The name of the new declaration.</param>
-       /// <param name="type">The type of the declaration.</param>
+       /// <param name="types">The types of the declaration.</param>
        /// <param name="defaultValue">The default value of the
        /// declaration. This must be a string, a number (integer or
        /// floating-point), or boolean value.</param>
@@ -22,11 +22,11 @@
        /// declaration.</param>
        /// <returns>A new instance of the <see cref="Declaration"/>
        /// class.</returns>
-       public static Declaration CreateVariable(string name, Yarn.IType type, IConvertible defaultValue, string description = null)
+       public static Declaration CreateVariable(string name, Yarn.IType types, IConvertible defaultValue, string description = null)
        {
-           if (type is null)
+           if (types is null)
            {
-               throw new ArgumentNullException(nameof(type));
+               throw new ArgumentNullException(nameof(types));
            }
 
            if (string.IsNullOrEmpty(name))
@@ -44,7 +44,7 @@
            {
                Name = name,
                DefaultValue = defaultValue,
-               Type = type,
+               Type = types,
                Description = description,
            };
        }
@@ -100,7 +100,7 @@
        public bool IsImplicit { get; internal set; }
 
        /// <summary>
-       /// Gets the type of the variable, as represented by an object that
+       /// Gets the types of the variable, as represented by an object that
        /// implements <see cref="IType"/>.
        /// </summary>
        public Yarn.IType Type { get; internal set; }
@@ -123,6 +123,7 @@
        public Range Range { get; internal set; } = new Range();
 */
 
+use rusty_yarn_spinner_core::prelude::{Type, Value};
 use std::ops::RangeInclusive;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -138,7 +139,7 @@ pub struct Declaration {
     /// The default value of this declaration, if no value has been
     /// specified in code or is available from a [`Dialogue`]'s
     /// [`IVariableStorage`].
-    pub default_value: usize, // TODO: IConvertible
+    pub default_value: Value,
 
     /// A string describing the purpose of this declaration.
     pub description: String,
@@ -169,9 +170,9 @@ pub struct Declaration {
     /// If `false`, this declaration appears in the source code.
     pub is_implicit: bool,
 
-    /// The type of the variable, as represented by an object found
+    /// The types of the variable, as represented by an object found
     /// in a variant of [`DeclarationType`].
-    pub r#type: DeclarationType, // TODO
+    pub r#type: Type, // TODO
 
     /// The range of text at which this declaration occurs.
     ///

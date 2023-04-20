@@ -16,7 +16,7 @@ pub struct CompilationJob {
     /// The [`Library`] that contains declarations for functions.
     pub library: Option<Library>,
 
-    /// The type of compilation that the compiler will do.
+    /// The types of compilation that the compiler will do.
     pub compilation_type: CompilationType,
 
     /// The declarations for variables.
@@ -37,7 +37,7 @@ pub struct File {
     pub source: String,
 }
 
-/// The type of compilation that the compiler will do.
+/// The types of compilation that the compiler will do.
 #[derive(Debug, Clone, Default)]
 pub enum CompilationType {
     /// The compiler will do a full compilation, and generate a [`Program`],

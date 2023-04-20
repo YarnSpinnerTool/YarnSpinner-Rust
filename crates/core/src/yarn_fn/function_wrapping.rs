@@ -1,9 +1,6 @@
-//! Inspired by how Bevy stores [`FnSystem`](https://docs.rs/bevy_ecs/0.10.1/bevy_ecs/system/struct.FnSystem.html)s.
-//! This is all here just to emulate the `Dictionary<string, Delegate>` used in Yarn Spinner's `Library` class.
-
 use crate::prelude::Value;
 use rusty_yarn_spinner_macros::all_tuples;
-use std::fmt::{format, Debug, Formatter};
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
 pub trait YarnFnWithMarker<Marker> {
@@ -63,11 +60,11 @@ where
     _marker: PhantomData<fn() -> Marker>,
 }
 
-impl<Marker, F> YarnFnWrapper<Marker, F>
+impl<Marker, F> From<F> for YarnFnWrapper<Marker, F>
 where
     F: YarnFnWithMarker<Marker>,
 {
-    pub fn new(function: F) -> Self {
+    fn from(function: F) -> Self {
         Self {
             function,
             _marker: PhantomData,
@@ -82,10 +79,21 @@ where
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let params = std::any::type_name::<Marker>();
         let function_path = std::any::type_name::<F>();
-        let debug_message = format!("{function_path}: YarnFn{params} -> Box<dyn IntoValue>");
+        let debug_message = format!("YarnFn{params} -> Box<dyn IntoValue> {{{function_path}}}");
         f.debug_struct(&debug_message).finish()
     }
 }
+
+impl PartialEq for Box<dyn YarnFn> {
+    fn eq(&self, other: &Self) -> bool {
+        // Not guaranteed to be unique, but that's good enough for our purposes.
+        let debug = format!("{:?}", self);
+        let other_debug = format!("{:?}", other);
+        debug == other_debug
+    }
+}
+
+impl Eq for Box<dyn YarnFn> {}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
