@@ -1,4 +1,4 @@
-//! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) types.
+//! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -117,7 +117,7 @@ impl From<bool> for Convertible {
 }
 
 #[derive(Error, Debug)]
-/// Represents a failure to convert one variant of [`Convertible`] to a base types.
+/// Represents a failure to convert one variant of [`Convertible`] to a base type.
 pub enum InvalidCastError {
     #[error(transparent)]
     ParseFloatError(#[from] std::num::ParseFloatError),

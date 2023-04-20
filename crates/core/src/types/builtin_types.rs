@@ -6,18 +6,18 @@ use crate::prelude::types::*;
 /// Contains the built-in types available in the Yarn language.
 /// A strict subset of [`Type`].
 pub enum BuiltinType {
-    /// The types representing any value.
+    /// The type representing any value.
     Any(AnyType),
-    /// The types representing numbers.
+    /// The type representing numbers.
     Number(NumberType),
-    /// The types representing strings.
+    /// The type representing strings.
     String(StringType),
-    /// The types representing boolean values.
+    /// The type representing boolean values.
     Bool(BooleanType),
-    /// An undefined types.
+    /// An undefined type.
     ///
     /// This value is not valid except during compilation. It
     /// is used to represent values that have not yet been assigned a
-    /// types by the types system.
+    /// type by the type system.
     Undefined,
 }
