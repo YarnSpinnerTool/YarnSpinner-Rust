@@ -26,7 +26,7 @@ jobs:
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
-        run: cargo clippy --workspace --all-features
+        run: cargo clippy --workspace --all-features --tests --examples
 
   format:
     runs-on: ubuntu-latest
