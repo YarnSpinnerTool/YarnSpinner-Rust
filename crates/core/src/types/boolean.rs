@@ -12,7 +12,7 @@ impl TypeProperties for BooleanType {
     const NAME: &'static str = "Bool";
     fn methods() -> YarnFnRegistry {
         yarn_fn_registry! {
-            Operator::EqualTo.to_string() => bool::eq,
+            Operator::EqualTo.to_string() => bool::eq_by_value,
         }
     }
 }

@@ -99,13 +99,13 @@ impl Eq for Box<dyn YarnFn> {}
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<'a, F, I, $($param,)*> YarnFnWithMarker<($(&'a $param,)*)> for F
+        impl<F, O, $($param,)*> YarnFnWithMarker<fn($($param,)*) -> O> for F
             where
-                F: Fn($(&$param,)*) -> I,
-                I: Into<Value> + 'static,
+                F: Fn($($param,)*) -> O,
+                O: Into<Value> + 'static,
                 $($param: TryFrom<Value> + 'static,)*
             {
-                type Out = I;
+                type Out = O;
                 #[allow(non_snake_case)]
                 fn call(&self, input: Vec<Value>) -> Self::Out {
                     let [$($param,)*] = &input[..] else {
@@ -120,7 +120,7 @@ macro_rules! impl_yarn_fn_tuple {
                         )*
                     );
                     let ($($param,)*) = input;
-                    self($(&$param,)*)
+                    self($($param,)*)
                 }
             }
     };
