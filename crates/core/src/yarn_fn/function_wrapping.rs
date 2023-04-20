@@ -99,27 +99,28 @@ impl Eq for Box<dyn YarnFn> {}
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<F, I, $($param,)*> YarnFnWithMarker<($($param,)*)> for F
+        impl<'a, F, I, $($param,)*> YarnFnWithMarker<($(&'a $param,)*)> for F
             where
-                F: Fn($($param,)*) -> I,
+                F: Fn($(&$param,)*) -> I,
                 I: Into<Value> + 'static,
                 $($param: TryFrom<Value> + 'static,)*
             {
                 type Out = I;
                 #[allow(non_snake_case)]
                 fn call(&self, input: Vec<Value>) -> Self::Out {
-                    if let [$($param,)*] = &input[..] {
-                        let input = (
-                            $($param
+                    let [$($param,)*] = &input[..] else {
+                        panic!("Wrong number of arguments")
+                    };
+
+                    let input = (
+                        $($param
                             .clone()
                             .try_into()
-                            .unwrap_or_else(|_| panic!("Failed to convert")),)*
-                        );
-                        let ($($param,)*) = input;
-                        self($($param,)*)
-                    } else {
-                        panic!("Wrong number of arguments")
-                    }
+                            .unwrap_or_else(|_| panic!("Failed to convert")),
+                        )*
+                    );
+                    let ($($param,)*) = input;
+                    self($(&$param,)*)
                 }
             }
     };

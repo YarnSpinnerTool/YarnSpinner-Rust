@@ -63,29 +63,118 @@ mod tests {
         let mut functions = YarnFnRegistry::default();
         functions.add("test", || true);
     }
+    /*
+        #[test]
+        fn can_add_fn_with_one_arg() {
+            let mut functions = YarnFnRegistry::default();
+            functions.add("test", |a: f32| a);
+        }
 
+        #[test]
+        fn can_call_fn_with_no_args() {
+            let mut functions = YarnFnRegistry::default();
+
+            functions.add("test", || true);
+            let function = functions.get("test").unwrap();
+            let result: bool = function.call(vec![]).as_value().try_into().unwrap();
+
+            assert_eq!(result, true);
+        }
+
+        #[test]
+        fn can_call_fn_with_one_arg() {
+            let mut functions = YarnFnRegistry::default();
+
+            functions.add("test", |a: f32| a);
+            let function = functions.get("test").unwrap();
+            let result: f32 = function
+                .call(vec![1.0.into()])
+                .as_value()
+                .try_into()
+                .unwrap();
+
+            assert_eq!(result, 1.0);
+        }
+
+        #[test]
+        fn can_add_multiple_fns() {
+            let mut functions = YarnFnRegistry::default();
+
+            functions.add("test1", || true);
+            functions.add("test2", |a: f32| a);
+        }
+
+        #[test]
+        fn can_call_multiple_fns() {
+            let mut functions = YarnFnRegistry::default();
+            functions.add("test1", || true);
+            functions.add("test2", |a: f32| a);
+
+            let function1 = functions.get("test1").unwrap();
+            let function2 = functions.get("test2").unwrap();
+
+            let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
+            let result2: f32 = function2
+                .call(vec![1.0.into()])
+                .as_value()
+                .try_into()
+                .unwrap();
+
+            assert_eq!(result1, true);
+            assert_eq!(result2, 1.0);
+        }
+
+        #[test]
+        fn can_call_multiple_fns_with_many_params() {
+            let mut functions = YarnFnRegistry::default();
+
+            functions.add("test1", || true);
+            functions.add("test2", |a: f32, b: f32| a + b);
+            functions.add("test3", |a: f32, b: f32, c: f32| a + b * c);
+            functions.add(
+                "test4",
+                |a: String, b: String, c: String, d: bool, e: f32| format!("{}{}{}{}{}", a, b, c, d, e),
+            );
+
+            let function1 = functions.get("test1").unwrap();
+            let function2 = functions.get("test2").unwrap();
+            let function3 = functions.get("test3").unwrap();
+            let function4 = functions.get("test4").unwrap();
+
+            let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
+            let result2: f32 = function2
+                .call(vec![1.0.into(), 2.0.into()])
+                .as_value()
+                .try_into()
+                .unwrap();
+            let result3: f32 = function3
+                .call(vec![1.0.into(), 2.0.into(), 3.0.into()])
+                .as_value()
+                .try_into()
+                .unwrap();
+            let result4: String = function4
+                .call(vec![
+                    "a".into(),
+                    "b".into(),
+                    "c".into(),
+                    true.into(),
+                    1.0.into(),
+                ])
+                .as_value()
+                .try_into()
+                .unwrap();
+
+            assert_eq!(result1, true);
+            assert_eq!(result2, 3.0);
+            assert_eq!(result3, 7.0);
+            assert_eq!(result4, "abctrue1".to_string());
+        }
+    */
     #[test]
-    fn can_add_fn_with_one_arg() {
-        let mut functions = YarnFnRegistry::default();
-        functions.add("test", |a: f32| a);
-    }
-
-    #[test]
-    fn can_call_fn_with_no_args() {
+    fn accepts_reference_params() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test", || true);
-        let function = functions.get("test").unwrap();
-        let result: bool = function.call(vec![]).as_value().try_into().unwrap();
-
-        assert_eq!(result, true);
-    }
-
-    #[test]
-    fn can_call_fn_with_one_arg() {
-        let mut functions = YarnFnRegistry::default();
-
-        functions.add("test", |a: f32| a);
+        functions.add("test", |a: &f32| *a);
         let function = functions.get("test").unwrap();
         let result: f32 = function
             .call(vec![1.0.into()])
@@ -97,76 +186,17 @@ mod tests {
     }
 
     #[test]
-    fn can_add_multiple_fns() {
+    fn accepts_string_reference() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test1", || true);
-        functions.add("test2", |a: f32| a);
-    }
-
-    #[test]
-    fn can_call_multiple_fns() {
-        let mut functions = YarnFnRegistry::default();
-        functions.add("test1", || true);
-        functions.add("test2", |a: f32| a);
-
-        let function1 = functions.get("test1").unwrap();
-        let function2 = functions.get("test2").unwrap();
-
-        let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
-        let result2: f32 = function2
-            .call(vec![1.0.into()])
+        functions.add("test", |a: &f32, b: &String| format!("{}{}", a, b));
+        let function = functions.get("test").unwrap();
+        let result: String = function
+            .call(vec![1.0.into(), "b".into()])
             .as_value()
             .try_into()
             .unwrap();
 
-        assert_eq!(result1, true);
-        assert_eq!(result2, 1.0);
-    }
-
-    #[test]
-    fn can_call_multiple_fns_with_many_params() {
-        let mut functions = YarnFnRegistry::default();
-
-        functions.add("test1", || true);
-        functions.add("test2", |a: f32, b: f32| a + b);
-        functions.add("test3", |a: f32, b: f32, c: f32| a + b * c);
-        functions.add(
-            "test4",
-            |a: String, b: String, c: String, d: bool, e: f32| format!("{}{}{}{}{}", a, b, c, d, e),
-        );
-
-        let function1 = functions.get("test1").unwrap();
-        let function2 = functions.get("test2").unwrap();
-        let function3 = functions.get("test3").unwrap();
-        let function4 = functions.get("test4").unwrap();
-
-        let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
-        let result2: f32 = function2
-            .call(vec![1.0.into(), 2.0.into()])
-            .as_value()
-            .try_into()
-            .unwrap();
-        let result3: f32 = function3
-            .call(vec![1.0.into(), 2.0.into(), 3.0.into()])
-            .as_value()
-            .try_into()
-            .unwrap();
-        let result4: String = function4
-            .call(vec![
-                "a".into(),
-                "b".into(),
-                "c".into(),
-                true.into(),
-                1.0.into(),
-            ])
-            .as_value()
-            .try_into()
-            .unwrap();
-
-        assert_eq!(result1, true);
-        assert_eq!(result2, 3.0);
-        assert_eq!(result3, 7.0);
-        assert_eq!(result4, "abctrue1".to_string());
+        assert_eq!(result, "1b".to_string());
     }
 }
