@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Types/StringType.cs>
 
-use crate::prelude::types::TypeProperties;
+use crate::prelude::types::{type_util::*, TypeProperties};
 use crate::prelude::*;
 
 /// A type that bridges to [`String`]
@@ -12,9 +12,9 @@ impl TypeProperties for StringType {
     const NAME: &'static str = "String";
     fn methods() -> YarnFnRegistry {
         yarn_fn_registry! {
-            Operator::EqualTo => Value::eq_by_value::<Self::RustType>,
-            Operator::NotEqualTo => Value::ne_by_value::<Self::RustType>,
-            Operator::Add => Value::combine(|a: Self::RustType, b: Self::RustType| a + &b),
+            Operator::EqualTo => Self::RustType::eq_by_value,
+            Operator::NotEqualTo => Self::RustType::ne_by_value,
+            Operator::Add => |a: Self::RustType, b: Self::RustType| a + &b,
         }
     }
 }
