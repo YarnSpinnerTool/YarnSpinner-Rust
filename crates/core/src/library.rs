@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Library.cs>
 
-use crate::prelude::YarnFnHashMap;
+use crate::prelude::YarnFnRegistry;
 
 /// A collection of functions that can be called from Yarn scripts.
 ///
@@ -10,5 +10,5 @@ use crate::prelude::YarnFnHashMap;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Library {
     /// The functions that are available to Yarn scripts.
-    functions: YarnFnHashMap,
+    functions: YarnFnRegistry,
 }

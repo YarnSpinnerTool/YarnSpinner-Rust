@@ -7,9 +7,9 @@ use std::ops::{Deref, DerefMut};
 /// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
-pub struct YarnFnHashMap(pub HashMap<String, Box<dyn YarnFn>>);
+pub struct YarnFnRegistry(pub HashMap<String, Box<dyn YarnFn>>);
 
-impl YarnFnHashMap {
+impl YarnFnRegistry {
     pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
     where
         Marker: 'static + Clone,
@@ -26,7 +26,7 @@ impl YarnFnHashMap {
     }
 }
 
-impl Deref for YarnFnHashMap {
+impl Deref for YarnFnRegistry {
     type Target = HashMap<String, Box<dyn YarnFn>>;
 
     fn deref(&self) -> &Self::Target {
@@ -34,18 +34,18 @@ impl Deref for YarnFnHashMap {
     }
 }
 
-impl DerefMut for YarnFnHashMap {
+impl DerefMut for YarnFnRegistry {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-/// Create a [`YarnFnHashMap`] from a list of named functions.
+/// Create a [`YarnFnRegistry`] from a list of named functions.
 #[macro_export]
-macro_rules! yarn_fn_hash_map {
+macro_rules! yarn_fn_registry {
     ($($name:expr => $function:expr,)*) => {
         {
-            let mut map = YarnFnHashMap::default();
+            let mut map = YarnFnRegistry::default();
             $(
                 map.add($name, $function);
             )*
@@ -60,22 +60,22 @@ mod tests {
 
     #[test]
     fn can_add_fn_with_no_args() {
-        let mut library = YarnFnHashMap::default();
-        library.add("test", || true);
+        let mut functions = YarnFnRegistry::default();
+        functions.add("test", || true);
     }
 
     #[test]
     fn can_add_fn_with_one_arg() {
-        let mut library = YarnFnHashMap::default();
-        library.add("test", |a: f32| a);
+        let mut functions = YarnFnRegistry::default();
+        functions.add("test", |a: f32| a);
     }
 
     #[test]
     fn can_call_fn_with_no_args() {
-        let mut library = YarnFnHashMap::default();
+        let mut functions = YarnFnRegistry::default();
 
-        library.add("test", || true);
-        let function = library.get("test").unwrap();
+        functions.add("test", || true);
+        let function = functions.get("test").unwrap();
         let result: bool = function.call(vec![]).as_value().try_into().unwrap();
 
         assert_eq!(result, true);
@@ -83,10 +83,10 @@ mod tests {
 
     #[test]
     fn can_call_fn_with_one_arg() {
-        let mut library = YarnFnHashMap::default();
+        let mut functions = YarnFnRegistry::default();
 
-        library.add("test", |a: f32| a);
-        let function = library.get("test").unwrap();
+        functions.add("test", |a: f32| a);
+        let function = functions.get("test").unwrap();
         let result: f32 = function
             .call(vec![1.0.into()])
             .as_value()
@@ -98,20 +98,20 @@ mod tests {
 
     #[test]
     fn can_add_multiple_fns() {
-        let mut library = YarnFnHashMap::default();
+        let mut functions = YarnFnRegistry::default();
 
-        library.add("test1", || true);
-        library.add("test2", |a: f32| a);
+        functions.add("test1", || true);
+        functions.add("test2", |a: f32| a);
     }
 
     #[test]
     fn can_call_multiple_fns() {
-        let mut library = YarnFnHashMap::default();
-        library.add("test1", || true);
-        library.add("test2", |a: f32| a);
+        let mut functions = YarnFnRegistry::default();
+        functions.add("test1", || true);
+        functions.add("test2", |a: f32| a);
 
-        let function1 = library.get("test1").unwrap();
-        let function2 = library.get("test2").unwrap();
+        let function1 = functions.get("test1").unwrap();
+        let function2 = functions.get("test2").unwrap();
 
         let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
         let result2: f32 = function2
@@ -126,20 +126,20 @@ mod tests {
 
     #[test]
     fn can_call_multiple_fns_with_many_params() {
-        let mut library = YarnFnHashMap::default();
+        let mut functions = YarnFnRegistry::default();
 
-        library.add("test1", || true);
-        library.add("test2", |a: f32, b: f32| a + b);
-        library.add("test3", |a: f32, b: f32, c: f32| a + b * c);
-        library.add(
+        functions.add("test1", || true);
+        functions.add("test2", |a: f32, b: f32| a + b);
+        functions.add("test3", |a: f32, b: f32, c: f32| a + b * c);
+        functions.add(
             "test4",
             |a: String, b: String, c: String, d: bool, e: f32| format!("{}{}{}{}{}", a, b, c, d, e),
         );
 
-        let function1 = library.get("test1").unwrap();
-        let function2 = library.get("test2").unwrap();
-        let function3 = library.get("test3").unwrap();
-        let function4 = library.get("test4").unwrap();
+        let function1 = functions.get("test1").unwrap();
+        let function2 = functions.get("test2").unwrap();
+        let function3 = functions.get("test3").unwrap();
+        let function4 = functions.get("test4").unwrap();
 
         let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
         let result2: f32 = function2

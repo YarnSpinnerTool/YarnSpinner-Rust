@@ -1,5 +1,5 @@
 use crate::prelude::types::*;
-use crate::prelude::YarnFnHashMap;
+use crate::prelude::YarnFnRegistry;
 use paste::paste;
 use std::any::Any;
 use std::fmt::Debug;
@@ -34,7 +34,7 @@ pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
     const DESCRIPTION: &'static str = Self::NAME;
 
     /// The collection of methods that are available on this types.
-    fn methods() -> YarnFnHashMap {
+    fn methods() -> YarnFnRegistry {
         Default::default()
     }
 }
