@@ -1,7 +1,6 @@
 use crate::prelude::Value;
 use std::fmt::Debug;
 use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Sub};
-use std::process::Output;
 
 impl Value {
     pub(crate) fn eq_by_value<T: PartialEq + TryFrom<Value>>(self, other: Self) -> bool

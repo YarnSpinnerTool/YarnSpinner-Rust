@@ -1,9 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Types/NumberType.cs>
 
-use crate::prelude::types::type_util::*;
 use crate::prelude::types::TypeProperties;
 use crate::prelude::*;
-use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 /// A type that bridges to [`f32`]
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

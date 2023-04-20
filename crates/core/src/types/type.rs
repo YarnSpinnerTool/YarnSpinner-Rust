@@ -1,5 +1,5 @@
 use crate::prelude::types::*;
-use crate::prelude::YarnFnRegistry;
+use crate::prelude::{YarnFn, YarnFnRegistry};
 use paste::paste;
 use std::any::Any;
 use std::fmt::Debug;
@@ -119,8 +119,18 @@ impl From<&Box<dyn Any>> for Type {
     }
 }
 
-impl From<Box<dyn Any>> for Type {
-    fn from(_value: Box<dyn Any>) -> Self {
-        Type::Any(Default::default())
+pub trait YarnFnExt {
+    fn r#type() -> Type;
+}
+
+impl YarnFnExt for Box<dyn YarnFn> {
+    fn r#type() -> Type {
+        Type::Function(Default::default())
+    }
+}
+
+impl From<&Box<dyn YarnFn>> for Type {
+    fn from(_value: &Box<dyn YarnFn>) -> Self {
+        Type::Function(Default::default())
     }
 }
