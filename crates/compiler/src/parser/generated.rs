@@ -32,8 +32,7 @@ title: Node_Title
 Here are some lines!
 That's weird?
 Wow!
-==="
-            .into(),
+===",
         ));
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
 

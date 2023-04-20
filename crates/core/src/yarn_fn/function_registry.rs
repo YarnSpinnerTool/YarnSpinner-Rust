@@ -79,7 +79,7 @@ mod tests {
         let function = functions.get("test").unwrap();
         let result: bool = function.call(vec![]).try_into().unwrap();
 
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
@@ -113,7 +113,7 @@ mod tests {
         let result1: bool = function1.call(vec![]).try_into().unwrap();
         let result2: f32 = function2.call(vec![1.0.into()]).try_into().unwrap();
 
-        assert_eq!(result1, true);
+        assert!(result1);
         assert_eq!(result2, 1.0);
     }
 
@@ -154,7 +154,7 @@ mod tests {
             .try_into()
             .unwrap();
 
-        assert_eq!(result1, true);
+        assert!(result1);
         assert_eq!(result2, 3.0);
         assert_eq!(result3, 7.0);
         assert_eq!(result4, "abctrue1".to_string());
@@ -167,10 +167,10 @@ mod tests {
         functions.add("test", |a: f32, b: f32| a + b);
         let debug_string = format!("{:?}", functions);
 
-        let element_start = debug_string.find("{").unwrap();
+        let element_start = debug_string.find('{').unwrap();
         // This looks like an off-by-one error on closer inspection,
         // but on even closer inspection it's correct because there's a space before the second '{' that we don't want to include.
-        let element_end = element_start + debug_string[element_start + 1..].find("{").unwrap();
+        let element_end = element_start + debug_string[element_start + 1..].find('{').unwrap();
         let element = &debug_string[element_start..element_end];
 
         // Not testing the part after because its stability is not guaranteed.
