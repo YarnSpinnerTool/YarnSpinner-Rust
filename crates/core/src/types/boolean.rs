@@ -12,12 +12,12 @@ impl TypeProperties for BooleanType {
     const NAME: &'static str = "Bool";
     fn methods() -> YarnFnRegistry {
         yarn_fn_registry! {
-            Operator::EqualTo => bool::eq_by_value,
-            Operator::NotEqualTo => bool::ne_by_value,
-            Operator::And => <bool as BitAnd>::bitand,
-            Operator::Or => <bool as BitOr>::bitor,
-            Operator::Xor => <bool as BitXor>::bitxor,
-            Operator::Not => bool::not,
+            Operator::EqualTo.to_string() => bool::eq_by_value,
+            Operator::NotEqualTo.to_string() => bool::ne_by_value,
+            Operator::And.to_string() => <bool as BitAnd>::bitand,
+            Operator::Or.to_string() => <bool as BitOr>::bitor,
+            Operator::Xor.to_string() => <bool as BitXor>::bitxor,
+            Operator::Not.to_string() => bool::not,
         }
     }
 }
