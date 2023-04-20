@@ -25,6 +25,8 @@ jobs:
         uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: yeet cache
+        run: cargo clean
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
 
@@ -54,5 +56,7 @@ jobs:
         uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: yeet cache
+        run: cargo clean
       - name: Run cargo test
         run: cargo test --workspace --all-features
