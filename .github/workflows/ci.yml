@@ -21,6 +21,8 @@ jobs:
         with:
           toolchain: stable
           components: clippy
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
@@ -34,6 +36,8 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
@@ -46,6 +50,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo test
