@@ -172,6 +172,7 @@ mod tests {
         let element_end = element_start + debug_string[element_start + 1..].find("{").unwrap();
         let element = &debug_string[element_start..element_end];
 
+        // Not testing the part after because its stability is not guaranteed.
         assert_eq!(element, "{\"test\": fn(f32, f32) -> f32");
     }
 }
