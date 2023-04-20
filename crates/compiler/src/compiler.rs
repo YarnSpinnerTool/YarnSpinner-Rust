@@ -13,10 +13,10 @@ use crate::{
 mod compilation_job;
 
 /// Compile Yarn code, as specified by a compilation job.
-pub fn compile(_compilation_job: CompilationJob) -> CompilationResult {
+pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     // TODO: other steps
-    let compiler_steps: Vec<dyn CompilerStep> =
-        vec![StringTableGenerator {}, BuiltInTypesProvider {}];
+    let compiler_steps: Vec<&dyn CompilerStep> =
+        vec![&StringTableGenerator {}, &BuiltInTypesProvider {}];
 
     let initial = CompilationResult {
         program: None,
@@ -30,18 +30,17 @@ pub fn compile(_compilation_job: CompilationJob) -> CompilationResult {
 
     compiler_steps
         .into_iter()
-        .fold(initial, |acc, curr| curr.run(acc))
+        .fold(initial, |acc, curr| curr.run(&compilation_job, &acc))
 }
 
 trait CompilerStep {
-    // TODO: make this mut or not? That's a general style decision...
-    fn run(input: &CompilationResult) -> CompilationResult;
+    fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult;
 }
 
 struct BuiltInTypesProvider {}
 
 impl CompilerStep for BuiltInTypesProvider {
-    fn run(_input: &CompilationResult) -> CompilationResult {
+    fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult {
         todo!()
     }
 }
@@ -49,7 +48,7 @@ impl CompilerStep for BuiltInTypesProvider {
 struct StringTableGenerator {}
 
 impl CompilerStep for StringTableGenerator {
-    fn run(_input: &CompilationResult) -> CompilationResult {
+    fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult {
         todo!()
     }
 }
@@ -58,7 +57,7 @@ impl<'input> ParseTreeListener<'input, YarnSpinnerParserContextType> for StringT
 
 impl<'input> StringTableGenerator {
     fn generate_string_tag_if_absent(&mut self, _ctx: &DialogueContext<'input>) {
-        if (!&self.has_string_tag(_ctx)) {
+        if !&self.has_string_tag(_ctx) {
             self.generate_string_tag(_ctx);
             // TODO: how to access CompilationResult? Or do we add field?
             // self.generated_implicit_string_tag = true;
