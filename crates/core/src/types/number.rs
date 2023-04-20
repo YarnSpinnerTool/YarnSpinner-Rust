@@ -13,18 +13,18 @@ impl TypeProperties for NumberType {
     const NAME: &'static str = "Number";
     fn methods() -> YarnFnRegistry {
         yarn_fn_registry! {
-            Operator::EqualTo.to_string() => f32::eq_by_value,
-            Operator::NotEqualTo.to_string() => f32::ne_by_value,
-            Operator::Add.to_string() => <f32 as Add>::add,
-            Operator::Subtract.to_string() => <f32 as Sub>::sub,
-            Operator::Multiply.to_string() => <f32 as Mul>::mul,
-            Operator::Divide.to_string() => <f32 as Div>::div,
-            Operator::Modulo.to_string() => <f32 as Rem>::rem,
-            Operator::UnarySubtract.to_string() => f32::neg,
-            Operator::GreaterThan.to_string() => f32::gt_by_value,
-            Operator::GreaterThanOrEqualTo.to_string() => f32::ge_by_value,
-            Operator::LessThan.to_string() => f32::lt_by_value,
-            Operator::LessThanOrEqualTo.to_string() => f32::le_by_value,
+            Operator::EqualTo => f32::eq_by_value,
+            Operator::NotEqualTo => f32::ne_by_value,
+            Operator::Add => <f32 as Add>::add,
+            Operator::Subtract => <f32 as Sub>::sub,
+            Operator::Multiply => <f32 as Mul>::mul,
+            Operator::Divide => <f32 as Div>::div,
+            Operator::Modulo => <f32 as Rem>::rem,
+            Operator::UnarySubtract => f32::neg,
+            Operator::GreaterThan => f32::gt_by_value,
+            Operator::GreaterThanOrEqualTo => f32::ge_by_value,
+            Operator::LessThan => f32::lt_by_value,
+            Operator::LessThanOrEqualTo => f32::le_by_value,
         }
     }
 }
