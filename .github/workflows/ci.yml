@@ -36,6 +36,9 @@ jobs:
       - name: Run diagnostics III
         if: failure()
         run: find */**/mod.rs
+      - name: Run diagnostics IV
+        if: failure()
+        run: pwd
 
   format:
     runs-on: ubuntu-latest
