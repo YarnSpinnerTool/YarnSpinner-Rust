@@ -6,5 +6,4 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 antlr-rust = "0.3.0-beta"
-thiserror = "1.0.40"
 rusty-yarn-spinner-core = { path = "../core" }

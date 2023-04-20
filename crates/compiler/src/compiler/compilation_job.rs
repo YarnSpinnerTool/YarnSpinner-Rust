@@ -46,8 +46,8 @@ pub enum CompilationType {
     FullCompilation,
     // The compiler will derive only the variable and function declarations,
     // and file tags, found in the script.
-    // DeclarationsOnly, // TODO
+    DeclarationsOnly,
 
     // The compiler will generate a string table only.
-    //StringsOnly, // TODO
+    StringsOnly,
 }

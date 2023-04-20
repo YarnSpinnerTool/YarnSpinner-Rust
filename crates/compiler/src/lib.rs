@@ -1,5 +1,5 @@
 mod compiler;
-//mod intermediate;
+mod error_listener;
 mod output;
 mod parser;
 

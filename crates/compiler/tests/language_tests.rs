@@ -23,6 +23,8 @@ fn test_end_of_notes_with_options_not_added() {
 
 #[test]
 fn test_node_headers() {
+    todo!()
+    /*
     let path = TestBase::test_data_path().join("Headers.yarn");
     let result = Compiler.Compile(CompilationJob.CreateFromFiles(path));
 
@@ -94,8 +96,8 @@ fn test_node_headers() {
     result.FileTags.Should().ContainSingle();
     result.FileTags[path].Should().ContainSingle();
     result.FileTags[path].Should().Contain("file_header");
+    */
 }
-
 
 #[test]
 #[ignore]
