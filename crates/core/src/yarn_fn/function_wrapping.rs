@@ -9,7 +9,7 @@ pub trait YarnFnWithMarker<Marker> {
 }
 
 pub trait YarnFn: Debug {
-    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue>;
+    fn call(&self, input: Vec<Value>) -> Value;
     fn clone_box(&self) -> Box<dyn YarnFn>;
 }
 
@@ -25,9 +25,9 @@ where
     F: YarnFnWithMarker<Marker> + 'static + Clone,
     F::Out: Into<Value> + 'static + Clone,
 {
-    fn call(&self, input: Vec<Value>) -> Box<dyn IntoValue> {
+    fn call(&self, input: Vec<Value>) -> Value {
         let output = self.function.call(input);
-        Box::new(output)
+        output.as_value()
     }
 
     fn clone_box(&self) -> Box<dyn YarnFn> {

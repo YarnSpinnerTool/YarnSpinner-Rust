@@ -76,7 +76,7 @@ mod tests {
 
             functions.add("test", || true);
             let function = functions.get("test").unwrap();
-            let result: bool = function.call(vec![]).as_value().try_into().unwrap();
+            let result: bool = function.call(vec![]).try_into().unwrap();
 
             assert_eq!(result, true);
         }
@@ -89,7 +89,7 @@ mod tests {
             let function = functions.get("test").unwrap();
             let result: f32 = function
                 .call(vec![1.0.into()])
-                .as_value()
+
                 .try_into()
                 .unwrap();
 
@@ -113,10 +113,10 @@ mod tests {
             let function1 = functions.get("test1").unwrap();
             let function2 = functions.get("test2").unwrap();
 
-            let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
+            let result1: bool = function1.call(vec![]).try_into().unwrap();
             let result2: f32 = function2
                 .call(vec![1.0.into()])
-                .as_value()
+
                 .try_into()
                 .unwrap();
 
@@ -141,15 +141,15 @@ mod tests {
             let function3 = functions.get("test3").unwrap();
             let function4 = functions.get("test4").unwrap();
 
-            let result1: bool = function1.call(vec![]).as_value().try_into().unwrap();
+            let result1: bool = function1.call(vec![]).try_into().unwrap();
             let result2: f32 = function2
                 .call(vec![1.0.into(), 2.0.into()])
-                .as_value()
+
                 .try_into()
                 .unwrap();
             let result3: f32 = function3
                 .call(vec![1.0.into(), 2.0.into(), 3.0.into()])
-                .as_value()
+
                 .try_into()
                 .unwrap();
             let result4: String = function4
@@ -160,7 +160,7 @@ mod tests {
                     true.into(),
                     1.0.into(),
                 ])
-                .as_value()
+
                 .try_into()
                 .unwrap();
 
@@ -176,11 +176,7 @@ mod tests {
 
         functions.add("test", |a: &f32| *a);
         let function = functions.get("test").unwrap();
-        let result: f32 = function
-            .call(vec![1.0.into()])
-            .as_value()
-            .try_into()
-            .unwrap();
+        let result: f32 = function.call(vec![1.0.into()]).try_into().unwrap();
 
         assert_eq!(result, 1.0);
     }
@@ -193,7 +189,6 @@ mod tests {
         let function = functions.get("test").unwrap();
         let result: String = function
             .call(vec![1.0.into(), "b".into()])
-            .as_value()
             .try_into()
             .unwrap();
 
