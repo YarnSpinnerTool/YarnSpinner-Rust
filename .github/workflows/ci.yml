@@ -31,6 +31,9 @@ jobs:
       - name: Run diagnostics II
         if: failure()
         run: find . -print | grep -i "Yarn.rs"
+      - name: Run diagnostics II
+        if: failure()
+        run: protoc --version
 
   format:
     runs-on: ubuntu-latest
