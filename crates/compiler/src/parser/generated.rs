@@ -15,6 +15,11 @@ pub mod yarnspinnerparser;
 #[allow(clippy)]
 pub mod yarnspinnerparserlistener;
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[allow(warnings)]
+#[allow(clippy)]
+pub mod yarnspinnerparservisitor;
+
 #[cfg(test)]
 mod tests {
     use super::*;
