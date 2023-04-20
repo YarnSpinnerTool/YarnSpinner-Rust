@@ -24,6 +24,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
       - name: Run cargo clippy
+        shell: zsh {0}
         run: cargo clippy --workspace --all-features --tests --examples
       - name: Run diagnostics
         if: failure()
@@ -31,12 +32,6 @@ jobs:
       - name: Run diagnostics II
         if: failure()
         run: find . -print | grep -i "Yarn.rs"
-      - name: Run diagnostics III
-        if: failure()
-        run: find . -print | grep -i "mod.rs"
-      - name: Run diagnostics IV
-        if: failure()
-        run: pwd
 
   format:
     runs-on: ubuntu-latest
