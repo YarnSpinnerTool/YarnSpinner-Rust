@@ -27,6 +27,12 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
+      - name: Run diagnostics
+        if: failure()
+        run: find */**/*.proto
+      - name: Run diagnostics II
+        if: failure()
+        run: find */**/Yarn.rs
 
   format:
     runs-on: ubuntu-latest
