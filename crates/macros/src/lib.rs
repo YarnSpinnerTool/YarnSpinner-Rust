@@ -8,6 +8,7 @@ use syn::{
     token::Comma,
     Ident, LitInt, Result,
 };
+
 struct AllTuples {
     macro_ident: Ident,
     start: usize,

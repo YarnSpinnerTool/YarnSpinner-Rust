@@ -3,10 +3,10 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
 /// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn YarnFn>>);
 
 impl YarnFnRegistry {
