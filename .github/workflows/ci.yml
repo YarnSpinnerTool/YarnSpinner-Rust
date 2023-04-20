@@ -27,6 +27,9 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
+      - name: Find generated files
+        if: failure()
+        run: find */**/Yarn.rs
 
   format:
     runs-on: ubuntu-latest
@@ -42,6 +45,9 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
         run: cargo fmt --check --all
+      - name: Find generated files
+        if: failure()
+        run: find */**/Yarn.rs
 
   test:
     runs-on: ubuntu-latest
@@ -56,3 +62,6 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo test
         run: cargo test --workspace --all-features
+      - name: Find generated files
+        if: failure()
+        run: find */**/Yarn.rs
