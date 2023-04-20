@@ -11,4 +11,4 @@ and the command `java -jar "path/to/antlr4-4.8-2-SNAPSHOT-complete.jar" -Dlangua
 * `YarnSpinnerParserParserContext` replaced with `YarnSpinnerParserContext` - no idea what happened there during generation
 * Disambiguate `visit_node` by explicitly using `antlr_rust::tree::VisitChildren::visit_node` (other variant would be `yarnspinnerparservisitor::YarnSpinnerParserVisitor::visit_node`)
 * Autoformat files
-* `parser.rs` now contains allows for `warnings` and `clippy` together with `#![cfg_attr(rustfmt, rustfmt_skip)]`
+* `generated.rs` now contains allows for `warnings` and `clippy` together with `#![cfg_attr(rustfmt, rustfmt_skip)]`
