@@ -5,6 +5,7 @@ mod compilation_job;
 
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(_compilation_job: CompilationJob) -> CompilationResult {
+    // TODO: Implement this :)
     CompilationResult {
         program: None,
         string_table: Default::default(),
