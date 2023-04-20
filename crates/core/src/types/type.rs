@@ -48,7 +48,7 @@ pub trait TypeProperties: Clone + PartialEq + Eq + Debug {
 }
 
 // The following is implemented on [`BuiltinTypes`] in the original implementation, but implementing it
-// on [`Type`] results in more compile time safety.
+// on [`Type`] results in more compile-time safety.
 
 macro_rules! impl_type {
     ($($yarn_type:pat => [$($base_type:path,)*] ,)*) => {
