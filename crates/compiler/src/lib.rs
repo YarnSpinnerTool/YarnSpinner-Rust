@@ -4,5 +4,5 @@ mod output;
 mod parser;
 
 pub mod prelude {
-    pub use crate::parser::generated::*;
+    pub use crate::{compiler::*, error_listener::*, output::*, parser::*};
 }
