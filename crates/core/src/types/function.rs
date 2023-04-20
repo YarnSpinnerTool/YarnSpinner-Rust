@@ -4,10 +4,15 @@ use crate::prelude::types::TypeProperties;
 use crate::prelude::YarnFn;
 use crate::types::Type;
 
-/// Todo
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct FunctionType {
-    parameters: Vec<Type>,
+    pub parameters: Vec<Type>,
+}
+
+impl FunctionType {
+    pub fn add_parameter(&mut self, parameter: Type) {
+        self.parameters.push(parameter);
+    }
 }
 
 impl TypeProperties for FunctionType {
