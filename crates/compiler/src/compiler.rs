@@ -48,11 +48,11 @@ where
 }
 
 fn add_built_in_types(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
-    todo!()
+    previous
 }
 
 fn create_string_tables(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
-    todo!()
+    previous
 }
 
 #[cfg(test)]
