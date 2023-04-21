@@ -1,16 +1,7 @@
 pub use crate::compiler::compilation_job::*;
+use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
-use crate::prelude::StringTableManager;
-use crate::{
-    output::*,
-    prelude::generated::{
-        yarnspinnerparser::{DialogueContext, YarnSpinnerParserContextType},
-        yarnspinnerparserlistener,
-    },
-};
 use antlr_rust::token::Token;
-use std::borrow::BorrowMut;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 mod compilation_job;
@@ -36,11 +27,11 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
 }
 
 pub(crate) fn get_line_id_tag<'a>(
-    hashtag_contexts: &[Rc<HashtagContextAll>],
-) -> Option<Rc<HashtagContextAll>> {
+    hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
+) -> Option<Rc<HashtagContextAll<'a>>> {
     hashtag_contexts
         .iter()
-        .find(|h| h.text.expect("Hashtag held no text").get_text() == "line:")
+        .find(|h| h.text.as_ref().expect("Hashtag held no text").get_text() == "line:")
         .cloned()
 }
 
