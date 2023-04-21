@@ -34,7 +34,7 @@ pub struct CompilationResult {
     /// for each line - either through explicit line tags indicated through
     /// the `#line:` tag, or implicitly-generated line IDs that the
     /// compiler added during compilation.
-    pub string_table: StringTableManager,
+    pub string_table: HashMap<String, StringInfo>,
 
     /// The collection of variable declarations that were found during
     /// compilation.

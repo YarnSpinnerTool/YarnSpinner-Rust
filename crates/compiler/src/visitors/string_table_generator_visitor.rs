@@ -2,24 +2,39 @@
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::tree::{ParseTreeVisitorCompat, Tree};
+use antlr_rust::tree::{ParseTreeVisitorCompat, TerminalNode, Tree};
 
-/// Represents StringTableGeneratorVisitor
-struct StringTableGeneratorVisitor(StringTableManager);
+#[derive(Debug, Clone)]
+pub(crate) struct StringTableGeneratorVisitor {
+    diagnostics: Vec<Diagnostic>,
+    current_node_name: String,
+    file_name: String,
+    string_table_manager: StringTableManager,
+}
 
-impl<'input> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisitor {
-    type Node = YarnSpinnerParserContextType;
-
-    type Return = StringTableManager;
-
-    fn temp_result(&mut self) -> &mut Self::Return {
-        &mut self.0
+impl StringTableGeneratorVisitor {
+    pub(crate) fn new(file_name: String, string_table_manager: StringTableManager) -> Self {
+        Self {
+            file_name,
+            string_table_manager,
+            diagnostics: Default::default(),
+            current_node_name: Default::default(),
+        }
     }
 }
 
-impl<'input> YarnSpinnerParserVisitor<'input> for StringTableGeneratorVisitor {
-    /// VisitLine_statement of StringTableGeneratorVisitor
-    fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) {
+impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
+    type Node = YarnSpinnerParserContextType;
+
+    type Return = ();
+
+    fn temp_result(&mut self) -> &mut Self::Return {
+        Box::leak(Box::new(()))
+    }
+}
+
+impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor {
+    fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
         let line_number = ctx.start().line;
         let hashtags = ctx.hashtag_all();
         let line_id_tag: Option<HashtagContext> = todo!();
@@ -27,25 +42,25 @@ impl<'input> YarnSpinnerParserVisitor<'input> for StringTableGeneratorVisitor {
 
         let hashtag_texts = hashtags.iter().map(|t| t.text.as_ref());
 
-        let generate_formatted_text = |_| (todo!(), todo!());
+        let generate_formatted_text = |_| -> (String, isize) { (todo!(), todo!()) };
         let (composed_string, expression_count) =
             generate_formatted_text(ctx.line_formatted_text().unwrap().get_children());
 
         if let Some(line_id) = line_id {
-            if self.0.contains_key(&line_id.to_string()) {
+            if self.string_table_manager.contains_key(&line_id.to_string()) {
                 // TODO: Duplicate line ID, add to diagnostics
             }
         };
 
         // TODO
-        self.0.insert(
+        self.string_table_manager.insert(
             composed_string,
             StringInfo {
-                text: (),
-                node_name: (),
-                line_number: (),
-                file_name: (),
-                metadata: (),
+                text: todo!(),
+                node_name: todo!(),
+                line_number: todo!(),
+                file_name: todo!(),
+                metadata: todo!(),
                 ..Default::default()
             },
         );
