@@ -5,8 +5,8 @@ pub(crate) trait PartialEqByValue {
 }
 
 impl<T> PartialEqByValue for T
-    where
-        T: PartialEq,
+where
+    T: PartialEq,
 {
     fn eq_by_value(self, other: Self) -> bool {
         self == other
@@ -26,8 +26,8 @@ pub(crate) trait PartialOrdByValue {
 }
 
 impl<T> PartialOrdByValue for T
-    where
-        T: PartialOrd,
+where
+    T: PartialOrd,
 {
     fn lt_by_value(self, other: Self) -> bool {
         self < other

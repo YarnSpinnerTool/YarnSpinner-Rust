@@ -20,10 +20,10 @@ impl Clone for Box<dyn YarnFn> {
 }
 
 impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
-    where
-        Marker: 'static + Clone,
-        F: YarnFnWithMarker<Marker> + 'static + Clone,
-        F::Out: Into<Value> + 'static + Clone,
+where
+    Marker: 'static + Clone,
+    F: YarnFnWithMarker<Marker> + 'static + Clone,
+    F::Out: Into<Value> + 'static + Clone,
 {
     fn call(&self, input: Vec<Value>) -> Value {
         let output = self.function.call(input);
@@ -41,8 +41,8 @@ pub trait IntoValue {
 }
 
 impl<T> IntoValue for T
-    where
-        T: Into<Value> + Clone,
+where
+    T: Into<Value> + Clone,
 {
     fn as_value(&self) -> Value {
         self.clone().into()
@@ -51,8 +51,8 @@ impl<T> IntoValue for T
 
 #[derive(Clone)]
 pub struct YarnFnWrapper<Marker, F>
-    where
-        F: YarnFnWithMarker<Marker>,
+where
+    F: YarnFnWithMarker<Marker>,
 {
     function: F,
 
@@ -61,8 +61,8 @@ pub struct YarnFnWrapper<Marker, F>
 }
 
 impl<Marker, F> From<F> for YarnFnWrapper<Marker, F>
-    where
-        F: YarnFnWithMarker<Marker>,
+where
+    F: YarnFnWithMarker<Marker>,
 {
     fn from(function: F) -> Self {
         Self {
@@ -73,8 +73,8 @@ impl<Marker, F> From<F> for YarnFnWrapper<Marker, F>
 }
 
 impl<Marker, F> Debug for YarnFnWrapper<Marker, F>
-    where
-        F: YarnFnWithMarker<Marker>,
+where
+    F: YarnFnWithMarker<Marker>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let signature = std::any::type_name::<Marker>();

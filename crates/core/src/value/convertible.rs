@@ -23,9 +23,9 @@ impl TryFrom<Convertible> for f32 {
 }
 
 impl<T> From<&T> for Convertible
-    where
-        T: Copy,
-        Convertible: From<T>,
+where
+    T: Copy,
+    Convertible: From<T>,
 {
     fn from(value: &T) -> Self {
         Self::from(*value)

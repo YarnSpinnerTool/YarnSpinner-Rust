@@ -23,7 +23,7 @@ impl TestBase {
             "YarnSpinner",
             "Tests",
         ]
-            .iter()
-            .collect()
+        .iter()
+        .collect()
     }
 }

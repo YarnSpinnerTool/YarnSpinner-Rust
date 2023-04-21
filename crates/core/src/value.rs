@@ -34,9 +34,9 @@ macro_rules! impl_from {
 }
 
 impl<T> From<&T> for Value
-    where
-        T: Copy,
-        Value: From<T>,
+where
+    T: Copy,
+    Value: From<T>,
 {
     fn from(value: &T) -> Self {
         Self::from(*value)
