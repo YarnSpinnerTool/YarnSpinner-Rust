@@ -147,8 +147,11 @@ mod tests {
     use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
     use antlr_rust::common_token_stream::CommonTokenStream;
     use antlr_rust::parser_rule_context::RuleContextExt;
+    use antlr_rust::token_stream::TokenStream;
     use antlr_rust::tree::ParseTreeVisitor;
-    use antlr_rust::InputStream;
+    use antlr_rust::{
+        BaseParser, DefaultErrorStrategy, ErrorStrategy, InputStream, Parser, TidAble,
+    };
 
     #[test]
     fn ignores_lines_without_expression() {
@@ -157,24 +160,7 @@ mod tests {
 A line
 ===
 ";
-        let lexer = YarnSpinnerLexer::new(InputStream::new(input.into()));
-        let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
-
-        let line_formatted_text = parser
-            .dialogue()
-            .unwrap()
-            .node(0)
-            .unwrap()
-            .body()
-            .unwrap()
-            .statement(0)
-            .unwrap()
-            .line_statement()
-            .unwrap()
-            .line_formatted_text()
-            .unwrap();
-
-        let result = generate_formatted_text(&line_formatted_text);
+        let result = process_input(input);
         let expected = "A line";
         assert_eq!(result, expected);
     }
@@ -186,9 +172,26 @@ A line
 A line with a {$cool} expression
 ===
 ";
+        let result = process_input(input);
+        let expected = "A line with a {0} expression";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn formats_lines_with_multiple_expressions() {
+        let input = "title: Title
+---
+A line with {$many} many {(1 -(1 * 2))}{$cool} expressions
+===
+";
+        let result = process_input(input);
+        let expected = "A line with {0} many {1}{2} expressions";
+        assert_eq!(result, expected);
+    }
+
+    fn process_input(input: &str) -> String {
         let lexer = YarnSpinnerLexer::new(InputStream::new(input.into()));
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
-
         let line_formatted_text = parser
             .dialogue()
             .unwrap()
@@ -202,8 +205,6 @@ A line with a {$cool} expression
             .unwrap()
             .line_formatted_text()
             .unwrap();
-        let result = generate_formatted_text(&line_formatted_text);
-        let expected = "A line with a {0} expression";
-        assert_eq!(result, expected);
+        generate_formatted_text(&line_formatted_text)
     }
 }
