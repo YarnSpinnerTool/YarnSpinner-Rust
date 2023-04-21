@@ -11,10 +11,10 @@ pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn YarnFn>>);
 
 impl YarnFnRegistry {
     pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
-    where
-        Marker: 'static + Clone,
-        F: YarnFnWithMarker<Marker> + 'static + Clone,
-        F::Out: Into<Value> + 'static + Clone,
+        where
+            Marker: 'static + Clone,
+            F: YarnFnWithMarker<Marker> + 'static + Clone,
+            F::Out: Into<Value> + 'static + Clone,
     {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);

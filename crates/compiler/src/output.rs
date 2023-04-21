@@ -55,7 +55,7 @@ pub struct CompilationResult {
     /// hand, or added using the [`Utility.AddTagsToLines`] method.
     pub contains_implicit_string_tags: bool,
 
-    /// Tthe collection of file-level tags found in the source code.
+    /// The collection of file-level tags found in the source code.
     ///
     /// The keys of this dictionary are the file names (as
     /// indicated by the [`CompilationJob.File.FileName`] property
