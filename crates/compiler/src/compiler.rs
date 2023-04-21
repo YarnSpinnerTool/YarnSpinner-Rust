@@ -35,22 +35,6 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
         .fold(initial, |acc, curr| curr.run(&compilation_job, &acc))
 }
 
-#[cfg(test)]
-mod test {
-    use super::CompilationJob;
-    use super::*;
-
-    #[test]
-    fn can_call_compile_without_crash() {
-        compile(CompilationJob {
-            files: vec![],
-            library: None,
-            compilation_type: CompilationType::FullCompilation,
-            variable_declarations: vec![],
-        });
-    }
-}
-
 trait CompilerStep {
     fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult;
 }
@@ -98,5 +82,21 @@ impl<'input> StringTableGenerator {
 
     fn generate_string_tag(&mut self, _ctx: &DialogueContext<'input>) {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::CompilationJob;
+    use super::*;
+
+    #[test]
+    fn can_call_compile_without_crash() {
+        compile(CompilationJob {
+            files: vec![],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
     }
 }
