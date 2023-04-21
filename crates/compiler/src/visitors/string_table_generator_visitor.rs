@@ -111,28 +111,16 @@ impl ParseTreeVisitorCompat<'_> for FormattedTextVisitor {
     }
 
     fn visit_terminal(&mut self, node: &TerminalNode<'_, Self::Node>) -> Self::Return {
-        unreachable!();
         println!("Visiting terminal");
         if node.symbol.get_token_type() == TEXT {
-            println!("Visiting text node: {}", node.get_text());
             node.get_text()
         } else {
-            println!("Visiting other node: {}", node.get_text());
             String::new()
         }
     }
 
-    //fn aggregate_results(&self, aggregate: Self::Return, next: Self::Return) -> Self::Return {
-    //    aggregate + &next
-    //}
-
-    fn should_visit_next_child(
-        &self,
-        _node: &<Self::Node as ParserNodeType<'_>>::Type,
-        current: &Self::Return,
-    ) -> bool {
-        println!("Should visit next child: {}", current.is_empty());
-        false
+    fn aggregate_results(&self, aggregate: Self::Return, next: Self::Return) -> Self::Return {
+        aggregate + &next
     }
 }
 
@@ -142,17 +130,16 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for FormattedTextVisitor {
         ctx.node_all()
             .into_iter()
             .fold(String::new(), |mut acc, node| acc + &self.visit(&*node))*/
-        println!(
-            "node: {}",
-            ctx.node(0)
-                .unwrap()
-                .body()
-                .unwrap()
-                .statement(0)
-                .unwrap()
-                .get_text()
-        );
-        String::new()
+        let line_statement = ctx
+            .node(0)
+            .unwrap()
+            .body()
+            .unwrap()
+            .statement(0)
+            .unwrap()
+            .line_statement()
+            .unwrap();
+        self.visit(&*line_statement)
     }
 
     /*
@@ -219,7 +206,7 @@ mod tests {
     use antlr_rust::InputStream;
 
     #[test]
-    fn works() {
+    fn ignores_lines_without_expression() {
         let input = "title: Title
 ---
 A line
@@ -231,7 +218,24 @@ A line
         let dialogue = parser.dialogue().unwrap();
 
         let result = FormattedTextVisitor::default().visit(&*dialogue);
-        let expected = "[@0,0:0='A',<1>,1:0]\n";
+        let expected = "A line";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn formats_lines_with_expression() {
+        let input = "title: Title
+---
+A line with a {$cool} expression
+===
+";
+        let lexer = YarnSpinnerLexer::new(InputStream::new(input.into()));
+        let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
+
+        let dialogue = parser.dialogue().unwrap();
+
+        let result = FormattedTextVisitor::default().visit(&*dialogue);
+        let expected = "A line with a {0} expression";
         assert_eq!(result, expected);
     }
 }
