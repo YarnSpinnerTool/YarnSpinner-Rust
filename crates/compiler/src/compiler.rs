@@ -9,6 +9,7 @@ use parser::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitor;
 use super::*;
 pub use crate::compiler::compilation_job::*;
 use crate::prelude::generated::yarnspinnerparser::*;
+use crate::prelude::StringTableManager;
 use crate::{
     output::*,
     prelude::generated::{
@@ -64,12 +65,12 @@ fn create_string_tables(job: &CompilationJob, previous: CompilationResult) -> Co
 }
 
 /// Represents StringTableGeneratorVisitor
-struct StringTableGeneratorVisitor(HashMap<String, StringInfo>);
+struct StringTableGeneratorVisitor(StringTableManager);
 
 impl<'input> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisitor {
     type Node = YarnSpinnerParserContextType;
 
-    type Return = HashMap<String, StringInfo>;
+    type Return = StringTableManager;
 
     fn temp_result(&mut self) -> &mut Self::Return {
         &mut self.0
@@ -104,8 +105,8 @@ impl<'input> YarnSpinnerParserVisitor<'input> for StringTableGeneratorVisitor {
                 node_name: (),
                 line_number: (),
                 file_name: (),
-                is_implicit_tag: (),
                 metadata: (),
+                ..Default::default()
             },
         );
 

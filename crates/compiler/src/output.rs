@@ -2,6 +2,7 @@
 
 use crate::error_listener::Diagnostic;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
+use crate::prelude::StringTableManager;
 use rusty_yarn_spinner_core::prelude::Program;
 use std::collections::HashMap;
 
@@ -33,7 +34,7 @@ pub struct CompilationResult {
     /// for each line - either through explicit line tags indicated through
     /// the `#line:` tag, or implicitly-generated line IDs that the
     /// compiler added during compilation.
-    pub string_table: HashMap<String, StringInfo>,
+    pub string_table: StringTableManager,
 
     /// The collection of variable declarations that were found during
     /// compilation.
