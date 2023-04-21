@@ -8,8 +8,10 @@ use crate::{
         yarnspinnerparserlistener,
     },
 };
+use antlr_rust::token::Token;
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 mod compilation_job;
 
@@ -31,6 +33,15 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     compiler_steps
         .into_iter()
         .fold(initial, |acc, curr| curr.apply(&compilation_job, acc))
+}
+
+pub(crate) fn get_line_id_tag<'a>(
+    hashtag_contexts: &[Rc<HashtagContextAll>],
+) -> Option<Rc<HashtagContextAll>> {
+    hashtag_contexts
+        .iter()
+        .find(|h| h.text.expect("Hashtag held no text").get_text() == "line:")
+        .cloned()
 }
 
 trait CompilerStep {

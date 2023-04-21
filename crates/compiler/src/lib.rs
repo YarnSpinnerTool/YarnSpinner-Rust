@@ -1,4 +1,4 @@
-mod compiler;
+pub(crate) mod compiler;
 mod error_listener;
 mod input_manager;
 mod output;
