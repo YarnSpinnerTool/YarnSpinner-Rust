@@ -14,4 +14,4 @@ java -jar "path/to/antlr4-4.8-2-SNAPSHOT-complete.jar" -Dlanguage=Rust third-par
 ## Manual Adjustments
 * Rename `YarnSpinnerParserParserContext` to `YarnSpinnerParserContext`
   * Something goes wrong during generation with this type, resulting in the error `symbol type conflicts with generated code in target language or runtime`
-* Add the generated `mod`s to `parser.rs`, including lint allow attributes for `warnings`, `clippy` and `rustfmt`
+* Add the generated `mod`s to `generated.rs`, including lint allow attributes for `warnings`, `clippy` and `rustfmt`
