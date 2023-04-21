@@ -3,37 +3,48 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [ main ]
 
 env:
   CARGO_TERM_COLOR: always
   # Sparse cargo registry for faster updates
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-  # Handle cargo check and cargo clippy warnings as errors
-  RUSTFLAGS: "-D warnings"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      # Handle cargo check and cargo clippy warnings as errors
+      RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           components: clippy
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
-        run: cargo clippy --workspace --all-features
+        run: cargo clippy --workspace --all-features --tests --examples
 
   format:
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           components: rustfmt
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
@@ -43,9 +54,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo test

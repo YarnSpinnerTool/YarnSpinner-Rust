@@ -1,0 +1,9 @@
+[package]
+name = "rusty-yarn-spinner-compiler"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+antlr-rust = "0.3.0-beta"
+rusty-yarn-spinner-core = { path = "../core" }
