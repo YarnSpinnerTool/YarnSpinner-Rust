@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="code" pattern="!file[rusty-yarn-spinner]:third-party//*&amp;&amp;!file[rusty-yarn-spinner]:crates/compiler/src/parser/generated//*&amp;&amp;!file[rusty-yarn-spinner]:.idea//*&amp;&amp;!file:Cargo.lock" />
+</component>

@@ -1,0 +1,375 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Annotator" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="CargoTomlCyclicFeature" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="CrateNotFound" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="CrateVersionInvalid" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigCharClassLetterRedundancy" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigCharClassRedundancy" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigDeprecatedDescriptor" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigEmptyHeader" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigEmptySection" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigEncoding" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigHeaderUniqueness" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigKeyCorrectness" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigListAcceptability" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigMissingRequiredDeclaration" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigNoMatchingFiles" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigNumerousWildcards" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigOptionRedundancy" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigPairAcceptability" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigPartialOverride" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigPatternEnumerationRedundancy" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigPatternRedundancy" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigReferenceCorrectness" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigRootDeclarationCorrectness" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigRootDeclarationUniqueness" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigShadowedOption" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigShadowingOption" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigSpaceInHeader" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigUnexpectedComma" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigUnusedDeclaration" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigValueCorrectness" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigValueUniqueness" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EditorConfigWildcardRedundancy" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="EmptyDirectory" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="GrazieInspection" enabled="true" level="GRAMMAR_ERROR" enabled_by_default="false">
+      <scope name="code" level="GRAMMAR_ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="IgnoreFileDuplicateEntry" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="InconsistentLineSeparators" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="IncorrectFormatting" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="InjectedReferences" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="LanguageDetectionInspection" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="LongLine" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="LossyEncoding" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="MissingFeatures" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="NewCrateVersionAvailable" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="NonAsciiCharacters" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="ProblematicWhitespace" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="ReassignedToPlainText" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RedundantSuppression" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsApproxConstant" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsArgumentNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsAssertEqual" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsAssignToImmutable" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsAssocTypeNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsAttrWithoutParentheses" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsBareTraitObjects" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsBorrowChecker" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsCStringPointer" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsCastToBool" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsConstNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsConstReferStatic" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsConstantConditionIf" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDanglingElse" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDeprecation" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDetachedFile" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDoubleMustUse" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDoubleNeg" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDropRef" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsDuplicatedTraitMethodBinding" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsEnumNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsEnumVariantNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsExperimentalChecks" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsExternalLinter" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsExtraSemicolon" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsFieldInitShorthand" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsFieldNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsFunctionNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsLifetimeNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsLift" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsLiveness" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsMacroNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsMainFunctionNotFound" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsMethodNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsMissingElse" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsModuleNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsNeedlessLifetimes" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsNonExhaustiveMatch" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsNonShorthandFieldPatterns" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsReassignImmutable" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsRedundantElse" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsRedundantSemicolons" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsSelfConvention" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsSimplifyBooleanExpression" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsSimplifyPrint" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsSortImplTraitMembers" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsStaticConstNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsStructNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsSuspiciousAssignment" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsTraitImplementation" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsTraitNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsTryMacro" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsTypeAliasNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsTypeCheck" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsTypeParameterNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnknownCrateTypes" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnnecessaryQualifications" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnreachableCode" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnreachablePatterns" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnresolvedReference" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnusedImport" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnusedLabels" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsUnusedMustUse" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsVariableMutable" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsVariableNaming" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsWhileTrueLoop" enabled="true" level="WEAK WARNING" enabled_by_default="false">
+      <scope name="code" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsWrongAssocTypeArguments" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsWrongGenericArgumentsNumber" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsWrongGenericArgumentsOrder" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsWrongGenericParametersNumber" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="RsWrongLifetimeParametersNumber" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="code" level="ERROR" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="SpellCheckingInspection" enabled="true" level="TYPO" enabled_by_default="false">
+      <scope name="code" level="TYPO" enabled="true">
+        <option name="processCode" value="true" />
+        <option name="processLiterals" value="true" />
+        <option name="processComments" value="true" />
+      </scope>
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
+    </inspection_tool>
+    <inspection_tool class="TodoComment" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="code" level="WARNING" enabled="true" />
+    </inspection_tool>
+  </profile>
+</component>
