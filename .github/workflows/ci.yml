@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [ main ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -18,6 +18,8 @@ jobs:
       RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -35,6 +37,8 @@ jobs:
       RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -50,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable

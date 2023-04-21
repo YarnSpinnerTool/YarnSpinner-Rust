@@ -1,5 +1,8 @@
 # Compiler API
 
-Protocol buffer taken from https://github.com/YarnSpinnerTool/YarnSpinner/blob/main/YarnSpinner/yarn_spinner.proto.
+Rust code is generated via [`prost_build`](https://github.com/tokio-rs/prost/tree/master/prost-build) in the `build.rs`.
+This requires pulling in the submodules:
 
-Rust code is then generated via [`prost_build`](https://github.com/tokio-rs/prost/tree/master/prost-build) in the `build.rs`
+```bash
+git submodule update --init --recursive
+```

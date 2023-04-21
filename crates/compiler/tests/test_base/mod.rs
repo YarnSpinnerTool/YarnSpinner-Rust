@@ -13,6 +13,17 @@ impl TestBase {
     }
 
     pub fn test_data_path() -> PathBuf {
-        Self::project_root_path().join("test_assets")
+        let project_root_path = Self::project_root_path();
+        let project_root = project_root_path.to_str().unwrap();
+        [
+            project_root,
+            "..",
+            "..",
+            "third-party",
+            "YarnSpinner",
+            "Tests",
+        ]
+        .iter()
+        .collect()
     }
 }
