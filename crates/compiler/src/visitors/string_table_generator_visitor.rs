@@ -53,8 +53,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
 
         let hashtag_texts = get_hashtag_texts(&hashtags);
 
-        let line_formatted_text = ctx.line_formatted_text().unwrap();
-        let composed_string = generate_formatted_text(line_formatted_text.get_children());
+        let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
 
         if let Some(line_id) = line_id {
             if self.string_table_manager.contains_key(&line_id.to_string()) {
@@ -101,80 +100,20 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
     }
 }
 
-#[derive(Debug, Clone, Default)]
-struct FormattedTextVisitor(String);
-
-impl ParseTreeVisitorCompat<'_> for FormattedTextVisitor {
-    type Node = YarnSpinnerParserContextType;
-    type Return = String;
-
-    fn temp_result(&mut self) -> &mut Self::Return {
-        &mut self.0
-    }
-
-    fn aggregate_results(&self, aggregate: Self::Return, next: Self::Return) -> Self::Return {
-        aggregate + &next
-    }
-}
-
-impl<'input> YarnSpinnerParserVisitorCompat<'input> for FormattedTextVisitor {
-    fn visit_dialogue(&mut self, ctx: &DialogueContext<'input>) -> Self::Return {
-        /// In theory, this is nearly the default impl and should be replaced by a simple overload of `visit_line_formatted_text`, however,
-        /// this ends up resulting in a stack overflow :(
-        let mut result = Self::Return::default();
-        for node in ctx.node_all() {
-            let body = node.body().unwrap();
-            for statement in body.statement_all() {
-                if !self.should_visit_next_child(&*statement, &result) {
-                    break;
-                }
-                let line_statement = statement.line_statement().unwrap();
-                let current = self.visit(&*line_statement);
-                result = self.aggregate_results(result, current);
-            }
-        }
-        result
-    }
-
-    fn visit_line_formatted_text(
-        &mut self,
-        ctx: &Line_formatted_textContext<'input>,
-    ) -> Self::Return {
-        for child in ctx.get_children() {
-            if child.get_child_count() == 0 {
-                println!("leaf: {}", child.get_text())
-            } else {
-                println!("edge: {}", child.get_text())
-            }
-        }
-        if let Some(text) = ctx.TEXT(0) {
-            println!("Visiting line formatted text: {}", text.get_text());
-            text.get_text()
-        } else if let Some(expression) = ctx.expression(0) {
-            println!("Visiting expression: :{}", expression.get_text());
-            expression.get_text()
-        } else {
-            panic!("Unexpected line formatted text")
-        }
-    }
-}
-
 /// Takes a string like
 /// `Hi there { some_expression }, how are you { another_expression } doing?`
 /// and turns it into
 /// `Hi there {0}, how are you {1}? doing`
-fn generate_formatted_text<'a>(
-    nodes: impl Iterator<Item = Rc<impl YarnSpinnerParserContext<'a> + ?Sized>>,
-) -> String {
+fn generate_formatted_text<'a>(ctx: &Line_formatted_textContext<'a>) -> String {
     let mut expression_count = 0;
     let mut composed_string = String::new();
     // First, visit all of the nodes, which are either terminal
     // text nodes or expressions. if they're expressions, we
     // evaluate them, and inject a positional reference into the
     // final string.
-    for node in nodes {
-        if node.get_token(TEXT, 0).is_some() {
-            composed_string.push_str(&node.get_text());
+    for child in ctx.get_children() {
+        if child.get_child_count() == 0 {
+            composed_string.push_str(&child.get_text());
         } else {
             // Expressions in the final string are denoted as the
             // index of the expression, surrounded by braces { }.
@@ -221,9 +160,21 @@ A line
         let lexer = YarnSpinnerLexer::new(InputStream::new(input.into()));
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
 
-        let dialogue = parser.dialogue().unwrap();
+        let line_formatted_text = parser
+            .dialogue()
+            .unwrap()
+            .node(0)
+            .unwrap()
+            .body()
+            .unwrap()
+            .statement(0)
+            .unwrap()
+            .line_statement()
+            .unwrap()
+            .line_formatted_text()
+            .unwrap();
 
-        let result = FormattedTextVisitor::default().visit(&*dialogue);
+        let result = generate_formatted_text(&line_formatted_text);
         let expected = "A line";
         assert_eq!(result, expected);
     }
@@ -238,9 +189,20 @@ A line with a {$cool} expression
         let lexer = YarnSpinnerLexer::new(InputStream::new(input.into()));
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
 
-        let dialogue = parser.dialogue().unwrap();
-
-        let result = FormattedTextVisitor::default().visit(&*dialogue);
+        let line_formatted_text = parser
+            .dialogue()
+            .unwrap()
+            .node(0)
+            .unwrap()
+            .body()
+            .unwrap()
+            .statement(0)
+            .unwrap()
+            .line_statement()
+            .unwrap()
+            .line_formatted_text()
+            .unwrap();
+        let result = generate_formatted_text(&line_formatted_text);
         let expected = "A line with a {0} expression";
         assert_eq!(result, expected);
     }
