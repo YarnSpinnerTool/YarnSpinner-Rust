@@ -1,10 +1,12 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs>
+use crate::parser::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, TerminalNode, Tree};
+use antlr_rust::tree::{ParseTree, ParseTreeListener, ParseTreeVisitorCompat, TerminalNode, Tree};
+use antlr_rust::TidExt;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -110,15 +112,6 @@ impl ParseTreeVisitorCompat<'_> for FormattedTextVisitor {
         &mut self.0
     }
 
-    fn visit_terminal(&mut self, node: &TerminalNode<'_, Self::Node>) -> Self::Return {
-        println!("Visiting terminal");
-        if node.symbol.get_token_type() == TEXT {
-            node.get_text()
-        } else {
-            String::new()
-        }
-    }
-
     fn aggregate_results(&self, aggregate: Self::Return, next: Self::Return) -> Self::Return {
         aggregate + &next
     }
@@ -126,31 +119,44 @@ impl ParseTreeVisitorCompat<'_> for FormattedTextVisitor {
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for FormattedTextVisitor {
     fn visit_dialogue(&mut self, ctx: &DialogueContext<'input>) -> Self::Return {
-        /*
-        ctx.node_all()
-            .into_iter()
-            .fold(String::new(), |mut acc, node| acc + &self.visit(&*node))*/
-        let line_statement = ctx
-            .node(0)
-            .unwrap()
-            .body()
-            .unwrap()
-            .statement(0)
-            .unwrap()
-            .line_statement()
-            .unwrap();
-        self.visit(&*line_statement)
+        /// In theory, this is nearly the default impl and should be replaced by a simple overload of `visit_line_formatted_text`, however,
+        /// this ends up resulting in a stack overflow :(
+        let mut result = Self::Return::default();
+        for node in ctx.node_all() {
+            let body = node.body().unwrap();
+            for statement in body.statement_all() {
+                if !self.should_visit_next_child(&*statement, &result) {
+                    break;
+                }
+                let line_statement = statement.line_statement().unwrap();
+                let current = self.visit(&*line_statement);
+                result = self.aggregate_results(result, current);
+            }
+        }
+        result
     }
 
-    /*
-    fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
-        self.visit(&*ctx.body().unwrap())
+    fn visit_line_formatted_text(
+        &mut self,
+        ctx: &Line_formatted_textContext<'input>,
+    ) -> Self::Return {
+        for child in ctx.get_children() {
+            if child.get_child_count() == 0 {
+                println!("leaf: {}", child.get_text())
+            } else {
+                println!("edge: {}", child.get_text())
+            }
+        }
+        if let Some(text) = ctx.TEXT(0) {
+            println!("Visiting line formatted text: {}", text.get_text());
+            text.get_text()
+        } else if let Some(expression) = ctx.expression(0) {
+            println!("Visiting expression: :{}", expression.get_text());
+            expression.get_text()
+        } else {
+            panic!("Unexpected line formatted text")
+        }
     }
-
-    fn visit_body(&mut self, ctx: &BodyContext<'input>) -> Self::Return {
-        self.visit(&*ctx.statement(0).unwrap())
-    }
-    */
 }
 
 /// Takes a string like
