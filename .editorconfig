@@ -1,3 +1,5 @@
+# Adapted from <https://github.com/rust-lang/rust/blob/master/.editorconfig>
+
 root = true
 
 [*]
