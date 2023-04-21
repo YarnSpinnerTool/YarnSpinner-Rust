@@ -17,8 +17,7 @@ mod compilation_job;
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     // TODO: other steps
-    let compiler_steps: Vec<&dyn CompilerStep> =
-        vec![&BuiltInTypesProvider {}, &StringTableGenerator {}];
+    let compiler_steps: Vec<&dyn CompilerStep> = vec![&add_built_in_types, &create_string_tables];
 
     let initial = CompilationResult {
         program: None,
@@ -32,57 +31,28 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
 
     compiler_steps
         .into_iter()
-        .fold(initial, |acc, curr| curr.run(&compilation_job, &acc))
+        .fold(initial, |acc, curr| curr.apply(&compilation_job, acc))
 }
 
 trait CompilerStep {
-    fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult;
+    fn apply(&self, job: &CompilationJob, previous: CompilationResult) -> CompilationResult;
 }
 
-struct BuiltInTypesProvider {}
-
-impl CompilerStep for BuiltInTypesProvider {
-    fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult {
-        todo!()
-    }
-}
-
-struct StringTableGenerator {}
-
-impl CompilerStep for StringTableGenerator {
-    fn run(&self, job: &CompilationJob, previous: &CompilationResult) -> CompilationResult {
-        todo!()
+impl<F> CompilerStep for F
+where
+    F: Fn(&CompilationJob, CompilationResult) -> CompilationResult,
+{
+    fn apply(&self, job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+        self(job, previous)
     }
 }
 
-impl<'input> ParseTreeListener<'input, YarnSpinnerParserContextType> for StringTableGenerator {}
-
-/// Adapted from https://github.com/YarnSpinnerTool/YarnSpinner/blob/v2.3.0/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs
-impl<'input> YarnSpinnerParserListener<'input> for StringTableGenerator {
-    fn exit_dialogue(&mut self, _ctx: &DialogueContext<'input>) {
-        println!("{:?}", _ctx);
-    }
+fn add_built_in_types(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+    todo!()
 }
 
-// TODO: needed?
-impl<'input> StringTableGenerator {
-    fn generate_string_tag_if_absent(&mut self, _ctx: &DialogueContext<'input>) {
-        if !&self.has_string_tag(_ctx) {
-            self.generate_string_tag(_ctx);
-            // TODO: how to access CompilationResult? Or do we add field?
-            // self.generated_implicit_string_tag = true;
-        }
-
-        todo!()
-    }
-
-    fn has_string_tag(&mut self, _ctx: &DialogueContext<'input>) -> bool {
-        todo!()
-    }
-
-    fn generate_string_tag(&mut self, _ctx: &DialogueContext<'input>) {
-        todo!()
-    }
+fn create_string_tables(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+    todo!()
 }
 
 #[cfg(test)]
