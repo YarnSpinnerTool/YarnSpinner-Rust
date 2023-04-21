@@ -105,7 +105,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
     }
 }
 
-fn generate_formatted_text<'a>(nodes: impl Iterator<Item = impl Tree>) -> String {
+fn generate_formatted_text<'a>(nodes: impl Iterator<Item = impl Tree<'a>>) -> String {
     let mut expression_count = 0;
     let mut composed_string = String::new();
     // First, visit all of the nodes, which are either terminal
@@ -113,9 +113,9 @@ fn generate_formatted_text<'a>(nodes: impl Iterator<Item = impl Tree>) -> String
     // evaluate them, and inject a positional reference into the
     // final string.
     for node in nodes {
-        if node.is::<TerminalNode<usize>>() {
+        if is_terminal_node {
             composed_string.push_str(&node.get_text());
-        } else if node.is::<impl ParserRuleContext>() {
+        } else if is_parser_rule_context {
             // Expressions in the final string are denoted as the
             // index of the expression, surrounded by braces { }.
             // However, we don't need to write the braces here
