@@ -20,3 +20,5 @@ Building requires pulling in the submodules:
 ```bash
 git submodule update --init --recursive
 ```
+
+As well as installing `protoc`
