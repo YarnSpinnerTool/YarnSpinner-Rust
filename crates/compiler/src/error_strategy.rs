@@ -7,7 +7,7 @@ use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 
-pub(crate) struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
+pub struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
     default_error_strategy: DefaultErrorStrategy<'input, Ctx>,
 }
 

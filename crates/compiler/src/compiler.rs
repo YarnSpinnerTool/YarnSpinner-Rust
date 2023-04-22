@@ -68,38 +68,41 @@ fn register_strings(job: &CompilationJob, previous: CompilationResult) -> Compil
     previous
 }
 
-fn parse_syntax_tree(
-    file: File,
-    diagnostics: &mut [Diagnostic],
-) -> FileParseResult<Rc<DialogueContextAll>, YarnSpinnerLexer<InputStream<&[u8]>>> {
+fn parse_syntax_tree<'a, 'b>(
+    file: &'b File,
+    diagnostics: &'a mut Vec<Diagnostic>,
+) -> FileParseResult<'b> {
     let input = CodePoint8BitCharStream::new(file.source.as_bytes());
     let mut lexer = YarnSpinnerLexer::new(input);
-    let tokens = CommonTokenStream::new(lexer);
-    let mut parser = YarnSpinnerParser::with_strategy(tokens.clone(), ErrorStrategy::new());
 
     // turning off the normal error listener and using ours
     let file_name = file.file_name.clone();
-    let parser_error_listener = ParserErrorListener::new(file);
-    let parser_error_listener_diagnostics = parser_error_listener.diagnostics.clone();
     let lexer_error_listener = LexerErrorListener::new(file_name.clone());
     let lexer_error_listener_diagnostics = lexer_error_listener.diagnostics.clone();
+    lexer.remove_error_listeners();
+    lexer.add_error_listener(Box::new(lexer_error_listener));
+
+    let tokens = CommonTokenStream::new(lexer);
+    let mut parser = YarnSpinnerParser::with_strategy(tokens, ErrorStrategy::new());
+
+    let parser_error_listener = ParserErrorListener::new(file.clone());
+    let parser_error_listener_diagnostics = parser_error_listener.diagnostics.clone();
 
     parser.remove_error_listeners();
     parser.add_error_listener(Box::new(parser_error_listener));
 
-    lexer.remove_error_listeners();
-    lexer.add_error_listener(Box::new(lexer_error_listener));
-
     let tree = parser.dialogue().unwrap();
-    let new_diagnostics = lexer_error_listener_diagnostics
-        .borrow()
+    let lexer_error_listener_diagnostics_borrowed = lexer_error_listener_diagnostics.borrow();
+    let parser_error_listener_diagnostics_borrowed = parser_error_listener_diagnostics.borrow();
+    let new_diagnostics = lexer_error_listener_diagnostics_borrowed
         .iter()
-        .chain(parser_error_listener_diagnostics.borrow().iter());
+        .chain(parser_error_listener_diagnostics_borrowed.iter())
+        .cloned();
     diagnostics.extend(new_diagnostics);
     FileParseResult {
         tree,
         name: file_name,
-        tokens,
+        parser,
     }
 }
 
