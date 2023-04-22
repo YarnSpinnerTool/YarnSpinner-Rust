@@ -1,6 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorListener.cs>
 
 use crate::output::Position;
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::token::Token;
 use std::ops::RangeInclusive;
 
 /// A diagnostic message that describes an error, warning or informational
@@ -15,19 +17,59 @@ use std::ops::RangeInclusive;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
     /// The path, URI or file-name that the issue occurred in.
-    pub file_name: String,
+    pub file_name: Option<String>,
 
     /// The range of the file indicated by the [`Diagnostic::file_name`] that the issue occurred in.
-    pub range: RangeInclusive<Position>,
+    pub range: Option<RangeInclusive<Position>>,
 
     /// The description of the issue.
     pub message: String,
 
     /// The source text of [`Diagnostic::file_name`] containing the issue.
-    pub context: String,
+    pub context: Option<String>,
 
     /// The severity of the issue.
     pub severity: DiagnosticSeverity,
+}
+
+impl Diagnostic {
+    pub fn from_message(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            file_name: Default::default(),
+            range: Default::default(),
+            context: Default::default(),
+            severity: Default::default(),
+        }
+    }
+
+    pub fn read_parser_rule_context(&mut self, ctx: &impl ParserRuleContext<'_>) -> &mut Self {
+        let start = Position::from_token(&ctx.start());
+        let stop = Position::from_token(&ctx.stop());
+        self.range = Some(start..=stop);
+        self.context = Some(ctx.get_text());
+        self
+    }
+
+    pub fn with_file_name(mut self, file_name: impl Into<String>) -> Self {
+        self.file_name = Some(file_name.into());
+        self
+    }
+
+    pub fn with_range(mut self, range: impl Into<RangeInclusive<Position>>) -> Self {
+        self.range = Some(range.into());
+        self
+    }
+
+    pub fn with_context(mut self, context: impl Into<String>) -> Self {
+        self.context = Some(context.into());
+        self
+    }
+
+    pub fn with_severity(mut self, severity: DiagnosticSeverity) -> Self {
+        self.severity = severity;
+        self
+    }
 }
 
 /// The severity of the issue.

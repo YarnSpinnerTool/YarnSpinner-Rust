@@ -4,6 +4,7 @@ use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::
 use crate::prelude::*;
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::rule_context::RuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeListener, ParseTreeVisitorCompat, TerminalNode, Tree};
 use antlr_rust::TidExt;
@@ -46,57 +47,48 @@ impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor {
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
-        let line_number = ctx.start().line;
-        let hashtags = ctx.hashtag_all();
         let line_id_tag = get_line_id_tag(&hashtags);
         let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
 
+        if let Some(line_id) = line_id {
+            if self.string_table_manager.contains_key(&line_id.to_string()) {
+                // The original has a fallback for when this is `null` / `None`,
+                // but this can logically not be the case in this scope.
+                let diagnostic_context = line_id_tag.unwrap();
+                self.diagnostics.push(
+                    Diagnostic::from_message(format!("Duplicate line ID {lineID}"))
+                        .read_parser_rule_context(&diagnostic_context)
+                        .with_file_name(&self.file_name),
+                );
+                return;
+            }
+        };
+
+        let line_number = ctx.start().line;
+
+        let hashtags = ctx.hashtag_all();
         let hashtag_texts = get_hashtag_texts(&hashtags);
 
         let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
 
-        if let Some(line_id) = line_id {
-            if self.string_table_manager.contains_key(&line_id.to_string()) {
-                // TODO: Duplicate line ID, add to diagnostics
-            }
-        };
-
-        // TODO
-        self.string_table_manager.insert(
-            composed_string,
+        let string_id = self.string_table_manager.insert(
+            line_id,
             StringInfo {
-                text: todo!(),
-                node_name: todo!(),
-                line_number: todo!(),
-                file_name: todo!(),
-                metadata: todo!(),
+                text: composed_string,
+                node_name: self.current_node_name.clone(),
+                line_number: line_number as usize,
+                file_name: self.file_name.clone(),
+                metadata: hashtag_texts,
                 ..Default::default()
             },
         );
 
-        /*
-
-
-
-
-               string stringID = stringTableManager.RegisterString(
-                   composedString.ToString(),
-                   fileName,
-                   currentNodeName,
-                   lineID,
-                   lineNumber,
-                   hashtagText);
-
-               if (lineID == null)
-               {
-                   var hashtag = new YarnSpinnerParser.HashtagContext(context, 0);
-                   hashtag.text = new CommonToken(YarnSpinnerLexer.HASHTAG_TEXT, stringID);
-                   context.AddChild(hashtag);
-               }
-
-               return 0;
-        */
-        self.visit_children(ctx);
+        if line_id.is_none() {
+            let parent = ctx.ctx;
+            let ctx_ext = HashtagContextExt::(parent, 0);
+            let hashtag = HashtagContext::new_parser_ctx(parent, 0, ctx_ext);
+            ctx.add_child(hashtag);
+        }
     }
 }
 
