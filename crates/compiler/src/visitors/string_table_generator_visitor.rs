@@ -8,6 +8,8 @@ use antlr_rust::token::Token;
 
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 
+use antlr_rust::parser::ParserNodeType;
+use antlr_rust::token_factory::CommonTokenFactory;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -19,8 +21,8 @@ use std::rc::Rc;
 /// [`visit`] method to begin generating string table entries.
 pub(crate) struct StringTableGeneratorVisitor {
     pub(crate) diagnostics: Vec<Diagnostic>,
-    pub(crate) current_node_name: String,
-    pub(crate) file_name: String,
+    current_node_name: String,
+    file_name: String,
     pub(crate) string_table_manager: StringTableManager,
     pub(crate) hashtags_to_insert: Vec<Option<String>>,
 }
@@ -92,6 +94,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             }
         }
     }
+
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
         let hashtags = ctx.hashtag_all();
         let line_id_tag = get_line_id_tag(&hashtags);
@@ -133,7 +136,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         if line_id.is_some() {
             self.hashtags_to_insert.push(None);
         } else {
-            self.hashtags_to_insert.push(Some(string_id));
+            add_hashtag_child(ctx, string_id);
         }
     }
 }

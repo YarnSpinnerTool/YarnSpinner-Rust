@@ -2,19 +2,20 @@
 
 pub use crate::compiler::compilation_job::*;
 use crate::error_strategy::ErrorStrategy;
+use crate::input_manager::StringTableManager;
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::{Diagnostic, FileParseResult, LexerErrorListener, ParserErrorListener};
-
-use crate::input_manager::StringTableManager;
 use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
+use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::tree::ParseTreeVisitorCompat;
-use antlr_rust::{InputStream, Parser};
+use antlr_rust::tree::{ParseTreeVisitorCompat, Tree};
+use antlr_rust::{InputStream, Parser, TokenSource};
+use std::any::Any;
 use std::rc::Rc;
 
 mod compilation_job;
@@ -86,7 +87,6 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
         visitor.visit(&*dialogue);
         previous.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
-
         parsed_files.push(parse_result);
     }
     previous
@@ -123,6 +123,7 @@ fn parse_syntax_tree<'a, 'b>(
         .chain(parser_error_listener_diagnostics_borrowed.iter())
         .cloned();
     diagnostics.extend(new_diagnostics);
+
     FileParseResult {
         tree,
         name: file_name,
@@ -134,13 +135,14 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
     format!("line:{name}")
 }
 
-fn add_hashtag_child<'input>(
-    parent: Rc<impl YarnSpinnerParserContext<'input> + 'input>,
-    token_factory: &'input CommonTokenFactory,
+pub(crate) fn add_hashtag_child<'input>(
+    parent: &impl YarnSpinnerParserContext<'input>,
     text: String,
 ) {
+    // Hack: need to convert the reference to an Rc somehow
+    let parent = parent.get_children().next().unwrap().get_parent().unwrap();
     // Taken from C# implementation of `CommonToken`s constructor
-    let string_id_token = token_factory.create::<InputStream<&'input str>>(
+    let string_id_token = CommonTokenFactory.create::<InputStream<&'input str>>(
         None,
         HASHTAG_TEXT,
         text.into(),
