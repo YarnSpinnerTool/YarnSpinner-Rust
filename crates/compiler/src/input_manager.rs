@@ -43,7 +43,7 @@ impl StringTableManager {
             };
             (line_id, string_info)
         };
-        self.0.insert(line_id, string_info);
+        self.0.insert(line_id.clone(), string_info);
         line_id
     }
 }

@@ -3,7 +3,9 @@ use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
+use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
+use antlr_rust::InputStream;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -51,11 +53,11 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             if self.string_table_manager.contains_key(&line_id.to_string()) {
                 // The original has a fallback for when this is `null` / `None`,
                 // but this can logically not be the case in this scope.
-                let diagnostic_context = line_id_tag.unwrap();
+                let diagnostic_context = line_id_tag.clone().unwrap();
                 let line_id = line_id.get_text();
                 self.diagnostics.push(
                     Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .read_parser_rule_context(&diagnostic_context)
+                        .read_parser_rule_context(diagnostic_context)
                         .with_file_name(&self.file_name),
                 );
                 return;
@@ -68,7 +70,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
 
         let string_id = self.string_table_manager.insert(
-            line_id,
+            line_id.map(|t| t.get_text().to_owned()),
             StringInfo {
                 text: composed_string,
                 node_name: self.current_node_name.clone(),
@@ -84,8 +86,20 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
 
             // Need an Rc of the current context, but we only got a reference to it and it does not implement `Clone`...
             let parent = ctx.get_children().next().unwrap().get_parent().unwrap();
-            // `new_with_text` was hacked into the generated parser. Also, `...Ext::new` is usually private...
-            let hashtag = HashtagContextExt::new_with_text(Some(parent), 0, string_id);
+            // `new_with_text` was hacked into the generated parser. Also, `XXExt::new` is usually private...
+            let token_factory = CommonTokenFactory::default();
+            // Taken from C# implementation of `CommonToken`s constructor
+            let string_id_token = token_factory.create::<InputStream<&'input str>>(
+                None,
+                HASHTAG_TEXT,
+                string_id.into(),
+                0,
+                0,
+                0,
+                0,
+                -1,
+            );
+            let hashtag = HashtagContextExt::new_with_text(Some(parent), 0, string_id_token);
             ctx.add_child(hashtag);
         }
     }

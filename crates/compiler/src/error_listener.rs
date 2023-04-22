@@ -4,6 +4,7 @@ use crate::output::Position;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use std::ops::RangeInclusive;
+use std::rc::Rc;
 
 /// A diagnostic message that describes an error, warning or informational
 /// message that the user can take action on.
@@ -44,11 +45,11 @@ impl Diagnostic {
     }
 
     pub fn read_parser_rule_context<'a, 'b, 'input>(
-        &'a mut self,
-        ctx: &'b impl ParserRuleContext<'input>,
-    ) -> &'a mut Self {
-        let start = Position::from_token(&ctx.start());
-        let stop = Position::from_token(&ctx.stop());
+        mut self,
+        ctx: Rc<impl ParserRuleContext<'input>>,
+    ) -> Self {
+        let start = Position::from_token(ctx.start());
+        let stop = Position::from_token(ctx.stop());
         self.range = Some(start..=stop);
         self.context = Some(ctx.get_text());
         self
