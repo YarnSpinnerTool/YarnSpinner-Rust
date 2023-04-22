@@ -96,7 +96,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
 /// `Hi there { some_expression }, how are you { another_expression } doing?`
 /// and turns it into
 /// `Hi there {0}, how are you {1}? doing`
-fn generate_formatted_text<'a>(ctx: &Line_formatted_textContext<'a>) -> String {
+fn generate_formatted_text(ctx: &Line_formatted_textContext) -> String {
     let mut expression_count = 0;
     let mut composed_string = String::new();
     // First, visit all of the nodes, which are either terminal
