@@ -11,9 +11,8 @@ use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
-use antlr_rust::tree::{ErrorNode, ParseTreeListener};
+use antlr_rust::tree::ParseTreeListener;
 use std::cell::RefCell;
-use std::error::Error;
 use std::ops::RangeInclusive;
 use std::rc::Rc;
 

@@ -6,12 +6,12 @@ use crate::output::*;
 use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::{Diagnostic, FileParseResult, LexerErrorListener, ParserErrorListener};
-use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
+
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::{CoerceTo, InputStream, Parser};
+use antlr_rust::{InputStream, Parser};
 use std::rc::Rc;
 
 mod compilation_job;
@@ -62,7 +62,7 @@ fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> Com
     previous
 }
 
-fn register_strings(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+fn register_strings(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
     // TODO:
     // # LastLineBeforeOptionsVisitor not done
     previous

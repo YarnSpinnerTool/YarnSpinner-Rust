@@ -1,9 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorStrategy.cs>
 
-use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
+
 use antlr_rust::errors::ANTLRError;
 use antlr_rust::parser::ParserNodeType;
-use antlr_rust::recognizer::Recognizer;
+
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 

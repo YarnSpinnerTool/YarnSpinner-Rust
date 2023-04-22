@@ -7,8 +7,8 @@ use crate::parser::generated::yarnspinnerparser::{
 use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParser;
 use antlr_rust::common_token_stream::CommonTokenStream;
-use antlr_rust::tree::ParseTree;
-use antlr_rust::{InputStream, TokenSource};
+
+use antlr_rust::{InputStream};
 use std::rc::Rc;
 
 /// Contains the result of parsing a single file of source code.
