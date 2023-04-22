@@ -21,6 +21,10 @@ pub struct FileParseResult<'input> {
 
     pub tree: Rc<DialogueContextAll<'input>>,
 
+    /// In the original, this was merely the `parser.dialogue()` return type as a dialog tree,
+    /// but in Rust we need to actually store the parser itself somewhere, which is why we store it here.
+    /// We also end up leading the `ErrorStrategy` into the public interface, but using generics here makes
+    /// the code a lot more complicated without actually providing much benefit.
     pub parser: YarnSpinnerParser<
         'input,
         CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>>,
