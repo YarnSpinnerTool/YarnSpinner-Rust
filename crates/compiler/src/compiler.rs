@@ -7,10 +7,13 @@ use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::{Diagnostic, FileParseResult, LexerErrorListener, ParserErrorListener};
 
+use crate::input_manager::StringTableManager;
+use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
+use antlr_rust::tree::ParseTreeVisitorCompat;
 use antlr_rust::{InputStream, Parser};
 use std::rc::Rc;
 
@@ -62,9 +65,30 @@ fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> Com
     previous
 }
 
-fn register_strings(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
-    // TODO:
-    // # LastLineBeforeOptionsVisitor not done
+fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> CompilationResult {
+    let mut parsed_files = Vec::new();
+
+    // First pass: parse all files, generate their syntax trees,
+    // and figure out what variables they've declared
+    let mut string_table_manager = StringTableManager::default();
+    for file in &job.files {
+        let mut parse_result = parse_syntax_tree(file, &mut previous.diagnostics);
+
+        // ok now we will add in our lastline tags
+        // we do this BEFORE we build our strings table otherwise the tags will get missed
+        // this should probably be a flag instead of every time though
+        // TODO
+        // let lastLineTagger = new LastLineBeforeOptionsVisitor();
+        //lastLineTagger.Visit(parseResult.Tree);
+        let mut visitor =
+            StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
+        let dialogue = parse_result.parser.dialogue().unwrap();
+        visitor.visit(&*dialogue);
+        previous.diagnostics.extend(visitor.diagnostics);
+        string_table_manager.extend(visitor.string_table_manager);
+
+        parsed_files.push(parse_result);
+    }
     previous
 }
 

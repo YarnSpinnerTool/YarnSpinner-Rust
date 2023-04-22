@@ -18,11 +18,11 @@ use std::rc::Rc;
 /// to future compilation passes, or stored for later use. Call the
 /// [`visit`] method to begin generating string table entries.
 pub(crate) struct StringTableGeneratorVisitor {
-    diagnostics: Vec<Diagnostic>,
-    current_node_name: String,
-    file_name: String,
-    string_table_manager: StringTableManager,
-    hashtags_to_insert: Vec<Option<String>>,
+    pub(crate) diagnostics: Vec<Diagnostic>,
+    pub(crate) current_node_name: String,
+    pub(crate) file_name: String,
+    pub(crate) string_table_manager: StringTableManager,
+    pub(crate) hashtags_to_insert: Vec<Option<String>>,
 }
 
 impl StringTableGeneratorVisitor {
@@ -184,7 +184,7 @@ mod tests {
     use super::*;
     use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
     use antlr_rust::common_token_stream::CommonTokenStream;
-    use antlr_rust::{InputStream};
+    use antlr_rust::InputStream;
 
     #[test]
     fn ignores_lines_without_expression() {

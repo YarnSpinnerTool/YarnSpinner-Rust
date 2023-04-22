@@ -46,6 +46,10 @@ impl StringTableManager {
         self.0.insert(line_id.clone(), string_info);
         line_id
     }
+
+    pub(crate) fn extend(&mut self, other: Self) {
+        self.0.extend(other.0);
+    }
 }
 
 impl Deref for StringTableManager {
