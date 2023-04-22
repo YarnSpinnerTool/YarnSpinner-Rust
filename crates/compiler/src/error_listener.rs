@@ -43,7 +43,10 @@ impl Diagnostic {
         }
     }
 
-    pub fn read_parser_rule_context(&mut self, ctx: &impl ParserRuleContext<'_>) -> &mut Self {
+    pub fn read_parser_rule_context<'a, 'b, 'input>(
+        &'a mut self,
+        ctx: &'b impl ParserRuleContext<'input>,
+    ) -> &'a mut Self {
         let start = Position::from_token(&ctx.start());
         let stop = Position::from_token(&ctx.stop());
         self.range = Some(start..=stop);

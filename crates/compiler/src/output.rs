@@ -2,7 +2,6 @@
 
 use crate::error_listener::Diagnostic;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
-use crate::prelude::StringTableManager;
 use rusty_yarn_spinner_core::prelude::Program;
 use std::collections::HashMap;
 

@@ -1980,6 +1980,20 @@ impl<'input> CustomRuleContext<'input> for HashtagContextExt<'input> {
 antlr_rust::tid! {HashtagContextExt<'a>}
 
 impl<'input> HashtagContextExt<'input> {
+    pub fn new_with_text(
+        parent: Option<Rc<dyn YarnSpinnerParserContext<'input> + 'input>>,
+        invoking_state: isize,
+        text: impl Into<Option<TokenType<'input>>>,
+    ) -> Rc<HashtagContextAll<'input>> {
+        Rc::new(BaseParserRuleContext::new_parser_ctx(
+            parent,
+            invoking_state,
+            HashtagContextExt {
+                text: text.into(),
+                ph: PhantomData,
+            },
+        ))
+    }
     fn new(
         parent: Option<Rc<dyn YarnSpinnerParserContext<'input> + 'input>>,
         invoking_state: isize,

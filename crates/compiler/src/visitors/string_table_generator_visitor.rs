@@ -1,13 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs>
-use crate::parser::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
-use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::rule_context::RuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeListener, ParseTreeVisitorCompat, TerminalNode, Tree};
-use antlr_rust::TidExt;
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -47,6 +43,7 @@ impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor {
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
+        let hashtags = ctx.hashtag_all();
         let line_id_tag = get_line_id_tag(&hashtags);
         let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
 
@@ -55,8 +52,9 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                 // The original has a fallback for when this is `null` / `None`,
                 // but this can logically not be the case in this scope.
                 let diagnostic_context = line_id_tag.unwrap();
+                let line_id = line_id.get_text();
                 self.diagnostics.push(
-                    Diagnostic::from_message(format!("Duplicate line ID {lineID}"))
+                    Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
                         .read_parser_rule_context(&diagnostic_context)
                         .with_file_name(&self.file_name),
                 );
@@ -65,8 +63,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         };
 
         let line_number = ctx.start().line;
-
-        let hashtags = ctx.hashtag_all();
         let hashtag_texts = get_hashtag_texts(&hashtags);
 
         let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
@@ -84,9 +80,12 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         );
 
         if line_id.is_none() {
-            let parent = ctx.ctx;
-            let ctx_ext = HashtagContextExt::(parent, 0);
-            let hashtag = HashtagContext::new_parser_ctx(parent, 0, ctx_ext);
+            // All of this is hacky af, is this my fault or antlr4rust's?
+
+            // Need an Rc of the current context, but we only got a reference to it and it does not implement `Clone`...
+            let parent = ctx.get_children().next().unwrap().get_parent().unwrap();
+            // `new_with_text` was hacked into the generated parser. Also, `...Ext::new` is usually private...
+            let hashtag = HashtagContextExt::new_with_text(Some(parent), 0, string_id);
             ctx.add_child(hashtag);
         }
     }
@@ -138,12 +137,7 @@ mod tests {
     use super::*;
     use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
     use antlr_rust::common_token_stream::CommonTokenStream;
-    use antlr_rust::parser_rule_context::RuleContextExt;
-    use antlr_rust::token_stream::TokenStream;
-    use antlr_rust::tree::ParseTreeVisitor;
-    use antlr_rust::{
-        BaseParser, DefaultErrorStrategy, ErrorStrategy, InputStream, Parser, TidAble,
-    };
+    use antlr_rust::InputStream;
 
     #[test]
     fn ignores_lines_without_expression() {

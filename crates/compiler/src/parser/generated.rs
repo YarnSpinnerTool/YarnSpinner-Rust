@@ -23,7 +23,6 @@ pub mod yarnspinnerparservisitor;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use antlr_rust::parser_rule_context::RuleContextExt;
     use antlr_rust::tree::ParseTree;
     use antlr_rust::{common_token_stream::CommonTokenStream, *};
     use yarnspinnerlexer::*;

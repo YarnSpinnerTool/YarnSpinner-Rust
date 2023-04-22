@@ -4,7 +4,6 @@
 //!
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
-use antlr_rust::token::Token;
 use antlr_rust::TokenSource;
 use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
@@ -89,7 +88,7 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn from_token(token: &impl Token<'_>) -> Self {
+    pub fn from_token<'a>(token: &impl TokenSource<'a>) -> Self {
         Self {
             line: (token.get_line() - 1) as usize,
             character: (token.get_column()) as usize,
