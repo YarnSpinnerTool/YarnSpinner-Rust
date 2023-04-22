@@ -7,5 +7,5 @@ pub(crate) mod visitors;
 
 pub mod prelude {
     pub use crate::{compiler::*, error_listener::*, output::*, parser::*};
-    pub(crate) use crate::{input_manager::*, visitors};
+    pub(crate) use crate::{input_manager::*};
 }

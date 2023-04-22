@@ -1,12 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs>
+use crate::compiler;
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::rule_context::CustomRuleContext;
+
 use antlr_rust::token::Token;
-use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
+
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
-use antlr_rust::InputStream;
+
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -47,6 +48,50 @@ impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
 }
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor {
+    fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
+        let mut tags = Vec::new();
+        for header in ctx.header_all() {
+            let header_key = header.header_key.as_ref().unwrap().get_text();
+            if header_key == "title" {
+                self.current_node_name =
+                    header.header_value.as_ref().unwrap().get_text().to_owned();
+            } else if header_key == "tags" {
+                let header_value = header
+                    .header_value
+                    .as_ref()
+                    .map(|header| header.get_text())
+                    .unwrap_or_default();
+                // Split the list of tags by spaces, and use that
+                // Todo: This seems to always take the last tags, idk if that is intended
+                // Todo: Original splits by spaces exclusively, this splits by any whitespace -> Check if this is okay
+                tags = header_value
+                    .split_whitespace()
+                    .map(ToOwned::to_owned)
+                    .collect();
+            }
+        }
+        if !self.current_node_name.is_empty() && tags.contains(&"rawText".to_owned()) {
+            // This is a raw text node. Use its entire contents as a
+            // string and don't use its contents.
+            let line_id = compiler::get_line_id_for_node_name(&self.current_node_name);
+            self.string_table_manager.insert(
+                line_id,
+                StringInfo {
+                    text: ctx.body().unwrap().get_text(),
+                    node_name: self.current_node_name.clone(),
+                    line_number: ctx.body().unwrap().start().line as usize,
+                    file_name: self.file_name.clone(),
+                    ..Default::default()
+                },
+            );
+        } else {
+            // This is a regular node
+            // String table generator: don't crash if a node has no body
+            if let Some(body) = ctx.body() {
+                self.visit(&*body);
+            }
+        }
+    }
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
         let hashtags = ctx.hashtag_all();
         let line_id_tag = get_line_id_tag(&hashtags);
@@ -139,7 +184,7 @@ mod tests {
     use super::*;
     use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
     use antlr_rust::common_token_stream::CommonTokenStream;
-    use antlr_rust::{InputStream, Parser};
+    use antlr_rust::{InputStream};
 
     #[test]
     fn ignores_lines_without_expression() {
@@ -178,7 +223,7 @@ A line with {$many} many {(1 -(1 * 2))}{$cool} expressions
     }
 
     fn process_input(input: &str) -> String {
-        let lexer = YarnSpinnerLexer::new(InputStream::new(input.into()));
+        let lexer = YarnSpinnerLexer::new(InputStream::new(input));
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
         let line_formatted_text = parser
             .dialogue()

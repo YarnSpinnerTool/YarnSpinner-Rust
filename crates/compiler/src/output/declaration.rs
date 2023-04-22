@@ -5,7 +5,6 @@
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
 use antlr_rust::token::Token;
-use antlr_rust::TokenSource;
 use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;

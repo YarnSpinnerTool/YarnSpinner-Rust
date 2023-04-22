@@ -3,7 +3,7 @@ use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::{InputStream, TokenSource};
+use antlr_rust::InputStream;
 use std::rc::Rc;
 
 mod compilation_job;
@@ -50,15 +50,19 @@ where
     }
 }
 
-fn add_built_in_types(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
     previous
 }
 
-fn create_string_tables(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+fn create_string_tables(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
     // TODO:
     // # LastLineBeforeOptionsVisitor not done
 
     previous
+}
+
+pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
+    format!("line:{name}")
 }
 
 fn add_hashtag_child<'input>(

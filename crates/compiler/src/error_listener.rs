@@ -2,7 +2,6 @@
 
 use crate::output::Position;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
 use std::ops::RangeInclusive;
 use std::rc::Rc;
 
