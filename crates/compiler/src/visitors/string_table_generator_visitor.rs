@@ -86,7 +86,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
 
             // Need an Rc of the current context, but we only got a reference to it and it does not implement `Clone`...
             let parent = ctx.get_children().next().unwrap().get_parent().unwrap();
-            // `new_with_text` was hacked into the generated parser. Also, `XXExt::new` is usually private...
             let token_factory = CommonTokenFactory::default();
             // Taken from C# implementation of `CommonToken`s constructor
             let string_id_token = token_factory.create::<InputStream<&'input str>>(
@@ -99,6 +98,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                 0,
                 -1,
             );
+            // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
             let hashtag = HashtagContextExt::new_with_text(Some(parent), 0, string_id_token);
             ctx.add_child(hashtag);
         }
