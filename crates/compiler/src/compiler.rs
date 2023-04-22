@@ -1,9 +1,17 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
+
 pub use crate::compiler::compilation_job::*;
+use crate::error_strategy::ErrorStrategy;
 use crate::output::*;
+use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser::*;
+use crate::prelude::{Diagnostic, FileParseResult, LexerErrorListener, ParserErrorListener};
+use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
+use antlr_rust::common_token_stream::CommonTokenStream;
+use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::InputStream;
+use antlr_rust::{CoerceTo, InputStream, Parser};
 use std::rc::Rc;
 
 mod compilation_job;
@@ -11,7 +19,7 @@ mod compilation_job;
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     // TODO: other steps
-    let compiler_steps: Vec<&dyn CompilerStep> = vec![&add_built_in_types, &create_string_tables];
+    let compiler_steps: Vec<&dyn CompilerStep> = vec![&add_built_in_types, &register_strings];
 
     let initial = CompilationResult {
         program: None,
@@ -54,11 +62,45 @@ fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> Com
     previous
 }
 
-fn create_string_tables(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+fn register_strings(job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
     // TODO:
     // # LastLineBeforeOptionsVisitor not done
-
     previous
+}
+
+fn parse_syntax_tree(
+    file: File,
+    diagnostics: &mut [Diagnostic],
+) -> FileParseResult<Rc<DialogueContextAll>, YarnSpinnerLexer<InputStream<&[u8]>>> {
+    let input = CodePoint8BitCharStream::new(file.source.as_bytes());
+    let mut lexer = YarnSpinnerLexer::new(input);
+    let tokens = CommonTokenStream::new(lexer);
+    let mut parser = YarnSpinnerParser::with_strategy(tokens.clone(), ErrorStrategy::new());
+
+    // turning off the normal error listener and using ours
+    let file_name = file.file_name.clone();
+    let parser_error_listener = ParserErrorListener::new(file);
+    let parser_error_listener_diagnostics = parser_error_listener.diagnostics.clone();
+    let lexer_error_listener = LexerErrorListener::new(file_name.clone());
+    let lexer_error_listener_diagnostics = lexer_error_listener.diagnostics.clone();
+
+    parser.remove_error_listeners();
+    parser.add_error_listener(Box::new(parser_error_listener));
+
+    lexer.remove_error_listeners();
+    lexer.add_error_listener(Box::new(lexer_error_listener));
+
+    let tree = parser.dialogue().unwrap();
+    let new_diagnostics = lexer_error_listener_diagnostics
+        .borrow()
+        .iter()
+        .chain(parser_error_listener_diagnostics.borrow().iter());
+    diagnostics.extend(new_diagnostics);
+    FileParseResult {
+        tree,
+        name: file_name,
+        tokens,
+    }
 }
 
 pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
