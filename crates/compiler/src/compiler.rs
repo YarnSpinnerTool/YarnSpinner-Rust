@@ -2,6 +2,8 @@ pub use crate::compiler::compilation_job::*;
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use antlr_rust::token::Token;
+use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
+use antlr_rust::{InputStream, TokenSource};
 use std::rc::Rc;
 
 mod compilation_job;
@@ -57,6 +59,27 @@ fn create_string_tables(job: &CompilationJob, previous: CompilationResult) -> Co
     // # LastLineBeforeOptionsVisitor not done
 
     previous
+}
+
+fn add_hashtag_child<'input>(
+    parent: Rc<impl YarnSpinnerParserContext<'input> + 'input>,
+    token_factory: &'input CommonTokenFactory,
+    text: String,
+) {
+    // Taken from C# implementation of `CommonToken`s constructor
+    let string_id_token = token_factory.create::<InputStream<&'input str>>(
+        None,
+        HASHTAG_TEXT,
+        text.into(),
+        0,
+        0,
+        0,
+        0,
+        -1,
+    );
+    // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
+    let hashtag = HashtagContextExt::new_with_text(Some(parent.clone()), 0, string_id_token);
+    parent.add_child(hashtag);
 }
 
 #[cfg(test)]

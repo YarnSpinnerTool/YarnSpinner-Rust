@@ -2,6 +2,7 @@
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
@@ -20,6 +21,7 @@ pub(crate) struct StringTableGeneratorVisitor {
     current_node_name: String,
     file_name: String,
     string_table_manager: StringTableManager,
+    hashtags_to_insert: Vec<Option<String>>,
 }
 
 impl StringTableGeneratorVisitor {
@@ -29,6 +31,7 @@ impl StringTableGeneratorVisitor {
             string_table_manager,
             diagnostics: Default::default(),
             current_node_name: Default::default(),
+            hashtags_to_insert: Default::default(),
         }
     }
 }
@@ -60,6 +63,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                         .read_parser_rule_context(diagnostic_context)
                         .with_file_name(&self.file_name),
                 );
+                self.hashtags_to_insert.push(None);
                 return;
             }
         };
@@ -81,26 +85,10 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             },
         );
 
-        if line_id.is_none() {
-            // All of this is hacky af, is this my fault or antlr4rust's?
-
-            // Need an Rc of the current context, but we only got a reference to it and it does not implement `Clone`...
-            let parent = ctx.get_children().next().unwrap().get_parent().unwrap();
-            let token_factory = CommonTokenFactory::default();
-            // Taken from C# implementation of `CommonToken`s constructor
-            let string_id_token = token_factory.create::<InputStream<&'input str>>(
-                None,
-                HASHTAG_TEXT,
-                string_id.into(),
-                0,
-                0,
-                0,
-                0,
-                -1,
-            );
-            // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
-            let hashtag = HashtagContextExt::new_with_text(Some(parent), 0, string_id_token);
-            ctx.add_child(hashtag);
+        if line_id.is_some() {
+            self.hashtags_to_insert.push(None);
+        } else {
+            self.hashtags_to_insert.push(Some(string_id));
         }
     }
 }
@@ -151,7 +139,7 @@ mod tests {
     use super::*;
     use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
     use antlr_rust::common_token_stream::CommonTokenStream;
-    use antlr_rust::InputStream;
+    use antlr_rust::{InputStream, Parser};
 
     #[test]
     fn ignores_lines_without_expression() {
