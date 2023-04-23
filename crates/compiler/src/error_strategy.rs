@@ -6,9 +6,9 @@ use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use std::rc::Rc;
 
-use crate::parser::generated::yarnspinnerparser::{If_statementContext, YarnSpinnerParserContext};
+
 use crate::prelude::generated::yarnspinnerparser;
-use crate::prelude::generated::yarnspinnerparser::If_statementContextExt;
+
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::tree::Tree;
@@ -169,7 +169,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
 
     fn get_friendly_name_for_rule_context(ctx: &Rc<Ctx::Type>) -> String {
         let rule_name = yarnspinnerparser::ruleNames[ctx.get_rule_index()];
-        rule_name.replace("_", " ")
+        rule_name.replace('_', " ")
     }
 
     fn get_friendly_name_for_rule_context_with_article(ctx: &Rc<Ctx::Type>) -> String {
