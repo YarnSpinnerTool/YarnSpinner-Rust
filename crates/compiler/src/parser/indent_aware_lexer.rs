@@ -4,13 +4,13 @@
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 //! TODO: Decide if we want to hide the generated lexer to make sure no one accidentially uses it.
 
-use antlr_rust::TokenSource;
+use antlr_rust::{token_factory::CommonTokenFactory, TokenSource};
 
 /// A Lexer subclass that detects newlines and generates indent and dedent tokens accordingly.
 pub struct IndentAwareYarnSpinnerLexer {}
 
-impl<'a> TokenSource<'a> for IndentAwareYarnSpinnerLexer {
-    type TF;
+impl<'input> TokenSource<'input> for IndentAwareYarnSpinnerLexer {
+    type TF = CommonTokenFactory;
 
     fn next_token(&mut self) -> <Self::TF as antlr_rust::token_factory::TokenFactory<'input>>::Tok {
         todo!()
