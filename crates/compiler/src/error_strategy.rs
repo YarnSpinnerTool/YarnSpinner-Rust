@@ -4,7 +4,18 @@ use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
+use std::rc::Rc;
 
+use crate::parser::generated::yarnspinnerlexer::ruleNames;
+use crate::parser::generated::yarnspinnerparser::{
+    If_statementContext, YarnSpinnerParserContext, COMMAND_ELSE, COMMAND_END, COMMAND_START,
+};
+use crate::prelude::generated::yarnspinnerparser::{
+    If_statementContextExt, RULE_if_statement, RULE_statement,
+};
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::rule_context::CustomRuleContext;
+use antlr_rust::tree::Tree;
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 
 pub struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
@@ -78,10 +89,32 @@ impl<'input, T: Parser<'input>> AntlrErrorStrategy<'input, T> for ErrorStrategy<
 impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
     fn report_no_viable_alternative<T: Parser<'input, Node = Ctx, TF = Ctx::TF>>(
         &self,
-        _recognizer: &mut T,
-        _e: &NoViableAltError,
+        recognizer: &mut T,
+        e: &NoViableAltError,
     ) -> String {
-        String::from("no viable alternative")
+        if is_inside_rule(recognizer, RULE_if_statement)
+            && recognizer.get_parser_rule_context().get_rule_index() == RULE_statement
+            && e.start_token.token_type == COMMAND_START
+            && e.base.offending_token.token_type == COMMAND_ELSE
+        {
+            // We are inside an if statement, we're attempting to parse a
+            // statement, and we got an '<<', 'else', and we weren't able
+            // to match that. The programmer included an extra '<<else>>'.
+            "More than one <<else>> statement in an <<if>> statement isn't allowed".to_owned()
+        } else if e.start_token.token_type == COMMAND_START
+            && e.base.offending_token.token_type == COMMAND_END
+        {
+            // We saw a << immediately followed by a >>. The programmer
+            // forgot to include command text.
+            "You forgot to include command text between << and >>".to_owned()
+        } else {
+            let rule_context = recognizer.get_parser_rule_context();
+            format!(
+                "Unexpected \"{}\" while reading {}",
+                e.base.offending_token.get_text(),
+                Self::get_friendly_name_for_rule_context(rule_context)
+            )
+        }
     }
 
     fn report_input_mismatch<T: Parser<'input, Node = Ctx, TF = Ctx::TF>>(
@@ -91,4 +124,33 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
     ) -> String {
         String::from("input mismatch")
     }
+
+    fn get_friendly_name_for_rule_context(ctx: &Rc<Ctx::Type>) -> String {
+        let rule_name = ruleNames[ctx.get_rule_index()];
+        rule_name.replace("_", " ")
+    }
+
+    fn get_friendly_name_for_rule_context_with_article(ctx: &Rc<Ctx::Type>) -> String {
+        let friendly_name = Self::get_friendly_name_for_rule_context(ctx);
+        // If the friendly name's first character is a vowel, the
+        // article is 'an'; otherwise, 'a'.
+        let first_letter = friendly_name.chars().next().unwrap();
+        let article = if "aeiou".contains(first_letter) {
+            "an"
+        } else {
+            "a"
+        };
+        format!("{} {}", article, friendly_name)
+    }
+}
+
+fn is_inside_rule<'a>(recognizer: &impl Parser<'a>, rule_index: usize) -> bool {
+    let mut current_context = Some(recognizer.get_parser_rule_context().clone());
+    while let Some(context) = current_context {
+        if context.get_rule_index() == rule_index {
+            return true;
+        }
+        current_context = context.get_parent();
+    }
+    false
 }
