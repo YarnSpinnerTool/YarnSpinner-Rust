@@ -186,7 +186,7 @@ a {1 + 3} cool expression
     }
 
     #[test]
-    fn populated_string_table() {
+    fn populates_string_table() {
         let file = File {
             file_name: "test.yarn".to_string(),
             source: "title: test
