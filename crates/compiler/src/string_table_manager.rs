@@ -65,3 +65,15 @@ impl DerefMut for StringTableManager {
         &mut self.0
     }
 }
+
+impl From<HashMap<String, StringInfo>> for StringTableManager {
+    fn from(map: HashMap<String, StringInfo>) -> Self {
+        Self(map)
+    }
+}
+
+impl From<StringTableManager> for HashMap<String, StringInfo> {
+    fn from(manager: StringTableManager) -> Self {
+        manager.0
+    }
+}

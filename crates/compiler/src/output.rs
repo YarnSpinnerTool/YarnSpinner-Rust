@@ -12,7 +12,7 @@ mod string_info;
 /// The result of a compilation.
 ///
 /// Instances of this struct are produced as a result of supplying a [`CompilationJob`] to [`compile`].
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct CompilationResult {
     /// The compiled Yarn program that the [`Compiler`] produced.
     /// produced.

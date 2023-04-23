@@ -69,9 +69,8 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
 
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
-    let mut string_table_manager = StringTableManager::default();
+    let mut string_table_manager: StringTableManager = previous.string_table.into();
     for file in &job.files {
-        println!("file: {file:?}");
         let parse_result = parse_syntax_tree(file, &mut previous.diagnostics);
 
         // ok now we will add in our lastline tags
@@ -83,11 +82,11 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
         let mut visitor =
             StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
         visitor.visit(&*parse_result.tree);
-        println!("visitor: {visitor:?}");
         previous.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
         parsed_files.push(parse_result);
     }
+    previous.string_table = string_table_manager.into();
     previous
 }
 
@@ -182,5 +181,60 @@ a {1 + 3} cool expression
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
         });
+    }
+
+    #[test]
+    fn populated_string_table() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+foo
+bar
+a {1 + 3} cool expression
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+        let string_table = result.string_table;
+        assert_eq!(string_table.len(), 3);
+        assert_eq!(
+            string_table["line:test.yarn-test-0"],
+            StringInfo {
+                text: "foo".to_string(),
+                node_name: "test".to_string(),
+                line_number: 3,
+                file_name: "test.yarn".to_string(),
+                is_implicit_tag: true,
+                metadata: vec![],
+            }
+        );
+        assert_eq!(
+            string_table["line:test.yarn-test-1"],
+            StringInfo {
+                text: "bar".to_string(),
+                node_name: "test".to_string(),
+                line_number: 4,
+                file_name: "test.yarn".to_string(),
+                is_implicit_tag: true,
+                metadata: vec![],
+            }
+        );
+        assert_eq!(
+            string_table["line:test.yarn-test-2"],
+            StringInfo {
+                text: "a {0} cool expression".to_string(),
+                node_name: "test".to_string(),
+                line_number: 5,
+                file_name: "test.yarn".to_string(),
+                is_implicit_tag: true,
+                metadata: vec![],
+            }
+        );
     }
 }
