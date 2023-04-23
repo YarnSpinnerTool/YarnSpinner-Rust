@@ -6,7 +6,6 @@ use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use std::rc::Rc;
 
-
 use crate::prelude::generated::yarnspinnerparser;
 
 use antlr_rust::parser_rule_context::ParserRuleContext;
