@@ -11,6 +11,12 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::InputStream;
 use std::rc::Rc;
 
+pub type ActualYarnSpinnerParser<'input> = YarnSpinnerParser<
+    'input,
+    CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>>,
+    ErrorStrategy<'input, YarnSpinnerParserContextType>,
+>;
+
 /// Contains the result of parsing a single file of source code.
 ///
 /// This class provides only syntactic information about a parse - that is,
@@ -25,22 +31,11 @@ pub struct FileParseResult<'input> {
     /// the parser itself somewhere, which is why we store it here.
     /// We also end up leading the `ErrorStrategy` into the public interface, but using generics here makes
     /// the code a lot more complicated without actually providing much benefit.
-    _parser: YarnSpinnerParser<
-        'input,
-        CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>>,
-        ErrorStrategy<'input, YarnSpinnerParserContextType>,
-    >,
+    _parser: ActualYarnSpinnerParser<'input>,
 }
 
 impl<'input> FileParseResult<'input> {
-    pub fn new(
-        name: String,
-        mut parser: YarnSpinnerParser<
-            'input,
-            CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>>,
-            ErrorStrategy<'input, YarnSpinnerParserContextType>,
-        >,
-    ) -> Self {
+    pub fn new(name: String, mut parser: ActualYarnSpinnerParser<'input>) -> Self {
         Self {
             name,
             tree: parser.dialogue().unwrap(),
