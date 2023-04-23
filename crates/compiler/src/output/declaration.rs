@@ -89,7 +89,7 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn from_token<'a>(token: Ref<impl Token + ?Sized>) -> Self {
+    pub fn from_token(token: Ref<impl Token + ?Sized>) -> Self {
         Self {
             line: (token.get_line() - 1) as usize,
             character: (token.get_column()) as usize,

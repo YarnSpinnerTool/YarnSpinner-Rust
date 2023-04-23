@@ -4,7 +4,7 @@ use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree, Visitable};
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::fmt::Debug;
 use std::rc::Rc;
 

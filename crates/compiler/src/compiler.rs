@@ -90,10 +90,7 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
     previous
 }
 
-fn parse_syntax_tree<'a, 'b>(
-    file: &'b File,
-    diagnostics: &'a mut Vec<Diagnostic>,
-) -> FileParseResult<'b> {
+fn parse_syntax_tree<'a>(file: &'a File, diagnostics: &mut Vec<Diagnostic>) -> FileParseResult<'a> {
     let input = CodePoint8BitCharStream::new(file.source.as_bytes());
     let mut lexer = YarnSpinnerLexer::new(input);
 
