@@ -196,6 +196,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
             let mut lines = input.lines();
             let error_line = lines.nth((line - 1) as usize).unwrap();
             string.push_str(error_line);
+            string.push('\n');
 
             // adding indicator symbols pointing out where the error is
             // on the line

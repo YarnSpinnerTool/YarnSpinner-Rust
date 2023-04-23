@@ -109,6 +109,10 @@ fn parse_syntax_tree<'a>(file: &'a File, diagnostics: &mut Vec<Diagnostic>) -> F
     parser.remove_error_listeners();
     parser.add_error_listener(Box::new(parser_error_listener));
 
+    // Must be read exactly here, because the error listeners running during the parse borrow the diagnostics mutably,
+    // and we want to read them after.
+    let tree = parser.dialogue().unwrap();
+
     let lexer_error_listener_diagnostics_borrowed = lexer_error_listener_diagnostics.borrow();
     let parser_error_listener_diagnostics_borrowed = parser_error_listener_diagnostics.borrow();
     let new_diagnostics = lexer_error_listener_diagnostics_borrowed
@@ -117,7 +121,7 @@ fn parse_syntax_tree<'a>(file: &'a File, diagnostics: &mut Vec<Diagnostic>) -> F
         .cloned();
     diagnostics.extend(new_diagnostics);
 
-    FileParseResult::new(file_name, parser)
+    FileParseResult::new(file_name, tree, parser)
 }
 
 pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
@@ -238,5 +242,58 @@ a {1 + 3} cool expression
                 metadata: vec![],
             }
         );
+    }
+}
+
+#[test]
+fn catches_expression_errors() {
+    use crate::prelude::DiagnosticSeverity;
+    let file = File {
+        file_name: "test.yarn".to_string(),
+        source: "title: test
+---
+foo
+bar
+a {very} cool expression
+==="
+        .to_string(),
+    };
+    let result = compile(CompilationJob {
+        files: vec![file],
+        library: None,
+        compilation_type: CompilationType::FullCompilation,
+        variable_declarations: vec![],
+    });
+    let diagnostics = result.diagnostics;
+    assert_eq!(diagnostics.len(), 2);
+
+    // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
+    // or if there is a (+1) that will be done at some point that we have not implemented yet.
+    let range = Position {
+        line: 4,
+        character: 7,
+    }..=Position {
+        line: 4,
+        character: 8,
+    };
+    let context = "a {very} cool expression\n       ^".to_owned();
+    let first_expected =
+        Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
+            .with_file_name("test.yarn".to_string())
+            .with_range(range.clone())
+            .with_context(context.clone())
+            .with_severity(DiagnosticSeverity::Error);
+
+    let second_expected =
+        Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+            .with_file_name("test.yarn".to_string())
+            .with_range(range)
+            .with_context(context)
+            .with_severity(DiagnosticSeverity::Error);
+    if diagnostics[0] == first_expected {
+        assert_eq!(diagnostics[1], second_expected);
+    } else {
+        assert_eq!(diagnostics[0], second_expected);
+        assert_eq!(diagnostics[1], first_expected);
     }
 }
