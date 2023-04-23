@@ -10,12 +10,10 @@ use crate::prelude::{Diagnostic, FileParseResult, LexerErrorListener, ParserErro
 use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
-use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::tree::{ParseTreeVisitorCompat, Tree};
-use antlr_rust::{InputStream, Parser, TokenSource};
-use std::any::Any;
+use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr_rust::{InputStream, Parser};
 use std::rc::Rc;
 
 mod compilation_job;

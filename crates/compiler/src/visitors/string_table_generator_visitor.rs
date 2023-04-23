@@ -3,13 +3,8 @@ use crate::compiler;
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-
 use antlr_rust::token::Token;
-
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
-
-use antlr_rust::parser::ParserNodeType;
-use antlr_rust::token_factory::CommonTokenFactory;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -24,7 +19,6 @@ pub(crate) struct StringTableGeneratorVisitor {
     current_node_name: String,
     file_name: String,
     pub(crate) string_table_manager: StringTableManager,
-    pub(crate) hashtags_to_insert: Vec<Option<String>>,
 }
 
 impl StringTableGeneratorVisitor {
@@ -34,7 +28,6 @@ impl StringTableGeneratorVisitor {
             string_table_manager,
             diagnostics: Default::default(),
             current_node_name: Default::default(),
-            hashtags_to_insert: Default::default(),
         }
     }
 }
@@ -111,7 +104,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                         .read_parser_rule_context(diagnostic_context)
                         .with_file_name(&self.file_name),
                 );
-                self.hashtags_to_insert.push(None);
                 return;
             }
         };
@@ -133,9 +125,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             },
         );
 
-        if line_id.is_some() {
-            self.hashtags_to_insert.push(None);
-        } else {
+        if line_id.is_none() {
             add_hashtag_child(ctx, string_id);
         }
     }
