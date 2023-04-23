@@ -4,7 +4,7 @@ use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree, Visitable};
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -43,16 +43,7 @@ impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
 }
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor {
-    fn visit_dialogue(&mut self, ctx: &DialogueContext<'input>) -> Self::Return {
-        println!("visiting dialogue");
-        println!("{}", ctx.get_text());
-        for child in ctx.get_children() {
-            println!("visiting child");
-            child.accept(self);
-        }
-    }
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
-        println!("visiting node");
         let mut tags = Vec::new();
         for header in ctx.header_all() {
             let header_key = header.header_key.as_ref().unwrap().get_text();

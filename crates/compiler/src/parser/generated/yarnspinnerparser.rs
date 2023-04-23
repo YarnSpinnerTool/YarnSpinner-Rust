@@ -869,7 +869,7 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Node
 
 impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for NodeContext<'input> {
     fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
-        antlr_rust::tree::VisitChildren::visit_node(visitor, self);
+        YarnSpinnerParserVisitor::visit_node(visitor, self);
     }
 }
 

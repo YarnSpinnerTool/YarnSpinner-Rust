@@ -182,6 +182,5 @@ a {1 + 3} cool expression
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
         });
-        panic!("aa");
     }
 }
