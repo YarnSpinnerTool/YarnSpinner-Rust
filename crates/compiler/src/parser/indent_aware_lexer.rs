@@ -4,13 +4,43 @@
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 //! TODO: Decide if we want to hide the generated lexer to make sure no one accidentially uses it.
 
-use antlr_rust::{token_factory::CommonTokenFactory, TokenSource};
+use std::sync::atomic::Ordering;
+
+use antlr_rust::{
+    char_stream::CharStream,
+    token::GenericToken,
+    token_factory::{CommonTokenFactory, TokenFactory},
+    TokenSource,
+};
+
+use super::generated::yarnspinnerlexer::{LocalTokenFactory, YarnSpinnerLexer};
 
 /// A Lexer subclass that detects newlines and generates indent and dedent tokens accordingly.
-pub struct IndentAwareYarnSpinnerLexer {}
+pub struct IndentAwareYarnSpinnerLexer<
+    'input,
+    Input: CharStream<From<'input>>,
+    TF: TokenFactory<'input> = CommonTokenFactory,
+> {
+    base: YarnSpinnerLexer<'input, Input>, // TODO: needed?
+    pub token: Option<TF::Tok>,
+}
 
-impl<'input> TokenSource<'input> for IndentAwareYarnSpinnerLexer {
-    type TF = CommonTokenFactory;
+impl<'input, Input: CharStream<From<'input>> + std::ops::Deref> std::ops::Deref
+    for IndentAwareYarnSpinnerLexer<'input, Input>
+{
+    type Target = YarnSpinnerLexer<'input, Input>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+// better_any::tid! {IndentAwareYarnSpinnerLexer} // TODO: needed?
+
+impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
+    for IndentAwareYarnSpinnerLexer<'input, Input>
+{
+    type TF = CommonTokenFactory; // TODO: correct?
 
     fn next_token(&mut self) -> <Self::TF as antlr_rust::token_factory::TokenFactory<'input>>::Tok {
         todo!()
@@ -27,4 +57,64 @@ impl<'input> TokenSource<'input> for IndentAwareYarnSpinnerLexer {
     fn get_token_factory(&self) -> &'input Self::TF {
         todo!()
     }
+}
+
+/// Copied from generated/yarnspinnerlexer.rs
+type From<'a> = <LocalTokenFactory<'a> as TokenFactory<'a>>::From;
+
+impl<'input, Input: CharStream<From<'input>>> IndentAwareYarnSpinnerLexer<'input, Input>
+where
+    &'input LocalTokenFactory<'input>: Default,
+{
+    pub fn new(input: Input) -> Self {
+        IndentAwareYarnSpinnerLexer {
+            // TODO: is that correct? Is ::new sufficient whithout the LocalTokenFactory as param?
+            base: YarnSpinnerLexer::new_with_token_factory(
+                input,
+                <&LocalTokenFactory<'input> as Default>::default(),
+            ),
+            token: Default::default(), // TODO: correct?
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use antlr_rust::InputStream;
+
+    use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
+
+    use super::*;
+
+    const MINIMAL_INPUT: &str = "title: Minimal Yarn
+---
+This is the one and only line
+===";
+
+    #[test]
+    fn behaves_like_lexer_for_unindented_input() {
+        let mut generated_lexer = YarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
+        let mut indent_aware_lexer =
+            IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
+
+        while generated_lexer.token.is_some() {
+            generated_lexer.next_token();
+            indent_aware_lexer.next_token();
+            let reference = generated_lexer.token.clone().unwrap();
+            let actual = indent_aware_lexer.token.clone().unwrap();
+            assert!(eq_impl(reference.as_ref(), actual.as_ref()));
+        }
+    }
+}
+
+fn eq_impl<T: std::cmp::PartialEq>(lhs: &GenericToken<T>, rhs: &GenericToken<T>) -> bool {
+    lhs.token_type == rhs.token_type
+        && lhs.channel == rhs.channel
+        && lhs.start == rhs.start
+        && lhs.stop == rhs.stop
+        && lhs.token_index.load(Ordering::Relaxed) == rhs.token_index.load(Ordering::Relaxed)
+        && lhs.line == rhs.line
+        && lhs.column == rhs.column
+        && lhs.text == rhs.text
+        && lhs.read_only == rhs.read_only
 }
