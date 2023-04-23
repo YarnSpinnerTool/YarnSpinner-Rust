@@ -264,6 +264,7 @@ a {very} cool expression
         compilation_type: CompilationType::FullCompilation,
         variable_declarations: vec![],
     });
+    assert!(result.program.is_none());
     let diagnostics = result.diagnostics;
     assert_eq!(diagnostics.len(), 2);
 
