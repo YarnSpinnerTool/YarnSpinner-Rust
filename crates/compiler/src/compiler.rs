@@ -2,11 +2,11 @@
 
 pub use crate::compiler::compilation_job::*;
 use crate::error_strategy::ErrorStrategy;
-use crate::input_manager::StringTableManager;
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::{Diagnostic, FileParseResult, LexerErrorListener, ParserErrorListener};
+use crate::string_table_manager::StringTableManager;
 use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
