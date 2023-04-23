@@ -12,7 +12,7 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use antlr_rust::{InputStream, Parser};
 use std::rc::Rc;
 
@@ -71,7 +71,8 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
     // and figure out what variables they've declared
     let mut string_table_manager = StringTableManager::default();
     for file in &job.files {
-        let mut parse_result = parse_syntax_tree(file, &mut previous.diagnostics);
+        println!("file: {file:?}");
+        let parse_result = parse_syntax_tree(file, &mut previous.diagnostics);
 
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
@@ -81,8 +82,8 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
         //lastLineTagger.Visit(parseResult.Tree);
         let mut visitor =
             StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
-        let dialogue = parse_result.parser.dialogue().unwrap();
-        visitor.visit(&*dialogue);
+        visitor.visit(&*parse_result.tree);
+        println!("visitor: {visitor:?}");
         previous.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
         parsed_files.push(parse_result);
@@ -106,14 +107,12 @@ fn parse_syntax_tree<'a, 'b>(
 
     let tokens = CommonTokenStream::new(lexer);
     let mut parser = YarnSpinnerParser::with_strategy(tokens, ErrorStrategy::new());
-
     let parser_error_listener = ParserErrorListener::new(file.clone());
     let parser_error_listener_diagnostics = parser_error_listener.diagnostics.clone();
 
     parser.remove_error_listeners();
     parser.add_error_listener(Box::new(parser_error_listener));
 
-    let tree = parser.dialogue().unwrap();
     let lexer_error_listener_diagnostics_borrowed = lexer_error_listener_diagnostics.borrow();
     let parser_error_listener_diagnostics_borrowed = parser_error_listener_diagnostics.borrow();
     let new_diagnostics = lexer_error_listener_diagnostics_borrowed
@@ -122,11 +121,7 @@ fn parse_syntax_tree<'a, 'b>(
         .cloned();
     diagnostics.extend(new_diagnostics);
 
-    FileParseResult {
-        tree,
-        name: file_name,
-        parser,
-    }
+    FileParseResult::new(file_name, parser)
 }
 
 pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
@@ -160,12 +155,33 @@ mod test {
     use super::*;
 
     #[test]
-    fn can_call_compile_without_crash() {
+    fn can_call_compile_empty_without_crash() {
         compile(CompilationJob {
             files: vec![],
             library: None,
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
         });
+    }
+
+    #[test]
+    fn can_call_compile_file_without_crash() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+foo
+bar
+a {1 + 3} cool expression
+==="
+            .to_string(),
+        };
+        compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+        panic!("aa");
     }
 }
