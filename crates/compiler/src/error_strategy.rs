@@ -1,20 +1,20 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorStrategy.cs>
 
-use antlr_rust::errors::{ANTLRError, FailedPredicateError, InputMisMatchError, NoViableAltError};
+use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
 use antlr_rust::parser::ParserNodeType;
-use std::marker::PhantomData;
-use std::rc::Rc;
 
-use crate::parser::generated::yarnspinnerparser::YarnSpinnerParserContextType;
-use crate::prelude::ActualYarnSpinnerParser;
-use antlr_rust::error_listener::ErrorListener;
-use antlr_rust::interval_set::IntervalSet;
-use antlr_rust::parser_atn_simulator::ParserATNSimulator;
-use antlr_rust::recognizer::Recognizer;
-use antlr_rust::rule_context::CustomRuleContext;
+
+
+
+
+
+
+
+
+
 use antlr_rust::token::Token;
-use antlr_rust::token_factory::{CommonTokenFactory, TokenAware, TokenFactory};
-use antlr_rust::token_stream::TokenStream;
+use antlr_rust::token_factory::{TokenFactory};
+
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 
 pub struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
@@ -76,7 +76,7 @@ impl<'input, T: Parser<'input>> AntlrErrorStrategy<'input, T> for ErrorStrategy<
             _ => return,
         };
         let offending_token_index = e.get_offending_token().map(|it| it.get_token_index());
-        recognizer.notify_error_listeners(msg, offending_token_index, Some(&e));
+        recognizer.notify_error_listeners(msg, offending_token_index, Some(e));
         self.default_error_strategy.report_error(recognizer, e);
     }
 
@@ -88,16 +88,16 @@ impl<'input, T: Parser<'input>> AntlrErrorStrategy<'input, T> for ErrorStrategy<
 impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
     fn report_no_viable_alternative<T: Parser<'input, Node = Ctx, TF = Ctx::TF>>(
         &self,
-        recognizer: &mut T,
-        e: &NoViableAltError,
+        _recognizer: &mut T,
+        _e: &NoViableAltError,
     ) -> String {
         String::from("no viable alternative")
     }
 
     fn report_input_mismatch<T: Parser<'input, Node = Ctx, TF = Ctx::TF>>(
         &self,
-        recognizer: &mut T,
-        e: &InputMisMatchError,
+        _recognizer: &mut T,
+        _e: &InputMisMatchError,
     ) -> String {
         String::from("input mismatch")
     }
