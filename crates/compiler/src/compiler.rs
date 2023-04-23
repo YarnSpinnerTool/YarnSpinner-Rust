@@ -12,7 +12,7 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr_rust::tree::ParseTreeVisitorCompat;
 use antlr_rust::{InputStream, Parser};
 use std::rc::Rc;
 
