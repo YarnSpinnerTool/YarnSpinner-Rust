@@ -141,8 +141,13 @@ pub(crate) fn add_hashtag_child<'input>(
         0,
         -1,
     );
+    let invoking_state_according_to_original_implementation = 0;
     // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
-    let hashtag = HashtagContextExt::new_with_text(Some(parent.clone()), 0, string_id_token);
+    let hashtag = HashtagContextExt::new_with_text(
+        Some(parent.clone()),
+        invoking_state_according_to_original_implementation,
+        string_id_token,
+    );
     parent.add_child(hashtag);
 }
 
