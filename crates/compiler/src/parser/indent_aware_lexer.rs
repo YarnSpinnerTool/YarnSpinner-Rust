@@ -97,6 +97,13 @@ This is the one and only line
         let mut indent_aware_lexer =
             IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
 
+        generated_lexer.next_token();
+        indent_aware_lexer.next_token();
+
+        // Sanity check: Make sure at least one token is read: We do have input.
+        assert!(generated_lexer.token.is_some());
+        assert!(indent_aware_lexer.token.is_some());
+
         while generated_lexer.token.is_some() {
             generated_lexer.next_token();
             indent_aware_lexer.next_token();
@@ -104,6 +111,9 @@ This is the one and only line
             let actual = indent_aware_lexer.token.clone().unwrap();
             assert!(eq_impl(reference.as_ref(), actual.as_ref()));
         }
+
+        assert!(indent_aware_lexer.token.is_none());
+        assert!(generated_lexer.token.is_none());
     }
 }
 
