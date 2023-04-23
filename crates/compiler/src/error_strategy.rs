@@ -2,18 +2,8 @@
 
 use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
 use antlr_rust::parser::ParserNodeType;
-
-
-
-
-
-
-
-
-
-
 use antlr_rust::token::Token;
-use antlr_rust::token_factory::{TokenFactory};
+use antlr_rust::token_factory::TokenFactory;
 
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 
