@@ -4,11 +4,8 @@
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 //! TODO: Decide if we want to hide the generated lexer to make sure no one accidentially uses it.
 
-use std::sync::atomic::Ordering;
-
 use antlr_rust::{
     char_stream::CharStream,
-    token::GenericToken,
     token_factory::{CommonTokenFactory, TokenFactory},
     TokenSource,
 };
