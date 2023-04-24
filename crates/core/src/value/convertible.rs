@@ -125,4 +125,6 @@ pub enum InvalidCastError {
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     ParseBoolError(#[from] std::str::ParseBoolError),
+    #[error("Value was uninitialized, cannot cast it to anything")]
+    UninitializedValue,
 }

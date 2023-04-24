@@ -56,7 +56,7 @@ impl Diagnostic {
 
     pub fn read_parser_rule_context<'a, 'b, 'input>(
         mut self,
-        ctx: Rc<impl ParserRuleContext<'input>>,
+        ctx: &impl ParserRuleContext<'input>,
     ) -> Self {
         let start = Position::from_token(ctx.start());
         let stop = Position::from_token(ctx.stop());

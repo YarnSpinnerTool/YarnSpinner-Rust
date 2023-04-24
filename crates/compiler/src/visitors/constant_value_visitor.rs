@@ -1,14 +1,16 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ConstantValueVisitor.cs>
 
+use crate::parser::generated::yarnspinnerparser::ValueNullContext;
 use crate::prelude::generated::yarnspinnerparser::{
-    Declare_statementContext, YarnSpinnerParserContext, YarnSpinnerParserContextType,
+    YarnSpinnerParserContext, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::Diagnostic;
-use antlr_rust::tree::{ParseTreeVisitor, ParseTreeVisitorCompat, VisitChildren};
-use antlr_rust::Parser;
+
+use antlr_rust::tree::{ParseTreeVisitorCompat};
+
 use rusty_yarn_spinner_core::prelude::Value;
-use rusty_yarn_spinner_core::types::Type;
+
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
@@ -54,6 +56,15 @@ impl<'a, 'input: 'a, P: YarnSpinnerParserContext<'input>> ParseTreeVisitorCompat
 impl<'a, 'input: 'a, P: YarnSpinnerParserContext<'input>> YarnSpinnerParserVisitorCompat<'input>
     for ConstantValueVisitor<'a, 'input, P>
 {
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
+        let message = "Null is not a permitted type in Yarn Spinner 2.0 and later";
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file_name)
+                .read_parser_rule_context(ctx),
+        );
+        ConstantValue::non_panicking_default()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -71,19 +82,19 @@ impl<'a, 'input: 'a, P: YarnSpinnerParserContext<'input>> YarnSpinnerParserVisit
 /// We cannot write a diagnostic in the default because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
-pub(crate) struct ConstantValue(Option<Value>);
+pub(crate) struct ConstantValue(Value);
 
 impl Deref for ConstantValue {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
-        self.0.as_ref().unwrap()
+        &self.0
     }
 }
 
 impl DerefMut for ConstantValue {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.0.as_mut().unwrap()
+        &mut self.0
     }
 }
 
@@ -96,14 +107,6 @@ impl Default for ConstantValue {
 impl ConstantValue {
     /// Only use this for dummy assignments.
     fn non_panicking_default() -> Self {
-        // This is the reason why we put the inner value behind an `Option`:
-        // By putting a `None` into it for the dummy value, we make sure that we neve ever
-        // leak a "defaulted" value into the outside world, because any and all "defaults" for
-        // `Value` are nonsense.
-        Self(None)
-    }
-
-    fn inner(self) -> Value {
-        self.0.unwrap()
+        Self(Default::default())
     }
 }
