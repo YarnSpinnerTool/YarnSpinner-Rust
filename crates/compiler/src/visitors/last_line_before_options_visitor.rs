@@ -2,10 +2,11 @@
 
 use crate::compiler;
 use crate::parser::generated::yarnspinnerparser::{
-    BodyContext, If_statementContext, Line_statementContext,
+    BodyContext, If_statementContext, Line_statementContext, Shortcut_option_statementContext,
 };
 use crate::prelude::generated::yarnspinnerparser::{
-    BodyContextAttrs, Else_clauseContextAttrs, If_clauseContextAttrs, If_statementContextAttrs,
+    BodyContextAttrs, Else_clauseContextAttrs, Else_if_clauseContextAttrs, If_clauseContextAttrs,
+    If_statementContextAttrs, Shortcut_optionContextAttrs, Shortcut_option_statementContextAttrs,
     StatementContextAll, StatementContextAttrs, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
@@ -27,34 +28,44 @@ impl<'input> ParseTreeVisitorCompat<'input> for LastLineBeforeOptionsVisitor {
 }
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for LastLineBeforeOptionsVisitor {
-    // tags this line as being one that is the statement immediately before an option block, does this by adding a #lastline tag onto this line
-    // no checking is needed because only lines that are needing to be tagged will be visited, others are skipped.
-    // The line is tagged regardless of if there is a #lastline there already
-    // technically unecessary in that case but this feels uncommon enough to not bother edgecasing
-    fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
-        compiler::add_hashtag_child(ctx, "lastline")
-    }
-
     // entry point for everything
     // if there are no ifs or options with embedded statements this will be all that is visited
     fn visit_body(&mut self, ctx: &BodyContext<'input>) -> Self::Return {
         self.run_through_statement(&ctx.statement_all());
     }
 
+    // tags this line as being one that is the statement immediately before an option block, does this by adding a #lastline tag onto this line
+    // no checking is needed because only lines that are needing to be tagged will be visited, others are skipped.
+    // The line is tagged regardless of if there is a #lastline there already
+    // technically unnecessary in that case but this feels uncommon enough to not bother edgecasing
+    fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
+        compiler::add_hashtag_child(ctx, "lastline")
+    }
+
     // handles the statements inside of an if statement
     // chunks its way through the if, any else-ifs and elses internal block of statements
     fn visit_if_statement(&mut self, ctx: &If_statementContext<'input>) -> Self::Return {
-        // TODO: Check this, I was distracted
         let statements = ctx.if_clause().unwrap().statement_all();
         self.run_through_statement(&statements);
-        if let Some(else_ifs) = ctx.else_if_clause() {
-            for else_if in else_ifs {
-                let statements = else_if.statement_all();
-                self.run_through_statement(&statements);
-            }
+        for else_if in ctx.else_if_clause_all() {
+            let statements = else_if.statement_all();
+            self.run_through_statement(&statements);
         }
+
         if let Some(else_statement) = ctx.else_clause() {
             let statements = else_statement.statement_all();
+            self.run_through_statement(&statements);
+        }
+    }
+
+    // visiting an option
+    // basically just run through the statement (if any exist)
+    fn visit_shortcut_option_statement(
+        &mut self,
+        ctx: &Shortcut_option_statementContext<'input>,
+    ) -> Self::Return {
+        for shortcut in ctx.shortcut_option_all() {
+            let statements = shortcut.statement_all();
             self.run_through_statement(&statements);
         }
     }
