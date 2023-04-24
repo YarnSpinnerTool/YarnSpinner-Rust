@@ -54,6 +54,8 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
     format!("line:{name}")
 }
 
+/// Not part of original implementation, but needed because we lack some convenience methods
+/// that the C# implementation of ANTLR would provide but antlr4rust does not.
 pub(crate) fn add_hashtag_child<'input>(
     parent: &impl YarnSpinnerParserContext<'input>,
     text: String,
