@@ -3,8 +3,7 @@
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::string_table_manager::StringTableManager;
-use crate::visitors::last_line_before_options_visitor::LastLineBeforeOptionsVisitor;
-use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
+use crate::visitors::*;
 use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
