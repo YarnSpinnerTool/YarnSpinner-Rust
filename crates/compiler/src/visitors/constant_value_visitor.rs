@@ -1,13 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ConstantValueVisitor.cs>
 
-use crate::parser::generated::yarnspinnerparser::ValueNullContext;
+use crate::parser::generated::yarnspinnerparser::{ValueNullContext, ValueNumberContext};
 use crate::prelude::generated::yarnspinnerparser::{
     YarnSpinnerParserContext, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::Diagnostic;
 
-use antlr_rust::tree::{ParseTreeVisitorCompat};
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 
 use rusty_yarn_spinner_core::prelude::Value;
 
@@ -65,6 +65,24 @@ impl<'a, 'input: 'a, P: YarnSpinnerParserContext<'input>> YarnSpinnerParserVisit
         );
         ConstantValue::non_panicking_default()
     }
+
+    fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
+        let text = ctx.get_text();
+        if let Ok(result) = text.parse::<f32>() {
+            Value::from(result).into()
+        } else {
+            let message = format!("Failed to parse {text} as a float",);
+            self.diagnostics.push(
+                Diagnostic::from_message(message)
+                    .with_file_name(&self.file_name)
+                    .read_parser_rule_context(ctx),
+            );
+            // This default value seems very "JavaScript-y" with the pseudo-sensible default value on errors.
+            // But this is not so! We just pushed an error diagnostic, so there will be no program emitted from this compilation attempt.
+            // All this does is allow the compiler to continue and potentially collect further useful diagnostics!
+            Value::from(0.0).into()
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -95,6 +113,12 @@ impl Deref for ConstantValue {
 impl DerefMut for ConstantValue {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<Value> for ConstantValue {
+    fn from(value: Value) -> Self {
+        Self(value)
     }
 }
 
