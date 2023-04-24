@@ -4,15 +4,12 @@
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 //! TODO: Decide if we want to hide the generated lexer to make sure no one accidentially uses it.
 
-use std::{
-    borrow::Borrow,
-    collections::{vec_deque, VecDeque},
-};
+use std::collections::VecDeque;
 
 use antlr_rust::{
     char_stream::CharStream,
     int_stream::EOF,
-    token::{CommonToken, Token},
+    token::CommonToken,
     token_factory::{CommonTokenFactory, TokenFactory},
     Lexer, TokenSource,
 };
