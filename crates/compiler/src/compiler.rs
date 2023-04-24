@@ -3,6 +3,7 @@
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::string_table_manager::StringTableManager;
+use crate::visitors::last_line_before_options_visitor::LastLineBeforeOptionsVisitor;
 use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
 use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeVisitorCompat;
@@ -71,9 +72,9 @@ fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> Compi
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
         // this should probably be a flag instead of every time though
-        // TODO
-        // let lastLineTagger = new LastLineBeforeOptionsVisitor();
-        //lastLineTagger.Visit(parseResult.Tree);
+        let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
+        last_line_tagger.visit(&*parse_result.tree);
+
         let mut visitor =
             StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
         visitor.visit(&*parse_result.tree);
