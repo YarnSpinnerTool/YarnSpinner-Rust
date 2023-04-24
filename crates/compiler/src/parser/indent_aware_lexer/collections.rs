@@ -32,6 +32,8 @@ impl<T: Debug + Clone> Stack<T> {
     }
 }
 
+// Somehow auto-derive does not work with those types so a manual impl is needed?
+
 impl<T: Debug + Clone> Default for Queue<T> {
     fn default() -> Self {
         Self(Default::default())
