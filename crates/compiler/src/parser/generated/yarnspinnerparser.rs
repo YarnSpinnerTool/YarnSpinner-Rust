@@ -7,25 +7,27 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use super::yarnspinnerparserlistener::*;
+use super::yarnspinnerparservisitor::*;
 use antlr_rust::atn::{ATN, INVALID_ALT};
 use antlr_rust::atn_deserializer::ATNDeserializer;
 use antlr_rust::dfa::DFA;
 use antlr_rust::error_strategy::{DefaultErrorStrategy, ErrorStrategy};
 use antlr_rust::errors::*;
 use antlr_rust::int_stream::EOF;
-use antlr_rust::lazy_static;
 use antlr_rust::parser::{BaseParser, Parser, ParserNodeType, ParserRecog};
 use antlr_rust::parser_atn_simulator::ParserATNSimulator;
 use antlr_rust::parser_rule_context::{cast, cast_mut, BaseParserRuleContext, ParserRuleContext};
 use antlr_rust::recognizer::{Actions, Recognizer};
 use antlr_rust::rule_context::{BaseRuleContext, CustomRuleContext, RuleContext};
-use antlr_rust::token::{OwningToken, Token, TOKEN_EOF};
+use antlr_rust::token::{CommonToken, OwningToken, Token, TOKEN_EOF};
 use antlr_rust::token_factory::{CommonTokenFactory, TokenAware, TokenFactory};
 use antlr_rust::token_stream::TokenStream;
 use antlr_rust::tree::*;
 use antlr_rust::vocabulary::{Vocabulary, VocabularyImpl};
-use antlr_rust::PredictionContextCache;
 use antlr_rust::TokenSource;
+use antlr_rust::{InputStream, PredictionContextCache};
+
+use antlr_rust::lazy_static;
 use antlr_rust::{TidAble, TidExt};
 
 use std::any::{Any, TypeId};
@@ -440,11 +442,21 @@ where
 /// Trait for monomorphized trait object that corresponds to the nodes of parse tree generated for YarnSpinnerParser
 pub trait YarnSpinnerParserContext<'input>:
     for<'x> Listenable<dyn YarnSpinnerParserListener<'input> + 'x>
+    + for<'x> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'x>
     + ParserRuleContext<'input, TF = LocalTokenFactory<'input>, Ctx = YarnSpinnerParserContextType>
 {
 }
 
 antlr_rust::coerce_from! { 'input : YarnSpinnerParserContext<'input> }
+
+impl<'input, 'x, T> VisitableDyn<T> for dyn YarnSpinnerParserContext<'input> + 'input
+where
+    T: YarnSpinnerParserVisitor<'input> + 'x,
+{
+    fn accept_dyn(&self, visitor: &mut T) {
+        self.accept(visitor as &mut (dyn YarnSpinnerParserVisitor<'input> + 'x))
+    }
+}
 
 impl<'input> YarnSpinnerParserContext<'input>
     for TerminalNode<'input, YarnSpinnerParserContextType>
@@ -575,6 +587,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_dialogue(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for DialogueContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_dialogue(self);
     }
 }
 
@@ -727,6 +745,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for File_hashtagContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_file_hashtag(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for File_hashtagContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -838,6 +864,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Node
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_node(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for NodeContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        YarnSpinnerParserVisitor::visit_node(visitor, self);
     }
 }
 
@@ -990,6 +1022,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Head
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for HeaderContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_header(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for HeaderContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -1126,6 +1164,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Body
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for BodyContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_body(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for BodyContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -1246,6 +1290,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_statement(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for StatementContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_statement(self);
     }
 }
 
@@ -1522,6 +1572,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Line_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_line_statement(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for Line_statementContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -1675,6 +1733,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_line_formatted_text(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Line_formatted_textContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_line_formatted_text(self);
     }
 }
 
@@ -1897,6 +1963,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for Hash
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for HashtagContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_hashtag(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for HashtagContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -1908,6 +1980,20 @@ impl<'input> CustomRuleContext<'input> for HashtagContextExt<'input> {
 antlr_rust::tid! {HashtagContextExt<'a>}
 
 impl<'input> HashtagContextExt<'input> {
+    pub fn new_with_text(
+        parent: Option<Rc<dyn YarnSpinnerParserContext<'input> + 'input>>,
+        invoking_state: isize,
+        text: impl Into<Option<TokenType<'input>>>,
+    ) -> Rc<HashtagContextAll<'input>> {
+        Rc::new(BaseParserRuleContext::new_parser_ctx(
+            parent,
+            invoking_state,
+            HashtagContextExt {
+                text: text.into(),
+                ph: PhantomData,
+            },
+        ))
+    }
     fn new(
         parent: Option<Rc<dyn YarnSpinnerParserContext<'input> + 'input>>,
         invoking_state: isize,
@@ -2009,6 +2095,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_line_condition(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Line_conditionContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_line_condition(self);
     }
 }
 
@@ -2161,6 +2255,13 @@ impl<'input> Deref for ExpressionContextAll<'input> {
         }
     }
 }
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ExpressionContextAll<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        self.deref().accept(visitor)
+    }
+}
 impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     for ExpressionContextAll<'input>
 {
@@ -2182,6 +2283,11 @@ pub struct ExpressionContextExt<'input> {
 impl<'input> YarnSpinnerParserContext<'input> for ExpressionContext<'input> {}
 
 impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
+    for ExpressionContext<'input>
+{
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
     for ExpressionContext<'input>
 {
 }
@@ -2262,6 +2368,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_expParens(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expParens(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ExpParensContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expParens(self);
     }
 }
 
@@ -2367,6 +2483,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_expMultDivMod(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expMultDivMod(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ExpMultDivModContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expMultDivMod(self);
     }
 }
 
@@ -2484,6 +2612,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_expComparison(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expComparison(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ExpComparisonContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expComparison(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ExpComparisonContextExt<'input> {
@@ -2562,6 +2702,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_expNegative(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expNegative(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ExpNegativeContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expNegative(self);
     }
 }
 
@@ -2662,6 +2814,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_expAndOrXor(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expAndOrXor(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ExpAndOrXorContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expAndOrXor(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ExpAndOrXorContextExt<'input> {
@@ -2757,6 +2921,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_expAddSub(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expAddSub(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ExpAddSubContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expAddSub(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ExpAddSubContextExt<'input> {
@@ -2832,6 +3006,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for ExpN
         listener.enter_every_rule(self);
         listener.enter_expNot(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expNot(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ExpNotContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expNot(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ExpNotContextExt<'input> {
@@ -2899,6 +3083,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_expValue(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expValue(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ExpValueContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expValue(self);
     }
 }
 
@@ -2993,6 +3187,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_expEquality(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_expEquality(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ExpEqualityContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_expEquality(self);
     }
 }
 
@@ -3534,6 +3740,11 @@ impl<'input> Deref for ValueContextAll<'input> {
         }
     }
 }
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ValueContextAll<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        self.deref().accept(visitor)
+    }
+}
 impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     for ValueContextAll<'input>
 {
@@ -3555,6 +3766,8 @@ pub struct ValueContextExt<'input> {
 impl<'input> YarnSpinnerParserContext<'input> for ValueContext<'input> {}
 
 impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a> for ValueContext<'input> {}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ValueContext<'input> {}
 
 impl<'input> CustomRuleContext<'input> for ValueContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
@@ -3618,6 +3831,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_valueNull(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueNull(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ValueNullContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueNull(self);
     }
 }
 
@@ -3688,6 +3911,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_valueNumber(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueNumber(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ValueNumberContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueNumber(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ValueNumberContextExt<'input> {
@@ -3756,6 +3991,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_valueTrue(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueTrue(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ValueTrueContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueTrue(self);
     }
 }
 
@@ -3826,6 +4071,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_valueFalse(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueFalse(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ValueFalseContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueFalse(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ValueFalseContextExt<'input> {
@@ -3893,6 +4150,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
         listener.enter_every_rule(self);
         listener.enter_valueFunc(self);
     }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueFunc(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ValueFuncContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueFunc(self);
+    }
 }
 
 impl<'input> CustomRuleContext<'input> for ValueFuncContextExt<'input> {
@@ -3959,6 +4226,16 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_valueVar(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueVar(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for ValueVarContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueVar(self);
     }
 }
 
@@ -4028,6 +4305,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_valueString(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_valueString(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for ValueStringContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_valueString(self);
     }
 }
 
@@ -4205,6 +4494,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for VariableContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_variable(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for VariableContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -4300,6 +4595,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_function_call(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Function_callContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_function_call(self);
     }
 }
 
@@ -4499,6 +4802,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for If_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_if_statement(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for If_statementContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -4685,6 +4996,12 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a> for If_clauseContext<'input> {
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_if_clause(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for If_clauseContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -4847,6 +5164,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_else_if_clause(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Else_if_clauseContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_else_if_clause(self);
     }
 }
 
@@ -5019,6 +5344,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Else_clauseContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_else_clause(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for Else_clauseContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -5176,6 +5509,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_set_statement(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Set_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_set_statement(self);
     }
 }
 
@@ -5415,6 +5756,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Call_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_call_statement(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for Call_statementContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -5551,6 +5900,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_command_statement(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Command_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_command_statement(self);
     }
 }
 
@@ -5710,6 +6067,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_command_formatted_text(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Command_formatted_textContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_command_formatted_text(self);
     }
 }
 
@@ -5918,6 +6283,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     }
 }
 
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Shortcut_option_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_shortcut_option_statement(self);
+    }
+}
+
 impl<'input> CustomRuleContext<'input> for Shortcut_option_statementContextExt<'input> {
     type TF = LocalTokenFactory<'input>;
     type Ctx = YarnSpinnerParserContextType;
@@ -6069,6 +6442,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_shortcut_option(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Shortcut_optionContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_shortcut_option(self);
     }
 }
 
@@ -6251,6 +6632,14 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.exit_declare_statement(self);
         listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Declare_statementContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_declare_statement(self);
     }
 }
 
@@ -6453,6 +6842,13 @@ impl<'input> Deref for Jump_statementContextAll<'input> {
         }
     }
 }
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for Jump_statementContextAll<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        self.deref().accept(visitor)
+    }
+}
 impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     for Jump_statementContextAll<'input>
 {
@@ -6475,6 +6871,11 @@ pub struct Jump_statementContextExt<'input> {
 impl<'input> YarnSpinnerParserContext<'input> for Jump_statementContext<'input> {}
 
 impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
+    for Jump_statementContext<'input>
+{
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
     for Jump_statementContext<'input>
 {
 }
@@ -6567,6 +6968,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_jumpToNodeName(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_jumpToNodeName(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for JumpToNodeNameContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_jumpToNodeName(self);
     }
 }
 
@@ -6676,6 +7089,18 @@ impl<'input, 'a> Listenable<dyn YarnSpinnerParserListener<'input> + 'a>
     fn enter(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
         listener.enter_every_rule(self);
         listener.enter_jumpToExpression(self);
+    }
+    fn exit(&self, listener: &mut (dyn YarnSpinnerParserListener<'input> + 'a)) {
+        listener.exit_jumpToExpression(self);
+        listener.exit_every_rule(self);
+    }
+}
+
+impl<'input, 'a> Visitable<dyn YarnSpinnerParserVisitor<'input> + 'a>
+    for JumpToExpressionContext<'input>
+{
+    fn accept(&self, visitor: &mut (dyn YarnSpinnerParserVisitor<'input> + 'a)) {
+        visitor.visit_jumpToExpression(self);
     }
 }
 

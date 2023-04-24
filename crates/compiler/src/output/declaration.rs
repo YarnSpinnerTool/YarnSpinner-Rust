@@ -4,8 +4,10 @@
 //!
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
+use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
+use std::cell::Ref;
 use std::ops::RangeInclusive;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -84,4 +86,13 @@ pub struct Position {
 
     /// The zero-indexed character number of this position.
     pub character: usize,
+}
+
+impl Position {
+    pub fn from_token(token: Ref<impl Token + ?Sized>) -> Self {
+        Self {
+            line: (token.get_line() - 1) as usize,
+            character: (token.get_column()) as usize,
+        }
+    }
 }
