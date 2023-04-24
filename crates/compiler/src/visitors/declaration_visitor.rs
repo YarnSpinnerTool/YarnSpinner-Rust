@@ -1,8 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/DeclarationVisitor.cs>
 
-use crate::prelude::generated::yarnspinnerparser::NodeContext;
+use crate::prelude::generated::yarnspinnerparser::{NodeContext, YarnSpinnerParserContextType};
+use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::{Declaration, Diagnostic};
 use antlr_rust::common_token_stream::CommonTokenStream;
+use antlr_rust::tree::ParseTreeVisitorCompat;
 use antlr_rust::TokenSource;
 use regex::Regex;
 use rusty_yarn_spinner_core::types::{BooleanType, BuiltinType, NumberType, StringType, Type};
@@ -50,6 +52,8 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
     /// A regular expression used to detect illegal characters in node titles.
     regex: Regex,
+
+    _dummy: BuiltinType,
 }
 
 impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
@@ -60,13 +64,9 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
         tokens: CommonTokenStream<'input, T>,
     ) -> Self {
         Self {
-            new_declarations: Default::default(),
-            file_tags: Default::default(),
-            diagnostics: Default::default(),
             tokens,
             existing_declarations,
-            current_node_name: None,
-            current_node_context: None,
+            new_declarations: Default::default(),
             source_file_name: source_file_name.into(),
             types: type_declarations,
             keywords_to_builtin_types: HashMap::from([
@@ -75,6 +75,11 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
                 ("bool", BuiltinType::Bool(BooleanType)),
             ]),
             regex: Regex::new(r"[\[<>\]{}|:\s#$]").unwrap(),
+            file_tags: Default::default(),
+            diagnostics: Default::default(),
+            current_node_name: None,
+            current_node_context: None,
+            _dummy: Default::default(),
         }
     }
 
@@ -87,4 +92,20 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
             .cloned()
             .collect()
     }
+}
+
+impl<'input, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
+    for DeclarationVisitor<'input, T>
+{
+    type Node = YarnSpinnerParserContextType;
+    type Return = BuiltinType;
+
+    fn temp_result(&mut self) -> &mut Self::Return {
+        &mut self._dummy
+    }
+}
+
+impl<'input, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
+    for DeclarationVisitor<'input, T>
+{
 }

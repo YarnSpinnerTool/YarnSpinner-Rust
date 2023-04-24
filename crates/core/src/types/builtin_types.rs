@@ -2,7 +2,7 @@
 
 use crate::prelude::types::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 /// Contains the built-in types available in the Yarn language.
 /// A strict subset of [`Type`].
 pub enum BuiltinType {
@@ -19,5 +19,6 @@ pub enum BuiltinType {
     /// This value is not valid except during compilation. It
     /// is used to represent values that have not yet been assigned a
     /// type by the type system.
+    #[default]
     Undefined,
 }
