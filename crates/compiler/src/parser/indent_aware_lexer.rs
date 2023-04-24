@@ -43,19 +43,19 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
     type TF = CommonTokenFactory; // TODO: correct?
 
     fn next_token(&mut self) -> <Self::TF as antlr_rust::token_factory::TokenFactory<'input>>::Tok {
-        todo!()
+        self.base.next_token()
     }
 
     fn get_input_stream(&mut self) -> Option<&mut dyn antlr_rust::int_stream::IntStream> {
-        todo!()
+        self.base.get_input_stream()
     }
 
     fn get_source_name(&self) -> String {
-        todo!()
+        self.base.get_source_name()
     }
 
     fn get_token_factory(&self) -> &'input Self::TF {
-        todo!()
+        self.base.get_token_factory()
     }
 }
 
@@ -80,7 +80,10 @@ where
 
 #[cfg(test)]
 mod test {
-    use antlr_rust::InputStream;
+    use antlr_rust::{
+        common_token_stream::CommonTokenStream, int_stream::IntStream, token::TOKEN_EOF,
+        InputStream,
+    };
 
     use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 
@@ -93,38 +96,37 @@ This is the one and only line
 
     #[test]
     fn behaves_like_lexer_for_unindented_input() {
-        let mut generated_lexer = YarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
-        let mut indent_aware_lexer =
-            IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
+        let generated_lexer = YarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
+        let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
 
-        generated_lexer.next_token();
-        indent_aware_lexer.next_token();
+        let mut reference_token_stream = CommonTokenStream::new(generated_lexer);
+        let mut indent_aware_token_stream = CommonTokenStream::new(indent_aware_lexer);
+
+        assert_eq!(
+            reference_token_stream.size(),
+            indent_aware_token_stream.size()
+        );
 
         // Sanity check: Make sure at least one token is read: We do have input.
-        assert!(generated_lexer.token.is_some());
-        assert!(indent_aware_lexer.token.is_some());
+        assert_eq!(
+            reference_token_stream.iter().next(),
+            indent_aware_token_stream.iter().next()
+        );
 
-        while generated_lexer.token.is_some() {
-            generated_lexer.next_token();
-            indent_aware_lexer.next_token();
-            let reference = generated_lexer.token.clone().unwrap();
-            let actual = indent_aware_lexer.token.clone().unwrap();
-            assert!(eq_impl(reference.as_ref(), actual.as_ref()));
+        // Can not do this, as trying to read EOF panics...
+        // Iterator::eq(
+        //     reference_token_stream.iter(),
+        //     indent_aware_token_stream.iter(),
+        // );
+
+        while reference_token_stream.la(1) != TOKEN_EOF {
+            assert_eq!(
+                reference_token_stream.iter().next(),
+                indent_aware_token_stream.iter().next()
+            );
         }
 
-        assert!(indent_aware_lexer.token.is_none());
-        assert!(generated_lexer.token.is_none());
+        assert_eq!(TOKEN_EOF, reference_token_stream.la(1));
+        assert_eq!(TOKEN_EOF, indent_aware_token_stream.la(1));
     }
-}
-
-fn eq_impl<T: std::cmp::PartialEq>(lhs: &GenericToken<T>, rhs: &GenericToken<T>) -> bool {
-    lhs.token_type == rhs.token_type
-        && lhs.channel == rhs.channel
-        && lhs.start == rhs.start
-        && lhs.stop == rhs.stop
-        && lhs.token_index.load(Ordering::Relaxed) == rhs.token_index.load(Ordering::Relaxed)
-        && lhs.line == rhs.line
-        && lhs.column == rhs.column
-        && lhs.text == rhs.text
-        && lhs.read_only == rhs.read_only
 }
