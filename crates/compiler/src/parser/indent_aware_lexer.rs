@@ -157,16 +157,113 @@ where
     }
 
     fn handle_newline_token(
-        &self,
-        current: Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+        &mut self,
+        current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) {
-        todo!()
+        // We're about to go to a new line. Look ahead to see how indented it is.
+
+        // insert the current NEWLINE token
+        self.pending_tokens.enqueue(current_token.clone());
+
+        if let Some(last_seen_option_content) = self.last_seen_option_content {
+            // [sic!] we are a blank line
+            if self
+                .last_token
+                .as_ref()
+                .map(|last| current_token.token_type == last.token_type)
+                .unwrap_or_default()
+            {
+                // is the option content directly above us?
+                if self.base.get_line() - last_seen_option_content == 1 {
+                    // [sic! (the whole thing)]
+                    // so that we don't end up printing <ending option group> into the stream we set the text to be empty
+                    // I dislike this and need to look into if you can set a debug text setting in ANTLR
+                    // TODO: see above comment
+                    // this.InsertToken("<ending option group>", YarnSpinnerLexer.BLANK_LINE_FOLLOWING_OPTION);
+                    self.insert_token("", yarnspinnerlexer::BLANK_LINE_FOLLOWING_OPTION);
+                }
+                // disabling the option tracking
+                self.last_seen_option_content = None;
+            }
+        }
+
+        let current_indentation_length = self.get_length_of_newline_token(&current_token);
+
+        // we need to actually see if there is a shortcut *somewhere* above us
+        // if there isn't we just chug on without worrying
+        if self.line_contains_shortcut {
+            // we have a shortcut *somewhere* above us
+            // that means we need to check our depth
+            // and compare it to the shortcut depth
+
+            // if the depth of the current line is greater than the previous one
+            // we need to add this depth to the indents stack
+            if current_indentation_length > self.last_indent {
+                self.unbalanced_indents.push(current_indentation_length);
+                // [sic!] so that we don't end up printing <indent to 8> into the stream we set the text to be empty
+                // I dislike this and need to look into if you can set a debug text setting in ANTLR
+                // TODO: see above comment
+                // this.InsertToken($"<indent to {currentIndentationLength}>", YarnSpinnerLexer.INDENT);
+                self.insert_token("", yarnspinnerlexer::INDENT);
+            }
+
+            // we've now started tracking the indentation, or ignored it, so can turn this off
+            self.line_contains_shortcut = false;
+            self.last_seen_option_content = Some(self.base.get_line());
+        }
+
+        // now we need to see if the current depth requires any indents or dedents
+        // we do this by first checking to see if there are any unbalanced indents
+        if let Some(&intial_top) = self.unbalanced_indents.peek() {
+            // [sic!] later should make it check if indentation has changed inside the statement block and throw out a warning
+            // this.warnings.Add(new Warning { Token = currentToken, Message = "Indentation inside of shortcut block has changed. This is generally a bad idea."});
+
+            // while there are unbalanced indents
+            // we need to check if the current line is shallower than the indent stack
+            // if it is then we emit a dedent and continue checking
+
+            let mut top = intial_top;
+
+            while current_indentation_length < top {
+                // so that we don't end up printing <indent from 8> into the stream we set the text to be empty
+                // I dislike this and need to look into if you can set a debug text setting in ANTLR
+                // TODO: see above comment
+                // this.InsertToken($"<dedent from {top}>", YarnSpinnerLexer.DEDENT);
+                self.insert_token("", yarnspinnerlexer::DEDENT);
+
+                self.unbalanced_indents.pop();
+
+                top = if let Some(&next) = self.unbalanced_indents.peek() {
+                    next
+                } else {
+                    // we've dedented all the way out of the shortcut
+                    // as such we are done with the option block
+                    // previousLineWasOptionOrOptionBlock = false;
+                    self.last_seen_option_content = Some(self.base.get_line());
+                    0
+                };
+            }
+        }
+
+        // finally we update the last seen depth
+        self.last_indent = current_indentation_length;
     }
 
     fn handle_eof_token(
         &self,
-        current: Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+        current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
     ) {
+        todo!()
+    }
+
+    fn get_length_of_newline_token(
+        &self,
+        current_token: &Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+    ) -> isize {
+        todo!()
+    }
+
+    fn insert_token(&self, arg: impl Into<String>, blank_line_following_option: isize) {
         todo!()
     }
 }

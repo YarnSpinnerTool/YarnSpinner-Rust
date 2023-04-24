@@ -30,6 +30,10 @@ impl<T: Debug + Clone> Stack<T> {
     pub(crate) fn pop(&mut self) -> Option<T> {
         self.0.pop_back()
     }
+
+    pub(crate) fn peek(&self) -> Option<&T> {
+        self.0.back()
+    }
 }
 
 // Somehow auto-derive does not work with those types so a manual impl is needed?
