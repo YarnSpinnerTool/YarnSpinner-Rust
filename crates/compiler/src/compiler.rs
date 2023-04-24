@@ -89,6 +89,7 @@ fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> Compi
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::prelude::*;
 
     #[test]
     fn can_call_compile_empty_without_crash() {
@@ -174,58 +175,57 @@ a {1 + 3} cool expression
             }
         );
     }
-}
 
-#[test]
-fn catches_expression_errors() {
-    use crate::prelude::*;
-    let file = File {
-        file_name: "test.yarn".to_string(),
-        source: "title: test
+    #[test]
+    fn catches_expression_errors() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
 ---
 foo
 bar
 a {very} cool expression
 ==="
-        .to_string(),
-    };
-    let result = compile(CompilationJob {
-        files: vec![file],
-        library: None,
-        compilation_type: CompilationType::FullCompilation,
-        variable_declarations: vec![],
-    });
-    assert!(result.program.is_none());
-    let diagnostics = result.diagnostics;
-    assert_eq!(diagnostics.len(), 2);
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+        assert!(result.program.is_none());
+        let diagnostics = result.diagnostics;
+        assert_eq!(diagnostics.len(), 2);
 
-    // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
-    // or if there is a (+1) that will be done at some point that we have not implemented yet.
-    let range = Position {
-        line: 4,
-        character: 7,
-    }..=Position {
-        line: 4,
-        character: 8,
-    };
-    let context = "a {very} cool expression\n       ^".to_owned();
-    let first_expected =
-        Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
-            .with_file_name("test.yarn".to_string())
-            .with_range(range.clone())
-            .with_context(context.clone())
-            .with_severity(DiagnosticSeverity::Error);
+        // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
+        // or if there is a (+1) that will be done at some point that we have not implemented yet.
+        let range = Position {
+            line: 4,
+            character: 7,
+        }..=Position {
+            line: 4,
+            character: 8,
+        };
+        let context = "a {very} cool expression\n       ^".to_owned();
+        let first_expected =
+            Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_range(range.clone())
+                .with_context(context.clone())
+                .with_severity(DiagnosticSeverity::Error);
 
-    let second_expected =
-        Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
-            .with_file_name("test.yarn".to_string())
-            .with_range(range)
-            .with_context(context)
-            .with_severity(DiagnosticSeverity::Error);
-    if diagnostics[0] == first_expected {
-        assert_eq!(diagnostics[1], second_expected);
-    } else {
-        assert_eq!(diagnostics[0], second_expected);
-        assert_eq!(diagnostics[1], first_expected);
+        let second_expected =
+            Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_range(range)
+                .with_context(context)
+                .with_severity(DiagnosticSeverity::Error);
+        if diagnostics[0] == first_expected {
+            assert_eq!(diagnostics[1], second_expected);
+        } else {
+            assert_eq!(diagnostics[0], second_expected);
+            assert_eq!(diagnostics[1], first_expected);
+        }
     }
 }
