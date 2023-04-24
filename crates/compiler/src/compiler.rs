@@ -3,6 +3,7 @@
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::string_table_manager::StringTableManager;
+use crate::visitors::last_line_before_options_visitor::LastLineBeforeOptionsVisitor;
 use crate::visitors::string_table_generator_visitor::StringTableGeneratorVisitor;
 use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeVisitorCompat;
@@ -71,9 +72,9 @@ fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> Compi
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
         // this should probably be a flag instead of every time though
-        // TODO
-        // let lastLineTagger = new LastLineBeforeOptionsVisitor();
-        //lastLineTagger.Visit(parseResult.Tree);
+        let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
+        last_line_tagger.visit(&*parse_result.tree);
+
         let mut visitor =
             StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
         visitor.visit(&*parse_result.tree);
@@ -88,6 +89,7 @@ fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> Compi
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::prelude::*;
 
     #[test]
     fn can_call_compile_empty_without_crash() {
@@ -173,58 +175,57 @@ a {1 + 3} cool expression
             }
         );
     }
-}
 
-#[test]
-fn catches_expression_errors() {
-    use crate::prelude::*;
-    let file = File {
-        file_name: "test.yarn".to_string(),
-        source: "title: test
+    #[test]
+    fn catches_expression_errors() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
 ---
 foo
 bar
 a {very} cool expression
 ==="
-        .to_string(),
-    };
-    let result = compile(CompilationJob {
-        files: vec![file],
-        library: None,
-        compilation_type: CompilationType::FullCompilation,
-        variable_declarations: vec![],
-    });
-    assert!(result.program.is_none());
-    let diagnostics = result.diagnostics;
-    assert_eq!(diagnostics.len(), 2);
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+        assert!(result.program.is_none());
+        let diagnostics = result.diagnostics;
+        assert_eq!(diagnostics.len(), 2);
 
-    // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
-    // or if there is a (+1) that will be done at some point that we have not implemented yet.
-    let range = Position {
-        line: 4,
-        character: 7,
-    }..=Position {
-        line: 4,
-        character: 8,
-    };
-    let context = "a {very} cool expression\n       ^".to_owned();
-    let first_expected =
-        Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
-            .with_file_name("test.yarn".to_string())
-            .with_range(range.clone())
-            .with_context(context.clone())
-            .with_severity(DiagnosticSeverity::Error);
+        // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
+        // or if there is a (+1) that will be done at some point that we have not implemented yet.
+        let range = Position {
+            line: 4,
+            character: 7,
+        }..=Position {
+            line: 4,
+            character: 8,
+        };
+        let context = "a {very} cool expression\n       ^".to_owned();
+        let first_expected =
+            Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_range(range.clone())
+                .with_context(context.clone())
+                .with_severity(DiagnosticSeverity::Error);
 
-    let second_expected =
-        Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
-            .with_file_name("test.yarn".to_string())
-            .with_range(range)
-            .with_context(context)
-            .with_severity(DiagnosticSeverity::Error);
-    if diagnostics[0] == first_expected {
-        assert_eq!(diagnostics[1], second_expected);
-    } else {
-        assert_eq!(diagnostics[0], second_expected);
-        assert_eq!(diagnostics[1], first_expected);
+        let second_expected =
+            Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_range(range)
+                .with_context(context)
+                .with_severity(DiagnosticSeverity::Error);
+        if diagnostics[0] == first_expected {
+            assert_eq!(diagnostics[1], second_expected);
+        } else {
+            assert_eq!(diagnostics[0], second_expected);
+            assert_eq!(diagnostics[1], first_expected);
+        }
     }
 }

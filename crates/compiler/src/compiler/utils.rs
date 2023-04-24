@@ -58,15 +58,16 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
 /// that the C# implementation of ANTLR would provide but antlr4rust does not.
 pub(crate) fn add_hashtag_child<'input>(
     parent: &impl YarnSpinnerParserContext<'input>,
-    text: String,
+    text: impl Into<String>,
 ) {
-    // Hack: need to convert the reference to an Rc somehow
+    // Hack: need to convert the reference to an Rc somehow.
+    // This will fail on a terminal node, fingers crossed that that won't happen 😅
     let parent = parent.get_children().next().unwrap().get_parent().unwrap();
     // Taken from C# implementation of `CommonToken`s constructor
     let string_id_token = CommonTokenFactory.create::<InputStream<&'input str>>(
         None,
         yarnspinnerparser::HASHTAG_TEXT,
-        text.into(),
+        Some(text.into()),
         0,
         0,
         0,
