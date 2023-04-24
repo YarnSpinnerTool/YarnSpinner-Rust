@@ -74,7 +74,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             self.check_next_token();
 
             if !self.pending_tokens.is_empty() {
-                return Box::new(self.pending_tokens.pop_front().unwrap());
+                return self.pending_tokens.pop_front().unwrap().to_owned();
             }
 
             todo!() // C# returns null?!
