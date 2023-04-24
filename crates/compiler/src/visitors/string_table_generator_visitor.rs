@@ -19,6 +19,7 @@ pub(crate) struct StringTableGeneratorVisitor {
     current_node_name: String,
     file_name: String,
     pub(crate) string_table_manager: StringTableManager,
+    _dummy: (),
 }
 
 impl StringTableGeneratorVisitor {
@@ -28,6 +29,7 @@ impl StringTableGeneratorVisitor {
             string_table_manager,
             diagnostics: Default::default(),
             current_node_name: Default::default(),
+            _dummy: (),
         }
     }
 }
@@ -38,7 +40,7 @@ impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
     type Return = ();
 
     fn temp_result(&mut self) -> &mut Self::Return {
-        Box::leak(Box::new(()))
+        &mut self._dummy
     }
 }
 
@@ -57,8 +59,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                     .map(|header| header.get_text())
                     .unwrap_or_default();
                 // Split the list of tags by spaces, and use that
-                // Todo: This seems to always take the last tags, idk if that is intended
-                // Todo: Original splits by spaces exclusively, this splits by any whitespace -> Check if this is okay
                 tags = header_value
                     .split_whitespace()
                     .map(ToOwned::to_owned)

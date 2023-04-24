@@ -35,10 +35,14 @@ pub struct FileParseResult<'input> {
 }
 
 impl<'input> FileParseResult<'input> {
-    pub fn new(name: String, mut parser: ActualYarnSpinnerParser<'input>) -> Self {
+    pub fn new(
+        name: String,
+        tree: Rc<DialogueContextAll<'input>>,
+        parser: ActualYarnSpinnerParser<'input>,
+    ) -> Self {
         Self {
             name,
-            tree: parser.dialogue().unwrap(),
+            tree,
             _parser: parser,
         }
     }

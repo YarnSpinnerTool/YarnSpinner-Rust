@@ -8,6 +8,7 @@ use std::ops::{Deref, DerefMut};
 pub(crate) struct StringTableManager(pub HashMap<String, StringInfo>);
 
 impl StringTableManager {
+    #[allow(dead_code)] // Todo: Remove this #28
     pub(crate) fn contains_implicit_string_tags(&self) -> bool {
         self.values().any(|x| x.is_implicit_tag)
     }

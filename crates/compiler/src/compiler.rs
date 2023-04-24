@@ -64,14 +64,14 @@ fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> Com
     previous
 }
 
-fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> CompilationResult {
+fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> CompilationResult {
     let mut parsed_files = Vec::new();
 
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
-    let mut string_table_manager: StringTableManager = previous.string_table.into();
+    let mut string_table_manager: StringTableManager = state.string_table.into();
     for file in &job.files {
-        let parse_result = parse_syntax_tree(file, &mut previous.diagnostics);
+        let parse_result = parse_syntax_tree(file, &mut state.diagnostics);
 
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
@@ -82,12 +82,12 @@ fn register_strings(job: &CompilationJob, mut previous: CompilationResult) -> Co
         let mut visitor =
             StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
         visitor.visit(&*parse_result.tree);
-        previous.diagnostics.extend(visitor.diagnostics);
+        state.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
         parsed_files.push(parse_result);
     }
-    previous.string_table = string_table_manager.into();
-    previous
+    state.string_table = string_table_manager.into();
+    state
 }
 
 fn parse_syntax_tree<'a>(file: &'a File, diagnostics: &mut Vec<Diagnostic>) -> FileParseResult<'a> {
@@ -109,6 +109,10 @@ fn parse_syntax_tree<'a>(file: &'a File, diagnostics: &mut Vec<Diagnostic>) -> F
     parser.remove_error_listeners();
     parser.add_error_listener(Box::new(parser_error_listener));
 
+    // Must be read exactly here, because the error listeners running during the parse borrow the diagnostics mutably,
+    // and we want to read them after.
+    let tree = parser.dialogue().unwrap();
+
     let lexer_error_listener_diagnostics_borrowed = lexer_error_listener_diagnostics.borrow();
     let parser_error_listener_diagnostics_borrowed = parser_error_listener_diagnostics.borrow();
     let new_diagnostics = lexer_error_listener_diagnostics_borrowed
@@ -117,7 +121,7 @@ fn parse_syntax_tree<'a>(file: &'a File, diagnostics: &mut Vec<Diagnostic>) -> F
         .cloned();
     diagnostics.extend(new_diagnostics);
 
-    FileParseResult::new(file_name, parser)
+    FileParseResult::new(file_name, tree, parser)
 }
 
 pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
@@ -141,8 +145,13 @@ pub(crate) fn add_hashtag_child<'input>(
         0,
         -1,
     );
+    let invoking_state_according_to_original_implementation = 0;
     // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
-    let hashtag = HashtagContextExt::new_with_text(Some(parent.clone()), 0, string_id_token);
+    let hashtag = HashtagContextExt::new_with_text(
+        Some(parent.clone()),
+        invoking_state_according_to_original_implementation,
+        string_id_token,
+    );
     parent.add_child(hashtag);
 }
 
@@ -181,7 +190,7 @@ a {1 + 3} cool expression
     }
 
     #[test]
-    fn populated_string_table() {
+    fn populates_string_table() {
         let file = File {
             file_name: "test.yarn".to_string(),
             source: "title: test
@@ -233,5 +242,59 @@ a {1 + 3} cool expression
                 metadata: vec![],
             }
         );
+    }
+}
+
+#[test]
+fn catches_expression_errors() {
+    use crate::prelude::DiagnosticSeverity;
+    let file = File {
+        file_name: "test.yarn".to_string(),
+        source: "title: test
+---
+foo
+bar
+a {very} cool expression
+==="
+        .to_string(),
+    };
+    let result = compile(CompilationJob {
+        files: vec![file],
+        library: None,
+        compilation_type: CompilationType::FullCompilation,
+        variable_declarations: vec![],
+    });
+    assert!(result.program.is_none());
+    let diagnostics = result.diagnostics;
+    assert_eq!(diagnostics.len(), 2);
+
+    // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
+    // or if there is a (+1) that will be done at some point that we have not implemented yet.
+    let range = Position {
+        line: 4,
+        character: 7,
+    }..=Position {
+        line: 4,
+        character: 8,
+    };
+    let context = "a {very} cool expression\n       ^".to_owned();
+    let first_expected =
+        Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
+            .with_file_name("test.yarn".to_string())
+            .with_range(range.clone())
+            .with_context(context.clone())
+            .with_severity(DiagnosticSeverity::Error);
+
+    let second_expected =
+        Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+            .with_file_name("test.yarn".to_string())
+            .with_range(range)
+            .with_context(context)
+            .with_severity(DiagnosticSeverity::Error);
+    if diagnostics[0] == first_expected {
+        assert_eq!(diagnostics[1], second_expected);
+    } else {
+        assert_eq!(diagnostics[0], second_expected);
+        assert_eq!(diagnostics[1], first_expected);
     }
 }
