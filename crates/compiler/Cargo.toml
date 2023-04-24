@@ -7,4 +7,5 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 antlr-rust = "0.3.0-beta"
 better_any = "0.2.0"
+regex = "1.8.1"
 rusty-yarn-spinner-core = { path = "../core" }
