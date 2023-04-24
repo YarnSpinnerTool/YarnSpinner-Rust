@@ -29,10 +29,10 @@ pub struct IndentAwareYarnSpinnerLexer<
     pub token: Option<TF::Tok>,
     hit_eof: bool,
     last_token: Option<TF::Tok>,
-    pending_tokens: VecDeque<TF::Tok>,
+    pending_tokens: Queue<TF::Tok>,
     line_contains_shortcut: bool,
     last_indent: isize,
-    unbalanced_indents: VecDeque<isize>,
+    unbalanced_indents: Stack<isize>,
     last_seen_option_content: Option<isize>,
 }
 
@@ -54,34 +54,34 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
     type TF = CommonTokenFactory; // TODO: correct?
 
     fn next_token(&mut self) -> <Self::TF as antlr_rust::token_factory::TokenFactory<'input>>::Tok {
-        if self.hit_eof && self.pending_tokens.len() > 0 {
+        if self.hit_eof && self.pending_tokens.0.len() > 0 {
             // We have hit the EOF, but we have tokens still pending.
             // Start returning those tokens.
-            self.pending_tokens.pop_front(); // TODO: I think that's right?
+            self.pending_tokens.dequeue();
             todo!()
         } else if self.base.input().size() == 0 {
             self.hit_eof = true;
-            Box::new(CommonToken {
-                token_type: antlr_rust::token::TOKEN_EOF,
-                channel: 0, // See CommonToken.ctor(int, string) in Antlr for C#
-                start: 0,   // TODO: does that work? and all after this one as well.
-                stop: 0,
-                token_index: 0.into(),
-                line: 0,
-                column: 0,
-                text: "<EOF>".into(),
-                read_only: true,
-            })
+            self.base.get_token_factory().create::<Input>(
+                None,
+                antlr_rust::token::TOKEN_EOF,
+                Some("<EOF>".to_owned()),
+                0, // See CommonToken.ctor(int, string) in Antlr for C#
+                0,
+                0,
+                0,
+                -1,
+            )
         } else {
             // Get the next token, which will enqueue one or more new
             // tokens into the pending tokens queue.
             self.check_next_token();
 
-            if !self.pending_tokens.is_empty() {
-                return self.pending_tokens.pop_front().unwrap().to_owned();
+            if !self.pending_tokens.0.is_empty() {
+                return self.pending_tokens.dequeue().unwrap().to_owned();
             }
 
-            todo!() // C# returns null?!
+            // C# returns null?!
+            todo!()
         }
     }
 
@@ -134,7 +134,7 @@ where
             // enqueues the EOF.
             antlr_rust::token::TOKEN_EOF => self.handle_eof_token(current.clone()),
             yarnspinnerlexer::SHORTCUT_ARROW => {
-                self.pending_tokens.push_back(current.clone()); // TODO: check if push_back is correctly modeling this.pendingTokens.Enqueue(currentToken);
+                self.pending_tokens.enqueue(current.clone());
                 self.line_contains_shortcut = true;
             }
             // we are at the end of the node
@@ -144,12 +144,12 @@ where
                 // TODO: put those into a well-named function
                 self.line_contains_shortcut = false;
                 self.last_indent = 0;
-                self.unbalanced_indents.clear();
+                self.unbalanced_indents.0.clear();
                 self.last_seen_option_content = None;
                 // [sic from the original!] TODO: this should be empty by now actually...
-                self.pending_tokens.push_back(current.clone());
+                self.pending_tokens.enqueue(current.clone());
             }
-            _ => self.pending_tokens.push_back(current.clone()),
+            _ => self.pending_tokens.enqueue(current.clone()),
         }
 
         // TODO: but... really?
