@@ -297,8 +297,26 @@ where
         return length;
     }
 
-    fn insert_token(&self, arg: impl Into<String>, blank_line_following_option: isize) {
-        todo!()
+    /// Inserts a new token with the given text and type, as though it
+    /// had appeared in the input stream.
+    fn insert_token(&mut self, text: impl Into<String>, token_type: isize) {
+        // https://www.antlr.org/api/Java/org/antlr/v4/runtime/Lexer.html#_tokenStartCharIndex
+        let start_index = self.base.token_start_char_index + self.base.get_text().len() as isize;
+
+        // let tokenFactorySourcePair = Tuple.Create((ITokenSource)this, (ICharStream)this.InputStream);
+
+        let token = CommonTokenFactory.create(
+            self,
+            token_type,
+            Some(text.into()),
+            0,
+            start_index,
+            start_index - 1,
+            self.get_line(),
+            self.get_char_position_in_line(),
+        );
+
+        self.pending_tokens.enqueue(token);
     }
 }
 
