@@ -2,16 +2,17 @@
 //! but were moved to their own file for better organization.
 
 use crate::error_strategy::ErrorStrategy;
-use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
+use crate::prelude::generated::yarnspinnerlexer::{LocalTokenFactory, YarnSpinnerLexer};
 use crate::prelude::generated::yarnspinnerparser;
 use crate::prelude::generated::yarnspinnerparser::{
-    HashtagContextExt, YarnSpinnerParser, YarnSpinnerParserContext,
+    HashtagContextExt, YarnSpinnerParser, YarnSpinnerParserContext, YarnSpinnerParserContextType,
 };
 use crate::prelude::{Diagnostic, File, FileParseResult, LexerErrorListener, ParserErrorListener};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::{InputStream, Parser};
+use std::rc::Rc;
 
 pub(crate) fn parse_syntax_tree<'a>(
     file: &'a File,
@@ -62,7 +63,7 @@ pub(crate) fn add_hashtag_child<'input>(
 ) {
     // Hack: need to convert the reference to an Rc somehow.
     // This will fail on a terminal node, fingers crossed that that won't happen 😅
-    let parent = parent.get_children().next().unwrap().get_parent().unwrap();
+    let parent = parent.ref_to_rc();
     // Taken from C# implementation of `CommonToken`s constructor
     let string_id_token = CommonTokenFactory.create::<InputStream<&'input str>>(
         None,
@@ -82,4 +83,35 @@ pub(crate) fn add_hashtag_child<'input>(
         string_id_token,
     );
     parent.add_child(hashtag);
+}
+
+pub(crate) trait ContextRefExt<'input> {
+    fn ref_to_rc(
+        self,
+    ) -> Rc<
+        dyn YarnSpinnerParserContext<
+            'input,
+            Ctx = YarnSpinnerParserContextType,
+            TF = LocalTokenFactory<'input>,
+        >,
+    >;
+}
+
+impl<'input, T> ContextRefExt<'input> for &T
+where
+    T: YarnSpinnerParserContext<'input>,
+{
+    fn ref_to_rc(
+        self,
+    ) -> Rc<
+        dyn YarnSpinnerParserContext<
+            'input,
+            Ctx = YarnSpinnerParserContextType,
+            TF = LocalTokenFactory<'input>,
+        >,
+    > {
+        // Hack: need to convert the reference to an Rc somehow.
+        // This will fail on a terminal node, fingers crossed that that won't happen 😅
+        self.get_children().next().unwrap().get_parent().unwrap()
+    }
 }

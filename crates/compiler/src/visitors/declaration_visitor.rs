@@ -1,9 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/DeclarationVisitor.cs>
 
-use crate::prelude::generated::yarnspinnerparser::{NodeContext, YarnSpinnerParserContextType};
+use crate::parser::generated::yarnspinnerparser::{Declare_statementContext, HashtagContext};
+use crate::prelude::generated::yarnspinnerparser::{
+    NodeContext, NodeContextAttrs, YarnSpinnerParserContextType,
+};
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::{Declaration, Diagnostic};
 use antlr_rust::common_token_stream::CommonTokenStream;
+use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 use antlr_rust::TokenSource;
 use regex::Regex;
@@ -39,9 +43,6 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     /// The name of the node that we're currently visiting.
     current_node_name: Option<String>,
 
-    /// The context of the node we're currently in.
-    current_node_context: Option<NodeContext<'input>>,
-
     /// The name of the file we're currently in.
     source_file_name: String,
 
@@ -53,7 +54,7 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     /// A regular expression used to detect illegal characters in node titles.
     regex: Regex,
 
-    _dummy: BuiltinType,
+    _dummy: Option<BuiltinType>,
 }
 
 impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
@@ -78,7 +79,6 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
             file_tags: Default::default(),
             diagnostics: Default::default(),
             current_node_name: None,
-            current_node_context: None,
             _dummy: Default::default(),
         }
     }
@@ -98,7 +98,7 @@ impl<'input, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
     for DeclarationVisitor<'input, T>
 {
     type Node = YarnSpinnerParserContextType;
-    type Return = BuiltinType;
+    type Return = Option<BuiltinType>;
 
     fn temp_result(&mut self) -> &mut Self::Return {
         &mut self._dummy
@@ -108,4 +108,35 @@ impl<'input, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
 impl<'input, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
     for DeclarationVisitor<'input, T>
 {
+    fn visit_hashtag(&mut self, ctx: &HashtagContext<'input>) -> Self::Return {
+        let hashtag_text = ctx.text.as_ref().unwrap();
+        self.file_tags.push(hashtag_text.get_text().to_owned());
+        None
+    }
+
+    fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
+        for header in ctx.header_all() {
+            let header_key = header.header_key.as_ref().unwrap();
+            if header_key.get_text() != "title" {
+                continue;
+            }
+
+            let header_value = header.header_value.as_ref().unwrap();
+            let current_node_name = header_value.get_text();
+            self.current_node_name = Some(current_node_name.to_owned());
+            if self.regex.is_match(current_node_name) {
+                let message =
+                    format!("The node '{current_node_name}' contains illegal characters.");
+                self.diagnostics.push(
+                    Diagnostic::from_message(message)
+                        .with_file_name(self.source_file_name.clone())
+                        .read_parser_rule_context(&*header),
+                );
+            }
+        }
+        if let Some(body) = ctx.body() {
+            self.visit(&*body);
+        }
+        None
+    }
 }
