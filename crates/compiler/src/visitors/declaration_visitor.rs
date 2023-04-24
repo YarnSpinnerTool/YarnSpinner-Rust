@@ -13,6 +13,19 @@ use std::collections::HashMap;
 ///  [`NewDeclarations`] property will contain all explicit
 /// variable declarations that were found.
 pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
+    /// Gets the collection of new variable declarations that were
+    /// found as a result of using this
+    ///  [`DeclarationVisitor`] to visit a
+    ///  [`ParserRuleContext`].
+    pub(crate) new_declarations: Vec<Declaration>,
+
+    /// Gets the collection of file-level hashtags that were found as a
+    /// result of using this  [`DeclarationVisitor`] to visit
+    /// a  [`ParserRuleContext`].
+    pub(crate) file_tags: Vec<String>,
+
+    pub(crate) diagnostics: Vec<Diagnostic>,
+
     /// The CommonTokenStream derived from the file we're parsing. This
     /// is used to find documentation comments for declarations.
     tokens: CommonTokenStream<'input, T>,
@@ -33,19 +46,6 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     /// Gets the collection of types known to this
     ///  [`DeclarationVisitor`].
     types: Vec<Type>,
-
-    /// Gets the collection of new variable declarations that were
-    /// found as a result of using this
-    ///  [`DeclarationVisitor`] to visit a
-    ///  [`ParserRuleContext`].
-    pub(crate) new_declarations: Vec<Declaration>,
-
-    /// Gets the collection of file-level hashtags that were found as a
-    /// result of using this  [`DeclarationVisitor`] to visit
-    /// a  [`ParserRuleContext`].
-    pub(crate) file_tags: Vec<String>,
-
-    pub(crate) diagnostics: Vec<Diagnostic>,
 
     keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
     /// A regular expression used to detect illegal characters in node titles.
