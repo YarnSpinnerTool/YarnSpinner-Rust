@@ -126,4 +126,9 @@ This is the one and only line
         assert_eq!(TOKEN_EOF, reference_token_stream.la(1));
         assert_eq!(TOKEN_EOF, indent_aware_token_stream.la(1));
     }
+
+    #[test]
+    fn correctly_indents_and_dedents_with_token() {
+
+    }
 }
