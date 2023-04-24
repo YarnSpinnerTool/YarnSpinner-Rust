@@ -82,7 +82,7 @@ mod test {
         InputStream,
     };
 
-    use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
+    use crate::prelude::generated::yarnspinnerlexer::{YarnSpinnerLexer, DEDENT, INDENT};
 
     use super::*;
 
@@ -129,6 +129,35 @@ This is the one and only line
 
     #[test]
     fn correctly_indents_and_dedents_with_token() {
+        let option_indentation_relevant_input: &str = &("title: Start
+---
+-> Option 1
+    Nice.
+-> Option 2
+    Nicer
+".to_owned() +
+    "    " /* Bug when saving in VSCode (maybe even with rustfmt):
+    the spaces on an empty line in a string are removed...  */ + &"
+    But this belongs to it!
 
+    And this doesn't
+===
+        ".as_ref());
+
+        let indent_aware_lexer =
+            IndentAwareYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
+
+        let mut indent_aware_token_stream = CommonTokenStream::new(indent_aware_lexer);
+
+        let mut tokens = vec![indent_aware_token_stream.iter().next().unwrap()];
+
+        while indent_aware_token_stream.la(1) != TOKEN_EOF {
+            tokens.push(indent_aware_token_stream.iter().next().unwrap());
+        }
+
+        assert!(tokens.contains(&INDENT));
+        assert!(tokens.contains(&DEDENT));
+
+        // TODO: actually test the order
     }
 }
