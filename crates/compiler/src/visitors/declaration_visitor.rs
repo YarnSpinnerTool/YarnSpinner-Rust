@@ -5,7 +5,7 @@ use crate::prelude::{Declaration, Diagnostic};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::TokenSource;
 use regex::Regex;
-use rusty_yarn_spinner_core::types::{BuiltinType, Type};
+use rusty_yarn_spinner_core::types::{BooleanType, BuiltinType, NumberType, StringType, Type};
 use std::collections::HashMap;
 
 /// A visitor that extracts variable declarations from a parse tree.
@@ -38,7 +38,7 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     current_node_name: Option<String>,
 
     /// The context of the node we're currently in.
-    current_node_context: NodeContext<'input>,
+    current_node_context: Option<NodeContext<'input>>,
 
     /// The name of the file we're currently in.
     source_file_name: String,
@@ -53,6 +53,31 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
 }
 
 impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
+    pub(crate) fn new(
+        source_file_name: impl Into<String>,
+        existing_declarations: Vec<Declaration>,
+        type_declarations: Vec<Type>,
+        tokens: CommonTokenStream<'input, T>,
+    ) -> Self {
+        Self {
+            new_declarations: Default::default(),
+            file_tags: Default::default(),
+            diagnostics: Default::default(),
+            tokens,
+            existing_declarations,
+            current_node_name: None,
+            current_node_context: None,
+            source_file_name: source_file_name.into(),
+            types: type_declarations,
+            keywords_to_builtin_types: HashMap::from([
+                ("string", BuiltinType::String(StringType)),
+                ("number", BuiltinType::Number(NumberType)),
+                ("bool", BuiltinType::Bool(BooleanType)),
+            ]),
+            regex: Regex::new(r"[\[<>\]{}|:\s#$]").unwrap(),
+        }
+    }
+
     /// The collection of all declarations - both the ones we received
     /// at the start, and the new ones we've derived ourselves.
     pub(crate) fn declarations(&self) -> Vec<Declaration> {
