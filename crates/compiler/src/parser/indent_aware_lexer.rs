@@ -8,11 +8,9 @@ mod collections;
 
 use collections::*;
 
-use std::collections::VecDeque;
-
 use antlr_rust::{
     char_stream::CharStream,
-    token::CommonToken,
+    token::Token,
     token_factory::{CommonTokenFactory, TokenFactory},
     Lexer, TokenSource,
 };
@@ -34,6 +32,12 @@ pub struct IndentAwareYarnSpinnerLexer<
     last_indent: isize,
     unbalanced_indents: Stack<isize>,
     last_seen_option_content: Option<isize>,
+    warnings: Vec<Warning<TF::Inner>>,
+}
+
+struct Warning<T: Token + ?Sized> {
+    token: Box<T>,
+    message: String,
 }
 
 impl<'input, Input: CharStream<From<'input>> + std::ops::Deref> std::ops::Deref
@@ -120,6 +124,7 @@ where
             last_indent: Default::default(),
             unbalanced_indents: Default::default(),
             last_seen_option_content: None,
+            warnings: Default::default(),
         }
     }
 
@@ -257,10 +262,39 @@ where
     }
 
     fn get_length_of_newline_token(
-        &self,
-        current_token: &Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+        &mut self,
+        current_token: &Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) -> isize {
-        todo!()
+        if current_token.token_type != yarnspinnerlexer::NEWLINE {
+            panic!("Current token must NOT be newline")
+        }
+
+        let mut length = 0;
+        let mut saw_spaces = false;
+        let mut saw_tabs = false;
+
+        for c in current_token.get_text().chars() {
+            match c {
+                ' ' => {
+                    length += 1;
+                    saw_spaces = true;
+                }
+                '\t' => {
+                    length += 8; // Ye, really (see reference implementation)
+                    saw_tabs = true;
+                }
+                _ => {}
+            }
+        }
+
+        if saw_spaces && saw_tabs {
+            self.warnings.push(Warning {
+                token: current_token.clone(),
+                message: "Indentation contains tabs and spaces".to_owned(),
+            })
+        }
+
+        return length;
     }
 
     fn insert_token(&self, arg: impl Into<String>, blank_line_following_option: isize) {
