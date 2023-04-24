@@ -4,17 +4,20 @@
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 //! TODO: Decide if we want to hide the generated lexer to make sure no one accidentially uses it.
 
+mod collections;
+
+use collections::*;
+
 use std::collections::VecDeque;
 
 use antlr_rust::{
     char_stream::CharStream,
-    int_stream::EOF,
     token::CommonToken,
     token_factory::{CommonTokenFactory, TokenFactory},
     Lexer, TokenSource,
 };
 
-use super::generated::yarnspinnerlexer::{LocalTokenFactory, YarnSpinnerLexer};
+use super::generated::yarnspinnerlexer::{self, LocalTokenFactory, YarnSpinnerLexer};
 
 /// A Lexer subclass that detects newlines and generates indent and dedent tokens accordingly.
 pub struct IndentAwareYarnSpinnerLexer<
@@ -26,7 +29,11 @@ pub struct IndentAwareYarnSpinnerLexer<
     pub token: Option<TF::Tok>,
     hit_eof: bool,
     last_token: Option<TF::Tok>,
-    pending_tokens: VecDeque<&'input TF::Tok>,
+    pending_tokens: VecDeque<TF::Tok>,
+    line_contains_shortcut: bool,
+    last_indent: isize,
+    unbalanced_indents: VecDeque<isize>,
+    last_seen_option_content: Option<isize>,
 }
 
 impl<'input, Input: CharStream<From<'input>> + std::ops::Deref> std::ops::Deref
@@ -55,9 +62,9 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
         } else if self.base.input().size() == 0 {
             self.hit_eof = true;
             Box::new(CommonToken {
-                token_type: EOF,
+                token_type: antlr_rust::token::TOKEN_EOF,
                 channel: 0, // See CommonToken.ctor(int, string) in Antlr for C#
-                start: 0,   // TODO: does that work?
+                start: 0,   // TODO: does that work? and all after this one as well.
                 stop: 0,
                 token_index: 0.into(),
                 line: 0,
@@ -109,11 +116,57 @@ where
             hit_eof: false,
             last_token: Default::default(),
             pending_tokens: Default::default(),
+            line_contains_shortcut: false,
+            last_indent: Default::default(),
+            unbalanced_indents: Default::default(),
+            last_seen_option_content: None,
         }
     }
 
-    fn check_next_token(&self) {
-        // self.base.next_token()
+    fn check_next_token(&mut self) {
+        let current = self.base.next_token();
+
+        match current.token_type {
+            // Insert indents or dedents depending on the next token's
+            // indentation, and enqueues the newline at the correct place
+            yarnspinnerlexer::NEWLINE => self.handle_newline_token(current.clone()),
+            // Insert dedents before the end of the file, and then
+            // enqueues the EOF.
+            antlr_rust::token::TOKEN_EOF => self.handle_eof_token(current.clone()),
+            yarnspinnerlexer::SHORTCUT_ARROW => {
+                self.pending_tokens.push_back(current.clone()); // TODO: check if push_back is correctly modeling this.pendingTokens.Enqueue(currentToken);
+                self.line_contains_shortcut = true;
+            }
+            // we are at the end of the node
+            // depth no longer matters
+            // clear the stack
+            yarnspinnerlexer::BODY_END => {
+                // TODO: put those into a well-named function
+                self.line_contains_shortcut = false;
+                self.last_indent = 0;
+                self.unbalanced_indents.clear();
+                self.last_seen_option_content = None;
+                // [sic from the original!] TODO: this should be empty by now actually...
+                self.pending_tokens.push_back(current.clone());
+            }
+            _ => self.pending_tokens.push_back(current.clone()),
+        }
+
+        // TODO: but... really?
+        self.last_token = Some(current);
+    }
+
+    fn handle_newline_token(
+        &self,
+        current: Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+    ) {
+        todo!()
+    }
+
+    fn handle_eof_token(
+        &self,
+        current: Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+    ) {
         todo!()
     }
 }
