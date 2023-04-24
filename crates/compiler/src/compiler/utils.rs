@@ -1,3 +1,6 @@
+//! Contains functions that were originally part of `compiler.rs` according to the original implementation,
+//! but were moved to their own file for better organization.
+
 use crate::error_strategy::ErrorStrategy;
 use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 use crate::prelude::generated::yarnspinnerparser;
