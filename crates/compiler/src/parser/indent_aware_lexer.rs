@@ -4,10 +4,17 @@
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 //! TODO: Decide if we want to hide the generated lexer to make sure no one accidentially uses it.
 
+use std::{
+    borrow::Borrow,
+    collections::{vec_deque, VecDeque},
+};
+
 use antlr_rust::{
     char_stream::CharStream,
+    int_stream::EOF,
+    token::{CommonToken, Token},
     token_factory::{CommonTokenFactory, TokenFactory},
-    TokenSource,
+    Lexer, TokenSource,
 };
 
 use super::generated::yarnspinnerlexer::{LocalTokenFactory, YarnSpinnerLexer};
@@ -20,6 +27,9 @@ pub struct IndentAwareYarnSpinnerLexer<
 > {
     base: YarnSpinnerLexer<'input, Input>, // TODO: needed?
     pub token: Option<TF::Tok>,
+    hit_eof: bool,
+    last_token: Option<TF::Tok>,
+    pending_tokens: VecDeque<&'input TF::Tok>,
 }
 
 impl<'input, Input: CharStream<From<'input>> + std::ops::Deref> std::ops::Deref
@@ -40,7 +50,35 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
     type TF = CommonTokenFactory; // TODO: correct?
 
     fn next_token(&mut self) -> <Self::TF as antlr_rust::token_factory::TokenFactory<'input>>::Tok {
-        self.base.next_token()
+        if self.hit_eof && self.pending_tokens.len() > 0 {
+            // We have hit the EOF, but we have tokens still pending.
+            // Start returning those tokens.
+            self.pending_tokens.pop_front(); // TODO: I think that's right?
+            todo!()
+        } else if self.base.input().size() == 0 {
+            self.hit_eof = true;
+            Box::new(CommonToken {
+                token_type: EOF,
+                channel: 0, // See CommonToken.ctor(int, string) in Antlr for C#
+                start: 0,   // TODO: does that work?
+                stop: 0,
+                token_index: 0.into(),
+                line: 0,
+                column: 0,
+                text: "<EOF>".into(),
+                read_only: true,
+            })
+        } else {
+            // Get the next token, which will enqueue one or more new
+            // tokens into the pending tokens queue.
+            self.check_next_token();
+
+            if !self.pending_tokens.is_empty() {
+                return Box::new(self.pending_tokens.pop_front().unwrap());
+            }
+
+            todo!() // C# returns null?!
+        }
     }
 
     fn get_input_stream(&mut self) -> Option<&mut dyn antlr_rust::int_stream::IntStream> {
@@ -71,7 +109,15 @@ where
                 <&LocalTokenFactory<'input> as Default>::default(),
             ),
             token: Default::default(), // TODO: correct?
+            hit_eof: false,
+            last_token: Default::default(),
+            pending_tokens: Default::default(),
         }
+    }
+
+    fn check_next_token(&self) {
+        // self.base.next_token()
+        todo!()
     }
 }
 
