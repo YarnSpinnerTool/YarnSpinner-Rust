@@ -36,7 +36,7 @@ where
         token_index: isize,
         channel: isize,
     ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
-        // This method is private, but it should be already to leave it out.
+        // This method is private, but it should be alright to leave it out.
         // this.setup();
         if token_index < 0 || token_index >= self.size() {
             panic!("{} not in 0..{}", token_index, self.size() - 1);
@@ -53,7 +53,7 @@ where
     }
 
     fn previous_token_on_channel(&self, mut token_index: isize, channel: isize) -> isize {
-        // This method is private, but it should be already to leave it out.
+        // This method is private, but it should be alright to leave it out.
         // this.sync(token_index);
         if token_index >= self.size() {
             return self.size() - 1;
