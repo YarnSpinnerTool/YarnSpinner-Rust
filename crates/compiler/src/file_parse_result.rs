@@ -40,4 +40,10 @@ impl<'input> FileParseResult<'input> {
             _parser: parser,
         }
     }
+
+    pub fn tokens(
+        &self,
+    ) -> &CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>> {
+        &self._parser.input
+    }
 }

@@ -14,6 +14,15 @@ use antlr_rust::{Parser, TokenSource};
 use std::borrow::Cow;
 use std::rc::Rc;
 
+pub(crate) fn get_line_id_tag<'a>(
+    hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
+) -> Option<Rc<HashtagContextAll<'a>>> {
+    hashtag_contexts
+        .iter()
+        .find(|h| h.text.as_ref().expect("Hashtag held no text").get_text() == "line:")
+        .cloned()
+}
+
 pub(crate) fn parse_syntax_tree<'a>(
     file: &'a File,
     diagnostics: &mut Vec<Diagnostic>,

@@ -3,11 +3,15 @@
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::output::*;
 use crate::parser::generated::yarnspinnerparser::HashtagContextAll;
+use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
+use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr_rust::tree::{ParseTreeVisitorCompat, ParseTreeWalker};
 pub use compilation_job::*;
+use rusty_yarn_spinner_core::types::*;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 mod antlr_rust_ext;
@@ -17,57 +21,97 @@ mod utils;
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     // TODO: other steps
-    let compiler_steps: Vec<&dyn CompilerStep> = vec![&add_built_in_types, &register_strings];
+    let compiler_steps: Vec<&dyn CompilerStep> = vec![&register_strings, &get_declarations];
 
-    let initial = CompilationResult {
-        program: None,
-        string_table: Default::default(),
-        declarations: None,
-        contains_implicit_string_tags: false,
-        file_tags: Default::default(),
-        diagnostics: vec![],
-        debug_info: Default::default(),
-    };
-
-    compiler_steps
+    let initial = CompilationIntermediate::default();
+    let result = compiler_steps
         .into_iter()
         .fold(initial, |acc, curr| curr.apply(&compilation_job, acc))
+        .result;
+
+    result
 }
 
-pub(crate) fn get_line_id_tag<'a>(
-    hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
-) -> Option<Rc<HashtagContextAll<'a>>> {
-    hashtag_contexts
-        .iter()
-        .find(|h| h.text.as_ref().expect("Hashtag held no text").get_text() == "line:")
-        .cloned()
+trait CompilerStep<'a> {
+    fn apply(
+        &self,
+        job: &'a CompilationJob,
+        previous: CompilationIntermediate<'a>,
+    ) -> CompilationIntermediate<'a>;
 }
 
-trait CompilerStep {
-    fn apply(&self, job: &CompilationJob, previous: CompilationResult) -> CompilationResult;
-}
-
-impl<F> CompilerStep for F
+impl<'a, F> CompilerStep<'a> for F
 where
-    F: Fn(&CompilationJob, CompilationResult) -> CompilationResult,
+    F: Fn(&'a CompilationJob, CompilationIntermediate<'a>) -> CompilationIntermediate<'a>,
 {
-    fn apply(&self, job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
+    fn apply(
+        &self,
+        job: &'a CompilationJob,
+        previous: CompilationIntermediate<'a>,
+    ) -> CompilationIntermediate<'a> {
         self(job, previous)
     }
 }
 
-fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
-    previous
+fn get_declarations<'a>(
+    _job: &'a CompilationJob,
+    mut state: CompilationIntermediate<'a>,
+) -> CompilationIntermediate<'a> {
+    // Find the variable declarations in these files.
+    for file in &state.parsed_files {
+        /*
+        let mut variable_declaration_visitor = DeclarationVisitor::new(
+            file.file_name.clone(),
+            job.variable_declarations.clone(),
+            in_yarn_explicitly_constructable_types(),
+            file.tree.get_tokens());
+
+        var variableDeclarationVisitor = new DeclarationVisitor(parsedFile.Name, existingDeclarations, typeDeclarations, parsedFile.Tokens);
+
+            var newDiagnosticList = new List<Diagnostic>();
+
+            variableDeclarationVisitor.Visit(parsedFile.Tree);
+
+            newDiagnosticList.AddRange(variableDeclarationVisitor.Diagnostics);
+
+            // Upon exit, newDeclarations will now contain every variable
+            // declaration we found
+            newDeclarations = variableDeclarationVisitor.NewDeclarations;
+
+            fileTags = variableDeclarationVisitor.FileTags;
+
+            diagnostics = newDiagnosticList;
+
+                knownVariableDeclarations.AddRange(newDeclarations);
+                derivedVariableDeclarations.AddRange(newDeclarations);
+                diagnostics.AddRange(declarationDiagnostics);
+
+                fileTags.Add(parsedFile.Name, newFileTags);
+            }
+            */
+    }
+    state
 }
 
-fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> CompilationResult {
-    let mut parsed_files = Vec::new();
+fn in_yarn_explicitly_constructable_types() -> Vec<BuiltinType> {
+    vec![
+        BuiltinType::Any(AnyType),
+        BuiltinType::Number(NumberType),
+        BuiltinType::String(StringType),
+        BuiltinType::Boolean(BooleanType),
+        // Undefined types are not explicitly constructable
+    ]
+}
 
+fn register_strings<'a>(
+    job: &'a CompilationJob,
+    mut state: CompilationIntermediate<'a>,
+) -> CompilationIntermediate<'a> {
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
-    let mut string_table_manager: StringTableManager = state.string_table.into();
+    let mut string_table_manager: StringTableManager = state.result.string_table.into();
     for file in &job.files {
-        let parse_result = parse_syntax_tree(file, &mut state.diagnostics);
+        let parse_result = parse_syntax_tree(file, &mut state.result.diagnostics);
 
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
@@ -78,12 +122,18 @@ fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> Compi
         let mut visitor =
             StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
         visitor.visit(&*parse_result.tree);
-        state.diagnostics.extend(visitor.diagnostics);
+        state.result.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
-        parsed_files.push(parse_result);
+        state.parsed_files.push(parse_result);
     }
-    state.string_table = string_table_manager.into();
+    state.result.string_table = string_table_manager.into();
     state
+}
+
+#[derive(Default)]
+struct CompilationIntermediate<'input> {
+    pub(crate) result: CompilationResult,
+    pub(crate) parsed_files: Vec<FileParseResult<'input>>,
 }
 
 #[cfg(test)]

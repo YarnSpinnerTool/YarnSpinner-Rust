@@ -164,7 +164,7 @@ where
                 "{} has already been declared in {}, line {}",
                 existing_explicit_declaration.name,
                 existing_explicit_declaration.source_file_name,
-                existing_explicit_declaration.source_file_line.unwrap(),
+                existing_explicit_declaration.source_file_line(),
             );
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
@@ -235,7 +235,7 @@ where
         let declaration = Declaration {
             name: variable_name,
             r#type: value.r#type.clone(),
-            default_value: value.internal_value.unwrap(),
+            default_value: value.internal_value.clone().unwrap(),
             description,
             source_file_name: self.source_file_name.clone().into(),
             source_node_name: self.current_node_name.clone(),
