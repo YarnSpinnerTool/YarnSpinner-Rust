@@ -277,6 +277,8 @@ where
         self.pending_tokens.enqueue(current_token);
     }
 
+    /// Given a NEWLINE token, return the length of the indentation
+    /// following it by counting the spaces and tabs after it.
     fn get_length_of_newline_token(
         &mut self,
         current_token: &antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>,
