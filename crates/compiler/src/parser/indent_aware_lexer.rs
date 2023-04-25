@@ -12,7 +12,7 @@ use antlr_rust::{
     char_stream::CharStream,
     token::Token,
     token_factory::{CommonTokenFactory, TokenFactory},
-    Lexer, TokenSource,
+    InputStream, Lexer, TokenSource,
 };
 
 use super::generated::yarnspinnerlexer::{self, LocalTokenFactory, YarnSpinnerLexer};
@@ -255,10 +255,21 @@ where
     }
 
     fn handle_eof_token(
-        &self,
-        current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<str>>>,
+        &mut self,
+        current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) {
-        todo!()
+        // We're at the end of the file. Emit as many dedents as we
+        // currently have on the stack.
+        while let Some(_indent) = self.unbalanced_indents.pop() {
+            // so that we don't end up printing <dedent from 8> into the stream we set the text to be empty
+            // I dislike this and need to look into if you can set a debug text setting in ANTLR
+            // TODO: see above comment
+            // this.InsertToken($"<dedent: {indent}>", YarnSpinnerLexer.DEDENT);
+            self.insert_token("", yarnspinnerlexer::DEDENT);
+        }
+
+        // Finally, enqueue the EOF token.
+        self.pending_tokens.enqueue(current_token);
     }
 
     fn get_length_of_newline_token(
@@ -303,10 +314,8 @@ where
         // https://www.antlr.org/api/Java/org/antlr/v4/runtime/Lexer.html#_tokenStartCharIndex
         let start_index = self.base.token_start_char_index + self.base.get_text().len() as isize;
 
-        // let tokenFactorySourcePair = Tuple.Create((ITokenSource)this, (ICharStream)this.InputStream);
-
-        let token = CommonTokenFactory.create(
-            self,
+        let token = CommonTokenFactory.create::<InputStream<&'input str>>(
+            None, // TODO: that might be wrong, C# does Tuple.Create((ITokenSource)this, (ICharStream)this.InputStream);
             token_type,
             Some(text.into()),
             0,
