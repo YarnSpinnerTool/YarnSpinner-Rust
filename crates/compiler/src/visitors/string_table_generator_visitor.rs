@@ -175,7 +175,6 @@ fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::generated::yarnspinnerlexer::YarnSpinnerLexer;
     use antlr_rust::common_token_stream::CommonTokenStream;
     use antlr_rust::InputStream;
 

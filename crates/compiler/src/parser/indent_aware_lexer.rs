@@ -399,7 +399,7 @@ mod test {
         InputStream,
     };
 
-    use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
+    use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer as GeneratedYarnSpinnerLexer;
 
     use super::*;
 
@@ -410,7 +410,7 @@ This is the one and only line
 
     #[test]
     fn behaves_like_lexer_for_unindented_input() {
-        let generated_lexer = YarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
+        let generated_lexer = GeneratedYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
 
         let mut reference_token_stream = CommonTokenStream::new(generated_lexer);
@@ -545,7 +545,7 @@ This is the one and only line
 ===";
 
         let generated_lexer =
-            YarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
+            GeneratedYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
         let mut reference_token_stream = CommonTokenStream::new(generated_lexer);
 
         let mut tokens = vec![reference_token_stream.iter().next().unwrap()];
