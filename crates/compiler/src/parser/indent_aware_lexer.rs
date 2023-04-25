@@ -315,15 +315,18 @@ where
         // https://www.antlr.org/api/Java/org/antlr/v4/runtime/Lexer.html#_tokenStartCharIndex
         let start_index = self.base.token_start_char_index + self.base.get_text().len() as isize;
 
+        let line = self.get_line();
+        let char_position_in_line = self.get_char_position_in_line();
+
         let token = CommonTokenFactory.create(
-            self.get_input_stream(), // TODO: that might be wrong, C# does Tuple.Create((ITokenSource)this, (ICharStream)this.InputStream);
+            self.base.input.as_mut(),
             token_type,
             Some(text.into()),
             TOKEN_DEFAULT_CHANNEL,
             start_index,
             start_index - 1,
-            self.get_line(),
-            self.get_char_position_in_line(),
+            line,
+            char_position_in_line,
         );
 
         self.pending_tokens.enqueue(token);
