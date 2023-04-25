@@ -43,16 +43,6 @@ impl ParseTreeVisitorCompat<'_> for ConstantValueVisitor {
 }
 
 impl YarnSpinnerParserVisitorCompat<'_> for ConstantValueVisitor {
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'_>) -> Self::Return {
-        let message = "Null is not a permitted type in Yarn Spinner 2.0 and later";
-        self.diagnostics.push(
-            Diagnostic::from_message(message)
-                .with_file_name(&self.file_name)
-                .read_parser_rule_context(ctx),
-        );
-        ConstantValue::non_panicking_default()
-    }
-
     fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'_>) -> Self::Return {
         let text = ctx.get_text();
         if let Ok(result) = text.parse::<f32>() {
@@ -71,17 +61,27 @@ impl YarnSpinnerParserVisitorCompat<'_> for ConstantValueVisitor {
         }
     }
 
-    fn visit_valueString(&mut self, ctx: &ValueStringContext<'_>) -> Self::Return {
-        let text = ctx.STRING().unwrap().get_text();
-        Value::from(text.trim_matches('"')).into()
+    fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'_>) -> Self::Return {
+        Value::from(true).into()
     }
 
     fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'_>) -> Self::Return {
         Value::from(false).into()
     }
 
-    fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'_>) -> Self::Return {
-        Value::from(true).into()
+    fn visit_valueString(&mut self, ctx: &ValueStringContext<'_>) -> Self::Return {
+        let text = ctx.STRING().unwrap().get_text();
+        Value::from(text.trim_matches('"')).into()
+    }
+
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'_>) -> Self::Return {
+        let message = "Null is not a permitted type in Yarn Spinner 2.0 and later";
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file_name)
+                .read_parser_rule_context(ctx),
+        );
+        ConstantValue::non_panicking_default()
     }
 }
 
