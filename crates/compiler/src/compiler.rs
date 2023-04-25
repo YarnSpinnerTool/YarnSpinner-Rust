@@ -65,30 +65,21 @@ fn get_declarations<'a>(
             in_yarn_explicitly_constructable_types(),
             file.tokens(),
         );
-        /*
-        var variableDeclarationVisitor = new DeclarationVisitor(parsedFile.Name, existingDeclarations, typeDeclarations, parsedFile.Tokens);
 
-            var newDiagnosticList = new List<Diagnostic>();
-
-            variableDeclarationVisitor.Visit(parsedFile.Tree);
-
-            newDiagnosticList.AddRange(variableDeclarationVisitor.Diagnostics);
-
-            // Upon exit, newDeclarations will now contain every variable
-            // declaration we found
-            newDeclarations = variableDeclarationVisitor.NewDeclarations;
-
-            fileTags = variableDeclarationVisitor.FileTags;
-
-            diagnostics = newDiagnosticList;
-
-                knownVariableDeclarations.AddRange(newDeclarations);
-                derivedVariableDeclarations.AddRange(newDeclarations);
-                diagnostics.AddRange(declarationDiagnostics);
-
-                fileTags.Add(parsedFile.Name, newFileTags);
-            }
-            */
+        variable_declaration_visitor.visit(&*file.tree);
+        state
+            .result
+            .diagnostics
+            .extend_from_slice(&variable_declaration_visitor.diagnostics);
+        if let Some(ref mut declarations) = state.result.declarations {
+            declarations.extend(variable_declaration_visitor.new_declarations);
+        } else {
+            state.result.declarations = Some(variable_declaration_visitor.new_declarations);
+        }
+        state
+            .result
+            .file_tags
+            .insert(file.name.clone(), variable_declaration_visitor.file_tags);
     }
     state
 }
