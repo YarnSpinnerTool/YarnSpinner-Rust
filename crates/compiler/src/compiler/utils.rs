@@ -157,20 +157,3 @@ where
         self.get_children().next().unwrap().get_parent().unwrap()
     }
 }
-
-pub(crate) fn create_common_token<'a>(
-    token_type: isize,
-    text: impl Into<String>,
-) -> Box<antlr_rust::token::CommonToken<'a>> {
-    // Taken from C# implementation of `CommonToken`s constructor
-    CommonTokenFactory.create::<InputStream<&'a str>>(
-        None,
-        token_type,
-        Some(text.into()),
-        TOKEN_DEFAULT_CHANNEL,
-        0,
-        0,
-        0,
-        -1,
-    )
-}
