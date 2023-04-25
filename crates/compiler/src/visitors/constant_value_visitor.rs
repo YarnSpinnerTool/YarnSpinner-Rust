@@ -23,7 +23,6 @@ pub(crate) struct ConstantValueVisitor {
 }
 
 impl ConstantValueVisitor {
-    #[allow(dead_code)] // TODO: Remove this once we have implemented `DeclarationVisitor` #34.
     pub(crate) fn new(file_name: impl Into<String>, diagnostics: Vec<Diagnostic>) -> Self {
         Self {
             file_name: file_name.into(),

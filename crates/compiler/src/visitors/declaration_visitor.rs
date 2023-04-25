@@ -7,6 +7,7 @@ use crate::prelude::generated::yarnspinnerparser::{
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::{Declaration, Diagnostic};
+use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
@@ -173,22 +174,14 @@ where
             );
             return;
         }
+
+        let mut constant_value_visitor =
+            ConstantValueVisitor::new(self.source_file_name.clone(), self.diagnostics.clone());
+        let value = constant_value_visitor.visit(&*ctx.value().unwrap());
+        self.diagnostics
+            .extend_from_slice(&constant_value_visitor.diagnostics);
+
         /*
-
-           // Get the name of the variable we're declaring
-           var variableContext = context.variable();
-           string variableName = variableContext.GetText();
-
-           // Does this variable name already exist in our declarations?
-           var existingExplicitDeclaration = this.Declarations.Where(d => d.IsImplicit == false).FirstOrDefault(d => d.Name == variableName);
-           if (existingExplicitDeclaration != null)
-           {
-               // Then this is an error, because you can't have two explicit declarations for the same variable.
-               string v = $"{existingExplicitDeclaration.Name} has already been declared in {existingExplicitDeclaration.SourceFileName}, line {existingExplicitDeclaration.SourceFileLine}";
-               this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
-               return BuiltinTypes.Undefined;
-
-           }
 
            // Figure out the value and its type
            var constantValueVisitor = new ConstantValueVisitor(context, sourceFileName, ref this.diagnostics);
