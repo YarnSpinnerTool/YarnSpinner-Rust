@@ -9,6 +9,7 @@ use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisito
 use crate::prelude::{Declaration, Diagnostic, Position};
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
+use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
@@ -17,7 +18,6 @@ use regex::Regex;
 use rusty_yarn_spinner_core::types::*;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use antlr_rust::parser_rule_context::ParserRuleContext;
 
 /// A visitor that extracts variable declarations from a parse tree.
 /// /// After visiting an entire parse tree for a file, the
@@ -229,7 +229,7 @@ where
                 return;
             }
         }
-           // We're done creating the declaration!
+        // We're done creating the declaration!
         let description = compiler::get_document_comments(&self.tokens, ctx);
         let line = variable_context.start().line as usize - 1;
         let declaration = Declaration {
@@ -239,52 +239,16 @@ where
             description,
             source_file_name: self.source_file_name.clone().into(),
             source_node_name: self.current_node_name.clone(),
-            range:  Position {
-                    line,
-                    character: variable_context.start().column as usize,
-                }..=Position {
-                    line,
-                    character: variable_context.stop().column as usize + variable_context.get_text().len(),
-                },
+            range: Position {
+                line,
+                character: variable_context.start().column as usize,
+            }..=Position {
+                line,
+                character: variable_context.stop().column as usize
+                    + variable_context.get_text().len(),
+            },
             is_implicit: false,
         };
-        }
-
-        /*
-           // We're done creating the declaration!
-
-           // The start line of the body is the line after the delimiter
-           // Hohenheim: Pretty sure we can remove this
-           _ = this.currentNodeContext.BODY_START().Symbol.Line;
-
-           string description = Compiler.GetDocumentComments(tokens, context);
-           var declaration = new Declaration
-           {
-               Name = variableName,
-               Type = value.Type,
-               DefaultValue = value.InternalValue,
-               Description = description,
-               SourceFileName = this.sourceFileName,
-               SourceNodeName = this.currentNodeName,
-               Range = new Range
-               {
-                   Start =
-                   {
-                       Line = variableContext.Start.Line - 1,
-                       Character = variableContext.Start.Column,
-                   },
-                   End =
-                   {
-                       Line = variableContext.Stop.Line - 1,
-                       Character = variableContext.Stop.Column + variableContext.GetText().Length,
-                   },
-               },
-               IsImplicit = false,
-           };
-
-           this.NewDeclarations.Add(declaration);
-
-           return value.Type;
-        */
+        self.new_declarations.push(declaration);
     }
 }
