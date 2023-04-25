@@ -149,89 +149,89 @@ where
     fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) -> Self::Return {
         compiler::get_document_comments(&self.tokens, ctx);
         /*
-        string description = Compiler.GetDocumentComments(tokens, context);
 
-            // Get the name of the variable we're declaring
-            var variableContext = context.variable();
-            string variableName = variableContext.GetText();
+           // Get the name of the variable we're declaring
+           var variableContext = context.variable();
+           string variableName = variableContext.GetText();
 
-            // Does this variable name already exist in our declarations?
-            var existingExplicitDeclaration = this.Declarations.Where(d => d.IsImplicit == false).FirstOrDefault(d => d.Name == variableName);
-            if (existingExplicitDeclaration != null)
-            {
-                // Then this is an error, because you can't have two explicit declarations for the same variable.
-                string v = $"{existingExplicitDeclaration.Name} has already been declared in {existingExplicitDeclaration.SourceFileName}, line {existingExplicitDeclaration.SourceFileLine}";
-                this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
-                return BuiltinTypes.Undefined;
+           // Does this variable name already exist in our declarations?
+           var existingExplicitDeclaration = this.Declarations.Where(d => d.IsImplicit == false).FirstOrDefault(d => d.Name == variableName);
+           if (existingExplicitDeclaration != null)
+           {
+               // Then this is an error, because you can't have two explicit declarations for the same variable.
+               string v = $"{existingExplicitDeclaration.Name} has already been declared in {existingExplicitDeclaration.SourceFileName}, line {existingExplicitDeclaration.SourceFileLine}";
+               this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
+               return BuiltinTypes.Undefined;
 
-            }
+           }
 
-            // Figure out the value and its type
-            var constantValueVisitor = new ConstantValueVisitor(context, sourceFileName, ref this.diagnostics);
-            var value = constantValueVisitor.Visit(context.value());
+           // Figure out the value and its type
+           var constantValueVisitor = new ConstantValueVisitor(context, sourceFileName, ref this.diagnostics);
+           var value = constantValueVisitor.Visit(context.value());
 
-            // Did the source code name an explicit type?
-            if (context.type != null)
-            {
-                if (KeywordsToBuiltinTypes.TryGetValue(context.type.Text, out Yarn.IType explicitType) == false)
-                {
-                    // The type name provided didn't map to a built-in
-                    // type. Look for the type in our Types collection.
-                    explicitType = this.Types.FirstOrDefault(t => t.Name == context.type.Text);
+           // Did the source code name an explicit type?
+           if (context.type != null)
+           {
+               if (KeywordsToBuiltinTypes.TryGetValue(context.type.Text, out Yarn.IType explicitType) == false)
+               {
+                   // The type name provided didn't map to a built-in
+                   // type. Look for the type in our Types collection.
+                   explicitType = this.Types.FirstOrDefault(t => t.Name == context.type.Text);
 
-                    if (explicitType == null)
-                    {
-                        // We didn't find a type by this name.
-                        string v = $"Unknown type {context.type.Text}";
-                        this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
-                        return BuiltinTypes.Undefined;
-                    }
-                }
+                   if (explicitType == null)
+                   {
+                       // We didn't find a type by this name.
+                       string v = $"Unknown type {context.type.Text}";
+                       this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
+                       return BuiltinTypes.Undefined;
+                   }
+               }
 
-                // Check that the type we've found is compatible with the
-                // type of the value that was provided - if it doesn't,
-                // that's a type error
-                if (TypeUtil.IsSubType(explicitType, value.Type) == false)
-                {
-                    string v = $"Type {context.type.Text} does not match value {context.value().GetText()} ({value.Type.Name})";
-                    this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
-                    return BuiltinTypes.Undefined;
-                }
-            }
+               // Check that the type we've found is compatible with the
+               // type of the value that was provided - if it doesn't,
+               // that's a type error
+               if (TypeUtil.IsSubType(explicitType, value.Type) == false)
+               {
+                   string v = $"Type {context.type.Text} does not match value {context.value().GetText()} ({value.Type.Name})";
+                   this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
+                   return BuiltinTypes.Undefined;
+               }
+           }
 
-            // We're done creating the declaration!
+           // We're done creating the declaration!
 
-            // The start line of the body is the line after the delimiter
-            // Hohenheim: Pretty sure we can remove this
-            _ = this.currentNodeContext.BODY_START().Symbol.Line;
+           // The start line of the body is the line after the delimiter
+           // Hohenheim: Pretty sure we can remove this
+           _ = this.currentNodeContext.BODY_START().Symbol.Line;
 
-            var declaration = new Declaration
-            {
-                Name = variableName,
-                Type = value.Type,
-                DefaultValue = value.InternalValue,
-                Description = description,
-                SourceFileName = this.sourceFileName,
-                SourceNodeName = this.currentNodeName,
-                Range = new Range
-                {
-                    Start =
-                    {
-                        Line = variableContext.Start.Line - 1,
-                        Character = variableContext.Start.Column,
-                    },
-                    End =
-                    {
-                        Line = variableContext.Stop.Line - 1,
-                        Character = variableContext.Stop.Column + variableContext.GetText().Length,
-                    },
-                },
-                IsImplicit = false,
-            };
+           string description = Compiler.GetDocumentComments(tokens, context);
+           var declaration = new Declaration
+           {
+               Name = variableName,
+               Type = value.Type,
+               DefaultValue = value.InternalValue,
+               Description = description,
+               SourceFileName = this.sourceFileName,
+               SourceNodeName = this.currentNodeName,
+               Range = new Range
+               {
+                   Start =
+                   {
+                       Line = variableContext.Start.Line - 1,
+                       Character = variableContext.Start.Column,
+                   },
+                   End =
+                   {
+                       Line = variableContext.Stop.Line - 1,
+                       Character = variableContext.Stop.Column + variableContext.GetText().Length,
+                   },
+               },
+               IsImplicit = false,
+           };
 
-            this.NewDeclarations.Add(declaration);
+           this.NewDeclarations.Add(declaration);
 
-            return value.Type;
-         */
+           return value.Type;
+        */
     }
 }

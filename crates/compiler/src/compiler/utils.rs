@@ -167,6 +167,7 @@ where
     > {
         // Hack: need to convert the reference to an Rc somehow.
         // This will fail on a terminal node, fingers crossed that that won't happen 😅
+        // See #45
         self.get_children().next().unwrap().get_parent().unwrap()
     }
 }
