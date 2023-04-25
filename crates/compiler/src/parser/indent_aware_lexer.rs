@@ -83,7 +83,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             self.pending_tokens.dequeue().unwrap()
         } else if self.base.input().size() == 0 {
             self.hit_eof = true;
-            self.base.get_token_factory().create::<Input>(
+            CommonTokenFactory.create::<Input>(
                 None,
                 antlr_rust::token::TOKEN_EOF,
                 Some("<EOF>".to_owned()),
