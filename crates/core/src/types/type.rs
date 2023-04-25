@@ -10,7 +10,7 @@ use std::fmt::Debug;
 ///
 /// This type does not exist in the original implementation and was a added as a more idiomatic
 /// representation of the types than dynamic dispatch.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, strum_macros::Display)]
 pub enum Type {
     Any(AnyType),
     Boolean(BooleanType),
@@ -84,6 +84,18 @@ macro_rules! impl_type {
             )*
         )*
     };
+}
+
+impl From<BuiltinType> for Type {
+    fn from(value: BuiltinType) -> Self {
+        match value {
+            BuiltinType::Any(any) => Type::Any(any),
+            BuiltinType::Boolean(boolean) => Type::Boolean(boolean),
+            BuiltinType::Number(number) => Type::Number(number),
+            BuiltinType::String(string) => Type::String(string),
+            BuiltinType::Undefined => Type::Undefined,
+        }
+    }
 }
 
 impl_type! {

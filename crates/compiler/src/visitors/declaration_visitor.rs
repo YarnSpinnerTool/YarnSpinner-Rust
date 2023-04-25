@@ -14,7 +14,7 @@ use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use antlr_rust::TokenSource;
 use regex::Regex;
-use rusty_yarn_spinner_core::types::{BooleanType, BuiltinType, NumberType, StringType, Type};
+use rusty_yarn_spinner_core::types::*;
 use std::borrow::Cow;
 use std::collections::HashMap;
 
@@ -52,7 +52,7 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
 
     /// Gets the collection of types known to this
     ///  [`DeclarationVisitor`].
-    types: Vec<Type>,
+    types: Vec<BuiltinType>,
 
     keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
 
@@ -66,7 +66,7 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
     pub(crate) fn new(
         source_file_name: impl Into<String>,
         existing_declarations: Vec<Declaration>,
-        type_declarations: Vec<Type>,
+        type_declarations: Vec<BuiltinType>,
         tokens: CommonTokenStream<'input, T>,
     ) -> Self {
         Self {
@@ -78,7 +78,7 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
             keywords_to_builtin_types: HashMap::from([
                 ("string", BuiltinType::String(StringType)),
                 ("number", BuiltinType::Number(NumberType)),
-                ("bool", BuiltinType::Bool(BooleanType)),
+                ("bool", BuiltinType::Boolean(BooleanType)),
             ]),
             regex: Regex::new(r"[\[<>\]{}|:\s#$]").unwrap(),
             file_tags: Default::default(),
@@ -178,17 +178,18 @@ where
         // Figure out the value and its type
         let mut constant_value_visitor =
             ConstantValueVisitor::new(self.source_file_name.clone(), self.diagnostics.clone());
-        let value = constant_value_visitor.visit(&*ctx.value().unwrap());
+        let value_context = ctx.value().unwrap();
+        let value = constant_value_visitor.visit(&*value_context);
         self.diagnostics
             .extend_from_slice(&constant_value_visitor.diagnostics);
 
         // Did the source code name an explicit type?
         if let Some(declaration_type) = ctx.declaration_type.as_ref() {
-            let Some(explicitType)  = self.keywords_to_builtin_types.get(declaration_type.get_text()) else {
+            let Some(explicit_type)  = self.keywords_to_builtin_types.get(declaration_type.get_text()) else {
                 // The type name provided didn't map to a built-in
                 // type. Look for the type in our Types collection.
-                if let Some(explicitType) = self.types.iter().find(|t| t.name == declaration_type.get_text()) {
-                    explicitType.into()
+                if let Some(explicit_type) = self.types.iter().find(|t| t.to_string() == declaration_type.get_text()) {
+                    explicit_type
                 } else {
                     // We didn't find a type by this name.
                     let msg = format!("Unknown type {}", declaration_type.get_text());
@@ -204,12 +205,20 @@ where
             // Check that the type we've found is compatible with the
             // type of the value that was provided - if it doesn't,
             // that's a type error
-             if (TypeUtil.IsSubType(explicitType, value.Type) == false)
-               {
-                   string v = $"Type {context.type.Text} does not match value {context.value().GetText()} ({value.Type.Name})";
-                   this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
-                   return BuiltinTypes.Undefined;
-               }
+            if !value.r#type.is_sub_type_of(explicit_type) {
+                let msg = format!(
+                    "Type {} does not match value {} ({})",
+                    declaration_type.get_text(),
+                    value_context.get_text(),
+                    value.r#type
+                );
+                self.diagnostics.push(
+                    Diagnostic::from_message(msg)
+                        .with_file_name(&self.source_file_name)
+                        .read_parser_rule_context(&*ctx),
+                );
+                return;
+            }
         }
 
         /*
