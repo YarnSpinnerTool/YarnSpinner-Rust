@@ -58,7 +58,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
     type TF = CommonTokenFactory; // TODO: correct?
 
     fn next_token(&mut self) -> <Self::TF as antlr_rust::token_factory::TokenFactory<'input>>::Tok {
-        if self.hit_eof && self.pending_tokens.0.len() > 0 {
+        if self.hit_eof && !self.pending_tokens.0.is_empty() {
             // We have hit the EOF, but we have tokens still pending.
             // Start returning those tokens.
             self.pending_tokens.dequeue();
@@ -81,7 +81,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             self.check_next_token();
 
             if !self.pending_tokens.0.is_empty() {
-                return self.pending_tokens.dequeue().unwrap().to_owned();
+                return self.pending_tokens.dequeue().unwrap();
             }
 
             // C# returns null?!
@@ -305,7 +305,7 @@ where
             })
         }
 
-        return length;
+        length
     }
 
     /// Inserts a new token with the given text and type, as though it
@@ -391,12 +391,12 @@ This is the one and only line
     Nicer
 ".to_owned() +
     "    " /* Bug when saving in VSCode (maybe even with rustfmt):
-    the spaces on an empty line in a string are removed...  */ + &"
+    the spaces on an empty line in a string are removed...  */ + "
     But this belongs to it!
 
     And this doesn't
 ===
-        ".as_ref());
+        ");
 
         let indent_aware_lexer =
             IndentAwareYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
