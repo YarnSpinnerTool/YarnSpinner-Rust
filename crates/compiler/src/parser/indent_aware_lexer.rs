@@ -40,7 +40,6 @@ pub struct IndentAwareYarnSpinnerLexer<
     last_indent: isize,
     unbalanced_indents: Stack<isize>,
     last_seen_option_content: Option<isize>,
-    warnings: Vec<Warning<TF::Inner>>,
 }
 
 impl<'input, Input: CharStream<From<'input>>> Deref for IndentAwareYarnSpinnerLexer<'input, Input> {
@@ -57,12 +56,6 @@ impl<'input, Input: CharStream<From<'input>>> DerefMut
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.base
     }
-}
-
-#[allow(unused)]
-struct Warning<T: Token + ?Sized> {
-    token: Box<T>,
-    message: String,
 }
 
 impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
@@ -133,7 +126,6 @@ where
             last_indent: Default::default(),
             unbalanced_indents: Default::default(),
             last_seen_option_content: None,
-            warnings: Default::default(),
         }
     }
 
@@ -229,9 +221,6 @@ where
         // now we need to see if the current depth requires any indents or dedents
         // we do this by first checking to see if there are any unbalanced indents
         if let Some(&initial_top) = self.unbalanced_indents.peek() {
-            // [sic!] later should make it check if indentation has changed inside the statement block and throw out a warning
-            // this.warnings.Add(new Warning { Token = currentToken, Message = "Indentation inside of shortcut block has changed. This is generally a bad idea."});
-
             // while there are unbalanced indents
             // we need to check if the current line is shallower than the indent stack
             // if it is then we emit a dedent and continue checking
@@ -290,28 +279,17 @@ where
         }
 
         let mut length = 0;
-        let mut saw_spaces = false;
-        let mut saw_tabs = false;
 
         for c in current_token.get_text().chars() {
             match c {
                 ' ' => {
                     length += 1;
-                    saw_spaces = true;
                 }
                 '\t' => {
                     length += 8; // Ye, really (see reference implementation)
-                    saw_tabs = true;
                 }
                 _ => {}
             }
-        }
-
-        if saw_spaces && saw_tabs {
-            self.warnings.push(Warning {
-                token: Box::new(current_token.clone()),
-                message: "Indentation contains tabs and spaces".to_owned(),
-            })
         }
 
         length
