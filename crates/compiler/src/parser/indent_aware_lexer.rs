@@ -124,9 +124,8 @@ where
 {
     pub fn new(input: Input) -> Self {
         IndentAwareYarnSpinnerLexer {
-            // TODO: is that correct? Is ::new sufficient without the LocalTokenFactory as param?
             base: GeneratedYarnSpinnerLexer::new(input),
-            token: Default::default(), // TODO: correct?
+            token: Default::default(),
             hit_eof: false,
             last_token: Default::default(),
             pending_tokens: Default::default(),
