@@ -1,5 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
+pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::output::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::string_table_manager::StringTableManager;
@@ -8,8 +9,8 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
 use std::rc::Rc;
-pub(crate) use utils::*;
 
+mod antlr_rust_ext;
 mod compilation_job;
 mod utils;
 

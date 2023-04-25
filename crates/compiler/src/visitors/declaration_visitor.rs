@@ -140,7 +140,7 @@ impl<'input, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
     }
 
     fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) -> Self::Return {
-        let mut description = compiler::get_document_comments(&self.tokens, ctx);
+        compiler::get_document_comments(&self.tokens, ctx);
         /*
         string description = Compiler.GetDocumentComments(tokens, context);
 

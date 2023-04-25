@@ -10,10 +10,9 @@ use crate::prelude::generated::yarnspinnerparser::{
 use crate::prelude::{Diagnostic, File, FileParseResult, LexerErrorListener, ParserErrorListener};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
-use antlr_rust::int_stream::IntStream;
-use antlr_rust::token::Token;
+
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::token_stream::TokenStream;
+
 use antlr_rust::{InputStream, Parser, TokenSource};
 use std::rc::Rc;
 
@@ -75,14 +74,14 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
 /// for documentation comments that come after <paramref
 /// name="context"/>'s last token and are on the same line.</param>
 pub(crate) fn get_document_comments<'input, T: TokenSource<'input>>(
-    tokens: &CommonTokenStream<'input, T>,
-    context: &impl YarnSpinnerParserContext<
+    _tokens: &CommonTokenStream<'input, T>,
+    _context: &impl YarnSpinnerParserContext<
         'input,
         TF = LocalTokenFactory<'input>,
         Ctx = YarnSpinnerParserContextType,
     >,
 ) {
-    let mut description: Option<String> = None;
+    let _description: Option<String> = None;
     /*
     string description = null;
 
@@ -109,73 +108,6 @@ pub(crate) fn get_document_comments<'input, T: TokenSource<'input>>(
                 }
             }
      */
-}
-
-pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
-    fn get_hidden_tokens_to_left(
-        &self,
-        token_index: isize,
-        channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
-
-    fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize;
-
-    fn filter_for_channel(
-        &self,
-        from: isize,
-        to: isize,
-        channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
-}
-
-impl<'input, T: TokenSource<'input>> CommonTokenStreamExt<'input, T>
-    for CommonTokenStream<'input, T>
-where
-    <T::TF as TokenFactory<'input>>::Tok: Token,
-{
-    fn get_hidden_tokens_to_left(
-        &self,
-        token_index: isize,
-        channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
-        // this.setup();
-        if token_index < 0 || token_index >= self.size() {
-            panic!("{} not in 0..{}", token_index, self.size() - 1);
-        }
-        if token_index == 0 {
-            return vec![];
-        }
-        let num = self.previous_token_on_channel(token_index - 1, 0);
-        if num == token_index - 1 {
-            vec![]
-        } else {
-            self.filter_for_channel(num + 1, token_index - 1, channel)
-        }
-    }
-
-    fn previous_token_on_channel(&self, mut token_index: isize, channel: isize) -> isize {
-        // this.sync(token_index);
-        if token_index >= self.size() {
-            return self.size() - 1;
-        }
-        while token_index >= 0 {
-            let token = self.get(token_index).clone();
-            if token.get_token_type() == -1 || token.get_channel() == channel {
-                return token_index;
-            }
-            token_index -= 1;
-        }
-        token_index
-    }
-
-    fn filter_for_channel(
-        &self,
-        from: isize,
-        to: isize,
-        channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
-        todo!()
-    }
 }
 
 /// Not part of original implementation, but needed because we lack some convenience methods
