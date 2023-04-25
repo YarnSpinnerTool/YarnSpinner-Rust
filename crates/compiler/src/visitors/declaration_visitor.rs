@@ -23,7 +23,7 @@ use std::collections::HashMap;
 /// /// After visiting an entire parse tree for a file, the
 ///  [`NewDeclarations`] property will contain all explicit
 /// variable declarations that were found.
-pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
+pub(crate) struct DeclarationVisitor<'a, 'input: 'a, T: TokenSource<'input>> {
     /// Gets the collection of new variable declarations that were
     /// found as a result of using this
     ///  [`DeclarationVisitor`] to visit a
@@ -39,7 +39,7 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
 
     /// The CommonTokenStream derived from the file we're parsing. This
     /// is used to find documentation comments for declarations.
-    tokens: CommonTokenStream<'input, T>,
+    tokens: &'a CommonTokenStream<'input, T>,
 
     /// The collection of variable declarations we know about before
     /// starting our work
@@ -63,12 +63,12 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     _dummy: (),
 }
 
-impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
+impl<'a, 'input: 'a, T: TokenSource<'input>> DeclarationVisitor<'a, 'input, T> {
     pub(crate) fn new(
         source_file_name: impl Into<String>,
         existing_declarations: Vec<Declaration>,
         type_declarations: Vec<BuiltinType>,
-        tokens: CommonTokenStream<'input, T>,
+        tokens: &'a CommonTokenStream<'input, T>,
     ) -> Self {
         Self {
             tokens,
@@ -100,8 +100,8 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
     }
 }
 
-impl<'input, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
-    for DeclarationVisitor<'input, T>
+impl<'a, 'input: 'a, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
+    for DeclarationVisitor<'a, 'input, T>
 where
     <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
 {
@@ -113,8 +113,8 @@ where
     }
 }
 
-impl<'input, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
-    for DeclarationVisitor<'input, T>
+impl<'a, 'input: 'a, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
+    for DeclarationVisitor<'a, 'input, T>
 where
     <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
 {

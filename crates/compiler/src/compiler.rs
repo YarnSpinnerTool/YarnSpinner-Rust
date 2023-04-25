@@ -54,18 +54,18 @@ where
 }
 
 fn get_declarations<'a>(
-    _job: &'a CompilationJob,
+    job: &'a CompilationJob,
     mut state: CompilationIntermediate<'a>,
 ) -> CompilationIntermediate<'a> {
     // Find the variable declarations in these files.
     for file in &state.parsed_files {
-        /*
         let mut variable_declaration_visitor = DeclarationVisitor::new(
-            file.file_name.clone(),
+            file.name.clone(),
             job.variable_declarations.clone(),
             in_yarn_explicitly_constructable_types(),
-            file.tree.get_tokens());
-
+            file.tokens(),
+        );
+        /*
         var variableDeclarationVisitor = new DeclarationVisitor(parsedFile.Name, existingDeclarations, typeDeclarations, parsedFile.Tokens);
 
             var newDiagnosticList = new List<Diagnostic>();
