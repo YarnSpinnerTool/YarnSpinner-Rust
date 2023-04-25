@@ -9,6 +9,7 @@ use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisito
 use crate::prelude::{Declaration, Diagnostic};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::token::Token;
+use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 use antlr_rust::TokenSource;
 use regex::Regex;
@@ -97,6 +98,8 @@ impl<'input, T: TokenSource<'input>> DeclarationVisitor<'input, T> {
 
 impl<'input, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
     for DeclarationVisitor<'input, T>
+where
+    <T::TF as TokenFactory<'input>>::Tok: Token,
 {
     type Node = YarnSpinnerParserContextType;
     type Return = ();
@@ -108,6 +111,8 @@ impl<'input, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
 
 impl<'input, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
     for DeclarationVisitor<'input, T>
+where
+    <T::TF as TokenFactory<'input>>::Tok: Token,
 {
     fn visit_hashtag(&mut self, ctx: &HashtagContext<'input>) -> Self::Return {
         let hashtag_text = ctx.text.as_ref().unwrap();

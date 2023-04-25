@@ -3,16 +3,20 @@
 
 use crate::error_strategy::ErrorStrategy;
 use crate::prelude::generated::yarnspinnerlexer::{LocalTokenFactory, YarnSpinnerLexer};
-use crate::prelude::generated::yarnspinnerparser;
 use crate::prelude::generated::yarnspinnerparser::{
     HashtagContextExt, YarnSpinnerParser, YarnSpinnerParserContext, YarnSpinnerParserContextType,
 };
-use crate::prelude::{Diagnostic, File, FileParseResult, LexerErrorListener, ParserErrorListener};
+use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
+use crate::prelude::{
+    CommonTokenStreamExt, Diagnostic, File, FileParseResult, LexerErrorListener,
+    ParserErrorListener,
+};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 
+use antlr_rust::token::Token;
 use antlr_rust::{InputStream, Parser, TokenSource};
 use std::rc::Rc;
 
@@ -73,15 +77,22 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
 /// <param name="allowCommentsAfter">If true, this method will search
 /// for documentation comments that come after <paramref
 /// name="context"/>'s last token and are on the same line.</param>
-pub(crate) fn get_document_comments<'input, T: TokenSource<'input>>(
-    _tokens: &CommonTokenStream<'input, T>,
-    _context: &impl YarnSpinnerParserContext<
+pub(crate) fn get_document_comments<'input, T>(
+    tokens: &CommonTokenStream<'input, T>,
+    context: &impl YarnSpinnerParserContext<
         'input,
         TF = LocalTokenFactory<'input>,
         Ctx = YarnSpinnerParserContextType,
     >,
-) {
+) where
+    T: TokenSource<'input>,
+    <T::TF as TokenFactory<'input>>::Tok: Token,
+{
     let _description: Option<String> = None;
+    let preceding_comments = tokens.get_hidden_tokens_to_left(
+        context.start().get_token_index(),
+        yarnspinnerlexer::COMMENTS as isize,
+    );
     /*
     string description = null;
 
