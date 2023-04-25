@@ -200,38 +200,19 @@ where
                     return;
                 }
             };
-        }
 
-        /*
-           // Did the source code name an explicit type?
-           if (context.type != null)
-           {
-               if (KeywordsToBuiltinTypes.TryGetValue(context.type.Text, out Yarn.IType explicitType) == false)
-               {
-                   // The type name provided didn't map to a built-in
-                   // type. Look for the type in our Types collection.
-                   explicitType = this.Types.FirstOrDefault(t => t.Name == context.type.Text);
-
-                   if (explicitType == null)
-                   {
-                       // We didn't find a type by this name.
-                       string v = $"Unknown type {context.type.Text}";
-                       this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
-                       return BuiltinTypes.Undefined;
-                   }
-               }
-
-               // Check that the type we've found is compatible with the
-               // type of the value that was provided - if it doesn't,
-               // that's a type error
-               if (TypeUtil.IsSubType(explicitType, value.Type) == false)
+            // Check that the type we've found is compatible with the
+            // type of the value that was provided - if it doesn't,
+            // that's a type error
+             if (TypeUtil.IsSubType(explicitType, value.Type) == false)
                {
                    string v = $"Type {context.type.Text} does not match value {context.value().GetText()} ({value.Type.Name})";
                    this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, v));
                    return BuiltinTypes.Undefined;
                }
-           }
+        }
 
+        /*
            // We're done creating the declaration!
 
            // The start line of the body is the line after the delimiter
