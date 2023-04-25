@@ -337,7 +337,7 @@ mod test {
         InputStream,
     };
 
-    use crate::prelude::generated::yarnspinnerlexer::{YarnSpinnerLexer, DEDENT, INDENT};
+    use crate::prelude::generated::yarnspinnerlexer::{YarnSpinnerLexer};
 
     use super::*;
 
@@ -411,9 +411,48 @@ This is the one and only line
             tokens.push(indent_aware_token_stream.iter().next().unwrap());
         }
 
-        assert!(tokens.contains(&INDENT));
-        assert!(tokens.contains(&DEDENT));
+        let names: Vec<_> = tokens
+            .into_iter()
+            .map(|t| yarnspinnerlexer::_SYMBOLIC_NAMES[t as usize].unwrap())
+            .collect();
 
-        // TODO: actually test the order
+        // Tests the stability of the lexer, targeted at indents and dedents - might break due to internal changes!
+        let expected = vec![
+            "ID",
+            "HEADER_DELIMITER",
+            "REST_OF_LINE",
+            "BODY_START",
+            "SHORTCUT_ARROW",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "INDENT",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "DEDENT",
+            "SHORTCUT_ARROW",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "INDENT",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "DEDENT",
+            "BLANK_LINE_FOLLOWING_OPTION",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "BODY_END",
+        ];
+
+        assert_eq!(expected, names);
     }
 }
