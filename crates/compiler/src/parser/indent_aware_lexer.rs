@@ -155,7 +155,6 @@ where
             // depth no longer matters
             // clear the stack
             yarnspinnerlexer::BODY_END => {
-                // TODO: put those into a well-named function
                 self.line_contains_shortcut = false;
                 self.last_indent = 0;
                 self.unbalanced_indents.0.clear();
