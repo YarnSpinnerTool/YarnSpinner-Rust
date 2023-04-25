@@ -11,7 +11,8 @@ use collections::*;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
-    token_factory::{CommonTokenFactory, TokenFactory}, Lexer, TokenSource,
+    token_factory::{CommonTokenFactory, TokenFactory},
+    Lexer, TokenSource,
 };
 
 use super::generated::yarnspinnerlexer::{self, LocalTokenFactory, YarnSpinnerLexer};
@@ -332,9 +333,57 @@ where
     }
 }
 
+/// To check for behaviour of the C# `IndentAwareLexer`, the following code can be added to a test file in the C# reference:
+///
+/// Whitespace in the raw string literal is important, and not correctly rendered by markdown renderers!
+///
+/// ```csharp
+/// using Antlr4.Runtime;
+/// using System.Linq;
+/// using Xunit;
+/// using Xunit.Abstractions;
+/// using Yarn.Compiler;
+///
+/// namespace YarnSpinner.Tests;
+///
+/// public class IndentAwareLexerTest
+/// {
+///     private readonly ITestOutputHelper _testOutputHelper;
+///
+///     public IndentAwareLexerTest(ITestOutputHelper testOutputHelper)
+///     {
+///         _testOutputHelper = testOutputHelper;
+///     }
+///
+/// 	[Fact]
+/// 	public void NewOne()
+///     {
+///         const string input = """
+/// title: Start
+/// ---
+/// -> Option 1
+///     Nice.
+/// -> Option 2
+///     Nicer
+///     
+/// This is part of the previous option statement due to indentation on the empty line ahead
+///
+/// And this doesn't, as the indentation is reset beforehand.
+///     
+/// This belongs to the previous statement, for the same reason.
+///     
+/// ===
+/// """;
+///
+///         // For the reference without indentation awareness copy the full lexer and change the base class to `Lexer` (of ANTLR)
+///         var referenceLexer = new YarnSpinnerLexer(CharStreams.fromstring(input));
+///         var referenceTokens = referenceLexer.GetAllTokens();
+///         _testOutputHelper.WriteLine("[{0}]", string.Join(",\n", referenceTokens.Select(t => $"\"{YarnSpinnerLexer.DefaultVocabulary.GetSymbolicName(t.Type)}\"")));
+///     }
+/// }
+/// ```
 #[cfg(test)]
 mod test {
-    
 
     use antlr_rust::{
         common_token_stream::CommonTokenStream, int_stream::IntStream, token::TOKEN_EOF,
