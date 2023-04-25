@@ -11,8 +11,7 @@ use collections::*;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
-    token_factory::{CommonTokenFactory, TokenFactory},
-    InputStream, Lexer, TidExt, TokenSource,
+    token_factory::{CommonTokenFactory, TokenFactory}, Lexer, TokenSource,
 };
 
 use super::generated::yarnspinnerlexer::{self, LocalTokenFactory, YarnSpinnerLexer};
@@ -335,7 +334,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use std::iter;
+    
 
     use antlr_rust::{
         common_token_stream::CommonTokenStream, int_stream::IntStream, token::TOKEN_EOF,
