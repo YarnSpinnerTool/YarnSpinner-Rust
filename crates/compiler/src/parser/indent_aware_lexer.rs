@@ -279,21 +279,15 @@ where
             panic!("Current token must NOT be newline")
         }
 
-        let mut length = 0;
-
-        for c in current_token.get_text().chars() {
-            match c {
-                ' ' => {
-                    length += 1;
-                }
-                '\t' => {
-                    length += 8; // Ye, really (see reference implementation)
-                }
-                _ => {}
-            }
-        }
-
-        length
+        current_token
+            .get_text()
+            .chars()
+            .map(|c| match c {
+                ' ' => 1,
+                '\t' => 8, // Ye, really (see reference implementation)
+                _ => 0,
+            })
+            .sum()
     }
 
     /// Inserts a new token with the given text and type, as though it
