@@ -7,17 +7,21 @@
 
 mod collections;
 
-use collections::*;
-use std::ops::{Deref, DerefMut};
-
+use super::generated::yarnspinnerlexer::{
+    self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
+};
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
     token_factory::{CommonTokenFactory, TokenFactory},
     Lexer, TokenSource,
 };
+use collections::*;
+use std::ops::{Deref, DerefMut};
 
-use super::generated::yarnspinnerlexer::{self, LocalTokenFactory, YarnSpinnerLexer};
+// To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
+#[allow(dead_code)]
+type YarnSpinnerLexer = ();
 
 antlr_rust::tid! { impl<'input, Input> TidAble<'input> for IndentAwareYarnSpinnerLexer<'input, Input> where Input:CharStream<From<'input>> }
 
@@ -27,7 +31,7 @@ pub struct IndentAwareYarnSpinnerLexer<
     Input: CharStream<From<'input>>,
     TF: TokenFactory<'input> = CommonTokenFactory,
 > {
-    base: YarnSpinnerLexer<'input, Input>,
+    base: GeneratedYarnSpinnerLexer<'input, Input>,
     pub token: Option<TF::Tok>,
     hit_eof: bool,
     last_token: Option<TF::Tok>,
@@ -40,7 +44,7 @@ pub struct IndentAwareYarnSpinnerLexer<
 }
 
 impl<'input, Input: CharStream<From<'input>>> Deref for IndentAwareYarnSpinnerLexer<'input, Input> {
-    type Target = YarnSpinnerLexer<'input, Input>;
+    type Target = GeneratedYarnSpinnerLexer<'input, Input>;
 
     fn deref(&self) -> &Self::Target {
         &self.base
@@ -121,10 +125,7 @@ where
     pub fn new(input: Input) -> Self {
         IndentAwareYarnSpinnerLexer {
             // TODO: is that correct? Is ::new sufficient without the LocalTokenFactory as param?
-            base: YarnSpinnerLexer::new_with_token_factory(
-                input,
-                <&LocalTokenFactory<'input> as Default>::default(),
-            ),
+            base: GeneratedYarnSpinnerLexer::new(input),
             token: Default::default(), // TODO: correct?
             hit_eof: false,
             last_token: Default::default(),
@@ -393,22 +394,19 @@ where
 #[cfg(test)]
 mod test {
 
+    use super::*;
     use antlr_rust::{
         common_token_stream::CommonTokenStream, int_stream::IntStream, token::TOKEN_EOF,
         InputStream,
     };
 
-    use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer as GeneratedYarnSpinnerLexer;
-
-    use super::*;
-
-    const MINIMAL_INPUT: &str = "title: Minimal Yarn
+    #[test]
+    fn behaves_like_lexer_for_unindented_input() {
+        const MINIMAL_INPUT: &str = "title: Minimal Yarn
 ---
 This is the one and only line
 ===";
 
-    #[test]
-    fn behaves_like_lexer_for_unindented_input() {
         let generated_lexer = GeneratedYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
 
