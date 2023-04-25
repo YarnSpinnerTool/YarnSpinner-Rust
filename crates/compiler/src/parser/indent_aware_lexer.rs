@@ -32,13 +32,26 @@ pub struct IndentAwareYarnSpinnerLexer<
     TF: TokenFactory<'input> = CommonTokenFactory,
 > {
     base: GeneratedYarnSpinnerLexer<'input, Input>,
-    pub token: Option<TF::Tok>,
     hit_eof: bool,
+    /// Holds the last observed token from the stream.
+    /// Used to see if a line is blank or not.
     last_token: Option<TF::Tok>,
+    /// The collection of tokens that we have seen, but have not yet
+    /// returned. This is needed when NextToken encounters a newline,
+    /// which means we need to buffer indents or dedents. [`next_token`]
+    /// only returns a single [`Token`] at a time, which
+    /// means we use this list to buffer it.
     pending_tokens: Queue<TF::Tok>,
+    /// A flag to say the last line observed was a shortcut or not.
+    /// Used to determine if tracking indents needs to occur.
     line_contains_shortcut: bool,
+    /// Keeps track of the last indentation encountered.
+    /// This is used to see if depth has changed between lines.
     last_indent: isize,
+    /// A stack keeping track of the levels of indentations we have seen so far that are relevant to shortcuts.
     unbalanced_indents: Stack<isize>,
+    /// holds the line number of the last seen option.
+    /// Lets us work out if the blank line needs to end the option.
     last_seen_option_content: Option<isize>,
 }
 
@@ -114,7 +127,6 @@ where
     pub fn new(input: Input) -> Self {
         IndentAwareYarnSpinnerLexer {
             base: GeneratedYarnSpinnerLexer::new(input),
-            token: Default::default(),
             hit_eof: false,
             last_token: Default::default(),
             pending_tokens: Default::default(),
