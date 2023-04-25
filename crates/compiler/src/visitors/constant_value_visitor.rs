@@ -123,7 +123,8 @@ impl From<Value> for ConstantValue {
 
 impl Default for ConstantValue {
     fn default() -> Self {
-        panic!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
+        //panic!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
+        Self::non_panicking_default()
     }
 }
 

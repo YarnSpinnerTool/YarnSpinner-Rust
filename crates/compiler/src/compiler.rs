@@ -262,4 +262,49 @@ a {very} cool expression
             assert_eq!(diagnostics[1], first_expected);
         }
     }
+
+    #[test]
+    fn recognizes_variable_declarations() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+<<declare $foo to 1>>
+<<declare $bar = \"2\">>
+<<declare $baz to true>>
+<<declare $qux = \"hello there\" as string>>
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+
+        println!("{:?}", result.diagnostics);
+        assert!(result.diagnostics.is_empty());
+        let declarations = result.declarations.unwrap();
+        assert_eq!(declarations.len(), 4);
+        assert_eq!(
+            declarations[0],
+            Declaration {
+                name: "$foo".to_string(),
+                default_value: 1.0.into(),
+                description: "".to_string(),
+                source_file_name: DeclarationSource::File("test.yarn".to_string()),
+                source_node_name: Some("test".to_string()),
+                is_implicit: false,
+                r#type: Type::Number(NumberType),
+                range: Position {
+                    line: 3,
+                    character: 11,
+                }..=Position {
+                    line: 3,
+                    character: 15,
+                },
+            }
+        );
+    }
 }
