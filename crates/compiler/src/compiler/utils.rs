@@ -16,6 +16,7 @@ use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::rule_context::RuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::{InputStream, Parser, TokenSource};
+use std::borrow::Cow;
 use std::rc::Rc;
 
 pub(crate) fn parse_syntax_tree<'a>(
@@ -84,7 +85,7 @@ pub(crate) fn get_document_comments<'input, T>(
     >,
 ) where
     T: TokenSource<'input>,
-    <T::TF as TokenFactory<'input>>::Tok: Token,
+    <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
 {
     let preceding_comments = tokens.get_hidden_tokens_to_left(
         context.start().get_token_index(),
