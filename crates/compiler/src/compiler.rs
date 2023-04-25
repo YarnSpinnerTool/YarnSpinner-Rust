@@ -2,7 +2,7 @@
 
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::output::*;
-use crate::prelude::generated::yarnspinnerparser::*;
+use crate::parser::generated::yarnspinnerparser::HashtagContextAll;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 use antlr_rust::token::Token;

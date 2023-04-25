@@ -2,10 +2,8 @@
 //! but were moved to their own file for better organization.
 
 use crate::error_strategy::ErrorStrategy;
-use crate::prelude::generated::yarnspinnerlexer::{LocalTokenFactory, YarnSpinnerLexer};
-use crate::prelude::generated::yarnspinnerparser::{
-    HashtagContextExt, YarnSpinnerParser, YarnSpinnerParserContext, YarnSpinnerParserContextType,
-};
+
+use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
 use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
@@ -117,16 +115,7 @@ pub(crate) fn add_hashtag_child<'input>(
 ) {
     let parent = parent.ref_to_rc();
     // Taken from C# implementation of `CommonToken`s constructor
-    let string_id_token = CommonTokenFactory.create::<InputStream<&'input str>>(
-        None,
-        yarnspinnerparser::HASHTAG_TEXT,
-        Some(text.into()),
-        0,
-        0,
-        0,
-        0,
-        -1,
-    );
+    let string_id_token = create_common_token(yarnspinnerparser::HASHTAG_TEXT, text);
     let invoking_state_according_to_original_implementation = 0;
     // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
     let hashtag = HashtagContextExt::new_with_text(
@@ -167,4 +156,21 @@ where
         // See #45
         self.get_children().next().unwrap().get_parent().unwrap()
     }
+}
+
+pub(crate) fn create_common_token<'a>(
+    token_type: isize,
+    text: impl Into<String>,
+) -> Box<antlr_rust::token::CommonToken<'a>> {
+    // Taken from C# implementation of `CommonToken`s constructor
+    CommonTokenFactory.create::<InputStream<&'a str>>(
+        None,
+        token_type,
+        Some(text.into()),
+        TOKEN_DEFAULT_CHANNEL,
+        0,
+        0,
+        0,
+        -1,
+    )
 }
