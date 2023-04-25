@@ -2,10 +2,10 @@
 
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::int_stream::IntStream;
-use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
+use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
+use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::token_stream::TokenStream;
-use antlr_rust::TokenSource;
+use antlr_rust::{InputStream, TokenSource};
 
 pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
     fn get_hidden_tokens_to_left(

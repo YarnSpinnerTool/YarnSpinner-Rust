@@ -9,8 +9,8 @@ use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
-use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::{InputStream, Parser, TokenSource};
+use antlr_rust::token_factory::TokenFactory;
+use antlr_rust::{Parser, TokenSource};
 use std::borrow::Cow;
 use std::rc::Rc;
 
