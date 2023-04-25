@@ -1,15 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/FileParseResult.cs>
 
 use crate::error_strategy::ErrorStrategy;
-use crate::prelude::{generated::yarnspinnerparser::*, YarnSpinnerLexer};
+use crate::prelude::{generated::yarnspinnerparser::*, *};
 use antlr_rust::{common_token_stream::*, *};
 use std::rc::Rc;
-
-pub type ActualYarnSpinnerParser<'input> = YarnSpinnerParser<
-    'input,
-    CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>>,
-    ErrorStrategy<'input, YarnSpinnerParserContextType>,
->;
 
 /// Contains the result of parsing a single file of source code.
 ///

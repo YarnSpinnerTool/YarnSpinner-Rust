@@ -75,18 +75,14 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
 ///
 /// ## Implementation notes
 /// The flag `allowCommentsAfter` and its consequences were not ported because they are unused.
-pub(crate) fn get_document_comments<'input, T>(
-    tokens: &CommonTokenStream<'input, T>,
+pub(crate) fn get_document_comments<'input>(
+    tokens: &ActualTokenStream<'input>,
     context: &impl YarnSpinnerParserContext<
         'input,
         TF = LocalTokenFactory<'input>,
         Ctx = YarnSpinnerParserContextType,
     >,
-) -> String
-where
-    T: TokenSource<'input>,
-    <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
-{
+) -> String {
     let preceding_comments = tokens.get_hidden_tokens_to_left(
         context.start().get_token_index(),
         yarnspinnerlexer::COMMENTS as isize,

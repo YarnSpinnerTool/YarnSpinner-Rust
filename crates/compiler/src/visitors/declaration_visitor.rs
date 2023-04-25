@@ -2,11 +2,15 @@
 
 use crate::compiler;
 use crate::parser::generated::yarnspinnerparser::{Declare_statementContext, HashtagContext};
+use crate::prelude::generated::yarnspinnerlexer::LocalTokenFactory;
 use crate::prelude::generated::yarnspinnerparser::{
     Declare_statementContextAttrs, NodeContext, NodeContextAttrs, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::{Declaration, Diagnostic, Position};
+use crate::prelude::{
+    ActualTokenStream, ActualYarnSpinnerLexer, ActualYarnSpinnerParser, Declaration, Diagnostic,
+    Position,
+};
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -23,7 +27,7 @@ use std::collections::HashMap;
 /// /// After visiting an entire parse tree for a file, the
 ///  [`NewDeclarations`] property will contain all explicit
 /// variable declarations that were found.
-pub(crate) struct DeclarationVisitor<'a, 'input: 'a, T: TokenSource<'input>> {
+pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// Gets the collection of new variable declarations that were
     /// found as a result of using this
     ///  [`DeclarationVisitor`] to visit a
@@ -39,7 +43,7 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a, T: TokenSource<'input>> {
 
     /// The CommonTokenStream derived from the file we're parsing. This
     /// is used to find documentation comments for declarations.
-    tokens: &'a CommonTokenStream<'input, T>,
+    tokens: &'a ActualTokenStream<'input>,
 
     /// The collection of variable declarations we know about before
     /// starting our work
@@ -63,12 +67,12 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a, T: TokenSource<'input>> {
     _dummy: (),
 }
 
-impl<'a, 'input: 'a, T: TokenSource<'input>> DeclarationVisitor<'a, 'input, T> {
+impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
     pub(crate) fn new(
         source_file_name: impl Into<String>,
         existing_declarations: Vec<Declaration>,
         type_declarations: Vec<BuiltinType>,
-        tokens: &'a CommonTokenStream<'input, T>,
+        tokens: &'a ActualTokenStream<'input>,
     ) -> Self {
         Self {
             tokens,
@@ -100,11 +104,7 @@ impl<'a, 'input: 'a, T: TokenSource<'input>> DeclarationVisitor<'a, 'input, T> {
     }
 }
 
-impl<'a, 'input: 'a, T: TokenSource<'input>> ParseTreeVisitorCompat<'input>
-    for DeclarationVisitor<'a, 'input, T>
-where
-    <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
-{
+impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for DeclarationVisitor<'a, 'input> {
     type Node = YarnSpinnerParserContextType;
     type Return = ();
 
@@ -113,11 +113,7 @@ where
     }
 }
 
-impl<'a, 'input: 'a, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
-    for DeclarationVisitor<'a, 'input, T>
-where
-    <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
-{
+impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'a, 'input> {
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         for header in ctx.header_all() {
             let header_key = header.header_key.as_ref().unwrap();

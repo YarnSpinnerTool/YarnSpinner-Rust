@@ -1,18 +1,19 @@
 //! Contains functionality provided in the C# implementation of ANTLR but not (yet?) in antlr4rust.
 
+use crate::parser::ActualTokenStream;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::int_stream::IntStream;
-use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
+use antlr_rust::token::{CommonToken, Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::token_stream::TokenStream;
 use antlr_rust::{InputStream, TokenSource};
 
-pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
+pub(crate) trait CommonTokenStreamExt<'input> {
     fn get_hidden_tokens_to_left(
         &self,
         token_index: isize,
         channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
+    ) -> Vec<Box<CommonToken<'input>>>;
 
     fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize;
 
@@ -21,21 +22,17 @@ pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
         from: isize,
         to: isize,
         channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
+    ) -> Vec<Box<CommonToken<'input>>>;
 
-    fn get_tokens(&self) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
+    fn get_tokens(&self) -> Vec<Box<CommonToken<'input>>>;
 }
 
-impl<'input, T: TokenSource<'input>> CommonTokenStreamExt<'input, T>
-    for CommonTokenStream<'input, T>
-where
-    <T::TF as TokenFactory<'input>>::Tok: Token,
-{
+impl<'input> CommonTokenStreamExt<'input> for ActualTokenStream<'input> {
     fn get_hidden_tokens_to_left(
         &self,
         token_index: isize,
         channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+    ) -> Vec<Box<CommonToken<'input>>> {
         // This method is private, but it should be alright to leave it out.
         // this.setup();
         if token_index < 0 || token_index >= self.size() {
@@ -73,7 +70,7 @@ where
         from: isize,
         to: isize,
         channel: isize,
-    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+    ) -> Vec<Box<CommonToken<'input>>> {
         let mut token_list = Vec::new();
 
         for index in from..=to {
@@ -89,7 +86,7 @@ where
         token_list
     }
 
-    fn get_tokens(&self) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+    fn get_tokens(&self) -> Vec<Box<CommonToken<'input>>> {
         (0..self.size()).map(|i| self.get(i).clone()).collect()
     }
 }
