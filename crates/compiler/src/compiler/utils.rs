@@ -13,6 +13,7 @@ use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::int_stream::IntStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
+use antlr_rust::token_stream::TokenStream;
 use antlr_rust::{InputStream, Parser, TokenSource};
 use std::rc::Rc;
 
@@ -129,12 +130,15 @@ pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
 
 impl<'input, T: TokenSource<'input>> CommonTokenStreamExt<'input, T>
     for CommonTokenStream<'input, T>
+where
+    <T::TF as TokenFactory<'input>>::Tok: Token,
 {
     fn get_hidden_tokens_to_left(
         &self,
         token_index: isize,
         channel: isize,
     ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+        // this.setup();
         if token_index < 0 || token_index >= self.size() {
             panic!("{} not in 0..{}", token_index, self.size() - 1);
         }
@@ -149,8 +153,18 @@ impl<'input, T: TokenSource<'input>> CommonTokenStreamExt<'input, T>
         }
     }
 
-    fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize {
-        todo!()
+    fn previous_token_on_channel(&self, mut token_index: isize, channel: isize) -> isize {
+        if token_index >= self.size() {
+            return self.size() - 1;
+        }
+        while token_index >= 0 {
+            let token = self.get(token_index).clone();
+            if token.get_token_type() == -1 || token.get_channel() == channel {
+                return token_index;
+            }
+            token_index -= 1;
+        }
+        token_index
     }
 
     fn filter_for_channel(
