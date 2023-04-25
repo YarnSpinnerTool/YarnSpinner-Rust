@@ -384,20 +384,21 @@ This is the one and only line
 
     #[test]
     fn correctly_indents_and_dedents_with_token() {
-        let option_indentation_relevant_input: &str = &("title: Start
+        let option_indentation_relevant_input: &str = "title: Start
 ---
 -> Option 1
     Nice.
 -> Option 2
     Nicer
-".to_owned() +
-    "    " /* Bug when saving in VSCode (maybe even with rustfmt):
-    the spaces on an empty line in a string are removed...  */ + "
-    But this belongs to it!
+    
+    This is part of the previous option statement due to indentation on the \"empty\" line ahead
 
-    And this doesn't
+    And this doesn't, as the indentation is reset beforehand.
+    
+    This belongs to the previous statement, for the same reason.
+    
 ===
-        ");
+    ";
 
         let indent_aware_lexer =
             IndentAwareYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
