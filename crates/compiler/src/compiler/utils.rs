@@ -78,7 +78,8 @@ pub(crate) fn get_document_comments<'input, T>(
         TF = LocalTokenFactory<'input>,
         Ctx = YarnSpinnerParserContextType,
     >,
-) where
+) -> String
+where
     T: TokenSource<'input>,
     <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
 {
