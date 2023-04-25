@@ -175,18 +175,18 @@ where
             return;
         }
 
+        // Figure out the value and its type
         let mut constant_value_visitor =
             ConstantValueVisitor::new(self.source_file_name.clone(), self.diagnostics.clone());
         let value = constant_value_visitor.visit(&*ctx.value().unwrap());
         self.diagnostics
             .extend_from_slice(&constant_value_visitor.diagnostics);
+        // Did the source code name an explicit type?
+        if let Some(declaration_type) = ctx.declaration_type.as_ref() {
+            if self.keywords_to_builtin_types.get(declaration_type.get_text())
+        }
 
         /*
-
-           // Figure out the value and its type
-           var constantValueVisitor = new ConstantValueVisitor(context, sourceFileName, ref this.diagnostics);
-           var value = constantValueVisitor.Visit(context.value());
-
            // Did the source code name an explicit type?
            if (context.type != null)
            {
