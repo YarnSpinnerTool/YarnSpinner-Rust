@@ -10,8 +10,10 @@ use crate::prelude::generated::yarnspinnerparser::{
 use crate::prelude::{Diagnostic, File, FileParseResult, LexerErrorListener, ParserErrorListener};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
+use antlr_rust::int_stream::IntStream;
+use antlr_rust::token::Token;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::{InputStream, Parser};
+use antlr_rust::{InputStream, Parser, TokenSource};
 use std::rc::Rc;
 
 pub(crate) fn parse_syntax_tree<'a>(
@@ -55,14 +57,118 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
     format!("line:{name}")
 }
 
+/// Gets the text of the documentation comments that either immediately
+/// precede <paramref name="context"/>, or are on the same line as
+/// <paramref name="context"/>.
+///
+/// Documentation comments begin with a triple-slash (<c>///</c>), and
+/// are used to describe variable declarations. If documentation
+/// comments precede a declaration (that is, they're not on the same
+/// line as the declaration), then they may span multiple lines, as long
+/// as each line begins with a triple-slash.
+/// </remarks>
+/// <param name="tokens">The token stream to search.</param>
+/// <param name="context">The parser rule context to get documentation
+/// comments for.</param>
+/// <param name="allowCommentsAfter">If true, this method will search
+/// for documentation comments that come after <paramref
+/// name="context"/>'s last token and are on the same line.</param>
+pub(crate) fn get_document_comments<'input, T: TokenSource<'input>>(
+    tokens: &CommonTokenStream<'input, T>,
+    context: &impl YarnSpinnerParserContext<
+        'input,
+        TF = LocalTokenFactory<'input>,
+        Ctx = YarnSpinnerParserContextType,
+    >,
+) {
+    let mut description: Option<String> = None;
+    /*
+    string description = null;
+
+            var precedingComments = tokens.GetHiddenTokensToLeft(context.Start.TokenIndex, YarnSpinnerLexer.COMMENTS);
+
+            if (precedingComments != null)
+            {
+                var precedingDocComments = precedingComments
+                    // There are no tokens on the main channel with this
+                    // one on the same line
+                    .Where(t => tokens.GetTokens()
+                        .Where(ot => ot.Line == t.Line)
+                        .Where(ot => ot.Type != YarnSpinnerLexer.INDENT && ot.Type != YarnSpinnerLexer.DEDENT)
+                        .Where(ot => ot.Channel == YarnSpinnerLexer.DefaultTokenChannel)
+                        .Count() == 0)
+                    // The comment starts with a triple-slash
+                    .Where(t => t.Text.StartsWith("///"))
+                    // Get its text
+                    .Select(t => t.Text.Replace("///", string.Empty).Trim());
+
+                if (precedingDocComments.Count() > 0)
+                {
+                    description = string.Join(" ", precedingDocComments);
+                }
+            }
+     */
+}
+
+pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
+    fn get_hidden_tokens_to_left(
+        &self,
+        token_index: isize,
+        channel: isize,
+    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
+
+    fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize;
+
+    fn filter_for_channel(
+        &self,
+        from: isize,
+        to: isize,
+        channel: isize,
+    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
+}
+
+impl<'input, T: TokenSource<'input>> CommonTokenStreamExt<'input, T>
+    for CommonTokenStream<'input, T>
+{
+    fn get_hidden_tokens_to_left(
+        &self,
+        token_index: isize,
+        channel: isize,
+    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+        if token_index < 0 || token_index >= self.size() {
+            panic!("{} not in 0..{}", token_index, self.size() - 1);
+        }
+        if token_index == 0 {
+            return vec![];
+        }
+        let num = self.previous_token_on_channel(token_index - 1, 0);
+        if num == token_index - 1 {
+            vec![]
+        } else {
+            self.filter_for_channel(num + 1, token_index - 1, channel)
+        }
+    }
+
+    fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize {
+        todo!()
+    }
+
+    fn filter_for_channel(
+        &self,
+        from: isize,
+        to: isize,
+        channel: isize,
+    ) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+        todo!()
+    }
+}
+
 /// Not part of original implementation, but needed because we lack some convenience methods
 /// that the C# implementation of ANTLR would provide but antlr4rust does not.
 pub(crate) fn add_hashtag_child<'input>(
     parent: &impl YarnSpinnerParserContext<'input>,
     text: impl Into<String>,
 ) {
-    // Hack: need to convert the reference to an Rc somehow.
-    // This will fail on a terminal node, fingers crossed that that won't happen 😅
     let parent = parent.ref_to_rc();
     // Taken from C# implementation of `CommonToken`s constructor
     let string_id_token = CommonTokenFactory.create::<InputStream<&'input str>>(
