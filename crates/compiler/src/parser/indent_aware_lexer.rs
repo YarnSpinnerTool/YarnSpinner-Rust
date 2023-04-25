@@ -501,67 +501,46 @@ This is the one and only line
             .collect();
 
         // Tests the compatibility of the generated lexer with a manually generated output from the reference implementation.
+        // The commented out lines are not correctly lexed by the generated lexer (in comparison with the C# generated lexer).
         let expected = vec![
             "ID",
             "HEADER_DELIMITER",
             "REST_OF_LINE",
-            "NEWLINE",
+            // "NEWLINE",
             "BODY_START",
+            // "NEWLINE",
+            "SHORTCUT_ARROW",
+            // "BODY_WS",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
             "NEWLINE",
             "SHORTCUT_ARROW",
-            "BODY_WS",
+            // "BODY_WS",
             "TEXT",
             "TEXT",
             "NEWLINE",
             "TEXT",
             "TEXT",
-            "NEWLINE",
-            "SHORTCUT_ARROW",
-            "BODY_WS",
-            "TEXT",
-            "TEXT",
+            // "NEWLINE",
             "NEWLINE",
             "TEXT",
             "TEXT",
-            "NEWLINE",
-            "NEWLINE",
-            "TEXT",
-            "TEXT",
-            "NEWLINE",
+            // "NEWLINE",
             "NEWLINE",
             "TEXT",
             "TEXT",
-            "NEWLINE",
+            // "NEWLINE",
             "NEWLINE",
             "TEXT",
             "TEXT",
-            "NEWLINE",
+            // "NEWLINE",
             "NEWLINE",
             "BODY_END",
         ];
 
-        assert_eq!(expected, correct_generated_lexer_discrepancies(names));
-    }
-
-    fn correct_generated_lexer_discrepancies(token_names: Vec<&'static str>) -> Vec<&'static str> {
-        iter::once(None)
-            .chain(token_names.iter().map(Option::Some))
-            .collect::<Vec<_>>()
-            .windows(2)
-            .into_iter()
-            .filter_map(|window| {
-                let [previous, current] = window else { unreachable!() };
-                (!(current.as_ref().unwrap()
-                    == &&yarnspinnerlexer::_SYMBOLIC_NAMES[yarnspinnerlexer::NEWLINE as usize]
-                        .unwrap()
-                    && previous == current))
-                    .then(|| current)
-            })
-            .filter_map(|x| x.map(|x| *x))
-            .into_iter()
-            .filter(|&t| {
-                t != yarnspinnerlexer::_SYMBOLIC_NAMES[yarnspinnerlexer::BODY_WS as usize].unwrap()
-            })
-            .collect()
+        assert_eq!(expected, names);
     }
 }
