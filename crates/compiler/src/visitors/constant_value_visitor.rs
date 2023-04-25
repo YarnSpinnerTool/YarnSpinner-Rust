@@ -88,16 +88,16 @@ impl YarnSpinnerParserVisitorCompat<'_> for ConstantValueVisitor {
 #[derive(Debug, Clone)]
 /// Needed because ANTLR needs visitors' return values to have a default.
 /// While the C# implementation allows overriding a `DefaultResult` property,
-/// the Rust implementation simply takes the `Default` implementation of the associated`Return` type.
-/// However, `Value` should not have a `Default` implementation, because it would be a useless and invalid value.
-/// Besides, we want to panic on `Default::default` anyways, so we use this wrapper to accomplish that.
+/// the Rust implementation simply takes the `Default` implementation of the associated `Return` type.
+/// However, we don't want the action default [`Value`], but panic when it would have been built by antl4rust,
+/// so we use this wrapper to accomplish that.
 ///
 /// This seems weird, I know. The original implementation writes a `Diagnostic` whenever the default value is constructed.
-/// The thing is, the original code says, I quote:
-/// >Default result is an exception - only specific parse nodes can
+/// The thing is, the original code says the following:
+/// > Default result is an exception - only specific parse nodes can
 ///  be visited by this visitor
 ///
-/// We cannot write a diagnostic in the default because we lack access to the diagnostics vector at that point.
+/// We cannot write a diagnostic in the default implementation because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
 pub(crate) struct ConstantValue(Value);
