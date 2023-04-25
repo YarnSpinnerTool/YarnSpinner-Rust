@@ -35,6 +35,7 @@ pub struct IndentAwareYarnSpinnerLexer<
     warnings: Vec<Warning<TF::Inner>>,
 }
 
+#[allow(unused)]
 struct Warning<T: Token + ?Sized> {
     token: Box<T>,
     message: String,
@@ -274,7 +275,7 @@ where
 
     fn get_length_of_newline_token(
         &mut self,
-        current_token: &Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
+        current_token: &antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>,
     ) -> isize {
         if current_token.token_type != yarnspinnerlexer::NEWLINE {
             panic!("Current token must NOT be newline")
@@ -300,7 +301,7 @@ where
 
         if saw_spaces && saw_tabs {
             self.warnings.push(Warning {
-                token: current_token.clone(),
+                token: Box::new(current_token.clone()),
                 message: "Indentation contains tabs and spaces".to_owned(),
             })
         }
