@@ -185,21 +185,31 @@ where
 
         // Did the source code name an explicit type?
         if let Some(declaration_type) = ctx.declaration_type.as_ref() {
-            let Some(explicit_type)  = self.keywords_to_builtin_types.get(declaration_type.get_text()) else {
+            let explicit_type = match self
+                .keywords_to_builtin_types
+                .get(declaration_type.get_text())
+            {
+                Some(builtin_type) => builtin_type,
+
                 // The type name provided didn't map to a built-in
                 // type. Look for the type in our Types collection.
-                if let Some(explicit_type) = self.types.iter().find(|t| t.to_string() == declaration_type.get_text()) {
-                    explicit_type
-                } else {
-                    // We didn't find a type by this name.
-                    let msg = format!("Unknown type {}", declaration_type.get_text());
-                    self.diagnostics.push(
-                        Diagnostic::from_message(msg)
-                            .with_file_name(&self.source_file_name)
-                            .read_parser_rule_context(&*ctx),
-                    );
-                    return;
-                }
+                None => match self
+                    .types
+                    .iter()
+                    .find(|t| t.to_string() == declaration_type.get_text())
+                {
+                    Some(explicit_type) => explicit_type,
+                    None => {
+                        // We didn't find a type by this name.
+                        let msg = format!("Unknown type {}", declaration_type.get_text());
+                        self.diagnostics.push(
+                            Diagnostic::from_message(msg)
+                                .with_file_name(&self.source_file_name)
+                                .read_parser_rule_context(&*ctx),
+                        );
+                        return;
+                    }
+                },
             };
 
             // Check that the type we've found is compatible with the
