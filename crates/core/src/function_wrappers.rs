@@ -1,3 +1,5 @@
+//! Contains wrappers making it easier to use base functions in Yarn scripts.
+
 /// Wrapper around [`PartialEq`] needed because functions called within Yarn cannot accept references.
 pub(crate) trait PartialEqByValue {
     fn eq_by_value(self, other: Self) -> bool;
