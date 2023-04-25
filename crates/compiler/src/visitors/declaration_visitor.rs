@@ -181,9 +181,25 @@ where
         let value = constant_value_visitor.visit(&*ctx.value().unwrap());
         self.diagnostics
             .extend_from_slice(&constant_value_visitor.diagnostics);
+
         // Did the source code name an explicit type?
         if let Some(declaration_type) = ctx.declaration_type.as_ref() {
-            if self.keywords_to_builtin_types.get(declaration_type.get_text())
+            let Some(explicitType)  = self.keywords_to_builtin_types.get(declaration_type.get_text()) else {
+                // The type name provided didn't map to a built-in
+                // type. Look for the type in our Types collection.
+                if let Some(explicitType) = self.types.iter().find(|t| t.name == declaration_type.get_text()) {
+                    explicitType.into()
+                } else {
+                    // We didn't find a type by this name.
+                    let msg = format!("Unknown type {}", declaration_type.get_text());
+                    self.diagnostics.push(
+                        Diagnostic::from_message(msg)
+                            .with_file_name(&self.source_file_name)
+                            .read_parser_rule_context(&*ctx),
+                    );
+                    return;
+                }
+            };
         }
 
         /*
