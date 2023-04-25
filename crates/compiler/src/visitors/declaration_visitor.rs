@@ -118,11 +118,6 @@ impl<'input, T: TokenSource<'input>> YarnSpinnerParserVisitorCompat<'input>
 where
     <T::TF as TokenFactory<'input>>::Tok: Token<Data = Cow<'input, str>>,
 {
-    fn visit_hashtag(&mut self, ctx: &HashtagContext<'input>) -> Self::Return {
-        let hashtag_text = ctx.text.as_ref().unwrap();
-        self.file_tags.push(hashtag_text.get_text().to_owned());
-    }
-
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         for header in ctx.header_all() {
             let header_key = header.header_key.as_ref().unwrap();
@@ -146,6 +141,11 @@ where
         if let Some(body) = ctx.body() {
             self.visit(&*body);
         }
+    }
+
+    fn visit_hashtag(&mut self, ctx: &HashtagContext<'input>) -> Self::Return {
+        let hashtag_text = ctx.text.as_ref().unwrap();
+        self.file_tags.push(hashtag_text.get_text().to_owned());
     }
 
     fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) -> Self::Return {
