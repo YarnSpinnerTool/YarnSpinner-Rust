@@ -1,4 +1,7 @@
 /target
 Cargo.lock
 .antlr
+
+.idea/
 !.idea/scopes/
+.vscode/
