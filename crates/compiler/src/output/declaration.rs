@@ -8,6 +8,7 @@ use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;
+use std::fmt::Display;
 use std::ops::RangeInclusive;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -93,6 +94,15 @@ impl Position {
         Self {
             line: (token.get_line() - 1) as usize,
             character: (token.get_column()) as usize,
+        }
+    }
+}
+
+impl Display for DeclarationSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::External => write!(f, "(External)"),
+            Self::File(file_name) => write!(f, "{}", file_name),
         }
     }
 }

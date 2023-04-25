@@ -3,14 +3,14 @@
 use crate::compiler;
 use crate::parser::generated::yarnspinnerparser::{Declare_statementContext, HashtagContext};
 use crate::prelude::generated::yarnspinnerparser::{
-    NodeContext, NodeContextAttrs, YarnSpinnerParserContextType,
+    Declare_statementContextAttrs, NodeContext, NodeContextAttrs, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::{Declaration, Diagnostic};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use antlr_rust::TokenSource;
 use regex::Regex;
 use rusty_yarn_spinner_core::types::{BooleanType, BuiltinType, NumberType, StringType, Type};
@@ -148,6 +148,31 @@ where
 
     fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) -> Self::Return {
         compiler::get_document_comments(&self.tokens, ctx);
+
+        // Get the name of the variable we're declaring
+        let variable_context = ctx.variable().unwrap();
+        let variable_name = variable_context.get_text();
+
+        // Does this variable name already exist in our declarations?
+        let existing_explicit_declaration = self
+            .declarations()
+            .iter()
+            .find(|d| !d.is_implicit && d.name == variable_name);
+        if let Some(existing_explicit_declaration) = existing_explicit_declaration {
+            // Then this is an error, because you can't have two explicit declarations for the same variable.
+            let msg = format!(
+                "{} has already been declared in {}, line {}",
+                existing_explicit_declaration.name,
+                existing_explicit_declaration.source_file_name,
+                existing_explicit_declaration.source_file_line.unwrap(),
+            );
+            self.diagnostics.push(
+                Diagnostic::from_message(msg)
+                    .with_file_name(self.source_file_name)
+                    .read_parser_rule_context(&*ctx),
+            );
+            return;
+        }
         /*
 
            // Get the name of the variable we're declaring
