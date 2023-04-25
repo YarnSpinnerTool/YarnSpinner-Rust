@@ -54,6 +54,7 @@ pub(crate) struct DeclarationVisitor<'input, T: TokenSource<'input>> {
     types: Vec<Type>,
 
     keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
+
     /// A regular expression used to detect illegal characters in node titles.
     regex: Regex,
 

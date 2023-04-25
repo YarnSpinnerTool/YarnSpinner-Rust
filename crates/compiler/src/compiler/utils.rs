@@ -61,21 +61,16 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
 }
 
 /// Gets the text of the documentation comments that either immediately
-/// precede <paramref name="context"/>, or are on the same line as
-/// <paramref name="context"/>.
+/// precede `context`, or are on the same line as `context`.
 ///
-/// Documentation comments begin with a triple-slash (<c>///</c>), and
+/// Documentation comments begin with a triple-slash (`///`), and
 /// are used to describe variable declarations. If documentation
 /// comments precede a declaration (that is, they're not on the same
 /// line as the declaration), then they may span multiple lines, as long
 /// as each line begins with a triple-slash.
-/// </remarks>
-/// <param name="tokens">The token stream to search.</param>
-/// <param name="context">The parser rule context to get documentation
-/// comments for.</param>
-/// <param name="allowCommentsAfter">If true, this method will search
-/// for documentation comments that come after <paramref
-/// name="context"/>'s last token and are on the same line.</param>
+///
+/// ## Implementation notes
+/// The flag `allowCommentsAfter` and its consequences were not ported because they are unused.
 pub(crate) fn get_document_comments<'input, T>(
     tokens: &CommonTokenStream<'input, T>,
     context: &impl YarnSpinnerParserContext<
@@ -113,7 +108,7 @@ pub(crate) fn get_document_comments<'input, T>(
         // Get its text
         .map(|t| t.get_text().replace("///", "").trim().to_owned())
         .collect();
-    let description = preceding_doc_comments.join(" ");
+    preceding_doc_comments.join(" ")
 }
 
 /// Not part of original implementation, but needed because we lack some convenience methods
