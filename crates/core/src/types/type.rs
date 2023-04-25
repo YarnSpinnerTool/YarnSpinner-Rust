@@ -10,13 +10,20 @@ use std::fmt::Debug;
 ///
 /// This type does not exist in the original implementation and was a added as a more idiomatic
 /// representation of the types than dynamic dispatch.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum Type {
     Any(AnyType),
     Boolean(BooleanType),
     Function(FunctionType),
     Number(NumberType),
     String(StringType),
+    /// An undefined type.
+    ///
+    /// This value is not valid except during compilation. It
+    /// is used to represent values that have not yet been assigned a
+    /// type by the type system.
+    #[default]
+    Undefined,
 }
 
 /// Defines properties that describe a type in the Yarn language.
