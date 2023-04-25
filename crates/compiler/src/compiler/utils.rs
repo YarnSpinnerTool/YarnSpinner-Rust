@@ -154,6 +154,7 @@ where
     }
 
     fn previous_token_on_channel(&self, mut token_index: isize, channel: isize) -> isize {
+        // this.sync(token_index);
         if token_index >= self.size() {
             return self.size() - 1;
         }
