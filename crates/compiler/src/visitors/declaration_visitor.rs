@@ -6,7 +6,7 @@ use crate::prelude::generated::yarnspinnerparser::{
     Declare_statementContextAttrs, NodeContext, NodeContextAttrs, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::{Declaration, Diagnostic};
+use crate::prelude::{Declaration, Diagnostic, Position};
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::token::Token;
@@ -17,6 +17,7 @@ use regex::Regex;
 use rusty_yarn_spinner_core::types::*;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use antlr_rust::parser_rule_context::ParserRuleContext;
 
 /// A visitor that extracts variable declarations from a parse tree.
 /// /// After visiting an entire parse tree for a file, the
@@ -148,8 +149,6 @@ where
     }
 
     fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) -> Self::Return {
-        compiler::get_document_comments(&self.tokens, ctx);
-
         // Get the name of the variable we're declaring
         let variable_context = ctx.variable().unwrap();
         let variable_name = variable_context.get_text();
@@ -229,6 +228,26 @@ where
                 );
                 return;
             }
+        }
+           // We're done creating the declaration!
+        let description = compiler::get_document_comments(&self.tokens, ctx);
+        let line = variable_context.start().line as usize - 1;
+        let declaration = Declaration {
+            name: variable_name,
+            r#type: value.r#type.clone(),
+            default_value: value.internal_value.unwrap(),
+            description,
+            source_file_name: self.source_file_name.clone().into(),
+            source_node_name: self.current_node_name.clone(),
+            range:  Position {
+                    line,
+                    character: variable_context.start().column as usize,
+                }..=Position {
+                    line,
+                    character: variable_context.stop().column as usize + variable_context.get_text().len(),
+                },
+            is_implicit: false,
+        };
         }
 
         /*

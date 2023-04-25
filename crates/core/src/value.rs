@@ -8,7 +8,7 @@ pub mod convertible;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Value {
     pub r#type: Type,
-    pub(crate) internal_value: Option<Convertible>,
+    pub internal_value: Option<Convertible>,
 }
 
 macro_rules! impl_from {

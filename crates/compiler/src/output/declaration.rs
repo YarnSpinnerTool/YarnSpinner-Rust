@@ -5,6 +5,7 @@
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
 use antlr_rust::token::Token;
+use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;
@@ -24,7 +25,7 @@ pub struct Declaration {
     /// The default value of this declaration, if no value has been
     /// specified in code or is available from a [`Dialogue`]'s
     /// [`IVariableStorage`].
-    pub default_value: Value,
+    pub default_value: Convertible,
 
     /// A string describing the purpose of this declaration.
     pub description: String,
@@ -40,13 +41,6 @@ pub struct Declaration {
     /// If this declaration was not found in a Yarn source file, this
     /// will be [`None`].
     pub source_node_name: Option<String>,
-
-    /// The line number at which this declaration was found in the
-    /// source file.
-    ///
-    /// If this declaration was not found in a Yarn source file, this
-    /// will be [`None`].
-    pub source_file_line: Option<usize>,
 
     /// A value indicating whether this declaration was implicitly
     /// inferred from usage.
@@ -68,6 +62,19 @@ pub struct Declaration {
     pub range: RangeInclusive<Position>,
 }
 
+impl Declaration {
+    /// Gets the line number at which this Declaration was found in the
+    /// source file.
+    pub fn source_file_line(&self) -> usize {
+        // The original says:
+        // > If this [`Declaration`] was not found in a Yarn
+        // > source file, this will be [`None`].
+        // But looking at the code, I doubt it...
+        // See #50
+        self.range.start().line
+    }
+}
+
 #[derive(Debug, Clone)]
 /// The source of a declaration.
 ///
@@ -77,6 +84,12 @@ pub struct Declaration {
 pub enum DeclarationSource {
     External,
     File(String),
+}
+
+impl From<String> for DeclarationSource {
+    fn from(file_name: String) -> Self {
+        Self::File(file_name)
+    }
 }
 
 /// Represents a position in a multi-line string.
