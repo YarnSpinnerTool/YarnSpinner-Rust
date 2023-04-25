@@ -168,7 +168,7 @@ where
             );
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
-                    .with_file_name(self.source_file_name)
+                    .with_file_name(&self.source_file_name)
                     .read_parser_rule_context(&*ctx),
             );
             return;

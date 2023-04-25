@@ -14,7 +14,7 @@ use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 
 use antlr_rust::rule_context::RuleContext;
-use antlr_rust::token::Token;
+use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::{InputStream, Parser, TokenSource};
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -101,7 +101,7 @@ where
                     ot.get_token_type() != yarnspinnerlexer::INDENT
                         && ot.get_token_type() != yarnspinnerlexer::DEDENT
                 })
-                .filter(|ot| ot.get_channel() == yarnspinnerlexer::DefaultTokenChannel as isize)
+                .filter(|ot| ot.get_channel() == TOKEN_DEFAULT_CHANNEL)
                 .next()
                 .is_none()
         })
