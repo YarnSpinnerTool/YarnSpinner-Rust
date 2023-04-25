@@ -10,6 +10,7 @@ mod collections;
 use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
+use crate::prelude::create_common_token;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
@@ -83,16 +84,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             self.pending_tokens.dequeue().unwrap()
         } else if self.base.input().size() == 0 {
             self.hit_eof = true;
-            CommonTokenFactory.create::<Input>(
-                None,
-                antlr_rust::token::TOKEN_EOF,
-                Some("<EOF>".to_owned()),
-                TOKEN_DEFAULT_CHANNEL,
-                0,
-                0,
-                0,
-                -1,
-            )
+            create_common_token(antlr_rust::token::TOKEN_EOF, "<EOF>")
         } else {
             // Get the next token, which will enqueue one or more new
             // tokens into the pending tokens queue.

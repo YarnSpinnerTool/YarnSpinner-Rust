@@ -10,6 +10,7 @@ use crate::prelude::generated::yarnspinnerparser::{
 use crate::prelude::{Diagnostic, File, FileParseResult, LexerErrorListener, ParserErrorListener};
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
+use antlr_rust::token::TOKEN_DEFAULT_CHANNEL;
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::{InputStream, Parser};
 
@@ -64,16 +65,7 @@ pub(crate) fn add_hashtag_child<'input>(
     // This will fail on a terminal node, fingers crossed that that won't happen 😅
     let parent = parent.get_children().next().unwrap().get_parent().unwrap();
     // Taken from C# implementation of `CommonToken`s constructor
-    let string_id_token = CommonTokenFactory.create::<InputStream<&'input str>>(
-        None,
-        yarnspinnerparser::HASHTAG_TEXT,
-        Some(text.into()),
-        0,
-        0,
-        0,
-        0,
-        -1,
-    );
+    let string_id_token = create_common_token(yarnspinnerparser::HASHTAG_TEXT, text);
     let invoking_state_according_to_original_implementation = 0;
     // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
     let hashtag = HashtagContextExt::new_with_text(
@@ -82,4 +74,21 @@ pub(crate) fn add_hashtag_child<'input>(
         string_id_token,
     );
     parent.add_child(hashtag);
+}
+
+pub(crate) fn create_common_token<'a>(
+    token_type: isize,
+    text: impl Into<String>,
+) -> Box<antlr_rust::token::CommonToken<'a>> {
+    // Taken from C# implementation of `CommonToken`s constructor
+    CommonTokenFactory.create::<InputStream<&'a str>>(
+        None,
+        token_type,
+        Some(text.into()),
+        TOKEN_DEFAULT_CHANNEL,
+        0,
+        0,
+        0,
+        -1,
+    )
 }
