@@ -28,8 +28,7 @@ where
         match (self_type, parent_type) {
             //  ALL types are a subtype of the Any type, including undefined
             (_, Type::Any(_)) => true,
-            // The subtype is undefined. Assume that it is not a
-            // subtype of parent.
+            // The subtype is undefined. Assume that it is not a subtype of parent.
             (Type::Undefined, _) => false,
             (_, Type::Undefined) => {
                 unreachable!("A parent type ended up being undefined. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
