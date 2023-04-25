@@ -156,7 +156,7 @@ where
         // Does this variable name already exist in our declarations?
         let existing_explicit_declaration = self
             .declarations()
-            .iter()
+            .into_iter()
             .find(|d| !d.is_implicit && d.name == variable_name);
         if let Some(existing_explicit_declaration) = existing_explicit_declaration {
             // Then this is an error, because you can't have two explicit declarations for the same variable.
