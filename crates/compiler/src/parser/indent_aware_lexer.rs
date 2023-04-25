@@ -67,8 +67,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
         if self.hit_eof && !self.pending_tokens.0.is_empty() {
             // We have hit the EOF, but we have tokens still pending.
             // Start returning those tokens.
-            self.pending_tokens.dequeue();
-            unreachable!("Seems to be never hit - if this throws we need to handle this case?")
+            self.pending_tokens.dequeue().unwrap()
         } else if self.base.input().size() == 0 {
             self.hit_eof = true;
             self.base.get_token_factory().create::<Input>(
@@ -86,12 +85,9 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             // tokens into the pending tokens queue.
             self.check_next_token();
 
-            if !self.pending_tokens.0.is_empty() {
-                return self.pending_tokens.dequeue().unwrap();
-            }
-
-            // C# returns null?!
-            unreachable!()
+            // `check_next_token` will always set at least one pending token if `self.base.input().size() > 0`
+            // if `self.base.input().size() == 0`, the branch returning the EOF token is already entered ahead of this.
+            self.pending_tokens.dequeue().unwrap()
         }
     }
 
