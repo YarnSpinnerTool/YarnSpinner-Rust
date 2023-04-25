@@ -10,9 +10,9 @@ use collections::*;
 
 use antlr_rust::{
     char_stream::CharStream,
-    token::Token,
+    token::{Token, TOKEN_DEFAULT_CHANNEL},
     token_factory::{CommonTokenFactory, TokenFactory},
-    InputStream, Lexer, TokenSource,
+    InputStream, Lexer, TidExt, TokenSource,
 };
 
 use super::generated::yarnspinnerlexer::{self, LocalTokenFactory, YarnSpinnerLexer};
@@ -70,11 +70,11 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
                 None,
                 antlr_rust::token::TOKEN_EOF,
                 Some("<EOF>".to_owned()),
-                0, // See CommonToken.ctor(int, string) in Antlr for C#
+                TOKEN_DEFAULT_CHANNEL,
                 0,
                 0,
                 0,
-                -1,
+                -1, // See CommonToken.ctor(int, string) in Antlr for C#
             )
         } else {
             // Get the next token, which will enqueue one or more new
@@ -315,11 +315,11 @@ where
         // https://www.antlr.org/api/Java/org/antlr/v4/runtime/Lexer.html#_tokenStartCharIndex
         let start_index = self.base.token_start_char_index + self.base.get_text().len() as isize;
 
-        let token = CommonTokenFactory.create::<InputStream<&'input str>>(
-            None, // TODO: that might be wrong, C# does Tuple.Create((ITokenSource)this, (ICharStream)this.InputStream);
+        let token = CommonTokenFactory.create(
+            self.get_input_stream(), // TODO: that might be wrong, C# does Tuple.Create((ITokenSource)this, (ICharStream)this.InputStream);
             token_type,
             Some(text.into()),
-            0,
+            TOKEN_DEFAULT_CHANNEL,
             start_index,
             start_index - 1,
             self.get_line(),
@@ -337,7 +337,7 @@ mod test {
         InputStream,
     };
 
-    use crate::prelude::generated::yarnspinnerlexer::{YarnSpinnerLexer};
+    use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
 
     use super::*;
 
@@ -391,14 +391,13 @@ This is the one and only line
 -> Option 2
     Nicer
     
-    This is part of the previous option statement due to indentation on the \"empty\" line ahead
+    This is part of the previous option statement due to indentation on the empty line ahead
 
     And this doesn't, as the indentation is reset beforehand.
     
     This belongs to the previous statement, for the same reason.
     
-===
-    ";
+===";
 
         let indent_aware_lexer =
             IndentAwareYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
@@ -421,8 +420,11 @@ This is the one and only line
             "ID",
             "HEADER_DELIMITER",
             "REST_OF_LINE",
+            "NEWLINE",
             "BODY_START",
+            "NEWLINE",
             "SHORTCUT_ARROW",
+            "BODY_WS",
             "TEXT",
             "TEXT",
             "NEWLINE",
@@ -432,6 +434,7 @@ This is the one and only line
             "NEWLINE",
             "DEDENT",
             "SHORTCUT_ARROW",
+            "BODY_WS",
             "TEXT",
             "TEXT",
             "NEWLINE",
@@ -439,16 +442,95 @@ This is the one and only line
             "TEXT",
             "TEXT",
             "NEWLINE",
+            "NEWLINE",
             "TEXT",
             "TEXT",
             "NEWLINE",
             "DEDENT",
+            "NEWLINE",
             "BLANK_LINE_FOLLOWING_OPTION",
             "TEXT",
             "TEXT",
             "NEWLINE",
+            "NEWLINE",
             "TEXT",
             "TEXT",
+            "NEWLINE",
+            "NEWLINE",
+            "BODY_END",
+        ];
+
+        assert_eq!(expected, names);
+    }
+
+    #[test]
+    fn generated_lexer_output_is_same_as_reference() {
+        let option_indentation_relevant_input: &str = "title: Start
+---
+-> Option 1
+    Nice.
+-> Option 2
+    Nicer
+    
+    This is part of the previous option statement due to indentation on the empty line ahead
+
+    And this doesn't, as the indentation is reset beforehand.
+    
+    This belongs to the previous statement, for the same reason.
+    
+===";
+
+        let generated_lexer =
+            YarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
+        let mut reference_token_stream = CommonTokenStream::new(generated_lexer);
+
+        let mut tokens = vec![reference_token_stream.iter().next().unwrap()];
+
+        while reference_token_stream.la(1) != TOKEN_EOF {
+            tokens.push(reference_token_stream.iter().next().unwrap());
+        }
+
+        let names: Vec<_> = tokens
+            .into_iter()
+            .map(|t| yarnspinnerlexer::_SYMBOLIC_NAMES[t as usize].unwrap())
+            .collect();
+
+        // Tests the compatibility of the generated lexer with a manually generated output from the reference implementation.
+        let expected = vec![
+            "ID",
+            "HEADER_DELIMITER",
+            "REST_OF_LINE",
+            "NEWLINE",
+            "BODY_START",
+            "NEWLINE",
+            "SHORTCUT_ARROW",
+            "BODY_WS",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "SHORTCUT_ARROW",
+            "BODY_WS",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
+            "NEWLINE",
+            "TEXT",
+            "TEXT",
+            "NEWLINE",
             "NEWLINE",
             "BODY_END",
         ];

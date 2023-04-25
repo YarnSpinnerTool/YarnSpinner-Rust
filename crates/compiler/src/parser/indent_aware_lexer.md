@@ -1034,7 +1034,5 @@ public partial class FakeYarnSpinnerLexerWithoutIndentAwareBase : Lexer {
 
 	public static readonly ATN _ATN =
 		new ATNDeserializer().Deserialize(_serializedATN);
-
-
 }
 ```
