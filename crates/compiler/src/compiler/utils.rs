@@ -7,15 +7,13 @@ use crate::prelude::generated::yarnspinnerparser::{
     HashtagContextExt, YarnSpinnerParser, YarnSpinnerParserContext, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
-use crate::prelude::{
-    CommonTokenStreamExt, Diagnostic, File, FileParseResult, LexerErrorListener,
-    ParserErrorListener,
-};
+use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 
+use antlr_rust::rule_context::RuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::{InputStream, Parser, TokenSource};
 use std::rc::Rc;
@@ -88,37 +86,33 @@ pub(crate) fn get_document_comments<'input, T>(
     T: TokenSource<'input>,
     <T::TF as TokenFactory<'input>>::Tok: Token,
 {
-    let _description: Option<String> = None;
     let preceding_comments = tokens.get_hidden_tokens_to_left(
         context.start().get_token_index(),
         yarnspinnerlexer::COMMENTS as isize,
     );
-    /*
-    string description = null;
 
-            var precedingComments = tokens.GetHiddenTokensToLeft(context.Start.TokenIndex, YarnSpinnerLexer.COMMENTS);
-
-            if (precedingComments != null)
-            {
-                var precedingDocComments = precedingComments
-                    // There are no tokens on the main channel with this
-                    // one on the same line
-                    .Where(t => tokens.GetTokens()
-                        .Where(ot => ot.Line == t.Line)
-                        .Where(ot => ot.Type != YarnSpinnerLexer.INDENT && ot.Type != YarnSpinnerLexer.DEDENT)
-                        .Where(ot => ot.Channel == YarnSpinnerLexer.DefaultTokenChannel)
-                        .Count() == 0)
-                    // The comment starts with a triple-slash
-                    .Where(t => t.Text.StartsWith("///"))
-                    // Get its text
-                    .Select(t => t.Text.Replace("///", string.Empty).Trim());
-
-                if (precedingDocComments.Count() > 0)
-                {
-                    description = string.Join(" ", precedingDocComments);
-                }
-            }
-     */
+    let preceding_doc_comments: Vec<_> = preceding_comments
+        .iter()
+        // There are no tokens on the main channel with this
+        // one on the same line
+        .filter(|t| {
+            tokens
+                .get_tokens()
+                .iter()
+                .filter(|ot| ot.get_line() == t.get_line())
+                .filter(|ot| {
+                    ot.get_token_type() != yarnspinnerlexer::INDENT
+                        && ot.get_token_type() != yarnspinnerlexer::DEDENT
+                })
+                .filter(|ot| ot.get_channel() == yarnspinnerlexer::DefaultTokenChannel as isize)
+                .next()
+                .is_none()
+        })
+        .filter(|t| t.get_text().starts_with("///"))
+        // Get its text
+        .map(|t| t.get_text().replace("///", "").trim().to_owned())
+        .collect();
+    let description = preceding_doc_comments.join(" ");
 }
 
 /// Not part of original implementation, but needed because we lack some convenience methods

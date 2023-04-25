@@ -22,6 +22,8 @@ pub(crate) trait CommonTokenStreamExt<'input, T: TokenSource<'input>> {
         to: isize,
         channel: isize,
     ) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
+
+    fn get_tokens(&self) -> Vec<<T::TF as TokenFactory<'input>>::Tok>;
 }
 
 impl<'input, T: TokenSource<'input>> CommonTokenStreamExt<'input, T>
@@ -85,5 +87,9 @@ where
             }
         }
         token_list
+    }
+
+    fn get_tokens(&self) -> Vec<<T::TF as TokenFactory<'input>>::Tok> {
+        (0..self.size()).map(|i| self.get(i).clone()).collect()
     }
 }
