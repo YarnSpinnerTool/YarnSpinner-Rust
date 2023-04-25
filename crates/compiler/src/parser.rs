@@ -1,4 +1,6 @@
 //! The parser for the compiler.
 
 pub mod generated;
-pub mod indent_aware_lexer;
+mod indent_aware_lexer;
+
+pub use indent_aware_lexer::IndentAwareYarnSpinnerLexer as YarnSpinnerLexer;

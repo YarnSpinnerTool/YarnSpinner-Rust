@@ -1,14 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/FileParseResult.cs>
 
 use crate::error_strategy::ErrorStrategy;
-use crate::parser::generated::yarnspinnerparser::{
-    DialogueContextAll, YarnSpinnerParserContextType,
-};
-use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer;
-use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParser;
-use antlr_rust::common_token_stream::CommonTokenStream;
-
-use antlr_rust::InputStream;
+use crate::prelude::{generated::yarnspinnerparser::*, YarnSpinnerLexer};
+use antlr_rust::{common_token_stream::*, *};
 use std::rc::Rc;
 
 pub type ActualYarnSpinnerParser<'input> = YarnSpinnerParser<
