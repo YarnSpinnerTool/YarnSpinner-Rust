@@ -2,17 +2,12 @@
 
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::output::*;
-use crate::parser::generated::yarnspinnerparser::HashtagContextAll;
 use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTreeVisitorCompat, ParseTreeWalker};
+use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
 use rusty_yarn_spinner_core::types::*;
-use std::collections::HashMap;
-use std::rc::Rc;
 
 mod antlr_rust_ext;
 mod compilation_job;
@@ -24,12 +19,10 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     let compiler_steps: Vec<&dyn CompilerStep> = vec![&register_strings, &get_declarations];
 
     let initial = CompilationIntermediate::default();
-    let result = compiler_steps
+    compiler_steps
         .into_iter()
         .fold(initial, |acc, curr| curr.apply(&compilation_job, acc))
-        .result;
-
-    result
+        .result
 }
 
 trait CompilerStep<'a> {

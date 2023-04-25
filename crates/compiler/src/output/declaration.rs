@@ -6,7 +6,6 @@
 
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
-use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;
 use std::fmt::Display;

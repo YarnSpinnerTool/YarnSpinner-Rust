@@ -1,26 +1,15 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/DeclarationVisitor.cs>
 
 use crate::compiler;
-use crate::parser::generated::yarnspinnerparser::{Declare_statementContext, HashtagContext};
-use crate::prelude::generated::yarnspinnerlexer::LocalTokenFactory;
-use crate::prelude::generated::yarnspinnerparser::{
-    Declare_statementContextAttrs, NodeContext, NodeContextAttrs, YarnSpinnerParserContextType,
-};
+use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::{
-    ActualTokenStream, ActualYarnSpinnerLexer, ActualYarnSpinnerParser, Declaration, Diagnostic,
-    Position,
-};
+use crate::prelude::*;
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
-use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
-use antlr_rust::TokenSource;
 use regex::Regex;
 use rusty_yarn_spinner_core::types::*;
-use std::borrow::Cow;
 use std::collections::HashMap;
 
 /// A visitor that extracts variable declarations from a parse tree.
@@ -165,7 +154,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
                     .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context(&*ctx),
+                    .read_parser_rule_context(ctx),
             );
             return;
         }
@@ -200,7 +189,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                         self.diagnostics.push(
                             Diagnostic::from_message(msg)
                                 .with_file_name(&self.source_file_name)
-                                .read_parser_rule_context(&*ctx),
+                                .read_parser_rule_context(ctx),
                         );
                         return;
                     }
@@ -220,13 +209,13 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                 self.diagnostics.push(
                     Diagnostic::from_message(msg)
                         .with_file_name(&self.source_file_name)
-                        .read_parser_rule_context(&*ctx),
+                        .read_parser_rule_context(ctx),
                 );
                 return;
             }
         }
         // We're done creating the declaration!
-        let description = compiler::get_document_comments(&self.tokens, ctx);
+        let description = compiler::get_document_comments(self.tokens, ctx);
         let line = variable_context.start().line as usize - 1;
         let declaration = Declaration {
             name: variable_name,

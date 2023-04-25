@@ -1,19 +1,18 @@
 //! Contains functionality provided in the C# implementation of ANTLR but not (yet?) in antlr4rust.
 
 use crate::parser::ActualTokenStream;
-use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::int_stream::IntStream;
 use antlr_rust::token::{CommonToken, Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::token_stream::TokenStream;
-use antlr_rust::{InputStream, TokenSource};
+use antlr_rust::InputStream;
 
 pub(crate) trait CommonTokenStreamExt<'input> {
     fn get_hidden_tokens_to_left(
         &self,
         token_index: isize,
         channel: isize,
-    ) -> Vec<Box<CommonToken<'input>>>;
+    ) -> Vec<CommonToken<'input>>;
 
     fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize;
 
@@ -22,9 +21,9 @@ pub(crate) trait CommonTokenStreamExt<'input> {
         from: isize,
         to: isize,
         channel: isize,
-    ) -> Vec<Box<CommonToken<'input>>>;
+    ) -> Vec<CommonToken<'input>>;
 
-    fn get_tokens(&self) -> Vec<Box<CommonToken<'input>>>;
+    fn get_tokens(&self) -> Vec<CommonToken<'input>>;
 }
 
 impl<'input> CommonTokenStreamExt<'input> for ActualTokenStream<'input> {
@@ -32,7 +31,7 @@ impl<'input> CommonTokenStreamExt<'input> for ActualTokenStream<'input> {
         &self,
         token_index: isize,
         channel: isize,
-    ) -> Vec<Box<CommonToken<'input>>> {
+    ) -> Vec<CommonToken<'input>> {
         // This method is private, but it should be alright to leave it out.
         // this.setup();
         if token_index < 0 || token_index >= self.size() {
@@ -70,11 +69,11 @@ impl<'input> CommonTokenStreamExt<'input> for ActualTokenStream<'input> {
         from: isize,
         to: isize,
         channel: isize,
-    ) -> Vec<Box<CommonToken<'input>>> {
+    ) -> Vec<CommonToken<'input>> {
         let mut token_list = Vec::new();
 
         for index in from..=to {
-            let token = self.get(index).clone();
+            let token = *self.get(index).clone();
             if channel == -1 {
                 if token.get_channel() != 0 {
                     token_list.push(token);
@@ -86,15 +85,15 @@ impl<'input> CommonTokenStreamExt<'input> for ActualTokenStream<'input> {
         token_list
     }
 
-    fn get_tokens(&self) -> Vec<Box<CommonToken<'input>>> {
-        (0..self.size()).map(|i| self.get(i).clone()).collect()
+    fn get_tokens(&self) -> Vec<CommonToken<'input>> {
+        (0..self.size()).map(|i| *self.get(i).clone()).collect()
     }
 }
 
 pub(crate) fn create_common_token<'a>(
     token_type: isize,
     text: impl Into<String>,
-) -> Box<antlr_rust::token::CommonToken<'a>> {
+) -> Box<CommonToken<'a>> {
     // Taken from C# implementation of `CommonToken`s constructor
     CommonTokenFactory.create::<InputStream<&'a str>>(
         None,

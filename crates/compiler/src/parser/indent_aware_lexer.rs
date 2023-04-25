@@ -15,7 +15,7 @@ use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
     token_factory::{CommonTokenFactory, TokenFactory},
-    InputStream, Lexer, TokenSource,
+    Lexer, TokenSource,
 };
 use collections::*;
 use std::ops::{Deref, DerefMut};
