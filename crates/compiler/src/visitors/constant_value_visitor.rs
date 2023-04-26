@@ -1,15 +1,12 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ConstantValueVisitor.cs>
 
-use crate::parser::generated::yarnspinnerparser::{
-    ValueFalseContext, ValueNullContext, ValueNumberContext, ValueStringContext,
-};
-use crate::prelude::generated::yarnspinnerparser::{
-    ValueStringContextAttrs, ValueTrueContext, YarnSpinnerParserContextType,
-};
+use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::Diagnostic;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr_rust::parser::ParserNodeType;
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use rusty_yarn_spinner_core::prelude::Value;
+use std::mem;
 use std::ops::{Deref, DerefMut};
 
 /// A visitor that visits any valid constant value, and returns a [`Value`].
@@ -38,6 +35,13 @@ impl ParseTreeVisitorCompat<'_> for ConstantValueVisitor {
 
     fn temp_result(&mut self) -> &mut Self::Return {
         &mut self._dummy
+    }
+
+    fn visit(&mut self, node: &<Self::Node as ParserNodeType<'_>>::Type) -> Self::Return {
+        VisitChildren::visit_node(self, node);
+        // The default implementation uses `mem::take`, which replaces the value with the default.
+        // However, we calling `default` on `ConstantValue` panics by design, so let's use the non-panicking version.
+        mem::replace(self.temp_result(), ConstantValue::non_panicking_default())
     }
 }
 
@@ -123,14 +127,13 @@ impl From<Value> for ConstantValue {
 
 impl Default for ConstantValue {
     fn default() -> Self {
-        //panic!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
-        Self::non_panicking_default()
+        panic!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
     }
 }
 
 impl ConstantValue {
     /// Only use this for dummy assignments.
     fn non_panicking_default() -> Self {
-        Self(Default::default())
+        Self(Value::default())
     }
 }
