@@ -232,4 +232,110 @@ A line with {$many} many {(1 -(1 * 2))}{$cool} expressions
             .unwrap();
         generate_formatted_text(&line_formatted_text)
     }
+
+    #[test]
+    fn populates_string_table() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+foo
+bar
+a {1 + 3} cool expression
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+        let string_table = result.string_table;
+        assert_eq!(string_table.len(), 3);
+        assert_eq!(
+            string_table["line:test.yarn-test-0"],
+            StringInfo {
+                text: "foo".to_string(),
+                node_name: "test".to_string(),
+                line_number: 3,
+                file_name: "test.yarn".to_string(),
+                is_implicit_tag: true,
+                metadata: vec![],
+            }
+        );
+        assert_eq!(
+            string_table["line:test.yarn-test-1"],
+            StringInfo {
+                text: "bar".to_string(),
+                node_name: "test".to_string(),
+                line_number: 4,
+                file_name: "test.yarn".to_string(),
+                is_implicit_tag: true,
+                metadata: vec![],
+            }
+        );
+        assert_eq!(
+            string_table["line:test.yarn-test-2"],
+            StringInfo {
+                text: "a {0} cool expression".to_string(),
+                node_name: "test".to_string(),
+                line_number: 5,
+                file_name: "test.yarn".to_string(),
+                is_implicit_tag: true,
+                metadata: vec![],
+            }
+        );
+    }
+
+    #[test]
+    fn catches_expression_errors() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+foo
+bar
+a {very} cool expression
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+        assert!(result.program.is_none());
+        let diagnostics = result.diagnostics;
+        assert_eq!(diagnostics.len(), 2);
+
+        let range = Position {
+            line: 5,
+            character: 8,
+        }..=Position {
+            line: 5,
+            character: 9,
+        };
+        let context = "a {very} cool expression\n       ^".to_owned();
+        let first_expected =
+            Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_range(range.clone())
+                .with_context(context.clone())
+                .with_severity(DiagnosticSeverity::Error);
+
+        let second_expected =
+            Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_range(range)
+                .with_context(context)
+                .with_severity(DiagnosticSeverity::Error);
+        if diagnostics[0] == first_expected {
+            assert_eq!(diagnostics[1], second_expected);
+        } else {
+            assert_eq!(diagnostics[0], second_expected);
+            assert_eq!(diagnostics[1], first_expected);
+        }
+    }
 }
