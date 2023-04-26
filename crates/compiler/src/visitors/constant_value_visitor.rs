@@ -38,6 +38,7 @@ impl ParseTreeVisitorCompat<'_> for ConstantValueVisitor {
     }
 
     fn visit(&mut self, node: &<Self::Node as ParserNodeType<'_>>::Type) -> Self::Return {
+        // Calling `self.visit_node` resolves to the wrong trait, so we need to be explicit.
         VisitChildren::visit_node(self, node);
         // The default implementation uses `mem::take`, which replaces the value with the default.
         // However, we calling `default` on `ConstantValue` panics by design, so let's use the non-panicking version.
