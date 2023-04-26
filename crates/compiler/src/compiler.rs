@@ -232,14 +232,12 @@ a {very} cool expression
         let diagnostics = result.diagnostics;
         assert_eq!(diagnostics.len(), 2);
 
-        // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
-        // or if there is a (+1) that will be done at some point that we have not implemented yet.
         let range = Position {
-            line: 4,
-            character: 7,
-        }..=Position {
-            line: 4,
+            line: 5,
             character: 8,
+        }..=Position {
+            line: 5,
+            character: 9,
         };
         let context = "a {very} cool expression\n       ^".to_owned();
         let first_expected =

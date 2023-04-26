@@ -224,6 +224,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             description,
             source_file_name: self.source_file_name.clone().into(),
             source_node_name: self.current_node_name.clone(),
+            // All positions are +1 compared to original implementation, but the result is the same.
+            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
             range: Position {
                 line,
                 character: variable_context.start().column as usize + 1,
