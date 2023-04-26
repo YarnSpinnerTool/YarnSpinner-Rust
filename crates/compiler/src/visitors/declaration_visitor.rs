@@ -216,7 +216,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         }
         // We're done creating the declaration!
         let description = compiler::get_document_comments(self.tokens, ctx);
-        let line = variable_context.start().line as usize - 1;
+        let line = variable_context.start().line as usize;
         let declaration = Declaration {
             name: variable_name,
             r#type: value.r#type.clone(),
@@ -226,10 +226,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             source_node_name: self.current_node_name.clone(),
             range: Position {
                 line,
-                character: variable_context.start().column as usize,
+                character: variable_context.start().column as usize + 1,
             }..=Position {
                 line,
                 character: variable_context.stop().column as usize
+                    + 1
                     + variable_context.get_text().len(),
             },
             is_implicit: false,
