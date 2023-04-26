@@ -1,9 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorListener.cs>
 
 use crate::output::Position;
+use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::prelude::File;
+use crate::prelude::{ActualTokenStream, File};
 use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
@@ -54,7 +55,7 @@ impl Diagnostic {
         }
     }
 
-    pub fn read_parser_rule_context<'a, 'b, 'input>(
+    pub fn read_parser_rule_context<'input>(
         mut self,
         ctx: &impl ParserRuleContext<'input>,
     ) -> Self {
@@ -62,6 +63,18 @@ impl Diagnostic {
         let stop = Position::from_token(ctx.stop());
         self.range = Some(start..=stop);
         self.context = Some(ctx.get_text());
+        self
+    }
+
+    pub fn read_parser_rule_context_with_whitespace<'a, 'b, 'input>(
+        mut self,
+        ctx: &impl ParserRuleContextExt<'input>,
+        token_stream: &ActualTokenStream<'input>,
+    ) -> Self {
+        let start = Position::from_token(ctx.start());
+        let stop = Position::from_token(ctx.stop());
+        self.range = Some(start..=stop);
+        self.context = Some(ctx.get_text_with_whitespace(token_stream));
         self
     }
 

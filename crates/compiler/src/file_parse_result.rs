@@ -18,7 +18,7 @@ pub struct FileParseResult<'input> {
     /// the parser itself somewhere, which is why we store it here.
     /// We also end up leading the `ErrorStrategy` into the public interface, but using generics here makes
     /// the code a lot more complicated without actually providing much benefit.
-    _parser: ActualYarnSpinnerParser<'input>,
+    parser: ActualYarnSpinnerParser<'input>,
 }
 
 impl<'input> FileParseResult<'input> {
@@ -30,13 +30,13 @@ impl<'input> FileParseResult<'input> {
         Self {
             name,
             tree,
-            _parser: parser,
+            parser: parser,
         }
     }
 
     pub fn tokens(
         &self,
     ) -> &CommonTokenStream<'input, YarnSpinnerLexer<'input, InputStream<&'input [u8]>>> {
-        &self._parser.input
+        &self.parser.input
     }
 }
