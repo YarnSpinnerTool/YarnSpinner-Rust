@@ -13,19 +13,18 @@ use rusty_yarn_spinner_core::types::*;
 use std::collections::HashMap;
 
 /// A visitor that extracts variable declarations from a parse tree.
-/// /// After visiting an entire parse tree for a file, the
-///  [`NewDeclarations`] property will contain all explicit
+/// After visiting an entire parse tree for a file, the
+/// [`NewDeclarations`] property will contain all explicit
 /// variable declarations that were found.
 pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// Gets the collection of new variable declarations that were
     /// found as a result of using this
-    ///  [`DeclarationVisitor`] to visit a
-    ///  [`ParserRuleContext`].
+    /// [`DeclarationVisitor`] to visit a
+    /// [`ParserRuleContext`].
     pub(crate) new_declarations: Vec<Declaration>,
 
     /// Gets the collection of file-level hashtags that were found as a
-    /// result of using this  [`DeclarationVisitor`] to visit
-    /// a  [`ParserRuleContext`].
+    /// result of using this  [`DeclarationVisitor`] to visit a [`ParserRuleContext`].
     pub(crate) file_tags: Vec<String>,
 
     pub(crate) diagnostics: Vec<Diagnostic>,
@@ -34,8 +33,7 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// is used to find documentation comments for declarations.
     tokens: &'a ActualTokenStream<'input>,
 
-    /// The collection of variable declarations we know about before
-    /// starting our work
+    /// The collection of variable declarations we know about before starting our work
     existing_declarations: Vec<Declaration>,
 
     /// The name of the node that we're currently visiting.
@@ -44,8 +42,7 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// The name of the file we're currently in.
     source_file_name: String,
 
-    /// Gets the collection of types known to this
-    ///  [`DeclarationVisitor`].
+    /// Gets the collection of types known to this [`DeclarationVisitor`].
     types: Vec<BuiltinType>,
 
     keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
@@ -179,7 +176,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                 Some(builtin_type) => builtin_type,
 
                 // The type name provided didn't map to a built-in
-                // type. Look for the type in our Types collection.
+                // type. Look for the type in our type collection.
                 None => match self
                     .types
                     .iter()

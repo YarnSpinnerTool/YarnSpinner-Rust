@@ -3,14 +3,13 @@
 use crate::types::Type;
 
 pub trait SubTypeOf<SubType: ?Sized = Self, Parent: ?Sized = Self> {
-    /// Checks to see if `self` is equal to
-    /// `parent`, or if `parent` exists in `self`'s type
-    /// hierarchy.
+    /// Checks to see if `self` is equal to `parent`,
+    /// or if `parent` exists in `self`'s type hierarchy.
     ///
     /// ## Implementation Notes
     ///
     /// The original implementation features the bones of an actual hierarchical type system,
-    /// but de factor it was unused. So, this implementation is way simpler, simply checking
+    /// but de facto it was unused. So, this implementation is way simpler, simply checking
     /// for special cases, namely `BuiltinType::Any` and `BuiltinType::Undefined`.
     fn is_sub_type_of(&self, parent: &Parent) -> bool;
 }
