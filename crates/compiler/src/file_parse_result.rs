@@ -27,11 +27,7 @@ impl<'input> FileParseResult<'input> {
         tree: Rc<DialogueContextAll<'input>>,
         parser: ActualYarnSpinnerParser<'input>,
     ) -> Self {
-        Self {
-            name,
-            tree,
-            parser: parser,
-        }
+        Self { name, tree, parser }
     }
 
     pub fn tokens(
