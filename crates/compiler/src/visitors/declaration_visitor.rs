@@ -371,8 +371,18 @@ mod tests {
         assert_eq!(result.diagnostics.len(), 1);
         assert_eq!(
             result.diagnostics[0],
-            Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+            Diagnostic::from_message("Type string does not match value 1 (Number)".to_string())
                 .with_file_name("test.yarn".to_string())
+                .with_context(Some("<<declare $foo to 1 as string>>".to_string()))
+                .with_range(
+                    Position {
+                        line: 3,
+                        character: 1,
+                    }..=Position {
+                        line: 3,
+                        character: 30,
+                    }
+                )
                 .with_severity(DiagnosticSeverity::Error)
         );
     }
