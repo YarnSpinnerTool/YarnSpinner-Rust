@@ -5,36 +5,41 @@ use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
-use std::fmt::Debug;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 /// A Visitor that walks an expression parse tree and generates string
 /// table entries, which are provided to a [`StringTableManager`].
 /// This string table can then be provided
 /// to future compilation passes, or stored for later use. Call the
 /// [`visit`] method to begin generating string table entries.
-pub(crate) struct StringTableGeneratorVisitor {
+pub(crate) struct StringTableGeneratorVisitor<'a, 'input: 'a> {
     pub(crate) diagnostics: Vec<Diagnostic>,
     current_node_name: String,
     file_name: String,
     pub(crate) string_table_manager: StringTableManager,
+    tokens: &'a ActualTokenStream<'input>,
     _dummy: (),
 }
 
-impl StringTableGeneratorVisitor {
-    pub(crate) fn new(file_name: String, string_table_manager: StringTableManager) -> Self {
+impl<'a, 'input: 'a> StringTableGeneratorVisitor<'a, 'input> {
+    pub(crate) fn new(
+        file_name: String,
+        string_table_manager: StringTableManager,
+        tokens: &'a ActualTokenStream<'input>,
+    ) -> Self {
         Self {
             file_name,
             string_table_manager,
             diagnostics: Default::default(),
             current_node_name: Default::default(),
+            tokens,
             _dummy: (),
         }
     }
 }
 
-impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
+impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisitor<'a, 'input> {
     type Node = YarnSpinnerParserContextType;
 
     type Return = ();
@@ -44,7 +49,9 @@ impl ParseTreeVisitorCompat<'_> for StringTableGeneratorVisitor {
     }
 }
 
-impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor {
+impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
+    for StringTableGeneratorVisitor<'a, 'input>
+{
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         let mut tags = Vec::new();
         for header in ctx.header_all() {
@@ -101,7 +108,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                 let line_id = line_id.get_text();
                 self.diagnostics.push(
                     Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .read_parser_rule_context(&*diagnostic_context)
+                        .read_parser_rule_context(&*diagnostic_context, self.tokens)
                         .with_file_name(&self.file_name),
                 );
                 return;

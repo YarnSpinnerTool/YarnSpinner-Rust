@@ -119,7 +119,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                 self.diagnostics.push(
                     Diagnostic::from_message(message)
                         .with_file_name(self.source_file_name.clone())
-                        .read_parser_rule_context_with_whitespace(&*header, self.tokens),
+                        .read_parser_rule_context(&*header, self.tokens),
                 );
             }
         }
@@ -154,7 +154,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
                     .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context_with_whitespace(ctx, self.tokens),
+                    .read_parser_rule_context(ctx, self.tokens),
             );
             return;
         }
@@ -192,7 +192,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                         self.diagnostics.push(
                             Diagnostic::from_message(msg)
                                 .with_file_name(&self.source_file_name)
-                                .read_parser_rule_context_with_whitespace(ctx, self.tokens),
+                                .read_parser_rule_context(ctx, self.tokens),
                         );
                         return;
                     }
@@ -212,7 +212,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                 self.diagnostics.push(
                     Diagnostic::from_message(msg)
                         .with_file_name(&self.source_file_name)
-                        .read_parser_rule_context_with_whitespace(ctx, self.tokens),
+                        .read_parser_rule_context(ctx, self.tokens),
                 );
                 return;
             }

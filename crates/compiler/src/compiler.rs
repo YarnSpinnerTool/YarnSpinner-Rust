@@ -100,8 +100,11 @@ fn register_strings<'a>(
         let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
         last_line_tagger.visit(&*parse_result.tree);
 
-        let mut visitor =
-            StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
+        let mut visitor = StringTableGeneratorVisitor::new(
+            file.file_name.clone(),
+            string_table_manager.clone(),
+            parse_result.tokens(),
+        );
         visitor.visit(&*parse_result.tree);
         state.result.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);

@@ -8,7 +8,6 @@ use crate::prelude::{ActualTokenStream, File};
 use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
-use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
@@ -55,7 +54,7 @@ impl Diagnostic {
         }
     }
 
-    pub fn read_parser_rule_context_with_whitespace<'a, 'b, 'input>(
+    pub fn read_parser_rule_context<'input>(
         mut self,
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,

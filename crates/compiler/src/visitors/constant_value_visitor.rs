@@ -43,7 +43,7 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for ConstantValueVisitor<'a,
         &mut self._dummy
     }
 
-    fn visit(&mut self, node: &<Self::Node as ParserNodeType<'_>>::Type) -> Self::Return {
+    fn visit(&mut self, node: &<Self::Node as ParserNodeType<'input>>::Type) -> Self::Return {
         // Calling `self.visit_node` resolves to the wrong trait, so we need to be explicit.
         VisitChildren::visit_node(self, node);
         // The default implementation uses `mem::take`, which replaces the value with the default.
@@ -53,7 +53,7 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for ConstantValueVisitor<'a,
 }
 
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'a, 'input> {
-    fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'_>) -> Self::Return {
+    fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
         let text = ctx.get_text();
         if let Ok(result) = text.parse::<f32>() {
             Value::from(result).into()
@@ -62,7 +62,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVis
             self.diagnostics.push(
                 Diagnostic::from_message(message)
                     .with_file_name(&self.file_name)
-                    .read_parser_rule_context_with_whitespace(ctx, self.tokens),
+                    .read_parser_rule_context(ctx, self.tokens),
             );
             // This default value seems very "JavaScript-y" with the pseudo-sensible default value on errors.
             // But this is not so! We just pushed an error diagnostic, so there will be no program emitted from this compilation attempt.
@@ -71,25 +71,25 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVis
         }
     }
 
-    fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'_>) -> Self::Return {
+    fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'input>) -> Self::Return {
         Value::from(true).into()
     }
 
-    fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'_>) -> Self::Return {
+    fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'input>) -> Self::Return {
         Value::from(false).into()
     }
 
-    fn visit_valueString(&mut self, ctx: &ValueStringContext<'_>) -> Self::Return {
+    fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
         let text = ctx.STRING().unwrap().get_text();
         Value::from(text.trim_matches('"')).into()
     }
 
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'_>) -> Self::Return {
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
         let message = "Null is not a permitted type in Yarn Spinner 2.0 and later";
         self.diagnostics.push(
             Diagnostic::from_message(message)
                 .with_file_name(&self.file_name)
-                .read_parser_rule_context_with_whitespace(ctx, self.tokens),
+                .read_parser_rule_context(ctx, self.tokens),
         );
         ConstantValue::non_panicking_default()
     }
