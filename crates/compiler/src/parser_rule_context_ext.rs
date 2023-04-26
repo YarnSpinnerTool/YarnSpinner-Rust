@@ -27,6 +27,11 @@ pub trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         if start > stop {
             self.get_text()
         } else {
+            // ## Implementation Notes
+            // Uses `get_token_index()` instead of `get_start()` and `get_stop()`.
+            // I suspect the `get_text_from_interval` implementation behaves differently
+            // from the C# ANTLR runtime. Might even be bugged. Alas, the way this
+            // function is written now behaves the same way the original did, even if it does not seem so.
             token_stream.get_text_from_interval(start, stop)
         }
     }
