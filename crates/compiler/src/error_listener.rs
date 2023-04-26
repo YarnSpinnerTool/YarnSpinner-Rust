@@ -3,7 +3,7 @@
 use crate::output::Position;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::prelude::File;
+use crate::prelude::{File, ParserRuleContextExt};
 use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
@@ -56,12 +56,12 @@ impl Diagnostic {
 
     pub fn read_parser_rule_context<'a, 'b, 'input>(
         mut self,
-        ctx: &impl ParserRuleContext<'input>,
+        ctx: &impl ParserRuleContextExt<'input>,
     ) -> Self {
         let start = Position::from_token(ctx.start());
         let stop = Position::from_token(ctx.stop());
         self.range = Some(start..=stop);
-        self.context = Some(ctx.get_text());
+        self.context = Some(ctx.get_text_with_whitespace());
         self
     }
 
