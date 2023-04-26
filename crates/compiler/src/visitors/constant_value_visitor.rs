@@ -2,7 +2,7 @@
 
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::Diagnostic;
+use crate::prelude::{ActualTokenStream, Diagnostic};
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use rusty_yarn_spinner_core::prelude::Value;
@@ -12,24 +12,30 @@ use std::ops::{Deref, DerefMut};
 /// A visitor that visits any valid constant value, and returns a [`Value`].
 /// Currently only supports terminals, not expressions,
 /// even if those expressions would be constant.
-#[derive(Debug, Clone)]
-pub(crate) struct ConstantValueVisitor {
+#[derive(Clone)]
+pub(crate) struct ConstantValueVisitor<'a, 'input: 'a> {
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) file_name: String,
     _dummy: ConstantValue,
+    tokens: &'a ActualTokenStream<'input>,
 }
 
-impl ConstantValueVisitor {
-    pub(crate) fn new(file_name: impl Into<String>, diagnostics: Vec<Diagnostic>) -> Self {
+impl<'a, 'input: 'a> ConstantValueVisitor<'a, 'input> {
+    pub(crate) fn new(
+        file_name: impl Into<String>,
+        diagnostics: Vec<Diagnostic>,
+        tokens: &'a ActualTokenStream<'input>,
+    ) -> Self {
         Self {
             file_name: file_name.into(),
             diagnostics,
+            tokens,
             _dummy: ConstantValue::non_panicking_default(),
         }
     }
 }
 
-impl ParseTreeVisitorCompat<'_> for ConstantValueVisitor {
+impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for ConstantValueVisitor<'a, 'input> {
     type Node = YarnSpinnerParserContextType;
     type Return = ConstantValue;
 
@@ -46,7 +52,7 @@ impl ParseTreeVisitorCompat<'_> for ConstantValueVisitor {
     }
 }
 
-impl YarnSpinnerParserVisitorCompat<'_> for ConstantValueVisitor {
+impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'a, 'input> {
     fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'_>) -> Self::Return {
         let text = ctx.get_text();
         if let Ok(result) = text.parse::<f32>() {
@@ -56,7 +62,7 @@ impl YarnSpinnerParserVisitorCompat<'_> for ConstantValueVisitor {
             self.diagnostics.push(
                 Diagnostic::from_message(message)
                     .with_file_name(&self.file_name)
-                    .read_parser_rule_context(ctx),
+                    .read_parser_rule_context_with_whitespace(ctx, self.tokens),
             );
             // This default value seems very "JavaScript-y" with the pseudo-sensible default value on errors.
             // But this is not so! We just pushed an error diagnostic, so there will be no program emitted from this compilation attempt.
@@ -83,7 +89,7 @@ impl YarnSpinnerParserVisitorCompat<'_> for ConstantValueVisitor {
         self.diagnostics.push(
             Diagnostic::from_message(message)
                 .with_file_name(&self.file_name)
-                .read_parser_rule_context(ctx),
+                .read_parser_rule_context_with_whitespace(ctx, self.tokens),
         );
         ConstantValue::non_panicking_default()
     }

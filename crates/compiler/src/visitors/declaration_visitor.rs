@@ -160,8 +160,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         }
 
         // Figure out the value and its type
-        let mut constant_value_visitor =
-            ConstantValueVisitor::new(self.source_file_name.clone(), self.diagnostics.clone());
+        let mut constant_value_visitor = ConstantValueVisitor::new(
+            self.source_file_name.clone(),
+            self.diagnostics.clone(),
+            self.tokens,
+        );
         let value_context = ctx.value().unwrap();
         let value = constant_value_visitor.visit(&*value_context);
         self.diagnostics

@@ -55,17 +55,6 @@ impl Diagnostic {
         }
     }
 
-    pub fn read_parser_rule_context<'input>(
-        mut self,
-        ctx: &impl ParserRuleContext<'input>,
-    ) -> Self {
-        let start = Position::from_token(ctx.start());
-        let stop = Position::from_token(ctx.stop());
-        self.range = Some(start..=stop);
-        self.context = Some(ctx.get_text());
-        self
-    }
-
     pub fn read_parser_rule_context_with_whitespace<'a, 'b, 'input>(
         mut self,
         ctx: &impl ParserRuleContextExt<'input>,
