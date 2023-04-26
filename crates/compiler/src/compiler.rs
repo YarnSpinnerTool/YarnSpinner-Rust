@@ -60,17 +60,14 @@ fn get_declarations<'a>(
         );
 
         variable_declaration_visitor.visit(&*file.tree);
-        state
-            .result
+        let result = &mut state.result;
+        result
             .diagnostics
             .extend_from_slice(&variable_declaration_visitor.diagnostics);
-        if let Some(ref mut declarations) = state.result.declarations {
-            declarations.extend(variable_declaration_visitor.new_declarations);
-        } else {
-            state.result.declarations = Some(variable_declaration_visitor.new_declarations);
-        }
-        state
-            .result
+        result
+            .declarations
+            .extend(variable_declaration_visitor.new_declarations);
+        result
             .file_tags
             .insert(file.name.clone(), variable_declaration_visitor.file_tags);
     }

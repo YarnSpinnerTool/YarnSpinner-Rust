@@ -267,10 +267,9 @@ mod tests {
 
         println!("{:?}", result.diagnostics);
         assert!(result.diagnostics.is_empty());
-        let declarations = result.declarations.unwrap();
-        assert_eq!(declarations.len(), 4);
+        assert_eq!(result.declarations.len(), 4);
         assert_eq!(
-            declarations[0],
+            result.declarations[0],
             Declaration {
                 name: "$foo".to_string(),
                 default_value: 1.0.into(),
@@ -290,7 +289,7 @@ mod tests {
         );
 
         assert_eq!(
-            declarations[1],
+            result.declarations[1],
             Declaration {
                 name: "$bar".to_string(),
                 default_value: "2".to_string().into(),
@@ -310,7 +309,7 @@ mod tests {
         );
 
         assert_eq!(
-            declarations[2],
+            result.declarations[2],
             Declaration {
                 name: "$baz".to_string(),
                 default_value: true.into(),
@@ -330,7 +329,7 @@ mod tests {
         );
 
         assert_eq!(
-            declarations[3],
+            result.declarations[3],
             Declaration {
                 name: "$quux".to_string(),
                 default_value: "hello there".to_string().into(),
@@ -347,6 +346,34 @@ mod tests {
                     character: 16,
                 },
             }
+        );
+    }
+
+    #[test]
+    fn catches_type_errors() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+<<declare $foo to 1 as string>>
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+
+        assert!(result.declarations.is_empty());
+
+        assert_eq!(result.diagnostics.len(), 1);
+        assert_eq!(
+            result.diagnostics[0],
+            Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_severity(DiagnosticSeverity::Error)
         );
     }
 }
