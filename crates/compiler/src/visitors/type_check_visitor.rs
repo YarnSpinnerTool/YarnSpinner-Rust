@@ -2,10 +2,14 @@ use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
+use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
-use rusty_yarn_spinner_core::types::{BooleanType, BuiltinType, NumberType, StringType, Type};
+use rusty_yarn_spinner_core::types::{
+    BooleanType, BuiltinType, FunctionType, NumberType, StringType, Type,
+};
+use std::collections::HashMap;
 
 /// A visitor that walks the parse tree, checking for type consistency
 /// in expressions. Existing type information is provided via the
@@ -37,6 +41,18 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
     // The name of the file that we're currently in.
     source_file_name: String,
 
+    /// Gets or sets a type hint for the expression.
+    /// This is mostly used by [`TypeCheckVisitor`]
+    /// to give a hint that can be used by functions to
+    /// influence their type when set to use inference.
+    /// Won't be used if a concrete type is already known.
+    ///
+    /// ## Implementation notes
+    ///
+    /// In the original implementation, this was implemented
+    /// on the [`ValueContext`] directly using a `partial`
+    hints: HashMap<Interval, Type>,
+
     tokens: &'a ActualTokenStream<'input>,
     _dummy: Option<BuiltinType>,
 }
@@ -55,6 +71,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             new_declarations: Default::default(),
             deferred_types: Default::default(),
             current_node_name: Default::default(),
+            hints: Default::default(),
             _dummy: Default::default(),
         }
     }
@@ -168,6 +185,132 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         // Undefined. Hopefully, other context will allow us to infer a
         // type.
         Some(BuiltinType::Undefined)
+    }
+
+    fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
+        let function_name = ctx
+            .function_call()
+            .unwrap()
+            .get_token(yarnspinnerlexer::FUNC_ID, 0)
+            .unwrap()
+            .get_text();
+        let function_declaration = self
+            .declarations()
+            .into_iter()
+            .find(|decl| decl.name == function_name);
+        let function_type = if let Some(function_declaration) = function_declaration {
+        } else {
+            // We don't have a declaration for this function. Create an
+            // implicit one.
+            let mut function_type = FunctionType::default();
+            // because it is an implicit declaration we will use the type hint to give us a return type
+            function_type.return_type = self.hints.get(&ctx.get_source_interval()).cloned();
+            let line = ctx.start().get_line();
+            let column = ctx.start().get_column();
+            let function_declaration = Declaration::from_type(&function_type)
+                .with_name(function_name)
+                .with_description(format!(
+                    "Implicit declaration of function at {}:{}:{}",
+                    self.source_file_name, line, column
+                ))
+                // All positions are +1 compared to original implementation, but the result is the same.
+                // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
+                .with_range(
+                    Position {
+                        line: line as usize,
+                        character: column as usize + 1,
+                    }..=Position {
+                        line: line as usize,
+                        character: column as usize + 1 + ctx.stop().get_text().len(),
+                    },
+                )
+                .with_implicit()
+                .into();
+
+            // Create the array of parameters for this function based
+            // on how many we've seen in this call. Set them all to be
+            // undefined; we'll bind their type shortly.
+            let parameter_types = ctx
+                .function_call()
+                .unwrap()
+                .expression_all()
+                .map(|_| Type::Undefined);
+            for parameter_type in parameter_types {
+                function_type.add_parameter(parameter_type);
+            }
+            self.new_declarations.push(function_declaration);
+            function_type
+        };
+        None
+        /*
+
+           if (functionDeclaration == null)
+           {
+              ...
+           }
+           else
+           {
+               functionType = functionDeclaration.Type as FunctionType;
+               if (functionType == null)
+               {
+                   throw new InvalidOperationException($"Internal error: decl's type is not a {nameof(FunctionType)}");
+               }
+
+               // we have an existing function but its undefined
+               // if we also have a type hint we can use that to update it
+               if (functionType.ReturnType == BuiltinTypes.Undefined && context.Hint != BuiltinTypes.Undefined)
+               {
+                   NewDeclarations.Remove(functionDeclaration);
+                   functionType.ReturnType = context.Hint;
+                   functionDeclaration.Type = functionType;
+                   NewDeclarations.Add(functionDeclaration);
+               }
+           }
+
+           // Check each parameter of the function
+           var suppliedParameters = context.function_call().expression();
+
+           var expectedParameters = functionType.Parameters;
+
+           if (suppliedParameters.Length != expectedParameters.Count())
+           {
+               // Wrong number of parameters supplied
+               var parameters = expectedParameters.Count() == 1 ? "parameter" : "parameters";
+
+               this.diagnostics.Add(new Diagnostic(this.sourceFileName, context,  $"Function {functionName} expects {expectedParameters.Count()} {parameters}, but received {suppliedParameters.Length}"));
+
+               return functionType.ReturnType;
+           }
+
+           for (int i = 0; i < expectedParameters.Count(); i++)
+           {
+               var suppliedParameter = suppliedParameters[i];
+
+               var expectedType = expectedParameters[i];
+
+               var suppliedType = this.Visit(suppliedParameter);
+
+               if (expectedType == BuiltinTypes.Undefined)
+               {
+                   // The type of this parameter hasn't yet been bound.
+                   // Bind this parameter type to what we've resolved the
+                   // type to.
+                   expectedParameters[i] = suppliedType;
+                   expectedType = suppliedType;
+               }
+
+               if (TypeUtil.IsSubType(expectedType, suppliedType) == false)
+               {
+                   this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, $"{functionName} parameter {i + 1} expects a {expectedType?.Name ?? "undefined"}, not a {suppliedType?.Name ?? "undefined"}"));
+                   return functionType.ReturnType;
+               }
+           }
+
+           // Cool, all the parameters check out!
+
+           // Finally, return the return type of this function.
+           return functionType.ReturnType;
+        */
     }
 }
 

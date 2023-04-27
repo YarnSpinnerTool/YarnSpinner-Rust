@@ -25,7 +25,7 @@ pub struct Declaration {
     /// The default value of this declaration, if no value has been
     /// specified in code or is available from a [`Dialogue`]'s
     /// [`IVariableStorage`].
-    pub default_value: Convertible,
+    pub default_value: Option<Convertible>,
 
     /// A string describing the purpose of this declaration.
     pub description: Option<String>,
@@ -51,7 +51,7 @@ pub struct Declaration {
 
     /// The type of the variable, as represented by an object found
     /// in a variant of [`Type`].
-    pub r#type: BuiltinType,
+    pub r#type: Type,
 
     /// The range of text at which this declaration occurs.
     ///
@@ -72,17 +72,25 @@ impl Declaration {
         self.range.as_ref()?.start().line.into()
     }
 
-    pub fn from_default_value(default_value: impl Into<Convertible>) -> Self {
+    pub fn from_type<T>(r#type: T) -> Self
+    where
+        Type: From<T>,
+    {
         Self {
-            default_value: default_value.into(),
+            r#type: r#type.into().unwrap(),
+            default_value: Default::default(),
             name: Default::default(),
             description: Default::default(),
             source_file_name: Default::default(),
             source_node_name: Default::default(),
             is_implicit: Default::default(),
-            r#type: Default::default(),
             range: Default::default(),
         }
+    }
+
+    pub fn with_default_value(mut self, default_value: impl Into<Convertible>) -> Self {
+        self.default_value = Some(default_value.into());
+        self
     }
 
     pub fn with_name(mut self, name: impl Into<String>) -> Self {

@@ -7,6 +7,7 @@ use crate::types::Type;
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct FunctionType {
     pub parameters: Vec<Type>,
+    pub return_type: Option<Type>,
 }
 
 impl FunctionType {
