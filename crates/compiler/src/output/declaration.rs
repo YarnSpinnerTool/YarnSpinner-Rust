@@ -7,9 +7,9 @@
 use crate::prelude::Diagnostic;
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
-use rusty_yarn_spinner_core::types::Type;
+use rusty_yarn_spinner_core::types::{BuiltinType, Type};
 use std::cell::Ref;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -51,7 +51,7 @@ pub struct Declaration {
 
     /// The type of the variable, as represented by an object found
     /// in a variant of [`Type`].
-    pub r#type: Type,
+    pub r#type: BuiltinType,
 
     /// The range of text at which this declaration occurs.
     ///
@@ -122,8 +122,13 @@ impl Declaration {
         self
     }
 
-    pub fn with_type(mut self, r#type: impl Into<Type>) -> Self {
-        self.r#type = r#type.into();
+    pub fn with_type<T>(mut self, r#type: T) -> Self
+    where
+        BuiltinType: TryFrom<T>,
+        <BuiltinType as TryFrom<T>>::Error: Debug,
+    {
+        let builtin_type = r#type.try_into().unwrap();
+        self.r#type = builtin_type;
         self
     }
 

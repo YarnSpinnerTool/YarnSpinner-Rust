@@ -47,3 +47,27 @@ impl TryFrom<Type> for BuiltinType {
         }
     }
 }
+
+impl From<AnyType> for BuiltinType {
+    fn from(any: AnyType) -> Self {
+        BuiltinType::Any(any)
+    }
+}
+
+impl From<BooleanType> for BuiltinType {
+    fn from(boolean: BooleanType) -> Self {
+        BuiltinType::Boolean(boolean)
+    }
+}
+
+impl From<NumberType> for BuiltinType {
+    fn from(number: NumberType) -> Self {
+        BuiltinType::Number(number)
+    }
+}
+
+impl From<StringType> for BuiltinType {
+    fn from(string: StringType) -> Self {
+        BuiltinType::String(string)
+    }
+}

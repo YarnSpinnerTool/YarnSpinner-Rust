@@ -1,5 +1,11 @@
+use crate::prelude::generated::yarnspinnerlexer;
+use crate::prelude::generated::yarnspinnerparser::*;
+use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
-use rusty_yarn_spinner_core::types::Type;
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use rusty_yarn_spinner_core::types::{BooleanType, BuiltinType, NumberType, StringType, Type};
 
 /// A visitor that walks the parse tree, checking for type consistency
 /// in expressions. Existing type information is provided via the
@@ -32,7 +38,7 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
     source_file_name: String,
 
     tokens: &'a ActualTokenStream<'input>,
-    _dummy: (),
+    _dummy: Option<BuiltinType>,
 }
 
 impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
@@ -61,6 +67,112 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             .cloned()
             .chain(self.new_declarations.iter().cloned())
             .collect()
+    }
+}
+
+impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
+    type Node = YarnSpinnerParserContextType;
+
+    type Return = Option<BuiltinType>;
+
+    fn temp_result(&mut self) -> &mut Self::Return {
+        &mut self._dummy
+    }
+}
+
+impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
+    fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
+        for header in ctx.header_all() {
+            let key = header.header_key.as_ref().unwrap().get_text();
+            if key == "title" {
+                let value = header.header_value.as_ref().unwrap().get_text();
+                self.current_node_name = Some(value.to_owned());
+            }
+        }
+        if let Some(body) = ctx.body() {
+            self.visit(&*body);
+        }
+        None
+    }
+
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
+        self.diagnostics.push(
+            Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(ctx, self.tokens),
+        );
+
+        Some(BuiltinType::Undefined)
+    }
+
+    fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
+        Some(BuiltinType::String(StringType))
+    }
+
+    fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'input>) -> Self::Return {
+        Some(BuiltinType::Boolean(BooleanType))
+    }
+
+    fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'input>) -> Self::Return {
+        Some(BuiltinType::Boolean(BooleanType))
+    }
+
+    fn visit_valueNumber(&mut self, _ctx: &ValueNumberContext<'input>) -> Self::Return {
+        Some(BuiltinType::Number(NumberType))
+    }
+
+    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
+        let variable = ctx.variable().unwrap();
+        self.visit_variable(&*variable)
+    }
+
+    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
+        // The type of the value depends on the declared type of the
+        // variable
+        let Some(var_id) = ctx.get_token(yarnspinnerlexer::VAR_ID, 0) else {
+                // We don't have a variable name for this Variable context.
+                // The parser will have generated an error for us in an
+                // earlier stage; here, we'll bail out.
+            return Some(BuiltinType::Undefined)
+        };
+        let name = var_id.get_text();
+        if let Some(declaration) = self
+            .declarations()
+            .into_iter()
+            .find(|decl| decl.name == name)
+        {
+            return Some(declaration.r#type);
+        }
+        None
+
+        /*
+
+           foreach (var declaration in this.Declarations)
+           {
+               if (declaration.Name == name)
+               {
+                   return declaration.Type;
+               }
+           }
+
+           // do we already have a potential warning about this?
+           // no need to make more
+           if (this.deferredTypes.Any(hmm => hmm.Name == name))
+           {
+               return BuiltinTypes.Undefined;
+           }
+
+           // creating a new diagnostic for us having an undefined variable
+           // this won't get added into the existing diags though because its possible a later pass will clear it up
+           // so we save this as a potential diagnostic for the compiler itself to resolve
+           var diagnostic = new Diagnostic(sourceFileName, context, string.Format(CantDetermineVariableTypeError, name));
+           deferredTypes.Add(DeferredTypeDiagnostic.CreateDeferredTypeDiagnostic(name, diagnostic));
+
+           // We don't have a declaration for this variable. Return
+           // Undefined. Hopefully, other context will allow us to infer a
+           // type.
+           return BuiltinTypes.Undefined;
+        */
     }
 }
 

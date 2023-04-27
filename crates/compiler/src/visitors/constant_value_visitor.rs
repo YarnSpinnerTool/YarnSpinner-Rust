@@ -55,8 +55,8 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for ConstantValueVisitor<'a,
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'a, 'input> {
     fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
         let text = ctx.get_text();
-        if let Ok(result) = text.parse::<f32>() {
-            Value::from(result).into()
+        if let Ok(number) = text.parse::<f32>() {
+            Value::from(number).into()
         } else {
             let message = format!("Failed to parse {text} as a float",);
             self.diagnostics.push(
