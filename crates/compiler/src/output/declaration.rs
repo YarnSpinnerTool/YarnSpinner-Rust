@@ -6,6 +6,7 @@
 
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
+use rusty_yarn_spinner_core::prelude::Value;
 use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;
 use std::fmt::Display;
@@ -68,7 +69,7 @@ impl Declaration {
     /// If this [`Declaration`] was not found in a Yarn source file,
     /// this will be [`None`].
     pub fn source_file_line(&self) -> Option<usize> {
-        self.range?.start().line.into()
+        self.range.as_ref()?.start().line.into()
     }
 
     pub fn from_default_value(default_value: impl Into<Convertible>) -> Self {
@@ -94,6 +95,11 @@ impl Declaration {
         self
     }
 
+    pub fn with_description_optional(mut self, description: impl Into<Option<String>>) -> Self {
+        self.description = description.into();
+        self
+    }
+
     pub fn with_source_file_name(mut self, source_file_name: impl Into<DeclarationSource>) -> Self {
         self.source_file_name = source_file_name.into();
         self
@@ -101,6 +107,13 @@ impl Declaration {
 
     pub fn with_source_node_name(mut self, source_node_name: impl Into<String>) -> Self {
         self.source_node_name = Some(source_node_name.into());
+        self
+    }
+    pub fn with_source_node_name_optional(
+        mut self,
+        source_node_name: impl Into<Option<String>>,
+    ) -> Self {
+        self.source_node_name = source_node_name.into();
         self
     }
 
@@ -135,6 +148,12 @@ pub enum DeclarationSource {
 impl From<String> for DeclarationSource {
     fn from(file_name: String) -> Self {
         Self::File(file_name)
+    }
+}
+
+impl From<&str> for DeclarationSource {
+    fn from(file_name: &str) -> Self {
+        file_name.to_owned().into()
     }
 }
 

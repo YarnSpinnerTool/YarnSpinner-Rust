@@ -137,11 +137,13 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             .find(|d| !d.is_implicit && d.name == variable_name);
         if let Some(existing_explicit_declaration) = existing_explicit_declaration {
             // Then this is an error, because you can't have two explicit declarations for the same variable.
+            let line = existing_explicit_declaration
+                .source_file_line()
+                .map(|l| format!(", line: {l}"))
+                .unwrap_or_default();
             let msg = format!(
-                "{} has already been declared in {}, line {}",
-                existing_explicit_declaration.name,
-                existing_explicit_declaration.source_file_name,
-                existing_explicit_declaration.source_file_line(),
+                "{} has already been declared in {}{line}",
+                existing_explicit_declaration.name, existing_explicit_declaration.source_file_name,
             );
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
@@ -210,27 +212,27 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         }
         // We're done creating the declaration!
         let description = compiler::get_document_comments(self.tokens, ctx);
+        let description_as_option = (!description.is_empty()).then_some(description);
         let line = variable_context.start().line as usize;
-        let declaration = Declaration {
-            name: variable_name,
-            r#type: value.r#type.clone(),
-            default_value: value.internal_value.clone().unwrap(),
-            description,
-            source_file_name: self.source_file_name.clone().into(),
-            source_node_name: self.current_node_name.clone(),
+        let declaration = Declaration::from_default_value(value.internal_value.clone().unwrap())
+            .with_type(value.r#type.clone())
+            .with_name(variable_name)
+            .with_description_optional(description_as_option)
+            .with_source_file_name(self.source_file_name.clone())
+            .with_source_node_name_optional(self.current_node_name.clone())
             // All positions are +1 compared to original implementation, but the result is the same.
             // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            range: Position {
-                line,
-                character: variable_context.start().column as usize + 1,
-            }..=Position {
-                line,
-                character: variable_context.stop().column as usize
-                    + 1
-                    + variable_context.get_text().len(),
-            },
-            is_implicit: false,
-        };
+            .with_range(
+                Position {
+                    line,
+                    character: variable_context.start().column as usize + 1,
+                }..=Position {
+                    line,
+                    character: variable_context.stop().column as usize
+                        + 1
+                        + variable_context.get_text().len(),
+                },
+            );
         self.new_declarations.push(declaration);
     }
 }
@@ -272,82 +274,74 @@ mod tests {
         assert_eq!(result.declarations.len(), 4);
         assert_eq!(
             result.declarations[0],
-            Declaration {
-                name: "$foo".to_string(),
-                default_value: 1.0.into(),
-                description: "".to_string(),
-                source_file_name: DeclarationSource::File("test.yarn".to_string()),
-                source_node_name: Some("test".to_string()),
-                is_implicit: false,
-                r#type: Type::Number(NumberType),
-                range: Position {
-                    line: 3,
-                    character: 11,
-                }..=Position {
-                    line: 3,
-                    character: 15,
-                },
-            }
+            Declaration::from_default_value(1.0)
+                .with_type(NumberType)
+                .with_name("$foo")
+                .with_source_file_name("test.yarn")
+                .with_source_node_name("test")
+                .with_range(
+                    Position {
+                        line: 3,
+                        character: 11,
+                    }..=Position {
+                        line: 3,
+                        character: 15,
+                    }
+                )
         );
 
         assert_eq!(
             result.declarations[1],
-            Declaration {
-                name: "$bar".to_string(),
-                default_value: "2".to_string().into(),
-                description: "".to_string(),
-                source_file_name: DeclarationSource::File("test.yarn".to_string()),
-                source_node_name: Some("test".to_string()),
-                is_implicit: false,
-                r#type: Type::String(StringType),
-                range: Position {
-                    line: 4,
-                    character: 11,
-                }..=Position {
-                    line: 4,
-                    character: 15,
-                },
-            }
+            Declaration::from_default_value("2")
+                .with_type(StringType)
+                .with_name("$bar")
+                .with_source_file_name("test.yarn")
+                .with_source_node_name("test")
+                .with_range(
+                    Position {
+                        line: 4,
+                        character: 11,
+                    }..=Position {
+                        line: 4,
+                        character: 15,
+                    }
+                )
         );
 
         assert_eq!(
             result.declarations[2],
-            Declaration {
-                name: "$baz".to_string(),
-                default_value: true.into(),
-                description: "".to_string(),
-                source_file_name: DeclarationSource::File("test.yarn".to_string()),
-                source_node_name: Some("test".to_string()),
-                is_implicit: false,
-                r#type: Type::Boolean(BooleanType),
-                range: Position {
-                    line: 5,
-                    character: 11,
-                }..=Position {
-                    line: 5,
-                    character: 15,
-                },
-            }
+            Declaration::from_default_value(true)
+                .with_type(BooleanType)
+                .with_name("$baz")
+                .with_source_file_name("test.yarn")
+                .with_source_node_name("test")
+                .with_range(
+                    Position {
+                        line: 5,
+                        character: 11,
+                    }..=Position {
+                        line: 5,
+                        character: 15,
+                    }
+                )
         );
 
         assert_eq!(
             result.declarations[3],
-            Declaration {
-                name: "$quux".to_string(),
-                default_value: "hello there".to_string().into(),
-                description: "".to_string(),
-                source_file_name: DeclarationSource::File("test.yarn".to_string()),
-                source_node_name: Some("test".to_string()),
-                is_implicit: false,
-                r#type: Type::String(StringType),
-                range: Position {
-                    line: 6,
-                    character: 11,
-                }..=Position {
-                    line: 6,
-                    character: 16,
-                },
-            }
+            Declaration::from_default_value("hello there")
+                .with_type(StringType)
+                .with_name("$quux")
+                .with_source_file_name("test.yarn")
+                .with_source_node_name("test")
+                .with_range(
+                    Position {
+                        line: 6,
+                        character: 11,
+                    }..=Position {
+                        line: 6,
+                        character: 16,
+                    }
+                )
         );
     }
 
