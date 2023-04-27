@@ -4,6 +4,7 @@
 //!
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
+use crate::prelude::Diagnostic;
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::types::Type;
@@ -184,4 +185,10 @@ impl Display for DeclarationSource {
             Self::File(file_name) => write!(f, "{}", file_name),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DeferredTypeDiagnostic {
+    name: String,
+    diagnostic: Diagnostic,
 }

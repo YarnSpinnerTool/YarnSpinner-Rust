@@ -174,7 +174,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
 
                 // The type name provided didn't map to a built-in
                 // type. Look for the type in our type collection.
-                None => match EXPLICITLY_CONSTRUCTABLE_TYPES
+                None => match BuiltinType::EXPLICITLY_CONSTRUCTABLE
                     .iter()
                     .find(|t| t.to_string() == declaration_type.get_text())
                 {
@@ -236,14 +236,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         self.new_declarations.push(declaration);
     }
 }
-
-const EXPLICITLY_CONSTRUCTABLE_TYPES: &[BuiltinType] = &[
-    BuiltinType::Any(AnyType),
-    BuiltinType::Number(NumberType),
-    BuiltinType::String(StringType),
-    BuiltinType::Boolean(BooleanType),
-    // Undefined types are not explicitly constructable
-];
 
 #[cfg(test)]
 mod tests {

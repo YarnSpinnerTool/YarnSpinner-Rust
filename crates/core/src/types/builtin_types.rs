@@ -23,6 +23,16 @@ pub enum BuiltinType {
     Undefined,
 }
 
+impl BuiltinType {
+    pub const EXPLICITLY_CONSTRUCTABLE: &'static [BuiltinType] = &[
+        BuiltinType::Any(AnyType),
+        BuiltinType::Number(NumberType),
+        BuiltinType::String(StringType),
+        BuiltinType::Boolean(BooleanType),
+        // Undefined types are not explicitly constructable
+    ];
+}
+
 impl TryFrom<Type> for BuiltinType {
     type Error = ();
 
