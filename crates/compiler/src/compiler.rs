@@ -18,45 +18,28 @@ mod utils;
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     // TODO: other steps
-    let compiler_steps: Vec<&dyn CompilerStep> = vec![&register_strings, &get_declarations];
+    let compiler_steps: Vec<&CompilationStep> = vec![
+        &register_strings,
+        &get_declarations,
+        &find_tracking_nodes,
+        &add_tracking_declarations,
+    ];
 
-    let initial = CompilationIntermediate::default();
+    let initial = CompilationIntermediate::from_job(&compilation_job);
     compiler_steps
         .into_iter()
-        .fold(initial, |acc, curr| curr.apply(&compilation_job, acc))
+        .fold(initial, |state, step| step(state))
         .result
 }
 
-trait CompilerStep<'a> {
-    fn apply(
-        &self,
-        job: &'a CompilationJob,
-        previous: CompilationIntermediate<'a>,
-    ) -> CompilationIntermediate<'a>;
-}
+type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
 
-impl<'a, F> CompilerStep<'a> for F
-where
-    F: Fn(&'a CompilationJob, CompilationIntermediate<'a>) -> CompilationIntermediate<'a>,
-{
-    fn apply(
-        &self,
-        job: &'a CompilationJob,
-        previous: CompilationIntermediate<'a>,
-    ) -> CompilationIntermediate<'a> {
-        self(job, previous)
-    }
-}
-
-fn get_declarations<'a>(
-    job: &'a CompilationJob,
-    mut state: CompilationIntermediate<'a>,
-) -> CompilationIntermediate<'a> {
+fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // Find the variable declarations in these files.
     for file in &state.parsed_files {
         let mut variable_declaration_visitor = DeclarationVisitor::new(
             file.name.clone(),
-            job.variable_declarations.clone(),
+            state.job.variable_declarations.clone(),
             file.tokens(),
         );
 
@@ -75,14 +58,11 @@ fn get_declarations<'a>(
     state
 }
 
-fn register_strings<'a>(
-    job: &'a CompilationJob,
-    mut state: CompilationIntermediate<'a>,
-) -> CompilationIntermediate<'a> {
+fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
     let mut string_table_manager: StringTableManager = state.result.string_table.into();
-    for file in &job.files {
+    for file in &state.job.files {
         let parse_result = parse_syntax_tree(file, &mut state.result.diagnostics);
 
         // ok now we will add in our lastline tags
@@ -105,10 +85,7 @@ fn register_strings<'a>(
     state
 }
 
-fn find_tracking_nodes<'a>(
-    job: &'a CompilationJob,
-    mut state: CompilationIntermediate<'a>,
-) -> CompilationIntermediate<'a> {
+fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // determining the nodes we need to track visits on
     // this needs to be done before we finish up with declarations
     // so that any tracking variables are included in the compiled declarations
@@ -120,8 +97,14 @@ fn find_tracking_nodes<'a>(
         tracking_nodes.extend(visitor.tracking_nodes);
         ignore_nodes.extend(visitor.ignoring_nodes);
     }
-    let final_tracking_nodes = tracking_nodes.difference(&ignore_nodes);
-    let tracking_declarations: Vec<_> = final_tracking_nodes
+    state.tracking_nodes = tracking_nodes.difference(&ignore_nodes).cloned().collect();
+    state
+}
+
+fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    let tracking_declarations: Vec<_> = state
+        .tracking_nodes
+        .iter()
         .map(|node| {
             Declaration::from_default_value(0.)
                 .with_name(Library::generate_unique_visited_variable_for_node(node))
@@ -141,17 +124,29 @@ fn find_tracking_nodes<'a>(
     state
         .derived_variable_declarations
         .extend(tracking_declarations);
-
     state
 }
 
-#[derive(Default)]
 struct CompilationIntermediate<'input> {
+    pub(crate) job: &'input CompilationJob,
     pub(crate) result: CompilationResult,
     pub(crate) known_variable_declarations: Vec<Declaration>,
     pub(crate) derived_variable_declarations: Vec<Declaration>,
     pub(crate) parsed_files: Vec<FileParseResult<'input>>,
     pub(crate) tracking_nodes: HashSet<String>,
+}
+
+impl<'input> CompilationIntermediate<'input> {
+    pub(crate) fn from_job(compilation_job: &'input CompilationJob) -> Self {
+        Self {
+            job: compilation_job,
+            result: Default::default(),
+            known_variable_declarations: Default::default(),
+            derived_variable_declarations: Default::default(),
+            parsed_files: Default::default(),
+            tracking_nodes: Default::default(),
+        }
+    }
 }
 
 #[cfg(test)]
