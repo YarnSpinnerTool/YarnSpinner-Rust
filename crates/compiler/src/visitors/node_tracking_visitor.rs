@@ -117,11 +117,19 @@ tracking: never
 title: This one says nothing about tracking
 ---
 ===
+title: This one is tracking, but indecisive
+tracking: never
+tracking: always
+---
+===
 ";
         let result = process_input(input);
-        assert_eq!(result.tracking_nodes.len(), 1);
+        assert_eq!(result.tracking_nodes.len(), 2);
         assert_eq!(result.ignoring_nodes.len(), 1);
         assert!(result.tracking_nodes.contains("this one is tracking"));
+        assert!(result
+            .tracking_nodes
+            .contains("This one is tracking, but indecisive"));
         assert!(result.ignoring_nodes.contains("This one is not tracking"));
     }
 
