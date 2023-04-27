@@ -12,3 +12,13 @@ pub struct Library {
     /// The functions that are available to Yarn scripts.
     functions: YarnFnRegistry,
 }
+
+impl Library {
+    /// Generates a unique tracking variable name.
+    /// This is intended to be used to generate names for visiting.
+    /// Ideally these will very reproducible and sensible.
+    /// For now it will be something terrible and easy.
+    pub fn generate_unique_visited_variable_for_node(node_name: &str) -> String {
+        format!("$Yarn.Internal.Visiting.{node_name}")
+    }
+}

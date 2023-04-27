@@ -80,6 +80,12 @@ macro_rules! impl_type {
                             $yarn_type(Default::default())
                         }
                     }
+
+                    impl From<$base_type> for Type {
+                        fn from(_value: $base_type) -> Self {
+                            $yarn_type(Default::default())
+                        }
+                    }
                 }
             )*
         )*
@@ -99,9 +105,9 @@ impl From<BuiltinType> for Type {
 }
 
 impl_type! {
-    Type::Number => [f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,],
-    Type::String => [String,],
-    Type::Boolean => [bool,],
+    Type::Number => [f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize, NumberType,],
+    Type::String => [String, StringType,],
+    Type::Boolean => [bool, BooleanType,],
 }
 
 // The macro has problems with the following expansions

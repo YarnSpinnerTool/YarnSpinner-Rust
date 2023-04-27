@@ -27,7 +27,7 @@ pub struct Declaration {
     pub default_value: Convertible,
 
     /// A string describing the purpose of this declaration.
-    pub description: String,
+    pub description: Option<String>,
 
     /// The name of the file in which this declaration was found.
     ///
@@ -58,19 +58,77 @@ pub struct Declaration {
     /// not any syntax surrounding it. For example, the declaration
     /// `<<declare $x = 1>>` would have a range referring to the `$x`
     /// symbol.
-    pub range: RangeInclusive<Position>,
+    pub range: Option<RangeInclusive<Position>>,
 }
 
 impl Declaration {
     /// Gets the line number at which this Declaration was found in the
     /// source file.
-    pub fn source_file_line(&self) -> usize {
-        // The original says:
-        // > If this [`Declaration`] was not found in a Yarn
-        // > source file, this will be [`None`].
-        // But looking at the code, I doubt it...
-        // See #50
-        self.range.start().line
+    ///
+    /// If this [`Declaration`] was not found in a Yarn source file,
+    /// this will be [`None`].
+    pub fn source_file_line(&self) -> Option<usize> {
+        self.range.as_ref()?.start().line.into()
+    }
+
+    pub fn from_default_value(default_value: impl Into<Convertible>) -> Self {
+        Self {
+            default_value: default_value.into(),
+            name: Default::default(),
+            description: Default::default(),
+            source_file_name: Default::default(),
+            source_node_name: Default::default(),
+            is_implicit: Default::default(),
+            r#type: Default::default(),
+            range: Default::default(),
+        }
+    }
+
+    pub fn with_name(mut self, name: impl Into<String>) -> Self {
+        self.name = name.into();
+        self
+    }
+
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+
+    pub fn with_description_optional(mut self, description: impl Into<Option<String>>) -> Self {
+        self.description = description.into();
+        self
+    }
+
+    pub fn with_source_file_name(mut self, source_file_name: impl Into<DeclarationSource>) -> Self {
+        self.source_file_name = source_file_name.into();
+        self
+    }
+
+    pub fn with_source_node_name(mut self, source_node_name: impl Into<String>) -> Self {
+        self.source_node_name = Some(source_node_name.into());
+        self
+    }
+    pub fn with_source_node_name_optional(
+        mut self,
+        source_node_name: impl Into<Option<String>>,
+    ) -> Self {
+        self.source_node_name = source_node_name.into();
+        self
+    }
+
+    pub fn with_implicit(mut self) -> Self {
+        self.is_implicit = true;
+        self
+    }
+
+    pub fn with_type(mut self, r#type: impl Into<Type>) -> Self {
+        self.r#type = r#type.into();
+        self
+    }
+
+    pub fn with_range(mut self, range: impl Into<RangeInclusive<Position>>) -> Self {
+        self.range = Some(range.into());
+        self
     }
 }
 
@@ -79,8 +137,9 @@ impl Declaration {
 /// ## Implementation notes
 ///
 /// In the original implementation, [`External`] is just a magic string.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum DeclarationSource {
+    #[default]
     External,
     File(String),
 }
@@ -88,6 +147,12 @@ pub enum DeclarationSource {
 impl From<String> for DeclarationSource {
     fn from(file_name: String) -> Self {
         Self::File(file_name)
+    }
+}
+
+impl From<&str> for DeclarationSource {
+    fn from(file_name: &str) -> Self {
+        file_name.to_owned().into()
     }
 }
 
