@@ -199,6 +199,24 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .into_iter()
             .find(|decl| decl.name == function_name);
         let function_type = if let Some(function_declaration) = function_declaration {
+            let mut function_type = function_declaration.r#type.clone();
+            /*
+            functionType = functionDeclaration.Type as FunctionType;
+               if (functionType == null)
+               {
+                   throw new InvalidOperationException($"Internal error: decl's type is not a {nameof(FunctionType)}");
+               }
+
+               // we have an existing function but its undefined
+               // if we also have a type hint we can use that to update it
+               if (functionType.ReturnType == BuiltinTypes.Undefined && context.Hint != BuiltinTypes.Undefined)
+               {
+                   NewDeclarations.Remove(functionDeclaration);
+                   functionType.ReturnType = context.Hint;
+                   functionDeclaration.Type = functionType;
+                   NewDeclarations.Add(functionDeclaration);
+               }
+             */
         } else {
             // We don't have a declaration for this function. Create an
             // implicit one.
@@ -244,28 +262,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         None
         /*
 
-           if (functionDeclaration == null)
-           {
-              ...
-           }
-           else
-           {
-               functionType = functionDeclaration.Type as FunctionType;
-               if (functionType == null)
-               {
-                   throw new InvalidOperationException($"Internal error: decl's type is not a {nameof(FunctionType)}");
-               }
-
-               // we have an existing function but its undefined
-               // if we also have a type hint we can use that to update it
-               if (functionType.ReturnType == BuiltinTypes.Undefined && context.Hint != BuiltinTypes.Undefined)
-               {
-                   NewDeclarations.Remove(functionDeclaration);
-                   functionType.ReturnType = context.Hint;
-                   functionDeclaration.Type = functionType;
-                   NewDeclarations.Add(functionDeclaration);
-               }
-           }
 
            // Check each parameter of the function
            var suppliedParameters = context.function_call().expression();
