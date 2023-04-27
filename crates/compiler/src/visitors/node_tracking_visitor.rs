@@ -95,3 +95,42 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParser;
+    use crate::prelude::*;
+    use antlr_rust::common_token_stream::CommonTokenStream;
+    use antlr_rust::InputStream;
+
+    #[test]
+    fn finds_title_and_tracking_headers() {
+        let input = "title: this one is tracking
+tracking: always
+---
+===
+title: This one is not tracking
+tracking: never
+---
+===
+title: This one says nothing about tracking
+---
+===
+";
+        let result = process_input(input);
+        assert_eq!(result.tracking_nodes.len(), 1);
+        assert_eq!(result.ignoring_nodes.len(), 1);
+        assert!(result.tracking_nodes.contains("this one is tracking"));
+        assert!(result.ignoring_nodes.contains("This one is not tracking"));
+    }
+
+    fn process_input(input: &str) -> NodeTrackingVisitor {
+        let lexer = YarnSpinnerLexer::new(InputStream::new(input));
+        let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
+        let tree = parser.dialogue().unwrap();
+        let mut visitor = NodeTrackingVisitor::new();
+        visitor.visit(&*tree);
+        visitor
+    }
+}
