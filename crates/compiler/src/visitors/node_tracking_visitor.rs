@@ -5,23 +5,16 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub(crate) struct NodeTrackingVisitor {
-    tracking_nodes: HashSet<String>,
-    node_deny_list: HashSet<String>,
+    pub(crate) tracking_nodes: HashSet<String>,
+    pub(crate) ignoring_nodes: HashSet<String>,
     _dummy: Option<String>,
 }
 
 impl NodeTrackingVisitor {
-    pub(crate) fn new(
-        existing_tracked_nodes: HashSet<String>,
-        existing_blocked_nodes: HashSet<String>,
-    ) -> Self {
-        Self {
-            tracking_nodes: existing_tracked_nodes,
-            node_deny_list: existing_blocked_nodes,
-            _dummy: Default::default(),
-        }
+    pub(crate) fn new() -> Self {
+        Default::default()
     }
 }
 
@@ -61,7 +54,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
                         self.tracking_nodes.insert(title);
                     }
                     "never" => {
-                        self.node_deny_list.insert(title);
+                        self.ignoring_nodes.insert(title);
                     }
                     _ => {}
                 }

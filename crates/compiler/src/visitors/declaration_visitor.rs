@@ -42,9 +42,6 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// The name of the file we're currently in.
     source_file_name: String,
 
-    /// Gets the collection of types known to this [`DeclarationVisitor`].
-    types: Vec<BuiltinType>,
-
     keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
 
     /// A regular expression used to detect illegal characters in node titles.
@@ -57,7 +54,6 @@ impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
     pub(crate) fn new(
         source_file_name: impl Into<String>,
         existing_declarations: Vec<Declaration>,
-        type_declarations: Vec<BuiltinType>,
         tokens: &'a ActualTokenStream<'input>,
     ) -> Self {
         Self {
@@ -65,7 +61,6 @@ impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
             existing_declarations,
             new_declarations: Default::default(),
             source_file_name: source_file_name.into(),
-            types: type_declarations,
             keywords_to_builtin_types: HashMap::from([
                 ("string", BuiltinType::String(StringType)),
                 ("number", BuiltinType::Number(NumberType)),
@@ -177,8 +172,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
 
                 // The type name provided didn't map to a built-in
                 // type. Look for the type in our type collection.
-                None => match self
-                    .types
+                None => match EXPLICITLY_CONSTRUCTABLE_TYPES
                     .iter()
                     .find(|t| t.to_string() == declaration_type.get_text())
                 {
@@ -240,6 +234,14 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         self.new_declarations.push(declaration);
     }
 }
+
+const EXPLICITLY_CONSTRUCTABLE_TYPES: &[BuiltinType] = &[
+    BuiltinType::Any(AnyType),
+    BuiltinType::Number(NumberType),
+    BuiltinType::String(StringType),
+    BuiltinType::Boolean(BooleanType),
+    // Undefined types are not explicitly constructable
+];
 
 #[cfg(test)]
 mod tests {

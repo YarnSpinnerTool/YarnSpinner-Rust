@@ -7,7 +7,9 @@ use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
+use rusty_yarn_spinner_core::prelude::Library;
 use rusty_yarn_spinner_core::types::*;
+use std::collections::HashSet;
 
 mod antlr_rust_ext;
 mod compilation_job;
@@ -55,7 +57,6 @@ fn get_declarations<'a>(
         let mut variable_declaration_visitor = DeclarationVisitor::new(
             file.name.clone(),
             job.variable_declarations.clone(),
-            in_yarn_explicitly_constructable_types(),
             file.tokens(),
         );
 
@@ -72,16 +73,6 @@ fn get_declarations<'a>(
             .insert(file.name.clone(), variable_declaration_visitor.file_tags);
     }
     state
-}
-
-fn in_yarn_explicitly_constructable_types() -> Vec<BuiltinType> {
-    vec![
-        BuiltinType::Any(AnyType),
-        BuiltinType::Number(NumberType),
-        BuiltinType::String(StringType),
-        BuiltinType::Boolean(BooleanType),
-        // Undefined types are not explicitly constructable
-    ]
 }
 
 fn register_strings<'a>(
@@ -114,10 +105,53 @@ fn register_strings<'a>(
     state
 }
 
+fn find_tracking_nodes<'a>(
+    job: &'a CompilationJob,
+    mut state: CompilationIntermediate<'a>,
+) -> CompilationIntermediate<'a> {
+    // determining the nodes we need to track visits on
+    // this needs to be done before we finish up with declarations
+    // so that any tracking variables are included in the compiled declarations
+    let mut tracking_nodes = HashSet::new();
+    let mut ignore_nodes = HashSet::new();
+    for file in &state.parsed_files {
+        let mut visitor = NodeTrackingVisitor::new();
+        visitor.visit(&*file.tree);
+        tracking_nodes.extend(visitor.tracking_nodes);
+        ignore_nodes.extend(visitor.ignoring_nodes);
+    }
+    let final_tracking_nodes = tracking_nodes.difference(&ignore_nodes);
+    let tracking_declarations: Vec<_> = final_tracking_nodes
+        .map(|node| {
+            Declaration::from_default_value(0.)
+                .with_name(Library::generate_unique_visited_variable_for_node(node))
+                .with_type(NumberType)
+                .with_description(format!(
+                    "The generated variable for tracking visits of node {node}"
+                ))
+        })
+        .collect();
+
+    // adding the generated tracking variables into the declaration list
+    // this way any future variable storage system will know about them
+    // if we didn't do this later stages wouldn't be able to interface with them
+    state
+        .known_variable_declarations
+        .extend(tracking_declarations.clone());
+    state
+        .derived_variable_declarations
+        .extend(tracking_declarations);
+
+    state
+}
+
 #[derive(Default)]
 struct CompilationIntermediate<'input> {
     pub(crate) result: CompilationResult,
+    pub(crate) known_variable_declarations: Vec<Declaration>,
+    pub(crate) derived_variable_declarations: Vec<Declaration>,
     pub(crate) parsed_files: Vec<FileParseResult<'input>>,
+    pub(crate) tracking_nodes: HashSet<String>,
 }
 
 #[cfg(test)]
