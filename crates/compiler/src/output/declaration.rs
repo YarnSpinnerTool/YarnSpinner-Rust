@@ -194,6 +194,6 @@ impl Display for DeclarationSource {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DeferredTypeDiagnostic {
-    name: String,
-    diagnostic: Diagnostic,
+    pub(crate) name: String,
+    pub(crate) diagnostic: Diagnostic,
 }

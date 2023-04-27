@@ -143,38 +143,35 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         {
             return Some(declaration.r#type);
         }
-        None
 
-        /*
+        // do we already have a potential warning about this?
+        // no need to make more
+        if self
+            .deferred_types
+            .iter()
+            .any(|deferred_type| deferred_type.name == name)
+        {
+            return Some(BuiltinType::Undefined);
+        }
 
-           foreach (var declaration in this.Declarations)
-           {
-               if (declaration.Name == name)
-               {
-                   return declaration.Type;
-               }
-           }
+        // creating a new diagnostic for us having an undefined variable
+        // this won't get added into the existing diags though because its possible a later pass will clear it up
+        // so we save this as a potential diagnostic for the compiler itself to resolve
+        let diagnostic =
+            Diagnostic::from_message(format_cannot_determine_variable_type_error(&name))
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(ctx, self.tokens);
+        self.deferred_types
+            .push(DeferredTypeDiagnostic { name, diagnostic });
 
-           // do we already have a potential warning about this?
-           // no need to make more
-           if (this.deferredTypes.Any(hmm => hmm.Name == name))
-           {
-               return BuiltinTypes.Undefined;
-           }
-
-           // creating a new diagnostic for us having an undefined variable
-           // this won't get added into the existing diags though because its possible a later pass will clear it up
-           // so we save this as a potential diagnostic for the compiler itself to resolve
-           var diagnostic = new Diagnostic(sourceFileName, context, string.Format(CantDetermineVariableTypeError, name));
-           deferredTypes.Add(DeferredTypeDiagnostic.CreateDeferredTypeDiagnostic(name, diagnostic));
-
-           // We don't have a declaration for this variable. Return
-           // Undefined. Hopefully, other context will allow us to infer a
-           // type.
-           return BuiltinTypes.Undefined;
-        */
+        // We don't have a declaration for this variable. Return
+        // Undefined. Hopefully, other context will allow us to infer a
+        // type.
+        Some(BuiltinType::Undefined)
     }
 }
 
 /// {0} = variable name
-const CANT_DETERMINE_VARIABLE_TYPE_ERROR: &str = "Can't figure out the type of variable {0} given its context. Specify its type with a <<declare>> statement.";
+fn format_cannot_determine_variable_type_error(name: &str) -> String {
+    format!("Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement.")
+}
