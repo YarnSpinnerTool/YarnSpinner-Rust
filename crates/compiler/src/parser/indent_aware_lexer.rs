@@ -30,7 +30,7 @@ antlr_rust::tid! { impl<'input, Input> TidAble<'input> for IndentAwareYarnSpinne
 pub struct IndentAwareYarnSpinnerLexer<
     'input,
     Input: CharStream<From<'input>>,
-    TF: TokenFactory<'input> = CommonTokenFactory,
+    TF: TokenFactory<'input> = LocalTokenFactory<'input>,
 > {
     base: GeneratedYarnSpinnerLexer<'input, Input>,
     hit_eof: bool,

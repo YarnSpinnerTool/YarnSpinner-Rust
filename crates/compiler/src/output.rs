@@ -38,9 +38,9 @@ pub struct CompilationResult {
     /// The collection of variable declarations that were found during
     /// compilation.
     ///
-    /// This value will be [`None`] if the [`CompilationJob`] object's
+    /// This value will be empty if the [`CompilationJob`] object's
     /// [`CompilationType`] value was not [`CompilationType::FullCompilation`].
-    pub declarations: Option<Vec<Declaration>>,
+    pub declarations: Vec<Declaration>,
 
     /// A value indicating whether the compiler had to create line IDs
     /// for lines in the source code that lacked `#line:` tags.

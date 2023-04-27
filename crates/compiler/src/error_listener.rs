@@ -1,13 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorListener.cs>
 
 use crate::output::Position;
+use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::prelude::File;
+use crate::prelude::{ActualTokenStream, File};
 use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
-use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
@@ -54,14 +54,15 @@ impl Diagnostic {
         }
     }
 
-    pub fn read_parser_rule_context<'a, 'b, 'input>(
+    pub fn read_parser_rule_context<'input>(
         mut self,
-        ctx: &impl ParserRuleContext<'input>,
+        ctx: &impl ParserRuleContextExt<'input>,
+        token_stream: &ActualTokenStream<'input>,
     ) -> Self {
         let start = Position::from_token(ctx.start());
         let stop = Position::from_token(ctx.stop());
         self.range = Some(start..=stop);
-        self.context = Some(ctx.get_text());
+        self.context = Some(ctx.get_text_with_whitespace(token_stream));
         self
     }
 
@@ -214,8 +215,11 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
                     }
                 }
             }
-            let line = (offending_symbol.get_line() - 1) as usize;
-            let column = offending_symbol.get_column() as usize;
+
+            // All positions are +1 compared to original implementation, but the result is the same.
+            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
+            let line = (offending_symbol.get_line() - 1) as usize + 1;
+            let column = offending_symbol.get_column() as usize + 1;
             let length = offending_symbol.get_text().len();
             diagnostic = diagnostic.with_context(string).with_range(
                 Position {

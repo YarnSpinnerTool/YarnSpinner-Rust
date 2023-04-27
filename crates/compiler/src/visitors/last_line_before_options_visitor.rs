@@ -1,14 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/LastLineBeforeOptionsVisitor.cs>
 
 use crate::compiler;
-use crate::parser::generated::yarnspinnerparser::{
-    BodyContext, If_statementContext, Line_statementContext, Shortcut_option_statementContext,
-};
-use crate::prelude::generated::yarnspinnerparser::{
-    BodyContextAttrs, Else_clauseContextAttrs, Else_if_clauseContextAttrs, If_clauseContextAttrs,
-    If_statementContextAttrs, Shortcut_optionContextAttrs, Shortcut_option_statementContextAttrs,
-    StatementContextAll, StatementContextAttrs, YarnSpinnerParserContextType,
-};
+use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 use std::rc::Rc;

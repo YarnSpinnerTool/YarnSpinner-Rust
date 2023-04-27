@@ -4,6 +4,7 @@
 
 pub use {
     any::*, boolean::*, builtin_types::*, function::*, number::*, r#type::*, r#type::*, string::*,
+    type_util::*,
 };
 
 mod any;
@@ -13,4 +14,4 @@ mod function;
 mod number;
 mod string;
 mod r#type;
-pub(crate) mod type_util;
+mod type_util;

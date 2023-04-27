@@ -2,17 +2,24 @@
 //! but were moved to their own file for better organization.
 
 use crate::error_strategy::ErrorStrategy;
-use crate::parser::YarnSpinnerLexer;
-use crate::prelude::generated::yarnspinnerparser;
-use crate::prelude::generated::yarnspinnerparser::{
-    HashtagContextExt, YarnSpinnerParser, YarnSpinnerParserContext,
-};
-use crate::prelude::{Diagnostic, File, FileParseResult, LexerErrorListener, ParserErrorListener};
+
+use crate::prelude::generated::yarnspinnerparser::*;
+use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
+use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
-use antlr_rust::token::TOKEN_DEFAULT_CHANNEL;
-use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
-use antlr_rust::{InputStream, Parser};
+use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
+use antlr_rust::Parser;
+use std::rc::Rc;
+
+pub(crate) fn get_line_id_tag<'a>(
+    hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
+) -> Option<Rc<HashtagContextAll<'a>>> {
+    hashtag_contexts
+        .iter()
+        .find(|h| h.text.as_ref().expect("Hashtag held no text").get_text() == "line:")
+        .cloned()
+}
 
 pub(crate) fn parse_syntax_tree<'a>(
     file: &'a File,
@@ -55,15 +62,59 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
     format!("line:{name}")
 }
 
+/// Gets the text of the documentation comments that either immediately
+/// precede `context`, or are on the same line as `context`.
+///
+/// Documentation comments begin with a triple-slash (`///`), and
+/// are used to describe variable declarations. If documentation
+/// comments precede a declaration (that is, they're not on the same
+/// line as the declaration), then they may span multiple lines, as long
+/// as each line begins with a triple-slash.
+///
+/// ## Implementation notes
+/// The flag `allowCommentsAfter` and its consequences were not ported because they are unused.
+pub(crate) fn get_document_comments<'input>(
+    tokens: &ActualTokenStream<'input>,
+    context: &impl YarnSpinnerParserContext<
+        'input,
+        TF = LocalTokenFactory<'input>,
+        Ctx = YarnSpinnerParserContextType,
+    >,
+) -> String {
+    let preceding_comments = tokens.get_hidden_tokens_to_left(
+        context.start().get_token_index(),
+        yarnspinnerlexer::COMMENTS as isize,
+    );
+
+    let preceding_doc_comments: Vec<_> = preceding_comments
+        .iter()
+        // There are no tokens on the main channel with this
+        // one on the same line
+        .filter(|t| {
+            !tokens
+                .get_tokens()
+                .iter()
+                .filter(|ot| ot.get_line() == t.get_line())
+                .filter(|ot| {
+                    ot.get_token_type() != yarnspinnerlexer::INDENT
+                        && ot.get_token_type() != yarnspinnerlexer::DEDENT
+                })
+                .any(|ot| ot.get_channel() == TOKEN_DEFAULT_CHANNEL)
+        })
+        .filter(|t| t.get_text().starts_with("///"))
+        // Get its text
+        .map(|t| t.get_text().replace("///", "").trim().to_owned())
+        .collect();
+    preceding_doc_comments.join(" ")
+}
+
 /// Not part of original implementation, but needed because we lack some convenience methods
 /// that the C# implementation of ANTLR would provide but antlr4rust does not.
 pub(crate) fn add_hashtag_child<'input>(
     parent: &impl YarnSpinnerParserContext<'input>,
     text: impl Into<String>,
 ) {
-    // Hack: need to convert the reference to an Rc somehow.
-    // This will fail on a terminal node, fingers crossed that that won't happen 😅
-    let parent = parent.get_children().next().unwrap().get_parent().unwrap();
+    let parent = parent.ref_to_rc();
     // Taken from C# implementation of `CommonToken`s constructor
     let string_id_token = create_common_token(yarnspinnerparser::HASHTAG_TEXT, text);
     let invoking_state_according_to_original_implementation = 0;
@@ -76,19 +127,34 @@ pub(crate) fn add_hashtag_child<'input>(
     parent.add_child(hashtag);
 }
 
-pub(crate) fn create_common_token<'a>(
-    token_type: isize,
-    text: impl Into<String>,
-) -> Box<antlr_rust::token::CommonToken<'a>> {
-    // Taken from C# implementation of `CommonToken`s constructor
-    CommonTokenFactory.create::<InputStream<&'a str>>(
-        None,
-        token_type,
-        Some(text.into()),
-        TOKEN_DEFAULT_CHANNEL,
-        0,
-        0,
-        0,
-        -1,
-    )
+pub(crate) trait ContextRefExt<'input> {
+    fn ref_to_rc(
+        self,
+    ) -> Rc<
+        dyn YarnSpinnerParserContext<
+            'input,
+            Ctx = YarnSpinnerParserContextType,
+            TF = LocalTokenFactory<'input>,
+        >,
+    >;
+}
+
+impl<'input, T> ContextRefExt<'input> for &T
+where
+    T: YarnSpinnerParserContext<'input>,
+{
+    fn ref_to_rc(
+        self,
+    ) -> Rc<
+        dyn YarnSpinnerParserContext<
+            'input,
+            Ctx = YarnSpinnerParserContextType,
+            TF = LocalTokenFactory<'input>,
+        >,
+    > {
+        // Hack: need to convert the reference to an Rc somehow.
+        // This will fail on a terminal node, fingers crossed that that won't happen 😅
+        // See #45
+        self.get_children().next().unwrap().get_parent().unwrap()
+    }
 }

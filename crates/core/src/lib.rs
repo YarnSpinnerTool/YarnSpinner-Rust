@@ -1,3 +1,4 @@
+pub mod function_wrappers;
 mod generated;
 mod library;
 pub mod types;

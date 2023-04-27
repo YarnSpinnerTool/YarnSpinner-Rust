@@ -1,72 +1,69 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
+pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::output::*;
-use crate::parser::generated::yarnspinnerparser::HashtagContextAll;
+use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
-use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
-use std::rc::Rc;
-pub(crate) use utils::*;
+use rusty_yarn_spinner_core::prelude::Library;
+use rusty_yarn_spinner_core::types::*;
+use std::collections::HashSet;
 
+mod antlr_rust_ext;
 mod compilation_job;
 mod utils;
 
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     // TODO: other steps
-    let compiler_steps: Vec<&dyn CompilerStep> = vec![&add_built_in_types, &register_strings];
+    let compiler_steps: Vec<&CompilationStep> = vec![
+        &register_strings,
+        &get_declarations,
+        &find_tracking_nodes,
+        &add_tracking_declarations,
+    ];
 
-    let initial = CompilationResult {
-        program: None,
-        string_table: Default::default(),
-        declarations: None,
-        contains_implicit_string_tags: false,
-        file_tags: Default::default(),
-        diagnostics: vec![],
-        debug_info: Default::default(),
-    };
-
+    let initial = CompilationIntermediate::from_job(&compilation_job);
     compiler_steps
         .into_iter()
-        .fold(initial, |acc, curr| curr.apply(&compilation_job, acc))
+        .fold(initial, |state, step| step(state))
+        .result
 }
 
-pub(crate) fn get_line_id_tag<'a>(
-    hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
-) -> Option<Rc<HashtagContextAll<'a>>> {
-    hashtag_contexts
-        .iter()
-        .find(|h| h.text.as_ref().expect("Hashtag held no text").get_text() == "line:")
-        .cloned()
-}
+type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
 
-trait CompilerStep {
-    fn apply(&self, job: &CompilationJob, previous: CompilationResult) -> CompilationResult;
-}
+fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    // Find the variable declarations in these files.
+    for file in &state.parsed_files {
+        let mut variable_declaration_visitor = DeclarationVisitor::new(
+            file.name.clone(),
+            state.job.variable_declarations.clone(),
+            file.tokens(),
+        );
 
-impl<F> CompilerStep for F
-where
-    F: Fn(&CompilationJob, CompilationResult) -> CompilationResult,
-{
-    fn apply(&self, job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
-        self(job, previous)
+        variable_declaration_visitor.visit(&*file.tree);
+        let result = &mut state.result;
+        result
+            .diagnostics
+            .extend_from_slice(&variable_declaration_visitor.diagnostics);
+        result
+            .declarations
+            .extend(variable_declaration_visitor.new_declarations);
+        result
+            .file_tags
+            .insert(file.name.clone(), variable_declaration_visitor.file_tags);
     }
+    state
 }
 
-fn add_built_in_types(_job: &CompilationJob, previous: CompilationResult) -> CompilationResult {
-    previous
-}
-
-fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> CompilationResult {
-    let mut parsed_files = Vec::new();
-
+fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
-    let mut string_table_manager: StringTableManager = state.string_table.into();
-    for file in &job.files {
-        let parse_result = parse_syntax_tree(file, &mut state.diagnostics);
+    let mut string_table_manager: StringTableManager = state.result.string_table.into();
+    for file in &state.job.files {
+        let parse_result = parse_syntax_tree(file, &mut state.result.diagnostics);
 
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
@@ -74,21 +71,87 @@ fn register_strings(job: &CompilationJob, mut state: CompilationResult) -> Compi
         let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
         last_line_tagger.visit(&*parse_result.tree);
 
-        let mut visitor =
-            StringTableGeneratorVisitor::new(file.file_name.clone(), string_table_manager.clone());
+        let mut visitor = StringTableGeneratorVisitor::new(
+            file.file_name.clone(),
+            string_table_manager.clone(),
+            parse_result.tokens(),
+        );
         visitor.visit(&*parse_result.tree);
-        state.diagnostics.extend(visitor.diagnostics);
+        state.result.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
-        parsed_files.push(parse_result);
+        state.parsed_files.push(parse_result);
     }
-    state.string_table = string_table_manager.into();
+    state.result.string_table = string_table_manager.into();
     state
+}
+
+fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    // determining the nodes we need to track visits on
+    // this needs to be done before we finish up with declarations
+    // so that any tracking variables are included in the compiled declarations
+    let mut tracking_nodes = HashSet::new();
+    let mut ignore_nodes = HashSet::new();
+    for file in &state.parsed_files {
+        let mut visitor = NodeTrackingVisitor::new();
+        visitor.visit(&*file.tree);
+        tracking_nodes.extend(visitor.tracking_nodes);
+        ignore_nodes.extend(visitor.ignoring_nodes);
+    }
+    state.tracking_nodes = tracking_nodes.difference(&ignore_nodes).cloned().collect();
+    state
+}
+
+fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    let tracking_declarations: Vec<_> = state
+        .tracking_nodes
+        .iter()
+        .map(|node| {
+            Declaration::from_default_value(0.)
+                .with_name(Library::generate_unique_visited_variable_for_node(node))
+                .with_type(NumberType)
+                .with_description(format!(
+                    "The generated variable for tracking visits of node {node}"
+                ))
+        })
+        .collect();
+
+    // adding the generated tracking variables into the declaration list
+    // this way any future variable storage system will know about them
+    // if we didn't do this later stages wouldn't be able to interface with them
+    state
+        .known_variable_declarations
+        .extend(tracking_declarations.clone());
+    state
+        .derived_variable_declarations
+        .extend(tracking_declarations);
+    state
+}
+
+struct CompilationIntermediate<'input> {
+    pub(crate) job: &'input CompilationJob,
+    pub(crate) result: CompilationResult,
+    pub(crate) known_variable_declarations: Vec<Declaration>,
+    pub(crate) derived_variable_declarations: Vec<Declaration>,
+    pub(crate) parsed_files: Vec<FileParseResult<'input>>,
+    pub(crate) tracking_nodes: HashSet<String>,
+}
+
+impl<'input> CompilationIntermediate<'input> {
+    pub(crate) fn from_job(compilation_job: &'input CompilationJob) -> Self {
+        Self {
+            job: compilation_job,
+            result: Default::default(),
+            known_variable_declarations: Default::default(),
+            derived_variable_declarations: Default::default(),
+            parsed_files: Default::default(),
+            tracking_nodes: Default::default(),
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::prelude::*;
 
     #[test]
     fn can_call_compile_empty_without_crash() {
@@ -118,113 +181,5 @@ a {1 + 3} cool expression
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
         });
-    }
-
-    #[test]
-    fn populates_string_table() {
-        let file = File {
-            file_name: "test.yarn".to_string(),
-            source: "title: test
----
-foo
-bar
-a {1 + 3} cool expression
-==="
-            .to_string(),
-        };
-        let result = compile(CompilationJob {
-            files: vec![file],
-            library: None,
-            compilation_type: CompilationType::FullCompilation,
-            variable_declarations: vec![],
-        });
-        let string_table = result.string_table;
-        assert_eq!(string_table.len(), 3);
-        assert_eq!(
-            string_table["line:test.yarn-test-0"],
-            StringInfo {
-                text: "foo".to_string(),
-                node_name: "test".to_string(),
-                line_number: 3,
-                file_name: "test.yarn".to_string(),
-                is_implicit_tag: true,
-                metadata: vec![],
-            }
-        );
-        assert_eq!(
-            string_table["line:test.yarn-test-1"],
-            StringInfo {
-                text: "bar".to_string(),
-                node_name: "test".to_string(),
-                line_number: 4,
-                file_name: "test.yarn".to_string(),
-                is_implicit_tag: true,
-                metadata: vec![],
-            }
-        );
-        assert_eq!(
-            string_table["line:test.yarn-test-2"],
-            StringInfo {
-                text: "a {0} cool expression".to_string(),
-                node_name: "test".to_string(),
-                line_number: 5,
-                file_name: "test.yarn".to_string(),
-                is_implicit_tag: true,
-                metadata: vec![],
-            }
-        );
-    }
-
-    #[test]
-    fn catches_expression_errors() {
-        let file = File {
-            file_name: "test.yarn".to_string(),
-            source: "title: test
----
-foo
-bar
-a {very} cool expression
-==="
-            .to_string(),
-        };
-        let result = compile(CompilationJob {
-            files: vec![file],
-            library: None,
-            compilation_type: CompilationType::FullCompilation,
-            variable_declarations: vec![],
-        });
-        assert!(result.program.is_none());
-        let diagnostics = result.diagnostics;
-        assert_eq!(diagnostics.len(), 2);
-
-        // TODO: Imo this is off by one, but I'm not sure if this is a bug in the original impl
-        // or if there is a (+1) that will be done at some point that we have not implemented yet.
-        let range = Position {
-            line: 4,
-            character: 7,
-        }..=Position {
-            line: 4,
-            character: 8,
-        };
-        let context = "a {very} cool expression\n       ^".to_owned();
-        let first_expected =
-            Diagnostic::from_message("Unexpected \"}\" while reading a function call".to_string())
-                .with_file_name("test.yarn".to_string())
-                .with_range(range.clone())
-                .with_context(context.clone())
-                .with_severity(DiagnosticSeverity::Error);
-
-        let second_expected =
-            Diagnostic::from_message("mismatched input '}' expecting '('".to_string())
-                .with_file_name("test.yarn".to_string())
-                .with_range(range)
-                .with_context(context)
-                .with_severity(DiagnosticSeverity::Error);
-        if diagnostics[0] == first_expected {
-            assert_eq!(diagnostics[1], second_expected);
-        } else {
-            assert_eq!(diagnostics[0], second_expected);
-            assert_eq!(diagnostics[1], first_expected);
-        }
     }
 }

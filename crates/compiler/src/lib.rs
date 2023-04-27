@@ -4,6 +4,7 @@ pub(crate) mod error_strategy;
 mod file_parse_result;
 mod output;
 mod parser;
+pub(crate) mod parser_rule_context_ext;
 mod string_table_manager;
 pub(crate) mod visitors;
 
