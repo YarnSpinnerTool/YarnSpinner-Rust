@@ -19,9 +19,3 @@ pub type ActualParserContext<'input> = dyn YarnSpinnerParserContext<
     Ctx = YarnSpinnerParserContextType,
     TF = LocalTokenFactory<'input>,
 >;
-
-pub type ActualRuleContext<'input> = dyn ParserRuleContext<
-    'input,
-    Ctx = YarnSpinnerParserContextType,
-    TF = LocalTokenFactory<'input>,
->;

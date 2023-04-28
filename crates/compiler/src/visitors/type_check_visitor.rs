@@ -386,7 +386,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         let expressions: Vec<_> = ctx
             .expression_all()
             .into_iter()
-            .map(|expr| expr as Rc<ActualRuleContext<'input>>)
+            .map(|expr| expr as Rc<ActualParserContext<'input>>)
             .collect();
         let operator_context = ctx.op.as_ref().unwrap();
         let operator: Operator = token_to_operator(operator_context.token_type).unwrap();
@@ -448,11 +448,25 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
     fn check_operation(
         &mut self,
         context: &impl ParserRuleContext<'input>,
-        terms: Vec<Rc<ActualRuleContext<'input>>>,
+        terms: Vec<Rc<ActualParserContext<'input>>>,
         operation_type: impl Into<Option<Operator>>,
         operation_description: String,
         permitted_types: Vec<Type>,
     ) -> Option<Type> {
+        let mut term_types = Vec::new();
+        let mut expression_type = None;
+        for expression in &terms {
+            // Visit this expression, and determine its type.
+            let r#type = self.visit(&**expression);
+            if let Some(r#type) = r#type.clone() {
+                if expression_type.is_none() {
+                    // This is the first concrete type we've seen. This
+                    // will be our expression type.
+                    expression_type = Some(r#type.clone());
+                }
+                term_types.push(r#type);
+            }
+        }
         todo!()
     }
 }
