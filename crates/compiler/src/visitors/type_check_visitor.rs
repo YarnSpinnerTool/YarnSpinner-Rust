@@ -129,24 +129,6 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         let hashable_interval = get_hashable_interval(ctx);
         self.types.insert(hashable_interval, r#type)
     }
-
-    /// ok so what do we actually need to do in here?
-    /// we need to do a few different things
-    /// basically we need to go through the various types in the expression
-    /// if any are known we need to basically log that
-    /// then at the end if there are still unknowns we check if the operation itself forces a type
-    /// so if we have say Undefined = Undefined + Number then we know that only one operation supports + Number and that is Number + Number
-    /// so we can slot the type into the various parts
-    fn check_operation(
-        &mut self,
-        context: &impl ParserRuleContext<'input>,
-        terms: Vec<Rc<ActualRuleContext<'input>>>,
-        operation_type: Operator,
-        operation_description: String,
-        permitted_types: Vec<Type>,
-    ) -> Option<Type> {
-        todo!()
-    }
 }
 
 impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
@@ -451,6 +433,26 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     }
 
     fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
+        todo!()
+    }
+}
+
+impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
+    /// ok so what do we actually need to do in here?
+    /// we need to do a few different things
+    /// basically we need to go through the various types in the expression
+    /// if any are known we need to basically log that
+    /// then at the end if there are still unknowns we check if the operation itself forces a type
+    /// so if we have say Undefined = Undefined + Number then we know that only one operation supports + Number and that is Number + Number
+    /// so we can slot the type into the various parts
+    fn check_operation(
+        &mut self,
+        context: &impl ParserRuleContext<'input>,
+        terms: Vec<Rc<ActualRuleContext<'input>>>,
+        operation_type: Operator,
+        operation_description: String,
+        permitted_types: Vec<Type>,
+    ) -> Option<Type> {
         todo!()
     }
 }
