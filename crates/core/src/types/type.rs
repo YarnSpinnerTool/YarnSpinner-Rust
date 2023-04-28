@@ -34,12 +34,10 @@ pub enum Type {
 
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = self.properties().name;
         match self {
-            Type::Any => write!(f, "any"),
-            Type::Boolean => write!(f, "boolean"),
             Type::Function(function) => Display::fmt(function, f),
-            Type::Number => write!(f, "number"),
-            Type::String => write!(f, "string"),
+            _ => write!(f, "{}", name),
         }
     }
 }

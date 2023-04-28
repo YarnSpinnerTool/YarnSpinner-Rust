@@ -361,7 +361,7 @@ mod tests {
         assert_eq!(result.diagnostics.len(), 1);
         assert_eq!(
             result.diagnostics[0],
-            Diagnostic::from_message("Type string does not match value 1 (number)".to_string())
+            Diagnostic::from_message("Type string does not match value 1 (Number)".to_string())
                 .with_file_name("test.yarn".to_string())
                 .with_context("<<declare $foo to 1 as string>>")
                 .with_range(
