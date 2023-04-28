@@ -6,7 +6,7 @@ use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
-use rusty_yarn_spinner_core::types::{FunctionType, Type};
+use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeOptionFormat};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
@@ -199,7 +199,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .into_iter()
             .find(|decl| decl.name == function_name);
         let hint = self.hints.get(&ctx.get_source_interval().into()).cloned();
-        let _function_type = if let Some(function_declaration) = function_declaration {
+        let function_type = if let Some(function_declaration) = function_declaration {
             let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
                  unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
             };
@@ -235,7 +235,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             let column = ctx.start().get_column();
             let function_declaration = Declaration::default()
                 .with_type(Type::from(function_type.clone()))
-                .with_name(function_name)
+                .with_name(&function_name)
                 .with_description(format!(
                     "Implicit declaration of function at {}:{}:{}",
                     self.source_file_name, line, column
@@ -264,54 +264,58 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             self.new_declarations.push(function_declaration);
             function_type
         };
-        None
-        /*
+        // Check each parameter of the function
+        let supplied_parameters = ctx.function_call().unwrap().expression_all();
+        let mut expected_parameters = function_type.parameters;
 
+        if supplied_parameters.len() != expected_parameters.len() {
+            // Wrong number of parameters supplied
+            let parameters = if expected_parameters.len() == 1 {
+                "parameter"
+            } else {
+                "parameters"
+            };
+            let diagnostic = Diagnostic::from_message(format!(
+                "Function {} expects {} {}, but received {}",
+                function_name,
+                expected_parameters.len(),
+                parameters,
+                supplied_parameters.len()
+            ))
+            .with_file_name(&self.source_file_name)
+            .read_parser_rule_context(ctx, self.tokens);
+            self.diagnostics.push(diagnostic);
+            return *function_type.return_type;
+        }
 
-           // Check each parameter of the function
-           var suppliedParameters = context.function_call().expression();
+        for i in 0..expected_parameters.len() {
+            let supplied_parameter = supplied_parameters[i].clone();
+            let mut expected_type = &expected_parameters[i];
+            let supplied_type = self.visit(&*supplied_parameter);
+            if expected_type.is_none() {
+                // The type of this parameter hasn't yet been bound.
+                // Bind this parameter type to what we've resolved the
+                // type to.
+                expected_parameters[i] = supplied_type.clone();
+                expected_type = &supplied_type;
+            }
+            if !expected_type.is_sub_type_of(&supplied_type) {
+                let diagnostic = Diagnostic::from_message(format!(
+                    "{} parameter {} expects a {}, not a {}",
+                    function_name,
+                    i + 1,
+                    expected_type.format(),
+                    supplied_type.format()
+                ))
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(ctx, self.tokens);
+                self.diagnostics.push(diagnostic);
+            }
+        }
+        // Cool, all the parameters check out!
 
-           var expectedParameters = functionType.Parameters;
-
-           if (suppliedParameters.Length != expectedParameters.Count())
-           {
-               // Wrong number of parameters supplied
-               var parameters = expectedParameters.Count() == 1 ? "parameter" : "parameters";
-
-               this.diagnostics.Add(new Diagnostic(this.sourceFileName, context,  $"Function {functionName} expects {expectedParameters.Count()} {parameters}, but received {suppliedParameters.Length}"));
-
-               return functionType.ReturnType;
-           }
-
-           for (int i = 0; i < expectedParameters.Count(); i++)
-           {
-               var suppliedParameter = suppliedParameters[i];
-
-               var expectedType = expectedParameters[i];
-
-               var suppliedType = this.Visit(suppliedParameter);
-
-               if (expectedType == Types.Undefined)
-               {
-                   // The type of this parameter hasn't yet been bound.
-                   // Bind this parameter type to what we've resolved the
-                   // type to.
-                   expectedParameters[i] = suppliedType;
-                   expectedType = suppliedType;
-               }
-
-               if (TypeUtil.IsSubType(expectedType, suppliedType) == false)
-               {
-                   this.diagnostics.Add(new Diagnostic(this.sourceFileName, context, $"{functionName} parameter {i + 1} expects a {expectedType?.Name ?? "undefined"}, not a {suppliedType?.Name ?? "undefined"}"));
-                   return functionType.ReturnType;
-               }
-           }
-
-           // Cool, all the parameters check out!
-
-           // Finally, return the return type of this function.
-           return functionType.ReturnType;
-        */
+        // Finally, return the return type of this function.
+        *function_type.return_type
     }
 }
 
