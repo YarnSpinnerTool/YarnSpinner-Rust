@@ -85,6 +85,23 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             .chain(self.new_declarations.iter().cloned())
             .collect()
     }
+
+    fn get_hint(&self, ctx: &impl ParserRuleContext<'input>) -> Option<&Type> {
+        let interval = ctx.get_source_interval();
+        let hashable_interval = HashableInterval(interval);
+        self.hints.get(&hashable_interval)
+    }
+
+    fn set_hint(
+        &mut self,
+        ctx: &impl ParserRuleContext<'input>,
+        hint: impl Into<Option<Type>>,
+    ) -> Option<Type> {
+        let hint = hint.into()?;
+        let interval = ctx.get_source_interval();
+        let hashable_interval = HashableInterval(interval);
+        self.hints.insert(hashable_interval, hint)
+    }
 }
 
 impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
@@ -198,7 +215,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .declarations()
             .into_iter()
             .find(|decl| decl.name == function_name);
-        let hint = self.hints.get(&ctx.get_source_interval().into()).cloned();
+        let hint = self.get_hint(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
                  unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
@@ -318,6 +335,32 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
 
         // Finally, return the return type of this function.
         *function_type.return_type
+    }
+
+    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
+        // passing the hint from the expression down into the values within
+        let hint = self.get_hint(ctx).cloned();
+        let value = ctx.value().unwrap();
+        self.set_hint(&*value, hint);
+        // Value expressions have the type of their inner value
+        let r#type = self.visit(&*value);
+        self.set_hint(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
+        // Parens expressions have the type of their inner expression
+        let r#type = self.visit(&*ctx.expression().unwrap());
+        self.set_hint(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
+        todo!()
     }
 }
 
