@@ -1,4 +1,3 @@
-use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
@@ -6,19 +5,15 @@ use crate::prelude::*;
 use crate::visitors::token_to_operator;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::{CommonToken, Token};
+use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
-use better_any::TidExt;
 use check_operation::*;
-use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
-use std::path::Path;
-use std::rc::Rc;
 
 mod check_operation;
 
