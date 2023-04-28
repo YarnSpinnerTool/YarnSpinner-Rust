@@ -3,13 +3,11 @@
 //! - `IBridgeableType` is not implemented because it is not actually used anywhere.
 
 pub use {
-    any::*, boolean::*, builtin_types::*, function::*, number::*, r#type::*, r#type::*, string::*,
-    type_util::*,
+    any::*, boolean::*, function::*, number::*, r#type::*, r#type::*, string::*, type_util::*,
 };
 
 mod any;
 mod boolean;
-mod builtin_types;
 mod function;
 mod number;
 mod string;

@@ -42,8 +42,6 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// The name of the file we're currently in.
     source_file_name: String,
 
-    keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
-
     /// A regular expression used to detect illegal characters in node titles.
     regex: Regex,
 
@@ -61,11 +59,6 @@ impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
             existing_declarations,
             new_declarations: Default::default(),
             source_file_name: source_file_name.into(),
-            keywords_to_builtin_types: HashMap::from([
-                ("string", BuiltinType::String(StringType)),
-                ("number", BuiltinType::Number(NumberType)),
-                ("bool", BuiltinType::Boolean(BooleanType)),
-            ]),
             regex: Regex::new(r"[\[<>\]{}|:\s#$]").unwrap(),
             file_tags: Default::default(),
             diagnostics: Default::default(),
@@ -166,19 +159,16 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
 
         // Did the source code name an explicit type?
         if let Some(declaration_type) = ctx.declaration_type.as_ref() {
-            let explicit_type = match self
-                .keywords_to_builtin_types
-                .get(declaration_type.get_text())
-            {
+            let explicit_type = match keyword_to_type(declaration_type.get_text()) {
                 Some(builtin_type) => builtin_type,
 
                 // The type name provided didn't map to a built-in
                 // type. Look for the type in our type collection.
-                None => match BuiltinType::EXPLICITLY_CONSTRUCTABLE
+                None => match Type::EXPLICITLY_CONSTRUCTABLE
                     .iter()
                     .find(|t| t.to_string() == declaration_type.get_text())
                 {
-                    Some(explicit_type) => explicit_type,
+                    Some(explicit_type) => explicit_type.clone(),
                     None => {
                         // We didn't find a type by this name.
                         let msg = format!("Unknown type {}", declaration_type.get_text());
@@ -195,12 +185,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             // Check that the type we've found is compatible with the
             // type of the value that was provided - if it doesn't,
             // that's a type error
-            if !value.r#type.is_sub_type_of(explicit_type) {
+            if !value.r#type.is_sub_type_of(&explicit_type) {
                 let msg = format!(
                     "Type {} does not match value {} ({})",
                     declaration_type.get_text(),
                     value_context.get_text(),
-                    value.r#type
+                    value.r#type.format()
                 );
                 self.diagnostics.push(
                     Diagnostic::from_message(msg)
@@ -214,7 +204,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         let description = compiler::get_document_comments(self.tokens, ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
         let line = variable_context.start().line as usize;
-        let declaration = Declaration::from_default_value(value.internal_value.clone().unwrap())
+        let declaration = Declaration::default()
+            .with_default_value(value.internal_value.clone().unwrap())
             .with_type(value.r#type.clone())
             .with_name(variable_name)
             .with_description_optional(description_as_option)
@@ -234,6 +225,15 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                 },
             );
         self.new_declarations.push(declaration);
+    }
+}
+
+fn keyword_to_type(keyword: &str) -> Option<Type> {
+    match keyword {
+        "string" => Some(Type::String),
+        "number" => Some(Type::Number),
+        "bool" => Some(Type::Boolean),
+        _ => None,
     }
 }
 
@@ -266,8 +266,9 @@ mod tests {
         assert_eq!(result.declarations.len(), 4);
         assert_eq!(
             result.declarations[0],
-            Declaration::from_default_value(1.0)
-                .with_type(NumberType)
+            Declaration::default()
+                .with_default_value(1.0)
+                .with_type(Type::Number)
                 .with_name("$foo")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -284,8 +285,9 @@ mod tests {
 
         assert_eq!(
             result.declarations[1],
-            Declaration::from_default_value("2")
-                .with_type(StringType)
+            Declaration::default()
+                .with_default_value("2")
+                .with_type(Type::String)
                 .with_name("$bar")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -302,8 +304,9 @@ mod tests {
 
         assert_eq!(
             result.declarations[2],
-            Declaration::from_default_value(true)
-                .with_type(BooleanType)
+            Declaration::default()
+                .with_default_value(true)
+                .with_type(Type::Boolean)
                 .with_name("$baz")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -320,8 +323,9 @@ mod tests {
 
         assert_eq!(
             result.declarations[3],
-            Declaration::from_default_value("hello there")
-                .with_type(StringType)
+            Declaration::default()
+                .with_default_value("hello there")
+                .with_type(Type::String)
                 .with_name("$quux")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -359,7 +363,7 @@ mod tests {
         assert_eq!(result.diagnostics.len(), 1);
         assert_eq!(
             result.diagnostics[0],
-            Diagnostic::from_message("Type string does not match value 1 (Number)".to_string())
+            Diagnostic::from_message("Type string does not match value 1 (number)".to_string())
                 .with_file_name("test.yarn".to_string())
                 .with_context("<<declare $foo to 1 as string>>")
                 .with_range(

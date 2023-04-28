@@ -7,7 +7,7 @@ pub mod convertible;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Value {
-    pub r#type: Type,
+    pub r#type: Option<Type>,
     pub internal_value: Option<Convertible>,
 }
 
@@ -17,7 +17,7 @@ macro_rules! impl_from {
             impl From<$from_type> for Value {
                 fn from(value: $from_type) -> Self {
                     Self {
-                        r#type: (&value).into(),
+                        r#type: Some((&value).into()),
                         internal_value: Some(value.into()),
                     }
                 }
@@ -63,7 +63,7 @@ impl_from![f32, f64, usize, String, bool,];
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
         Self {
-            r#type: value.into(),
+            r#type: Some(value.into()),
             internal_value: Some(value.into()),
         }
     }

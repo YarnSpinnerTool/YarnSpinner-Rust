@@ -2,21 +2,45 @@
 
 use crate::prelude::types::TypeProperties;
 use crate::prelude::YarnFn;
-use crate::types::Type;
+use crate::types::{Type, TypeOptionFormat};
+use std::fmt::Display;
+
+pub(crate) fn function_type_properties() -> TypeProperties {
+    TypeProperties::from_name("Function")
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct FunctionType {
-    pub parameters: Vec<Type>,
-    pub return_type: Option<Type>,
+    pub parameters: Vec<Option<Type>>,
+    // Needs to be on the heap because of type recursion
+    pub return_type: Box<Option<Type>>,
 }
 
-impl FunctionType {
-    pub fn add_parameter(&mut self, parameter: Type) {
-        self.parameters.push(parameter);
+impl From<FunctionType> for Type {
+    fn from(function_type: FunctionType) -> Self {
+        Type::Function(function_type)
     }
 }
 
-impl TypeProperties for FunctionType {
-    type RustType = Box<dyn YarnFn>;
-    const NAME: &'static str = "Function";
+impl FunctionType {
+    pub fn set_return_type(&mut self, return_type: impl Into<Option<Type>>) {
+        self.return_type = Box::new(return_type.into());
+    }
+
+    pub fn add_parameter(&mut self, parameter: impl Into<Option<Type>>) {
+        self.parameters.push(parameter.into());
+    }
+}
+
+impl Display for FunctionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let parameters = self
+            .parameters
+            .iter()
+            .map(TypeOptionFormat::format)
+            .collect::<Vec<_>>()
+            .join(", ");
+        let return_type = self.return_type.as_ref().format();
+        write!(f, "Fn({}) -> {}", parameters, return_type)
+    }
 }

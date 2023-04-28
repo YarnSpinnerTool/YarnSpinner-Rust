@@ -6,10 +6,10 @@ use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
-use rusty_yarn_spinner_core::types::{
-    BooleanType, BuiltinType, FunctionType, NumberType, StringType, Type,
-};
+use rusty_yarn_spinner_core::types::{FunctionType, Type};
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut};
 
 /// A visitor that walks the parse tree, checking for type consistency
 /// in expressions. Existing type information is provided via the
@@ -51,10 +51,10 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
     ///
     /// In the original implementation, this was implemented
     /// on the [`ValueContext`] directly using a `partial`
-    hints: HashMap<Interval, Type>,
+    hints: HashMap<HashableInterval, Type>,
 
     tokens: &'a ActualTokenStream<'input>,
-    _dummy: Option<BuiltinType>,
+    _dummy: Option<Type>,
 }
 
 impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
@@ -90,7 +90,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
 impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
     type Node = YarnSpinnerParserContextType;
 
-    type Return = Option<BuiltinType>;
+    type Return = Option<Type>;
 
     fn temp_result(&mut self) -> &mut Self::Return {
         &mut self._dummy
@@ -119,23 +119,23 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 .read_parser_rule_context(ctx, self.tokens),
         );
 
-        Some(BuiltinType::Undefined)
+        None
     }
 
     fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
-        Some(BuiltinType::String(StringType))
+        Some(Type::String)
     }
 
     fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'input>) -> Self::Return {
-        Some(BuiltinType::Boolean(BooleanType))
+        Some(Type::Boolean)
     }
 
     fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'input>) -> Self::Return {
-        Some(BuiltinType::Boolean(BooleanType))
+        Some(Type::Boolean)
     }
 
     fn visit_valueNumber(&mut self, _ctx: &ValueNumberContext<'input>) -> Self::Return {
-        Some(BuiltinType::Number(NumberType))
+        Some(Type::Number)
     }
 
     fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
@@ -150,7 +150,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 // We don't have a variable name for this Variable context.
                 // The parser will have generated an error for us in an
                 // earlier stage; here, we'll bail out.
-            return Some(BuiltinType::Undefined)
+            return None
         };
         let name = var_id.get_text();
         if let Some(declaration) = self
@@ -158,7 +158,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .into_iter()
             .find(|decl| decl.name == name)
         {
-            return Some(declaration.r#type);
+            return declaration.r#type;
         }
 
         // do we already have a potential warning about this?
@@ -168,7 +168,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .iter()
             .any(|deferred_type| deferred_type.name == name)
         {
-            return Some(BuiltinType::Undefined);
+            return None;
         }
 
         // creating a new diagnostic for us having an undefined variable
@@ -184,7 +184,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         // We don't have a declaration for this variable. Return
         // Undefined. Hopefully, other context will allow us to infer a
         // type.
-        Some(BuiltinType::Undefined)
+        None
     }
 
     fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
@@ -209,23 +209,27 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
 
                // we have an existing function but its undefined
                // if we also have a type hint we can use that to update it
-               if (functionType.ReturnType == BuiltinTypes.Undefined && context.Hint != BuiltinTypes.Undefined)
+               if (functionType.ReturnType == Types.Undefined && context.Hint != Types.Undefined)
                {
                    NewDeclarations.Remove(functionDeclaration);
                    functionType.ReturnType = context.Hint;
                    functionDeclaration.Type = functionType;
                    NewDeclarations.Add(functionDeclaration);
                }
+
              */
+            todo!("function type")
         } else {
             // We don't have a declaration for this function. Create an
             // implicit one.
             let mut function_type = FunctionType::default();
             // because it is an implicit declaration we will use the type hint to give us a return type
-            function_type.return_type = self.hints.get(&ctx.get_source_interval()).cloned();
+            let hint = self.hints.get(&ctx.get_source_interval().into()).cloned();
+            function_type.set_return_type(hint);
             let line = ctx.start().get_line();
             let column = ctx.start().get_column();
-            let function_declaration = Declaration::from_type(&function_type)
+            let function_declaration = Declaration::default()
+                .with_type(Type::from(function_type.clone()))
                 .with_name(function_name)
                 .with_description(format!(
                     "Implicit declaration of function at {}:{}:{}",
@@ -248,11 +252,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             // Create the array of parameters for this function based
             // on how many we've seen in this call. Set them all to be
             // undefined; we'll bind their type shortly.
-            let parameter_types = ctx
-                .function_call()
-                .unwrap()
-                .expression_all()
-                .map(|_| Type::Undefined);
+            let expressions = ctx.function_call().unwrap().expression_all();
+            let parameter_types = expressions.iter().map(|_| None);
             for parameter_type in parameter_types {
                 function_type.add_parameter(parameter_type);
             }
@@ -286,7 +287,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
 
                var suppliedType = this.Visit(suppliedParameter);
 
-               if (expectedType == BuiltinTypes.Undefined)
+               if (expectedType == Types.Undefined)
                {
                    // The type of this parameter hasn't yet been bound.
                    // Bind this parameter type to what we've resolved the
@@ -313,4 +314,34 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
 /// {0} = variable name
 fn format_cannot_determine_variable_type_error(name: &str) -> String {
     format!("Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement.")
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+struct HashableInterval(Interval);
+
+impl From<Interval> for HashableInterval {
+    fn from(interval: Interval) -> Self {
+        Self(interval)
+    }
+}
+
+impl Hash for HashableInterval {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.a.hash(state);
+        self.0.b.hash(state);
+    }
+}
+
+impl Deref for HashableInterval {
+    type Target = Interval;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for HashableInterval {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }

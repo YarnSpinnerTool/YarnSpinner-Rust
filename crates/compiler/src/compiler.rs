@@ -106,9 +106,10 @@ fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationI
         .tracking_nodes
         .iter()
         .map(|node| {
-            Declaration::from_default_value(0.)
+            Declaration::default()
+                .with_default_value(0.)
                 .with_name(Library::generate_unique_visited_variable_for_node(node))
-                .with_type(NumberType)
+                .with_type(Type::Number)
                 .with_description(format!(
                     "The generated variable for tracking visits of node {node}"
                 ))
