@@ -5,11 +5,14 @@ use crate::prelude::*;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
+use antlr_rust::token_factory::CommonTokenFactory;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeOptionFormat};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
 
 /// A visitor that walks the parse tree, checking for type consistency
 /// in expressions. Existing type information is provided via the
@@ -101,6 +104,32 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         let interval = ctx.get_source_interval();
         let hashable_interval = HashableInterval(interval);
         self.hints.insert(hashable_interval, hint)
+    }
+
+    /// ok so what do we actually need to do in here?
+    /// we need to do a few different things
+    /// basically we need to go through the various types in the expression
+    /// if any are known we need to basically log that
+    /// then at the end if there are still unknowns we check if the operation itself forces a type
+    /// so if we have say Undefined = Undefined + Number then we know that only one operation supports + Number and that is Number + Number
+    /// so we can slot the type into the various parts
+    fn check_operation(
+        &mut self,
+        context: &impl ParserRuleContext<'input>,
+        terms: Vec<
+            Rc<
+                dyn ParserRuleContext<
+                    'input,
+                    Ctx = YarnSpinnerParserContextType,
+                    TF = CommonTokenFactory,
+                >,
+            >,
+        >,
+        operation_type: Operator,
+        operation_description: String,
+        permitted_types: Vec<Type>,
+    ) -> Type {
+        todo!()
     }
 }
 
@@ -356,7 +385,22 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     }
 
     fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
-        todo!()
+        let expressions: Vec<_> = ctx
+            .expression_all()
+            .into_iter()
+            .map(|expr| {
+                expr as Rc<
+                    dyn ParserRuleContext<
+                        'input,
+                        Ctx = YarnSpinnerParserContextType,
+                        TF = CommonTokenFactory,
+                    >,
+                >
+            })
+            .collect();
+        let operator: Operator = todo!();
+        let description = ctx.op.unwrap().get_text().to_owned();
+        let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
     }
 
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
