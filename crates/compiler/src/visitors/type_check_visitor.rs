@@ -8,6 +8,7 @@ use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use better_any::TidExt;
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeOptionFormat};
 use std::collections::HashMap;
@@ -541,15 +542,18 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 .unwrap()
                 .get_text();
 
-            let function_declaration = self
+            let function_type = self
                 .new_declarations
                 .iter_mut()
-                .filter(|decl| matches!(decl.r#type, Some(Type::Function(_))))
-                .find(|decl| decl.name == id);
-            if let Some(declaration) = function_declaration {
-                let Some(Type::Function(ref mut func)) = declaration.r#type else {
-                    unreachable!("Cannot reach this since we filtered out all non-functions");
-                };
+                .filter(|decl| decl.name == id)
+                .find_map(|decl| {
+                    if let Some(Type::Function(ref mut func)) = decl.r#type {
+                        Some(func)
+                    } else {
+                        None
+                    }
+                });
+            if let Some(func) = function_type {
                 if func.return_type.is_some() {
                     continue;
                 }
@@ -558,6 +562,51 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 self.visit(&*term.generic_context());
             }
         }
+        // Were any of the terms variables for which we don't currently
+        // have a declaration for?
+
+        // Start by building a list of all terms that are variables.
+        // These are either variable values, or variable names . (The
+        // difference between these two is that a ValueVarContext
+        // occurs in syntax where the value of the variable is used
+        // (like an expression), while a VariableContext occurs in
+        // syntax where it's just a variable name (like a set
+        // statements)
+
+        // All VariableContexts in the terms of this expression (but
+        // not in the children of those terms)
+        let variable_contexts: Vec<Rc<VariableContext>> = terms
+            .iter()
+            .filter_map(|term| {
+                term.generic_context().get_children().find_map(|child| {
+                    if let ValueContextAll::ValueVarContext(context) =
+                        child.downcast_ref::<ValueContextAll>()?
+                    {
+                        context.variable()
+                    } else {
+                        None
+                    }
+                })
+            })
+            .chain(terms.iter().find_map(|term| {
+                term.generic_context()
+                    .child_of_type_unsized::<VariableContext>(0)
+            }))
+            .collect::<Vec<_>>();
+        /*
+        var variableContexts = terms
+                .Select(c => c.GetChild<YarnSpinnerParser.ValueVarContext>(0)?.variable())
+                .Concat(terms.Select(c => c.GetChild<YarnSpinnerParser.VariableContext>(0)))
+                .Concat(terms.OfType<YarnSpinnerParser.VariableContext>())
+                .Concat(terms.OfType<YarnSpinnerParser.ValueVarContext>().Select(v => v.variable()))
+                .Where(c => c != null);
+
+            // Build the list of variable contexts that we don't have a
+            // declaration for. We'll check for explicit declarations first.
+            var undefinedVariableContexts = variableContexts
+                .Where(v => Declarations.Any(d => d.Name == v.VAR_ID().GetText()) == false)
+                .Distinct();
+         */
         todo!()
     }
 }
