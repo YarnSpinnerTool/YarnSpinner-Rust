@@ -2,10 +2,10 @@ use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
+use crate::visitors::token_to_operator;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::token_factory::CommonTokenFactory;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeOptionFormat};
@@ -44,7 +44,17 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
     // The name of the file that we're currently in.
     source_file_name: String,
 
-    /// Gets or sets a type hint for the expression.
+    /// The type that this expression has been
+    /// determined to be by a [`TypeCheckVisitor`]
+    /// object.
+    ///
+    /// ## Implementation notes
+    ///
+    /// In the original implementation, this was implemented
+    /// on the [`ValueContext`] directly using a `partial`
+    types: HashMap<HashableInterval, Type>,
+
+    /// A type hint for the expression.
     /// This is mostly used by [`TypeCheckVisitor`]
     /// to give a hint that can be used by functions to
     /// influence their type when set to use inference.
@@ -74,6 +84,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             new_declarations: Default::default(),
             deferred_types: Default::default(),
             current_node_name: Default::default(),
+            types: Default::default(),
             hints: Default::default(),
             _dummy: Default::default(),
         }
@@ -90,8 +101,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
     }
 
     fn get_hint(&self, ctx: &impl ParserRuleContext<'input>) -> Option<&Type> {
-        let interval = ctx.get_source_interval();
-        let hashable_interval = HashableInterval(interval);
+        let hashable_interval = get_hashable_interval(ctx);
         self.hints.get(&hashable_interval)
     }
 
@@ -101,9 +111,23 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         hint: impl Into<Option<Type>>,
     ) -> Option<Type> {
         let hint = hint.into()?;
-        let interval = ctx.get_source_interval();
-        let hashable_interval = HashableInterval(interval);
+        let hashable_interval = get_hashable_interval(ctx);
         self.hints.insert(hashable_interval, hint)
+    }
+
+    fn get_type(&self, ctx: &impl ParserRuleContext<'input>) -> Option<&Type> {
+        let hashable_interval = get_hashable_interval(ctx);
+        self.types.get(&hashable_interval)
+    }
+
+    fn set_type(
+        &mut self,
+        ctx: &impl ParserRuleContext<'input>,
+        r#type: impl Into<Option<Type>>,
+    ) -> Option<Type> {
+        let r#type = r#type.into()?;
+        let hashable_interval = get_hashable_interval(ctx);
+        self.types.insert(hashable_interval, r#type)
     }
 
     /// ok so what do we actually need to do in here?
@@ -120,7 +144,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         operation_type: Operator,
         operation_description: String,
         permitted_types: Vec<Type>,
-    ) -> Type {
+    ) -> Option<Type> {
         todo!()
     }
 }
@@ -382,9 +406,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .into_iter()
             .map(|expr| expr as Rc<ActualRuleContext<'input>>)
             .collect();
-        let operator: Operator = todo!();
-        let description = ctx.op.unwrap().get_text().to_owned();
+        let operator_context = ctx.op.as_ref().unwrap();
+        let operator: Operator = token_to_operator(operator_context.token_type).unwrap();
+        let description = operator_context.get_text().to_owned();
         let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
+        self.set_type(ctx, r#type.clone());
+        r#type
     }
 
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
@@ -395,6 +422,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
 /// {0} = variable name
 fn format_cannot_determine_variable_type_error(name: &str) -> String {
     format!("Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement.")
+}
+
+fn get_hashable_interval<'input>(ctx: &impl ParserRuleContext<'input>) -> HashableInterval {
+    let interval = ctx.get_source_interval();
+    HashableInterval(interval)
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
