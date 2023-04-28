@@ -452,7 +452,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         let mut expression_type = None;
         for expression in &terms {
             // Visit this expression, and determine its type.
-            let r#type = self.visit(&*expression.generic_context());
+            let r#type = self.visit(&**expression);
             if let Some(r#type) = r#type.clone() {
                 if expression_type.is_none() {
                     // This is the first concrete type we've seen. This
@@ -559,7 +559,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 }
                 func.return_type = Box::new(expression_type.clone());
             } else {
-                self.visit(&*term.generic_context());
+                self.visit(&**term);
             }
         }
         // Were any of the terms variables for which we don't currently
@@ -578,21 +578,50 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         let variable_contexts: Vec<Rc<VariableContext>> = terms
             .iter()
             .filter_map(|term| {
-                term.generic_context().get_children().find_map(|child| {
-                    if let ValueContextAll::ValueVarContext(context) =
-                        child.downcast_ref::<ValueContextAll>()?
-                    {
-                        context.variable()
-                    } else {
-                        None
-                    }
-                })
+                term.child_of_type_unsized::<ValueContextAll>(0)
+                    .and_then(|value_context| {
+                        if let ValueContextAll::ValueVarContext(context) = value_context.as_ref() {
+                            context.variable()
+                        } else {
+                            None
+                        }
+                    })
             })
-            .chain(terms.iter().find_map(|term| {
-                term.generic_context()
-                    .child_of_type_unsized::<VariableContext>(0)
-            }))
-            .collect::<Vec<_>>();
+            .chain(
+                terms
+                    .iter()
+                    .find_map(|term| term.child_of_type_unsized::<VariableContext>(0)),
+            )
+            .chain(
+                terms.iter().filter_map(|term| {
+                    term.generic_context().downcast_rc::<VariableContext>().ok()
+                }),
+            )
+            .chain(
+                terms
+                    .iter()
+                    .filter_map(|term| term.generic_context().downcast_rc::<ValueContextAll>().ok())
+                    .filter_map(|value_context| {
+                        if let ValueContextAll::ValueVarContext(context) = value_context.as_ref() {
+                            context.variable()
+                        } else {
+                            None
+                        }
+                    }),
+            )
+            .collect();
+
+        // Build the list of variable contexts that we don't have a
+        // declaration for. We'll check for explicit declarations first.
+        let undefined_variable_contexts: Vec<_> = variable_contexts
+            .iter()
+            .filter(|v| {
+                !self
+                    .declarations()
+                    .iter()
+                    .any(|d| d.name == v.VAR_ID().unwrap().get_text())
+            })
+            .collect();
         /*
         var variableContexts = terms
                 .Select(c => c.GetChild<YarnSpinnerParser.ValueVarContext>(0)?.variable())
@@ -681,6 +710,17 @@ impl<'input> Term<'input> {
         match self {
             Term::Expression(ctx) => ctx.clone() as Rc<ActualParserContext<'input>>,
             Term::Variable(ctx) => ctx.clone(),
+        }
+    }
+}
+
+impl<'input> Deref for Term<'input> {
+    type Target = ActualParserContext<'input>;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Term::Expression(ctx) => ctx.as_ref() as &ActualParserContext<'input>,
+            Term::Variable(ctx) => ctx.as_ref(),
         }
     }
 }
