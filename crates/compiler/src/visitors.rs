@@ -7,5 +7,5 @@ mod type_check_visitor;
 
 pub(crate) use self::{
     declaration_visitor::*, last_line_before_options_visitor::*, node_tracking_visitor::*,
-    string_table_generator_visitor::*, type_check_visitor::*,
+    string_table_generator_visitor::*,
 };

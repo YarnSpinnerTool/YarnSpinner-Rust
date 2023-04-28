@@ -198,8 +198,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .declarations()
             .into_iter()
             .find(|decl| decl.name == function_name);
-        let function_type = if let Some(function_declaration) = function_declaration {
-            let mut function_type = function_declaration.r#type.clone();
+        let _function_type = if let Some(function_declaration) = function_declaration {
+            let _function_type = function_declaration.r#type.clone();
             /*
             functionType = functionDeclaration.Type as FunctionType;
                if (functionType == null)

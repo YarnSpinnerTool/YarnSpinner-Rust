@@ -7,7 +7,7 @@
 use crate::prelude::Diagnostic;
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
-use rusty_yarn_spinner_core::types::{FunctionType, Type};
+use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;

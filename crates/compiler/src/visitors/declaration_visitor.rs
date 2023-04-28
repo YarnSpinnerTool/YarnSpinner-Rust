@@ -10,7 +10,6 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
 use rusty_yarn_spinner_core::types::*;
-use std::collections::HashMap;
 
 /// A visitor that extracts variable declarations from a parse tree.
 /// After visiting an entire parse tree for a file, the

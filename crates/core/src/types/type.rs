@@ -1,5 +1,5 @@
 use crate::prelude::types::*;
-use crate::prelude::{YarnFn, YarnFnRegistry};
+use crate::prelude::YarnFnRegistry;
 use paste::paste;
 use std::any::Any;
 use std::fmt::{Debug, Display};
