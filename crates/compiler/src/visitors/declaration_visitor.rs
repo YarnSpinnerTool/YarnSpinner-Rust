@@ -189,7 +189,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                     "Type {} does not match value {} ({})",
                     declaration_type.get_text(),
                     value_context.get_text(),
-                    value.r#type.format_user_friendly()
+                    value.r#type.format()
                 );
                 self.diagnostics.push(
                     Diagnostic::from_message(msg)

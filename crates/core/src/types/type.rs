@@ -43,22 +43,13 @@ impl Display for Type {
 }
 
 pub trait TypeFormat {
-    fn format_name(&self) -> String;
-    fn format_user_friendly(&self) -> String;
+    fn format(&self) -> String;
 }
 
 impl TypeFormat for Option<Type> {
-    fn format_name(&self) -> String {
+    fn format(&self) -> String {
         if let Some(r#type) = self {
-            r#type.format_name()
-        } else {
-            "undefined".to_string()
-        }
-    }
-
-    fn format_user_friendly(&self) -> String {
-        if let Some(r#type) = self {
-            r#type.format_user_friendly()
+            r#type.format()
         } else {
             "undefined".to_string()
         }
@@ -66,11 +57,7 @@ impl TypeFormat for Option<Type> {
 }
 
 impl TypeFormat for Type {
-    fn format_name(&self) -> String {
-        self.properties().name.to_string()
-    }
-
-    fn format_user_friendly(&self) -> String {
+    fn format(&self) -> String {
         self.to_string()
     }
 }

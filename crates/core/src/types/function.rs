@@ -41,10 +41,10 @@ impl Display for FunctionType {
         let parameters = self
             .parameters
             .iter()
-            .map(TypeFormat::format_user_friendly)
+            .map(TypeFormat::format)
             .collect::<Vec<_>>()
             .join(", ");
-        let return_type = self.return_type.as_ref().format_user_friendly();
+        let return_type = self.return_type.as_ref().format();
         write!(f, "Fn({}) -> {}", parameters, return_type)
     }
 }
