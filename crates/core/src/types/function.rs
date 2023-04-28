@@ -30,6 +30,10 @@ impl FunctionType {
     pub fn add_parameter(&mut self, parameter: impl Into<Option<Type>>) {
         self.parameters.push(parameter.into());
     }
+
+    pub fn properties() -> TypeProperties {
+        function_type_properties()
+    }
 }
 
 impl Display for FunctionType {

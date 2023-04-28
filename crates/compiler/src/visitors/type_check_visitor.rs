@@ -256,14 +256,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             // if we also have a type hint we can use that to update it
             if function_type.return_type.is_none() {
                 if let Some(hint) = hint {
-                    if let Some(index) = self
-                        .new_declarations
-                        .iter()
-                        .filter_map(|decl| decl.eq(&function_declaration, 1e-4).ok())
-                        .position(|eq| eq)
-                    {
-                        self.new_declarations.remove(index);
-                    }
+                    self.new_declarations.find_remove(&function_declaration);
                     function_type.set_return_type(hint);
                     let new_declaration = Declaration {
                         r#type: Some(Type::from(function_type.clone())),
@@ -535,8 +528,56 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         // or the implicit type of any function.
         // annoyingly the function will already have an implicit definition created for it
         // we will have to strip that out and add in a new one with the new return type
-        for term in &terms {}
+        for term in &terms {
+            let Term::Expression(expression) = term else { continue; };
+            let ExpressionContextAll::ExpValueContext(value_context) = expression.as_ref() else { continue; };
+            let Some(value) = value_context.value() else { continue; };
+            let ValueContextAll::ValueFuncContext(func_context) = value.as_ref() else { continue; };
+
+            let id = func_context
+                .function_call()
+                .unwrap()
+                .FUNC_ID()
+                .unwrap()
+                .get_text();
+
+            let function_declaration = self
+                .new_declarations
+                .iter_mut()
+                .filter(|decl| matches!(decl.r#type, Some(Type::Function(_))))
+                .find(|decl| decl.name == id);
+            if let Some(declaration) = function_declaration {
+                let Some(Type::Function(ref mut func)) = declaration.r#type else {
+                    unreachable!("Cannot reach this since we filtered out all non-functions");
+                };
+                if func.return_type.is_some() {
+                    continue;
+                }
+                func.return_type = Box::new(expression_type.clone());
+            } else {
+                self.visit(&*term.generic_context());
+            }
+        }
         todo!()
+    }
+}
+
+trait DeclarationVecExt {
+    fn position(&self, declaration: &Declaration) -> Option<usize>;
+    fn find_remove(&mut self, declaration: &Declaration);
+}
+
+impl DeclarationVecExt for Vec<Declaration> {
+    fn position(&self, declaration: &Declaration) -> Option<usize> {
+        self.iter()
+            .filter_map(|decl| decl.eq(declaration, 1e-4).ok())
+            .position(|eq| eq)
+    }
+
+    fn find_remove(&mut self, declaration: &Declaration) {
+        if let Some(index) = self.position(declaration) {
+            self.remove(index);
+        }
     }
 }
 
