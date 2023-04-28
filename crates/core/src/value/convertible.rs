@@ -7,7 +7,7 @@ use thiserror::Error;
 pub enum Convertible {
     Number(f32),
     String(String),
-    Bool(bool),
+    Boolean(bool),
 }
 
 impl Convertible {
@@ -18,7 +18,7 @@ impl Convertible {
                 let b: f32 = b.parse().map_err(InvalidCastError::from)?;
                 Ok((a - b).abs() < epsilon)
             }
-            (Self::Number(a), Self::Bool(b)) => {
+            (Self::Number(a), Self::Boolean(b)) => {
                 let b = if *b { 1.0 } else { 0.0 };
                 Ok((a - b).abs() < epsilon)
             }
@@ -27,16 +27,16 @@ impl Convertible {
                 let a: f32 = a.parse().map_err(InvalidCastError::from)?;
                 Ok((a - b).abs() < epsilon)
             }
-            (Self::String(a), Self::Bool(b)) => {
+            (Self::String(a), Self::Boolean(b)) => {
                 let a: bool = a.parse().map_err(InvalidCastError::from)?;
                 Ok(a == *b)
             }
-            (Self::Bool(a), Self::Bool(b)) => Ok(a == b),
-            (Self::Bool(a), Self::String(b)) => {
+            (Self::Boolean(a), Self::Boolean(b)) => Ok(a == b),
+            (Self::Boolean(a), Self::String(b)) => {
                 let b: bool = b.parse().map_err(InvalidCastError::from)?;
                 Ok(*a == b)
             }
-            (Self::Bool(a), Self::Number(b)) => {
+            (Self::Boolean(a), Self::Number(b)) => {
                 let a = if *a { 1.0 } else { 0.0 };
                 Ok((a - b).abs() < epsilon)
             }
@@ -51,7 +51,7 @@ impl TryFrom<Convertible> for f32 {
         match value {
             Convertible::Number(value) => Ok(value),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(if value { 1.0 } else { 0.0 }),
+            Convertible::Boolean(value) => Ok(if value { 1.0 } else { 0.0 }),
         }
     }
 }
@@ -79,7 +79,7 @@ impl TryFrom<Convertible> for f64 {
         match value {
             Convertible::Number(value) => Ok(value as f64),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(if value { 1.0 } else { 0.0 }),
+            Convertible::Boolean(value) => Ok(if value { 1.0 } else { 0.0 }),
         }
     }
 }
@@ -97,7 +97,7 @@ impl TryFrom<Convertible> for usize {
         match value {
             Convertible::Number(value) => Ok(value as usize),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(if value { 1 } else { 0 }),
+            Convertible::Boolean(value) => Ok(if value { 1 } else { 0 }),
         }
     }
 }
@@ -115,7 +115,7 @@ impl TryFrom<Convertible> for String {
         match value {
             Convertible::Number(value) => Ok(value.to_string()),
             Convertible::String(value) => Ok(value),
-            Convertible::Bool(value) => Ok(value.to_string()),
+            Convertible::Boolean(value) => Ok(value.to_string()),
         }
     }
 }
@@ -139,14 +139,14 @@ impl TryFrom<Convertible> for bool {
         match value {
             Convertible::Number(value) => Ok(value != 0.0),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(value),
+            Convertible::Boolean(value) => Ok(value),
         }
     }
 }
 
 impl From<bool> for Convertible {
     fn from(value: bool) -> Self {
-        Self::Bool(value)
+        Self::Boolean(value)
     }
 }
 

@@ -202,7 +202,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         // We're done creating the declaration!
         let description = compiler::get_document_comments(self.tokens, ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
-        let line = variable_context.start().line as usize;
         let declaration = Declaration::default()
             .with_default_value(value.internal_value.clone().unwrap())
             .with_type(value.r#type.clone())
@@ -214,10 +213,10 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
             .with_range(
                 Position {
-                    line,
+                    line: variable_context.start().line as usize,
                     character: variable_context.start().column as usize + 1,
                 }..=Position {
-                    line,
+                    line: variable_context.stop().line as usize,
                     character: variable_context.stop().column as usize
                         + 1
                         + variable_context.get_text().len(),

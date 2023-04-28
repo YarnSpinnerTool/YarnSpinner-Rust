@@ -9,11 +9,14 @@ use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
+use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeOptionFormat};
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
+use std::path::Path;
 use std::rc::Rc;
 
 /// A visitor that walks the parse tree, checking for type consistency
@@ -575,7 +578,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
 
         // All VariableContexts in the terms of this expression (but
         // not in the children of those terms)
-        let variable_contexts: Vec<Rc<VariableContext>> = terms
+        let variable_contexts = terms
             .iter()
             .filter_map(|term| {
                 term.child_of_type_unsized::<ValueContextAll>(0)
@@ -608,13 +611,11 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                             None
                         }
                     }),
-            )
-            .collect();
+            );
 
         // Build the list of variable contexts that we don't have a
         // declaration for. We'll check for explicit declarations first.
-        let undefined_variable_contexts: Vec<_> = variable_contexts
-            .iter()
+        let mut undefined_variable_contexts: Vec<_> = variable_contexts
             .filter(|v| {
                 !self
                     .declarations()
@@ -622,20 +623,61 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                     .any(|d| d.name == v.VAR_ID().unwrap().get_text())
             })
             .collect();
-        /*
-        var variableContexts = terms
-                .Select(c => c.GetChild<YarnSpinnerParser.ValueVarContext>(0)?.variable())
-                .Concat(terms.Select(c => c.GetChild<YarnSpinnerParser.VariableContext>(0)))
-                .Concat(terms.OfType<YarnSpinnerParser.VariableContext>())
-                .Concat(terms.OfType<YarnSpinnerParser.ValueVarContext>().Select(v => v.variable()))
-                .Where(c => c != null);
+        // Implementation note: The original compares by reference here. The interval should be unique for each context, so let's use that instead.
+        undefined_variable_contexts.sort_by_key(|v| get_hashable_interval(&**v));
+        undefined_variable_contexts.dedup_by_key(|v| get_hashable_interval(&**v));
 
-            // Build the list of variable contexts that we don't have a
-            // declaration for. We'll check for explicit declarations first.
-            var undefinedVariableContexts = variableContexts
-                .Where(v => Declarations.Any(d => d.Name == v.VAR_ID().GetText()) == false)
-                .Distinct();
-         */
+        for undefined_variable_context in undefined_variable_contexts {
+            // We have references to variables that we don't have a an
+            // explicit declaration for! Time to create implicit
+            // references for them!
+
+            let var_name = undefined_variable_context.VAR_ID().unwrap().get_text();
+            // We can only create an implicit declaration for a variable
+            // if we have a default value for it, because all variables
+            // are required to have a value. If we can't, it's generally
+            // because we couldn't figure out a concrete type for the
+            // variable given the context.
+            if let Some(default_value) = default_value_for_type(&expression_type) {
+                let file_name = filename(&self.source_file_name);
+                let node = self
+                    .current_node_name
+                    .as_ref()
+                    .map(|name| format!(", node {name}"))
+                    .unwrap_or_default();
+                let decl = Declaration::default()
+                    .with_name(&var_name)
+                    .with_description(format!("Implicitly declared in {file_name}{node}"))
+                    .with_type(expression_type.clone())
+                    .with_default_value(default_value)
+                    .with_source_file_name(self.source_file_name.clone())
+                    .with_source_node_name_optional(self.current_node_name.clone())
+                    .with_range(
+                        Position {
+                            line: undefined_variable_context.start().line as usize - 1,
+                            character: undefined_variable_context.start().column as usize,
+                        }..=Position {
+                            line: undefined_variable_context.stop().line as usize - 1,
+                            character: undefined_variable_context.stop().column as usize
+                                // Implementation note: The original called `.stop()` here before the `get_text`,
+                                //but I suspect that is at best unnecessary and at worst incorrect.
+                                + undefined_variable_context.get_text().len(),
+                        },
+                    )
+                    .with_implicit();
+                self.new_declarations.push(decl);
+            } else {
+                // If we can't produce this, then we can't generate the
+                // declaration.
+                let diagnostic = Diagnostic::from_message(
+                    format_cannot_determine_variable_type_error(&var_name),
+                )
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(&*undefined_variable_context, self.tokens);
+                self.diagnostics.push(diagnostic);
+                continue;
+            }
+        }
         todo!()
     }
 }
@@ -664,9 +706,27 @@ fn format_cannot_determine_variable_type_error(name: &str) -> String {
     format!("Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement.")
 }
 
+fn default_value_for_type(expression_type: &Option<Type>) -> Option<Convertible> {
+    match expression_type.as_ref()? {
+        Type::String => Some(Convertible::String(Default::default())),
+        Type::Number => Some(Convertible::Number(Default::default())),
+        Type::Boolean => Some(Convertible::Boolean(Default::default())),
+        _ => None,
+    }
+}
+
 fn get_hashable_interval<'input>(ctx: &impl ParserRuleContext<'input>) -> HashableInterval {
     let interval = ctx.get_source_interval();
     HashableInterval(interval)
+}
+
+fn filename(path: &str) -> &str {
+    if let Some(os_str) = Path::new(path).file_name() {
+        if let Some(file_name) = os_str.to_str() {
+            return file_name;
+        }
+    }
+    path
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -675,6 +735,18 @@ struct HashableInterval(Interval);
 impl From<Interval> for HashableInterval {
     fn from(interval: Interval) -> Self {
         Self(interval)
+    }
+}
+
+impl Ord for HashableInterval {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.a.cmp(&other.0.a).then(self.0.b.cmp(&other.0.b))
+    }
+}
+
+impl PartialOrd for HashableInterval {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

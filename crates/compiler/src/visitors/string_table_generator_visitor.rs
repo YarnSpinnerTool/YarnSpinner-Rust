@@ -53,12 +53,87 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisi
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
     for StringTableGeneratorVisitor<'a, 'input>
 {
-    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
-        let parent = ctx.get_parent().unwrap();
-        for child in parent.get_children() {
-            if let Some(value_context_all) = child.downcast_ref::<VariableContext>() {
-                panic!("here!");
+    fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
+        let mut tags = Vec::new();
+        for header in ctx.header_all() {
+            let header_key = header.header_key.as_ref().unwrap().get_text();
+            if header_key == "title" {
+                self.current_node_name =
+                    header.header_value.as_ref().unwrap().get_text().to_owned();
+            } else if header_key == "tags" {
+                let header_value = header
+                    .header_value
+                    .as_ref()
+                    .map(|header| header.get_text())
+                    .unwrap_or_default();
+                // Split the list of tags by spaces, and use that
+                tags = header_value
+                    .split_whitespace()
+                    .map(ToOwned::to_owned)
+                    .collect();
             }
+        }
+        if !self.current_node_name.is_empty() && tags.contains(&"rawText".to_owned()) {
+            // This is a raw text node. Use its entire contents as a
+            // string and don't use its contents.
+            let line_id = compiler::get_line_id_for_node_name(&self.current_node_name);
+            self.string_table_manager.insert(
+                line_id,
+                StringInfo {
+                    text: ctx.body().unwrap().get_text(),
+                    node_name: self.current_node_name.clone(),
+                    line_number: ctx.body().unwrap().start().line as usize,
+                    file_name: self.file_name.clone(),
+                    ..Default::default()
+                },
+            );
+        } else {
+            // This is a regular node
+            // String table generator: don't crash if a node has no body
+            if let Some(body) = ctx.body() {
+                self.visit(&*body);
+            }
+        }
+    }
+    fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
+        let hashtags = ctx.hashtag_all();
+        let line_id_tag = get_line_id_tag(&hashtags);
+        let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
+
+        if let Some(line_id) = line_id {
+            if self.string_table_manager.contains_key(&line_id.to_string()) {
+                // The original has a fallback for when this is `null` / `None`,
+                // but this can logically not be the case in this scope.
+                let diagnostic_context = line_id_tag.clone().unwrap();
+                let line_id = line_id.get_text();
+                self.diagnostics.push(
+                    Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
+                        .read_parser_rule_context(&*diagnostic_context, self.tokens)
+                        .with_file_name(&self.file_name),
+                );
+                return;
+            }
+        };
+
+        let line_number = ctx.start().line;
+        let hashtag_texts = get_hashtag_texts(&hashtags);
+
+        let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
+
+        let string_id = self.string_table_manager.insert(
+            line_id.map(|t| t.get_text().to_owned()),
+            StringInfo {
+                text: composed_string,
+                node_name: self.current_node_name.clone(),
+                line_number: line_number as usize,
+                file_name: self.file_name.clone(),
+                metadata: hashtag_texts,
+                ..Default::default()
+            },
+        );
+
+        if line_id.is_none() {
+            add_hashtag_child(ctx, string_id);
         }
     }
 }
@@ -171,7 +246,9 @@ A line with {$many} many {(1 -(1 * 2))}{$cool} expressions
             file_name: "test.yarn".to_string(),
             source: "title: test
 ---
-a {$foo} cool expression
+foo
+bar
+a {1 + 3} cool expression
 ==="
             .to_string(),
         };
