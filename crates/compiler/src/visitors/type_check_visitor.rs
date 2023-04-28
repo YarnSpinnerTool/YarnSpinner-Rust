@@ -449,7 +449,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         &mut self,
         context: &impl ParserRuleContext<'input>,
         terms: Vec<Rc<ActualRuleContext<'input>>>,
-        operation_type: Operator,
+        operation_type: impl Into<Option<Operator>>,
         operation_description: String,
         permitted_types: Vec<Type>,
     ) -> Option<Type> {

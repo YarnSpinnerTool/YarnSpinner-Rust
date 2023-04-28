@@ -3,10 +3,6 @@ use std::borrow::Cow;
 /// The available operators that can be used with Yarn values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, strum_macros::Display)]
 pub enum Operator {
-    /// A unary operator that returns its input.
-    #[allow(dead_code)]
-    None,
-
     /// A binary operator that represents equality.
     EqualTo,
 
