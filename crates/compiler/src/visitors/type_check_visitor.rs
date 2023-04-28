@@ -387,11 +387,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     }
 
     fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
-        let expressions: Vec<_> = ctx
-            .expression_all()
-            .into_iter()
-            .map(|expr| expr as Rc<ActualParserContext<'input>>)
-            .collect();
+        let expressions: Vec<_> = ctx.expression_all().into_iter().map(Term::from).collect();
         let operator_context = ctx.op.as_ref().unwrap();
         let operator: Operator = token_to_operator(operator_context.token_type).unwrap();
         let description = operator_context.get_text().to_owned();
@@ -452,7 +448,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
     fn check_operation(
         &mut self,
         context: &impl ParserRuleContext<'input>,
-        terms: Vec<Rc<ActualParserContext<'input>>>,
+        terms: Vec<Term<'input>>,
         operation_type: impl Into<Option<Operator>>,
         operation_description: String,
         permitted_types: Vec<Type>,
@@ -462,7 +458,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         let mut expression_type = None;
         for expression in &terms {
             // Visit this expression, and determine its type.
-            let r#type = self.visit(&**expression);
+            let r#type = self.visit(&*expression.generic_context());
             if let Some(r#type) = r#type.clone() {
                 if expression_type.is_none() {
                     // This is the first concrete type we've seen. This
@@ -581,5 +577,32 @@ impl Deref for HashableInterval {
 impl DerefMut for HashableInterval {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+/// Bandaid enum to allow static type checks that work via dynamic dispatch on C#
+enum Term<'input> {
+    Expression(Rc<ExpressionContextAll<'input>>),
+    Variable(Rc<VariableContextAll<'input>>),
+}
+
+impl<'input> Term<'input> {
+    fn generic_context(&self) -> Rc<ActualParserContext<'input>> {
+        match self {
+            Term::Expression(ctx) => ctx.clone() as Rc<ActualParserContext<'input>>,
+            Term::Variable(ctx) => ctx.clone(),
+        }
+    }
+}
+
+impl<'input> From<Rc<ExpressionContextAll<'input>>> for Term<'input> {
+    fn from(ctx: Rc<ExpressionContextAll<'input>>) -> Self {
+        Self::Expression(ctx)
+    }
+}
+
+impl<'input> From<Rc<VariableContextAll<'input>>> for Term<'input> {
+    fn from(ctx: Rc<VariableContextAll<'input>>) -> Self {
+        Self::Variable(ctx)
     }
 }
