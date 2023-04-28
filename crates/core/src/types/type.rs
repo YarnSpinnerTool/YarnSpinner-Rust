@@ -67,6 +67,16 @@ impl Type {
             Type::String => string_type_properties(),
         }
     }
+
+    /// Returns whether this type's methods contain the given method by name.
+    ///
+    /// ## Implementation notes
+    /// Adapted from the `FindImplementingTypeForMethod`, but massively simplified because
+    /// we removed type hierarchies.
+    pub fn has_method(&self, name: &str) -> bool {
+        self.properties().methods.contains_key(name)
+    }
+
     pub const EXPLICITLY_CONSTRUCTABLE: &'static [Type] = &[
         Type::Any,
         Type::Number,

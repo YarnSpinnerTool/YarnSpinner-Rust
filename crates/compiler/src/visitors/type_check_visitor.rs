@@ -128,6 +128,11 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         self.types.get(&hashable_interval)
     }
 
+    fn get_type_mut(&mut self, ctx: &impl ParserRuleContext<'input>) -> Option<&mut Type> {
+        let hashable_interval = get_hashable_interval(ctx);
+        self.types.get_mut(&hashable_interval)
+    }
+
     fn set_type(
         &mut self,
         ctx: &impl ParserRuleContext<'input>,
@@ -677,6 +682,80 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 self.diagnostics.push(diagnostic);
                 continue;
             }
+        }
+
+        // All types must be same as the expression type (which is the
+        // first defined type we encountered when going through the
+        // terms)
+        if !term_types
+            .iter()
+            .all(|t| Some(t) == expression_type.as_ref())
+        {
+            // Not all the term types we found were the expression
+            // type.
+            let type_list = term_types
+                .iter()
+                .map(|t| t.properties().name)
+                .collect::<Vec<_>>()
+                .join(", ");
+            let message =
+                format!("All terms of {operation_description} must be the same, not {type_list}");
+            let diagnostic = Diagnostic::from_message(message)
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(&*context, self.tokens);
+            self.diagnostics.push(diagnostic);
+            return None;
+        }
+
+        // We've now determined that this expression is of
+        // expressionType. In case any of the terms had an undefined
+        // type, we'll define it now.
+        for term in terms {
+            if let Term::Expression(expression) = term {
+                if self.get_type(&*expression).is_none() {
+                    self.set_type(&*expression, expression_type.clone());
+                }
+                // Guaranteed to be Some
+                let expression = self.get_type_mut(&*expression).unwrap();
+                if let Type::Function(ref mut function_type) = expression {
+                    function_type.set_return_type(expression_type.clone());
+                }
+            }
+        }
+        if let Some(operation_type) = operation_type {
+            // We need to validate that the type we've selected actually
+            // implements this operation.
+
+            // By the logic of this function, this is guaranteed to be Some
+            let expression_type = expression_type.unwrap();
+            let implements_method = expression_type.has_method(&operation_type.to_string());
+            if !implements_method {
+                let message = format!(
+                    "{} has no implementation defined for {operation_description}",
+                    expression_type.properties().name,
+                );
+                let diagnostic = Diagnostic::from_message(message)
+                    .with_file_name(&self.source_file_name)
+                    .read_parser_rule_context(&*context, self.tokens);
+                self.diagnostics.push(diagnostic);
+                return None;
+            }
+        }
+
+        // Is this expression is required to be one of the specified types?
+        if !permitted_types.is_empty() {
+            // Is the type that we've arrived at compatible with one of
+            // the permitted types?
+            if permitted_types
+                .iter()
+                .any(|t| t.is_sub_type_of(&expression_type))
+            {
+                // It's compatible! Great, return the type we've
+                // determined.
+                return expression_type;
+            }
+            // The expression type wasn't valid!
+            let permitted_types_list =
         }
         todo!()
     }
