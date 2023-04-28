@@ -6,7 +6,7 @@ use crate::prelude::*;
 use crate::visitors::token_to_operator;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
+use antlr_rust::token::{CommonToken, Token};
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
@@ -399,6 +399,30 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     }
 
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
+        let Some(variable_context) = ctx.variable() else {
+            return None;
+        };
+        let Some(expression_context) = ctx.expression() else {
+            return None;
+        };
+        let variable_type = self.visit(&*variable_context);
+        if let Some(variable_type) = variable_type {
+            // giving the expression a hint just in case it is needed to help resolve any ambiguity on the expression
+            // currently this is only useful in situations where we have a function as the rvalue of a known lvalue
+            self.set_hint(&*expression_context, variable_type.clone());
+        }
+        let expression_type = self.visit(&*expression_context);
+        let variable_name = variable_context.get_text();
+        let terms: Vec<Term> = vec![variable_context.into(), expression_context.into()];
+
+        match ctx.op.unwrap().token_type {
+            yarnspinnerlexer::OPERATOR_ASSIGNMENT => {
+                // Straight assignment supports any assignment, as long
+                // as it's consistent; we already know the type of the
+                // expression, so let's check to see if it's assignable
+                // to the type of the variable.
+            }
+        }
         todo!()
     }
 
