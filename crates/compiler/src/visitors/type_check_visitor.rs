@@ -266,11 +266,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         };
         // Check each parameter of the function
         let supplied_parameters = ctx.function_call().unwrap().expression_all();
-        let mut expected_parameters = function_type.parameters;
+        let expected_parameter_types = function_type.parameters;
 
-        if supplied_parameters.len() != expected_parameters.len() {
+        if supplied_parameters.len() != expected_parameter_types.len() {
             // Wrong number of parameters supplied
-            let parameters = if expected_parameters.len() == 1 {
+            let parameters = if expected_parameter_types.len() == 1 {
                 "parameter"
             } else {
                 "parameters"
@@ -278,7 +278,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             let diagnostic = Diagnostic::from_message(format!(
                 "Function {} expects {} {}, but received {}",
                 function_name,
-                expected_parameters.len(),
+                expected_parameter_types.len(),
                 parameters,
                 supplied_parameters.len()
             ))
@@ -288,15 +288,17 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             return *function_type.return_type;
         }
 
-        for i in 0..expected_parameters.len() {
-            let supplied_parameter = supplied_parameters[i].clone();
-            let mut expected_type = &expected_parameters[i];
+        for (i, (supplied_parameter, mut expected_type)) in supplied_parameters
+            .iter()
+            .cloned()
+            .zip(expected_parameter_types.iter())
+            .enumerate()
+        {
             let supplied_type = self.visit(&*supplied_parameter);
             if expected_type.is_none() {
                 // The type of this parameter hasn't yet been bound.
                 // Bind this parameter type to what we've resolved the
                 // type to.
-                expected_parameters[i] = supplied_type.clone();
                 expected_type = &supplied_type;
             }
             if !expected_type.is_sub_type_of(&supplied_type) {
