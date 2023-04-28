@@ -417,6 +417,42 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
         todo!()
     }
+
+    fn visit_if_clause(&mut self, ctx: &If_clauseContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_else_if_clause(&mut self, ctx: &Else_if_clauseContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
+        todo!()
+    }
 }
 
 /// {0} = variable name
