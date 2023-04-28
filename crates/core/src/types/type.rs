@@ -1,5 +1,9 @@
 use crate::prelude::types::*;
 use crate::prelude::YarnFnRegistry;
+use crate::types::any::any_type_properties;
+use crate::types::boolean::boolean_type_properties;
+use crate::types::number::number_type_properties;
+use crate::types::string::string_type_properties;
 use paste::paste;
 use std::any::Any;
 use std::fmt::{Debug, Display};

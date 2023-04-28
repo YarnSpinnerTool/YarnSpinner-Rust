@@ -6,7 +6,7 @@
 
 use crate::prelude::Diagnostic;
 use antlr_rust::token::Token;
-use rusty_yarn_spinner_core::prelude::convertible::Convertible;
+use rusty_yarn_spinner_core::prelude::convertible::{Convertible, InvalidCastError};
 use rusty_yarn_spinner_core::types::Type;
 use std::cell::Ref;
 use std::fmt::{Debug, Display};
@@ -122,6 +122,21 @@ impl Declaration {
     pub fn with_range(mut self, range: impl Into<RangeInclusive<Position>>) -> Self {
         self.range = Some(range.into());
         self
+    }
+
+    pub fn eq(&self, other: &Self, epsilon: f32) -> Result<bool, InvalidCastError> {
+        Ok(self.name == other.name
+            && self.description == other.description
+            && self.source_file_name == other.source_file_name
+            && self.source_node_name == other.source_node_name
+            && self.is_implicit == other.is_implicit
+            && self.r#type == other.r#type
+            && self.range == other.range
+            && match (&self.default_value, &other.default_value) {
+                (Some(a), Some(b)) => a.eq(b, epsilon)?,
+                (None, None) => true,
+                _ => false,
+            })
     }
 }
 

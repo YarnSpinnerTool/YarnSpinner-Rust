@@ -198,33 +198,38 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             .declarations()
             .into_iter()
             .find(|decl| decl.name == function_name);
+        let hint = self.hints.get(&ctx.get_source_interval().into()).cloned();
         let _function_type = if let Some(function_declaration) = function_declaration {
-            let _function_type = function_declaration.r#type.clone();
-            /*
-            functionType = functionDeclaration.Type as FunctionType;
-               if (functionType == null)
-               {
-                   throw new InvalidOperationException($"Internal error: decl's type is not a {nameof(FunctionType)}");
-               }
+            let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
+                 unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
+            };
 
-               // we have an existing function but its undefined
-               // if we also have a type hint we can use that to update it
-               if (functionType.ReturnType == Types.Undefined && context.Hint != Types.Undefined)
-               {
-                   NewDeclarations.Remove(functionDeclaration);
-                   functionType.ReturnType = context.Hint;
-                   functionDeclaration.Type = functionType;
-                   NewDeclarations.Add(functionDeclaration);
-               }
-
-             */
-            todo!("function type")
+            // we have an existing function but its undefined
+            // if we also have a type hint we can use that to update it
+            if function_type.return_type.is_none() {
+                if let Some(hint) = hint {
+                    if let Some(index) = self
+                        .new_declarations
+                        .iter()
+                        .filter_map(|decl| decl.eq(&function_declaration, 1e-4).ok())
+                        .position(|eq| eq)
+                    {
+                        self.new_declarations.remove(index);
+                    }
+                    function_type.set_return_type(hint);
+                    let new_declaration = Declaration {
+                        r#type: Some(Type::from(function_type.clone())),
+                        ..function_declaration
+                    };
+                    self.new_declarations.push(new_declaration);
+                }
+            }
+            function_type
         } else {
             // We don't have a declaration for this function. Create an
             // implicit one.
             let mut function_type = FunctionType::default();
             // because it is an implicit declaration we will use the type hint to give us a return type
-            let hint = self.hints.get(&ctx.get_source_interval().into()).cloned();
             function_type.set_return_type(hint);
             let line = ctx.start().get_line();
             let column = ctx.start().get_column();
@@ -246,8 +251,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                         character: column as usize + 1 + ctx.stop().get_text().len(),
                     },
                 )
-                .with_implicit()
-                .into();
+                .with_implicit();
 
             // Create the array of parameters for this function based
             // on how many we've seen in this call. Set them all to be
