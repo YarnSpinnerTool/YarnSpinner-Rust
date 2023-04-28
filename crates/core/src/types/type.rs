@@ -42,17 +42,36 @@ impl Display for Type {
     }
 }
 
-pub trait TypeOptionFormat {
-    fn format(&self) -> String;
+pub trait TypeFormat {
+    fn format_name(&self) -> String;
+    fn format_user_friendly(&self) -> String;
 }
 
-impl TypeOptionFormat for Option<Type> {
-    fn format(&self) -> String {
+impl TypeFormat for Option<Type> {
+    fn format_name(&self) -> String {
         if let Some(r#type) = self {
-            format!("{}", r#type)
+            r#type.format_name()
         } else {
             "undefined".to_string()
         }
+    }
+
+    fn format_user_friendly(&self) -> String {
+        if let Some(r#type) = self {
+            r#type.format_user_friendly()
+        } else {
+            "undefined".to_string()
+        }
+    }
+}
+
+impl TypeFormat for Type {
+    fn format_name(&self) -> String {
+        self.properties().name.to_string()
+    }
+
+    fn format_user_friendly(&self) -> String {
+        self.to_string()
     }
 }
 
@@ -94,7 +113,7 @@ impl Type {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeProperties {
     /// The name of this type.
-    pub name: &'static str,
+    pub(crate) name: &'static str,
 
     /// A more verbose description of this type.
     pub description: String,

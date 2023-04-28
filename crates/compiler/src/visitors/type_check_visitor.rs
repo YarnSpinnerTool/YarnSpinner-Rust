@@ -11,7 +11,7 @@ use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::prelude::Operator;
-use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeOptionFormat};
+use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -356,8 +356,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                     "{} parameter {} expects a {}, not a {}",
                     function_name,
                     i + 1,
-                    expected_type.format(),
-                    supplied_type.format()
+                    expected_type.format_user_friendly(),
+                    supplied_type.format_user_friendly()
                 ))
                 .with_file_name(&self.source_file_name)
                 .read_parser_rule_context(ctx, self.tokens);
@@ -491,7 +491,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 let operation_type_name = operation_type.to_string();
                 let types_implementing_method: Vec<_> = Type::EXPLICITLY_CONSTRUCTABLE
                     .iter()
-                    .filter(|t| t.properties().methods.contains_key(&operation_type_name))
+                    .filter(|t| t.has_method(&operation_type_name))
                     .collect();
                 if types_implementing_method.len() == 1 {
                     // Only one type implements the operation we were
@@ -504,7 +504,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                     // Multiple types implement this operation.
                     let type_names = types_implementing_method
                         .iter()
-                        .map(|t| t.properties().name)
+                        .map(|t| t.format_user_friendly())
                         .collect::<Vec<_>>()
                         .join(", or ");
                     let message = format!(
@@ -695,7 +695,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // type.
             let type_list = term_types
                 .iter()
-                .map(|t| t.properties().name)
+                .map(|t| t.format_user_friendly())
                 .collect::<Vec<_>>()
                 .join(", ");
             let message =
@@ -732,7 +732,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             if !implements_method {
                 let message = format!(
                     "{} has no implementation defined for {operation_description}",
-                    expression_type.properties().name,
+                    expression_type.format_user_friendly(),
                 );
                 let diagnostic = Diagnostic::from_message(message)
                     .with_file_name(&self.source_file_name)
@@ -757,12 +757,12 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // The expression type wasn't valid!
             let permitted_types_list = permitted_types
                 .iter()
-                .map(|t| t.properties().name)
+                .map(|t| t.format_user_friendly())
                 .collect::<Vec<_>>()
                 .join(" or ");
             let type_list = term_types
                 .iter()
-                .map(|t| t.properties().name)
+                .map(|t| t.format_user_friendly())
                 .collect::<Vec<_>>()
                 .join(", ");
             let message = format!(
@@ -792,7 +792,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // expression is therefore invalid.
             let message = format!(
                 "Operator {operation_description} cannot be used with {} values",
-                expression_type.format()
+                expression_type.format_user_friendly()
             );
             self.diagnostics.push(
                 Diagnostic::from_message(message)

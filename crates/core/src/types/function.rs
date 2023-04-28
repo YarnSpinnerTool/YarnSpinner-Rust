@@ -2,7 +2,7 @@
 
 use crate::prelude::types::TypeProperties;
 
-use crate::types::{Type, TypeOptionFormat};
+use crate::types::{Type, TypeFormat};
 use std::fmt::Display;
 
 pub(crate) fn function_type_properties(function_type: &FunctionType) -> TypeProperties {
@@ -41,10 +41,10 @@ impl Display for FunctionType {
         let parameters = self
             .parameters
             .iter()
-            .map(TypeOptionFormat::format)
+            .map(TypeFormat::format_user_friendly)
             .collect::<Vec<_>>()
             .join(", ");
-        let return_type = self.return_type.as_ref().format();
+        let return_type = self.return_type.as_ref().format_user_friendly();
         write!(f, "Fn({}) -> {}", parameters, return_type)
     }
 }
