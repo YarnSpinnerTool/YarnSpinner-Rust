@@ -5,7 +5,6 @@ use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
-use better_any::TidExt;
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -95,6 +94,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
             }
         }
     }
+
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
         let hashtags = ctx.hashtag_all();
         let line_id_tag = get_line_id_tag(&hashtags);
