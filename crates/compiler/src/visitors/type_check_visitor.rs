@@ -727,7 +727,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // implements this operation.
 
             // By the logic of this function, this is guaranteed to be Some
-            let expression_type = expression_type.unwrap();
+            let expression_type = expression_type.as_ref().unwrap();
             let implements_method = expression_type.has_method(&operation_type.to_string());
             if !implements_method {
                 let message = format!(
@@ -755,9 +755,53 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 return expression_type;
             }
             // The expression type wasn't valid!
-            let permitted_types_list =
+            let permitted_types_list = permitted_types
+                .iter()
+                .map(|t| t.properties().name)
+                .collect::<Vec<_>>()
+                .join(" or ");
+            let type_list = term_types
+                .iter()
+                .map(|t| t.properties().name)
+                .collect::<Vec<_>>()
+                .join(", ");
+            let message = format!(
+                "Terms of '{operation_description}' must be {permitted_types_list}, not {type_list}",
+            );
+            let diagnostic = Diagnostic::from_message(message)
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(&*context, self.tokens);
+            self.diagnostics.push(diagnostic);
+            return None;
         }
-        todo!()
+        // We weren't given a specific type. The expression type is
+        // therefore only valid if it can use the provided
+        // operator.
+
+        // Find a type in 'expressionType's hierarchy that
+        // implements this method.
+
+        let has_method = expression_type
+            .as_ref()
+            .map(|exp| operation_type.map(|op| exp.has_method(&op.to_string())))
+            .flatten()
+            .unwrap_or_default();
+        if !has_method {
+            // The type doesn't have a method for handling this
+            // operator, and neither do any of its supertypes. This
+            // expression is therefore invalid.
+            let message = format!(
+                "Operator {operation_description} cannot be used with {} values",
+                expression_type.format()
+            );
+            self.diagnostics.push(
+                Diagnostic::from_message(message)
+                    .with_file_name(&self.source_file_name)
+                    .read_parser_rule_context(&*context, self.tokens),
+            );
+            return None;
+        }
+        expression_type
     }
 }
 

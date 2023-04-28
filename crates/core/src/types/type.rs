@@ -6,6 +6,7 @@ use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
 use paste::paste;
 use std::any::Any;
+use std::borrow::Cow;
 use std::fmt::{Debug, Display};
 
 /// All types in the virtual machine, both built-in, i.e. usable in yarn scripts, and internal.
@@ -62,7 +63,7 @@ impl Type {
         match self {
             Type::Any => any_type_properties(),
             Type::Boolean => boolean_type_properties(),
-            Type::Function(_) => function_type_properties(),
+            Type::Function(function_type) => function_type_properties(function_type),
             Type::Number => number_type_properties(),
             Type::String => string_type_properties(),
         }
@@ -98,7 +99,7 @@ pub struct TypeProperties {
     pub name: &'static str,
 
     /// A more verbose description of this type.
-    pub description: &'static str,
+    pub description: String,
 
     /// The collection of methods that are available on this type.
     pub methods: YarnFnRegistry,
@@ -108,13 +109,13 @@ impl TypeProperties {
     pub fn from_name(name: &'static str) -> Self {
         Self {
             name,
-            description: name,
+            description: name.to_owned(),
             methods: Default::default(),
         }
     }
 
-    pub fn with_description(mut self, description: &'static str) -> Self {
-        self.description = description;
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        self.description = description.into();
         self
     }
 

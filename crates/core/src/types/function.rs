@@ -5,8 +5,8 @@ use crate::prelude::types::TypeProperties;
 use crate::types::{Type, TypeOptionFormat};
 use std::fmt::Display;
 
-pub(crate) fn function_type_properties() -> TypeProperties {
-    TypeProperties::from_name("Function")
+pub(crate) fn function_type_properties(function_type: &FunctionType) -> TypeProperties {
+    TypeProperties::from_name("Function").with_description(&function_type.to_string())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -31,8 +31,8 @@ impl FunctionType {
         self.parameters.push(parameter.into());
     }
 
-    pub fn properties() -> TypeProperties {
-        function_type_properties()
+    pub fn properties(&self) -> TypeProperties {
+        function_type_properties(self)
     }
 }
 
