@@ -116,15 +116,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
     fn check_operation(
         &mut self,
         context: &impl ParserRuleContext<'input>,
-        terms: Vec<
-            Rc<
-                dyn ParserRuleContext<
-                    'input,
-                    Ctx = YarnSpinnerParserContextType,
-                    TF = CommonTokenFactory,
-                >,
-            >,
-        >,
+        terms: Vec<Rc<ActualRuleContext<'input>>>,
         operation_type: Operator,
         operation_description: String,
         permitted_types: Vec<Type>,
@@ -388,15 +380,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         let expressions: Vec<_> = ctx
             .expression_all()
             .into_iter()
-            .map(|expr| {
-                expr as Rc<
-                    dyn ParserRuleContext<
-                        'input,
-                        Ctx = YarnSpinnerParserContextType,
-                        TF = CommonTokenFactory,
-                    >,
-                >
-            })
+            .map(|expr| expr as Rc<ActualRuleContext<'input>>)
             .collect();
         let operator: Operator = todo!();
         let description = ctx.op.unwrap().get_text().to_owned();

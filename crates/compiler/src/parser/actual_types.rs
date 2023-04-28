@@ -3,6 +3,8 @@
 use crate::error_strategy::ErrorStrategy;
 use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::token_factory::CommonTokenFactory;
 use antlr_rust::InputStream;
 use generated::yarnspinnerparser::*;
 
@@ -12,3 +14,14 @@ pub type ActualErrorStrategy<'input> = ErrorStrategy<'input, YarnSpinnerParserCo
 pub type ActualTokenStream<'input> = CommonTokenStream<'input, ActualYarnSpinnerLexer<'input>>;
 pub type ActualYarnSpinnerParser<'input> =
     YarnSpinnerParser<'input, ActualTokenStream<'input>, ActualErrorStrategy<'input>>;
+pub type ActualParserContext<'input> = dyn YarnSpinnerParserContext<
+    'input,
+    Ctx = YarnSpinnerParserContextType,
+    TF = LocalTokenFactory<'input>,
+>;
+
+pub type ActualRuleContext<'input> = dyn ParserRuleContext<
+    'input,
+    Ctx = YarnSpinnerParserContextType,
+    TF = LocalTokenFactory<'input>,
+>;
