@@ -58,7 +58,7 @@ impl TypeOptionFormat for Option<Type> {
 }
 
 impl Type {
-    fn properties(&self) -> TypeProperties {
+    pub fn properties(&self) -> TypeProperties {
         match self {
             Type::Any => any_type_properties(),
             Type::Boolean => boolean_type_properties(),

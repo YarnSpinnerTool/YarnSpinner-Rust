@@ -1,3 +1,4 @@
+use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
@@ -51,7 +52,10 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
     /// ## Implementation notes
     ///
     /// In the original implementation, this was implemented
-    /// on the [`ValueContext`] directly using a `partial`
+    /// on the [`ValueContext`] directly using a `partial`.
+    ///
+    /// Careful, the original class has an unrelated member called `types`,
+    /// but in this implementation, we replaced that member by [`Type::EXPLICITLY_CONSTRUCTABLE`].
     types: HashMap<HashableInterval, Type>,
 
     /// A type hint for the expression.
@@ -453,6 +457,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         operation_description: String,
         permitted_types: Vec<Type>,
     ) -> Option<Type> {
+        let operation_type = operation_type.into();
         let mut term_types = Vec::new();
         let mut expression_type = None;
         for expression in &terms {
@@ -467,6 +472,74 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 term_types.push(r#type);
             }
         }
+        if permitted_types.len() == 1 && expression_type.is_none() {
+            // If we aren't sure of the expression type from
+            // parameters, but we only have one permitted one, then
+            // assume that the expression type is the single permitted
+            // type.
+
+            // Guaranteed to be `Some`
+            expression_type = permitted_types.first().cloned();
+        }
+
+        if expression_type.is_none() {
+            // We still don't know what type of expression this is, and
+            // don't have a reasonable guess.
+
+            // Last-ditch effort: is the operator that we were given
+            // valid in exactly one type? In that case, we'll decide
+            // it's that type.
+            if let Some(operation_type) = operation_type {
+                let operation_type_name = operation_type.to_string();
+                let types_implementing_method: Vec<_> = Type::EXPLICITLY_CONSTRUCTABLE
+                    .iter()
+                    .filter(|t| t.properties().methods.contains_key(&operation_type_name))
+                    .collect();
+                if types_implementing_method.len() == 1 {
+                    // Only one type implements the operation we were
+                    // given. Given no other information, we will assume
+                    // that it is this type.
+
+                    // Guaranteed to be `Some`
+                    expression_type = types_implementing_method.first().cloned().cloned();
+                } else if types_implementing_method.len() > 1 {
+                    // Multiple types implement this operation.
+                    let type_names = types_implementing_method
+                        .iter()
+                        .map(|t| t.properties().name)
+                        .collect::<Vec<_>>()
+                        .join(", or ");
+                    let message = format!(
+                        "Type of expression \"{}\" can't be determined without more context (the compiler thinks it could be {type_names}). Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
+                        context.get_text_with_whitespace(self.tokens),
+                    );
+                    let diagnostic = Diagnostic::from_message(message)
+                        .with_file_name(&self.source_file_name)
+                        .read_parser_rule_context(context, self.tokens);
+                    self.diagnostics.push(diagnostic);
+                    return None;
+                } else {
+                    // No types implement this operation (??) [sic]
+                    let message = format!(
+                        "Type of expression \"{}\" can't be determined without more context. Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
+                        context.get_text_with_whitespace(self.tokens),
+                    );
+                    let diagnostic = Diagnostic::from_message(message)
+                        .with_file_name(&self.source_file_name)
+                        .read_parser_rule_context(context, self.tokens);
+                    self.diagnostics.push(diagnostic);
+                    return None;
+                }
+            }
+        }
+
+        // to reach this point we have either worked out the final type of the expression
+        // or had to give up, and if we gave up we have nothing left to do
+        // there are then two parts to this, first we need to declare the implicit type of any variables (that appears to be working)
+        // or the implicit type of any function.
+        // annoyingly the function will already have an implicit definition created for it
+        // we will have to strip that out and add in a new one with the new return type
+        for term in &terms {}
         todo!()
     }
 }
