@@ -389,14 +389,14 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         self.set_hint(&*value, hint);
         // Value expressions have the type of their inner value
         let r#type = self.visit(&*value);
-        self.set_hint(ctx, r#type.clone());
+        self.set_type(ctx, r#type.clone());
         r#type
     }
 
     fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
         // Parens expressions have the type of their inner expression
         let r#type = self.visit(&*ctx.expression().unwrap());
-        self.set_hint(ctx, r#type.clone());
+        self.set_type(ctx, r#type.clone());
         r#type
     }
 
