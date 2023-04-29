@@ -730,3 +730,60 @@ impl DerefMut for HashableInterval {
         &mut self.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn allows_valid_assignments() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+<<declare $foo to 1>>
+<<set $foo to 2>>
+<<declare $bar to true>>
+<<declare $baz to \"hello\">>
+<<set $bar to false>>
+<<set $baz to \"world\">>
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+
+        println!("{:?}", result.diagnostics);
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn catches_invalid_assignments() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+<<declare $foo to 1>>
+<<set $foo to \"invalid\">>
+<<declare $bar to true>>
+<<declare $baz to \"hello\">>
+<<set $bar to -15>>
+<<set $baz to false>>
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+
+        println!("{:?}", result.diagnostics);
+        assert!(result.diagnostics.is_empty());
+    }
+}
