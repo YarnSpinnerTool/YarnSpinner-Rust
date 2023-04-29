@@ -21,6 +21,7 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
     let compiler_steps: Vec<&CompilationStep> = vec![
         &register_strings,
         &get_declarations,
+        &check_types,
         &find_tracking_nodes,
         &add_tracking_declarations,
     ];
@@ -39,18 +40,23 @@ fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermedia
     for file in &state.parsed_files {
         let mut variable_declaration_visitor = DeclarationVisitor::new(
             file.name.clone(),
-            state.job.variable_declarations.clone(),
+            state.known_variable_declarations.clone(),
             file.tokens(),
         );
 
         variable_declaration_visitor.visit(&*file.tree);
+
+        state
+            .known_variable_declarations
+            .extend(variable_declaration_visitor.new_declarations.clone());
+        state
+            .derived_variable_declarations
+            .extend(variable_declaration_visitor.new_declarations);
+
         let result = &mut state.result;
         result
             .diagnostics
             .extend_from_slice(&variable_declaration_visitor.diagnostics);
-        result
-            .declarations
-            .extend(variable_declaration_visitor.new_declarations);
         result
             .file_tags
             .insert(file.name.clone(), variable_declaration_visitor.file_tags);
@@ -101,6 +107,26 @@ fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationInterme
     state
 }
 
+fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    for file in &state.parsed_files {
+        let mut visitor = TypeCheckVisitor::new(
+            file.name.clone(),
+            state.known_variable_declarations.clone(),
+            file.tokens(),
+        );
+        visitor.visit(&*file.tree);
+        state
+            .known_variable_declarations
+            .extend(visitor.new_declarations.clone());
+        state
+            .derived_variable_declarations
+            .extend(visitor.new_declarations);
+        state.result.diagnostics.extend(visitor.diagnostics);
+        state.potential_issues.extend(visitor.deferred_types);
+    }
+    state
+}
+
 fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     let tracking_declarations: Vec<_> = state
         .tracking_nodes
@@ -133,6 +159,7 @@ struct CompilationIntermediate<'input> {
     pub(crate) result: CompilationResult,
     pub(crate) known_variable_declarations: Vec<Declaration>,
     pub(crate) derived_variable_declarations: Vec<Declaration>,
+    pub(crate) potential_issues: Vec<DeferredTypeDiagnostic>,
     pub(crate) parsed_files: Vec<FileParseResult<'input>>,
     pub(crate) tracking_nodes: HashSet<String>,
 }
@@ -144,6 +171,7 @@ impl<'input> CompilationIntermediate<'input> {
             result: Default::default(),
             known_variable_declarations: Default::default(),
             derived_variable_declarations: Default::default(),
+            potential_issues: Default::default(),
             parsed_files: Default::default(),
             tracking_nodes: Default::default(),
         }
