@@ -8,6 +8,7 @@ use crate::visitors::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
+use std::cmp::Ordering;
 
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{SubTypeOf, Type, TypeFormat};
@@ -70,40 +71,44 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                     .iter()
                     .filter(|t| t.has_method(&operation_type_name))
                     .collect();
-                if types_implementing_method.len() == 1 {
-                    // Only one type implements the operation we were
-                    // given. Given no other information, we will assume
-                    // that it is this type.
+                match types_implementing_method.len().cmp(&1_usize) {
+                    Ordering::Equal => {
+                        // Only one type implements the operation we were
+                        // given. Given no other information, we will assume
+                        // that it is this type.
 
-                    // Guaranteed to be `Some`
-                    expression_type = types_implementing_method.first().cloned().cloned();
-                } else if types_implementing_method.len() > 1 {
-                    // Multiple types implement this operation.
-                    let type_names = types_implementing_method
-                        .iter()
-                        .map(|t| t.format())
-                        .collect::<Vec<_>>()
-                        .join(", or ");
-                    let message = format!(
+                        // Guaranteed to be `Some`
+                        expression_type = types_implementing_method.first().cloned().cloned();
+                    }
+                    Ordering::Greater => {
+                        // Multiple types implement this operation.
+                        let type_names = types_implementing_method
+                            .iter()
+                            .map(|t| t.format())
+                            .collect::<Vec<_>>()
+                            .join(", or ");
+                        let message = format!(
                         "Type of expression \"{}\" can't be determined without more context (the compiler thinks it could be {type_names}). Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
                         context.get_text_with_whitespace(self.tokens),
                     );
-                    let diagnostic = Diagnostic::from_message(message)
-                        .with_file_name(&self.source_file_name)
-                        .read_parser_rule_context(context, self.tokens);
-                    self.diagnostics.push(diagnostic);
-                    return None;
-                } else {
-                    // No types implement this operation (??) [sic]
-                    let message = format!(
+                        let diagnostic = Diagnostic::from_message(message)
+                            .with_file_name(&self.source_file_name)
+                            .read_parser_rule_context(context, self.tokens);
+                        self.diagnostics.push(diagnostic);
+                        return None;
+                    }
+                    Ordering::Less => {
+                        // No types implement this operation (??) [sic]
+                        let message = format!(
                         "Type of expression \"{}\" can't be determined without more context. Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
                         context.get_text_with_whitespace(self.tokens),
                     );
-                    let diagnostic = Diagnostic::from_message(message)
-                        .with_file_name(&self.source_file_name)
-                        .read_parser_rule_context(context, self.tokens);
-                    self.diagnostics.push(diagnostic);
-                    return None;
+                        let diagnostic = Diagnostic::from_message(message)
+                            .with_file_name(&self.source_file_name)
+                            .read_parser_rule_context(context, self.tokens);
+                        self.diagnostics.push(diagnostic);
+                        return None;
+                    }
                 }
             }
         }
