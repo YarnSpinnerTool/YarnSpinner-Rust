@@ -135,7 +135,7 @@ impl From<Value> for ConstantValue {
 impl Default for ConstantValue {
     /// The constant value visitor is meant to be used for very specific contexts, e.g. it is allowed to be called for a line but not for an entire dialog.
     /// This default implementation is called when the visitor is called in an unexpected way, which in the current implementation can indeed not happen.
-    /// If we refactor the code wrongly, this panic will be reached and tell us. I'll write this into a comment in the code later.
+    /// If we refactor the code wrongly, this panic will be reached and tell us.
     fn default() -> Self {
         unreachable!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
     }
