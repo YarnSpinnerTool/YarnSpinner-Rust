@@ -523,7 +523,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 // expression, so let's check to see if it's assignable
                 // to the type of the variable.
                 match (variable_type.as_ref(), expression_type.as_ref()) {
-                    (Some(variable_type), _) if expression_type.is_sub_type_of(variable_type) => {
+                    (Some(variable_type), _) if !expression_type.is_sub_type_of(variable_type) => {
                         let diagnostic = Diagnostic::from_message(format!(
                             "{variable_name} ({}) cannot be assigned a {}",
                             variable_type.format(),
@@ -784,6 +784,20 @@ mod tests {
         });
 
         println!("{:?}", result.diagnostics);
-        assert!(result.diagnostics.is_empty());
+        assert_eq!(3, result.diagnostics.len());
+
+        let expected = Diagnostic::from_message("$foo (Number) cannot be assigned a String")
+            .with_file_name("test.yarn")
+            .with_context("<<set $foo to \"invalid\">>")
+            .with_range(
+                Position {
+                    line: 4,
+                    character: 1,
+                }..=Position {
+                    line: 4,
+                    character: 25,
+                },
+            );
+        assert!(result.diagnostics.contains(&expected,));
     }
 }

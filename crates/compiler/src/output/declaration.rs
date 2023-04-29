@@ -175,12 +175,21 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn from_token(token: Ref<impl Token + ?Sized>) -> Self {
+    pub fn from_start_token(token: Ref<impl Token + ?Sized>) -> Self {
         Self {
             // All positions are +1 compared to original implementation, but the result is the same.
             // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
             line: token.get_line() as usize,
             character: token.get_column() as usize + 1,
+        }
+    }
+
+    pub fn from_stop_token(token: Ref<impl Token + ?Sized>) -> Self {
+        Self {
+            // All positions are +1 compared to original implementation, but the result is the same.
+            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
+            line: token.get_line() as usize,
+            character: token.get_column() as usize + 2,
         }
     }
 }

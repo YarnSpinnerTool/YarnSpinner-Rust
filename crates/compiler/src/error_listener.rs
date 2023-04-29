@@ -59,8 +59,8 @@ impl Diagnostic {
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,
     ) -> Self {
-        let start = Position::from_token(ctx.start());
-        let stop = Position::from_token(ctx.stop());
+        let start = Position::from_start_token(ctx.start());
+        let stop = Position::from_stop_token(ctx.stop());
         self.range = Some(start..=stop);
         self.context = Some(ctx.get_text_with_whitespace(token_stream));
         self

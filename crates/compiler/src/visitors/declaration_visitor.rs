@@ -370,7 +370,7 @@ mod tests {
                         character: 1,
                     }..=Position {
                         line: 3,
-                        character: 30,
+                        character: 31,
                     }
                 )
                 .with_severity(DiagnosticSeverity::Error)
