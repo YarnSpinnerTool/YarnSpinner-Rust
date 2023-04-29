@@ -1,9 +1,10 @@
 use crate::prelude::*;
+use antlr_rust::token::Token;
 use antlr_rust::tree::ParseTreeListener;
 use rusty_yarn_spinner_core::prelude::*;
 mod emit;
 use crate::parser::generated::yarnspinnerparser::{
-    BodyContext, NodeContext, YarnSpinnerParserContextType,
+    BodyContext, HeaderContext, NodeContext, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 pub(crate) use emit::*;
@@ -75,5 +76,46 @@ impl<'a, 'b, 'input: 'a + 'b> YarnSpinnerParserListener<'input>
         }
         self.current_node = None;
         self.raw_text_node = false;
+    }
+
+    fn exit_header(&mut self, ctx: &HeaderContext<'input>) {
+        // have finished with the header so about to enter the node body
+        // and all its statements do the initial setup required before
+        // compiling that body statements eg emit a new startlabel
+        let header_key = ctx.header_key.as_ref().unwrap().get_text();
+
+        // Use the header value if provided, else fall back to the
+        // empty string. This means that a header like "foo: \n" will
+        // be stored as 'foo', '', consistent with how it was typed.
+        // That is, it's not null, because a header was provided, but
+        // it was written as an empty line.
+        let header_value = ctx
+            .header_value
+            .as_ref()
+            .map(|v| v.get_text())
+            .unwrap_or_default()
+            .to_owned();
+        match header_key {
+            "title" => {
+                // Set the name of the node
+                self.current_node.as_mut().unwrap().name = header_value.clone();
+            }
+            "tags" => {
+                // Split the list of tags by spaces, and use that
+                let tags = header_value.split(' ').map(|s| s.to_owned());
+                let current_tags = &mut self.current_node.as_mut().unwrap().tags;
+                current_tags.extend(tags);
+                if current_tags.contains(&"rawText".to_owned()) {
+                    // This is a raw text node. Flag it as such for future compilation.
+                    self.raw_text_node = true;
+                }
+            }
+            _ => {}
+        }
+        let header = Header {
+            key: header_key.to_owned(),
+            value: header_value,
+        };
+        self.current_node.as_mut().unwrap().headers.push(header);
     }
 }
