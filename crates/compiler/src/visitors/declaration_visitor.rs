@@ -211,17 +211,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             .with_source_node_name_optional(self.current_node_name.clone())
             // All positions are +1 compared to original implementation, but the result is the same.
             // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            .with_range(
-                Position {
-                    line: variable_context.start().line as usize,
-                    character: variable_context.start().column as usize + 1,
-                }..=Position {
-                    line: variable_context.stop().line as usize,
-                    character: variable_context.stop().column as usize
-                        + 1
-                        + variable_context.get_text().len(),
-                },
-            );
+            .with_range(variable_context.range(self.tokens));
         self.new_declarations.push(declaration);
     }
 }
@@ -276,7 +266,7 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 3,
-                        character: 15,
+                        character: 14,
                     }
                 )
         );
@@ -295,7 +285,7 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 4,
-                        character: 15,
+                        character: 14,
                     }
                 )
         );
@@ -314,7 +304,7 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 5,
-                        character: 15,
+                        character: 14,
                     }
                 )
         );
@@ -333,7 +323,7 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 6,
-                        character: 16,
+                        character: 15,
                     }
                 )
         );

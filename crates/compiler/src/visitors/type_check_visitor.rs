@@ -353,15 +353,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 ))
                 // All positions are +1 compared to original implementation, but the result is the same.
                 // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-                .with_range(
-                    Position {
-                        line: line as usize,
-                        character: column as usize + 1,
-                    }..=Position {
-                        line: line as usize,
-                        character: column as usize + 1 + ctx.stop().get_text().len(),
-                    },
-                )
+                .with_range(ctx.range(self.tokens))
                 .with_implicit();
 
             // Create the array of parameters for this function based
@@ -553,15 +545,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                                 .with_default_value(default_value)
                                 .with_source_file_name(self.source_file_name.clone())
                                 .with_source_node_name_optional(self.current_node_name.clone())
-                                .with_range(
-                                    Position {
-                                        line: variable_context.start().line as usize - 1,
-                                        character: variable_context.start().column as usize,
-                                    }..=Position {
-                                        line: variable_context.stop().line as usize - 1,
-                                        character: variable_context.stop().column as usize
-                                            + variable_context.get_text().len(),
-                                    },
+                                .with_range(variable_context.range(self.tokens)
                                 )
                                 .with_implicit();
                             self.new_declarations.push(decl);
@@ -783,7 +767,6 @@ mod tests {
             variable_declarations: vec![],
         });
 
-        println!("{:?}", result.diagnostics);
         assert_eq!(3, result.diagnostics.len());
 
         assert_contains(
@@ -838,9 +821,124 @@ mod tests {
     fn assert_contains(diagnostics: &[Diagnostic], expected: &Diagnostic) {
         assert!(
             diagnostics.contains(expected),
-            "Expected {:?} to contain {:?}",
-            diagnostics,
+            "Expected diagnostics:\n{}\nto contain:\n- {:?}",
+            diagnostics
+                .iter()
+                .map(|d| format!("- {:?}", d))
+                .collect::<Vec<_>>()
+                .join("\n"),
             expected
+        );
+    }
+
+    #[test]
+    fn allows_valid_math() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+<<declare $foo to 1>>
+<<declare $bar = 2>>
+<<set $foo to $foo + $bar>>
+<<set $bar to $bar * $foo>>
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+
+        println!("{:?}", result.diagnostics);
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn catches_invalid_math() {
+        let file = File {
+            file_name: "test.yarn".to_string(),
+            source: "title: test
+---
+<<declare $foo to 1>>
+<<declare $bar = \"invalid\">>
+<<set $foo to $foo + $bar>>
+<<set $foo to $foo * \"invalid\">>
+==="
+            .to_string(),
+        };
+        let result = compile(CompilationJob {
+            files: vec![file],
+            library: None,
+            compilation_type: CompilationType::FullCompilation,
+            variable_declarations: vec![],
+        });
+
+        assert_eq!(4, result.diagnostics.len());
+
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
+                .with_file_name("test.yarn")
+                .with_context("<<set $foo to $foo + $bar>>")
+                .with_range(
+                    Position {
+                        line: 5,
+                        character: 1,
+                    }..=Position {
+                        line: 5,
+                        character: 27,
+                    },
+                ),
+        );
+
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
+                .with_file_name("test.yarn")
+                .with_context("<<set $foo to $foo * \"invalid\">>")
+                .with_range(
+                    Position {
+                        line: 6,
+                        character: 1,
+                    }..=Position {
+                        line: 6,
+                        character: 32,
+                    },
+                ),
+        );
+
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("All terms of + must be the same, not Number, String")
+                .with_file_name("test.yarn")
+                .with_context("$foo + $bar")
+                .with_range(
+                    Position {
+                        line: 5,
+                        character: 15,
+                    }..=Position {
+                        line: 5,
+                        character: 25,
+                    },
+                ),
+        );
+
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("All terms of * must be the same, not Number, String")
+                .with_file_name("test.yarn")
+                .with_context("$foo * \"invalid\"")
+                .with_range(
+                    Position {
+                        line: 6,
+                        character: 15,
+                    }..=Position {
+                        line: 6,
+                        character: 30,
+                    },
+                ),
         );
     }
 }

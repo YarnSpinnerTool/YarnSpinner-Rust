@@ -234,18 +234,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                     .with_default_value(default_value)
                     .with_source_file_name(self.source_file_name.clone())
                     .with_source_node_name_optional(self.current_node_name.clone())
-                    .with_range(
-                        Position {
-                            line: undefined_variable_context.start().line as usize - 1,
-                            character: undefined_variable_context.start().column as usize,
-                        }..=Position {
-                            line: undefined_variable_context.stop().line as usize - 1,
-                            character: undefined_variable_context.stop().column as usize
-                                // Implementation note: The original called `.stop()` here before the `get_text`,
-                                //but I suspect that is at best unnecessary and at worst incorrect.
-                                + undefined_variable_context.get_text().len(),
-                        },
-                    )
+                    .with_range(undefined_variable_context.range(self.tokens))
                     .with_implicit();
                 self.new_declarations.push(decl);
             } else {

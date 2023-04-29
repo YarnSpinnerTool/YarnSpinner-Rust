@@ -2,13 +2,17 @@
 
 use crate::output::Position;
 use crate::parser_rule_context_ext::ParserRuleContextExt;
-use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
+use crate::prelude::generated::yarnspinnerlexer::LocalTokenFactory;
+use crate::prelude::generated::yarnspinnerparser::{
+    YarnSpinnerParserContext, YarnSpinnerParserContextType,
+};
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::prelude::{ActualTokenStream, File};
+use crate::prelude::{ActualTokenStream, File, RangeSource};
 use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
 use antlr_rust::recognizer::Recognizer;
+use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::ParseTreeListener;
@@ -59,9 +63,8 @@ impl Diagnostic {
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,
     ) -> Self {
-        let start = Position::from_start_token(ctx.start());
-        let stop = Position::from_stop_token(ctx.stop());
-        self.range = Some(start..=stop);
+        let range = ctx.range(token_stream);
+        self.range = Some(range);
         self.context = Some(ctx.get_text_with_whitespace(token_stream));
         self
     }

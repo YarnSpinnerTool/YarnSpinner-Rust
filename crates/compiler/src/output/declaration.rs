@@ -4,7 +4,8 @@
 //!
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
-use crate::prelude::Diagnostic;
+use crate::parser_rule_context_ext::ParserRuleContextExt;
+use crate::prelude::{ActualTokenStream, Diagnostic};
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::{Convertible, InvalidCastError};
 use rusty_yarn_spinner_core::types::Type;
@@ -174,25 +175,22 @@ pub struct Position {
     pub character: usize,
 }
 
-impl Position {
-    pub fn from_start_token(token: Ref<impl Token + ?Sized>) -> Self {
-        Self {
-            // All positions are +1 compared to original implementation, but the result is the same.
-            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            line: token.get_line() as usize,
-            character: token.get_column() as usize + 1,
-        }
-    }
-
-    pub fn from_stop_token(token: Ref<impl Token + ?Sized>) -> Self {
-        Self {
-            // All positions are +1 compared to original implementation, but the result is the same.
-            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            line: token.get_line() as usize,
-            character: token.get_column() as usize + 2,
-        }
+pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
+    fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
+        let start = Position {
+            line: self.start().get_line() as usize,
+            character: self.start().get_column() as usize + 1,
+        };
+        let stop = Position {
+            line: self.stop().get_line() as usize,
+            character: self.start().get_column() as usize
+                + self.get_text_with_whitespace(token_stream).len(),
+        };
+        start..=stop
     }
 }
+
+impl<'input, T: ParserRuleContextExt<'input>> RangeSource<'input> for T {}
 
 impl Display for DeclarationSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
