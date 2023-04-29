@@ -29,7 +29,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         context: &impl ParserRuleContext<'input>,
         terms: Vec<Term<'input>>,
         operation_type: impl Into<Option<Operator>>,
-        operation_description: String,
+        operation_description: &str,
         permitted_types: Vec<Type>,
     ) -> Option<Type> {
         let operation_type = operation_type.into();

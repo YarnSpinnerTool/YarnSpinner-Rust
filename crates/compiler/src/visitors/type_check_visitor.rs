@@ -1,3 +1,4 @@
+use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
@@ -391,8 +392,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(Term::from).collect();
         let operator_context = ctx.op.as_ref().unwrap();
-        let operator: Operator = token_to_operator(operator_context.token_type).unwrap();
-        let description = operator_context.get_text().to_owned();
+        let operator = token_to_operator(operator_context.token_type).unwrap();
+        let description = operator_context.get_text();
         let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
         self.set_type(ctx, r#type.clone());
         r#type
@@ -411,14 +412,15 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             // currently this is only useful in situations where we have a function as the rvalue of a known lvalue
             self.set_hint(&*expression_context, variable_type.clone());
         }
-        let expression_type = self.visit(&*expression_context);
+        let mut expression_type = self.visit(&*expression_context);
         let variable_name = variable_context.get_text();
         let terms: Vec<Term> = vec![
             variable_context.clone().into(),
             expression_context.clone().into(),
         ];
 
-        match ctx.op.as_ref().unwrap().token_type {
+        let op = ctx.op.as_ref().unwrap();
+        match op.token_type {
             yarnspinnerlexer::OPERATOR_ASSIGNMENT => {
                 // Straight assignment supports any assignment, as long
                 // as it's consistent; we already know the type of the
@@ -482,9 +484,44 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                     }
                 }
             }
-            _ => {}
+            yarnspinnerlexer::OPERATOR_MATHS_ADDITION_EQUALS => {
+                // += supports strings and numbers
+                let operator =
+                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_ADDITION).unwrap();
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION_EQUALS => {
+                // -=, *=, /=, %= supports only numbers
+                let operator =
+                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION).unwrap();
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION_EQUALS => {
+                let operator =
+                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION).unwrap();
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_DIVISION_EQUALS => {
+                let operator =
+                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_DIVISION).unwrap();
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_MODULUS_EQUALS => {
+                let operator = token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+            }
+            _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new", op.get_text())
         }
-        todo!()
+        if variable_type.is_none() && expression_type.is_none() {
+            self.diagnostics.push(
+                            Diagnostic::from_message(
+                                format!("Type of expression \"{}\" can't be determined without more context. Please declare one or more terms.", ctx.get_text_with_whitespace(self.tokens)))
+                                .with_file_name(&self.source_file_name)
+                                .read_parser_rule_context(&*ctx, self.tokens));
+        }
+        // at this point we have either fully resolved the type of the expression or been unable to do so
+        // we return the type of the expression regardless and rely on either elements to catch the issue
+        expression_type
     }
 
     fn visit_if_clause(&mut self, ctx: &If_clauseContext<'input>) -> Self::Return {
