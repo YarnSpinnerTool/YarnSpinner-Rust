@@ -170,20 +170,15 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
     }
     // No errors! Go ahead and generate the code for all parsed
     // files.
+    let template = CompilationResult {
+        string_table: state.result.string_table.clone(),
+        contains_implicit_string_tags: state.result.contains_implicit_string_tags,
+        ..Default::default()
+    };
     let results: Vec<_> = state
         .parsed_files
         .iter()
-        .map(|file| {
-            generate_code_for_file(
-                &mut state.tracking_nodes,
-                CompilationResult {
-                    string_table: state.result.string_table.clone(),
-                    contains_implicit_string_tags: state.result.contains_implicit_string_tags,
-                    ..Default::default()
-                },
-                file,
-            )
-        })
+        .map(|file| generate_code_for_file(&mut state.tracking_nodes, template.clone(), file))
         .collect();
     state.result = CompilationResult::combine(results, todo!());
     state
