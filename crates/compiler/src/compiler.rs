@@ -172,54 +172,60 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
     let results: Vec<_> = state
         .parsed_files
         .iter()
-        .map(|file| {
-            let compiler_listener =
-                Box::new(CompilerListener::new(file, state.tracking_nodes.clone()));
-            let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
-            let compiler_diagnostics = compiler_listener.diagnostics.clone();
-            let compiler_program = compiler_listener.program.clone();
-            let compiler_debug_infos = compiler_listener.debug_infos.clone();
-
-            YarnSpinnerParserTreeWalker::walk(compiler_listener, &*file.tree);
-
-            state
-                .tracking_nodes
-                .extend(compiler_tracking_nodes.iter().cloned());
-
-            // Don't attempt to generate debug information if compilation
-            // produced errors
-            if compiler_diagnostics
-                .iter()
-                .any(|d| d.severity == DiagnosticSeverity::Error)
-            {
-                CompilationResult {
-                    // ## Implementation notes
-                    // In the original, this could still contain a `Program` even though the docs say otherwise
-                    program: None,
-                    string_table: state.result.string_table.clone(),
-                    contains_implicit_string_tags: state.result.contains_implicit_string_tags,
-                    diagnostics: compiler_diagnostics.as_ref().clone(),
-                    ..Default::default()
-                }
-            } else {
-                let debug_infos: HashMap<_, _> = compiler_debug_infos
-                    .iter()
-                    .map(|debug_info| (debug_info.node_name.clone(), debug_info.clone()))
-                    .collect();
-
-                CompilationResult {
-                    program: Some(compiler_program.as_ref().clone()),
-                    string_table: state.result.string_table.clone(),
-                    contains_implicit_string_tags: state.result.contains_implicit_string_tags,
-                    diagnostics: compiler_diagnostics.as_ref().clone(),
-                    debug_info: debug_infos,
-                    ..Default::default()
-                }
-            }
-        })
+        .map(|file| generate_code_for_file(&mut state, file))
         .collect();
     state.result = CompilationResult::combine(results, todo!());
     state
+}
+
+fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
+    state: &'b mut CompilationIntermediate,
+    file: &'a FileParseResult<'input>,
+) -> CompilationResult {
+    let compiler_listener = Box::new(CompilerListener::new(file, state.tracking_nodes.clone()));
+    let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
+    let compiler_diagnostics = compiler_listener.diagnostics.clone();
+    let compiler_program = compiler_listener.program.clone();
+    let compiler_debug_infos = compiler_listener.debug_infos.clone();
+
+    YarnSpinnerParserTreeWalker::walk(compiler_listener, &*file.tree);
+
+    state
+        .tracking_nodes
+        .extend(compiler_tracking_nodes.borrow().iter().cloned());
+
+    // Don't attempt to generate debug information if compilation
+    // produced errors
+    if compiler_diagnostics
+        .borrow()
+        .iter()
+        .any(|d| d.severity == DiagnosticSeverity::Error)
+    {
+        CompilationResult {
+            // ## Implementation notes
+            // In the original, this could still contain a `Program` even though the docs say otherwise
+            program: None,
+            string_table: state.result.string_table.clone(),
+            contains_implicit_string_tags: state.result.contains_implicit_string_tags,
+            diagnostics: compiler_diagnostics.borrow().clone(),
+            ..Default::default()
+        }
+    } else {
+        let debug_infos: HashMap<_, _> = compiler_debug_infos
+            .borrow()
+            .iter()
+            .map(|debug_info| (debug_info.node_name.clone(), debug_info.clone()))
+            .collect();
+
+        CompilationResult {
+            program: Some(compiler_program.borrow().clone()),
+            string_table: state.result.string_table.clone(),
+            contains_implicit_string_tags: state.result.contains_implicit_string_tags,
+            diagnostics: compiler_diagnostics.borrow().clone(),
+            debug_info: debug_infos,
+            ..Default::default()
+        }
+    }
 }
 
 fn add_initial_value_registrations(mut state: CompilationIntermediate) -> CompilationIntermediate {
