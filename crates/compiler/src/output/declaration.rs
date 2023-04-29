@@ -165,7 +165,7 @@ impl From<&str> for DeclarationSource {
 }
 
 /// Represents a position in a multi-line string.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Position {
     /// The zero-indexed line of this position.
     pub line: usize,

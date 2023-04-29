@@ -25,7 +25,7 @@ use std::rc::Rc;
 /// ## Implementation notes
 ///
 /// The properties marked as `Obsolete` were not implemented.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Diagnostic {
     /// The path, URI or file-name that the issue occurred in.
     pub file_name: Option<String>,
@@ -88,7 +88,7 @@ impl Diagnostic {
 }
 
 /// The severity of the issue.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum DiagnosticSeverity {
     /// An error.
     ///

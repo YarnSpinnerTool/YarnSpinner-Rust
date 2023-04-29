@@ -1,13 +1,14 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
+use crate::error_listener::Diagnostic;
 use crate::output::*;
 use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
-use rusty_yarn_spinner_core::prelude::Library;
+use rusty_yarn_spinner_core::prelude::{operand, Library, Operand};
 use rusty_yarn_spinner_core::types::*;
 use std::collections::HashSet;
 
@@ -24,6 +25,7 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
         &check_types,
         &find_tracking_nodes,
         &add_tracking_declarations,
+        &add_initial_value_registrations,
     ];
 
     let initial = CompilationIntermediate::from_job(&compilation_job);
@@ -151,6 +153,51 @@ fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationI
     state
         .derived_variable_declarations
         .extend(tracking_declarations);
+    state
+}
+
+fn add_initial_value_registrations(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    // Last step: take every variable declaration we found in all
+    // of the inputs, and create an initial value registration for
+    // it.
+    let declarations = state
+        .known_variable_declarations
+        .iter()
+        .filter(|decl| !matches!(decl.r#type, Some(Type::Function(_))))
+        .filter(|decl| decl.r#type.is_some());
+    for declaration in declarations {
+        let Some(default_value) = declaration.default_value.clone() else {
+             state.result.diagnostics.push(
+                 Diagnostic::from_message(
+                     format!("Variable declaration {} (type {}) has a null default value. This is not allowed.", declaration.name, declaration.r#type.format())));
+             continue;
+         };
+        if let Some(ref mut program) = state.result.program {
+            let value = match declaration.r#type.as_ref().unwrap() {
+                Type::String => Operand {
+                    value: Some(operand::Value::StringValue(
+                        default_value.try_into().unwrap(),
+                    )),
+                },
+                Type::Number => Operand {
+                    value: Some(operand::Value::FloatValue(
+                        default_value.try_into().unwrap(),
+                    )),
+                },
+                Type::Boolean => Operand {
+                    value: Some(operand::Value::BoolValue(default_value.try_into().unwrap())),
+                },
+                _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new ", declaration.r#type.format()),
+            };
+            program
+                .initial_values
+                .insert(declaration.name.clone(), value);
+        }
+    }
+    state.result.declarations = state.derived_variable_declarations.clone();
+    let unique_diagnostics: HashSet<Diagnostic> =
+        HashSet::from_iter(state.result.diagnostics.clone().into_iter());
+    state.result.diagnostics = unique_diagnostics.into_iter().collect();
     state
 }
 
