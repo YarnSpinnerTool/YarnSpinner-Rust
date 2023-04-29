@@ -8,7 +8,7 @@ use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
-use rusty_yarn_spinner_core::prelude::{operand, Library, Operand};
+use rusty_yarn_spinner_core::prelude::{Library, Operand};
 use rusty_yarn_spinner_core::types::*;
 use std::collections::HashSet;
 

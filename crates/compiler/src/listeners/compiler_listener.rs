@@ -179,11 +179,9 @@ impl<'a, 'input: 'a> YarnSpinnerParserListener<'input> for CompilerListener<'a, 
             CodeGenerationVisitor::generate_tracking_code(self, track);
         }
         // We have exited the body; emit a 'stop' opcode here.
-        self.emit(
-            EmitBuilder::from_op_code(OpCode::Stop).with_source(Position {
-                line: ctx.stop().line as usize - 1,
-                character: 0,
-            }),
-        );
+        self.emit(Emit::from_op_code(OpCode::Stop).with_source(Position {
+            line: ctx.stop().line as usize - 1,
+            character: 0,
+        }));
     }
 }

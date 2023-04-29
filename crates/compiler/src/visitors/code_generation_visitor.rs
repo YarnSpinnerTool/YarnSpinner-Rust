@@ -1,12 +1,12 @@
-use crate::listeners::{CompilerListener, EmitBuilder};
+use crate::listeners::{CompilerListener, Emit};
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
-use rusty_yarn_spinner_core::prelude::{Operand, Operator};
+use rusty_yarn_spinner_core::prelude::Operator;
 
+#[allow(dead_code)]
 pub(crate) struct CodeGenerationVisitor<'a, 'b: 'a, 'input: 'a + 'b> {
     compiler_listener: &'a mut CompilerListener<'b, 'input>,
     tracking_enabled: Option<String>,
@@ -53,22 +53,18 @@ impl<'a, 'b: 'a, 'input: 'a + 'b> CodeGenerationVisitor<'a, 'b, 'input> {
     // [sic] really ought to make this emit like a list of opcodes actually
     pub(crate) fn generate_tracking_code(compiler: &mut CompilerListener, variable_name: String) {
         // pushing the var and the increment onto the stack
-        compiler.emit(
-            EmitBuilder::from_op_code(OpCode::PushVariable).with_operand(variable_name.clone()),
-        );
-        compiler.emit(EmitBuilder::from_op_code(OpCode::PushFloat).with_operand(1.));
+        compiler.emit(Emit::from_op_code(OpCode::PushVariable).with_operand(variable_name.clone()));
+        compiler.emit(Emit::from_op_code(OpCode::PushFloat).with_operand(1.));
 
         // Indicate that we are pushing this many items for comparison
-        compiler.emit(EmitBuilder::from_op_code(OpCode::PushFloat).with_operand(2.));
+        compiler.emit(Emit::from_op_code(OpCode::PushFloat).with_operand(2.));
 
         // calling the function
-        compiler.emit(
-            EmitBuilder::from_op_code(OpCode::CallFunc).with_operand("Number.Add".to_owned()),
-        );
+        compiler.emit(Emit::from_op_code(OpCode::CallFunc).with_operand("Number.Add".to_owned()));
 
         // now store the variable and clean up the stack
-        compiler.emit(EmitBuilder::from_op_code(OpCode::StoreVariable).with_operand(variable_name));
-        compiler.emit(EmitBuilder::from_op_code(OpCode::Pop));
+        compiler.emit(Emit::from_op_code(OpCode::StoreVariable).with_operand(variable_name));
+        compiler.emit(Emit::from_op_code(OpCode::Pop));
     }
 }
 
