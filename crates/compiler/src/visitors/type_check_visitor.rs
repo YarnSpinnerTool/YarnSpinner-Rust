@@ -170,18 +170,112 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         None
     }
 
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
-        self.diagnostics.push(
-            Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(ctx, self.tokens),
-        );
-
-        None
+    fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
+        // Parens expressions have the type of their inner expression
+        let r#type = self.visit(&*ctx.expression().unwrap());
+        self.set_type(ctx, r#type.clone());
+        r#type
     }
 
-    fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
-        Some(Type::String)
+    fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        // *, /, % all support numbers only
+        // ## Implementation notes
+        // The original passes no permitted types, but judging by the comment above, this seems like a bug
+        let r#type = self.check_operation(
+            ctx,
+            expressions,
+            operator,
+            op.get_text(),
+            vec![Type::Number],
+        );
+        self.set_type(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type);
+        // Comparisons always return bool
+        Some(Type::Boolean)
+    }
+
+    fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
+        let expressions = vec![ctx.expression().unwrap().into()];
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
+        let expressions: Vec<_> = ctx.expression_all().into_iter().map(Term::from).collect();
+        let operator_context = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(operator_context.token_type).unwrap();
+        let description = operator_context.get_text();
+        let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
+        self.set_type(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
+        let expressions = vec![ctx.expression().unwrap().into()];
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        // ! supports only bool types
+        // ## Implementation notes
+        // The original passes no permitted types, but judging by the comment above, this seems like a bug
+        let r#type = self.check_operation(
+            ctx,
+            expressions,
+            operator,
+            op.get_text(),
+            vec![Type::Boolean],
+        );
+        self.set_type(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
+        // passing the hint from the expression down into the values within
+        let hint = self.get_hint(ctx).cloned();
+        let value = ctx.value().unwrap();
+        self.set_hint(&*value, hint);
+        // Value expressions have the type of their inner value
+        let r#type = self.visit(&*value);
+        self.set_type(ctx, r#type.clone());
+        r#type
+    }
+
+    fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        // == and != support any defined type, as long as terms are the
+        // same type
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type);
+        // Equality always returns bool
+        Some(Type::Boolean)
+    }
+
+    fn visit_valueNumber(&mut self, _ctx: &ValueNumberContext<'input>) -> Self::Return {
+        Some(Type::Number)
     }
 
     fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'input>) -> Self::Return {
@@ -192,56 +286,22 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         Some(Type::Boolean)
     }
 
-    fn visit_valueNumber(&mut self, _ctx: &ValueNumberContext<'input>) -> Self::Return {
-        Some(Type::Number)
-    }
-
     fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
         let variable = ctx.variable().unwrap();
         self.visit_variable(&*variable)
     }
 
-    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
-        // The type of the value depends on the declared type of the
-        // variable
-        let Some(var_id) = ctx.get_token(yarnspinnerlexer::VAR_ID, 0) else {
-                // We don't have a variable name for this Variable context.
-                // The parser will have generated an error for us in an
-                // earlier stage; here, we'll bail out.
-            return None
-        };
-        let name = var_id.get_text();
-        if let Some(declaration) = self
-            .declarations()
-            .into_iter()
-            .find(|decl| decl.name == name)
-        {
-            return declaration.r#type;
-        }
+    fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
+        Some(Type::String)
+    }
 
-        // do we already have a potential warning about this?
-        // no need to make more
-        if self
-            .deferred_types
-            .iter()
-            .any(|deferred_type| deferred_type.name == name)
-        {
-            return None;
-        }
-
-        // creating a new diagnostic for us having an undefined variable
-        // this won't get added into the existing diags though because its possible a later pass will clear it up
-        // so we save this as a potential diagnostic for the compiler itself to resolve
-        let diagnostic =
-            Diagnostic::from_message(format_cannot_determine_variable_type_error(&name))
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
+        self.diagnostics.push(
+            Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
                 .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(ctx, self.tokens);
-        self.deferred_types
-            .push(DeferredTypeDiagnostic { name, diagnostic });
+                .read_parser_rule_context(ctx, self.tokens),
+        );
 
-        // We don't have a declaration for this variable. Return
-        // Undefined. Hopefully, other context will allow us to infer a
-        // type.
         None
     }
 
@@ -371,32 +431,68 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         *function_type.return_type
     }
 
-    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
-        // passing the hint from the expression down into the values within
-        let hint = self.get_hint(ctx).cloned();
-        let value = ctx.value().unwrap();
-        self.set_hint(&*value, hint);
-        // Value expressions have the type of their inner value
-        let r#type = self.visit(&*value);
-        self.set_type(ctx, r#type.clone());
-        r#type
+    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
+        // The type of the value depends on the declared type of the
+        // variable
+        let Some(var_id) = ctx.get_token(yarnspinnerlexer::VAR_ID, 0) else {
+                // We don't have a variable name for this Variable context.
+                // The parser will have generated an error for us in an
+                // earlier stage; here, we'll bail out.
+            return None
+        };
+        let name = var_id.get_text();
+        if let Some(declaration) = self
+            .declarations()
+            .into_iter()
+            .find(|decl| decl.name == name)
+        {
+            return declaration.r#type;
+        }
+
+        // do we already have a potential warning about this?
+        // no need to make more
+        if self
+            .deferred_types
+            .iter()
+            .any(|deferred_type| deferred_type.name == name)
+        {
+            return None;
+        }
+
+        // creating a new diagnostic for us having an undefined variable
+        // this won't get added into the existing diags though because its possible a later pass will clear it up
+        // so we save this as a potential diagnostic for the compiler itself to resolve
+        let diagnostic =
+            Diagnostic::from_message(format_cannot_determine_variable_type_error(&name))
+                .with_file_name(&self.source_file_name)
+                .read_parser_rule_context(ctx, self.tokens);
+        self.deferred_types
+            .push(DeferredTypeDiagnostic { name, diagnostic });
+
+        // We don't have a declaration for this variable. Return
+        // Undefined. Hopefully, other context will allow us to infer a
+        // type.
+        None
     }
 
-    fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
-        // Parens expressions have the type of their inner expression
-        let r#type = self.visit(&*ctx.expression().unwrap());
-        self.set_type(ctx, r#type.clone());
-        r#type
+    fn visit_if_clause(&mut self, ctx: &If_clauseContext<'input>) -> Self::Return {
+        ParseTreeVisitorCompat::visit_children(self, ctx);
+        // If clauses are required to be boolean
+        let expressions = vec![ctx.expression().unwrap().into()];
+        self.check_operation(ctx, expressions, None, "if statement", vec![Type::Boolean])
     }
 
-    fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
-        let expressions: Vec<_> = ctx.expression_all().into_iter().map(Term::from).collect();
-        let operator_context = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(operator_context.token_type).unwrap();
-        let description = operator_context.get_text();
-        let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
-        self.set_type(ctx, r#type.clone());
-        r#type
+    fn visit_else_if_clause(&mut self, ctx: &Else_if_clauseContext<'input>) -> Self::Return {
+        ParseTreeVisitorCompat::visit_children(self, ctx);
+        // Else if clauses are required to be boolean
+        let expressions = vec![ctx.expression().unwrap().into()];
+        self.check_operation(
+            ctx,
+            expressions,
+            None,
+            "elseif statement",
+            vec![Type::Boolean],
+        )
     }
 
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
@@ -522,102 +618,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         // at this point we have either fully resolved the type of the expression or been unable to do so
         // we return the type of the expression regardless and rely on either elements to catch the issue
         expression_type
-    }
-
-    fn visit_if_clause(&mut self, ctx: &If_clauseContext<'input>) -> Self::Return {
-        ParseTreeVisitorCompat::visit_children(self, ctx);
-        // If clauses are required to be boolean
-        let expressions = vec![ctx.expression().unwrap().into()];
-        self.check_operation(ctx, expressions, None, "if statement", vec![Type::Boolean])
-    }
-
-    fn visit_else_if_clause(&mut self, ctx: &Else_if_clauseContext<'input>) -> Self::Return {
-        ParseTreeVisitorCompat::visit_children(self, ctx);
-        // Else if clauses are required to be boolean
-        let expressions = vec![ctx.expression().unwrap().into()];
-        self.check_operation(
-            ctx,
-            expressions,
-            None,
-            "elseif statement",
-            vec![Type::Boolean],
-        )
-    }
-
-    fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
-        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
-        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type.clone());
-        r#type
-    }
-
-    fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
-        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
-        // *, /, % all support numbers only
-        // ## Implementation notes
-        // The original passes no permitted types, but judging by the comment above, this seems like a bug
-        let r#type = self.check_operation(
-            ctx,
-            expressions,
-            operator,
-            op.get_text(),
-            vec![Type::Number],
-        );
-        self.set_type(ctx, r#type.clone());
-        r#type
-    }
-
-    fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
-        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
-        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type);
-        // Comparisons always return bool
-        Some(Type::Boolean)
-    }
-
-    fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
-        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
-        // == and != support any defined type, as long as terms are the
-        // same type
-        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type);
-        // Equality always returns bool
-        Some(Type::Boolean)
-    }
-
-    fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
-        let expressions = vec![ctx.expression().unwrap().into()];
-        let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
-        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type.clone());
-        r#type
-    }
-
-    fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
-        let expressions = vec![ctx.expression().unwrap().into()];
-        let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
-        // ! supports only bool types
-        // ## Implementation notes
-        // The original passes no permitted types, but judging by the comment above, this seems like a bug
-        let r#type = self.check_operation(
-            ctx,
-            expressions,
-            operator,
-            op.get_text(),
-            vec![Type::Boolean],
-        );
-        self.set_type(ctx, r#type.clone());
-        r#type
     }
 
     fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
