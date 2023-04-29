@@ -174,19 +174,9 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
          };
         if let Some(ref mut program) = state.result.program {
             let value = match declaration.r#type.as_ref().unwrap() {
-                Type::String => Operand {
-                    value: Some(operand::Value::StringValue(
-                        default_value.try_into().unwrap(),
-                    )),
-                },
-                Type::Number => Operand {
-                    value: Some(operand::Value::FloatValue(
-                        default_value.try_into().unwrap(),
-                    )),
-                },
-                Type::Boolean => Operand {
-                    value: Some(operand::Value::BoolValue(default_value.try_into().unwrap())),
-                },
+                Type::String => Operand::from(String::try_from(default_value).unwrap()),
+                Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
+                Type::Boolean => Operand::from(bool::try_from(default_value).unwrap()),
                 _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new ", declaration.r#type.format()),
             };
             program

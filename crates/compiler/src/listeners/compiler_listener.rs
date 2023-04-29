@@ -1,8 +1,10 @@
 use crate::prelude::*;
+use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
 use rusty_yarn_spinner_core::prelude::*;
 use std::collections::HashSet;
+
 mod emit;
 use crate::parser::generated::yarnspinnerparser::{
     BodyContext, HeaderContext, NodeContext, YarnSpinnerParserContextType,
@@ -11,6 +13,7 @@ use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::visitors::CodeGenerationVisitor;
 pub(crate) use emit::*;
+use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 
 pub(crate) struct CompilerListener<'a, 'input: 'a> {
     /// The current node to which instructions are being added.
@@ -57,14 +60,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserListener<'input> for CompilerListener<'a, 
     fn enter_node(&mut self, _ctx: &NodeContext<'input>) {
         // we have found a new node set up the currentNode var ready to
         // hold it and otherwise continue
-        self.current_node = Some(Node {
-            name: Default::default(),
-            instructions: Default::default(),
-            labels: Default::default(),
-            tags: Default::default(),
-            source_text_string_id: Default::default(),
-            headers: Default::default(),
-        });
+        self.current_node = Some(Node::default());
         self.current_debug_info = Default::default();
         self.raw_text_node = false;
     }
@@ -164,5 +160,30 @@ impl<'a, 'input: 'a> YarnSpinnerParserListener<'input> for CompilerListener<'a, 
             let current_node = self.current_node.as_mut().unwrap();
             current_node.source_text_string_id = get_line_id_for_node_name(&current_node.name);
         }
+    }
+
+    fn exit_body(&mut self, ctx: &BodyContext<'input>) {
+        // this gives us the final increment at the end of the node
+        // this is for when we visit and complete a node without a jump
+        // theoretically this does mean that there might be redundant increments
+        // but I don't think it will matter because a jump always prevents
+        // the extra increment being reached
+        // a bit inelegant to do it this way but the codegen visitor doesn't exit a node
+        // will do for now, shouldn't be hard to refactor this later
+        let track = {
+            let name = &self.current_node.as_ref().unwrap().name;
+            (self.tracking_nodes.contains(name))
+                .then(|| Library::generate_unique_visited_variable_for_node(name))
+        };
+        if let Some(track) = track {
+            CodeGenerationVisitor::generate_tracking_code(self, track);
+        }
+        // We have exited the body; emit a 'stop' opcode here.
+        self.emit(
+            EmitBuilder::from_op_code(OpCode::Stop).with_source(Position {
+                line: ctx.stop().line as usize - 1,
+                character: 0,
+            }),
+        );
     }
 }

@@ -63,6 +63,11 @@ impl<'a> EmitBuilder<'a> {
         self
     }
 
+    pub(crate) fn with_operand(mut self, operand: impl Into<Operand>) -> Self {
+        self.operands.push(operand.into());
+        self
+    }
+
     pub(crate) fn with_operands(mut self, operands: Vec<Operand>) -> Self {
         self.operands = operands;
         self

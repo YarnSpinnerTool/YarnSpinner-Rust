@@ -3,7 +3,7 @@ use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
-use crate::visitors::token_to_operator;
+use crate::visitors::CodeGenerationVisitor;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
@@ -179,7 +179,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
         let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
         let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
+        let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // *, /, % all support numbers only
         // ## Implementation notes
         // The original passes no permitted types, but judging by the comment above, this seems like a bug
@@ -197,7 +197,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
         let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
         let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
+        let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
         self.set_type(ctx, r#type);
         // Comparisons always return bool
@@ -207,7 +207,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
         let expressions = vec![ctx.expression().unwrap().into()];
         let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
+        let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
         self.set_type(ctx, r#type.clone());
         r#type
@@ -216,7 +216,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(Term::from).collect();
         let operator_context = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(operator_context.token_type).unwrap();
+        let operator =
+            CodeGenerationVisitor::token_to_operator(operator_context.token_type).unwrap();
         let description = operator_context.get_text();
         let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
         self.set_type(ctx, r#type.clone());
@@ -226,7 +227,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
         let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
         let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
+        let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
         self.set_type(ctx, r#type.clone());
         r#type
@@ -235,7 +236,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
         let expressions = vec![ctx.expression().unwrap().into()];
         let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
+        let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // ! supports only bool types
         // ## Implementation notes
         // The original passes no permitted types, but judging by the comment above, this seems like a bug
@@ -264,7 +265,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
         let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
         let op = ctx.op.as_ref().unwrap();
-        let operator = token_to_operator(op.token_type);
+        let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // == and != support any defined type, as long as terms are the
         // same type
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
@@ -566,27 +567,27 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             yarnspinnerlexer::OPERATOR_MATHS_ADDITION_EQUALS => {
                 // += supports strings and numbers
                 let operator =
-                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_ADDITION).unwrap();
+                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_ADDITION).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION_EQUALS => {
                 // -=, *=, /=, %= supports only numbers
                 let operator =
-                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION).unwrap();
+                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION_EQUALS => {
                 let operator =
-                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION).unwrap();
+                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_DIVISION_EQUALS => {
                 let operator =
-                    token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_DIVISION).unwrap();
+                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_DIVISION).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_MODULUS_EQUALS => {
-                let operator = token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
+                let operator = CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
             }
             _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new", op.get_text())
