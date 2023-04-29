@@ -14,32 +14,7 @@ impl Convertible {
     pub fn eq(&self, other: &Self, epsilon: f32) -> Result<bool, InvalidCastError> {
         match (self, other) {
             (Self::Number(a), Self::Number(b)) => Ok((a - b).abs() < epsilon),
-            (Self::Number(a), Self::String(b)) => {
-                let b: f32 = b.parse().map_err(InvalidCastError::from)?;
-                Ok((a - b).abs() < epsilon)
-            }
-            (Self::Number(a), Self::Boolean(b)) => {
-                let b = if *b { 1.0 } else { 0.0 };
-                Ok((a - b).abs() < epsilon)
-            }
-            (Self::String(a), Self::String(b)) => Ok(a == b),
-            (Self::String(a), Self::Number(b)) => {
-                let a: f32 = a.parse().map_err(InvalidCastError::from)?;
-                Ok((a - b).abs() < epsilon)
-            }
-            (Self::String(a), Self::Boolean(b)) => {
-                let a: bool = a.parse().map_err(InvalidCastError::from)?;
-                Ok(a == *b)
-            }
-            (Self::Boolean(a), Self::Boolean(b)) => Ok(a == b),
-            (Self::Boolean(a), Self::String(b)) => {
-                let b: bool = b.parse().map_err(InvalidCastError::from)?;
-                Ok(*a == b)
-            }
-            (Self::Boolean(a), Self::Number(b)) => {
-                let a = if *a { 1.0 } else { 0.0 };
-                Ok((a - b).abs() < epsilon)
-            }
+            (a, b) => Ok(a == b),
         }
     }
 }
