@@ -4,17 +4,17 @@ use crate::output::Position;
 use std::collections::HashMap;
 
 /// Contains debug information for a node in a Yarn file.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DebugInfo {
     /// The file that this DebugInfo was produced from.
-    file_name: String,
+    pub file_name: String,
 
     /// The node that this DebugInfo was produced from.
-    node_name: String,
+    pub node_name: String,
 
     /// The mapping of instruction numbers to line and character
     /// information in the file indicated by `file_name`.
-    line_positions: HashMap<usize, Position>,
+    pub line_positions: HashMap<usize, Option<Position>>,
 }
 
 impl DebugInfo {
@@ -66,5 +66,5 @@ pub struct LineInfo {
 
     /// The zero-indexed position in `file_name` that contains the
     /// statement or expression that this line was produced from.
-    pub position: Position,
+    pub position: Option<Position>,
 }
