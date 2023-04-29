@@ -7,7 +7,7 @@ use crate::visitors::token_to_operator;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr_rust::tree::{ParseTree, ParseTreeVisitor, ParseTreeVisitorCompat};
 use check_operation::*;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::prelude::Operator;
@@ -525,39 +525,105 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     }
 
     fn visit_if_clause(&mut self, ctx: &If_clauseContext<'input>) -> Self::Return {
-        todo!()
+        ParseTreeVisitorCompat::visit_children(self, ctx);
+        // If clauses are required to be boolean
+        let expressions = vec![ctx.expression().unwrap().into()];
+        self.check_operation(ctx, expressions, None, "if statement", vec![Type::Boolean])
     }
 
     fn visit_else_if_clause(&mut self, ctx: &Else_if_clauseContext<'input>) -> Self::Return {
-        todo!()
+        ParseTreeVisitorCompat::visit_children(self, ctx);
+        // Else if clauses are required to be boolean
+        let expressions = vec![ctx.expression().unwrap().into()];
+        self.check_operation(
+            ctx,
+            expressions,
+            None,
+            "elseif statement",
+            vec![Type::Boolean],
+        )
     }
 
     fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type.clone());
+        r#type
     }
 
     fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        // *, /, % all support numbers only
+        // ## Implementation notes
+        // The original passes no permitted types, but judging by the comment above, this seems like a bug
+        let r#type = self.check_operation(
+            ctx,
+            expressions,
+            operator,
+            op.get_text(),
+            vec![Type::Number],
+        );
+        self.set_type(ctx, r#type.clone());
+        r#type
     }
 
     fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type);
+        // Comparisons always return bool
+        Some(Type::Boolean)
     }
 
     fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = ctx.expression_all().into_iter().map(|e| e.into()).collect();
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        // == and != support any defined type, as long as terms are the
+        // same type
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type);
+        // Equality always returns bool
+        Some(Type::Boolean)
     }
 
     fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = vec![ctx.expression().unwrap().into()];
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        self.set_type(ctx, r#type.clone());
+        r#type
     }
 
     fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = vec![ctx.expression().unwrap().into()];
+        let op = ctx.op.as_ref().unwrap();
+        let operator = token_to_operator(op.token_type);
+        // ! supports only bool types
+        // ## Implementation notes
+        // The original passes no permitted types, but judging by the comment above, this seems like a bug
+        let r#type = self.check_operation(
+            ctx,
+            expressions,
+            operator,
+            op.get_text(),
+            vec![Type::Boolean],
+        );
+        self.set_type(ctx, r#type.clone());
+        r#type
     }
 
     fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
-        todo!()
+        let expressions = vec![ctx.expression().unwrap().into()];
+        // The expression's type must resolve to a string.
+        self.check_operation(ctx, expressions, None, "jump statement", vec![Type::String])
     }
 }
 
