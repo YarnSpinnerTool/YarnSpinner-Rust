@@ -786,18 +786,61 @@ mod tests {
         println!("{:?}", result.diagnostics);
         assert_eq!(3, result.diagnostics.len());
 
-        let expected = Diagnostic::from_message("$foo (Number) cannot be assigned a String")
-            .with_file_name("test.yarn")
-            .with_context("<<set $foo to \"invalid\">>")
-            .with_range(
-                Position {
-                    line: 4,
-                    character: 1,
-                }..=Position {
-                    line: 4,
-                    character: 25,
-                },
-            );
-        assert!(result.diagnostics.contains(&expected,));
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("$foo (Number) cannot be assigned a String")
+                .with_file_name("test.yarn")
+                .with_context("<<set $foo to \"invalid\">>")
+                .with_range(
+                    Position {
+                        line: 4,
+                        character: 1,
+                    }..=Position {
+                        line: 4,
+                        character: 25,
+                    },
+                ),
+        );
+
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("$bar (Bool) cannot be assigned a Number")
+                .with_file_name("test.yarn")
+                .with_context("<<set $bar to -15>>")
+                .with_range(
+                    Position {
+                        line: 7,
+                        character: 1,
+                    }..=Position {
+                        line: 7,
+                        character: 19,
+                    },
+                ),
+        );
+
+        assert_contains(
+            &result.diagnostics,
+            &Diagnostic::from_message("$baz (String) cannot be assigned a Bool")
+                .with_file_name("test.yarn")
+                .with_context("<<set $baz to false>>")
+                .with_range(
+                    Position {
+                        line: 8,
+                        character: 1,
+                    }..=Position {
+                        line: 8,
+                        character: 21,
+                    },
+                ),
+        );
+    }
+
+    fn assert_contains(diagnostics: &[Diagnostic], expected: &Diagnostic) {
+        assert!(
+            diagnostics.contains(expected),
+            "Expected {:?} to contain {:?}",
+            diagnostics,
+            expected
+        );
     }
 }
