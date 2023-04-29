@@ -14,6 +14,7 @@ use antlr_rust::dfa::DFA;
 use antlr_rust::error_strategy::{DefaultErrorStrategy, ErrorStrategy};
 use antlr_rust::errors::*;
 use antlr_rust::int_stream::EOF;
+use antlr_rust::lazy_static;
 use antlr_rust::parser::{BaseParser, Parser, ParserNodeType, ParserRecog};
 use antlr_rust::parser_atn_simulator::ParserATNSimulator;
 use antlr_rust::parser_rule_context::{cast, cast_mut, BaseParserRuleContext, ParserRuleContext};
@@ -26,10 +27,7 @@ use antlr_rust::tree::*;
 use antlr_rust::vocabulary::{Vocabulary, VocabularyImpl};
 use antlr_rust::TokenSource;
 use antlr_rust::{InputStream, PredictionContextCache};
-
-use antlr_rust::lazy_static;
 use antlr_rust::{TidAble, TidExt};
-
 use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;

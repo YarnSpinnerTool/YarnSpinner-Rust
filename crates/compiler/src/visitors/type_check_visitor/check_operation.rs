@@ -8,13 +8,10 @@ use crate::visitors::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
-use std::cmp::Ordering;
-
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{SubTypeOf, Type, TypeFormat};
-
+use std::cmp::Ordering;
 use std::ops::Deref;
-
 use std::rc::Rc;
 
 impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {

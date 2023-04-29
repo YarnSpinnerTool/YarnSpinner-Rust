@@ -5,7 +5,6 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
-
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;

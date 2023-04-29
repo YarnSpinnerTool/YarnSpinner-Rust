@@ -10,7 +10,6 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
-
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 use std::cmp::Ordering;
 use std::collections::HashMap;

@@ -3,7 +3,6 @@
 use crate::error_strategy::ErrorStrategy;
 use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
-
 use antlr_rust::InputStream;
 use generated::yarnspinnerparser::*;
 

@@ -2,7 +2,6 @@
 
 use crate::output::Position;
 use crate::parser_rule_context_ext::ParserRuleContextExt;
-
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::prelude::{ActualTokenStream, File, RangeSource};
@@ -10,7 +9,6 @@ use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
 use antlr_rust::recognizer::Recognizer;
-
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::ParseTreeListener;

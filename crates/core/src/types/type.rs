@@ -6,7 +6,6 @@ use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
 use paste::paste;
 use std::any::Any;
-
 use std::fmt::{Debug, Display};
 
 /// All types in the virtual machine, both built-in, i.e. usable in yarn scripts, and internal.

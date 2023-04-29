@@ -1,17 +1,15 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorStrategy.cs>
 
+use crate::prelude::generated::yarnspinnerparser;
 use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
 use antlr_rust::parser::ParserNodeType;
-use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
-use std::rc::Rc;
-
-use crate::prelude::generated::yarnspinnerparser;
-
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::rule_context::CustomRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::Tree;
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
+use std::rc::Rc;
 
 pub struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
     default_error_strategy: DefaultErrorStrategy<'input, Ctx>,
