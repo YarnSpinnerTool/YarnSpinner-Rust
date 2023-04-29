@@ -8,12 +8,12 @@ use crate::visitors::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
-use rusty_yarn_spinner_core::prelude::convertible::Convertible;
+
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{SubTypeOf, Type, TypeFormat};
-use std::hash::Hasher;
+
 use std::ops::Deref;
-use std::path::Path;
+
 use std::rc::Rc;
 
 impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
@@ -268,7 +268,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 format!("All terms of {operation_description} must be the same, not {type_list}");
             let diagnostic = Diagnostic::from_message(message)
                 .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(&*context, self.tokens);
+                .read_parser_rule_context(context, self.tokens);
             self.diagnostics.push(diagnostic);
             return None;
         }
@@ -302,7 +302,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 );
                 let diagnostic = Diagnostic::from_message(message)
                     .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context(&*context, self.tokens);
+                    .read_parser_rule_context(context, self.tokens);
                 self.diagnostics.push(diagnostic);
                 return None;
             }
@@ -336,7 +336,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             );
             let diagnostic = Diagnostic::from_message(message)
                 .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(&*context, self.tokens);
+                .read_parser_rule_context(context, self.tokens);
             self.diagnostics.push(diagnostic);
             return None;
         }
@@ -349,8 +349,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
 
         let has_method = expression_type
             .as_ref()
-            .map(|exp| operation_type.map(|op| exp.has_method(&op.to_string())))
-            .flatten()
+            .and_then(|exp| operation_type.map(|op| exp.has_method(&op.to_string())))
             .unwrap_or_default();
         if !has_method {
             // The type doesn't have a method for handling this
@@ -363,7 +362,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             self.diagnostics.push(
                 Diagnostic::from_message(message)
                     .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context(&*context, self.tokens),
+                    .read_parser_rule_context(context, self.tokens),
             );
             return None;
         }

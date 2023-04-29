@@ -7,10 +7,10 @@ use crate::visitors::token_to_operator;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitor, ParseTreeVisitorCompat};
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
-use rusty_yarn_spinner_core::prelude::Operator;
+
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -288,7 +288,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
 
     fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
         let variable = ctx.variable().unwrap();
-        self.visit_variable(&*variable)
+        self.visit_variable(&variable)
     }
 
     fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
@@ -597,7 +597,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                             Diagnostic::from_message(
                                 format!("Type of expression \"{}\" can't be determined without more context. Please declare one or more terms.", ctx.get_text_with_whitespace(self.tokens)))
                                 .with_file_name(&self.source_file_name)
-                                .read_parser_rule_context(&*ctx, self.tokens));
+                                .read_parser_rule_context(ctx, self.tokens));
         }
         // at this point we have either fully resolved the type of the expression or been unable to do so
         // we return the type of the expression regardless and rely on either elements to catch the issue

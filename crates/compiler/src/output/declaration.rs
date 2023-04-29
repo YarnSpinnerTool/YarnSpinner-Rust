@@ -9,7 +9,7 @@ use crate::prelude::{ActualTokenStream, Diagnostic};
 use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::convertible::{Convertible, InvalidCastError};
 use rusty_yarn_spinner_core::types::Type;
-use std::cell::Ref;
+
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
 

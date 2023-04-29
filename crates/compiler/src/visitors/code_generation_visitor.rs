@@ -1,5 +1,5 @@
 use crate::prelude::generated::yarnspinnerlexer;
-use crate::prelude::ActualTokenStream;
+
 use rusty_yarn_spinner_core::prelude::Operator;
 
 pub(crate) fn token_to_operator(token: isize) -> Option<Operator> {
