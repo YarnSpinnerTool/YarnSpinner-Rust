@@ -26,6 +26,7 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
         &check_types,
         &find_tracking_nodes,
         &add_tracking_declarations,
+        &generate_code,
         &add_initial_value_registrations,
     ];
 
@@ -172,17 +173,28 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
     let results: Vec<_> = state
         .parsed_files
         .iter()
-        .map(|file| generate_code_for_file(&mut state, file))
+        .map(|file| {
+            generate_code_for_file(
+                &mut state.tracking_nodes,
+                CompilationResult {
+                    string_table: state.result.string_table.clone(),
+                    contains_implicit_string_tags: state.result.contains_implicit_string_tags,
+                    ..Default::default()
+                },
+                file,
+            )
+        })
         .collect();
     state.result = CompilationResult::combine(results, todo!());
     state
 }
 
 fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
-    state: &'b mut CompilationIntermediate,
+    tracking_nodes: &mut HashSet<String>,
+    result_template: CompilationResult,
     file: &'a FileParseResult<'input>,
 ) -> CompilationResult {
-    let compiler_listener = Box::new(CompilerListener::new(file, state.tracking_nodes.clone()));
+    let compiler_listener = Box::new(CompilerListener::new(file, tracking_nodes.clone()));
     let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
     let compiler_diagnostics = compiler_listener.diagnostics.clone();
     let compiler_program = compiler_listener.program.clone();
@@ -190,9 +202,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
 
     YarnSpinnerParserTreeWalker::walk(compiler_listener, &*file.tree);
 
-    state
-        .tracking_nodes
-        .extend(compiler_tracking_nodes.borrow().iter().cloned());
+    tracking_nodes.extend(compiler_tracking_nodes.borrow().iter().cloned());
 
     // Don't attempt to generate debug information if compilation
     // produced errors
@@ -205,10 +215,8 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
             // ## Implementation notes
             // In the original, this could still contain a `Program` even though the docs say otherwise
             program: None,
-            string_table: state.result.string_table.clone(),
-            contains_implicit_string_tags: state.result.contains_implicit_string_tags,
             diagnostics: compiler_diagnostics.borrow().clone(),
-            ..Default::default()
+            ..result_template
         }
     } else {
         let debug_infos: HashMap<_, _> = compiler_debug_infos
@@ -219,11 +227,9 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
 
         CompilationResult {
             program: Some(compiler_program.borrow().clone()),
-            string_table: state.result.string_table.clone(),
-            contains_implicit_string_tags: state.result.contains_implicit_string_tags,
             diagnostics: compiler_diagnostics.borrow().clone(),
             debug_info: debug_infos,
-            ..Default::default()
+            ..result_template
         }
     }
 }
