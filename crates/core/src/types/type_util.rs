@@ -11,6 +11,8 @@ pub trait SubTypeOf<T: ?Sized = Self> {
     /// The original implementation features the bones of an actual hierarchical type system,
     /// but de facto it was unused. So, this implementation is way simpler, simply checking
     /// for special cases, namely `Type::Any` and `Type::Undefined`.
+    ///
+    /// Careful, the original implementation has the param order flipped!
     fn is_sub_type_of(&self, parent: &T) -> bool;
 }
 
@@ -56,9 +58,7 @@ where
         match (self, parent) {
             //  ALL types are a subtype of the Any type, including undefined
             (_, Some(Type::Any)) => true,
-            (_, None) => {
-                unreachable!("A parent type ended up being undefined. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
-            }
+            (_, None) => false,
             (a, Some(b)) => *a == b,
         }
     }
@@ -76,9 +76,7 @@ where
             (_, Some(Type::Any)) => true,
             // The subtype is undefined. Assume that it is not a subtype of parent.
             (None, _) => false,
-            (_, None) => {
-                unreachable!("A parent type ended up being undefined. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
-            }
+            (_, None) => false,
             (a, b) => *a == b,
         }
     }

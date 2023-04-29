@@ -8,12 +8,14 @@ use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
+use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
+use std::path::Path;
 
 mod check_operation;
 
@@ -349,7 +351,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 // type to.
                 expected_type = &supplied_type;
             }
-            if !expected_type.is_sub_type_of(&supplied_type) {
+            if !supplied_type.is_sub_type_of(expected_type) {
                 let diagnostic = Diagnostic::from_message(format!(
                     "{} parameter {} expects a {}, not a {}",
                     function_name,
@@ -404,14 +406,17 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
             return None;
         };
         let variable_type = self.visit(&*variable_context);
-        if let Some(variable_type) = variable_type {
+        if let Some(variable_type) = variable_type.as_ref() {
             // giving the expression a hint just in case it is needed to help resolve any ambiguity on the expression
             // currently this is only useful in situations where we have a function as the rvalue of a known lvalue
             self.set_hint(&*expression_context, variable_type.clone());
         }
         let expression_type = self.visit(&*expression_context);
         let variable_name = variable_context.get_text();
-        let terms: Vec<Term> = vec![variable_context.into(), expression_context.into()];
+        let terms: Vec<Term> = vec![
+            variable_context.clone().into(),
+            expression_context.clone().into(),
+        ];
 
         match ctx.op.as_ref().unwrap().token_type {
             yarnspinnerlexer::OPERATOR_ASSIGNMENT => {
@@ -419,6 +424,63 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 // as it's consistent; we already know the type of the
                 // expression, so let's check to see if it's assignable
                 // to the type of the variable.
+                match (variable_type.as_ref(), expression_type.as_ref()) {
+                    (Some(variable_type), _) if expression_type.is_sub_type_of(variable_type) => {
+                        let diagnostic = Diagnostic::from_message(format!(
+                            "{variable_name} ({}) cannot be assigned a {}",
+                            variable_type.format(),
+                            expression_type.format(),
+                        ))
+                        .with_file_name(&self.source_file_name)
+                        .read_parser_rule_context(ctx, self.tokens);
+                        self.diagnostics.push(diagnostic);
+                    }
+                    (None, Some(expression_type)) => {
+                        // This variable was undefined, but we have a
+                        // defined type for the value it was set to. Create
+                        // an implicit declaration for the variable!
+
+                        // Attempt to get a default value for the given type. If
+                        // we can't get one, we can't create the definition.
+                        if let Some(default_value) = expression_type.default_value() {
+                            // Generate a declaration for this variable here.
+                            let decl = Declaration::default()
+                                .with_name(variable_name)
+                                .with_description(format!(
+                                    "Implicitly declared in {}, node {}",
+                                    get_filename(&self.source_file_name),
+                                    self.current_node_name.as_ref().unwrap()
+                                ))
+                                .with_type(expression_type.clone())
+                                .with_default_value(default_value)
+                                .with_source_file_name(self.source_file_name.clone())
+                                .with_source_node_name_optional(self.current_node_name.clone())
+                                .with_range(
+                                    Position {
+                                        line: variable_context.start().line as usize - 1,
+                                        character: variable_context.start().column as usize,
+                                    }..=Position {
+                                        line: variable_context.stop().line as usize - 1,
+                                        character: variable_context.stop().column as usize
+                                            + variable_context.get_text().len(),
+                                    },
+                                )
+                                .with_implicit();
+                            self.new_declarations.push(decl);
+                        } else {
+                            self.diagnostics.push(
+                                Diagnostic::from_message(
+                                    format_cannot_determine_variable_type_error(&variable_name),
+                                )
+                                .with_file_name(&self.source_file_name)
+                                .read_parser_rule_context(ctx, self.tokens),
+                            )
+                        }
+                    }
+                    _ => {
+                        // Implementation note: Apparently, this is unhandled? Maybe it's unreachable? Idk.
+                    }
+                }
             }
             _ => {}
         }
@@ -486,6 +548,15 @@ fn format_cannot_determine_variable_type_error(name: &str) -> String {
     format!("Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement.")
 }
 
+fn get_filename(path: &str) -> &str {
+    if let Some(os_str) = Path::new(path).file_name() {
+        if let Some(file_name) = os_str.to_str() {
+            return file_name;
+        }
+    }
+    path
+}
+
 trait GetHashableInterval<'input>: ParserRuleContext<'input> {
     fn get_hashable_interval(&self) -> HashableInterval {
         let interval = self.get_source_interval();
@@ -494,6 +565,26 @@ trait GetHashableInterval<'input>: ParserRuleContext<'input> {
 }
 
 impl<'input, T: ParserRuleContext<'input>> GetHashableInterval<'input> for T {}
+
+trait DefaultValue {
+    fn default_value(&self) -> Option<Convertible>;
+}
+impl DefaultValue for Type {
+    fn default_value(&self) -> Option<Convertible> {
+        match self {
+            Type::String => Some(Convertible::String(Default::default())),
+            Type::Number => Some(Convertible::Number(Default::default())),
+            Type::Boolean => Some(Convertible::Boolean(Default::default())),
+            _ => None,
+        }
+    }
+}
+
+impl DefaultValue for Option<Type> {
+    fn default_value(&self) -> Option<Convertible> {
+        self.as_ref()?.default_value()
+    }
+}
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 struct HashableInterval(Interval);

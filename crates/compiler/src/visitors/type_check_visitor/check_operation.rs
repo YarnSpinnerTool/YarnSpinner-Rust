@@ -2,7 +2,7 @@ use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::*;
 use crate::visitors::type_check_visitor::{
-    format_cannot_determine_variable_type_error, GetHashableInterval,
+    format_cannot_determine_variable_type_error, get_filename, DefaultValue, GetHashableInterval,
 };
 use crate::visitors::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -220,8 +220,8 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // are required to have a value. If we can't, it's generally
             // because we couldn't figure out a concrete type for the
             // variable given the context.
-            if let Some(default_value) = default_value_for_type(&expression_type) {
-                let file_name = filename(&self.source_file_name);
+            if let Some(default_value) = expression_type.default_value() {
+                let file_name = get_filename(&self.source_file_name);
                 let node = self
                     .current_node_name
                     .as_ref()
@@ -325,7 +325,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // the permitted types?
             if permitted_types
                 .iter()
-                .any(|t| t.is_sub_type_of(&expression_type))
+                .any(|t| expression_type.is_sub_type_of(t))
             {
                 // It's compatible! Great, return the type we've
                 // determined.
@@ -380,24 +380,6 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
         }
         expression_type
     }
-}
-
-fn default_value_for_type(expression_type: &Option<Type>) -> Option<Convertible> {
-    match expression_type.as_ref()? {
-        Type::String => Some(Convertible::String(Default::default())),
-        Type::Number => Some(Convertible::Number(Default::default())),
-        Type::Boolean => Some(Convertible::Boolean(Default::default())),
-        _ => None,
-    }
-}
-
-fn filename(path: &str) -> &str {
-    if let Some(os_str) = Path::new(path).file_name() {
-        if let Some(file_name) = os_str.to_str() {
-            return file_name;
-        }
-    }
-    path
 }
 
 /// Bandaid enum to allow static type checks that work via dynamic dispatch on C#
