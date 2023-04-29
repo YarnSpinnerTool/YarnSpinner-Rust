@@ -50,7 +50,7 @@ impl DebugInfo {
             .map(|position| LineInfo {
                 file_name: self.file_name.clone(),
                 node_name: self.node_name.clone(),
-                position: position.clone(),
+                position: *position,
             })
     }
 }
