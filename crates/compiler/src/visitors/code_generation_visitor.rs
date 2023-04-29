@@ -6,15 +6,15 @@ use crate::prelude::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 use rusty_yarn_spinner_core::prelude::Operator;
 
-pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
-    compiler_listener: &'a mut CompilerListener<'a, 'input>,
+pub(crate) struct CodeGenerationVisitor<'a, 'b: 'a, 'input: 'a + 'b> {
+    compiler_listener: &'a mut CompilerListener<'b, 'input>,
     tracking_enabled: Option<String>,
     _dummy: (),
 }
 
-impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
+impl<'a, 'b: 'a, 'input: 'a + 'b> CodeGenerationVisitor<'a, 'b, 'input> {
     pub(crate) fn new(
-        compiler_listener: &'a mut CompilerListener<'a, 'input>,
+        compiler_listener: &'a mut CompilerListener<'b, 'input>,
         tracking_enabled: impl Into<Option<String>>,
     ) -> Self {
         Self {
@@ -25,7 +25,9 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
     }
 }
 
-impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {
+impl<'a, 'b: 'a, 'input: 'a + 'b> ParseTreeVisitorCompat<'input>
+    for CodeGenerationVisitor<'a, 'b, 'input>
+{
     type Node = YarnSpinnerParserContextType;
     type Return = ();
 
@@ -34,7 +36,10 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for CodeGenerationVisitor<'a
     }
 }
 
-impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {}
+impl<'a, 'b: 'a, 'input: 'a + 'b> YarnSpinnerParserVisitorCompat<'input>
+    for CodeGenerationVisitor<'a, 'b, 'input>
+{
+}
 
 pub(crate) fn token_to_operator(token: isize) -> Option<Operator> {
     // operators for the standard expressions

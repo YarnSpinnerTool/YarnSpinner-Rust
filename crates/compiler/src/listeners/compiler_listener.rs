@@ -138,7 +138,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserListener<'input> for CompilerListener<'a, 
     }
 
     fn enter_body(&mut self, ctx: &BodyContext<'input>) {
-        let current_node = self.current_node.as_mut().unwrap();
         // ok so something in here needs to be a bit different
         // also need to emit tracking code here for when we fall out of a node that needs tracking?
         // or should do I do in inside the codegenvisitor?
@@ -147,10 +146,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserListener<'input> for CompilerListener<'a, 
         if !self.raw_text_node {
             // This is the start of a node that we can jump to. Add a
             // label at this point
-            current_node.labels.insert(
-                self.register_label(None),
-                current_node.instructions.len() as i32,
-            );
+            let label = self.register_label(None);
+            let current_node = self.current_node.as_mut().unwrap();
+            current_node
+                .labels
+                .insert(label, current_node.instructions.len() as i32);
             let track = (self.tracking_nodes.contains(&current_node.name))
                 .then(|| Library::generate_unique_visited_variable_for_node(&current_node.name));
 
@@ -161,6 +161,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserListener<'input> for CompilerListener<'a, 
         } else {
             // We are a rawText node. Don't compile it; instead, note the
             // string
+            let current_node = self.current_node.as_mut().unwrap();
             current_node.source_text_string_id = get_line_id_for_node_name(&current_node.name);
         }
     }
