@@ -3,14 +3,15 @@
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::listeners::*;
 use crate::output::*;
+use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr_rust::tree::{ParseTreeVisitorCompat, ParseTreeWalker};
 pub use compilation_job::*;
 use rusty_yarn_spinner_core::prelude::{Library, Operand};
 use rusty_yarn_spinner_core::types::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 mod antlr_rust_ext;
 mod compilation_job;
@@ -153,6 +154,71 @@ fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationI
     state
         .derived_variable_declarations
         .extend(tracking_declarations);
+    state
+}
+
+fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    if state
+        .result
+        .diagnostics
+        .iter()
+        .any(|d| d.severity == DiagnosticSeverity::Error)
+    {
+        // We have errors, so we can't safely generate code.
+        return state;
+    }
+    // No errors! Go ahead and generate the code for all parsed
+    // files.
+    let results: Vec<_> = state
+        .parsed_files
+        .iter()
+        .map(|file| {
+            let compiler_listener =
+                Box::new(CompilerListener::new(file, state.tracking_nodes.clone()));
+            let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
+            let compiler_diagnostics = compiler_listener.diagnostics.clone();
+            let compiler_program = compiler_listener.program.clone();
+            let compiler_debug_infos = compiler_listener.debug_infos.clone();
+
+            YarnSpinnerParserTreeWalker::walk(compiler_listener, &*file.tree);
+
+            state
+                .tracking_nodes
+                .extend(compiler_tracking_nodes.iter().cloned());
+
+            // Don't attempt to generate debug information if compilation
+            // produced errors
+            if compiler_diagnostics
+                .iter()
+                .any(|d| d.severity == DiagnosticSeverity::Error)
+            {
+                CompilationResult {
+                    // ## Implementation notes
+                    // In the original, this could still contain a `Program` even though the docs say otherwise
+                    program: None,
+                    string_table: state.result.string_table.clone(),
+                    contains_implicit_string_tags: state.result.contains_implicit_string_tags,
+                    diagnostics: compiler_diagnostics.as_ref().clone(),
+                    ..Default::default()
+                }
+            } else {
+                let debug_infos: HashMap<_, _> = compiler_debug_infos
+                    .iter()
+                    .map(|debug_info| (debug_info.node_name.clone(), debug_info.clone()))
+                    .collect();
+
+                CompilationResult {
+                    program: Some(compiler_program.as_ref().clone()),
+                    string_table: state.result.string_table.clone(),
+                    contains_implicit_string_tags: state.result.contains_implicit_string_tags,
+                    diagnostics: compiler_diagnostics.as_ref().clone(),
+                    debug_info: debug_infos,
+                    ..Default::default()
+                }
+            }
+        })
+        .collect();
+    state.result = CompilationResult::combine(results, todo!());
     state
 }
 

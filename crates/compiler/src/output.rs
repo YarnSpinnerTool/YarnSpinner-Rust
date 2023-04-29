@@ -2,6 +2,7 @@
 
 use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
+use crate::prelude::StringTableManager;
 use rusty_yarn_spinner_core::prelude::Program;
 use std::collections::HashMap;
 
@@ -75,4 +76,13 @@ pub struct CompilationResult {
     /// The collection of [`DebugInfo`] objects for each node
     /// in [`Program`].
     pub debug_info: HashMap<String, DebugInfo>,
+}
+
+impl CompilationResult {
+    pub fn combine(
+        results: Vec<CompilationResult>,
+        string_table_manager: StringTableManager,
+    ) -> Self {
+        todo!()
+    }
 }
