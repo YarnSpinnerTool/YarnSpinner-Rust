@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
-use crate::error_listener::Diagnostic;
+use crate::listeners::*;
 use crate::output::*;
 use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;

@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationResult.cs>
 
-use crate::error_listener::Diagnostic;
+use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
 use rusty_yarn_spinner_core::prelude::Program;
 use std::collections::HashMap;

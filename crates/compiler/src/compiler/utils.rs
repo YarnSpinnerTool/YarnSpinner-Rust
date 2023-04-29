@@ -2,6 +2,7 @@
 //! but were moved to their own file for better organization.
 
 use crate::error_strategy::ErrorStrategy;
+use crate::listeners::*;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
 use crate::prelude::*;
