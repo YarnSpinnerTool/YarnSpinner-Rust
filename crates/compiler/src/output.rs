@@ -79,10 +79,34 @@ pub struct CompilationResult {
 }
 
 impl CompilationResult {
+    /// Combines multiple [`CompilationResult`] objects together into one object.
     pub(crate) fn combine(
-        _results: Vec<CompilationResult>,
-        _string_table_manager: StringTableManager,
+        results: Vec<CompilationResult>,
+        string_table_manager: StringTableManager,
     ) -> Self {
-        todo!()
+        let mut programs = Vec::new();
+        let mut declarations = Vec::new();
+        let mut tags = HashMap::new();
+        let mut diagnostics = Vec::new();
+        let mut node_debug_infos = HashMap::new();
+
+        for result in results {
+            programs.push(result.program.unwrap());
+            declarations.extend(result.declarations);
+            tags.extend(result.file_tags);
+            diagnostics.extend(result.diagnostics);
+            node_debug_infos.extend(result.debug_info);
+        }
+        let combined_program = Program::combine(programs);
+        let contains_implicit_string_tags = string_table_manager.contains_implicit_string_tags();
+        CompilationResult {
+            program: combined_program,
+            string_table: string_table_manager.0,
+            declarations,
+            debug_info: node_debug_infos,
+            contains_implicit_string_tags,
+            file_tags: tags,
+            diagnostics,
+        }
     }
 }

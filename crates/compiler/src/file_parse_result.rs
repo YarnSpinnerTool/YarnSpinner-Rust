@@ -1,7 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/FileParseResult.cs>
 
 use crate::prelude::{generated::yarnspinnerparser::*, *};
-use antlr_rust::*;
 use std::rc::Rc;
 
 /// Contains the result of parsing a single file of source code.
