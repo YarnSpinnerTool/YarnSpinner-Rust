@@ -1,3 +1,5 @@
+//! Contains extensions to generated types that in the original implementation are sprinkled around the repo via partial classes
+
 use crate::prelude::*;
 
 impl From<String> for Operand {
