@@ -55,8 +55,7 @@ impl<'input> CompilerListener<'input> {
     /// Generates a unique label name to use in the program.
     ///
     /// ## Params
-    /// - `commentary` Any additional text to append to the
-    /// end of the label.
+    /// - `commentary` Any additional text to append to the end of the label.
     pub(crate) fn register_label<'b>(&mut self, commentary: impl Into<Option<&'b str>>) -> String {
         self.label_count += 1;
         let commentary = commentary.into().unwrap_or_default();
@@ -68,8 +67,7 @@ impl<'input> ParseTreeListener<'input, YarnSpinnerParserContextType> for Compile
 
 impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
     fn enter_node(&mut self, _ctx: &NodeContext<'input>) {
-        // we have found a new node set up the currentNode var ready to
-        // hold it and otherwise continue
+        // we have found a new node set up the currentNode var ready to hold it and otherwise continue
         self.current_node = Some(Node::default());
         self.current_debug_info = Default::default();
         self.is_current_node_raw_text = false;
@@ -78,8 +76,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
     fn exit_node(&mut self, ctx: &NodeContext<'input>) {
         let name = &self.current_node.as_ref().unwrap().name.clone();
         if name.is_empty() {
-            // We don't have a name for this node. We can't emit code for
-            // it.
+            // We don't have a name for this node. We can't emit code for it.
             self.diagnostics.borrow_mut().push(
                 Diagnostic::from_message("Missing title header for node")
                     .with_file_name(self.file.name.clone())
@@ -168,8 +165,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
                 visitor.visit(&*statement);
             }
         } else {
-            // We are a rawText node. Don't compile it; instead, note the
-            // string
+            // We are a rawText node. Don't compile it; instead, note the string
             let current_node = self.current_node.as_mut().unwrap();
             current_node.source_text_string_id = get_line_id_for_node_name(&current_node.name);
         }
