@@ -149,26 +149,27 @@ fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationI
 }
 
 fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate {
-    if state
+    let has_errors = state
         .diagnostics
         .iter()
-        .any(|d| d.severity == DiagnosticSeverity::Error)
-    {
+        .any(|d| d.severity == DiagnosticSeverity::Error);
+    let results: Vec<_> = if has_errors {
         // We have errors, so we can't safely generate code.
-        return state;
-    }
-    // No errors! Go ahead and generate the code for all parsed
-    // files.
-    let template = CompilationResult {
-        string_table: state.string_table.0.clone(),
-        contains_implicit_string_tags: state.string_table.contains_implicit_string_tags(),
-        ..Default::default()
+        vec![]
+    } else {
+        // No errors! Go ahead and generate the code for all parsed
+        // files.
+        let template = CompilationResult {
+            string_table: state.string_table.0.clone(),
+            contains_implicit_string_tags: state.string_table.contains_implicit_string_tags(),
+            ..Default::default()
+        };
+        state
+            .parsed_files
+            .iter()
+            .map(|file| generate_code_for_file(&mut state.tracking_nodes, template.clone(), file))
+            .collect()
     };
-    let results: Vec<_> = state
-        .parsed_files
-        .iter()
-        .map(|file| generate_code_for_file(&mut state.tracking_nodes, template.clone(), file))
-        .collect();
     state.result = Some(CompilationResult::combine(
         results,
         state.string_table.clone(),
