@@ -46,7 +46,7 @@ impl Emit {
         self
     }
 
-    #[allow(dead_code)] // See #57
+    #[allow(dead_code)] // Todo: #57
     pub(crate) fn with_source_from_token(mut self, token: &impl Token) -> Self {
         self.source = Some(Position {
             line: token.get_line() as usize,
