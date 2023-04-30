@@ -5,17 +5,12 @@ use crate::prelude::types::TypeProperties;
 use crate::prelude::*;
 
 /// A type that bridges to [`String`]
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct StringType;
-
-impl TypeProperties for StringType {
-    type RustType = String;
-    const NAME: &'static str = "String";
-    fn methods() -> YarnFnRegistry {
-        yarn_fn_registry! {
-            Operator::EqualTo => Self::RustType::eq_by_value,
-            Operator::NotEqualTo => Self::RustType::ne_by_value,
-            Operator::Add => |a: Self::RustType, b: Self::RustType| a + &b,
-        }
-    }
+pub(crate) fn string_type_properties() -> TypeProperties {
+    TypeProperties::from_name("String").with_methods(yarn_fn_registry! {
+        Operator::EqualTo => RustType::eq_by_value,
+        Operator::NotEqualTo => RustType::ne_by_value,
+        Operator::Add => |a: RustType, b: RustType| a + &b,
+    })
 }
+
+type RustType = String;

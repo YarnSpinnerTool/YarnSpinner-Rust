@@ -21,9 +21,12 @@ impl YarnFnRegistry {
         self.insert(name, Box::new(wrapped));
     }
 
-    pub fn get(&self, name: impl Into<Cow<'static, str>>) -> Option<&dyn YarnFn> {
-        let name = name.into();
-        self.0.get(&name).map(|f| f.as_ref())
+    pub fn contains_key(&self, name: &str) -> bool {
+        self.get(name).is_some()
+    }
+
+    pub fn get(&self, name: &str) -> Option<&dyn YarnFn> {
+        self.0.get(name).map(|f| f.as_ref())
     }
 }
 

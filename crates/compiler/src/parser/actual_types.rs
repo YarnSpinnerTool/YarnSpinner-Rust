@@ -12,3 +12,8 @@ pub type ActualErrorStrategy<'input> = ErrorStrategy<'input, YarnSpinnerParserCo
 pub type ActualTokenStream<'input> = CommonTokenStream<'input, ActualYarnSpinnerLexer<'input>>;
 pub type ActualYarnSpinnerParser<'input> =
     YarnSpinnerParser<'input, ActualTokenStream<'input>, ActualErrorStrategy<'input>>;
+pub type ActualParserContext<'input> = dyn YarnSpinnerParserContext<
+    'input,
+    Ctx = YarnSpinnerParserContextType,
+    TF = LocalTokenFactory<'input>,
+>;

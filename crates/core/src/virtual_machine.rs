@@ -1,3 +1,3 @@
 mod operator;
 
-pub(crate) use operator::*;
+pub use operator::*;

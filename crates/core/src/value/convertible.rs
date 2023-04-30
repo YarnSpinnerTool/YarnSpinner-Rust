@@ -7,7 +7,16 @@ use thiserror::Error;
 pub enum Convertible {
     Number(f32),
     String(String),
-    Bool(bool),
+    Boolean(bool),
+}
+
+impl Convertible {
+    pub fn eq(&self, other: &Self, epsilon: f32) -> Result<bool, InvalidCastError> {
+        match (self, other) {
+            (Self::Number(a), Self::Number(b)) => Ok((a - b).abs() < epsilon),
+            (a, b) => Ok(a == b),
+        }
+    }
 }
 
 impl TryFrom<Convertible> for f32 {
@@ -17,7 +26,7 @@ impl TryFrom<Convertible> for f32 {
         match value {
             Convertible::Number(value) => Ok(value),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(if value { 1.0 } else { 0.0 }),
+            Convertible::Boolean(value) => Ok(if value { 1.0 } else { 0.0 }),
         }
     }
 }
@@ -45,7 +54,7 @@ impl TryFrom<Convertible> for f64 {
         match value {
             Convertible::Number(value) => Ok(value as f64),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(if value { 1.0 } else { 0.0 }),
+            Convertible::Boolean(value) => Ok(if value { 1.0 } else { 0.0 }),
         }
     }
 }
@@ -63,7 +72,7 @@ impl TryFrom<Convertible> for usize {
         match value {
             Convertible::Number(value) => Ok(value as usize),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(if value { 1 } else { 0 }),
+            Convertible::Boolean(value) => Ok(if value { 1 } else { 0 }),
         }
     }
 }
@@ -81,7 +90,7 @@ impl TryFrom<Convertible> for String {
         match value {
             Convertible::Number(value) => Ok(value.to_string()),
             Convertible::String(value) => Ok(value),
-            Convertible::Bool(value) => Ok(value.to_string()),
+            Convertible::Boolean(value) => Ok(value.to_string()),
         }
     }
 }
@@ -105,14 +114,14 @@ impl TryFrom<Convertible> for bool {
         match value {
             Convertible::Number(value) => Ok(value != 0.0),
             Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Bool(value) => Ok(value),
+            Convertible::Boolean(value) => Ok(value),
         }
     }
 }
 
 impl From<bool> for Convertible {
     fn from(value: bool) -> Self {
-        Self::Bool(value)
+        Self::Boolean(value)
     }
 }
 

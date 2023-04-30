@@ -5,12 +5,10 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
-use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
 use rusty_yarn_spinner_core::types::*;
-use std::collections::HashMap;
 
 /// A visitor that extracts variable declarations from a parse tree.
 /// After visiting an entire parse tree for a file, the
@@ -42,8 +40,6 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// The name of the file we're currently in.
     source_file_name: String,
 
-    keywords_to_builtin_types: HashMap<&'static str, BuiltinType>,
-
     /// A regular expression used to detect illegal characters in node titles.
     regex: Regex,
 
@@ -61,11 +57,6 @@ impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
             existing_declarations,
             new_declarations: Default::default(),
             source_file_name: source_file_name.into(),
-            keywords_to_builtin_types: HashMap::from([
-                ("string", BuiltinType::String(StringType)),
-                ("number", BuiltinType::Number(NumberType)),
-                ("bool", BuiltinType::Boolean(BooleanType)),
-            ]),
             regex: Regex::new(r"[\[<>\]{}|:\s#$]").unwrap(),
             file_tags: Default::default(),
             diagnostics: Default::default(),
@@ -166,19 +157,16 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
 
         // Did the source code name an explicit type?
         if let Some(declaration_type) = ctx.declaration_type.as_ref() {
-            let explicit_type = match self
-                .keywords_to_builtin_types
-                .get(declaration_type.get_text())
-            {
+            let explicit_type = match keyword_to_type(declaration_type.get_text()) {
                 Some(builtin_type) => builtin_type,
 
                 // The type name provided didn't map to a built-in
                 // type. Look for the type in our type collection.
-                None => match EXPLICITLY_CONSTRUCTABLE_TYPES
+                None => match Type::EXPLICITLY_CONSTRUCTABLE
                     .iter()
                     .find(|t| t.to_string() == declaration_type.get_text())
                 {
-                    Some(explicit_type) => explicit_type,
+                    Some(explicit_type) => explicit_type.clone(),
                     None => {
                         // We didn't find a type by this name.
                         let msg = format!("Unknown type {}", declaration_type.get_text());
@@ -195,12 +183,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             // Check that the type we've found is compatible with the
             // type of the value that was provided - if it doesn't,
             // that's a type error
-            if !value.r#type.is_sub_type_of(explicit_type) {
+            if !value.r#type.is_sub_type_of(&explicit_type) {
                 let msg = format!(
                     "Type {} does not match value {} ({})",
                     declaration_type.get_text(),
                     value_context.get_text(),
-                    value.r#type
+                    value.r#type.format()
                 );
                 self.diagnostics.push(
                     Diagnostic::from_message(msg)
@@ -213,8 +201,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
         // We're done creating the declaration!
         let description = compiler::get_document_comments(self.tokens, ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
-        let line = variable_context.start().line as usize;
-        let declaration = Declaration::from_default_value(value.internal_value.clone().unwrap())
+        let declaration = Declaration::default()
+            .with_default_value(value.internal_value.clone().unwrap())
             .with_type(value.r#type.clone())
             .with_name(variable_name)
             .with_description_optional(description_as_option)
@@ -222,28 +210,19 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             .with_source_node_name_optional(self.current_node_name.clone())
             // All positions are +1 compared to original implementation, but the result is the same.
             // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            .with_range(
-                Position {
-                    line,
-                    character: variable_context.start().column as usize + 1,
-                }..=Position {
-                    line,
-                    character: variable_context.stop().column as usize
-                        + 1
-                        + variable_context.get_text().len(),
-                },
-            );
+            .with_range(variable_context.range(self.tokens));
         self.new_declarations.push(declaration);
     }
 }
 
-const EXPLICITLY_CONSTRUCTABLE_TYPES: &[BuiltinType] = &[
-    BuiltinType::Any(AnyType),
-    BuiltinType::Number(NumberType),
-    BuiltinType::String(StringType),
-    BuiltinType::Boolean(BooleanType),
-    // Undefined types are not explicitly constructable
-];
+fn keyword_to_type(keyword: &str) -> Option<Type> {
+    match keyword {
+        "string" => Some(Type::String),
+        "number" => Some(Type::Number),
+        "bool" => Some(Type::Boolean),
+        _ => None,
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -274,8 +253,9 @@ mod tests {
         assert_eq!(result.declarations.len(), 4);
         assert_eq!(
             result.declarations[0],
-            Declaration::from_default_value(1.0)
-                .with_type(NumberType)
+            Declaration::default()
+                .with_default_value(1.0)
+                .with_type(Type::Number)
                 .with_name("$foo")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -285,15 +265,16 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 3,
-                        character: 15,
+                        character: 14,
                     }
                 )
         );
 
         assert_eq!(
             result.declarations[1],
-            Declaration::from_default_value("2")
-                .with_type(StringType)
+            Declaration::default()
+                .with_default_value("2")
+                .with_type(Type::String)
                 .with_name("$bar")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -303,15 +284,16 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 4,
-                        character: 15,
+                        character: 14,
                     }
                 )
         );
 
         assert_eq!(
             result.declarations[2],
-            Declaration::from_default_value(true)
-                .with_type(BooleanType)
+            Declaration::default()
+                .with_default_value(true)
+                .with_type(Type::Boolean)
                 .with_name("$baz")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -321,15 +303,16 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 5,
-                        character: 15,
+                        character: 14,
                     }
                 )
         );
 
         assert_eq!(
             result.declarations[3],
-            Declaration::from_default_value("hello there")
-                .with_type(StringType)
+            Declaration::default()
+                .with_default_value("hello there")
+                .with_type(Type::String)
                 .with_name("$quux")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
@@ -339,7 +322,7 @@ mod tests {
                         character: 11,
                     }..=Position {
                         line: 6,
-                        character: 16,
+                        character: 15,
                     }
                 )
         );
@@ -376,7 +359,7 @@ mod tests {
                         character: 1,
                     }..=Position {
                         line: 3,
-                        character: 30,
+                        character: 31,
                     }
                 )
                 .with_severity(DiagnosticSeverity::Error)

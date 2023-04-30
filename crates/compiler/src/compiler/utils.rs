@@ -2,7 +2,6 @@
 //! but were moved to their own file for better organization.
 
 use crate::error_strategy::ErrorStrategy;
-
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
 use crate::prelude::*;
@@ -128,30 +127,14 @@ pub(crate) fn add_hashtag_child<'input>(
 }
 
 pub(crate) trait ContextRefExt<'input> {
-    fn ref_to_rc(
-        self,
-    ) -> Rc<
-        dyn YarnSpinnerParserContext<
-            'input,
-            Ctx = YarnSpinnerParserContextType,
-            TF = LocalTokenFactory<'input>,
-        >,
-    >;
+    fn ref_to_rc(self) -> Rc<ActualParserContext<'input>>;
 }
 
 impl<'input, T> ContextRefExt<'input> for &T
 where
     T: YarnSpinnerParserContext<'input>,
 {
-    fn ref_to_rc(
-        self,
-    ) -> Rc<
-        dyn YarnSpinnerParserContext<
-            'input,
-            Ctx = YarnSpinnerParserContextType,
-            TF = LocalTokenFactory<'input>,
-        >,
-    > {
+    fn ref_to_rc(self) -> Rc<ActualParserContext<'input>> {
         // Hack: need to convert the reference to an Rc somehow.
         // This will fail on a terminal node, fingers crossed that that won't happen 😅
         // See #45

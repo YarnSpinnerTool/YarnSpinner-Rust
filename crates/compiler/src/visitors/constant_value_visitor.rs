@@ -55,8 +55,8 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for ConstantValueVisitor<'a,
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'a, 'input> {
     fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
         let text = ctx.get_text();
-        if let Ok(result) = text.parse::<f32>() {
-            Value::from(result).into()
+        if let Ok(number) = text.parse::<f32>() {
+            Value::from(number).into()
         } else {
             let message = format!("Failed to parse {text} as a float",);
             self.diagnostics.push(
@@ -133,8 +133,11 @@ impl From<Value> for ConstantValue {
 }
 
 impl Default for ConstantValue {
+    /// The constant value visitor is meant to be used for very specific contexts, e.g. it is allowed to be called for a line but not for an entire dialog.
+    /// This default implementation is called when the visitor is called in an unexpected way, which in the current implementation can indeed not happen.
+    /// If we refactor the code wrongly, this panic will be reached and tell us.
     fn default() -> Self {
-        panic!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
+        unreachable!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
     }
 }
 

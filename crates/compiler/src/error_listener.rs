@@ -4,7 +4,7 @@ use crate::output::Position;
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::prelude::{ActualTokenStream, File};
+use crate::prelude::{ActualTokenStream, File, RangeSource};
 use antlr_rust::char_stream::InputData;
 use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::errors::ANTLRError;
@@ -25,7 +25,7 @@ use std::rc::Rc;
 /// ## Implementation notes
 ///
 /// The properties marked as `Obsolete` were not implemented.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Diagnostic {
     /// The path, URI or file-name that the issue occurred in.
     pub file_name: Option<String>,
@@ -59,9 +59,8 @@ impl Diagnostic {
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,
     ) -> Self {
-        let start = Position::from_token(ctx.start());
-        let stop = Position::from_token(ctx.stop());
-        self.range = Some(start..=stop);
+        let range = ctx.range(token_stream);
+        self.range = Some(range);
         self.context = Some(ctx.get_text_with_whitespace(token_stream));
         self
     }
@@ -88,7 +87,7 @@ impl Diagnostic {
 }
 
 /// The severity of the issue.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum DiagnosticSeverity {
     /// An error.
     ///

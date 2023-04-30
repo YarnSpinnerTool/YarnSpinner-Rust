@@ -19,9 +19,7 @@ use antlr_rust::token_factory::{CommonTokenFactory, TokenAware, TokenFactory};
 use antlr_rust::vocabulary::{Vocabulary, VocabularyImpl};
 use antlr_rust::PredictionContextCache;
 use antlr_rust::TokenSource;
-
 use antlr_rust::{lazy_static, Tid, TidAble, TidExt};
-
 use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};

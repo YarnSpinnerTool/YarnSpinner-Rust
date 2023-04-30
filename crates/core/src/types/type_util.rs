@@ -2,7 +2,7 @@
 
 use crate::types::Type;
 
-pub trait SubTypeOf<SubType: ?Sized = Self, Parent: ?Sized = Self> {
+pub trait SubTypeOf<T: ?Sized = Self> {
     /// Checks to see if `self` is equal to `parent`,
     /// or if `parent` exists in `self`'s type hierarchy.
     ///
@@ -10,29 +10,74 @@ pub trait SubTypeOf<SubType: ?Sized = Self, Parent: ?Sized = Self> {
     ///
     /// The original implementation features the bones of an actual hierarchical type system,
     /// but de facto it was unused. So, this implementation is way simpler, simply checking
-    /// for special cases, namely `BuiltinType::Any` and `BuiltinType::Undefined`.
-    fn is_sub_type_of(&self, parent: &Parent) -> bool;
+    /// for special cases, namely `Type::Any` and `Type::Undefined`.
+    ///
+    /// Careful, the original implementation has the param order flipped!
+    fn is_sub_type_of(&self, parent: &T) -> bool;
 }
 
-// The blanket impl catches both [`Type`] and [`BuiltInType`].
-impl<SubType, Parent> SubTypeOf<SubType, Parent> for SubType
+impl<T> SubTypeOf<T> for Type
 where
-    SubType: Clone,
-    Type: From<SubType> + From<Parent>,
-    Parent: Clone,
+    Type: From<T>,
+    T: Clone,
 {
-    fn is_sub_type_of(&self, parent: &Parent) -> bool {
-        let self_type = Type::from(self.clone());
-        let parent_type = Type::from(parent.clone());
-        match (self_type, parent_type) {
+    fn is_sub_type_of(&self, parent: &T) -> bool {
+        let parent = Type::from(parent.clone());
+        match (self, parent) {
             //  ALL types are a subtype of the Any type, including undefined
-            (_, Type::Any(_)) => true,
+            (_, Type::Any) => true,
+            (a, b) => *a == b,
+        }
+    }
+}
+
+impl<T> SubTypeOf<T> for Option<Type>
+where
+    Type: From<T>,
+    T: Clone,
+{
+    fn is_sub_type_of(&self, parent: &T) -> bool {
+        let parent = Type::from(parent.clone());
+        match (self, parent) {
+            //  ALL types are a subtype of the Any type, including undefined
+            (_, Type::Any) => true,
             // The subtype is undefined. Assume that it is not a subtype of parent.
-            (Type::Undefined, _) => false,
-            (_, Type::Undefined) => {
-                unreachable!("A parent type ended up being undefined. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
-            }
-            (a, b) => a == b,
+            (None, _) => false,
+            (Some(a), b) => *a == b,
+        }
+    }
+}
+
+impl<T> SubTypeOf<Option<T>> for Type
+where
+    Type: From<T>,
+    T: Clone,
+{
+    fn is_sub_type_of(&self, parent: &Option<T>) -> bool {
+        let parent = parent.clone().map(|parent| Type::from(parent));
+        match (self, parent) {
+            //  ALL types are a subtype of the Any type, including undefined
+            (_, Some(Type::Any)) => true,
+            (_, None) => false,
+            (a, Some(b)) => *a == b,
+        }
+    }
+}
+
+impl<T> SubTypeOf<Option<T>> for Option<Type>
+where
+    Type: From<T>,
+    T: Clone,
+{
+    fn is_sub_type_of(&self, parent: &Option<T>) -> bool {
+        let parent = parent.clone().map(|parent| Type::from(parent));
+        match (self, parent) {
+            //  ALL types are a subtype of the Any type, including undefined
+            (_, Some(Type::Any)) => true,
+            // The subtype is undefined. Assume that it is not a subtype of parent.
+            (None, _) => false,
+            (_, None) => false,
+            (a, b) => *a == b,
         }
     }
 }
