@@ -42,11 +42,8 @@ type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediat
 fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // Find the variable declarations in these files.
     for file in &state.parsed_files {
-        let mut variable_declaration_visitor = DeclarationVisitor::new(
-            file.name.clone(),
-            state.known_variable_declarations.clone(),
-            file.tokens(),
-        );
+        let mut variable_declaration_visitor =
+            DeclarationVisitor::new(state.known_variable_declarations.clone(), file.clone());
 
         variable_declaration_visitor.visit(&*file.tree);
 
@@ -81,11 +78,8 @@ fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermedia
         let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
         last_line_tagger.visit(&*parse_result.tree);
 
-        let mut visitor = StringTableGeneratorVisitor::new(
-            file.file_name.clone(),
-            string_table_manager.clone(),
-            parse_result.tokens(),
-        );
+        let mut visitor =
+            StringTableGeneratorVisitor::new(string_table_manager.clone(), parse_result.clone());
         visitor.visit(&*parse_result.tree);
         state.result.diagnostics.extend(visitor.diagnostics);
         string_table_manager.extend(visitor.string_table_manager);
@@ -113,11 +107,8 @@ fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationInterme
 
 fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
     for file in &state.parsed_files {
-        let mut visitor = TypeCheckVisitor::new(
-            file.name.clone(),
-            state.known_variable_declarations.clone(),
-            file.tokens(),
-        );
+        let mut visitor =
+            TypeCheckVisitor::new(state.known_variable_declarations.clone(), file.clone());
         visitor.visit(&*file.tree);
         state
             .known_variable_declarations
@@ -189,11 +180,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     result_template: CompilationResult,
     file: &'a FileParseResult<'input>,
 ) -> CompilationResult {
-    let compiler_listener = Box::new(CompilerListener::new(
-        file.name.clone(),
-        file.tokens(),
-        tracking_nodes.clone(),
-    ));
+    let compiler_listener = Box::new(CompilerListener::new(tracking_nodes.clone(), file.clone()));
     let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
     let compiler_diagnostics = compiler_listener.diagnostics.clone();
     let compiler_program = compiler_listener.program.clone();

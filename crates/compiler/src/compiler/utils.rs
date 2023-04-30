@@ -55,7 +55,7 @@ pub(crate) fn parse_syntax_tree<'a>(
         .cloned();
     diagnostics.extend(new_diagnostics);
 
-    FileParseResult::new(file_name, tree, parser)
+    FileParseResult::new(file_name, tree, Rc::new(parser))
 }
 
 pub(crate) fn get_line_id_for_node_name(name: &str) -> String {

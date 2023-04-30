@@ -16,6 +16,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
+use std::rc::Rc;
 
 mod check_operation;
 
@@ -25,7 +26,7 @@ mod check_operation;
 /// attempt to infer the type of variables that don't have an explicit
 /// declaration; for each of these, a new Declaration will be created
 /// and made available via the [`new_declaration`] property.
-pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
+pub(crate) struct TypeCheckVisitor<'input> {
     /// <summary>
     /// Gets the collection of all declarations - both the ones we received
     /// at the start, and the new ones we've derived ourselves.
@@ -45,9 +46,6 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
 
     // The name of the node that we're currently visiting.
     current_node_name: Option<String>,
-
-    // The name of the file that we're currently in.
-    source_file_name: String,
 
     /// The type that this expression has been
     /// determined to be by a [`TypeCheckVisitor`]
@@ -74,20 +72,18 @@ pub(crate) struct TypeCheckVisitor<'a, 'input: 'a> {
     /// on the [`ValueContext`] directly using a `partial`
     hints: HashMap<HashableInterval, Type>,
 
-    tokens: &'a ActualTokenStream<'input>,
+    file: FileParseResult<'input>,
     _dummy: Option<Type>,
 }
 
-impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
+impl<'input> TypeCheckVisitor<'input> {
     pub(crate) fn new(
-        source_file_name: String,
         existing_declarations: Vec<Declaration>,
-        tokens: &'a ActualTokenStream<'input>,
+        file: FileParseResult<'input>,
     ) -> Self {
         Self {
+            file,
             existing_declarations,
-            source_file_name,
-            tokens,
             diagnostics: Default::default(),
             new_declarations: Default::default(),
             deferred_types: Default::default(),
@@ -144,7 +140,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
     }
 }
 
-impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
+impl<'input> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'input> {
     type Node = YarnSpinnerParserContextType;
 
     type Return = Option<Type>;
@@ -154,7 +150,7 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'a, 'in
     }
 }
 
-impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'a, 'input> {
+impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input> {
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         for header in ctx.header_all() {
             let key = header.header_key.as_ref().unwrap().get_text();
@@ -298,8 +294,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
     fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
         self.diagnostics.push(
             Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(ctx, self.tokens),
+                .with_file_name(&self.file.name)
+                .read_parser_rule_context(ctx, self.file.tokens()),
         );
 
         None
@@ -349,11 +345,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 .with_name(&function_name)
                 .with_description(format!(
                     "Implicit declaration of function at {}:{}:{}",
-                    self.source_file_name, line, column
+                    self.file.name, line, column
                 ))
                 // All positions are +1 compared to original implementation, but the result is the same.
                 // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-                .with_range(ctx.range(self.tokens))
+                .with_range(ctx.range(self.file.tokens()))
                 .with_implicit();
 
             // Create the array of parameters for this function based
@@ -385,8 +381,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                 parameters,
                 supplied_parameters.len()
             ))
-            .with_file_name(&self.source_file_name)
-            .read_parser_rule_context(ctx, self.tokens);
+            .with_file_name(&self.file.name)
+            .read_parser_rule_context(ctx, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return *function_type.return_type;
         }
@@ -412,8 +408,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                     expected_type.format(),
                     supplied_type.format()
                 ))
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(ctx, self.tokens);
+                .with_file_name(&self.file.name)
+                .read_parser_rule_context(ctx, self.file.tokens());
                 self.diagnostics.push(diagnostic);
             }
         }
@@ -456,8 +452,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         // so we save this as a potential diagnostic for the compiler itself to resolve
         let diagnostic =
             Diagnostic::from_message(format_cannot_determine_variable_type_error(&name))
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(ctx, self.tokens);
+                .with_file_name(&self.file.name)
+                .read_parser_rule_context(ctx, self.file.tokens());
         self.deferred_types
             .push(DeferredTypeDiagnostic { name, diagnostic });
 
@@ -521,8 +517,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                             variable_type.format(),
                             expression_type.format(),
                         ))
-                        .with_file_name(&self.source_file_name)
-                        .read_parser_rule_context(ctx, self.tokens);
+                        .with_file_name(&self.file.name)
+                        .read_parser_rule_context(ctx, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                     }
                     (None, Some(expression_type)) => {
@@ -538,14 +534,14 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                                 .with_name(variable_name)
                                 .with_description(format!(
                                     "Implicitly declared in {}, node {}",
-                                    get_filename(&self.source_file_name),
+                                    get_filename(&self.file.name),
                                     self.current_node_name.as_ref().unwrap()
                                 ))
                                 .with_type(expression_type.clone())
                                 .with_default_value(default_value)
-                                .with_source_file_name(self.source_file_name.clone())
+                                .with_source_file_name(self.file.name.clone())
                                 .with_source_node_name_optional(self.current_node_name.clone())
-                                .with_range(variable_context.range(self.tokens)
+                                .with_range(variable_context.range(self.file.tokens())
                                 )
                                 .with_implicit();
                             self.new_declarations.push(decl);
@@ -554,8 +550,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
                                 Diagnostic::from_message(
                                     format_cannot_determine_variable_type_error(&variable_name),
                                 )
-                                .with_file_name(&self.source_file_name)
-                                .read_parser_rule_context(ctx, self.tokens),
+                                .with_file_name(&self.file.name)
+                                .read_parser_rule_context(ctx, self.file.tokens()),
                             )
                         }
                     }
@@ -595,9 +591,9 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor
         if variable_type.is_none() && expression_type.is_none() {
             self.diagnostics.push(
                             Diagnostic::from_message(
-                                format!("Type of expression \"{}\" can't be determined without more context. Please declare one or more terms.", ctx.get_text_with_whitespace(self.tokens)))
-                                .with_file_name(&self.source_file_name)
-                                .read_parser_rule_context(ctx, self.tokens));
+                                format!("Type of expression \"{}\" can't be determined without more context. Please declare one or more terms.", ctx.get_text_with_whitespace(self.file.tokens())))
+                                .with_file_name(&self.file.name)
+                                .read_parser_rule_context(ctx, self.file.tokens()));
         }
         // at this point we have either fully resolved the type of the expression or been unable to do so
         // we return the type of the expression regardless and rely on either elements to catch the issue

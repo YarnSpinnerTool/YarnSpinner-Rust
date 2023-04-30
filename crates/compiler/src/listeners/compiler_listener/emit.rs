@@ -4,7 +4,7 @@ use antlr_rust::token::Token;
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 use rusty_yarn_spinner_core::prelude::*;
 
-impl<'a, 'input: 'a> CompilerListener<'a, 'input> {
+impl<'input> CompilerListener<'input> {
     /// Creates a new instruction, and appends it to a node in the [`Program`].
     pub(crate) fn emit(&mut self, emit: Emit) {
         let instruction = Instruction {

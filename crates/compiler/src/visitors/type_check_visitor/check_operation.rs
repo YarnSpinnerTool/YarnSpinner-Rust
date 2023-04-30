@@ -14,7 +14,7 @@ use std::cmp::Ordering;
 use std::ops::Deref;
 use std::rc::Rc;
 
-impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
+impl<'input> TypeCheckVisitor<'input> {
     /// ok so what do we actually need to do in here?
     /// we need to do a few different things
     /// basically we need to go through the various types in the expression
@@ -86,11 +86,11 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                             .join(", or ");
                         let message = format!(
                         "Type of expression \"{}\" can't be determined without more context (the compiler thinks it could be {type_names}). Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
-                        context.get_text_with_whitespace(self.tokens),
+                        context.get_text_with_whitespace(self.file.tokens()),
                     );
                         let diagnostic = Diagnostic::from_message(message)
-                            .with_file_name(&self.source_file_name)
-                            .read_parser_rule_context(context, self.tokens);
+                            .with_file_name(&self.file.name)
+                            .read_parser_rule_context(context, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                         return None;
                     }
@@ -98,11 +98,11 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                         // No types implement this operation (??) [sic]
                         let message = format!(
                         "Type of expression \"{}\" can't be determined without more context. Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
-                        context.get_text_with_whitespace(self.tokens),
+                        context.get_text_with_whitespace(self.file.tokens()),
                     );
                         let diagnostic = Diagnostic::from_message(message)
-                            .with_file_name(&self.source_file_name)
-                            .read_parser_rule_context(context, self.tokens);
+                            .with_file_name(&self.file.name)
+                            .read_parser_rule_context(context, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                         return None;
                     }
@@ -223,7 +223,7 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             // because we couldn't figure out a concrete type for the
             // variable given the context.
             if let Some(default_value) = expression_type.default_value() {
-                let file_name = get_filename(&self.source_file_name);
+                let file_name = get_filename(&self.file.name);
                 let node = self
                     .current_node_name
                     .as_ref()
@@ -234,9 +234,9 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                     .with_description(format!("Implicitly declared in {file_name}{node}"))
                     .with_type(expression_type.clone())
                     .with_default_value(default_value)
-                    .with_source_file_name(self.source_file_name.clone())
+                    .with_source_file_name(self.file.name.clone())
                     .with_source_node_name_optional(self.current_node_name.clone())
-                    .with_range(undefined_variable_context.range(self.tokens))
+                    .with_range(undefined_variable_context.range(self.file.tokens()))
                     .with_implicit();
                 self.new_declarations.push(decl);
             } else {
@@ -245,8 +245,8 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 let diagnostic = Diagnostic::from_message(
                     format_cannot_determine_variable_type_error(&var_name),
                 )
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(&*undefined_variable_context, self.tokens);
+                .with_file_name(&self.file.name)
+                .read_parser_rule_context(&*undefined_variable_context, self.file.tokens());
                 self.diagnostics.push(diagnostic);
                 continue;
             }
@@ -269,8 +269,8 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             let message =
                 format!("All terms of {operation_description} must be the same, not {type_list}");
             let diagnostic = Diagnostic::from_message(message)
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(context, self.tokens);
+                .with_file_name(&self.file.name)
+                .read_parser_rule_context(context, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return None;
         }
@@ -303,8 +303,8 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                     expression_type.format(),
                 );
                 let diagnostic = Diagnostic::from_message(message)
-                    .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context(context, self.tokens);
+                    .with_file_name(&self.file.name)
+                    .read_parser_rule_context(context, self.file.tokens());
                 self.diagnostics.push(diagnostic);
                 return None;
             }
@@ -337,8 +337,8 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
                 "Terms of '{operation_description}' must be {permitted_types_list}, not {type_list}",
             );
             let diagnostic = Diagnostic::from_message(message)
-                .with_file_name(&self.source_file_name)
-                .read_parser_rule_context(context, self.tokens);
+                .with_file_name(&self.file.name)
+                .read_parser_rule_context(context, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return None;
         }
@@ -363,8 +363,8 @@ impl<'a, 'input: 'a> TypeCheckVisitor<'a, 'input> {
             );
             self.diagnostics.push(
                 Diagnostic::from_message(message)
-                    .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context(context, self.tokens),
+                    .with_file_name(&self.file.name)
+                    .read_parser_rule_context(context, self.file.tokens()),
             );
             return None;
         }

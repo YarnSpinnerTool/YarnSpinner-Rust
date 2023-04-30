@@ -13,33 +13,30 @@ use std::rc::Rc;
 /// This string table can then be provided
 /// to future compilation passes, or stored for later use. Call the
 /// [`visit`] method to begin generating string table entries.
-pub(crate) struct StringTableGeneratorVisitor<'a, 'input: 'a> {
+pub(crate) struct StringTableGeneratorVisitor<'input> {
     pub(crate) diagnostics: Vec<Diagnostic>,
     current_node_name: String,
-    file_name: String,
     pub(crate) string_table_manager: StringTableManager,
-    tokens: &'a ActualTokenStream<'input>,
+    file: FileParseResult<'input>,
     _dummy: (),
 }
 
-impl<'a, 'input: 'a> StringTableGeneratorVisitor<'a, 'input> {
+impl<'input> StringTableGeneratorVisitor<'input> {
     pub(crate) fn new(
-        file_name: String,
         string_table_manager: StringTableManager,
-        tokens: &'a ActualTokenStream<'input>,
+        file: FileParseResult<'input>,
     ) -> Self {
         Self {
-            file_name,
+            file,
             string_table_manager,
             diagnostics: Default::default(),
             current_node_name: Default::default(),
-            tokens,
             _dummy: (),
         }
     }
 }
 
-impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisitor<'a, 'input> {
+impl<'input> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisitor<'input> {
     type Node = YarnSpinnerParserContextType;
 
     type Return = ();
@@ -49,9 +46,7 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for StringTableGeneratorVisi
     }
 }
 
-impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
-    for StringTableGeneratorVisitor<'a, 'input>
-{
+impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisitor<'input> {
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         let mut tags = Vec::new();
         for header in ctx.header_all() {
@@ -82,7 +77,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
                     text: ctx.body().unwrap().get_text(),
                     node_name: self.current_node_name.clone(),
                     line_number: ctx.body().unwrap().start().line as usize,
-                    file_name: self.file_name.clone(),
+                    file_name: self.file.name.clone(),
                     ..Default::default()
                 },
             );
@@ -108,8 +103,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
                 let line_id = line_id.get_text();
                 self.diagnostics.push(
                     Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .read_parser_rule_context(&*diagnostic_context, self.tokens)
-                        .with_file_name(&self.file_name),
+                        .read_parser_rule_context(&*diagnostic_context, self.file.tokens())
+                        .with_file_name(&self.file.name),
                 );
                 return;
             }
@@ -126,7 +121,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input>
                 text: composed_string,
                 node_name: self.current_node_name.clone(),
                 line_number: line_number as usize,
-                file_name: self.file_name.clone(),
+                file_name: self.file.name.clone(),
                 metadata: hashtag_texts,
                 ..Default::default()
             },

@@ -79,7 +79,7 @@ pub struct CompilationResult {
 }
 
 impl CompilationResult {
-    pub fn combine(
+    pub(crate) fn combine(
         results: Vec<CompilationResult>,
         string_table_manager: StringTableManager,
     ) -> Self {
