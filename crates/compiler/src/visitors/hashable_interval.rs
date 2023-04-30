@@ -27,6 +27,7 @@ impl KnownTypes {
         let hashable_interval = ctx.get_hashable_interval();
         self.0.get_mut(&hashable_interval)
     }
+
     pub(crate) fn insert<'input>(
         &mut self,
         ctx: &impl YarnSpinnerParserContext<'input>,
@@ -35,6 +36,10 @@ impl KnownTypes {
         let r#type = r#type.into()?;
         let hashable_interval = ctx.get_hashable_interval();
         self.0.insert(hashable_interval, r#type)
+    }
+
+    pub(crate) fn extend(&mut self, other: Self) {
+        self.0.extend(other.0)
     }
 }
 

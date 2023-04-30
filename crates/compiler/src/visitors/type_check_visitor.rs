@@ -59,7 +59,7 @@ pub(crate) struct TypeCheckVisitor<'input> {
     ///
     /// Careful, the original class has an unrelated member called `types`,
     /// but in this implementation, we replaced that member by [`Type::EXPLICITLY_CONSTRUCTABLE`].
-    types: KnownTypes,
+    pub(crate) known_types: KnownTypes,
 
     /// A type hint for the expression.
     /// This is mostly used by [`TypeCheckVisitor`]
@@ -89,7 +89,7 @@ impl<'input> TypeCheckVisitor<'input> {
             new_declarations: Default::default(),
             deferred_types: Default::default(),
             current_node_name: Default::default(),
-            types: Default::default(),
+            known_types: Default::default(),
             hints: Default::default(),
             _dummy: Default::default(),
         }
@@ -134,7 +134,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
         // Parens expressions have the type of their inner expression
         let r#type = self.visit(&*ctx.expression().unwrap());
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -152,7 +152,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             op.get_text(),
             vec![Type::Number],
         );
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -161,7 +161,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.types.insert(ctx, r#type);
+        self.known_types.insert(ctx, r#type);
         // Comparisons always return bool
         Some(Type::Boolean)
     }
@@ -171,7 +171,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -182,7 +182,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             CodeGenerationVisitor::token_to_operator(operator_context.token_type).unwrap();
         let description = operator_context.get_text();
         let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -191,7 +191,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -209,7 +209,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             op.get_text(),
             vec![Type::Boolean],
         );
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -220,7 +220,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         self.hints.insert(&*value, hint);
         // Value expressions have the type of their inner value
         let r#type = self.visit(&*value);
-        self.types.insert(ctx, r#type.clone());
+        self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -231,7 +231,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         // == and != support any defined type, as long as terms are the
         // same type
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.types.insert(ctx, r#type);
+        self.known_types.insert(ctx, r#type);
         // Equality always returns bool
         Some(Type::Boolean)
     }

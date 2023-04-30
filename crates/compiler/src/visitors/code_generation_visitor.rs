@@ -24,7 +24,6 @@ use std::rc::Rc;
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
     compiler_listener: &'a mut CompilerListener<'input>,
     tracking_enabled: Option<String>,
-    types: KnownTypes,
 
     _dummy: (),
 }
@@ -33,13 +32,11 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
     pub(crate) fn new(
         compiler_listener: &'a mut CompilerListener<'input>,
         tracking_enabled: impl Into<Option<String>>,
-        types: KnownTypes,
     ) -> Self {
         Self {
             compiler_listener,
             tracking_enabled: tracking_enabled.into(),
             _dummy: Default::default(),
-            types,
         }
     }
     pub(crate) fn token_to_operator(token: isize) -> Option<Operator> {
@@ -121,7 +118,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let expression = ctx.expression().unwrap();
         let variable = ctx.variable().unwrap();
         let generate_code_for_operation = |op: Operator| {
-            let r#type = self.types.get(expression.as_ref()).unwrap().clone();
+            let r#type = self.compiler_listener.types.get(expression.as_ref()).unwrap().clone();
             self.generate_code_for_operation(
                 op,
                 operator_token,
