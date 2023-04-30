@@ -8,7 +8,6 @@ use antlr_rust::tree::ParseTreeVisitorCompat;
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 use rusty_yarn_spinner_core::prelude::Operator;
 
-#[allow(dead_code)]
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
     compiler_listener: &'a mut CompilerListener<'input>,
     tracking_enabled: Option<String>,
