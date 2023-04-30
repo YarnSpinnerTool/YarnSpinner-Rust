@@ -157,8 +157,7 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
         // We have errors, so we can't safely generate code.
         vec![]
     } else {
-        // No errors! Go ahead and generate the code for all parsed
-        // files.
+        // No errors! Go ahead and generate the code for all parsed files.
         let template = CompilationResult {
             string_table: state.string_table.0.clone(),
             contains_implicit_string_tags: state.string_table.contains_implicit_string_tags(),
@@ -192,8 +191,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
 
     tracking_nodes.extend(compiler_tracking_nodes.borrow().iter().cloned());
 
-    // Don't attempt to generate debug information if compilation
-    // produced errors
+    // Don't attempt to generate debug information if compilation produced errors
     if compiler_diagnostics
         .borrow()
         .iter()
