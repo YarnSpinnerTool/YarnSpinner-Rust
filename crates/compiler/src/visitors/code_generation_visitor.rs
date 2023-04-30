@@ -224,6 +224,31 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             }
         }
     }
+
+    /// handles emitting the correct instructions for the function
+    fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) -> Self::Return {
+        // generate the instructions for all of the parameters
+        let expressions = ctx.expression_all();
+        for parameter in &expressions {
+            self.visit(parameter.as_ref());
+        }
+
+        let token = ctx.start();
+        // push the number of parameters onto the stack
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushFloat)
+                .with_source_from_token(token.deref())
+                .with_operand(expressions.len()),
+        );
+
+        // then call the function itself
+        let function_name = ctx.FUNC_ID().unwrap().get_text();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::CallFunc)
+                .with_source_from_token(token.deref())
+                .with_operand(function_name),
+        );
+    }
 }
 
 impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
