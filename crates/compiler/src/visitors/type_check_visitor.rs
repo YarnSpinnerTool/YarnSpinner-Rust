@@ -16,7 +16,6 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
-use std::rc::Rc;
 
 mod check_operation;
 

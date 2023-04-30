@@ -80,8 +80,8 @@ pub struct CompilationResult {
 
 impl CompilationResult {
     pub(crate) fn combine(
-        results: Vec<CompilationResult>,
-        string_table_manager: StringTableManager,
+        _results: Vec<CompilationResult>,
+        _string_table_manager: StringTableManager,
     ) -> Self {
         todo!()
     }

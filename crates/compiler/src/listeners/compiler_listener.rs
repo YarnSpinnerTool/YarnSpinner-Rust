@@ -85,7 +85,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
             self.diagnostics.borrow_mut().push(
                 Diagnostic::from_message("Missing title header for node")
                     .with_file_name(self.file.name.clone())
-                    .read_parser_rule_context(ctx, &self.file.tokens()),
+                    .read_parser_rule_context(ctx, self.file.tokens()),
             );
         } else {
             if !self.program.borrow().nodes.contains_key(name) {
