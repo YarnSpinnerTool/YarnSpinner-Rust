@@ -18,7 +18,6 @@ use std::rc::Rc;
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
     compiler_listener: &'a mut CompilerListener<'input>,
     tracking_enabled: Option<String>,
-
     _dummy: (),
 }
 
