@@ -9,7 +9,6 @@ use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
-use antlr_rust::tree::{ParseTree, Tree};
 use antlr_rust::Parser;
 use std::rc::Rc;
 

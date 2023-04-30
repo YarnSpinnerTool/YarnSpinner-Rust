@@ -12,8 +12,6 @@ use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
 use rusty_yarn_spinner_core::prelude::convertible::Convertible;
 use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
-use std::hash::Hasher;
-use std::ops::DerefMut;
 use std::path::Path;
 
 mod check_operation;

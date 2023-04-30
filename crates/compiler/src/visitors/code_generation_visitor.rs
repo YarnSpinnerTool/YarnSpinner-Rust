@@ -5,10 +5,9 @@ use crate::listeners::{CompilerListener, Emit};
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::{ActualParserContext, YarnSpinnerParserContextExt};
-use crate::visitors::KnownTypes;
+use crate::prelude::ActualParserContext;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::{CommonToken, Token};
+use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 use rusty_yarn_spinner_core::prelude::Operator;
@@ -162,7 +161,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         }
 
         // now store the variable and clean up the stack
-        let variable_name = variable.get_text().to_owned();
+        let variable_name = variable.get_text();
         let token = variable.start();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::StoreVariable)

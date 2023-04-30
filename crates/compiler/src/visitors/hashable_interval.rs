@@ -1,5 +1,4 @@
 use crate::parser::generated::yarnspinnerparser::YarnSpinnerParserContext;
-use crate::prelude::*;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use rusty_yarn_spinner_core::types::Type;
