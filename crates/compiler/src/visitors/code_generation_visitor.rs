@@ -499,6 +499,101 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         ];
         self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
     }
+
+    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
+        self.visit(ctx.variable().unwrap().as_ref())
+    }
+
+    fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
+        let number: f32 = ctx.NUMBER().unwrap().get_text().parse().unwrap();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushFloat)
+                .with_source_from_token(ctx.start().deref())
+                .with_operand(number),
+        )
+    }
+
+    fn visit_valueTrue(&mut self, ctx: &ValueTrueContext<'input>) -> Self::Return {
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushBool)
+                .with_source_from_token(ctx.start().deref())
+                .with_operand(true),
+        )
+    }
+
+    fn visit_valueFalse(&mut self, ctx: &ValueFalseContext<'input>) -> Self::Return {
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushBool)
+                .with_source_from_token(ctx.start().deref())
+                .with_operand(false),
+        )
+    }
+
+    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
+        let variable_name = ctx.VAR_ID().unwrap().get_text();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushVariable)
+                .with_source_from_token(ctx.start().deref())
+                .with_operand(variable_name),
+        )
+    }
+
+    fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
+        // [sic] stripping the " off the front and back actually is this what we want?
+        let string_value = ctx
+            .STRING()
+            .unwrap()
+            .get_text()
+            .trim_matches('"')
+            .to_owned();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushString)
+                .with_source_from_token(ctx.start().deref())
+                .with_operand(string_value),
+        )
+    }
+
+    /// all we need do is visit the function itself, it will handle everything
+    fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
+        self.visit(ctx.function_call().unwrap().as_ref())
+    }
+
+    /// null value
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::PushNull).with_source_from_token(ctx.start().deref()))
+    }
+
+    fn visit_declare_statement(&mut self, _ctx: &Declare_statementContext<'input>) -> Self::Return {
+        // Declare statements do not participate in code generation
+    }
+
+    /// A <<jump>> command, which immediately jumps to another node, given its name.
+    fn visit_jumpToNodeName(&mut self, ctx: &JumpToNodeNameContext<'input>) -> Self::Return {
+        if let Some(tracking_enabled) = self.tracking_enabled.clone() {
+            Self::generate_tracking_code(self.compiler_listener, tracking_enabled);
+        }
+        let destination = ctx.destination.as_ref().unwrap();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushString)
+                .with_source_from_token(destination.deref())
+                .with_operand(destination.get_text().to_owned()),
+        );
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::RunNode).with_source_from_token(ctx.start().deref()))
+    }
+
+    /// A <<jump>> command, which immediately jumps to another node, given an
+    /// expression that resolves to a node's name.
+    fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
+        if let Some(tracking_enabled) = self.tracking_enabled.clone() {
+            Self::generate_tracking_code(self.compiler_listener, tracking_enabled);
+        }
+        // Evaluate the expression, and jump to the result on the stack.
+        self.visit(ctx.expression().unwrap().as_ref());
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::RunNode).with_source_from_token(ctx.start().deref()))
+    }
 }
 
 impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
