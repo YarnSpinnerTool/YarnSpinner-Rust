@@ -9,6 +9,7 @@ use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
+use antlr_rust::tree::{ParseTree, Tree};
 use antlr_rust::Parser;
 use std::rc::Rc;
 
@@ -133,12 +134,19 @@ pub(crate) trait ContextRefExt<'input> {
 
 impl<'input, T> ContextRefExt<'input> for &T
 where
-    T: YarnSpinnerParserContext<'input>,
+    T: YarnSpinnerParserContext<'input> + ?Sized,
 {
     fn ref_to_rc(self) -> Rc<ActualParserContext<'input>> {
-        // Hack: need to convert the reference to an Rc somehow.
-        // This will fail on a terminal node, fingers crossed that that won't happen 😅
-        // See #45
-        self.get_children().next().unwrap().get_parent().unwrap()
+        self.get_children()
+            .next()
+            .map(|child| child.get_parent().unwrap())
+            .unwrap_or_else(|| {
+                let interval = self.get_source_interval();
+                self.get_parent()
+                    .unwrap()
+                    .get_children()
+                    .find(|child| child.get_source_interval() == interval)
+                    .unwrap()
+            })
     }
 }

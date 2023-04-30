@@ -5,10 +5,10 @@ use crate::listeners::{CompilerListener, Emit};
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::ActualParserContext;
+use crate::prelude::{ActualParserContext, YarnSpinnerParserContextExt};
 use crate::visitors::KnownTypes;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
+use antlr_rust::token::{CommonToken, Token};
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 use rusty_yarn_spinner_core::prelude::Operator;
@@ -249,6 +249,50 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 .with_operand(function_name),
         );
     }
+
+    /// if statement ifclause (elseifclause)* (elseclause)? <<endif>>
+    fn visit_if_statement(&mut self, ctx: &If_statementContext<'input>) -> Self::Return {
+        // Implementation note: Idk what this is supposed to do. Looks like a noop.
+        // context.AddErrorNode(null);
+
+        // label to give us a jump point for when the if finishes
+        let end_of_if_statement_label = self.compiler_listener.register_label("endif");
+
+        // handle the if
+        let if_clause = ctx.if_clause().unwrap();
+        self.generate_code_for_clause(
+            end_of_if_statement_label.clone(),
+            if_clause.as_ref(),
+            &if_clause.statement_all(),
+            if_clause.expression().unwrap(),
+        );
+
+        // all elseifs
+        for else_if_clause in &ctx.else_if_clause_all() {
+            self.generate_code_for_clause(
+                end_of_if_statement_label.clone(),
+                else_if_clause.as_ref(),
+                &else_if_clause.statement_all(),
+                else_if_clause.expression().unwrap(),
+            );
+        }
+
+        // the else, if there is one
+        if let Some(else_clause) = ctx.else_clause() {
+            self.generate_code_for_clause(
+                end_of_if_statement_label.clone(),
+                else_clause.as_ref(),
+                &else_clause.statement_all(),
+                None,
+            );
+        }
+
+        let current_node = self.compiler_listener.current_node.as_mut().unwrap();
+        current_node.labels.insert(
+            end_of_if_statement_label,
+            current_node.instructions.len() as i32,
+        );
+    }
 }
 
 impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
@@ -310,5 +354,48 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
                 .with_source_from_token(operator_token)
                 .with_operand(function_name),
         );
+    }
+
+    fn generate_code_for_clause(
+        &mut self,
+        jump_label: String,
+        ctx: &impl ParserRuleContext<'input>,
+        children: &[Rc<StatementContext<'input>>],
+        expression: impl Into<Option<Rc<ExpressionContextAll<'input>>>>,
+    ) {
+        let expression = expression.into();
+        let end_of_clause_label = self.compiler_listener.register_label("skipclause");
+        // handling the expression (if it has one) will only be called on ifs and elseifs
+        if let Some(expression) = expression.clone() {
+            // Code-generate the expression
+            self.visit(expression.as_ref());
+
+            self.compiler_listener.emit(
+                Emit::from_op_code(OpCode::JumpIfFalse)
+                    .with_source_from_token(expression.start().deref())
+                    .with_operand(end_of_clause_label.clone()),
+            );
+        }
+
+        // running through all of the children statements
+        for child in children {
+            self.visit(child.as_ref());
+        }
+
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::JumpTo)
+                .with_source_from_token(ctx.stop().deref())
+                .with_operand(jump_label),
+        );
+
+        if let Some(expression) = expression {
+            let current_node = self.compiler_listener.current_node.as_mut().unwrap();
+            current_node
+                .labels
+                .insert(end_of_clause_label, current_node.instructions.len() as i32);
+            self.compiler_listener.emit(
+                Emit::from_op_code(OpCode::Pop).with_source_from_token(expression.stop().deref()),
+            );
+        }
     }
 }

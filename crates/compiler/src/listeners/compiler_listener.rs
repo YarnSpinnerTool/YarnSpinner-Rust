@@ -28,7 +28,7 @@ pub(crate) struct CompilerListener<'input> {
     pub(crate) diagnostics: Rc<RefCell<Vec<Diagnostic>>>,
     pub(crate) types: KnownTypes,
     /// The current node to which instructions are being added.
-    current_node: Option<Node>,
+    pub(crate) current_node: Option<Node>,
     /// The current debug information that describes [`current_node`].
     current_debug_info: DebugInfo,
     /// Whether we are currently parsing the
