@@ -2,23 +2,18 @@
 
 use crate::compiler;
 use crate::listeners::{CompilerListener, Emit};
-use crate::parser::generated::yarnspinnerparser::{
-    Line_statementContext, Set_statementContext, YarnSpinnerParserContext,
-};
 use crate::prelude::generated::yarnspinnerlexer;
-use crate::prelude::generated::yarnspinnerparser::{
-    Line_statementContextAttrs, Set_statementContextAttrs, YarnSpinnerParserContextType,
-};
+use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::ActualParserContext;
-use crate::visitors::{HashableInterval, KnownTypes};
+use crate::visitors::KnownTypes;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 use rusty_yarn_spinner_core::prelude::Operator;
 use rusty_yarn_spinner_core::types::Type;
-use std::collections::HashMap;
+use std::ops::Deref;
 use std::rc::Rc;
 
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
@@ -93,7 +88,16 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for CodeGenerationVisitor<'a
 }
 
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {
+    /// a regular ol' line of text
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
+        // [sic] TODO: add support for line conditions:
+        //
+        // Mae: here's a line <<if true>>
+        //
+        // is identical to
+        //
+        // <<if true>> Mae: here's a line <<endif>>
+
         // Evaluate the inline expressions and push the results onto the
         // stack.
         let formatted_text = ctx.line_formatted_text().unwrap();
@@ -110,6 +114,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         );
     }
 
+    /// A set command: explicitly setting a value to an expression <<set $foo to 1>>
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
         // Ensure that the correct result is on the stack by evaluating the
         // expression. If this assignment includes an operation (e.g. +=),
@@ -166,6 +171,58 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         );
         self.compiler_listener
             .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(&*token));
+    }
+
+    fn visit_call_statement(&mut self, ctx: &Call_statementContext<'input>) -> Self::Return {
+        // Visit our function call, which will invoke the function
+        self.visit(ctx.function_call().unwrap().as_ref());
+        // [sic] TODO: if this function returns a value, it will be pushed onto
+        // the stack, but there's no way for the compiler to know that, so
+        // the stack will not be tidied up. is there a way for that to work?
+    }
+
+    /// semi-free form text that gets passed along to the game for things
+    /// like <<turn fred left>> or <<unlockAchievement FacePlant>>
+    fn visit_command_statement(&mut self, ctx: &Command_statementContext<'input>) -> Self::Return {
+        let formatted_text = ctx.command_formatted_text().unwrap();
+        let (composed_string, expression_count) = formatted_text.get_children().fold(
+            (String::new(), 0_usize),
+            |(composed_string, expression_count), node| {
+                if node.get_child_count() == 0 {
+                    // Terminal node
+                    (composed_string + &node.get_text(), expression_count)
+                } else {
+                    // Generate code for evaluating the expression at runtime
+                    self.visit(node.as_ref());
+                    // Don't include the '{' and '}', because it will have been
+                    // added as a terminal node already
+                    (
+                        composed_string + &expression_count.to_string(),
+                        expression_count + 1,
+                    )
+                }
+            },
+        );
+
+        // [sic] TODO: look into replacing this as it seems a bit odd
+        match composed_string.as_str() {
+            "stop" => {
+                // "stop" is a special command that immediately stops
+                // execution
+                self.compiler_listener.emit(
+                    Emit::from_op_code(OpCode::Stop)
+                        .with_source_from_token(formatted_text.start().deref()),
+                );
+            }
+            _ => {
+                self.compiler_listener.emit(
+                    Emit::from_op_code(OpCode::RunCommand)
+                        .with_source_from_token(formatted_text.start().deref())
+                        .with_operand(composed_string)
+                        .with_operand(expression_count),
+                );
+            }
+        }
     }
 }
 
