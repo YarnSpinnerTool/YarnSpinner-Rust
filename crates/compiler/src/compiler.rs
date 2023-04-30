@@ -189,7 +189,11 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     result_template: CompilationResult,
     file: &'a FileParseResult<'input>,
 ) -> CompilationResult {
-    let compiler_listener = Box::new(CompilerListener::new(file, tracking_nodes.clone()));
+    let compiler_listener = Box::new(CompilerListener::new(
+        file.name.clone(),
+        file.tokens(),
+        tracking_nodes.clone(),
+    ));
     let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
     let compiler_diagnostics = compiler_listener.diagnostics.clone();
     let compiler_program = compiler_listener.program.clone();
