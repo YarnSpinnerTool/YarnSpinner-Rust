@@ -114,16 +114,21 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // Ensure that the correct result is on the stack by evaluating the
         // expression. If this assignment includes an operation (e.g. +=),
         // do that work here too.
-        let operator_token = *ctx.op.unwrap();
+        let operator_token = ctx.op.as_ref().unwrap();
         let expression = ctx.expression().unwrap();
         let variable = ctx.variable().unwrap();
-        let generate_code_for_operation = |op: Operator| {
-            let r#type = self.compiler_listener.types.get(expression.as_ref()).unwrap().clone();
+        let mut generate_code_for_operation = |op: Operator| {
+            let r#type = self
+                .compiler_listener
+                .types
+                .get(expression.as_ref())
+                .unwrap()
+                .clone();
             self.generate_code_for_operation(
                 op,
-                operator_token,
-                r#type,
-                &[variable.clone(), expression],
+                operator_token.as_ref(),
+                &r#type,
+                &[variable.clone(), expression.clone()],
             )
         };
         match operator_token.get_token_type() {
@@ -190,8 +195,8 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
     fn generate_code_for_operation(
         &mut self,
         op: Operator,
-        operator_token: impl Token,
-        r#type: Type,
+        operator_token: &impl Token,
+        r#type: &Type,
         operands: &[Rc<ActualParserContext<'input>>],
     ) {
         // Generate code for each of the operands, so that their value is
@@ -199,5 +204,29 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
         for operand in operands {
             self.visit(operand.as_ref());
         }
+
+        // Indicate that we are pushing this many items for comparison
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushFloat)
+                .with_source_from_token(operator_token)
+                .with_operand(operands.len()),
+        );
+        // Figure out the canonical name for the method that the VM should
+        // invoke in order to perform this work
+        let method_name = op.to_string();
+        let has_method = r#type.has_method(&method_name);
+        assert!(
+            has_method,
+            "Codegen failed to get implementation type for {} given input type {}.",
+            op,
+            r#type.properties().name,
+        );
+        let function_name = r#type.get_canonical_name_for_method(&method_name);
+        // Call that function.
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::CallFunc)
+                .with_source_from_token(operator_token)
+                .with_operand(function_name),
+        );
     }
 }
