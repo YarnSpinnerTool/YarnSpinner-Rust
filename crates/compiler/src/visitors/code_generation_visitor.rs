@@ -293,6 +293,212 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             current_node.instructions.len() as i32,
         );
     }
+
+    /// for the shortcut options (-> line of text <<if expression>> indent statements dedent)+
+    fn visit_shortcut_option_statement(
+        &mut self,
+        ctx: &Shortcut_option_statementContext<'input>,
+    ) -> Self::Return {
+        let end_of_group_label = self.compiler_listener.register_label("group_end");
+        let mut labels = Vec::new();
+
+        // For each option, create an internal destination label that, if
+        // the user selects the option, control flow jumps to. Then,
+        // evaluate its associated line_statement, and use that as the
+        // option text. Finally, add this option to the list of upcoming
+        // options.
+        for (option_count, shortcut) in ctx.shortcut_option_all().into_iter().enumerate() {
+            // Generate the name of internal label that we'll jump to if
+            // this option is selected. We'll emit the label itself later.
+            // ## Implementation note
+            // The original uses no null propagation and checks for a null where none can be,
+            // so this implementation places the `map` where we think it was intended to be.
+            let name = self
+                .compiler_listener
+                .current_node
+                .as_ref()
+                .map(|node| node.name.clone())
+                .unwrap_or_else(|| "node".to_string());
+            let option_destination_label = self
+                .compiler_listener
+                .register_label(format!("shortcutoption_{name}_{}", option_count + 1).as_str());
+            labels.push(option_destination_label.clone());
+
+            // This line statement may have a condition on it. If it does,
+            // emit code that evaluates the condition, and add a flag on the
+            // 'Add Option' instruction that indicates that a condition exists.
+            let has_line_condition = if let Some(expression) = shortcut
+                .line_statement()
+                .and_then(|ctx| ctx.line_condition())
+                .and_then(|ctx| ctx.expression())
+            {
+                // Evaluate the condition, and leave it on the stack
+                self.visit(expression.as_ref());
+                true
+            } else {
+                false
+            };
+
+            // We can now prepare and add the option.
+
+            // Start by figuring out the text that we want to add. This will
+            // involve evaluating any inline expressions.
+            let line_statement = shortcut.line_statement().unwrap();
+            let expression_count = self.generate_code_for_expressions_in_formatted_text(
+                line_statement.line_formatted_text().unwrap().get_children(),
+            );
+
+            // Get the line ID from the hashtags if it has one
+            let line_id_tag = compiler::get_line_id_tag(&line_statement.hashtag_all())
+                .expect("Internal error: no line ID provided. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new");
+            let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
+
+            // And add this option to the list.
+            self.compiler_listener.emit(
+                Emit::from_op_code(OpCode::AddOption)
+                    .with_source_from_token(line_statement.start().deref())
+                    .with_operand(line_id)
+                    .with_operand(option_destination_label)
+                    .with_operand(expression_count)
+                    .with_operand(has_line_condition),
+            );
+        }
+        // All of the options that we intend to show are now ready to go.
+        let token = ctx.stop();
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::ShowOptions).with_source_from_token(token.deref()));
+
+        // The top of the stack now contains the name of the label we want
+        // to jump to. Jump to it now.
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::Jump).with_source_from_token(token.deref()));
+
+        // We'll now emit the labels and code associated with each option.
+        for (option_count, shortcut) in ctx.shortcut_option_all().into_iter().enumerate() {
+            // Emit the label for this option's code
+            let current_node = self.compiler_listener.current_node.as_mut().unwrap();
+            current_node.labels.insert(
+                labels[option_count].clone(),
+                current_node.instructions.len() as i32,
+            );
+
+            // Run through all the children statements of the shortcut option
+            for child in shortcut.statement_all() {
+                self.visit(child.as_ref());
+            }
+
+            // Jump to the end of this shortcut option group.
+            self.compiler_listener.emit(
+                Emit::from_op_code(OpCode::JumpTo)
+                    .with_source_from_token(shortcut.stop().deref())
+                    .with_operand(end_of_group_label.clone()),
+            );
+        }
+
+        // We made it to the end! Mark the end of the group, so we can jump to it
+        let current_node = self.compiler_listener.current_node.as_mut().unwrap();
+        current_node
+            .labels
+            .insert(end_of_group_label, current_node.instructions.len() as i32);
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(token.deref()));
+    }
+
+    /// (expression)
+    fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
+        self.visit(ctx.expression().unwrap().as_ref())
+    }
+
+    /// -expression
+    fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![ctx.expression().unwrap() as Rc<ActualParserContext<'input>>];
+        self.generate_code_for_operation(
+            Operator::UnarySubtract,
+            operator_token.deref(),
+            &r#type,
+            &expressions,
+        )
+    }
+
+    /// [sic] (not NOT !)expression
+    fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![ctx.expression().unwrap() as Rc<ActualParserContext<'input>>];
+        self.generate_code_for_operation(
+            Operator::Not,
+            operator_token.deref(),
+            &r#type,
+            &expressions,
+        )
+    }
+
+    /// Variable
+    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
+        self.visit(ctx.value().unwrap().as_ref())
+    }
+
+    /// * / %
+    fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// + -
+    fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// < <= > >=
+    fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// == !=
+    fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// and && or || xor ^
+    fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
 }
 
 impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
