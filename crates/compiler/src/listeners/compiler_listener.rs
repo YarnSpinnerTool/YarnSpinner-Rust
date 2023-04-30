@@ -32,7 +32,7 @@ pub(crate) struct CompilerListener<'input> {
     current_debug_info: DebugInfo,
     /// Whether we are currently parsing the
     /// current node as a 'raw text' node, or as a fully syntactic node.
-    raw_text_node: bool,
+    is_current_node_raw_text: bool,
     file: FileParseResult<'input>,
     label_count: usize,
 }
@@ -44,7 +44,7 @@ impl<'input> CompilerListener<'input> {
             tracking_nodes: Rc::new(RefCell::new(tracking_nodes)),
             current_node: Default::default(),
             current_debug_info: Default::default(),
-            raw_text_node: Default::default(),
+            is_current_node_raw_text: Default::default(),
             diagnostics: Default::default(),
             program: Default::default(),
             label_count: Default::default(),
@@ -72,7 +72,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         // hold it and otherwise continue
         self.current_node = Some(Node::default());
         self.current_debug_info = Default::default();
-        self.raw_text_node = false;
+        self.is_current_node_raw_text = false;
     }
 
     fn exit_node(&mut self, ctx: &NodeContext<'input>) {
@@ -102,7 +102,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
                 .push(self.current_debug_info.clone());
         }
         self.current_node = None;
-        self.raw_text_node = false;
+        self.is_current_node_raw_text = false;
     }
 
     fn exit_header(&mut self, ctx: &HeaderContext<'input>) {
@@ -134,7 +134,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
                 current_node.tags.extend(tags);
                 if current_node.tags.contains(&"rawText".to_owned()) {
                     // This is a raw text node. Flag it as such for future compilation.
-                    self.raw_text_node = true;
+                    self.is_current_node_raw_text = true;
                 }
             }
             _ => {}
@@ -152,7 +152,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         // or should do I do in inside the codegenvisitor?
 
         // if it is a regular node
-        if !self.raw_text_node {
+        if !self.is_current_node_raw_text {
             // This is the start of a node that we can jump to. Add a
             // label at this point
             let label = self.register_label(None);
