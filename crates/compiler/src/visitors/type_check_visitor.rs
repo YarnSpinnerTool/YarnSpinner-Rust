@@ -5,7 +5,7 @@ use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
-use crate::visitors::CodeGenerationVisitor;
+use crate::visitors::{CodeGenerationVisitor, KnownTypes};
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
@@ -59,7 +59,7 @@ pub(crate) struct TypeCheckVisitor<'input> {
     ///
     /// Careful, the original class has an unrelated member called `types`,
     /// but in this implementation, we replaced that member by [`Type::EXPLICITLY_CONSTRUCTABLE`].
-    types: HashMap<HashableInterval, Type>,
+    types: KnownTypes,
 
     /// A type hint for the expression.
     /// This is mostly used by [`TypeCheckVisitor`]
@@ -71,7 +71,7 @@ pub(crate) struct TypeCheckVisitor<'input> {
     ///
     /// In the original implementation, this was implemented
     /// on the [`ValueContext`] directly using a `partial`
-    hints: HashMap<HashableInterval, Type>,
+    hints: KnownTypes,
 
     file: FileParseResult<'input>,
     _dummy: Option<Type>,
@@ -104,41 +104,6 @@ impl<'input> TypeCheckVisitor<'input> {
             .chain(self.new_declarations.iter().cloned())
             .collect()
     }
-
-    fn get_hint(&self, ctx: &impl ParserRuleContext<'input>) -> Option<&Type> {
-        let hashable_interval = ctx.get_hashable_interval();
-        self.hints.get(&hashable_interval)
-    }
-
-    fn set_hint(
-        &mut self,
-        ctx: &impl ParserRuleContext<'input>,
-        hint: impl Into<Option<Type>>,
-    ) -> Option<Type> {
-        let hint = hint.into()?;
-        let hashable_interval = ctx.get_hashable_interval();
-        self.hints.insert(hashable_interval, hint)
-    }
-
-    fn get_type(&self, ctx: &impl ParserRuleContext<'input>) -> Option<&Type> {
-        let hashable_interval = ctx.get_hashable_interval();
-        self.types.get(&hashable_interval)
-    }
-
-    fn get_type_mut(&mut self, ctx: &impl ParserRuleContext<'input>) -> Option<&mut Type> {
-        let hashable_interval = ctx.get_hashable_interval();
-        self.types.get_mut(&hashable_interval)
-    }
-
-    fn set_type(
-        &mut self,
-        ctx: &impl ParserRuleContext<'input>,
-        r#type: impl Into<Option<Type>>,
-    ) -> Option<Type> {
-        let r#type = r#type.into()?;
-        let hashable_interval = ctx.get_hashable_interval();
-        self.types.insert(hashable_interval, r#type)
-    }
 }
 
 impl<'input> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'input> {
@@ -169,7 +134,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
         // Parens expressions have the type of their inner expression
         let r#type = self.visit(&*ctx.expression().unwrap());
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -187,7 +152,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             op.get_text(),
             vec![Type::Number],
         );
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -196,7 +161,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type);
+        self.types.insert(ctx, r#type);
         // Comparisons always return bool
         Some(Type::Boolean)
     }
@@ -206,7 +171,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -217,7 +182,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             CodeGenerationVisitor::token_to_operator(operator_context.token_type).unwrap();
         let description = operator_context.get_text();
         let r#type = self.check_operation(ctx, expressions, operator, description, vec![]);
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -226,7 +191,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -244,18 +209,18 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             op.get_text(),
             vec![Type::Boolean],
         );
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
     fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
         // passing the hint from the expression down into the values within
-        let hint = self.get_hint(ctx).cloned();
+        let hint = self.hints.get(ctx).cloned();
         let value = ctx.value().unwrap();
-        self.set_hint(&*value, hint);
+        self.hints.insert(&*value, hint);
         // Value expressions have the type of their inner value
         let r#type = self.visit(&*value);
-        self.set_type(ctx, r#type.clone());
+        self.types.insert(ctx, r#type.clone());
         r#type
     }
 
@@ -266,7 +231,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         // == and != support any defined type, as long as terms are the
         // same type
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
-        self.set_type(ctx, r#type);
+        self.types.insert(ctx, r#type);
         // Equality always returns bool
         Some(Type::Boolean)
     }
@@ -313,7 +278,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .declarations()
             .into_iter()
             .find(|decl| decl.name == function_name);
-        let hint = self.get_hint(ctx).cloned();
+        let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
                  unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
@@ -495,7 +460,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         if let Some(variable_type) = variable_type.as_ref() {
             // giving the expression a hint just in case it is needed to help resolve any ambiguity on the expression
             // currently this is only useful in situations where we have a function as the rvalue of a known lvalue
-            self.set_hint(&*expression_context, variable_type.clone());
+            self.hints
+                .insert(&*expression_context, variable_type.clone());
         }
         let mut expression_type = self.visit(&*expression_context);
         let variable_name = variable_context.get_text();
@@ -641,15 +607,6 @@ fn get_filename(path: &str) -> &str {
     path
 }
 
-trait GetHashableInterval<'input>: ParserRuleContext<'input> {
-    fn get_hashable_interval(&self) -> HashableInterval {
-        let interval = self.get_source_interval();
-        HashableInterval(interval)
-    }
-}
-
-impl<'input, T: ParserRuleContext<'input>> GetHashableInterval<'input> for T {}
-
 trait DefaultValue {
     fn default_value(&self) -> Option<Convertible>;
 }
@@ -667,48 +624,6 @@ impl DefaultValue for Type {
 impl DefaultValue for Option<Type> {
     fn default_value(&self) -> Option<Convertible> {
         self.as_ref()?.default_value()
-    }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-struct HashableInterval(Interval);
-
-impl From<Interval> for HashableInterval {
-    fn from(interval: Interval) -> Self {
-        Self(interval)
-    }
-}
-
-impl Ord for HashableInterval {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.a.cmp(&other.0.a).then(self.0.b.cmp(&other.0.b))
-    }
-}
-
-impl PartialOrd for HashableInterval {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Hash for HashableInterval {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.a.hash(state);
-        self.0.b.hash(state);
-    }
-}
-
-impl Deref for HashableInterval {
-    type Target = Interval;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for HashableInterval {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
     }
 }
 

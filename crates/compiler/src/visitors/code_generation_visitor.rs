@@ -1,17 +1,31 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CodeGenerationVisitor.cs>
 
+use crate::compiler;
 use crate::listeners::{CompilerListener, Emit};
+use crate::parser::generated::yarnspinnerparser::{
+    Line_statementContext, Set_statementContext, YarnSpinnerParserContext,
+};
 use crate::prelude::generated::yarnspinnerlexer;
-use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
+use crate::prelude::generated::yarnspinnerparser::{
+    Line_statementContextAttrs, Set_statementContextAttrs, YarnSpinnerParserContextType,
+};
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use crate::prelude::ActualParserContext;
+use crate::visitors::{HashableInterval, KnownTypes};
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 use rusty_yarn_spinner_core::prelude::Operator;
+use rusty_yarn_spinner_core::types::Type;
+use std::collections::HashMap;
+use std::rc::Rc;
 
-#[allow(dead_code)] // Todo: #32
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
     compiler_listener: &'a mut CompilerListener<'input>,
     tracking_enabled: Option<String>,
+    types: KnownTypes,
+
     _dummy: (),
 }
 
@@ -19,11 +33,13 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
     pub(crate) fn new(
         compiler_listener: &'a mut CompilerListener<'input>,
         tracking_enabled: impl Into<Option<String>>,
+        types: KnownTypes,
     ) -> Self {
         Self {
             compiler_listener,
             tracking_enabled: tracking_enabled.into(),
             _dummy: Default::default(),
+            types,
         }
     }
     pub(crate) fn token_to_operator(token: isize) -> Option<Operator> {
@@ -79,4 +95,112 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for CodeGenerationVisitor<'a
     }
 }
 
-impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {}
+impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {
+    fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
+        // Evaluate the inline expressions and push the results onto the
+        // stack.
+        let formatted_text = ctx.line_formatted_text().unwrap();
+        let expression_count =
+            self.generate_code_for_expressions_in_formatted_text(formatted_text.get_children());
+        let line_id_tag = compiler::get_line_id_tag(&ctx.hashtag_all())
+            .expect("Internal error: line should have an implicit or explicit line ID tag, but none was found. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new");
+        let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::RunLine)
+                .with_source_from_token(&*ctx.start())
+                .with_operand(line_id)
+                .with_operand(expression_count),
+        );
+    }
+
+    fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
+        // Ensure that the correct result is on the stack by evaluating the
+        // expression. If this assignment includes an operation (e.g. +=),
+        // do that work here too.
+        let operator_token = *ctx.op.unwrap();
+        let expression = ctx.expression().unwrap();
+        let variable = ctx.variable().unwrap();
+        let generate_code_for_operation = |op: Operator| {
+            let r#type = self.types.get(expression.as_ref()).unwrap().clone();
+            self.generate_code_for_operation(
+                op,
+                operator_token,
+                r#type,
+                &[variable.clone(), expression],
+            )
+        };
+        match operator_token.get_token_type() {
+            yarnspinnerlexer::OPERATOR_ASSIGNMENT => {
+                self.visit(expression.as_ref());
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_ADDITION_EQUALS => {
+                generate_code_for_operation(Operator::Add);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION_EQUALS => {
+                generate_code_for_operation(Operator::Subtract);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION_EQUALS => {
+                generate_code_for_operation(Operator::Multiply);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_DIVISION_EQUALS => {
+                generate_code_for_operation(Operator::Divide);
+            }
+            yarnspinnerlexer::OPERATOR_MATHS_MODULUS_EQUALS => {
+                generate_code_for_operation(Operator::Modulo);
+            }
+            _ => {
+                // ## Implementation note
+                // Apparently, we don't do anything here. Maybe a panic would be better?
+            }
+        }
+
+        // now store the variable and clean up the stack
+        let variable_name = variable.get_text().to_owned();
+        let token = variable.start();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::StoreVariable)
+                .with_source_from_token(&*token)
+                .with_operand(variable_name),
+        );
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(&*token));
+    }
+}
+
+impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
+    fn generate_code_for_expressions_in_formatted_text(
+        &mut self,
+        nodes: impl Iterator<Item = Rc<ActualParserContext<'input>>>,
+    ) -> usize {
+        // First, visit all of the nodes, which are either terminal text
+        // nodes or expressions. if they're expressions, we evaluate them,
+        // and inject a positional reference into the final string.
+
+        // If there are zero subnodes: terminal node.
+        // nothing to do; string assembly will have been done by the
+        // StringTableGeneratorVisitor
+        // Otherwise: assume that this is an expression (the parser only
+        // permits them to be expressions, but we can't specify that here)
+        // -> visit it, and we will emit code that pushes the
+        // final value of this expression onto the stack. running
+        // the line will pop these expressions off the stack.
+        nodes
+            .filter_map(|child| (child.get_child_count() > 0).then(|| self.visit(child.as_ref())))
+            .count()
+    }
+
+    /// Emits code that calls a method appropriate for the operator
+    fn generate_code_for_operation(
+        &mut self,
+        op: Operator,
+        operator_token: impl Token,
+        r#type: Type,
+        operands: &[Rc<ActualParserContext<'input>>],
+    ) {
+        // Generate code for each of the operands, so that their value is
+        // now on the stack.
+        for operand in operands {
+            self.visit(operand.as_ref());
+        }
+    }
+}

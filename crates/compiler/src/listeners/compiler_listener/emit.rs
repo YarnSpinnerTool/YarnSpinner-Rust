@@ -55,3 +55,9 @@ impl Emit {
         self
     }
 }
+
+impl From<OpCode> for Emit {
+    fn from(op_code: OpCode) -> Self {
+        Self::from_op_code(op_code)
+    }
+}

@@ -18,6 +18,12 @@ impl From<f32> for Operand {
     }
 }
 
+impl From<usize> for Operand {
+    fn from(f: usize) -> Self {
+        Self::from(f as f32)
+    }
+}
+
 impl From<bool> for Operand {
     fn from(b: bool) -> Self {
         Self {
