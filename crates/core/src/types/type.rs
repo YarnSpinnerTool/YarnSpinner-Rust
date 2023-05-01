@@ -81,6 +81,11 @@ impl Type {
         self.properties().methods.contains_key(name)
     }
 
+    /// Does not check whether the method exists. Use [`has_method`] for that.
+    pub fn get_canonical_name_for_method(&self, method_name: &str) -> String {
+        format!("{}.{}", self.properties().name, method_name)
+    }
+
     pub const EXPLICITLY_CONSTRUCTABLE: &'static [Type] = &[
         Type::Any,
         Type::Number,
@@ -99,7 +104,7 @@ impl Type {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeProperties {
     /// The name of this type.
-    pub(crate) name: &'static str,
+    pub name: &'static str,
 
     /// A more verbose description of this type.
     pub description: String,

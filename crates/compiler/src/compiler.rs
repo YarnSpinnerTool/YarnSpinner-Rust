@@ -1,16 +1,17 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
 pub(crate) use self::{antlr_rust_ext::*, utils::*};
-use crate::error_listener::Diagnostic;
+use crate::listeners::*;
 use crate::output::*;
+use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::FileParseResult;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 pub use compilation_job::*;
-use rusty_yarn_spinner_core::prelude::{operand, Library, Operand};
+use rusty_yarn_spinner_core::prelude::{Library, Operand};
 use rusty_yarn_spinner_core::types::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 mod antlr_rust_ext;
 mod compilation_job;
@@ -25,6 +26,7 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
         &check_types,
         &find_tracking_nodes,
         &add_tracking_declarations,
+        &generate_code,
         &add_initial_value_registrations,
     ];
 
@@ -33,6 +35,7 @@ pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
         .into_iter()
         .fold(initial, |state, step| step(state))
         .result
+        .unwrap()
 }
 
 type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
@@ -40,11 +43,8 @@ type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediat
 fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // Find the variable declarations in these files.
     for file in &state.parsed_files {
-        let mut variable_declaration_visitor = DeclarationVisitor::new(
-            file.name.clone(),
-            state.known_variable_declarations.clone(),
-            file.tokens(),
-        );
+        let mut variable_declaration_visitor =
+            DeclarationVisitor::new(state.known_variable_declarations.clone(), file.clone());
 
         variable_declaration_visitor.visit(&*file.tree);
 
@@ -55,11 +55,10 @@ fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermedia
             .derived_variable_declarations
             .extend(variable_declaration_visitor.new_declarations);
 
-        let result = &mut state.result;
-        result
+        state
             .diagnostics
             .extend_from_slice(&variable_declaration_visitor.diagnostics);
-        result
+        state
             .file_tags
             .insert(file.name.clone(), variable_declaration_visitor.file_tags);
     }
@@ -69,9 +68,8 @@ fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermedia
 fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
-    let mut string_table_manager: StringTableManager = state.result.string_table.into();
     for file in &state.job.files {
-        let parse_result = parse_syntax_tree(file, &mut state.result.diagnostics);
+        let parse_result = parse_syntax_tree(file, &mut state.diagnostics);
 
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
@@ -79,17 +77,14 @@ fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermedia
         let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
         last_line_tagger.visit(&*parse_result.tree);
 
-        let mut visitor = StringTableGeneratorVisitor::new(
-            file.file_name.clone(),
-            string_table_manager.clone(),
-            parse_result.tokens(),
-        );
+        let mut visitor =
+            StringTableGeneratorVisitor::new(state.string_table.clone(), parse_result.clone());
         visitor.visit(&*parse_result.tree);
-        state.result.diagnostics.extend(visitor.diagnostics);
-        string_table_manager.extend(visitor.string_table_manager);
+        state.diagnostics.extend(visitor.diagnostics);
+        state.string_table.extend(visitor.string_table_manager);
         state.parsed_files.push(parse_result);
     }
-    state.result.string_table = string_table_manager.into();
+
     state
 }
 
@@ -111,11 +106,8 @@ fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationInterme
 
 fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
     for file in &state.parsed_files {
-        let mut visitor = TypeCheckVisitor::new(
-            file.name.clone(),
-            state.known_variable_declarations.clone(),
-            file.tokens(),
-        );
+        let mut visitor =
+            TypeCheckVisitor::new(state.known_variable_declarations.clone(), file.clone());
         visitor.visit(&*file.tree);
         state
             .known_variable_declarations
@@ -123,8 +115,9 @@ fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
         state
             .derived_variable_declarations
             .extend(visitor.new_declarations);
-        state.result.diagnostics.extend(visitor.diagnostics);
+        state.diagnostics.extend(visitor.diagnostics);
         state.potential_issues.extend(visitor.deferred_types);
+        state.known_types.extend(visitor.known_types);
     }
     state
 }
@@ -156,6 +149,90 @@ fn add_tracking_declarations(mut state: CompilationIntermediate) -> CompilationI
     state
 }
 
+fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    let has_errors = state
+        .diagnostics
+        .iter()
+        .any(|d| d.severity == DiagnosticSeverity::Error);
+    let results: Vec<_> = if has_errors {
+        // We have errors, so we can't safely generate code.
+        vec![]
+    } else {
+        // No errors! Go ahead and generate the code for all parsed files.
+        let template = CompilationResult {
+            string_table: state.string_table.0.clone(),
+            contains_implicit_string_tags: state.string_table.contains_implicit_string_tags(),
+            ..Default::default()
+        };
+        state
+            .parsed_files
+            .iter()
+            .map(|file| {
+                generate_code_for_file(
+                    &mut state.tracking_nodes,
+                    state.known_types.clone(),
+                    template.clone(),
+                    file,
+                )
+            })
+            .collect()
+    };
+    state.result = Some(CompilationResult::combine(
+        results,
+        state.string_table.clone(),
+    ));
+    state
+}
+
+fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
+    tracking_nodes: &mut HashSet<String>,
+    known_types: KnownTypes,
+    result_template: CompilationResult,
+    file: &'a FileParseResult<'input>,
+) -> CompilationResult {
+    let compiler_listener = Box::new(CompilerListener::new(
+        tracking_nodes.clone(),
+        known_types,
+        file.clone(),
+    ));
+    let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
+    let compiler_diagnostics = compiler_listener.diagnostics.clone();
+    let compiler_program = compiler_listener.program.clone();
+    let compiler_debug_infos = compiler_listener.debug_infos.clone();
+
+    YarnSpinnerParserTreeWalker::walk(compiler_listener, &*file.tree);
+
+    tracking_nodes.extend(compiler_tracking_nodes.borrow().iter().cloned());
+
+    // Don't attempt to generate debug information if compilation produced errors
+    if compiler_diagnostics
+        .borrow()
+        .iter()
+        .any(|d| d.severity == DiagnosticSeverity::Error)
+    {
+        CompilationResult {
+            // ## Implementation notes
+            // In the original, this could still contain a `Program` even though the docs say otherwise
+            program: None,
+            diagnostics: compiler_diagnostics.borrow().clone(),
+            ..result_template
+        }
+    } else {
+        let debug_infos: HashMap<_, _> = compiler_debug_infos
+            .borrow()
+            .iter()
+            .map(|debug_info| (debug_info.node_name.clone(), debug_info.clone()))
+            .collect();
+
+        CompilationResult {
+            program: Some(compiler_program.borrow().clone()),
+            diagnostics: compiler_diagnostics.borrow().clone(),
+            debug_info: debug_infos,
+            ..result_template
+        }
+    }
+}
+
 fn add_initial_value_registrations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // Last step: take every variable declaration we found in all
     // of the inputs, and create an initial value registration for
@@ -165,50 +242,46 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
         .iter()
         .filter(|decl| !matches!(decl.r#type, Some(Type::Function(_))))
         .filter(|decl| decl.r#type.is_some());
+    let result = state.result.as_mut().unwrap();
+
     for declaration in declarations {
         let Some(default_value) = declaration.default_value.clone() else {
-             state.result.diagnostics.push(
+             result.diagnostics.push(
                  Diagnostic::from_message(
                      format!("Variable declaration {} (type {}) has a null default value. This is not allowed.", declaration.name, declaration.r#type.format())));
              continue;
          };
-        if let Some(ref mut program) = state.result.program {
+        if let Some(ref mut program) = result.program {
             let value = match declaration.r#type.as_ref().unwrap() {
-                Type::String => Operand {
-                    value: Some(operand::Value::StringValue(
-                        default_value.try_into().unwrap(),
-                    )),
-                },
-                Type::Number => Operand {
-                    value: Some(operand::Value::FloatValue(
-                        default_value.try_into().unwrap(),
-                    )),
-                },
-                Type::Boolean => Operand {
-                    value: Some(operand::Value::BoolValue(default_value.try_into().unwrap())),
-                },
-                _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new ", declaration.r#type.format()),
+                Type::String => Operand::from(String::try_from(default_value).unwrap()),
+                Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
+                Type::Boolean => Operand::from(bool::try_from(default_value).unwrap()),
+                _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new", declaration.r#type.format()),
             };
             program
                 .initial_values
                 .insert(declaration.name.clone(), value);
         }
     }
-    state.result.declarations = state.derived_variable_declarations.clone();
+    result.declarations = state.derived_variable_declarations.clone();
     let unique_diagnostics: HashSet<Diagnostic> =
-        HashSet::from_iter(state.result.diagnostics.clone().into_iter());
-    state.result.diagnostics = unique_diagnostics.into_iter().collect();
+        HashSet::from_iter(state.diagnostics.clone().into_iter());
+    result.diagnostics = unique_diagnostics.into_iter().collect();
     state
 }
 
 struct CompilationIntermediate<'input> {
-    pub(crate) job: &'input CompilationJob,
-    pub(crate) result: CompilationResult,
-    pub(crate) known_variable_declarations: Vec<Declaration>,
-    pub(crate) derived_variable_declarations: Vec<Declaration>,
-    pub(crate) potential_issues: Vec<DeferredTypeDiagnostic>,
-    pub(crate) parsed_files: Vec<FileParseResult<'input>>,
-    pub(crate) tracking_nodes: HashSet<String>,
+    job: &'input CompilationJob,
+    result: Option<CompilationResult>,
+    known_variable_declarations: Vec<Declaration>,
+    derived_variable_declarations: Vec<Declaration>,
+    potential_issues: Vec<DeferredTypeDiagnostic>,
+    parsed_files: Vec<FileParseResult<'input>>,
+    tracking_nodes: HashSet<String>,
+    string_table: StringTableManager,
+    diagnostics: Vec<Diagnostic>,
+    file_tags: HashMap<String, Vec<String>>,
+    known_types: KnownTypes,
 }
 
 impl<'input> CompilationIntermediate<'input> {
@@ -221,6 +294,10 @@ impl<'input> CompilationIntermediate<'input> {
             potential_issues: Default::default(),
             parsed_files: Default::default(),
             tracking_nodes: Default::default(),
+            string_table: Default::default(),
+            diagnostics: Default::default(),
+            file_tags: Default::default(),
+            known_types: Default::default(),
         }
     }
 }

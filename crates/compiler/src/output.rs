@@ -1,7 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationResult.cs>
 
-use crate::error_listener::Diagnostic;
+use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
+use crate::prelude::StringTableManager;
 use rusty_yarn_spinner_core::prelude::Program;
 use std::collections::HashMap;
 
@@ -75,4 +76,37 @@ pub struct CompilationResult {
     /// The collection of [`DebugInfo`] objects for each node
     /// in [`Program`].
     pub debug_info: HashMap<String, DebugInfo>,
+}
+
+impl CompilationResult {
+    /// Combines multiple [`CompilationResult`] objects together into one object.
+    pub(crate) fn combine(
+        results: Vec<CompilationResult>,
+        string_table_manager: StringTableManager,
+    ) -> Self {
+        let mut programs = Vec::new();
+        let mut declarations = Vec::new();
+        let mut tags = HashMap::new();
+        let mut diagnostics = Vec::new();
+        let mut node_debug_infos = HashMap::new();
+
+        for result in results {
+            programs.push(result.program.unwrap());
+            declarations.extend(result.declarations);
+            tags.extend(result.file_tags);
+            diagnostics.extend(result.diagnostics);
+            node_debug_infos.extend(result.debug_info);
+        }
+        let combined_program = Program::combine(programs);
+        let contains_implicit_string_tags = string_table_manager.contains_implicit_string_tags();
+        CompilationResult {
+            program: combined_program,
+            string_table: string_table_manager.0,
+            declarations,
+            debug_info: node_debug_infos,
+            contains_implicit_string_tags,
+            file_tags: tags,
+            diagnostics,
+        }
+    }
 }

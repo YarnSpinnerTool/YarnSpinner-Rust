@@ -14,7 +14,7 @@ use rusty_yarn_spinner_core::types::*;
 /// After visiting an entire parse tree for a file, the
 /// [`NewDeclarations`] property will contain all explicit
 /// variable declarations that were found.
-pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
+pub(crate) struct DeclarationVisitor<'input> {
     /// Gets the collection of new variable declarations that were
     /// found as a result of using this
     /// [`DeclarationVisitor`] to visit a
@@ -29,7 +29,7 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
 
     /// The CommonTokenStream derived from the file we're parsing. This
     /// is used to find documentation comments for declarations.
-    tokens: &'a ActualTokenStream<'input>,
+    file: FileParseResult<'input>,
 
     /// The collection of variable declarations we know about before starting our work
     existing_declarations: Vec<Declaration>,
@@ -37,26 +37,21 @@ pub(crate) struct DeclarationVisitor<'a, 'input: 'a> {
     /// The name of the node that we're currently visiting.
     current_node_name: Option<String>,
 
-    /// The name of the file we're currently in.
-    source_file_name: String,
-
     /// A regular expression used to detect illegal characters in node titles.
     regex: Regex,
 
     _dummy: (),
 }
 
-impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
+impl<'input> DeclarationVisitor<'input> {
     pub(crate) fn new(
-        source_file_name: impl Into<String>,
         existing_declarations: Vec<Declaration>,
-        tokens: &'a ActualTokenStream<'input>,
+        file: FileParseResult<'input>,
     ) -> Self {
         Self {
-            tokens,
+            file,
             existing_declarations,
             new_declarations: Default::default(),
-            source_file_name: source_file_name.into(),
             regex: Regex::new(r"[\[<>\]{}|:\s#$]").unwrap(),
             file_tags: Default::default(),
             diagnostics: Default::default(),
@@ -76,7 +71,7 @@ impl<'a, 'input: 'a> DeclarationVisitor<'a, 'input> {
     }
 }
 
-impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for DeclarationVisitor<'a, 'input> {
+impl<'input> ParseTreeVisitorCompat<'input> for DeclarationVisitor<'input> {
     type Node = YarnSpinnerParserContextType;
     type Return = ();
 
@@ -85,7 +80,7 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for DeclarationVisitor<'a, '
     }
 }
 
-impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'a, 'input> {
+impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'input> {
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         for header in ctx.header_all() {
             let header_key = header.header_key.as_ref().unwrap();
@@ -101,8 +96,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                     format!("The node '{current_node_name}' contains illegal characters.");
                 self.diagnostics.push(
                     Diagnostic::from_message(message)
-                        .with_file_name(self.source_file_name.clone())
-                        .read_parser_rule_context(&*header, self.tokens),
+                        .with_file_name(self.file.name.clone())
+                        .read_parser_rule_context(&*header, self.file.tokens()),
                 );
             }
         }
@@ -138,18 +133,15 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
             );
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
-                    .with_file_name(&self.source_file_name)
-                    .read_parser_rule_context(ctx, self.tokens),
+                    .with_file_name(&self.file.name)
+                    .read_parser_rule_context(ctx, self.file.tokens()),
             );
             return;
         }
 
         // Figure out the value and its type
-        let mut constant_value_visitor = ConstantValueVisitor::new(
-            self.source_file_name.clone(),
-            self.diagnostics.clone(),
-            self.tokens,
-        );
+        let mut constant_value_visitor =
+            ConstantValueVisitor::new(self.diagnostics.clone(), self.file.clone());
         let value_context = ctx.value().unwrap();
         let value = constant_value_visitor.visit(&*value_context);
         self.diagnostics
@@ -172,8 +164,8 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                         let msg = format!("Unknown type {}", declaration_type.get_text());
                         self.diagnostics.push(
                             Diagnostic::from_message(msg)
-                                .with_file_name(&self.source_file_name)
-                                .read_parser_rule_context(ctx, self.tokens),
+                                .with_file_name(&self.file.name)
+                                .read_parser_rule_context(ctx, self.file.tokens()),
                         );
                         return;
                     }
@@ -192,25 +184,25 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisit
                 );
                 self.diagnostics.push(
                     Diagnostic::from_message(msg)
-                        .with_file_name(&self.source_file_name)
-                        .read_parser_rule_context(ctx, self.tokens),
+                        .with_file_name(&self.file.name)
+                        .read_parser_rule_context(ctx, self.file.tokens()),
                 );
                 return;
             }
         }
         // We're done creating the declaration!
-        let description = compiler::get_document_comments(self.tokens, ctx);
+        let description = compiler::get_document_comments(self.file.tokens(), ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
         let declaration = Declaration::default()
             .with_default_value(value.internal_value.clone().unwrap())
             .with_type(value.r#type.clone())
             .with_name(variable_name)
             .with_description_optional(description_as_option)
-            .with_source_file_name(self.source_file_name.clone())
+            .with_source_file_name(self.file.name.clone())
             .with_source_node_name_optional(self.current_node_name.clone())
             // All positions are +1 compared to original implementation, but the result is the same.
             // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            .with_range(variable_context.range(self.tokens));
+            .with_range(variable_context.range(self.file.tokens()));
         self.new_declarations.push(declaration);
     }
 }
