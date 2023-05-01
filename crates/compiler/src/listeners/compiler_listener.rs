@@ -168,7 +168,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
 
             let mut visitor = CodeGenerationVisitor::new(self, track);
             for statement in ctx.statement_all() {
-                visitor.visit(&*statement);
+                visitor.visit(statement.as_ref());
             }
         } else {
             // We are a rawText node. Don't compile it; instead, note the string

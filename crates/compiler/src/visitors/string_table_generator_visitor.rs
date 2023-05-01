@@ -85,7 +85,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             // This is a regular node
             // String table generator: don't crash if a node has no body
             if let Some(body) = ctx.body() {
-                self.visit(&*body);
+                self.visit(body.as_ref());
             }
         }
     }
@@ -103,7 +103,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                 let line_id = line_id.get_text();
                 self.diagnostics.push(
                     Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .read_parser_rule_context(&*diagnostic_context, self.file.tokens())
+                        .read_parser_rule_context(diagnostic_context.as_ref(), self.file.tokens())
                         .with_file_name(&self.file.name),
                 );
                 return;

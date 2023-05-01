@@ -25,17 +25,17 @@ impl<'input> TypeCheckVisitor<'input> {
     pub(super) fn check_operation(
         &mut self,
         context: &impl ParserRuleContext<'input>,
-        terms: Vec<Term<'input>>,
+        terms: &[Term<'input>],
         operation_type: impl Into<Option<Operator>>,
         operation_description: &str,
-        permitted_types: Vec<Type>,
+        permitted_types: &[Type],
     ) -> Option<Type> {
         let operation_type = operation_type.into();
         let mut term_types = Vec::new();
         let mut expression_type = None;
-        for expression in &terms {
+        for expression in terms {
             // Visit this expression, and determine its type.
-            let r#type = self.visit(&**expression);
+            let r#type = self.visit(expression.deref());
             if let Some(r#type) = r#type.clone() {
                 if expression_type.is_none() {
                     // This is the first concrete type we've seen. This
@@ -116,7 +116,7 @@ impl<'input> TypeCheckVisitor<'input> {
         // or the implicit type of any function.
         // annoyingly the function will already have an implicit definition created for it
         // we will have to strip that out and add in a new one with the new return type
-        for term in &terms {
+        for term in terms {
             let Term::Expression(expression) = term else { continue; };
             let ExpressionContextAll::ExpValueContext(value_context) = expression.as_ref() else { continue; };
             let Some(value) = value_context.value() else { continue; };
@@ -146,7 +146,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 }
                 func.return_type = Box::new(expression_type.clone());
             } else {
-                self.visit(&**term);
+                self.visit(term.deref());
             }
         }
         // Were any of the terms variables for which we don't currently
@@ -246,7 +246,7 @@ impl<'input> TypeCheckVisitor<'input> {
                     format_cannot_determine_variable_type_error(&var_name),
                 )
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(&*undefined_variable_context, self.file.tokens());
+                .read_parser_rule_context(undefined_variable_context.as_ref(), self.file.tokens());
                 self.diagnostics.push(diagnostic);
                 continue;
             }
@@ -280,12 +280,12 @@ impl<'input> TypeCheckVisitor<'input> {
         // type, we'll define it now.
         for term in terms {
             if let Term::Expression(expression) = term {
-                if self.known_types.get(&*expression).is_none() {
+                if self.known_types.get(expression.as_ref()).is_none() {
                     self.known_types
-                        .insert(&*expression, expression_type.clone());
+                        .insert(expression.as_ref(), expression_type.clone());
                 }
                 // Guaranteed to be Some
-                let expression = self.known_types.get_mut(&*expression).unwrap();
+                let expression = self.known_types.get_mut(expression.as_ref()).unwrap();
                 if let Type::Function(ref mut function_type) = expression {
                     function_type.set_return_type(expression_type.clone());
                 }

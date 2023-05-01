@@ -46,7 +46,7 @@ fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermedia
         let mut variable_declaration_visitor =
             DeclarationVisitor::new(state.known_variable_declarations.clone(), file.clone());
 
-        variable_declaration_visitor.visit(&*file.tree);
+        variable_declaration_visitor.visit(file.tree.as_ref());
 
         state
             .known_variable_declarations
@@ -75,11 +75,11 @@ fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermedia
         // we do this BEFORE we build our strings table otherwise the tags will get missed
         // this should probably be a flag instead of every time though
         let mut last_line_tagger = LastLineBeforeOptionsVisitor::default();
-        last_line_tagger.visit(&*parse_result.tree);
+        last_line_tagger.visit(parse_result.tree.as_ref());
 
         let mut visitor =
             StringTableGeneratorVisitor::new(state.string_table.clone(), parse_result.clone());
-        visitor.visit(&*parse_result.tree);
+        visitor.visit(parse_result.tree.as_ref());
         state.diagnostics.extend(visitor.diagnostics);
         state.string_table.extend(visitor.string_table_manager);
         state.parsed_files.push(parse_result);
@@ -96,7 +96,7 @@ fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationInterme
     let mut ignore_nodes = HashSet::new();
     for file in &state.parsed_files {
         let mut visitor = NodeTrackingVisitor::new();
-        visitor.visit(&*file.tree);
+        visitor.visit(file.tree.as_ref());
         tracking_nodes.extend(visitor.tracking_nodes);
         ignore_nodes.extend(visitor.ignoring_nodes);
     }
@@ -108,7 +108,7 @@ fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
     for file in &state.parsed_files {
         let mut visitor =
             TypeCheckVisitor::new(state.known_variable_declarations.clone(), file.clone());
-        visitor.visit(&*file.tree);
+        visitor.visit(file.tree.as_ref());
         state
             .known_variable_declarations
             .extend(visitor.new_declarations.clone());
@@ -200,7 +200,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     let compiler_program = compiler_listener.program.clone();
     let compiler_debug_infos = compiler_listener.debug_infos.clone();
 
-    YarnSpinnerParserTreeWalker::walk(compiler_listener, &*file.tree);
+    YarnSpinnerParserTreeWalker::walk(compiler_listener, file.tree.as_ref());
 
     tracking_nodes.extend(compiler_tracking_nodes.borrow().iter().cloned());
 

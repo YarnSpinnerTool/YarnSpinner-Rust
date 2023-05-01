@@ -106,7 +106,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::RunLine)
-                .with_source_from_token(&*ctx.start())
+                .with_source_from_token(ctx.start().deref())
                 .with_operand(line_id)
                 .with_operand(expression_count),
         );
@@ -164,11 +164,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let token = variable.start();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::StoreVariable)
-                .with_source_from_token(&*token)
+                .with_source_from_token(token.deref())
                 .with_operand(variable_name),
         );
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(&*token));
+            .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(token.deref()));
     }
 
     fn visit_call_statement(&mut self, ctx: &Call_statementContext<'input>) -> Self::Return {
