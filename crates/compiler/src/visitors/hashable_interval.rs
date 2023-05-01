@@ -1,11 +1,11 @@
 use crate::parser::generated::yarnspinnerparser::YarnSpinnerParserContext;
 use antlr_rust::interval_set::Interval;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use rusty_yarn_spinner_core::types::Type;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
+use yarn_slinger_core::types::Type;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub(crate) struct HashableInterval(Interval);

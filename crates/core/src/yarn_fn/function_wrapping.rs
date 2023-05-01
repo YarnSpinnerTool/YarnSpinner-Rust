@@ -1,7 +1,7 @@
 use crate::prelude::Value;
-use rusty_yarn_spinner_macros::all_tuples;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use yarn_slinger_macros::all_tuples;
 
 pub trait YarnFnWithMarker<Marker> {
     type Out: Into<Value>;

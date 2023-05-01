@@ -7,10 +7,10 @@
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::{ActualTokenStream, Diagnostic};
 use antlr_rust::token::Token;
-use rusty_yarn_spinner_core::prelude::convertible::{Convertible, InvalidCastError};
-use rusty_yarn_spinner_core::types::Type;
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
+use yarn_slinger_core::prelude::convertible::{Convertible, InvalidCastError};
+use yarn_slinger_core::types::Type;
 
 /// Information about a declaration. Stored inside a declaration table,
 /// which is produced from the Compiler.

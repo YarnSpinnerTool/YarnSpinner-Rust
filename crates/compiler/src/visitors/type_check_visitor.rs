@@ -10,9 +10,9 @@ use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
-use rusty_yarn_spinner_core::prelude::convertible::Convertible;
-use rusty_yarn_spinner_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 use std::path::Path;
+use yarn_slinger_core::prelude::convertible::Convertible;
+use yarn_slinger_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
 
 mod check_operation;
 
@@ -266,7 +266,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
-                 unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
+                 unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/Mafii/yarn_slinger/issues/new")
             };
 
             // we have an existing function but its undefined
@@ -532,7 +532,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 let operator = CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
-            _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new", op.get_text())
+            _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/Mafii/yarn_slinger/issues/new", op.get_text())
         }
         if variable_type.is_none() && expression_type.is_none() {
             self.diagnostics.push(
