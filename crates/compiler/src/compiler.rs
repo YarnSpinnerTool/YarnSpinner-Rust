@@ -17,8 +17,10 @@ mod antlr_rust_ext;
 mod compilation_job;
 mod utils;
 
+pub type Result<T> = std::result::Result<T, CompilationError>;
+
 /// Compile Yarn code, as specified by a compilation job.
-pub fn compile(compilation_job: CompilationJob) -> CompilationResult {
+pub fn compile(compilation_job: CompilationJob) -> Result<Compilation> {
     // TODO: other steps
     let compiler_steps: Vec<&CompilationStep> = vec![
         &register_strings,
@@ -159,7 +161,7 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
         vec![]
     } else {
         // No errors! Go ahead and generate the code for all parsed files.
-        let template = CompilationResult {
+        let template = Compilation {
             string_table: state.string_table.0.clone(),
             contains_implicit_string_tags: state.string_table.contains_implicit_string_tags(),
             ..Default::default()
@@ -177,19 +179,36 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
             })
             .collect()
     };
-    state.result = Some(CompilationResult::combine(
-        results,
-        state.string_table.clone(),
-    ));
+    let has_code_generation_errors = results.iter().any(|r| r.is_err());
+    let result = if has_code_generation_errors {
+        let total_diagnostics: Vec<_> = results
+            .iter()
+            .filter_map(|r| r.as_ref().err())
+            .flat_map(|r| r.diagnostics.iter())
+            .cloned()
+            .chain(state.diagnostics.iter().cloned())
+            .collect();
+        Err(CompilationError {
+            diagnostics: total_diagnostics,
+        })
+    } else {
+        let compilations = results.into_iter().map(|r| r.unwrap());
+        Ok(Compilation::combine(
+            compilations,
+            state.string_table.clone(),
+        ))
+    };
+
+    state.result = Some(result);
     state
 }
 
 fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     tracking_nodes: &mut HashSet<String>,
     known_types: KnownTypes,
-    result_template: CompilationResult,
+    result_template: Compilation,
     file: &'a FileParseResult<'input>,
-) -> CompilationResult {
+) -> Result<Compilation> {
     let compiler_listener = Box::new(CompilerListener::new(
         tracking_nodes.clone(),
         known_types,
@@ -210,13 +229,9 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
         .iter()
         .any(|d| d.severity == DiagnosticSeverity::Error)
     {
-        CompilationResult {
-            // ## Implementation notes
-            // In the original, this could still contain a `Program` even though the docs say otherwise
-            program: None,
+        Err(CompilationError {
             diagnostics: compiler_diagnostics.borrow().clone(),
-            ..result_template
-        }
+        })
     } else {
         let debug_infos: HashMap<_, _> = compiler_debug_infos
             .borrow()
@@ -224,12 +239,12 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
             .map(|debug_info| (debug_info.node_name.clone(), debug_info.clone()))
             .collect();
 
-        CompilationResult {
+        Ok(Compilation {
             program: Some(compiler_program.borrow().clone()),
             diagnostics: compiler_diagnostics.borrow().clone(),
             debug_info: debug_infos,
             ..result_template
-        }
+        })
     }
 }
 
@@ -242,7 +257,7 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
         .iter()
         .filter(|decl| !matches!(decl.r#type, Some(Type::Function(_))))
         .filter(|decl| decl.r#type.is_some());
-    let result = state.result.as_mut().unwrap();
+    let result = state.result.as_mut().unwrap().as_mut().unwrap();
 
     for declaration in declarations {
         let Some(default_value) = declaration.default_value.clone() else {
@@ -272,7 +287,7 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
 
 struct CompilationIntermediate<'input> {
     job: &'input CompilationJob,
-    result: Option<CompilationResult>,
+    result: Option<Result<Compilation>>,
     known_variable_declarations: Vec<Declaration>,
     derived_variable_declarations: Vec<Declaration>,
     potential_issues: Vec<DeferredTypeDiagnostic>,
@@ -308,12 +323,7 @@ mod test {
 
     #[test]
     fn can_call_compile_empty_without_crash() {
-        compile(CompilationJob {
-            files: vec![],
-            library: None,
-            compilation_type: CompilationType::FullCompilation,
-            variable_declarations: vec![],
-        });
+        compile(CompilationJob::default()).unwrap();
     }
 
     #[test]
@@ -328,11 +338,6 @@ a {1 + 3} cool expression
 ==="
             .to_string(),
         };
-        compile(CompilationJob {
-            files: vec![file],
-            library: None,
-            compilation_type: CompilationType::FullCompilation,
-            variable_declarations: vec![],
-        });
+        compile(CompilationJob::default().with_file(file)).unwrap();
     }
 }

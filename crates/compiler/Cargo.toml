@@ -9,3 +9,7 @@ antlr-rust = "0.3.0-beta"
 better_any = "0.2.0"
 regex = "1.8.1"
 yarn_slinger_core = { path = "../core" }
+thiserror = "1"
+strum = "0.24.1"
+strum_macros = "0.24"
+annotate-snippets = { version = "0.9", features = ["color"] }
