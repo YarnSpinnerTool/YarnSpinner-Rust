@@ -2,6 +2,7 @@
 
 use crate::prelude::convertible::Convertible;
 use crate::prelude::{convertible::InvalidCastError, types::Type};
+use std::any::Any;
 
 pub mod convertible;
 
@@ -56,7 +57,7 @@ where
     }
 }
 
-impl_from![f32, f64, usize, String, bool,];
+impl_from![String, bool, f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
 
 // The macro above doesn't work for &str because it's trying to work with &&str
 
@@ -66,5 +67,24 @@ impl From<&str> for Value {
             r#type: Some(value.into()),
             internal_value: Some(value.into()),
         }
+    }
+}
+
+impl TryFrom<Box<dyn Any>> for Value {
+    type Error = InvalidCastError;
+    fn try_from(value: Box<dyn Any>) -> Result<Self, Self::Error> {
+        Ok(Self {
+            r#type: Some((&value).into()),
+            internal_value: Some(value.try_into()?),
+        })
+    }
+}
+
+impl TryFrom<Value> for Box<dyn Any> {
+    type Error = InvalidCastError;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        let convertible: Convertible = value.internal_value.try_into()?;
+        convertible.try_into()
     }
 }

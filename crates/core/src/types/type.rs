@@ -212,6 +212,12 @@ impl From<&Box<dyn Any>> for Type {
     }
 }
 
+impl From<Box<dyn Any>> for Type {
+    fn from(_value: Box<dyn Any>) -> Self {
+        Type::Any
+    }
+}
+
 impl TryFrom<TypeId> for Type {
     type Error = InvalidDowncastError;
 

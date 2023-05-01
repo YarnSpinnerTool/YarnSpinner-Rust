@@ -13,7 +13,7 @@ use antlr_rust::Parser;
 use std::any::TypeId;
 use std::rc::Rc;
 use yarn_slinger_core::prelude::{Library, Value};
-use yarn_slinger_core::types::Type;
+use yarn_slinger_core::types::{FunctionType, Type};
 
 pub(crate) fn get_line_id_tag<'a>(
     hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
@@ -184,10 +184,19 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
                     .all(|t| t != TypeId::of::<Value>())
         })
         .map(|(name, function)| {
+            let mut function_type = FunctionType::default();
+            let parameters = function
+                .parameter_types()
+                .into_iter()
+                .map(|t| Type::try_from(t).unwrap())
+                .map(Some)
+                .collect();
+            function_type.parameters = parameters;
             let return_type = Type::try_from(function.return_type()).unwrap();
+            function_type.set_return_type(return_type);
             Declaration::default()
                 .with_name(name.to_string())
-                .with_type(return_type)
+                .with_type(Type::from(function_type))
                 .with_source_file_name(DeclarationSource::External)
         })
         .collect()
