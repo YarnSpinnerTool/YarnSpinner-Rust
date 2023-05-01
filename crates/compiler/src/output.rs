@@ -4,6 +4,8 @@ use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
 use crate::prelude::StringTableManager;
 use std::collections::HashMap;
+use std::fmt::Display;
+use thiserror::Error;
 use yarn_slinger_core::prelude::Program;
 
 mod debug_info;
@@ -14,15 +16,11 @@ mod string_info;
 ///
 /// Instances of this struct are produced as a result of supplying a [`CompilationJob`] to [`compile`].
 #[derive(Debug, Clone, Default)]
-pub struct CompilationResult {
+pub struct Compilation {
     /// The compiled Yarn program that the [`Compiler`] produced.
     /// produced.
     ///
-    /// This value will be [`None`] if there were errors
-    /// in the compilation. If this is the case, [`Diagnostics`]
-    /// will contain information describing the errors.
-    ///
-    /// It will also be [`None`] if the <see
+    /// This value will be [`None`] if the
     /// [`CompilationJob`] object's [`CompilationJob::CompilationType`] value was not
     /// [`CompilationType::FullCompilation`]
     pub program: Option<Program>,
@@ -73,15 +71,14 @@ pub struct CompilationResult {
     /// what the error is, users should consult the contents of this field.
     pub diagnostics: Vec<Diagnostic>,
 
-    /// The collection of [`DebugInfo`] objects for each node
-    /// in [`Program`].
+    /// The collection of [`DebugInfo`] objects for each node in [`Program`].
     pub debug_info: HashMap<String, DebugInfo>,
 }
 
-impl CompilationResult {
+impl Compilation {
     /// Combines multiple [`CompilationResult`] objects together into one object.
     pub(crate) fn combine(
-        results: Vec<CompilationResult>,
+        compilations: impl Iterator<Item = Compilation>,
         string_table_manager: StringTableManager,
     ) -> Self {
         let mut programs = Vec::new();
@@ -90,16 +87,16 @@ impl CompilationResult {
         let mut diagnostics = Vec::new();
         let mut node_debug_infos = HashMap::new();
 
-        for result in results {
-            programs.push(result.program.unwrap());
-            declarations.extend(result.declarations);
-            tags.extend(result.file_tags);
-            diagnostics.extend(result.diagnostics);
-            node_debug_infos.extend(result.debug_info);
+        for compilation in compilations {
+            programs.push(compilation.program.unwrap());
+            declarations.extend(compilation.declarations);
+            tags.extend(compilation.file_tags);
+            diagnostics.extend(compilation.diagnostics);
+            node_debug_infos.extend(compilation.debug_info);
         }
         let combined_program = Program::combine(programs);
         let contains_implicit_string_tags = string_table_manager.contains_implicit_string_tags();
-        CompilationResult {
+        Compilation {
             program: combined_program,
             string_table: string_table_manager.0,
             declarations,
@@ -108,5 +105,19 @@ impl CompilationResult {
             file_tags: tags,
             diagnostics,
         }
+    }
+}
+
+#[derive(Error, Debug)]
+pub struct CompilationError {
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+impl Display for CompilationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for diagnostic in &self.diagnostics {
+            writeln!(f, "{}", diagnostic)?;
+        }
+        Ok(())
     }
 }

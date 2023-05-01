@@ -252,7 +252,8 @@ a {1 + 3} cool expression
             library: None,
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        })
+        .unwrap();
         let string_table = result.string_table;
         assert_eq!(string_table.len(), 3);
         assert_eq!(
@@ -308,8 +309,8 @@ a {very} cool expression
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
         });
-        assert!(result.program.is_none());
-        let diagnostics = result.diagnostics;
+
+        let diagnostics = result.unwrap_err().diagnostics;
         assert_eq!(diagnostics.len(), 2);
 
         let range = Position {

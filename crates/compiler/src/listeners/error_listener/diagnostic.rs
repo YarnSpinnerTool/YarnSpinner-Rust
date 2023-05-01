@@ -1,5 +1,10 @@
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
+use annotate_snippets::{
+    display_list::{DisplayList, FormatOptions},
+    snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
+};
+use std::fmt::{Display, Formatter};
 use std::ops::RangeInclusive;
 
 /// A diagnostic message that describes an error, warning or informational
@@ -72,8 +77,60 @@ impl Diagnostic {
     }
 }
 
+impl Display for Diagnostic {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let label = &self.message;
+        let annotation_type = match self.severity {
+            DiagnosticSeverity::Error => AnnotationType::Error,
+            DiagnosticSeverity::Warning => AnnotationType::Warning,
+            DiagnosticSeverity::Info => AnnotationType::Info,
+        };
+        let snippet = Snippet {
+            title: Some(Annotation {
+                label: Some(label),
+                id: None,
+                annotation_type,
+            }),
+            footer: vec![],
+            slices: vec![Slice {
+                source: self.context.as_deref().unwrap_or("<unknown line>"),
+                line_start: self
+                    .range
+                    .as_ref()
+                    .map(|r| r.start().line)
+                    .unwrap_or_default(),
+                origin: self.file_name.as_deref(),
+                fold: true,
+                annotations: vec![SourceAnnotation {
+                    label: "",
+                    annotation_type,
+                    range: (
+                        self.range
+                            .as_ref()
+                            .map(|r| r.start().character)
+                            .unwrap_or_default(),
+                        self.range
+                            .as_ref()
+                            .map(|r| r.end().character)
+                            .unwrap_or_default(),
+                    ),
+                }],
+            }],
+            opt: FormatOptions {
+                color: true,
+                ..Default::default()
+            },
+        };
+
+        let display_list = DisplayList::from(snippet);
+        writeln!(f, "{}", display_list)?;
+
+        Ok(())
+    }
+}
+
 /// The severity of the issue.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, strum_macros::Display)]
 pub enum DiagnosticSeverity {
     /// An error.
     ///

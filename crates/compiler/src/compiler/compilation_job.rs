@@ -23,6 +23,28 @@ pub struct CompilationJob {
     pub variable_declarations: Vec<Declaration>,
 }
 
+impl CompilationJob {
+    pub fn with_file(mut self, file: File) -> Self {
+        self.files.push(file);
+        self
+    }
+
+    pub fn with_library(mut self, library: Library) -> Self {
+        self.library = Some(library);
+        self
+    }
+
+    pub fn with_compilation_type(mut self, compilation_type: CompilationType) -> Self {
+        self.compilation_type = compilation_type;
+        self
+    }
+
+    pub fn with_variable_declaration(mut self, declaration: Declaration) -> Self {
+        self.variable_declarations.push(declaration);
+        self
+    }
+}
+
 /// Represents the contents of a file to compile.
 #[derive(Debug, Clone)]
 pub struct File {

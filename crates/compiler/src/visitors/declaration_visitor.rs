@@ -238,9 +238,9 @@ mod tests {
             library: None,
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        })
+        .unwrap();
 
-        println!("{:?}", result.diagnostics);
         assert!(result.diagnostics.is_empty());
         assert_eq!(result.declarations.len(), 4);
         assert_eq!(
@@ -337,11 +337,10 @@ mod tests {
             variable_declarations: vec![],
         });
 
-        assert!(result.declarations.is_empty());
-
-        assert_eq!(result.diagnostics.len(), 1);
+        let diagnostics = result.unwrap_err().diagnostics;
+        assert_eq!(diagnostics.len(), 1);
         assert_eq!(
-            result.diagnostics[0],
+            diagnostics[0],
             Diagnostic::from_message("Type string does not match value 1 (Number)".to_string())
                 .with_file_name("test.yarn".to_string())
                 .with_context("<<declare $foo to 1 as string>>")
