@@ -1,4 +1,4 @@
-# Rusty Yarn Spinner
+# Yarn Slinger
 
 **WIP** This project is still early work in progress. There may be large chunks of missing or untested functionality.
 Please ask before contributing, to make sure your work is not wasted or duplicated!
