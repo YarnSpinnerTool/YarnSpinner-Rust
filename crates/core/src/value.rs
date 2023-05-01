@@ -7,10 +7,11 @@ use std::any::Any;
 pub mod convertible;
 
 #[derive(Debug, Clone, PartialEq, Default)]
-/// A value appearing in a Yarn program. Convert it into a Rust type using
-/// the [`TryFrom`] trait.
+/// A value appearing in a Yarn program. Construct it using the [`From`] trait and
+/// Convert it into a Rust type using the [`TryInto`] trait.
 pub struct Value {
     /// The proper Yarn type according to the type checker of this value.
+    /// If [`None`], this value is undefined at this point
     pub r#type: Option<Type>,
     pub(crate) internal_value: Option<Convertible>,
 }
