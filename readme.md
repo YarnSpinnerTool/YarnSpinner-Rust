@@ -3,9 +3,9 @@
 **WIP** This project is still early work in progress. There may be large chunks of missing or untested functionality.
 Please ask before contributing, to make sure your work is not wasted or duplicated!
 
-Goal of the `Yarn Slinger` project is to bring this capability set to the rust world (
-specifically [bevy](https://github.com/bevyengine/bevy)) while maintaining compatibility with the `yarn` syntax/language designed
-by the great team at [Secret Lab](https://secretlab.games/).
+Goal of the `Yarn Slinger` project is to bring this capability set to the rust world 
+(specifically [Bevy](https://github.com/bevyengine/bevy)) while maintaining compatibility with the
+`yarn` syntax/language designed by the great team at [Secret Lab](https://secretlab.games/).
 
 ## Yarn Spinner
 
