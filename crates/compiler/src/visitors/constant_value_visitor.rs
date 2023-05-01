@@ -5,9 +5,9 @@ use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisito
 use crate::prelude::{Diagnostic, FileParseResult};
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
-use rusty_yarn_spinner_core::prelude::Value;
 use std::mem;
 use std::ops::{Deref, DerefMut};
+use yarn_slinger_core::prelude::Value;
 
 /// A visitor that visits any valid constant value, and returns a [`Value`].
 /// Currently only supports terminals, not expressions,
@@ -131,7 +131,7 @@ impl Default for ConstantValue {
     /// This default implementation is called when the visitor is called in an unexpected way, which in the current implementation can indeed not happen.
     /// If we refactor the code wrongly, this panic will be reached and tell us.
     fn default() -> Self {
-        unreachable!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new")
+        unreachable!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
     }
 }
 

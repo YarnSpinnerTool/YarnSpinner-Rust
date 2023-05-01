@@ -1,5 +1,5 @@
 [package]
-name = "rusty-yarn-spinner-compiler"
+name = "yarn_slinger_compiler"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -8,4 +8,4 @@ license = "MIT OR Apache-2.0"
 antlr-rust = "0.3.0-beta"
 better_any = "0.2.0"
 regex = "1.8.1"
-rusty-yarn-spinner-core = { path = "../core" }
+yarn_slinger_core = { path = "../core" }
