@@ -5,8 +5,9 @@ use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
 use paste::paste;
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::fmt::{Debug, Display};
+use thiserror::Error;
 
 /// All types in the virtual machine, both built-in, i.e. usable in yarn scripts, and internal.
 ///
@@ -209,4 +210,42 @@ impl From<&Box<dyn Any>> for Type {
     fn from(_value: &Box<dyn Any>) -> Self {
         Type::Any
     }
+}
+
+impl TryFrom<TypeId> for Type {
+    type Error = InvalidDowncastError;
+
+    fn try_from(r#type: TypeId) -> Result<Self, Self::Error> {
+        let string_type = TypeId::of::<String>();
+        let bool_type = TypeId::of::<bool>();
+        let number_types = &[
+            TypeId::of::<f32>(),
+            TypeId::of::<f64>(),
+            TypeId::of::<i8>(),
+            TypeId::of::<i16>(),
+            TypeId::of::<i32>(),
+            TypeId::of::<i64>(),
+            TypeId::of::<i128>(),
+            TypeId::of::<u8>(),
+            TypeId::of::<u16>(),
+            TypeId::of::<u32>(),
+            TypeId::of::<u64>(),
+            TypeId::of::<u128>(),
+            TypeId::of::<usize>(),
+            TypeId::of::<isize>(),
+        ];
+        match r#type {
+            _ if r#type == string_type => Ok(Type::String),
+            _ if r#type == bool_type => Ok(Type::Boolean),
+            _ if number_types.contains(&r#type) => Ok(Type::Number),
+            _ => Err(InvalidDowncastError::InvalidTypeId(r#type)),
+        }
+    }
+}
+
+#[derive(Error, Debug)]
+/// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
+pub enum InvalidDowncastError {
+    #[error("Cannot convert TypeId {:?} to a Yarn Slinger `Type`", .0)]
+    InvalidTypeId(TypeId),
 }

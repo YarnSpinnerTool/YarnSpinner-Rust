@@ -21,8 +21,8 @@ pub type Result<T> = std::result::Result<T, CompilationError>;
 
 /// Compile Yarn code, as specified by a compilation job.
 pub fn compile(compilation_job: CompilationJob) -> Result<Compilation> {
-    // TODO: other steps
     let compiler_steps: Vec<&CompilationStep> = vec![
+        &register_initial_variables,
         &register_strings,
         &get_declarations,
         &check_types,
@@ -41,6 +41,15 @@ pub fn compile(compilation_job: CompilationJob) -> Result<Compilation> {
 }
 
 type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
+
+fn register_initial_variables(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    let variables = &mut state.known_variable_declarations;
+    variables.extend(state.job.variable_declarations.clone());
+    if let Some(library) = &state.job.library {
+        variables.extend(get_declarations_from_library(library));
+    }
+    state
+}
 
 fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // Find the variable declarations in these files.
@@ -290,7 +299,9 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
 struct CompilationIntermediate<'input> {
     job: &'input CompilationJob,
     result: Option<Result<Compilation>>,
+    /// All variable declarations that we've encountered, PLUS the ones we knew about before
     known_variable_declarations: Vec<Declaration>,
+    /// All variable declarations that we've encountered during this compilation job
     derived_variable_declarations: Vec<Declaration>,
     potential_issues: Vec<DeferredTypeDiagnostic>,
     parsed_files: Vec<FileParseResult<'input>>,

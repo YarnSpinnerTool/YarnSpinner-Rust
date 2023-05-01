@@ -10,7 +10,7 @@ use crate::prelude::YarnFnRegistry;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Library {
     /// The functions that are available to Yarn scripts.
-    functions: YarnFnRegistry,
+    pub functions: YarnFnRegistry,
 }
 
 impl Library {
