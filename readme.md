@@ -14,6 +14,9 @@ licensed under MIT, allows writers to do their part effectively and efficiently 
 actual coding. Yarn Spinner® and Secret Lab® are trade marks of Secret Lab Pty. Ltd. and and are not affiliated with 
 this project.
 
+## ... Slinger?
+A slinger is just a _blazingly fast_ spinner ;)
+
 ## Build
 
 Building requires pulling in the submodules:
