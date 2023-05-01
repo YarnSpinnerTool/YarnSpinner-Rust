@@ -7,9 +7,12 @@ use std::any::Any;
 pub mod convertible;
 
 #[derive(Debug, Clone, PartialEq, Default)]
+/// A value appearing in a Yarn program. Convert it into a Rust type using
+/// the [`TryFrom`] trait.
 pub struct Value {
+    /// The proper Yarn type according to the type checker of this value.
     pub r#type: Option<Type>,
-    pub internal_value: Option<Convertible>,
+    pub(crate) internal_value: Option<Convertible>,
 }
 
 macro_rules! impl_from {
@@ -104,5 +107,13 @@ impl TryFrom<Value> for Box<dyn Any> {
     fn try_from(value: Value) -> Result<Self, Self::Error> {
         let convertible: Convertible = value.internal_value.try_into()?;
         Ok(convertible.into())
+    }
+}
+
+impl TryFrom<Value> for Convertible {
+    type Error = InvalidCastError;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        value.internal_value.try_into()
     }
 }

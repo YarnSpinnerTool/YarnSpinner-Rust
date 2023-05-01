@@ -104,7 +104,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// We cannot write a diagnostic in the default implementation because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
-pub(crate) struct ConstantValue(Value);
+pub(crate) struct ConstantValue(pub(crate) Value);
 
 impl Deref for ConstantValue {
     type Target = Value;

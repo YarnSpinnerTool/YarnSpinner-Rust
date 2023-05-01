@@ -8,6 +8,7 @@ use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
+use yarn_slinger_core::prelude::convertible::Convertible;
 use yarn_slinger_core::types::*;
 
 /// A visitor that extracts variable declarations from a parse tree.
@@ -194,7 +195,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         let description = compiler::get_document_comments(self.file.tokens(), ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
         let declaration = Declaration::default()
-            .with_default_value(value.internal_value.clone().unwrap())
+            .with_default_value(Convertible::try_from(value.0.clone()).unwrap())
             .with_type(value.r#type.clone())
             .with_name(variable_name)
             .with_description_optional(description_as_option)

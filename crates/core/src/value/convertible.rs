@@ -7,8 +7,11 @@ use thiserror::Error;
 /// A failure to convert one variant to another will result in an [`InvalidCastError`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum Convertible {
+    /// Any kind of Rust number, e.g. `i32`, `f32`, `u64`, `isize`, etc.
     Number(f32),
+    /// An owned Rust string.
     String(String),
+    /// A Rust boolean.
     Boolean(bool),
 }
 
