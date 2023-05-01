@@ -9,7 +9,7 @@ use crate::prelude::{ActualTokenStream, Diagnostic};
 use antlr_rust::token::Token;
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
-use yarn_slinger_core::prelude::convertible::{Convertible, InvalidCastError};
+use yarn_slinger_core::prelude::convertible::Convertible;
 use yarn_slinger_core::types::Type;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -124,8 +124,8 @@ impl Declaration {
         self
     }
 
-    pub fn eq(&self, other: &Self, epsilon: f32) -> Result<bool, InvalidCastError> {
-        Ok(self.name == other.name
+    pub fn eq(&self, other: &Self, epsilon: f32) -> bool {
+        self.name == other.name
             && self.description == other.description
             && self.source_file_name == other.source_file_name
             && self.source_node_name == other.source_node_name
@@ -133,10 +133,10 @@ impl Declaration {
             && self.r#type == other.r#type
             && self.range == other.range
             && match (&self.default_value, &other.default_value) {
-                (Some(a), Some(b)) => a.eq(b, epsilon)?,
+                (Some(a), Some(b)) => a.eq(b, epsilon),
                 (None, None) => true,
                 _ => false,
-            })
+            }
     }
 }
 

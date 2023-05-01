@@ -1,6 +1,6 @@
 //! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
-use crate::types::{InvalidDowncastError, Type};
-use std::any::{Any, TypeId};
+use crate::types::InvalidDowncastError;
+use std::any::Any;
 use thiserror::Error;
 
 /// Implements meaningful conversions, i.e. impls for [`TryFrom`] and [`From`] from the variants to Rust's base types.
@@ -13,10 +13,10 @@ pub enum Convertible {
 }
 
 impl Convertible {
-    pub fn eq(&self, other: &Self, epsilon: f32) -> Result<bool, InvalidCastError> {
+    pub fn eq(&self, other: &Self, epsilon: f32) -> bool {
         match (self, other) {
-            (Self::Number(a), Self::Number(b)) => Ok((a - b).abs() < epsilon),
-            (a, b) => Ok(a == b),
+            (Self::Number(a), Self::Number(b)) => (a - b).abs() < epsilon,
+            (a, b) => a == b,
         }
     }
 }
@@ -71,14 +71,12 @@ macro_rules! impl_from_numeral {
 
 impl_from_numeral![f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
 
-impl TryFrom<Convertible> for String {
-    type Error = InvalidCastError;
-
-    fn try_from(value: Convertible) -> Result<Self, Self::Error> {
+impl From<Convertible> for String {
+    fn from(value: Convertible) -> Self {
         match value {
-            Convertible::Number(value) => Ok(value.to_string()),
-            Convertible::String(value) => Ok(value),
-            Convertible::Boolean(value) => Ok(value.to_string()),
+            Convertible::Number(value) => value.to_string(),
+            Convertible::String(value) => value,
+            Convertible::Boolean(value) => value.to_string(),
         }
     }
 }
@@ -113,14 +111,12 @@ impl From<bool> for Convertible {
     }
 }
 
-impl TryFrom<Convertible> for Box<dyn Any> {
-    type Error = InvalidCastError;
-
-    fn try_from(value: Convertible) -> Result<Self, Self::Error> {
+impl From<Convertible> for Box<dyn Any> {
+    fn from(value: Convertible) -> Self {
         match value {
-            Convertible::Number(value) => Ok(Box::new(value)),
-            Convertible::String(value) => Ok(Box::new(value)),
-            Convertible::Boolean(value) => Ok(Box::new(value)),
+            Convertible::Number(value) => Box::new(value),
+            Convertible::String(value) => Box::new(value),
+            Convertible::Boolean(value) => Box::new(value),
         }
     }
 }

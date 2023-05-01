@@ -57,7 +57,7 @@ where
     }
 }
 
-impl_from![String, bool, f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
+impl_from![bool, f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
 
 // The macro above doesn't work for &str because it's trying to work with &&str
 
@@ -67,6 +67,24 @@ impl From<&str> for Value {
             r#type: Some(value.into()),
             internal_value: Some(value.into()),
         }
+    }
+}
+
+impl From<String> for Value {
+    fn from(value: String) -> Self {
+        Self {
+            r#type: Some((&value).into()),
+            internal_value: Some(value.into()),
+        }
+    }
+}
+
+impl TryFrom<Value> for String {
+    type Error = InvalidCastError;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        let convertible: Convertible = value.internal_value.try_into()?;
+        Ok(convertible.into())
     }
 }
 
@@ -85,6 +103,6 @@ impl TryFrom<Value> for Box<dyn Any> {
 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
         let convertible: Convertible = value.internal_value.try_into()?;
-        convertible.try_into()
+        Ok(convertible.into())
     }
 }

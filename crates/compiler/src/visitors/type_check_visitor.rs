@@ -560,9 +560,7 @@ trait DeclarationVecExt {
 
 impl DeclarationVecExt for Vec<Declaration> {
     fn position(&self, declaration: &Declaration) -> Option<usize> {
-        self.iter()
-            .filter_map(|decl| decl.eq(declaration, 1e-4).ok())
-            .position(|eq| eq)
+        self.iter().position(|decl| decl.eq(declaration, 1e-4))
     }
 
     fn find_remove(&mut self, declaration: &Declaration) {
