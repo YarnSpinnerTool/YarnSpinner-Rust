@@ -25,7 +25,7 @@ impl<'input> TypeCheckVisitor<'input> {
     pub(super) fn check_operation(
         &mut self,
         context: &impl ParserRuleContext<'input>,
-        terms: Vec<Term<'input>>,
+        terms: &[Term<'input>],
         operation_type: impl Into<Option<Operator>>,
         operation_description: &str,
         permitted_types: Vec<Type>,
@@ -33,7 +33,7 @@ impl<'input> TypeCheckVisitor<'input> {
         let operation_type = operation_type.into();
         let mut term_types = Vec::new();
         let mut expression_type = None;
-        for expression in &terms {
+        for expression in terms {
             // Visit this expression, and determine its type.
             let r#type = self.visit(expression.deref());
             if let Some(r#type) = r#type.clone() {
@@ -116,7 +116,7 @@ impl<'input> TypeCheckVisitor<'input> {
         // or the implicit type of any function.
         // annoyingly the function will already have an implicit definition created for it
         // we will have to strip that out and add in a new one with the new return type
-        for term in &terms {
+        for term in terms {
             let Term::Expression(expression) = term else { continue; };
             let ExpressionContextAll::ExpValueContext(value_context) = expression.as_ref() else { continue; };
             let Some(value) = value_context.value() else { continue; };
