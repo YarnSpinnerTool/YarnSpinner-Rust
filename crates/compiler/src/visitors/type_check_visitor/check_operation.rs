@@ -2,7 +2,7 @@ use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::*;
 use crate::visitors::type_check_visitor::{
-    format_cannot_determine_variable_type_error, get_filename, DefaultValue, GetHashableInterval,
+    format_cannot_determine_variable_type_error, get_filename, DefaultValue,
 };
 use crate::visitors::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -280,11 +280,12 @@ impl<'input> TypeCheckVisitor<'input> {
         // type, we'll define it now.
         for term in terms {
             if let Term::Expression(expression) = term {
-                if self.get_type(&*expression).is_none() {
-                    self.set_type(&*expression, expression_type.clone());
+                if self.known_types.get(&*expression).is_none() {
+                    self.known_types
+                        .insert(&*expression, expression_type.clone());
                 }
                 // Guaranteed to be Some
-                let expression = self.get_type_mut(&*expression).unwrap();
+                let expression = self.known_types.get_mut(&*expression).unwrap();
                 if let Type::Function(ref mut function_type) = expression {
                     function_type.set_return_type(expression_type.clone());
                 }

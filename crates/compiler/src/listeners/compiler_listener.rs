@@ -15,7 +15,7 @@ use crate::parser::generated::yarnspinnerparser::{
 };
 use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::visitors::CodeGenerationVisitor;
+use crate::visitors::{CodeGenerationVisitor, KnownTypes};
 pub(crate) use emit::*;
 use rusty_yarn_spinner_core::prelude::instruction::OpCode;
 
@@ -26,8 +26,9 @@ pub(crate) struct CompilerListener<'input> {
     /// the list of nodes we have to ensure we track visitation
     pub(crate) tracking_nodes: Rc<RefCell<HashSet<String>>>,
     pub(crate) diagnostics: Rc<RefCell<Vec<Diagnostic>>>,
+    pub(crate) types: KnownTypes,
     /// The current node to which instructions are being added.
-    current_node: Option<Node>,
+    pub(crate) current_node: Option<Node>,
     /// The current debug information that describes [`current_node`].
     current_debug_info: DebugInfo,
     /// Whether we are currently parsing the
@@ -38,9 +39,14 @@ pub(crate) struct CompilerListener<'input> {
 }
 
 impl<'input> CompilerListener<'input> {
-    pub(crate) fn new(tracking_nodes: HashSet<String>, file: FileParseResult<'input>) -> Self {
+    pub(crate) fn new(
+        tracking_nodes: HashSet<String>,
+        types: KnownTypes,
+        file: FileParseResult<'input>,
+    ) -> Self {
         Self {
             file,
+            types,
             tracking_nodes: Rc::new(RefCell::new(tracking_nodes)),
             current_node: Default::default(),
             current_debug_info: Default::default(),

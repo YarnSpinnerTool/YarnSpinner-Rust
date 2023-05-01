@@ -1,11 +1,15 @@
 //! Contains functionality provided in the C# implementation of ANTLR but not (yet?) in antlr4rust.
 
+use crate::parser::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::parser::ActualTokenStream;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContext;
+use crate::prelude::ContextRefExt;
 use antlr_rust::int_stream::IntStream;
+use antlr_rust::rule_context::RuleContext;
 use antlr_rust::token::{CommonToken, Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::token_stream::TokenStream;
+use antlr_rust::tree::ErrorNode;
 use antlr_rust::InputStream;
 use better_any::TidExt;
 use std::rc::Rc;
@@ -136,6 +140,17 @@ pub(crate) trait YarnSpinnerParserContextExt<'input>:
         self.get_children()
             .filter_map(|child| child.downcast_rc::<T>().ok())
             .nth(pos)
+    }
+
+    /// Adapted from <https://github.com/antlr/antlr4/blob/8dcc6526cfb154d688497f31cf1e0904801c6df2/runtime/CSharp/src/ParserRuleContext.cs#L220>
+    fn add_error_node(
+        &self,
+        bad_token: CommonToken<'input>,
+    ) -> Rc<ErrorNode<'input, YarnSpinnerParserContextType>> {
+        let error_node = Rc::new(ErrorNode::new(Box::new(bad_token)));
+        error_node.set_parent(&Some(self.ref_to_rc()));
+        self.add_child(error_node.clone());
+        error_node
     }
 }
 impl<'input, T: YarnSpinnerParserContext<'input> + ?Sized> YarnSpinnerParserContextExt<'input>

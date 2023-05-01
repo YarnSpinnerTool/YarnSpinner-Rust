@@ -17,7 +17,14 @@ pub(crate) fn get_line_id_tag<'a>(
 ) -> Option<Rc<HashtagContextAll<'a>>> {
     hashtag_contexts
         .iter()
-        .find(|h| h.text.as_ref().expect("Hashtag held no text").get_text() == "line:")
+        .find(|hashtag| {
+            let hashtag_text = hashtag
+                .text
+                .as_ref()
+                .expect("Hashtag held no text")
+                .get_text();
+            hashtag_text.starts_with("line:")
+        })
         .cloned()
 }
 
@@ -115,7 +122,6 @@ pub(crate) fn add_hashtag_child<'input>(
     text: impl Into<String>,
 ) {
     let parent = parent.ref_to_rc();
-    // Taken from C# implementation of `CommonToken`s constructor
     let string_id_token = create_common_token(yarnspinnerparser::HASHTAG_TEXT, text);
     let invoking_state_according_to_original_implementation = 0;
     // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
@@ -133,12 +139,19 @@ pub(crate) trait ContextRefExt<'input> {
 
 impl<'input, T> ContextRefExt<'input> for &T
 where
-    T: YarnSpinnerParserContext<'input>,
+    T: YarnSpinnerParserContext<'input> + ?Sized,
 {
     fn ref_to_rc(self) -> Rc<ActualParserContext<'input>> {
-        // Hack: need to convert the reference to an Rc somehow.
-        // This will fail on a terminal node, fingers crossed that that won't happen 😅
-        // See #45
-        self.get_children().next().unwrap().get_parent().unwrap()
+        self.get_children()
+            .next()
+            .map(|child| child.get_parent().unwrap())
+            .or_else(|| {
+                let interval = self.get_source_interval();
+                self.get_parent()
+                    .unwrap()
+                    .get_children()
+                    .find(|child| child.get_source_interval() == interval)
+            })
+            .unwrap()
     }
 }

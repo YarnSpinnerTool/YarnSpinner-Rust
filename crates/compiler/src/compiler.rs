@@ -117,6 +117,7 @@ fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
             .extend(visitor.new_declarations);
         state.diagnostics.extend(visitor.diagnostics);
         state.potential_issues.extend(visitor.deferred_types);
+        state.known_types.extend(visitor.known_types);
     }
     state
 }
@@ -166,7 +167,14 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
         state
             .parsed_files
             .iter()
-            .map(|file| generate_code_for_file(&mut state.tracking_nodes, template.clone(), file))
+            .map(|file| {
+                generate_code_for_file(
+                    &mut state.tracking_nodes,
+                    state.known_types.clone(),
+                    template.clone(),
+                    file,
+                )
+            })
             .collect()
     };
     state.result = Some(CompilationResult::combine(
@@ -178,10 +186,15 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
 
 fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     tracking_nodes: &mut HashSet<String>,
+    known_types: KnownTypes,
     result_template: CompilationResult,
     file: &'a FileParseResult<'input>,
 ) -> CompilationResult {
-    let compiler_listener = Box::new(CompilerListener::new(tracking_nodes.clone(), file.clone()));
+    let compiler_listener = Box::new(CompilerListener::new(
+        tracking_nodes.clone(),
+        known_types,
+        file.clone(),
+    ));
     let compiler_tracking_nodes = compiler_listener.tracking_nodes.clone();
     let compiler_diagnostics = compiler_listener.diagnostics.clone();
     let compiler_program = compiler_listener.program.clone();
@@ -243,7 +256,7 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
                 Type::String => Operand::from(String::try_from(default_value).unwrap()),
                 Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
                 Type::Boolean => Operand::from(bool::try_from(default_value).unwrap()),
-                _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new ", declaration.r#type.format()),
+                _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new", declaration.r#type.format()),
             };
             program
                 .initial_values
@@ -268,6 +281,7 @@ struct CompilationIntermediate<'input> {
     string_table: StringTableManager,
     diagnostics: Vec<Diagnostic>,
     file_tags: HashMap<String, Vec<String>>,
+    known_types: KnownTypes,
 }
 
 impl<'input> CompilationIntermediate<'input> {
@@ -283,6 +297,7 @@ impl<'input> CompilationIntermediate<'input> {
             string_table: Default::default(),
             diagnostics: Default::default(),
             file_tags: Default::default(),
+            known_types: Default::default(),
         }
     }
 }
