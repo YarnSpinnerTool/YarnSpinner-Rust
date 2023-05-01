@@ -28,7 +28,7 @@ impl<'input> TypeCheckVisitor<'input> {
         terms: &[Term<'input>],
         operation_type: impl Into<Option<Operator>>,
         operation_description: &str,
-        permitted_types: Vec<Type>,
+        permitted_types: &[Type],
     ) -> Option<Type> {
         let operation_type = operation_type.into();
         let mut term_types = Vec::new();

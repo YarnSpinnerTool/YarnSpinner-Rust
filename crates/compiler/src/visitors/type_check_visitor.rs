@@ -140,13 +140,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         // *, /, % all support numbers only
         // ## Implementation notes
         // The original passes no permitted types, but judging by the comment above, this seems like a bug
-        let r#type = self.check_operation(
-            ctx,
-            &expressions,
-            operator,
-            op.get_text(),
-            vec![Type::Number],
-        );
+        let r#type =
+            self.check_operation(ctx, &expressions, operator, op.get_text(), &[Type::Number]);
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -155,7 +150,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(|e| e.into()).collect();
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
-        let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), vec![]);
+        let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type);
         // Comparisons always return bool
         Some(Type::Boolean)
@@ -165,7 +160,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let expressions = &[ctx.expression().unwrap().into()];
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
-        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), vec![]);
+        let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -176,7 +171,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let operator =
             CodeGenerationVisitor::token_to_operator(operator_context.token_type).unwrap();
         let description = operator_context.get_text();
-        let r#type = self.check_operation(ctx, &expressions, operator, description, vec![]);
+        let r#type = self.check_operation(ctx, &expressions, operator, description, &[]);
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -185,7 +180,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(|e| e.into()).collect();
         let op = ctx.op.as_ref().unwrap();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
-        let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), vec![]);
+        let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -197,13 +192,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         // ! supports only bool types
         // ## Implementation notes
         // The original passes no permitted types, but judging by the comment above, this seems like a bug
-        let r#type = self.check_operation(
-            ctx,
-            expressions,
-            operator,
-            op.get_text(),
-            vec![Type::Boolean],
-        );
+        let r#type =
+            self.check_operation(ctx, expressions, operator, op.get_text(), &[Type::Boolean]);
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -225,7 +215,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // == and != support any defined type, as long as terms are the
         // same type
-        let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), vec![]);
+        let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type);
         // Equality always returns bool
         Some(Type::Boolean)
@@ -428,20 +418,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         ParseTreeVisitorCompat::visit_children(self, ctx);
         // If clauses are required to be boolean
         let expressions = &[ctx.expression().unwrap().into()];
-        self.check_operation(ctx, expressions, None, "if statement", vec![Type::Boolean])
+        self.check_operation(ctx, expressions, None, "if statement", &[Type::Boolean])
     }
 
     fn visit_else_if_clause(&mut self, ctx: &Else_if_clauseContext<'input>) -> Self::Return {
         ParseTreeVisitorCompat::visit_children(self, ctx);
         // Else if clauses are required to be boolean
         let expressions = &[ctx.expression().unwrap().into()];
-        self.check_operation(
-            ctx,
-            expressions,
-            None,
-            "elseif statement",
-            vec![Type::Boolean],
-        )
+        self.check_operation(ctx, expressions, None, "elseif statement", &[Type::Boolean])
     }
 
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
@@ -526,27 +510,27 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 // += supports strings and numbers
                 let operator =
                     CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_ADDITION).unwrap();
-                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION_EQUALS => {
                 // -=, *=, /=, %= supports only numbers
                 let operator =
                     CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION).unwrap();
-                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION_EQUALS => {
                 let operator =
                     CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION).unwrap();
-                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_DIVISION_EQUALS => {
                 let operator =
                     CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_DIVISION).unwrap();
-                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_MODULUS_EQUALS => {
                 let operator = CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
-                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), vec![]);
+                expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/Mafii/rusty-yarn-spinner/issues/new", op.get_text())
         }
@@ -565,7 +549,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
         let expressions = &[ctx.expression().unwrap().into()];
         // The expression's type must resolve to a string.
-        self.check_operation(ctx, expressions, None, "jump statement", vec![Type::String])
+        self.check_operation(ctx, expressions, None, "jump statement", &[Type::String])
     }
 }
 
