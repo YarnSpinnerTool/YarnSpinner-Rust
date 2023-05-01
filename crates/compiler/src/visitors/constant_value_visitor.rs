@@ -131,7 +131,7 @@ impl Default for ConstantValue {
     /// This default implementation is called when the visitor is called in an unexpected way, which in the current implementation can indeed not happen.
     /// If we refactor the code wrongly, this panic will be reached and tell us.
     fn default() -> Self {
-        unreachable!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/Mafii/yarn_slinger/issues/new")
+        unreachable!("The `ConstantValueVisitor` was called in an unexpected context. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
     }
 }
 

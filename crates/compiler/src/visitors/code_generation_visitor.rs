@@ -102,7 +102,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let expression_count =
             self.generate_code_for_expressions_in_formatted_text(formatted_text.get_children());
         let line_id_tag = compiler::get_line_id_tag(&ctx.hashtag_all())
-            .expect("Internal error: line should have an implicit or explicit line ID tag, but none was found. This is a bug. Please report it at https://github.com/Mafii/yarn_slinger/issues/new");
+            .expect("Internal error: line should have an implicit or explicit line ID tag, but none was found. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
         let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::RunLine)
@@ -348,7 +348,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 
             // Get the line ID from the hashtags if it has one
             let line_id_tag = compiler::get_line_id_tag(&line_statement.hashtag_all())
-                .expect("Internal error: no line ID provided. This is a bug. Please report it at https://github.com/Mafii/yarn_slinger/issues/new");
+                .expect("Internal error: no line ID provided. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
             let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
 
             // And add this option to the list.
