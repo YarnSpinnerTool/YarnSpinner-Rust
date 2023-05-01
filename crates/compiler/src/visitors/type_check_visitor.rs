@@ -625,15 +625,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let _result = compile(CompilationJob {
             files: vec![file],
             library: None,
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
-
-        println!("{:?}", result.diagnostics);
-        assert!(result.diagnostics.is_empty());
+        })
+        .unwrap();
     }
 
     #[test]
@@ -658,10 +656,12 @@ mod tests {
             variable_declarations: vec![],
         });
 
-        assert_eq!(3, result.diagnostics.len());
+        let diagnostics = result.unwrap_err().diagnostics;
+
+        assert_eq!(3, diagnostics.len());
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a String")
                 .with_file_name("test.yarn")
                 .with_context("<<set $foo to \"invalid\">>")
@@ -677,7 +677,7 @@ mod tests {
         );
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("$bar (Bool) cannot be assigned a Number")
                 .with_file_name("test.yarn")
                 .with_context("<<set $bar to -15>>")
@@ -693,7 +693,7 @@ mod tests {
         );
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("$baz (String) cannot be assigned a Bool")
                 .with_file_name("test.yarn")
                 .with_context("<<set $baz to false>>")
@@ -735,15 +735,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let _result = compile(CompilationJob {
             files: vec![file],
             library: None,
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
-
-        println!("{:?}", result.diagnostics);
-        assert!(result.diagnostics.is_empty());
+        })
+        .unwrap();
     }
 
     #[test]
@@ -766,10 +764,12 @@ mod tests {
             variable_declarations: vec![],
         });
 
-        assert_eq!(4, result.diagnostics.len());
+        let diagnostics = result.unwrap_err().diagnostics;
+
+        assert_eq!(4, diagnostics.len());
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
                 .with_file_name("test.yarn")
                 .with_context("<<set $foo to $foo + $bar>>")
@@ -785,7 +785,7 @@ mod tests {
         );
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
                 .with_file_name("test.yarn")
                 .with_context("<<set $foo to $foo * \"invalid\">>")
@@ -801,7 +801,7 @@ mod tests {
         );
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("All terms of + must be the same, not Number, String")
                 .with_file_name("test.yarn")
                 .with_context("$foo + $bar")
@@ -817,7 +817,7 @@ mod tests {
         );
 
         assert_contains(
-            &result.diagnostics,
+            &diagnostics,
             &Diagnostic::from_message("All terms of * must be the same, not Number, String")
                 .with_file_name("test.yarn")
                 .with_context("$foo * \"invalid\"")

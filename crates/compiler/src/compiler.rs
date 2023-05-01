@@ -180,7 +180,7 @@ fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate 
             .collect()
     };
     let has_code_generation_errors = results.iter().any(|r| r.is_err());
-    let result = if has_code_generation_errors {
+    let result = if has_errors || has_code_generation_errors {
         let total_diagnostics: Vec<_> = results
             .iter()
             .filter_map(|r| r.as_ref().err())
@@ -257,16 +257,18 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
         .iter()
         .filter(|decl| !matches!(decl.r#type, Some(Type::Function(_))))
         .filter(|decl| decl.r#type.is_some());
-    let result = state.result.as_mut().unwrap().as_mut().unwrap();
+    let Ok(compilation) = state.result.as_mut().unwrap().as_mut() else {
+        return state;
+    };
 
     for declaration in declarations {
         let Some(default_value) = declaration.default_value.clone() else {
-             result.diagnostics.push(
+             compilation.diagnostics.push(
                  Diagnostic::from_message(
                      format!("Variable declaration {} (type {}) has a null default value. This is not allowed.", declaration.name, declaration.r#type.format())));
              continue;
          };
-        if let Some(ref mut program) = result.program {
+        if let Some(ref mut program) = compilation.program {
             let value = match declaration.r#type.as_ref().unwrap() {
                 Type::String => Operand::from(String::try_from(default_value).unwrap()),
                 Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
@@ -278,10 +280,10 @@ fn add_initial_value_registrations(mut state: CompilationIntermediate) -> Compil
                 .insert(declaration.name.clone(), value);
         }
     }
-    result.declarations = state.derived_variable_declarations.clone();
+    compilation.declarations = state.derived_variable_declarations.clone();
     let unique_diagnostics: HashSet<Diagnostic> =
         HashSet::from_iter(state.diagnostics.clone().into_iter());
-    result.diagnostics = unique_diagnostics.into_iter().collect();
+    compilation.diagnostics = unique_diagnostics.into_iter().collect();
     state
 }
 
