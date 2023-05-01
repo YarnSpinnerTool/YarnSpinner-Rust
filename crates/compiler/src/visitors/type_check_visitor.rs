@@ -121,14 +121,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             }
         }
         if let Some(body) = ctx.body() {
-            self.visit(&*body);
+            self.visit(body.as_ref());
         }
         None
     }
 
     fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
         // Parens expressions have the type of their inner expression
-        let r#type = self.visit(&*ctx.expression().unwrap());
+        let r#type = self.visit(ctx.expression().unwrap().as_ref());
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -212,9 +212,9 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         // passing the hint from the expression down into the values within
         let hint = self.hints.get(ctx).cloned();
         let value = ctx.value().unwrap();
-        self.hints.insert(&*value, hint);
+        self.hints.insert(value.as_ref(), hint);
         // Value expressions have the type of their inner value
-        let r#type = self.visit(&*value);
+        let r#type = self.visit(value.as_ref());
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
@@ -354,7 +354,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .zip(expected_parameter_types.iter())
             .enumerate()
         {
-            let supplied_type = self.visit(&*supplied_parameter);
+            let supplied_type = self.visit(supplied_parameter.as_ref());
             if expected_type.is_none() {
                 // The type of this parameter hasn't yet been bound.
                 // Bind this parameter type to what we've resolved the
@@ -451,14 +451,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let Some(expression_context) = ctx.expression() else {
             return None;
         };
-        let variable_type = self.visit(&*variable_context);
+        let variable_type = self.visit(variable_context.as_ref());
         if let Some(variable_type) = variable_type.as_ref() {
             // giving the expression a hint just in case it is needed to help resolve any ambiguity on the expression
             // currently this is only useful in situations where we have a function as the rvalue of a known lvalue
             self.hints
-                .insert(&*expression_context, variable_type.clone());
+                .insert(expression_context.as_ref(), variable_type.clone());
         }
-        let mut expression_type = self.visit(&*expression_context);
+        let mut expression_type = self.visit(expression_context.as_ref());
         let variable_name = variable_context.get_text();
         let terms: Vec<Term> = vec![
             variable_context.clone().into(),

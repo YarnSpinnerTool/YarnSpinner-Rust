@@ -61,7 +61,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
             }
         }
         if let Some(body) = ctx.body() {
-            return self.visit(&*body);
+            return self.visit(body.as_ref());
         }
         None
     }
@@ -88,7 +88,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
         // if it isn't a static string we'll get back null so can ignore it
         // if the func has more than one parameter later on it will cause an error so again can ignore
         let expression = ctx.expression(0).unwrap();
-        let result = self.visit(&*expression);
+        let result = self.visit(expression.as_ref());
         if let Some(result) = result {
             self.tracking_nodes.insert(result);
         }
@@ -138,7 +138,7 @@ tracking: always
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
         let tree = parser.dialogue().unwrap();
         let mut visitor = NodeTrackingVisitor::new();
-        visitor.visit(&*tree);
+        visitor.visit(tree.as_ref());
         visitor
     }
 }

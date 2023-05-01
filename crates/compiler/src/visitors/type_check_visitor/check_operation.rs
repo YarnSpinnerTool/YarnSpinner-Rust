@@ -246,7 +246,7 @@ impl<'input> TypeCheckVisitor<'input> {
                     format_cannot_determine_variable_type_error(&var_name),
                 )
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(&*undefined_variable_context, self.file.tokens());
+                .read_parser_rule_context(undefined_variable_context.as_ref(), self.file.tokens());
                 self.diagnostics.push(diagnostic);
                 continue;
             }
@@ -280,12 +280,12 @@ impl<'input> TypeCheckVisitor<'input> {
         // type, we'll define it now.
         for term in terms {
             if let Term::Expression(expression) = term {
-                if self.known_types.get(&*expression).is_none() {
+                if self.known_types.get(expression.as_ref()).is_none() {
                     self.known_types
-                        .insert(&*expression, expression_type.clone());
+                        .insert(expression.as_ref(), expression_type.clone());
                 }
                 // Guaranteed to be Some
-                let expression = self.known_types.get_mut(&*expression).unwrap();
+                let expression = self.known_types.get_mut(expression.as_ref()).unwrap();
                 if let Type::Function(ref mut function_type) = expression {
                     function_type.set_return_type(expression_type.clone());
                 }

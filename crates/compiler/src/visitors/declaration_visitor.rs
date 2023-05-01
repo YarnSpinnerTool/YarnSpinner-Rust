@@ -97,12 +97,12 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
                 self.diagnostics.push(
                     Diagnostic::from_message(message)
                         .with_file_name(self.file.name.clone())
-                        .read_parser_rule_context(&*header, self.file.tokens()),
+                        .read_parser_rule_context(header.as_ref(), self.file.tokens()),
                 );
             }
         }
         if let Some(body) = ctx.body() {
-            self.visit(&*body);
+            self.visit(body.as_ref());
         }
     }
 
@@ -143,7 +143,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         let mut constant_value_visitor =
             ConstantValueVisitor::new(self.diagnostics.clone(), self.file.clone());
         let value_context = ctx.value().unwrap();
-        let value = constant_value_visitor.visit(&*value_context);
+        let value = constant_value_visitor.visit(value_context.as_ref());
         self.diagnostics
             .extend_from_slice(&constant_value_visitor.diagnostics);
 

@@ -77,7 +77,7 @@ impl LastLineBeforeOptionsVisitor {
             // if we are an if-block we have to visit it in case there are options and lines inside of that
             // once that is done we can move onto the next statement
             if let Some(if_statement) = statement.if_statement() {
-                self.visit(&*if_statement);
+                self.visit(if_statement.as_ref());
                 continue;
             }
 
@@ -86,7 +86,7 @@ impl LastLineBeforeOptionsVisitor {
                 continue;
             };
             // we need to visit the option in case it has embedded statements
-            self.visit(&*shortcut_option_statement);
+            self.visit(shortcut_option_statement.as_ref());
 
             if i == 0 {
                 // we are an option BUT there isn't a previous statement
@@ -97,7 +97,7 @@ impl LastLineBeforeOptionsVisitor {
             if let Some(previous) = statements[i - 1].line_statement() {
                 // ok now at this point we know the line that needs to be tagged as the last line
                 // we do that inside the line visitation
-                self.visit(&*previous);
+                self.visit(previous.as_ref());
             }
         }
     }

@@ -25,6 +25,7 @@ mod tests {
     use super::*;
     use antlr_rust::tree::ParseTree;
     use antlr_rust::{common_token_stream::CommonTokenStream, *};
+    use std::ops::Deref;
     use yarnspinnerlexer::*;
     use yarnspinnerparser::*;
 
@@ -39,7 +40,10 @@ This is the one and only line
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
         let dialogue = parser.dialogue().unwrap();
         let expected_string_tree = "(dialogue (node (header title :  Minimal Yarn) --- (body (statement (line_statement (line_formatted_text T his is the one and only line) \\n))) ===))";
-        assert_eq!(expected_string_tree, dialogue.to_string_tree(&*parser));
+        assert_eq!(
+            expected_string_tree,
+            dialogue.to_string_tree(parser.deref())
+        );
     }
 
     #[test]
