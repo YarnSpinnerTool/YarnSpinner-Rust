@@ -169,8 +169,6 @@ where
 /// functions are valid and compatible with Yarn.
 pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaration> {
     library
-        .functions
-        .0
         .iter()
         .filter(|(_name, function)| {
             // Functions that return or accept the internal type `Value` are

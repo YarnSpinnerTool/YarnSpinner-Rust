@@ -21,6 +21,11 @@ impl YarnFnRegistry {
         self.insert(name, Box::new(wrapped));
     }
 
+    pub fn add_boxed(&mut self, name: impl Into<Cow<'static, str>>, function: Box<dyn YarnFn>) {
+        let name = name.into();
+        self.insert(name, function);
+    }
+
     pub fn contains_key(&self, name: &str) -> bool {
         self.get(name).is_some()
     }
