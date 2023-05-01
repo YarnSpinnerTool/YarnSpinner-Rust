@@ -2,7 +2,7 @@
 
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::{Diagnostic, FileParseResult};
+use crate::prelude::*;
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use std::mem;
@@ -93,7 +93,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// Needed because ANTLR needs visitors' return values to have a default.
 /// While the C# implementation allows overriding a `DefaultResult` property,
 /// the Rust implementation simply takes the `Default` implementation of the associated `Return` type.
-/// However, we don't want the action default [`Value`], but panic when it would have been built by antl4rust,
+/// However, we don't have a default [`Value`], which wouldn't make much sense, but panic when it would have been built by antl4rust,
 /// so we use this wrapper to accomplish that.
 ///
 /// This seems weird, I know. The original implementation writes a `Diagnostic` whenever the default value is constructed.
@@ -104,10 +104,10 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// We cannot write a diagnostic in the default implementation because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
-pub(crate) struct ConstantValue(pub(crate) Value);
+pub(crate) struct ConstantValue(pub(crate) Option<Value>);
 
 impl Deref for ConstantValue {
-    type Target = Value;
+    type Target = Option<Value>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -122,7 +122,7 @@ impl DerefMut for ConstantValue {
 
 impl From<Value> for ConstantValue {
     fn from(value: Value) -> Self {
-        Self(value)
+        Self(Some(value))
     }
 }
 
@@ -138,6 +138,6 @@ impl Default for ConstantValue {
 impl ConstantValue {
     /// Only use this for dummy assignments.
     fn non_panicking_default() -> Self {
-        Self(Value::default())
+        Self(None)
     }
 }

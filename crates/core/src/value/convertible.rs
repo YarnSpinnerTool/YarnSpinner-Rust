@@ -24,6 +24,17 @@ impl Convertible {
     }
 }
 
+impl TryInto<Convertible> for Option<Convertible> {
+    type Error = InvalidCastError;
+
+    fn try_into(self) -> Result<Convertible, Self::Error> {
+        match self {
+            Some(convertible) => Ok(convertible),
+            None => Err(InvalidCastError::UninitializedValue),
+        }
+    }
+}
+
 impl TryFrom<Convertible> for f32 {
     type Error = InvalidCastError;
 

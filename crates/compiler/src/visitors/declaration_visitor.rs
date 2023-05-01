@@ -8,7 +8,6 @@ use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
-use yarn_slinger_core::prelude::convertible::Convertible;
 use yarn_slinger_core::types::*;
 
 /// A visitor that extracts variable declarations from a parse tree.
@@ -176,35 +175,39 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             // Check that the type we've found is compatible with the
             // type of the value that was provided - if it doesn't,
             // that's a type error
-            if !value.r#type.is_sub_type_of(&explicit_type) {
-                let msg = format!(
-                    "Type {} does not match value {} ({})",
-                    declaration_type.get_text(),
-                    value_context.get_text(),
-                    value.r#type.format()
-                );
-                self.diagnostics.push(
-                    Diagnostic::from_message(msg)
-                        .with_file_name(&self.file.name)
-                        .read_parser_rule_context(ctx, self.file.tokens()),
-                );
-                return;
+            if let Some(value) = value.as_ref() {
+                if !value.r#type.is_sub_type_of(&explicit_type) {
+                    let msg = format!(
+                        "Type {} does not match value {} ({})",
+                        declaration_type.get_text(),
+                        value_context.get_text(),
+                        value.r#type.format()
+                    );
+                    self.diagnostics.push(
+                        Diagnostic::from_message(msg)
+                            .with_file_name(&self.file.name)
+                            .read_parser_rule_context(ctx, self.file.tokens()),
+                    );
+                    return;
+                }
             }
         }
         // We're done creating the declaration!
         let description = compiler::get_document_comments(self.file.tokens(), ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
-        let declaration = Declaration::default()
-            .with_default_value(Convertible::try_from(value.0.clone()).unwrap())
-            .with_type(value.r#type.clone())
-            .with_name(variable_name)
-            .with_description_optional(description_as_option)
-            .with_source_file_name(self.file.name.clone())
-            .with_source_node_name_optional(self.current_node_name.clone())
-            // All positions are +1 compared to original implementation, but the result is the same.
-            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            .with_range(variable_context.range(self.file.tokens()));
-        self.new_declarations.push(declaration);
+        if let Some(value) = value.as_ref() {
+            let declaration = Declaration::default()
+                .with_default_value(value.internal_value.clone())
+                .with_type(value.r#type.clone())
+                .with_name(variable_name)
+                .with_description_optional(description_as_option)
+                .with_source_file_name(self.file.name.clone())
+                .with_source_node_name_optional(self.current_node_name.clone())
+                // All positions are +1 compared to original implementation, but the result is the same.
+                // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
+                .with_range(variable_context.range(self.file.tokens()));
+            self.new_declarations.push(declaration);
+        }
     }
 }
 

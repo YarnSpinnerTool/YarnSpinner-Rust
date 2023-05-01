@@ -6,14 +6,14 @@ use std::any::Any;
 
 pub mod convertible;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 /// A value appearing in a Yarn program. Construct it using the [`From`] trait and
 /// Convert it into a Rust type using the [`TryInto`] trait.
 pub struct Value {
     /// The proper Yarn type according to the type checker of this value.
-    /// If [`None`], this value is undefined at this point
-    pub r#type: Option<Type>,
-    pub(crate) internal_value: Option<Convertible>,
+    pub r#type: Type,
+    pub internal_value: Convertible,
 }
 
 macro_rules! impl_from {
@@ -22,8 +22,8 @@ macro_rules! impl_from {
             impl From<$from_type> for Value {
                 fn from(value: $from_type) -> Self {
                     Self {
-                        r#type: Some((&value).into()),
-                        internal_value: Some(value.into()),
+                        r#type: (&value).into(),
+                        internal_value: value.into(),
                     }
                 }
             }
@@ -32,23 +32,11 @@ macro_rules! impl_from {
                 type Error = InvalidCastError;
 
                 fn try_from(value: Value) -> Result<Self, Self::Error> {
-                    let convertible: Convertible = value.internal_value.try_into()?;
-                    convertible.try_into()
+                    value.internal_value.try_into()
                 }
             }
         )*
     };
-}
-
-impl TryInto<Convertible> for Option<Convertible> {
-    type Error = InvalidCastError;
-
-    fn try_into(self) -> Result<Convertible, Self::Error> {
-        match self {
-            Some(convertible) => Ok(convertible),
-            None => Err(InvalidCastError::UninitializedValue),
-        }
-    }
 }
 
 impl<T> From<&T> for Value
@@ -68,8 +56,8 @@ impl_from![bool, f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usi
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
         Self {
-            r#type: Some(value.into()),
-            internal_value: Some(value.into()),
+            r#type: value.into(),
+            internal_value: value.into(),
         }
     }
 }
@@ -77,18 +65,15 @@ impl From<&str> for Value {
 impl From<String> for Value {
     fn from(value: String) -> Self {
         Self {
-            r#type: Some((&value).into()),
-            internal_value: Some(value.into()),
+            r#type: (&value).into(),
+            internal_value: value.into(),
         }
     }
 }
 
-impl TryFrom<Value> for String {
-    type Error = InvalidCastError;
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        let convertible: Convertible = value.internal_value.try_into()?;
-        Ok(convertible.into())
+impl From<Value> for String {
+    fn from(value: Value) -> Self {
+        value.internal_value.into()
     }
 }
 
@@ -96,25 +81,26 @@ impl TryFrom<Box<dyn Any>> for Value {
     type Error = InvalidCastError;
     fn try_from(value: Box<dyn Any>) -> Result<Self, Self::Error> {
         Ok(Self {
-            r#type: Some((&value).into()),
-            internal_value: Some(value.try_into()?),
+            r#type: (&value).into(),
+            internal_value: value.try_into()?,
         })
     }
 }
 
-impl TryFrom<Value> for Box<dyn Any> {
-    type Error = InvalidCastError;
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        let convertible: Convertible = value.internal_value.try_into()?;
-        Ok(convertible.into())
+impl From<Value> for Box<dyn Any> {
+    fn from(value: Value) -> Self {
+        value.internal_value.into()
     }
 }
 
-impl TryFrom<Value> for Convertible {
-    type Error = InvalidCastError;
+impl From<Value> for Convertible {
+    fn from(value: Value) -> Self {
+        value.internal_value
+    }
+}
 
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        value.internal_value.try_into()
+impl From<Value> for Type {
+    fn from(value: Value) -> Self {
+        value.r#type
     }
 }
