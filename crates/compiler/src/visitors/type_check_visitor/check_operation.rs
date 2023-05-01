@@ -35,7 +35,7 @@ impl<'input> TypeCheckVisitor<'input> {
         let mut expression_type = None;
         for expression in &terms {
             // Visit this expression, and determine its type.
-            let r#type = self.visit(&**expression);
+            let r#type = self.visit(expression.deref());
             if let Some(r#type) = r#type.clone() {
                 if expression_type.is_none() {
                     // This is the first concrete type we've seen. This
@@ -146,7 +146,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 }
                 func.return_type = Box::new(expression_type.clone());
             } else {
-                self.visit(&**term);
+                self.visit(term.deref());
             }
         }
         // Were any of the terms variables for which we don't currently
