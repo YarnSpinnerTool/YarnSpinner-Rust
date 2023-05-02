@@ -15,6 +15,12 @@ pub enum Convertible {
     Boolean(bool),
 }
 
+/// Needed to ensure that the return type of a registered function is
+/// able to be turned into a [`Value`], but not a [`Value`] itself.
+pub trait IntoConvertibleFromNonConvertible {
+    fn into_convertible(self) -> Convertible;
+}
+
 impl Convertible {
     pub fn eq(&self, other: &Self, epsilon: f32) -> bool {
         match (self, other) {
@@ -63,6 +69,12 @@ impl From<f32> for Convertible {
     }
 }
 
+impl IntoConvertibleFromNonConvertible for f32 {
+    fn into_convertible(self) -> Convertible {
+        self.into()
+    }
+}
+
 macro_rules! impl_from_numeral {
     ($($from_type:ty,)*) => {
         $(
@@ -77,6 +89,13 @@ macro_rules! impl_from_numeral {
 
                 fn try_from(value: Convertible) -> Result<Self, Self::Error> {
                     f32::try_from(value).map(|value| value as $from_type)
+                }
+            }
+
+
+            impl IntoConvertibleFromNonConvertible for $from_type {
+                fn into_convertible(self) -> Convertible {
+                    self.into()
                 }
             }
         )*
@@ -107,6 +126,12 @@ impl From<&str> for Convertible {
     }
 }
 
+impl IntoConvertibleFromNonConvertible for String {
+    fn into_convertible(self) -> Convertible {
+        self.into()
+    }
+}
+
 impl TryFrom<Convertible> for bool {
     type Error = InvalidCastError;
 
@@ -122,6 +147,12 @@ impl TryFrom<Convertible> for bool {
 impl From<bool> for Convertible {
     fn from(value: bool) -> Self {
         Self::Boolean(value)
+    }
+}
+
+impl IntoConvertibleFromNonConvertible for bool {
+    fn into_convertible(self) -> Convertible {
+        self.into()
     }
 }
 

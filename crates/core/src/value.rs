@@ -15,12 +15,6 @@ pub struct Value {
     pub internal_value: Convertible,
 }
 
-/// Needed to ensure that the return type of a registered function is
-/// able to be turned into a [`Value`], but not a [`Value`] itself.
-pub trait IntoValueFromNonValue {
-    fn into_value(self) -> Value;
-}
-
 macro_rules! impl_from {
     ($($from_type:ty,)*) => {
         $(
@@ -41,11 +35,6 @@ macro_rules! impl_from {
                 }
             }
 
-            impl IntoValueFromNonValue for $from_type {
-                fn into_value(self) -> Value {
-                    self.into()
-                }
-            }
         )*
     };
 }
@@ -79,12 +68,6 @@ impl From<String> for Value {
             r#type: (&value).into(),
             internal_value: value.into(),
         }
-    }
-}
-
-impl IntoValueFromNonValue for String {
-    fn into_value(self) -> Value {
-        self.into()
     }
 }
 

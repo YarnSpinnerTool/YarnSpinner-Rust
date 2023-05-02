@@ -1,7 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Library.cs>
 
-use crate::prelude::{yarn_fn_registry, Value, YarnFnRegistry};
+use crate::prelude::{yarn_fn_registry, YarnFnRegistry};
 use crate::types::Type;
+use crate::value::convertible::Convertible;
 use std::ops::{Deref, DerefMut};
 
 /// A collection of functions that can be called from Yarn scripts.
@@ -37,9 +38,9 @@ impl Library {
 
     pub fn standard_library() -> Self {
         let mut library = Library(yarn_fn_registry!(
-            "string" => <String as From<Value>>::from,
-            "number" => |value: Value| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
-            "bool" => |value: Value| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
+            "string" => <String as From<Convertible>>::from,
+            "number" => |value: Convertible| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
+            "bool" => |value: Convertible| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
         ));
         for r#type in [Type::Number, Type::String, Type::Boolean] {
             library.register_methods(r#type);

@@ -14,7 +14,7 @@ impl YarnFnRegistry {
     where
         Marker: 'static + Clone,
         F: YarnFn<Marker> + 'static + Clone,
-        F::Out: IntoValueFromNonValue + 'static + Clone,
+        F::Out: IntoConvertibleFromNonConvertible + 'static + Clone,
     {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);
@@ -65,6 +65,7 @@ macro_rules! yarn_fn_registry {
         }
     };
 }
+use crate::prelude::convertible::IntoConvertibleFromNonConvertible;
 pub(crate) use yarn_fn_registry;
 
 #[cfg(test)]
