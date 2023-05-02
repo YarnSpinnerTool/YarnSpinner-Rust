@@ -204,3 +204,24 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn warns_about_mixed_indentation() {
+        let mut diagnostics = Vec::new();
+        let mixed_indentation_input = File {
+            file_name: "test.yarn".to_owned(),
+            source: "title: Start
+---
+-> Option 1
+\t   Nice.
+==="
+            .to_owned(),
+        };
+        let _parsed_file = parse_syntax_tree(&mixed_indentation_input, &mut diagnostics);
+        assert_eq!(1, diagnostics.len());
+    }
+}
