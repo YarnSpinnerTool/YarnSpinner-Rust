@@ -223,5 +223,21 @@ mod tests {
         };
         let _parsed_file = parse_syntax_tree(&mixed_indentation_input, &mut diagnostics);
         assert_eq!(1, diagnostics.len());
+        assert_eq!(
+            Diagnostic::from_message("Indentation contains tabs and spaces")
+                .with_context("\t   ")
+                .with_file_name("test.yarn")
+                .with_range(
+                    Position {
+                        line: 3,
+                        character: 0
+                    }..=Position {
+                        line: 3,
+                        character: 4
+                    }
+                )
+                .with_severity(DiagnosticSeverity::Warning),
+            diagnostics[0]
+        );
     }
 }

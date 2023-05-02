@@ -11,7 +11,9 @@ use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
 use crate::listeners::Diagnostic;
-use crate::prelude::{create_common_token, DiagnosticSeverity, TokenRangeSource};
+use crate::output::Position;
+use crate::prelude::{create_common_token, DiagnosticSeverity};
+use antlr_rust::token::CommonToken;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
@@ -20,7 +22,7 @@ use antlr_rust::{
 };
 use collections::*;
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, RangeInclusive};
 use std::rc::Rc;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
@@ -310,8 +312,8 @@ where
         if saw_spaces && saw_tabs {
             self.diagnostics.borrow_mut().push(
                 Diagnostic::from_message("Indentation contains tabs and spaces")
-                    .with_range(current_token.range())
-                    .with_context(current_token.get_text())
+                    .with_range(get_newline_indentation_range(current_token))
+                    .with_context(get_newline_indentation_text(current_token))
                     .with_file_name(self.file_name.clone())
                     .with_severity(DiagnosticSeverity::Warning),
             );
@@ -342,4 +344,22 @@ where
 
         self.pending_tokens.enqueue(token);
     }
+}
+
+fn get_newline_indentation_range(token: &CommonToken<'_>) -> RangeInclusive<Position> {
+    // +1 compared to similar code because we don't want to start at the newline
+    let line = token.get_line() as usize;
+
+    let start = Position { line, character: 0 };
+    let stop = Position {
+        line,
+        character: token.get_text().len() - 1,
+    };
+
+    start..=stop
+}
+
+fn get_newline_indentation_text(token: &CommonToken<'_>) -> String {
+    // Skip newline
+    token.get_text().chars().skip(1).collect()
 }
