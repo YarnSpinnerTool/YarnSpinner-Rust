@@ -83,7 +83,6 @@ impl Display for Diagnostic {
         let annotation_type = match self.severity {
             DiagnosticSeverity::Error => AnnotationType::Error,
             DiagnosticSeverity::Warning => AnnotationType::Warning,
-            DiagnosticSeverity::Info => AnnotationType::Info,
         };
         let snippet = Snippet {
             title: Some(Annotation {
@@ -140,6 +139,10 @@ impl DiagnosticVec for Vec<Diagnostic> {
 }
 
 /// The severity of the issue.
+///
+/// ## Implementation notes
+///
+/// The `Info` variant was not implemented because it was unused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, strum_macros::Display)]
 pub enum DiagnosticSeverity {
     /// An error.
@@ -149,15 +152,9 @@ pub enum DiagnosticSeverity {
     #[default]
     Error,
 
-    /// An warning.
+    /// A warning.
     ///
     /// Warnings represent possible problems that the user should fix,
     /// but do not cause the compilation process to fail.
     Warning,
-
-    /// An informational diagnostic.
-    ///
-    /// Infos represent possible issues or steps that the user may wish
-    /// to fix, but are unlikely to cause problems.
-    Info,
 }

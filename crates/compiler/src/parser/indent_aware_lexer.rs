@@ -32,6 +32,10 @@ type YarnSpinnerLexer = ();
 antlr_rust::tid! { impl<'input, Input> TidAble<'input> for IndentAwareYarnSpinnerLexer<'input, Input> where Input:CharStream<From<'input>> }
 
 /// A Lexer subclass that detects newlines and generates indent and dedent tokens accordingly.
+///
+/// ## Implementation notes
+///
+/// In contrast to the original implementation, the warnings emitted by this lexer are actually respected in the diagnostics.
 pub struct IndentAwareYarnSpinnerLexer<
     'input,
     Input: CharStream<From<'input>>,

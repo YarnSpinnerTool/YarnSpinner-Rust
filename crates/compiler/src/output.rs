@@ -15,6 +15,11 @@ mod string_info;
 /// The result of a compilation.
 ///
 /// Instances of this struct are produced as a result of supplying a [`CompilationJob`] to [`compile`].
+/// 
+/// ## Implementation Notes
+/// 
+/// In contrast to the original implementation, where this struct was called a `CompilationResult`, we return
+/// an actual [`Result`], so this type is guaranteed to only hold warnings as opposed to all diagnostics.
 #[derive(Debug, Clone, Default)]
 pub struct Compilation {
     /// The compiled Yarn program that the [`Compiler`] produced.
@@ -64,7 +69,12 @@ pub struct Compilation {
     pub file_tags: HashMap<String, Vec<String>>,
 
     /// The collection of [`Diagnostic`] objects that
-    /// describe non-fatal problems in the source code.
+    /// describe possible problems that the user should fix,
+    /// but do not cause the compilation process to fail.
+    /// 
+    /// All diagnostics in this collection have a severity of [`DiagnosticSeverity::Warning`].
+    /// If there was an error during compilation, the compilation returns an [`Err`] variant containing
+    /// error diagnostics instead of this [`Compilation`].
     pub warnings: Vec<Diagnostic>,
 
     /// The collection of [`DebugInfo`] objects for each node in [`Program`].
