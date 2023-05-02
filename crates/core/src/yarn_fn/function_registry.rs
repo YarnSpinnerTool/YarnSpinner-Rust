@@ -7,13 +7,13 @@ use std::ops::{Deref, DerefMut};
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn YarnFn>>);
+pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>);
 
 impl YarnFnRegistry {
     pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
     where
         Marker: 'static + Clone,
-        F: YarnFnWithMarker<Marker> + 'static + Clone,
+        F: YarnFn<Marker> + 'static + Clone,
         F::Out: IntoValueFromNonValue + 'static + Clone,
     {
         let name = name.into();
@@ -21,7 +21,11 @@ impl YarnFnRegistry {
         self.insert(name, Box::new(wrapped));
     }
 
-    pub fn add_boxed(&mut self, name: impl Into<Cow<'static, str>>, function: Box<dyn YarnFn>) {
+    pub fn add_boxed(
+        &mut self,
+        name: impl Into<Cow<'static, str>>,
+        function: Box<dyn UntypedYarnFn>,
+    ) {
         let name = name.into();
         self.insert(name, function);
     }
@@ -30,13 +34,13 @@ impl YarnFnRegistry {
         self.get(name).is_some()
     }
 
-    pub fn get(&self, name: &str) -> Option<&dyn YarnFn> {
+    pub fn get(&self, name: &str) -> Option<&dyn UntypedYarnFn> {
         self.0.get(name).map(|f| f.as_ref())
     }
 }
 
 impl Deref for YarnFnRegistry {
-    type Target = HashMap<Cow<'static, str>, Box<dyn YarnFn>>;
+    type Target = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

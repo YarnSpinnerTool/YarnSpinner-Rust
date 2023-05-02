@@ -4,7 +4,8 @@ use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
 
-pub trait YarnFnWithMarker<Marker> {
+/// A function that can be registered into and called from Yarn.
+pub trait YarnFn<Marker> {
     type Out: IntoValueFromNonValue + 'static;
     fn call(&self, input: Vec<Value>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -13,23 +14,24 @@ pub trait YarnFnWithMarker<Marker> {
     }
 }
 
-pub trait YarnFn: Debug {
+/// A [`YarnFn`] with the `Marker` type parameter erased.
+pub trait UntypedYarnFn: Debug {
     fn call(&self, input: Vec<Value>) -> Value;
-    fn clone_box(&self) -> Box<dyn YarnFn>;
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
 
-impl Clone for Box<dyn YarnFn> {
+impl Clone for Box<dyn UntypedYarnFn> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
 }
 
-impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
+impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static + Clone,
-    F: YarnFnWithMarker<Marker> + 'static + Clone,
+    F: YarnFn<Marker> + 'static + Clone,
     F::Out: IntoValueFromNonValue + 'static + Clone,
 {
     fn call(&self, input: Vec<Value>) -> Value {
@@ -37,7 +39,7 @@ where
         output.into_value()
     }
 
-    fn clone_box(&self) -> Box<dyn YarnFn> {
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
         Box::new(self.clone())
     }
 
@@ -51,9 +53,9 @@ where
 }
 
 #[derive(Clone)]
-pub struct YarnFnWrapper<Marker, F>
+pub(crate) struct YarnFnWrapper<Marker, F>
 where
-    F: YarnFnWithMarker<Marker>,
+    F: YarnFn<Marker>,
 {
     function: F,
 
@@ -63,7 +65,7 @@ where
 
 impl<Marker, F> From<F> for YarnFnWrapper<Marker, F>
 where
-    F: YarnFnWithMarker<Marker>,
+    F: YarnFn<Marker>,
 {
     fn from(function: F) -> Self {
         Self {
@@ -75,7 +77,7 @@ where
 
 impl<Marker, F> Debug for YarnFnWrapper<Marker, F>
 where
-    F: YarnFnWithMarker<Marker>,
+    F: YarnFn<Marker>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let signature = std::any::type_name::<Marker>();
@@ -85,7 +87,7 @@ where
     }
 }
 
-impl PartialEq for Box<dyn YarnFn> {
+impl PartialEq for Box<dyn UntypedYarnFn> {
     fn eq(&self, other: &Self) -> bool {
         // Not guaranteed to be unique, but that's good enough for our purposes.
         let debug = format!("{:?}", self);
@@ -94,13 +96,13 @@ impl PartialEq for Box<dyn YarnFn> {
     }
 }
 
-impl Eq for Box<dyn YarnFn> {}
+impl Eq for Box<dyn UntypedYarnFn> {}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<F, O, $($param,)*> YarnFnWithMarker<fn($($param,)*) -> O> for F
+        impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
                 F: Fn($($param,)*) -> O,
                 O: IntoValueFromNonValue + 'static,
