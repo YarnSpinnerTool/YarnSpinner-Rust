@@ -30,17 +30,6 @@ impl Convertible {
     }
 }
 
-impl TryInto<Convertible> for Option<Convertible> {
-    type Error = InvalidCastError;
-
-    fn try_into(self) -> Result<Convertible, Self::Error> {
-        match self {
-            Some(convertible) => Ok(convertible),
-            None => Err(InvalidCastError::UninitializedValue),
-        }
-    }
-}
-
 impl TryFrom<Convertible> for f32 {
     type Error = InvalidCastError;
 
@@ -156,60 +145,6 @@ impl IntoConvertibleFromNonConvertible for bool {
     }
 }
 
-impl From<Convertible> for Box<dyn Any> {
-    fn from(value: Convertible) -> Self {
-        match value {
-            Convertible::Number(value) => Box::new(value),
-            Convertible::String(value) => Box::new(value),
-            Convertible::Boolean(value) => Box::new(value),
-        }
-    }
-}
-
-impl TryFrom<Box<dyn Any>> for Convertible {
-    type Error = InvalidCastError;
-
-    fn try_from(value: Box<dyn Any>) -> Result<Self, Self::Error> {
-        if let Some(value) = value.downcast_ref::<f32>() {
-            Ok(Self::Number(*value))
-        } else if let Some(value) = value.downcast_ref::<f64>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<i8>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<i16>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<i32>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<i64>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<i128>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<u8>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<u16>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<u32>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<u64>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<u128>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<usize>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<isize>() {
-            Ok(Self::Number(*value as f32))
-        } else if let Some(value) = value.downcast_ref::<String>() {
-            Ok(Self::String(value.clone()))
-        } else if let Some(value) = value.downcast_ref::<bool>() {
-            Ok(Self::Boolean(*value))
-        } else {
-            Err(InvalidCastError::InvalidTypeId(
-                InvalidDowncastError::InvalidTypeId(value.type_id()),
-            ))
-        }
-    }
-}
-
 #[derive(Error, Debug)]
 /// Represents a failure to convert one variant of [`Convertible`] to a base type.
 pub enum InvalidCastError {
@@ -219,8 +154,4 @@ pub enum InvalidCastError {
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     ParseBoolError(#[from] std::str::ParseBoolError),
-    #[error(transparent)]
-    InvalidTypeId(InvalidDowncastError),
-    #[error("Value was uninitialized, cannot cast it to anything")]
-    UninitializedValue,
 }

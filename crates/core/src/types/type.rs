@@ -197,28 +197,6 @@ impl From<&str> for Type {
     }
 }
 
-pub trait AnyExt {
-    fn r#type() -> Type;
-}
-
-impl AnyExt for Box<dyn Any> {
-    fn r#type() -> Type {
-        Type::Any
-    }
-}
-
-impl From<&Box<dyn Any>> for Type {
-    fn from(_value: &Box<dyn Any>) -> Self {
-        Type::Any
-    }
-}
-
-impl From<Box<dyn Any>> for Type {
-    fn from(_value: Box<dyn Any>) -> Self {
-        Type::Any
-    }
-}
-
 impl TryFrom<TypeId> for Type {
     type Error = InvalidDowncastError;
 
