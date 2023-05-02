@@ -64,12 +64,8 @@ pub struct Compilation {
     pub file_tags: HashMap<String, Vec<String>>,
 
     /// The collection of [`Diagnostic`] objects that
-    /// describe problems in the source code.
-    ///
-    /// If the compiler encounters errors while compiling source code, the
-    /// [`CompilationResult`] it produces will have a [`Program`] value of [`None`]. To help figure out
-    /// what the error is, users should consult the contents of this field.
-    pub diagnostics: Vec<Diagnostic>,
+    /// describe non-fatal problems in the source code.
+    pub warnings: Vec<Diagnostic>,
 
     /// The collection of [`DebugInfo`] objects for each node in [`Program`].
     pub debug_info: HashMap<String, DebugInfo>,
@@ -91,7 +87,7 @@ impl Compilation {
             programs.push(compilation.program.unwrap());
             declarations.extend(compilation.declarations);
             tags.extend(compilation.file_tags);
-            diagnostics.extend(compilation.diagnostics);
+            diagnostics.extend(compilation.warnings);
             node_debug_infos.extend(compilation.debug_info);
         }
         let combined_program = Program::combine(programs);
@@ -103,7 +99,7 @@ impl Compilation {
             debug_info: node_debug_infos,
             contains_implicit_string_tags,
             file_tags: tags,
-            diagnostics,
+            warnings: diagnostics,
         }
     }
 }

@@ -32,19 +32,21 @@ pub fn compile(compilation_job: CompilationJob) -> Result<Compilation> {
         &resolve_deferred_type_diagnostic,
         &break_on_job_with_only_declarations,
         &generate_code,
+        &add_initial_value_registrations,
     ];
 
     let initial = CompilationIntermediate::from_job(&compilation_job);
     let intermediate = compiler_steps.into_iter().fold(initial, |state, step| {
-        if state.result.is_none() {
-            step(state)
-        } else {
+        if state.early_break {
             state
+        } else {
+            step(state)
         }
     });
-    let final_state = add_initial_value_registrations(intermediate);
-
-    final_state.result.unwrap()
+    // Cleaning up diagnostics doesn't change the state but makes sure
+    // that diagnostics are unique, there are no errors in the warnings, etc.
+    // So we execute it even if we've had early breaks.
+    clean_up_diagnostics(intermediate).result.unwrap()
 }
 
 type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
@@ -63,6 +65,7 @@ pub(crate) struct CompilationIntermediate<'input> {
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) file_tags: HashMap<String, Vec<String>>,
     pub(crate) known_types: KnownTypes,
+    pub(crate) early_break: bool,
 }
 
 impl<'input> CompilationIntermediate<'input> {
@@ -79,6 +82,7 @@ impl<'input> CompilationIntermediate<'input> {
             diagnostics: Default::default(),
             file_tags: Default::default(),
             known_types: Default::default(),
+            early_break: Default::default(),
         }
     }
 }

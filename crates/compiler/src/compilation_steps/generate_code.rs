@@ -1,14 +1,11 @@
-use crate::listeners::CompilerListener;
+use crate::listeners::{CompilerListener, DiagnosticVec};
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::*;
 use crate::visitors::KnownTypes;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate {
-    let has_errors = state
-        .diagnostics
-        .iter()
-        .any(|d| d.severity == DiagnosticSeverity::Error);
+    let has_errors = state.diagnostics.has_errors();
     let results: Vec<_> = if has_errors {
         // We have errors, so we can't safely generate code.
         vec![]
@@ -36,8 +33,8 @@ pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIn
     let result = if has_errors || has_code_generation_errors {
         let total_diagnostics: Vec<_> = results
             .iter()
-            .filter_map(|r| r.as_ref().err())
-            .flat_map(|r| r.diagnostics.iter())
+            .filter_map(|result| result.as_ref().err())
+            .flat_map(|error| error.diagnostics.iter())
             .cloned()
             .chain(state.diagnostics.iter().cloned())
             .collect();
@@ -77,11 +74,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     tracking_nodes.extend(compiler_tracking_nodes.borrow().iter().cloned());
 
     // Don't attempt to generate debug information if compilation produced errors
-    if compiler_diagnostics
-        .borrow()
-        .iter()
-        .any(|d| d.severity == DiagnosticSeverity::Error)
-    {
+    if compiler_diagnostics.borrow().has_errors() {
         Err(CompilationError {
             diagnostics: compiler_diagnostics.borrow().clone(),
         })
@@ -94,7 +87,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
 
         Ok(Compilation {
             program: Some(compiler_program.borrow().clone()),
-            diagnostics: compiler_diagnostics.borrow().clone(),
+            warnings: compiler_diagnostics.borrow().clone(),
             debug_info: debug_infos,
             ..result_template
         })

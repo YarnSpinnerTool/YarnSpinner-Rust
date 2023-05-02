@@ -129,6 +129,16 @@ impl Display for Diagnostic {
     }
 }
 
+pub trait DiagnosticVec {
+    fn has_errors(&self) -> bool;
+}
+
+impl DiagnosticVec for Vec<Diagnostic> {
+    fn has_errors(&self) -> bool {
+        self.iter().any(|d| d.severity == DiagnosticSeverity::Error)
+    }
+}
+
 /// The severity of the issue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, strum_macros::Display)]
 pub enum DiagnosticSeverity {

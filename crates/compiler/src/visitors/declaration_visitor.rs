@@ -243,7 +243,7 @@ mod tests {
         })
         .unwrap();
 
-        assert!(result.diagnostics.is_empty());
+        assert!(result.warnings.is_empty());
         assert_eq!(result.declarations.len(), 4);
         assert_eq!(
             result.declarations[0],
