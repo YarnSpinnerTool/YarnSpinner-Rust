@@ -10,9 +10,9 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::CodePoint8BitCharStream;
 use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::Parser;
-use std::any::TypeId;
+use std::collections::HashSet;
 use std::rc::Rc;
-use yarn_slinger_core::prelude::{Library, Value};
+use yarn_slinger_core::prelude::Library;
 use yarn_slinger_core::types::{FunctionType, Type};
 
 pub(crate) fn get_line_id_tag<'a>(
@@ -168,23 +168,25 @@ where
 /// because Rust's type system already guarantees at compile-time that all registered
 /// functions are valid and compatible with Yarn.
 pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaration> {
+    let operators: HashSet<_> = Type::EXPLICITLY_CONSTRUCTABLE
+        .iter()
+        .map(|r#type| {
+            r#type
+                .properties()
+                .methods
+                .keys()
+                .map(|name| r#type.get_canonical_name_for_method(name))
+                .collect::<Vec<_>>()
+        })
+        .flatten()
+        .collect();
     library
         .iter()
-        .filter(|(_name, function)| {
-            // Functions that return or accept the internal type `Value` are
-            // operators, and are type checked by
-            // ExpressionTypeVisitor. [sic] (Future work: define each
-            // polymorph of each operator as a separate function
-            // that returns a concrete type, rather than the
-            // current method of having a 'Value' wrapper type).
-            function.return_type() != TypeId::of::<Value>()
-                && function
-                    .parameter_types()
-                    .into_iter()
-                    .all(|t| t != TypeId::of::<Value>())
-        })
+        // Operators are type checked by visitors instead
+        .filter(|(name, _function)| !operators.contains(name.as_ref()))
         .map(|(name, function)| {
             let mut function_type = FunctionType::default();
+            println!("function: {:?}", function);
             let parameters = function
                 .parameter_types()
                 .into_iter()

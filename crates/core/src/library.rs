@@ -37,9 +37,9 @@ impl Library {
 
     pub fn standard_library() -> Self {
         let mut library = Library(yarn_fn_registry!(
-            "string" => |value: Value| String::try_from(value).unwrap(),
-            "number" => |value: Value| f32::try_from(value).unwrap(),
-            "bool" => |value: Value| bool::try_from(value).unwrap(),
+            "string" => |value: Value| String::from(value),
+            "number" => |value: Value| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
+            "bool" => |value: Value| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
         ));
         for r#type in [Type::Number, Type::String, Type::Boolean] {
             library.register_methods(r#type);

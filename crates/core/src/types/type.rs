@@ -1,5 +1,5 @@
 use crate::prelude::types::*;
-use crate::prelude::YarnFnRegistry;
+use crate::prelude::{Value, YarnFnRegistry};
 use crate::types::any::any_type_properties;
 use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
@@ -224,6 +224,7 @@ impl TryFrom<TypeId> for Type {
     fn try_from(r#type: TypeId) -> Result<Self, Self::Error> {
         let string_type = TypeId::of::<String>();
         let bool_type = TypeId::of::<bool>();
+        let value_types = &[TypeId::of::<Value>(), TypeId::of::<Box<dyn Any>>()];
         let number_types = &[
             TypeId::of::<f32>(),
             TypeId::of::<f64>(),
@@ -244,6 +245,7 @@ impl TryFrom<TypeId> for Type {
             _ if r#type == string_type => Ok(Type::String),
             _ if r#type == bool_type => Ok(Type::Boolean),
             _ if number_types.contains(&r#type) => Ok(Type::Number),
+            _ if value_types.contains(&r#type) => Ok(Type::Any),
             _ => Err(InvalidDowncastError::InvalidTypeId(r#type)),
         }
     }
