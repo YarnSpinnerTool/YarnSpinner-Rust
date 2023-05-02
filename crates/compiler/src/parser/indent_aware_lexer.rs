@@ -10,7 +10,8 @@ mod collections;
 use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
-use crate::prelude::create_common_token;
+use crate::listeners::Diagnostic;
+use crate::prelude::{create_common_token, DiagnosticSeverity, TokenRangeSource};
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
@@ -18,7 +19,9 @@ use antlr_rust::{
     Lexer, TokenSource,
 };
 use collections::*;
+use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
 #[allow(dead_code)]
@@ -54,7 +57,8 @@ pub struct IndentAwareYarnSpinnerLexer<
     /// holds the line number of the last seen option.
     /// Lets us work out if the blank line needs to end the option.
     last_seen_option_content: Option<isize>,
-    warnings: Vec<Warning<TF::Inner>>,
+    file_name: String,
+    pub(crate) diagnostics: Rc<RefCell<Vec<Diagnostic>>>,
 }
 
 impl<'input, Input: CharStream<From<'input>>> Deref for IndentAwareYarnSpinnerLexer<'input, Input> {
@@ -71,12 +75,6 @@ impl<'input, Input: CharStream<From<'input>>> DerefMut
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.base
     }
-}
-
-#[allow(unused)]
-struct Warning<T: Token + ?Sized> {
-    token: Box<T>,
-    message: String,
 }
 
 impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
@@ -123,8 +121,9 @@ impl<'input, Input: CharStream<From<'input>>> IndentAwareYarnSpinnerLexer<'input
 where
     &'input LocalTokenFactory<'input>: Default,
 {
-    pub fn new(input: Input) -> Self {
+    pub fn new(input: Input, file_name: String) -> Self {
         IndentAwareYarnSpinnerLexer {
+            file_name,
             base: GeneratedYarnSpinnerLexer::new(input),
             hit_eof: false,
             last_token: Default::default(),
@@ -133,7 +132,7 @@ where
             last_indent: Default::default(),
             unbalanced_indents: Default::default(),
             last_seen_option_content: None,
-            warnings: Default::default(),
+            diagnostics: Default::default(),
         }
     }
 
@@ -309,10 +308,13 @@ where
         }
 
         if saw_spaces && saw_tabs {
-            self.warnings.push(Warning {
-                token: Box::new(current_token.clone()),
-                message: "Indentation contains tabs and spaces".to_owned(),
-            })
+            self.diagnostics.borrow_mut().push(
+                Diagnostic::from_message("Indentation contains tabs and spaces")
+                    .with_range(current_token.range())
+                    .with_context(current_token.get_text())
+                    .with_file_name(self.file_name.clone())
+                    .with_severity(DiagnosticSeverity::Warning),
+            );
         }
 
         length

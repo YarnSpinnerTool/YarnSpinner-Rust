@@ -6,7 +6,7 @@
 
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::{ActualTokenStream, Diagnostic};
-use antlr_rust::token::Token;
+use antlr_rust::token::{CommonToken, Token};
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
 use yarn_slinger_core::prelude::convertible::Convertible;
@@ -174,7 +174,9 @@ pub struct Position {
     pub character: usize,
 }
 
-pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
+pub(crate) trait ParserRuleContextExtRangeSource<'input>:
+    ParserRuleContextExt<'input>
+{
     fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
         let start = Position {
             line: self.start().get_line() as usize - 1,
@@ -190,7 +192,27 @@ pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
     }
 }
 
-impl<'input, T: ParserRuleContextExt<'input>> RangeSource<'input> for T {}
+impl<'input, T: ParserRuleContextExt<'input>> ParserRuleContextExtRangeSource<'input> for T {}
+
+pub(crate) trait TokenRangeSource<'input>: Token {
+    fn range(&self) -> RangeInclusive<Position>;
+}
+
+impl<'input> TokenRangeSource<'input> for CommonToken<'input> {
+    fn range(&self) -> RangeInclusive<Position> {
+        let line = self.get_line() as usize - 1;
+        let start_character = self.get_column() as usize;
+        let start = Position {
+            line,
+            character: start_character,
+        };
+        let stop = Position {
+            line,
+            character: start_character + self.get_text().len() - 1,
+        };
+        start..=stop
+    }
+}
 
 impl Display for DeclarationSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

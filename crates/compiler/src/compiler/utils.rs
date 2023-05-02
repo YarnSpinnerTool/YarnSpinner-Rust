@@ -36,12 +36,13 @@ pub(crate) fn parse_syntax_tree<'a>(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> FileParseResult<'a> {
     let input = CodePoint8BitCharStream::new(file.source.as_bytes());
-    let mut lexer = YarnSpinnerLexer::new(input);
+    let mut lexer = YarnSpinnerLexer::new(input, file.file_name.clone());
 
     // turning off the normal error listener and using ours
     let file_name = file.file_name.clone();
     let lexer_error_listener = LexerErrorListener::new(file_name.clone());
     let lexer_error_listener_diagnostics = lexer_error_listener.diagnostics.clone();
+    let lexer_diagnostics = lexer.diagnostics.clone();
     lexer.remove_error_listeners();
     lexer.add_error_listener(Box::new(lexer_error_listener));
 
@@ -57,10 +58,12 @@ pub(crate) fn parse_syntax_tree<'a>(
     // and we want to read them after.
     let tree = parser.dialogue().unwrap();
 
+    let lexer_diagnostics_borrowed = lexer_diagnostics.borrow();
     let lexer_error_listener_diagnostics_borrowed = lexer_error_listener_diagnostics.borrow();
     let parser_error_listener_diagnostics_borrowed = parser_error_listener_diagnostics.borrow();
     let new_diagnostics = lexer_error_listener_diagnostics_borrowed
         .iter()
+        .chain(lexer_diagnostics_borrowed.iter())
         .chain(parser_error_listener_diagnostics_borrowed.iter())
         .cloned();
     diagnostics.extend(new_diagnostics);
