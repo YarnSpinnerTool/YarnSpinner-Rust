@@ -9,9 +9,9 @@ pub(crate) fn resolve_deferred_type_diagnostic(
         .iter()
         .map(|decl| &decl.name)
         .collect();
+
     for deferred_type_diagnostic in &state.potential_issues {
         let resolved = known_declarations.contains(&deferred_type_diagnostic.name);
-
         if !resolved {
             state
                 .diagnostics
