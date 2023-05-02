@@ -14,7 +14,7 @@ impl YarnFnRegistry {
     where
         Marker: 'static + Clone,
         F: YarnFnWithMarker<Marker> + 'static + Clone,
-        F::Out: Into<Value> + 'static + Clone,
+        F::Out: IntoValueFromNonValue + 'static + Clone,
     {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);

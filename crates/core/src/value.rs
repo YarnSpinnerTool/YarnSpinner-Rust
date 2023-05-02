@@ -2,7 +2,6 @@
 
 use crate::prelude::convertible::Convertible;
 use crate::prelude::{convertible::InvalidCastError, types::Type};
-use std::any::Any;
 
 pub mod convertible;
 
@@ -14,6 +13,12 @@ pub struct Value {
     /// The proper Yarn type according to the type checker of this value.
     pub r#type: Type,
     pub internal_value: Convertible,
+}
+
+/// Needed to ensure that the return type of a registered function is
+/// able to be turned into a [`Value`], but not a [`Value`] itself.
+pub trait IntoValueFromNonValue {
+    fn into_value(self) -> Value;
 }
 
 macro_rules! impl_from {
@@ -33,6 +38,12 @@ macro_rules! impl_from {
 
                 fn try_from(value: Value) -> Result<Self, Self::Error> {
                     value.internal_value.try_into()
+                }
+            }
+
+            impl IntoValueFromNonValue for $from_type {
+                fn into_value(self) -> Value {
+                    self.into()
                 }
             }
         )*
@@ -71,36 +82,14 @@ impl From<String> for Value {
     }
 }
 
+impl IntoValueFromNonValue for String {
+    fn into_value(self) -> Value {
+        self.into()
+    }
+}
+
 impl From<Value> for String {
     fn from(value: Value) -> Self {
         value.internal_value.into()
-    }
-}
-
-impl TryFrom<Box<dyn Any>> for Value {
-    type Error = InvalidCastError;
-    fn try_from(value: Box<dyn Any>) -> Result<Self, Self::Error> {
-        Ok(Self {
-            r#type: (&value).into(),
-            internal_value: value.try_into()?,
-        })
-    }
-}
-
-impl From<Value> for Box<dyn Any> {
-    fn from(value: Value) -> Self {
-        value.internal_value.into()
-    }
-}
-
-impl From<Value> for Convertible {
-    fn from(value: Value) -> Self {
-        value.internal_value
-    }
-}
-
-impl From<Value> for Type {
-    fn from(value: Value) -> Self {
-        value.r#type
     }
 }

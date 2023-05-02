@@ -1,11 +1,11 @@
-use crate::prelude::Value;
+use crate::prelude::*;
 use std::any::TypeId;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
 
 pub trait YarnFnWithMarker<Marker> {
-    type Out: Into<Value> + 'static;
+    type Out: IntoValueFromNonValue + 'static;
     fn call(&self, input: Vec<Value>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
@@ -30,11 +30,11 @@ impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static + Clone,
     F: YarnFnWithMarker<Marker> + 'static + Clone,
-    F::Out: Into<Value> + 'static + Clone,
+    F::Out: IntoValueFromNonValue + 'static + Clone,
 {
     fn call(&self, input: Vec<Value>) -> Value {
         let output = self.function.call(input);
-        output.as_value()
+        output.into_value()
     }
 
     fn clone_box(&self) -> Box<dyn YarnFn> {
@@ -47,20 +47,6 @@ where
 
     fn return_type(&self) -> TypeId {
         self.function.return_type()
-    }
-}
-
-/// Necessary because [`Into`] requires `self` to be consumed and thus be [`Sized`], which in turn means no trait objects.
-pub trait IntoValue {
-    fn as_value(&self) -> Value;
-}
-
-impl<T> IntoValue for T
-where
-    T: Into<Value> + Clone,
-{
-    fn as_value(&self) -> Value {
-        self.clone().into()
     }
 }
 
@@ -117,7 +103,7 @@ macro_rules! impl_yarn_fn_tuple {
         impl<F, O, $($param,)*> YarnFnWithMarker<fn($($param,)*) -> O> for F
             where
                 F: Fn($($param,)*) -> O,
-                O: Into<Value> + 'static,
+                O: IntoValueFromNonValue + 'static,
                 $($param: TryFrom<Value> + 'static,)*
             {
                 type Out = O;
