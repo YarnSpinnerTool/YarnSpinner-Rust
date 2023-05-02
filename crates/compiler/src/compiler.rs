@@ -29,6 +29,8 @@ pub fn compile(compilation_job: CompilationJob) -> Result<Compilation> {
         &find_tracking_nodes,
         &create_declarations_for_tracking_nodes,
         &add_tracking_declarations,
+        &resolve_deferred_type_diagnostic,
+        &break_on_job_with_only_declarations,
         &generate_code,
     ];
 

@@ -13,3 +13,17 @@ pub(crate) fn break_on_job_with_only_strings(
     }
     state
 }
+
+pub(crate) fn break_on_job_with_only_declarations(
+    mut state: CompilationIntermediate,
+) -> CompilationIntermediate {
+    if state.job.compilation_type == CompilationType::DeclarationsOnly {
+        state.result = Some(Ok(Compilation {
+            declarations: state.derived_variable_declarations.clone(),
+            diagnostics: state.diagnostics.clone(),
+            file_tags: state.file_tags.clone(),
+            ..Default::default()
+        }));
+    }
+    state
+}
