@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
-use crate::test_base::TestBase;
+use crate::test_base::*;
 use yarn_slinger_compiler::prelude::*;
-use yarn_slinger_core::prelude::Program;
+use yarn_slinger_core::prelude::*;
 
 mod test_base;
 
@@ -26,8 +26,8 @@ fn test_merging_nodes() -> std::io::Result<()> {
         .read_file(&ship_path)?
         .with_library(test_base.dialogue.library.clone());
 
-    let result_sally = compile(compilation_job_sally).unwrap();
-    let result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap();
+    let result_sally = compile(compilation_job_sally).unwrap_pretty();
+    let result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
 
     // Loading code with the same contents should throw
     let combined_not_working = Program::combine(vec![

@@ -45,14 +45,14 @@ impl Diagnostic {
         }
     }
 
-    pub fn read_parser_rule_context<'input>(
+    pub(crate) fn with_parser_context<'input>(
         mut self,
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,
     ) -> Self {
         let range = ctx.range(token_stream);
         self.range = Some(range);
-        self.context = Some(ctx.get_text_with_whitespace(token_stream));
+        self.context = Some(ctx.get_lines_around(token_stream));
         self
     }
 
@@ -97,7 +97,8 @@ impl Display for Diagnostic {
                     .range
                     .as_ref()
                     .map(|r| r.start().line)
-                    .unwrap_or_default(),
+                    .unwrap_or_default()
+                    + 1,
                 origin: self.file_name.as_deref(),
                 fold: true,
                 annotations: vec![SourceAnnotation {

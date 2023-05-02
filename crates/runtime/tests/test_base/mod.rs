@@ -4,6 +4,7 @@
 //! - pretty much anything lol
 
 use std::path::PathBuf;
+use yarn_slinger_compiler::prelude::{Compilation, CompilationError};
 use yarn_slinger_runtime::prelude::*;
 
 pub struct TestBase {
@@ -42,5 +43,26 @@ impl TestBase {
         let test_data_path = Self::test_data_path();
         let test_data = test_data_path.to_str().unwrap();
         [test_data, "Projects", "Space"].iter().collect()
+    }
+}
+
+pub trait CompileResultExt {
+    fn unwrap_pretty(self) -> Compilation;
+}
+
+impl CompileResultExt for Result<Compilation, CompilationError> {
+    fn unwrap_pretty(self) -> Compilation {
+        match self {
+            Ok(compilation) => compilation,
+            Err(error) => {
+                for diagnostic in &error.diagnostics {
+                    eprintln!("{:?}", diagnostic);
+                }
+                for diagnostic in error.diagnostics {
+                    eprintln!("{}", diagnostic);
+                }
+                panic!("Compilation failed due to Yarn errors")
+            }
+        }
     }
 }

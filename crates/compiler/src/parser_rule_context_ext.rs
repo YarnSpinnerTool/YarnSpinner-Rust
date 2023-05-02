@@ -1,11 +1,12 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/YarnSpinnerRuleContextExt.cs>
 
 use crate::prelude::*;
+use antlr_rust::int_stream::IntStream;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_stream::TokenStream;
 
-pub trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
+pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     /// Returns the original text of this [`ParserRuleContext`], including all
     /// whitespace.
     ///
@@ -35,6 +36,24 @@ pub trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
             token_stream.get_text_from_interval(start, stop)
         }
     }
+
+    fn get_lines_around(&self, token_stream: &ActualTokenStream<'input>) -> String {
+        let start = self.start().get_token_index();
+        let stop = self.stop().get_token_index();
+        let head = token_stream.get_text_from_interval(0, start - 1);
+        let body = token_stream.get_text_from_interval(start, stop);
+        let tail = token_stream.get_text_from_interval(stop + 1, token_stream.size() - 1);
+        let last_line = head.rfind('\n').map(|index| index + 1).unwrap_or(0);
+        let head = head[last_line..].to_string();
+        let next_line = tail.find('\n').unwrap_or(tail.len());
+        let tail = tail[..next_line].to_string();
+        head + &body + &tail
+    }
+}
+
+pub(crate) struct LinesAroundResult {
+    pub(crate) lines: String,
+    pub(crate) line_offset: usize,
 }
 
 impl<'input, T: ?Sized> ParserRuleContextExt<'input> for T where T: ParserRuleContext<'input> {}

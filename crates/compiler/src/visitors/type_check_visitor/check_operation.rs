@@ -90,7 +90,7 @@ impl<'input> TypeCheckVisitor<'input> {
                     );
                         let diagnostic = Diagnostic::from_message(message)
                             .with_file_name(&self.file.name)
-                            .read_parser_rule_context(context, self.file.tokens());
+                            .with_parser_context(context, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                         return None;
                     }
@@ -102,7 +102,7 @@ impl<'input> TypeCheckVisitor<'input> {
                     );
                         let diagnostic = Diagnostic::from_message(message)
                             .with_file_name(&self.file.name)
-                            .read_parser_rule_context(context, self.file.tokens());
+                            .with_parser_context(context, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                         return None;
                     }
@@ -246,7 +246,7 @@ impl<'input> TypeCheckVisitor<'input> {
                     format_cannot_determine_variable_type_error(&var_name),
                 )
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(undefined_variable_context.as_ref(), self.file.tokens());
+                .with_parser_context(undefined_variable_context.as_ref(), self.file.tokens());
                 self.diagnostics.push(diagnostic);
                 continue;
             }
@@ -270,7 +270,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 format!("All terms of {operation_description} must be the same, not {type_list}");
             let diagnostic = Diagnostic::from_message(message)
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(context, self.file.tokens());
+                .with_parser_context(context, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return None;
         }
@@ -305,7 +305,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 );
                 let diagnostic = Diagnostic::from_message(message)
                     .with_file_name(&self.file.name)
-                    .read_parser_rule_context(context, self.file.tokens());
+                    .with_parser_context(context, self.file.tokens());
                 self.diagnostics.push(diagnostic);
                 return None;
             }
@@ -339,7 +339,7 @@ impl<'input> TypeCheckVisitor<'input> {
             );
             let diagnostic = Diagnostic::from_message(message)
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(context, self.file.tokens());
+                .with_parser_context(context, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return None;
         }
@@ -365,7 +365,7 @@ impl<'input> TypeCheckVisitor<'input> {
             self.diagnostics.push(
                 Diagnostic::from_message(message)
                     .with_file_name(&self.file.name)
-                    .read_parser_rule_context(context, self.file.tokens()),
+                    .with_parser_context(context, self.file.tokens()),
             );
             return None;
         }

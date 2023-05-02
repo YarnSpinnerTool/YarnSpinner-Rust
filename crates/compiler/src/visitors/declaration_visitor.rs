@@ -97,7 +97,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
                 self.diagnostics.push(
                     Diagnostic::from_message(message)
                         .with_file_name(self.file.name.clone())
-                        .read_parser_rule_context(header.as_ref(), self.file.tokens()),
+                        .with_parser_context(header.as_ref(), self.file.tokens()),
                 );
             }
         }
@@ -134,7 +134,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             self.diagnostics.push(
                 Diagnostic::from_message(msg)
                     .with_file_name(&self.file.name)
-                    .read_parser_rule_context(ctx, self.file.tokens()),
+                    .with_parser_context(ctx, self.file.tokens()),
             );
             return;
         }
@@ -165,7 +165,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
                         self.diagnostics.push(
                             Diagnostic::from_message(msg)
                                 .with_file_name(&self.file.name)
-                                .read_parser_rule_context(ctx, self.file.tokens()),
+                                .with_parser_context(ctx, self.file.tokens()),
                         );
                         return;
                     }
@@ -186,7 +186,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
                     self.diagnostics.push(
                         Diagnostic::from_message(msg)
                             .with_file_name(&self.file.name)
-                            .read_parser_rule_context(ctx, self.file.tokens()),
+                            .with_parser_context(ctx, self.file.tokens()),
                     );
                     return;
                 }

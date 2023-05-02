@@ -103,7 +103,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                 let line_id = line_id.get_text();
                 self.diagnostics.push(
                     Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .read_parser_rule_context(diagnostic_context.as_ref(), self.file.tokens())
+                        .with_parser_context(diagnostic_context.as_ref(), self.file.tokens())
                         .with_file_name(&self.file.name),
                 );
                 return;

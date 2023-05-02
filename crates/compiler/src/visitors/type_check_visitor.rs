@@ -246,7 +246,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         self.diagnostics.push(
             Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens()),
+                .with_parser_context(ctx, self.file.tokens()),
         );
 
         None
@@ -324,14 +324,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 "parameters"
             };
             let diagnostic = Diagnostic::from_message(format!(
-                "Function {} expects {} {}, but received {}",
+                "Function \"{}\" expects {} {}, but received {}",
                 function_name,
                 expected_parameter_types.len(),
                 parameters,
                 supplied_parameters.len()
             ))
             .with_file_name(&self.file.name)
-            .read_parser_rule_context(ctx, self.file.tokens());
+            .with_parser_context(ctx, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return *function_type.return_type;
         }
@@ -358,7 +358,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     supplied_type.format()
                 ))
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens());
+                .with_parser_context(ctx, self.file.tokens());
                 self.diagnostics.push(diagnostic);
             }
         }
@@ -402,7 +402,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let diagnostic =
             Diagnostic::from_message(format_cannot_determine_variable_type_error(&name))
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens());
+                .with_parser_context(ctx, self.file.tokens());
         self.deferred_types
             .push(DeferredTypeDiagnostic { name, diagnostic });
 
@@ -462,7 +462,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                             expression_type.format(),
                         ))
                         .with_file_name(&self.file.name)
-                        .read_parser_rule_context(ctx, self.file.tokens());
+                        .with_parser_context(ctx, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                     }
                     (None, Some(expression_type)) => {
@@ -495,7 +495,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                                     format_cannot_determine_variable_type_error(&variable_name),
                                 )
                                 .with_file_name(&self.file.name)
-                                .read_parser_rule_context(ctx, self.file.tokens()),
+                                .with_parser_context(ctx, self.file.tokens()),
                             )
                         }
                     }
@@ -537,7 +537,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                             Diagnostic::from_message(
                                 format!("Type of expression \"{}\" can't be determined without more context. Please declare one or more terms.", ctx.get_text_with_whitespace(self.file.tokens())))
                                 .with_file_name(&self.file.name)
-                                .read_parser_rule_context(ctx, self.file.tokens()));
+                                .with_parser_context(ctx, self.file.tokens()));
         }
         // at this point we have either fully resolved the type of the expression or been unable to do so
         // we return the type of the expression regardless and rely on either elements to catch the issue
