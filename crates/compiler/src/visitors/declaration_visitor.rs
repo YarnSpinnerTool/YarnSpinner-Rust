@@ -175,35 +175,37 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             // Check that the type we've found is compatible with the
             // type of the value that was provided - if it doesn't,
             // that's a type error
-            if !value.r#type.is_sub_type_of(&explicit_type) {
-                let msg = format!(
-                    "Type {} does not match value {} ({})",
-                    declaration_type.get_text(),
-                    value_context.get_text(),
-                    value.r#type.format()
-                );
-                self.diagnostics.push(
-                    Diagnostic::from_message(msg)
-                        .with_file_name(&self.file.name)
-                        .read_parser_rule_context(ctx, self.file.tokens()),
-                );
-                return;
+            if let Some(value) = value.as_ref() {
+                if !value.r#type.is_sub_type_of(&explicit_type) {
+                    let msg = format!(
+                        "Type {} does not match value {} ({})",
+                        declaration_type.get_text(),
+                        value_context.get_text(),
+                        value.r#type.format()
+                    );
+                    self.diagnostics.push(
+                        Diagnostic::from_message(msg)
+                            .with_file_name(&self.file.name)
+                            .read_parser_rule_context(ctx, self.file.tokens()),
+                    );
+                    return;
+                }
             }
         }
         // We're done creating the declaration!
         let description = compiler::get_document_comments(self.file.tokens(), ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
-        let declaration = Declaration::default()
-            .with_default_value(value.internal_value.clone().unwrap())
-            .with_type(value.r#type.clone())
-            .with_name(variable_name)
-            .with_description_optional(description_as_option)
-            .with_source_file_name(self.file.name.clone())
-            .with_source_node_name_optional(self.current_node_name.clone())
-            // All positions are +1 compared to original implementation, but the result is the same.
-            // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
-            .with_range(variable_context.range(self.file.tokens()));
-        self.new_declarations.push(declaration);
+        if let Some(value) = value.as_ref() {
+            let declaration = Declaration::default()
+                .with_default_value(value.internal_value.clone())
+                .with_type(value.r#type.clone())
+                .with_name(variable_name)
+                .with_description_optional(description_as_option)
+                .with_source_file_name(self.file.name.clone())
+                .with_source_node_name_optional(self.current_node_name.clone())
+                .with_range(variable_context.range(self.file.tokens()));
+            self.new_declarations.push(declaration);
+        }
     }
 }
 
@@ -253,11 +255,11 @@ mod tests {
                 .with_source_node_name("test")
                 .with_range(
                     Position {
-                        line: 3,
-                        character: 11,
+                        line: 2,
+                        character: 10,
                     }..=Position {
-                        line: 3,
-                        character: 14,
+                        line: 2,
+                        character: 13,
                     }
                 )
         );
@@ -272,11 +274,11 @@ mod tests {
                 .with_source_node_name("test")
                 .with_range(
                     Position {
-                        line: 4,
-                        character: 11,
+                        line: 3,
+                        character: 10,
                     }..=Position {
-                        line: 4,
-                        character: 14,
+                        line: 3,
+                        character: 13,
                     }
                 )
         );
@@ -291,11 +293,11 @@ mod tests {
                 .with_source_node_name("test")
                 .with_range(
                     Position {
-                        line: 5,
-                        character: 11,
+                        line: 4,
+                        character: 10,
                     }..=Position {
-                        line: 5,
-                        character: 14,
+                        line: 4,
+                        character: 13,
                     }
                 )
         );
@@ -310,11 +312,11 @@ mod tests {
                 .with_source_node_name("test")
                 .with_range(
                     Position {
-                        line: 6,
-                        character: 11,
+                        line: 5,
+                        character: 10,
                     }..=Position {
-                        line: 6,
-                        character: 15,
+                        line: 5,
+                        character: 14,
                     }
                 )
         );
@@ -338,7 +340,7 @@ mod tests {
         });
 
         let diagnostics = result.unwrap_err().diagnostics;
-        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(2, diagnostics.len());
         assert_eq!(
             diagnostics[0],
             Diagnostic::from_message("Type string does not match value 1 (Number)".to_string())
@@ -346,14 +348,28 @@ mod tests {
                 .with_context("<<declare $foo to 1 as string>>")
                 .with_range(
                     Position {
-                        line: 3,
-                        character: 1,
+                        line: 2,
+                        character: 0,
                     }..=Position {
-                        line: 3,
-                        character: 31,
+                        line: 2,
+                        character: 30,
                     }
                 )
-                .with_severity(DiagnosticSeverity::Error)
+        );
+        assert_eq!(
+            diagnostics[1],
+            Diagnostic::from_message("Can't figure out the type of variable $foo given its context. Specify its type with a <<declare>> statement.".to_string())
+                .with_file_name("test.yarn".to_string())
+                .with_context("$foo")
+                .with_range(
+                    Position {
+                        line: 2,
+                        character: 10,
+                    }..=Position {
+                        line: 2,
+                        character: 13,
+                    }
+                )
         );
     }
 }

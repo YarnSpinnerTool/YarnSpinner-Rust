@@ -311,14 +311,14 @@ a {very} cool expression
         });
 
         let diagnostics = result.unwrap_err().diagnostics;
-        assert_eq!(diagnostics.len(), 2);
+        assert_eq!(2, diagnostics.len());
 
         let range = Position {
-            line: 5,
-            character: 8,
+            line: 4,
+            character: 7,
         }..=Position {
-            line: 5,
-            character: 9,
+            line: 4,
+            character: 8,
         };
         let context = "a {very} cool expression\n       ^".to_owned();
         let first_expected =

@@ -9,7 +9,7 @@ use crate::prelude::{ActualTokenStream, Diagnostic};
 use antlr_rust::token::Token;
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
-use yarn_slinger_core::prelude::convertible::{Convertible, InvalidCastError};
+use yarn_slinger_core::prelude::convertible::Convertible;
 use yarn_slinger_core::types::Type;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -124,8 +124,8 @@ impl Declaration {
         self
     }
 
-    pub fn eq(&self, other: &Self, epsilon: f32) -> Result<bool, InvalidCastError> {
-        Ok(self.name == other.name
+    pub fn eq(&self, other: &Self, epsilon: f32) -> bool {
+        self.name == other.name
             && self.description == other.description
             && self.source_file_name == other.source_file_name
             && self.source_node_name == other.source_node_name
@@ -133,10 +133,10 @@ impl Declaration {
             && self.r#type == other.r#type
             && self.range == other.range
             && match (&self.default_value, &other.default_value) {
-                (Some(a), Some(b)) => a.eq(b, epsilon)?,
+                (Some(a), Some(b)) => a.eq(b, epsilon),
                 (None, None) => true,
                 _ => false,
-            })
+            }
     }
 }
 
@@ -177,13 +177,14 @@ pub struct Position {
 pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
     fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
         let start = Position {
-            line: self.start().get_line() as usize,
-            character: self.start().get_column() as usize + 1,
+            line: self.start().get_line() as usize - 1,
+            character: self.start().get_column() as usize,
         };
         let stop = Position {
-            line: self.stop().get_line() as usize,
+            line: self.stop().get_line() as usize - 1,
             character: self.start().get_column() as usize
-                + self.get_text_with_whitespace(token_stream).len(),
+                + self.get_text_with_whitespace(token_stream).len()
+                - 1,
         };
         start..=stop
     }
@@ -200,7 +201,7 @@ impl Display for DeclarationSource {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct DeferredTypeDiagnostic {
     pub(crate) name: String,
     pub(crate) diagnostic: Diagnostic,

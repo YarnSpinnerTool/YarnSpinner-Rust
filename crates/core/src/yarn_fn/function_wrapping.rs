@@ -1,16 +1,23 @@
 use crate::prelude::Value;
+use std::any::TypeId;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
 
 pub trait YarnFnWithMarker<Marker> {
-    type Out: Into<Value>;
+    type Out: Into<Value> + 'static;
     fn call(&self, input: Vec<Value>) -> Self::Out;
+    fn parameter_types(&self) -> Vec<TypeId>;
+    fn return_type(&self) -> TypeId {
+        TypeId::of::<Self::Out>()
+    }
 }
 
 pub trait YarnFn: Debug {
     fn call(&self, input: Vec<Value>) -> Value;
     fn clone_box(&self) -> Box<dyn YarnFn>;
+    fn parameter_types(&self) -> Vec<TypeId>;
+    fn return_type(&self) -> TypeId;
 }
 
 impl Clone for Box<dyn YarnFn> {
@@ -32,6 +39,14 @@ where
 
     fn clone_box(&self) -> Box<dyn YarnFn> {
         Box::new(self.clone())
+    }
+
+    fn parameter_types(&self) -> Vec<TypeId> {
+        self.function.parameter_types()
+    }
+
+    fn return_type(&self) -> TypeId {
+        self.function.return_type()
     }
 }
 
@@ -121,6 +136,10 @@ macro_rules! impl_yarn_fn_tuple {
                     );
                     let ($($param,)*) = input;
                     self($($param,)*)
+                }
+
+                fn parameter_types(&self) -> Vec<TypeId> {
+                    vec![$(TypeId::of::<$param>()),*]
                 }
             }
     };

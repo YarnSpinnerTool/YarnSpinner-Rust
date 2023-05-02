@@ -298,8 +298,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     "Implicit declaration of function at {}:{}:{}",
                     self.file.name, line, column
                 ))
-                // All positions are +1 compared to original implementation, but the result is the same.
-                // I suspect the C# ANTLR implementation is 1-based while antlr4rust is 0-based.
                 .with_range(ctx.range(self.file.tokens()))
                 .with_implicit();
 
@@ -560,9 +558,7 @@ trait DeclarationVecExt {
 
 impl DeclarationVecExt for Vec<Declaration> {
     fn position(&self, declaration: &Declaration) -> Option<usize> {
-        self.iter()
-            .filter_map(|decl| decl.eq(declaration, 1e-4).ok())
-            .position(|eq| eq)
+        self.iter().position(|decl| decl.eq(declaration, 1e-4))
     }
 
     fn find_remove(&mut self, declaration: &Declaration) {
@@ -667,11 +663,11 @@ mod tests {
                 .with_context("<<set $foo to \"invalid\">>")
                 .with_range(
                     Position {
-                        line: 4,
-                        character: 1,
+                        line: 3,
+                        character: 0,
                     }..=Position {
-                        line: 4,
-                        character: 25,
+                        line: 3,
+                        character: 24,
                     },
                 ),
         );
@@ -683,11 +679,11 @@ mod tests {
                 .with_context("<<set $bar to -15>>")
                 .with_range(
                     Position {
-                        line: 7,
-                        character: 1,
+                        line: 6,
+                        character: 0,
                     }..=Position {
-                        line: 7,
-                        character: 19,
+                        line: 6,
+                        character: 18,
                     },
                 ),
         );
@@ -699,11 +695,11 @@ mod tests {
                 .with_context("<<set $baz to false>>")
                 .with_range(
                     Position {
-                        line: 8,
-                        character: 1,
+                        line: 7,
+                        character: 0,
                     }..=Position {
-                        line: 8,
-                        character: 21,
+                        line: 7,
+                        character: 20,
                     },
                 ),
         );
@@ -775,11 +771,11 @@ mod tests {
                 .with_context("<<set $foo to $foo + $bar>>")
                 .with_range(
                     Position {
-                        line: 5,
-                        character: 1,
+                        line: 4,
+                        character: 0,
                     }..=Position {
-                        line: 5,
-                        character: 27,
+                        line: 4,
+                        character: 26,
                     },
                 ),
         );
@@ -791,11 +787,11 @@ mod tests {
                 .with_context("<<set $foo to $foo * \"invalid\">>")
                 .with_range(
                     Position {
-                        line: 6,
-                        character: 1,
+                        line: 5,
+                        character: 0,
                     }..=Position {
-                        line: 6,
-                        character: 32,
+                        line: 5,
+                        character: 31,
                     },
                 ),
         );
@@ -807,11 +803,11 @@ mod tests {
                 .with_context("$foo + $bar")
                 .with_range(
                     Position {
-                        line: 5,
-                        character: 15,
+                        line: 4,
+                        character: 14,
                     }..=Position {
-                        line: 5,
-                        character: 25,
+                        line: 4,
+                        character: 24,
                     },
                 ),
         );
@@ -823,11 +819,11 @@ mod tests {
                 .with_context("$foo * \"invalid\"")
                 .with_range(
                     Position {
-                        line: 6,
-                        character: 15,
+                        line: 5,
+                        character: 14,
                     }..=Position {
-                        line: 6,
-                        character: 30,
+                        line: 5,
+                        character: 29,
                     },
                 ),
         );
