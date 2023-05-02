@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::visitors::TypeCheckVisitor;
 use antlr_rust::tree::ParseTreeVisitorCompat;
-use yarn_slinger_core::prelude::*;
 
 pub(crate) fn check_types(mut state: CompilationIntermediate) -> CompilationIntermediate {
     for file in &state.parsed_files {

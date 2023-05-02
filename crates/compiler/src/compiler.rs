@@ -4,18 +4,11 @@ pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::compilation_steps::*;
 use crate::listeners::*;
 use crate::output::*;
-use crate::prelude::generated::yarnspinnerparser::{
-    DialogueContextAttrs, HeaderContextAll, NodeContextAttrs, YarnSpinnerParserTreeWalker,
-};
 use crate::prelude::*;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTreeVisitorCompat, Tree};
 pub use compilation_job::*;
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
-use yarn_slinger_core::prelude::*;
 
 mod antlr_rust_ext;
 mod compilation_job;

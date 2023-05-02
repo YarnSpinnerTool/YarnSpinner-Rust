@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::visitors::DeclarationVisitor;
 use antlr_rust::tree::ParseTreeVisitorCompat;
-use yarn_slinger_core::prelude::*;
 
 pub(crate) fn get_declarations(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // Find the variable declarations in these files.

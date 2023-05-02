@@ -37,7 +37,7 @@ impl Library {
 
     pub fn standard_library() -> Self {
         let mut library = Library(yarn_fn_registry!(
-            "string" => |value: Value| String::from(value),
+            "string" => <String as From<Value>>::from,
             "number" => |value: Value| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
             "bool" => |value: Value| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
         ));
@@ -50,7 +50,7 @@ impl Library {
     /// Registers the methods found inside a type.
     fn register_methods(&mut self, r#type: Type) {
         for (name, function) in r#type.properties().methods.iter() {
-            let canonical_name = r#type.get_canonical_name_for_method(&name);
+            let canonical_name = r#type.get_canonical_name_for_method(name);
             self.add_boxed(canonical_name, function.clone());
         }
     }

@@ -170,7 +170,7 @@ where
 pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaration> {
     let operators: HashSet<_> = Type::EXPLICITLY_CONSTRUCTABLE
         .iter()
-        .map(|r#type| {
+        .flat_map(|r#type| {
             r#type
                 .properties()
                 .methods
@@ -178,7 +178,6 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
                 .map(|name| r#type.get_canonical_name_for_method(name))
                 .collect::<Vec<_>>()
         })
-        .flatten()
         .collect();
     library
         .iter()
