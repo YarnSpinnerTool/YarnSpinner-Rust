@@ -63,7 +63,8 @@ This is the one and only line
 ===";
 
     let generated_lexer = GeneratedYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
-    let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
+    let indent_aware_lexer =
+        IndentAwareYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT), "input.yarn".to_owned());
 
     let mut reference_token_stream = CommonTokenStream::new(generated_lexer);
     let mut indent_aware_token_stream = CommonTokenStream::new(indent_aware_lexer);
@@ -98,6 +99,7 @@ This is the one and only line
 
 #[test]
 fn correctly_indents_and_dedents_with_token() {
+    // Careful: IDE's love to break the following significant whitespace!
     let option_indentation_relevant_input: &str = "title: Start
 ---
 -> Option 1
@@ -113,8 +115,10 @@ fn correctly_indents_and_dedents_with_token() {
     
 ===";
 
-    let indent_aware_lexer =
-        IndentAwareYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
+    let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
+        InputStream::new(option_indentation_relevant_input),
+        "input.yarn".to_owned(),
+    );
 
     let mut indent_aware_token_stream = CommonTokenStream::new(indent_aware_lexer);
 

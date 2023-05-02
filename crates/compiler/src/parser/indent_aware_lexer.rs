@@ -10,7 +10,10 @@ mod collections;
 use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
-use crate::prelude::create_common_token;
+use crate::listeners::Diagnostic;
+use crate::output::Position;
+use crate::prelude::{create_common_token, DiagnosticSeverity};
+use antlr_rust::token::CommonToken;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
@@ -18,7 +21,9 @@ use antlr_rust::{
     Lexer, TokenSource,
 };
 use collections::*;
-use std::ops::{Deref, DerefMut};
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut, RangeInclusive};
+use std::rc::Rc;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
 #[allow(dead_code)]
@@ -27,6 +32,10 @@ type YarnSpinnerLexer = ();
 antlr_rust::tid! { impl<'input, Input> TidAble<'input> for IndentAwareYarnSpinnerLexer<'input, Input> where Input:CharStream<From<'input>> }
 
 /// A Lexer subclass that detects newlines and generates indent and dedent tokens accordingly.
+///
+/// ## Implementation notes
+///
+/// In contrast to the original implementation, the warnings emitted by this lexer are actually respected in the diagnostics.
 pub struct IndentAwareYarnSpinnerLexer<
     'input,
     Input: CharStream<From<'input>>,
@@ -54,6 +63,8 @@ pub struct IndentAwareYarnSpinnerLexer<
     /// holds the line number of the last seen option.
     /// Lets us work out if the blank line needs to end the option.
     last_seen_option_content: Option<isize>,
+    file_name: String,
+    pub(crate) diagnostics: Rc<RefCell<Vec<Diagnostic>>>,
 }
 
 impl<'input, Input: CharStream<From<'input>>> Deref for IndentAwareYarnSpinnerLexer<'input, Input> {
@@ -116,8 +127,9 @@ impl<'input, Input: CharStream<From<'input>>> IndentAwareYarnSpinnerLexer<'input
 where
     &'input LocalTokenFactory<'input>: Default,
 {
-    pub fn new(input: Input) -> Self {
+    pub fn new(input: Input, file_name: String) -> Self {
         IndentAwareYarnSpinnerLexer {
+            file_name,
             base: GeneratedYarnSpinnerLexer::new(input),
             hit_eof: false,
             last_token: Default::default(),
@@ -126,6 +138,7 @@ where
             last_indent: Default::default(),
             unbalanced_indents: Default::default(),
             last_seen_option_content: None,
+            diagnostics: Default::default(),
         }
     }
 
@@ -220,6 +233,9 @@ where
         // now we need to see if the current depth requires any indents or dedents
         // we do this by first checking to see if there are any unbalanced indents
         if let Some(&initial_top) = self.unbalanced_indents.peek() {
+            // [sic!] later should make it check if indentation has changed inside the statement block and throw out a warning
+            // this.warnings.Add(new Warning { Token = currentToken, Message = "Indentation inside of shortcut block has changed. This is generally a bad idea."});
+
             // while there are unbalanced indents
             // we need to check if the current line is shallower than the indent stack
             // if it is then we emit a dedent and continue checking
@@ -279,15 +295,35 @@ where
             panic!("Current token must NOT be newline")
         }
 
-        current_token
-            .get_text()
-            .chars()
-            .map(|c| match c {
-                ' ' => 1,
-                '\t' => 8, // Ye, really (see reference implementation)
-                _ => 0,
-            })
-            .sum()
+        let mut length = 0;
+        let mut saw_spaces = false;
+        let mut saw_tabs = false;
+
+        for c in current_token.get_text().chars() {
+            match c {
+                ' ' => {
+                    length += 1;
+                    saw_spaces = true;
+                }
+                '\t' => {
+                    length += 8; // Ye, really (see reference implementation)
+                    saw_tabs = true;
+                }
+                _ => {}
+            }
+        }
+
+        if saw_spaces && saw_tabs {
+            self.diagnostics.borrow_mut().push(
+                Diagnostic::from_message("Indentation contains tabs and spaces")
+                    .with_range(get_newline_indentation_range(current_token))
+                    .with_context(get_newline_indentation_text(current_token))
+                    .with_file_name(self.file_name.clone())
+                    .with_severity(DiagnosticSeverity::Warning),
+            );
+        }
+
+        length
     }
 
     /// Inserts a new token with the given text and type, as though it
@@ -312,4 +348,22 @@ where
 
         self.pending_tokens.enqueue(token);
     }
+}
+
+fn get_newline_indentation_range(token: &CommonToken<'_>) -> RangeInclusive<Position> {
+    // +1 compared to similar code because we don't want to start at the newline
+    let line = token.get_line() as usize;
+
+    let start = Position { line, character: 0 };
+    let stop = Position {
+        line,
+        character: token.get_text().len() - 1,
+    };
+
+    start..=stop
+}
+
+fn get_newline_indentation_text(token: &CommonToken<'_>) -> String {
+    // Skip newline
+    token.get_text().chars().skip(1).collect()
 }
