@@ -1,12 +1,11 @@
 pub mod function_wrappers;
 mod generated;
 mod library;
+mod operator;
 pub mod types;
 mod value;
-mod virtual_machine;
 mod yarn_fn;
 
 pub mod prelude {
-    pub use crate::virtual_machine::*;
-    pub use crate::{generated::*, library::*, types, value::*, yarn_fn::*};
+    pub use crate::{generated::*, library::*, operator::*, types, value::*, yarn_fn::*};
 }
