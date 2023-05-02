@@ -1,13 +1,14 @@
 //! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
-use crate::types::InvalidDowncastError;
-use std::any::Any;
 use thiserror::Error;
 
-/// Implements meaningful conversions, i.e. impls for [`TryFrom`] and [`From`] from the variants to Rust's base types.
+/// Represents a Yarn value without a specific type, so something like a generic.
+///
+/// Implements meaningful conversions between types through [`TryFrom`] and [`From`].
 /// A failure to convert one variant to another will result in an [`InvalidCastError`].
 #[derive(Debug, Clone, PartialEq)]
-pub enum Convertible {
-    /// Any kind of Rust number, e.g. `i32`, `f32`, `u64`, `isize`, etc.
+pub enum UntypedValue {
+    /// Any kind of Rust number, i.e. one of `f32`, `f64`, `i8`, `i16`, `i32`, `i64`, `i128`, `u8`, `u16`, `u32`, `u64`, `u128`, `usize`, `isize`.
+    /// They are internally stored as `f32` through simple type casts. When pulling out a whole number, the floating point number is rounded.
     Number(f32),
     /// An owned Rust string.
     String(String),
@@ -17,11 +18,11 @@ pub enum Convertible {
 
 /// Needed to ensure that the return type of a registered function is
 /// able to be turned into a [`Value`], but not a [`Value`] itself.
-pub trait IntoConvertibleFromNonConvertible {
-    fn into_convertible(self) -> Convertible;
+pub trait IntoUntypedValueFromNonUntypedValue {
+    fn into_untyped_value(self) -> UntypedValue;
 }
 
-impl Convertible {
+impl UntypedValue {
     pub fn eq(&self, other: &Self, epsilon: f32) -> bool {
         match (self, other) {
             (Self::Number(a), Self::Number(b)) => (a - b).abs() < epsilon,
@@ -30,60 +31,40 @@ impl Convertible {
     }
 }
 
-impl TryFrom<Convertible> for f32 {
-    type Error = InvalidCastError;
-
-    fn try_from(value: Convertible) -> Result<Self, Self::Error> {
-        match value {
-            Convertible::Number(value) => Ok(value),
-            Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Boolean(value) => Ok(if value { 1.0 } else { 0.0 }),
-        }
-    }
-}
-
-impl<T> From<&T> for Convertible
+impl<T> From<&T> for UntypedValue
 where
     T: Copy,
-    Convertible: From<T>,
+    UntypedValue: From<T>,
 {
     fn from(value: &T) -> Self {
         Self::from(*value)
     }
 }
 
-impl From<f32> for Convertible {
-    fn from(value: f32) -> Self {
-        Self::Number(value)
-    }
-}
-
-impl IntoConvertibleFromNonConvertible for f32 {
-    fn into_convertible(self) -> Convertible {
-        self.into()
-    }
-}
-
-macro_rules! impl_from_numeral {
-    ($($from_type:ty,)*) => {
+macro_rules! impl_floating_point {
+        ($($from_type:ty,)*) => {
         $(
-            impl From<$from_type> for Convertible {
+            impl From<$from_type> for UntypedValue {
                 fn from(value: $from_type) -> Self {
                     Self::Number(value as f32)
                 }
             }
 
-            impl TryFrom<Convertible> for $from_type {
+            impl TryFrom<UntypedValue> for $from_type {
                 type Error = InvalidCastError;
 
-                fn try_from(value: Convertible) -> Result<Self, Self::Error> {
-                    f32::try_from(value).map(|value| value as $from_type)
+                fn try_from(value: UntypedValue) -> Result<Self, Self::Error> {
+                    match value {
+                        UntypedValue::Number(value) => Ok(value as $from_type),
+                        UntypedValue::String(value) => value.parse().map_err(Into::into),
+                        UntypedValue::Boolean(value) => Ok(if value { 1.0 as $from_type } else { 0.0 }),
+                    }
                 }
             }
 
 
-            impl IntoConvertibleFromNonConvertible for $from_type {
-                fn into_convertible(self) -> Convertible {
+            impl IntoUntypedValueFromNonUntypedValue for $from_type {
+                fn into_untyped_value(self) -> UntypedValue {
                     self.into()
                 }
             }
@@ -91,62 +72,91 @@ macro_rules! impl_from_numeral {
     };
 }
 
-impl_from_numeral![f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
+impl_floating_point![f32, f64,];
 
-impl From<Convertible> for String {
-    fn from(value: Convertible) -> Self {
+macro_rules! impl_whole_number {
+    ($($from_type:ty,)*) => {
+        $(
+            impl From<$from_type> for UntypedValue {
+                fn from(value: $from_type) -> Self {
+                    Self::Number(value as f32)
+                }
+            }
+
+            impl TryFrom<UntypedValue> for $from_type {
+                type Error = InvalidCastError;
+
+                fn try_from(value: UntypedValue) -> Result<Self, Self::Error> {
+                    f32::try_from(value).map(|value| value.round() as $from_type)
+                }
+            }
+
+
+            impl IntoUntypedValueFromNonUntypedValue for $from_type {
+                fn into_untyped_value(self) -> UntypedValue {
+                    self.into()
+                }
+            }
+        )*
+    };
+}
+
+impl_whole_number![i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
+
+impl From<UntypedValue> for String {
+    fn from(value: UntypedValue) -> Self {
         match value {
-            Convertible::Number(value) => value.to_string(),
-            Convertible::String(value) => value,
-            Convertible::Boolean(value) => value.to_string(),
+            UntypedValue::Number(value) => value.to_string(),
+            UntypedValue::String(value) => value,
+            UntypedValue::Boolean(value) => value.to_string(),
         }
     }
 }
 
-impl From<String> for Convertible {
+impl From<String> for UntypedValue {
     fn from(value: String) -> Self {
         Self::String(value)
     }
 }
 
-impl From<&str> for Convertible {
+impl From<&str> for UntypedValue {
     fn from(value: &str) -> Self {
         Self::String(value.to_string())
     }
 }
 
-impl IntoConvertibleFromNonConvertible for String {
-    fn into_convertible(self) -> Convertible {
+impl IntoUntypedValueFromNonUntypedValue for String {
+    fn into_untyped_value(self) -> UntypedValue {
         self.into()
     }
 }
 
-impl TryFrom<Convertible> for bool {
+impl TryFrom<UntypedValue> for bool {
     type Error = InvalidCastError;
 
-    fn try_from(value: Convertible) -> Result<Self, Self::Error> {
+    fn try_from(value: UntypedValue) -> Result<Self, Self::Error> {
         match value {
-            Convertible::Number(value) => Ok(value != 0.0),
-            Convertible::String(value) => value.parse().map_err(Into::into),
-            Convertible::Boolean(value) => Ok(value),
+            UntypedValue::Number(value) => Ok(value != 0.0),
+            UntypedValue::String(value) => value.parse().map_err(Into::into),
+            UntypedValue::Boolean(value) => Ok(value),
         }
     }
 }
 
-impl From<bool> for Convertible {
+impl From<bool> for UntypedValue {
     fn from(value: bool) -> Self {
         Self::Boolean(value)
     }
 }
 
-impl IntoConvertibleFromNonConvertible for bool {
-    fn into_convertible(self) -> Convertible {
+impl IntoUntypedValueFromNonUntypedValue for bool {
+    fn into_untyped_value(self) -> UntypedValue {
         self.into()
     }
 }
 
 #[derive(Error, Debug)]
-/// Represents a failure to convert one variant of [`Convertible`] to a base type.
+/// Represents a failure to convert one variant of [`UntypedValue`] to a base type.
 pub enum InvalidCastError {
     #[error(transparent)]
     ParseFloatError(#[from] std::num::ParseFloatError),

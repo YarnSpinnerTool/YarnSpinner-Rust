@@ -1,10 +1,9 @@
 use crate::prelude::types::*;
-use crate::prelude::{Value, YarnFnRegistry};
+use crate::prelude::*;
 use crate::types::any::any_type_properties;
 use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
-use crate::value::convertible::Convertible;
 use paste::paste;
 use std::any::{Any, TypeId};
 use std::fmt::{Debug, Display};
@@ -204,8 +203,8 @@ impl TryFrom<TypeId> for Type {
         let string_type = TypeId::of::<String>();
         let bool_type = TypeId::of::<bool>();
         let value_types = &[
-            TypeId::of::<Value>(),
-            TypeId::of::<Convertible>(),
+            TypeId::of::<InternalValue>(),
+            TypeId::of::<UntypedValue>(),
             TypeId::of::<Box<dyn Any>>(),
         ];
         let number_types = &[

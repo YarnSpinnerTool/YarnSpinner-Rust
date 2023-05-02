@@ -11,8 +11,8 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
 use std::path::Path;
-use yarn_slinger_core::prelude::convertible::Convertible;
-use yarn_slinger_core::types::{FunctionType, SubTypeOf, Type, TypeFormat};
+use yarn_slinger_core::prelude::*;
+use yarn_slinger_core::types::*;
 
 mod check_operation;
 
@@ -583,21 +583,21 @@ fn get_filename(path: &str) -> &str {
 }
 
 trait DefaultValue {
-    fn default_value(&self) -> Option<Convertible>;
+    fn default_value(&self) -> Option<UntypedValue>;
 }
 impl DefaultValue for Type {
-    fn default_value(&self) -> Option<Convertible> {
+    fn default_value(&self) -> Option<UntypedValue> {
         match self {
-            Type::String => Some(Convertible::String(Default::default())),
-            Type::Number => Some(Convertible::Number(Default::default())),
-            Type::Boolean => Some(Convertible::Boolean(Default::default())),
+            Type::String => Some(UntypedValue::String(Default::default())),
+            Type::Number => Some(UntypedValue::Number(Default::default())),
+            Type::Boolean => Some(UntypedValue::Boolean(Default::default())),
             _ => None,
         }
     }
 }
 
 impl DefaultValue for Option<Type> {
-    fn default_value(&self) -> Option<Convertible> {
+    fn default_value(&self) -> Option<UntypedValue> {
         self.as_ref()?.default_value()
     }
 }

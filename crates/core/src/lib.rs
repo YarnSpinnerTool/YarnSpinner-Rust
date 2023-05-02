@@ -7,5 +7,12 @@ mod value;
 mod yarn_fn;
 
 pub mod prelude {
-    pub use crate::{generated::*, library::*, operator::*, types, value::*, yarn_fn::*};
+    pub use crate::{
+        generated::*,
+        library::*,
+        operator::*,
+        types::{self, Type},
+        value::*,
+        yarn_fn::*,
+    };
 }

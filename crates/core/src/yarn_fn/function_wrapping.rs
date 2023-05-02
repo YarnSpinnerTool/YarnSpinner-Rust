@@ -1,4 +1,4 @@
-use crate::prelude::convertible::{Convertible, IntoConvertibleFromNonConvertible};
+use crate::prelude::*;
 use std::any::TypeId;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
@@ -6,8 +6,8 @@ use yarn_slinger_macros::all_tuples;
 
 /// A function that can be registered into and called from Yarn.
 pub trait YarnFn<Marker> {
-    type Out: IntoConvertibleFromNonConvertible + 'static;
-    fn call(&self, input: Vec<Convertible>) -> Self::Out;
+    type Out: IntoUntypedValueFromNonUntypedValue + 'static;
+    fn call(&self, input: Vec<UntypedValue>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
@@ -16,7 +16,7 @@ pub trait YarnFn<Marker> {
 
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 pub trait UntypedYarnFn: Debug {
-    fn call(&self, input: Vec<Convertible>) -> Convertible;
+    fn call(&self, input: Vec<UntypedValue>) -> UntypedValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
@@ -32,11 +32,11 @@ impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static + Clone,
     F: YarnFn<Marker> + 'static + Clone,
-    F::Out: IntoConvertibleFromNonConvertible + 'static + Clone,
+    F::Out: IntoUntypedValueFromNonUntypedValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<Convertible>) -> Convertible {
+    fn call(&self, input: Vec<UntypedValue>) -> UntypedValue {
         let output = self.function.call(input);
-        output.into_convertible()
+        output.into_untyped_value()
     }
 
     fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
@@ -105,12 +105,12 @@ macro_rules! impl_yarn_fn_tuple {
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
                 F: Fn($($param,)*) -> O,
-                O: IntoConvertibleFromNonConvertible + 'static,
-                $($param: TryFrom<Convertible> + 'static,)*
+                O: IntoUntypedValueFromNonUntypedValue + 'static,
+                $($param: TryFrom<UntypedValue> + 'static,)*
             {
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, input: Vec<Convertible>) -> Self::Out {
+                fn call(&self, input: Vec<UntypedValue>) -> Self::Out {
                     let [$($param,)*] = &input[..] else {
                         panic!("Wrong number of arguments")
                     };
