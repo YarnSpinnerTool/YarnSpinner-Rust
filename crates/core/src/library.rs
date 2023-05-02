@@ -26,6 +26,15 @@ impl DerefMut for Library {
 }
 
 impl Library {
+    /// Loads functions from another [`Library`].
+    ///
+    /// If the other library contains a function with the same name as
+    /// one in this library, the function in the other library takes
+    /// precedence.
+    pub fn import(&mut self, other: Self) {
+        self.0.extend(other.0 .0);
+    }
+
     /// Generates a unique tracking variable name.
     /// This is intended to be used to generate names for visiting.
     /// Ideally these will very reproducible and sensible.

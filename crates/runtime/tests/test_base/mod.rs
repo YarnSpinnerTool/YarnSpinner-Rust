@@ -4,8 +4,19 @@
 //! - pretty much anything lol
 
 use std::path::PathBuf;
+use yarn_slinger_runtime::prelude::*;
 
-pub struct TestBase {}
+pub struct TestBase {
+    pub dialogue: Dialogue,
+}
+
+impl Default for TestBase {
+    fn default() -> Self {
+        let variable_storage = MemoryVariableStore::default();
+        let dialogue = Dialogue::with_variable_storage(variable_storage);
+        Self { dialogue }
+    }
+}
 
 impl TestBase {
     pub fn project_root_path() -> PathBuf {
@@ -25,5 +36,11 @@ impl TestBase {
         ]
         .iter()
         .collect()
+    }
+
+    pub fn space_demo_scripts_path() -> PathBuf {
+        let test_data_path = Self::test_data_path();
+        let test_data = test_data_path.to_str().unwrap();
+        [test_data, "Projects", "Space"].iter().collect()
     }
 }
