@@ -2,21 +2,21 @@
 
 use crate::prelude::types::Type;
 
-mod convertible;
-pub use convertible::*;
+mod untyped_value;
+pub use untyped_value::*;
 
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 
-/// A value appearing in a Yarn program. Construct it using the [`From`] trait and
-/// Convert it into a Rust type using the [`TryInto`] trait.
+/// A value as it appears to the compiler. As a consumer, you should not be facing this type.
 ///
 /// ## Implementation Notes
 ///
 /// Corresponds to the internal `Value` class in the original C# implementation.
 pub struct InternalValue {
-    /// The proper Yarn type according to the type checker of this value.
+    /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,
+    /// The actual value
     pub raw_value: UntypedValue,
 }
 

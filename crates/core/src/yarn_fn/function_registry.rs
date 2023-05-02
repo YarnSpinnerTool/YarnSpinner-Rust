@@ -10,6 +10,7 @@ use std::ops::{Deref, DerefMut};
 pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>);
 
 impl YarnFnRegistry {
+    /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
     pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
     where
         Marker: 'static + Clone,

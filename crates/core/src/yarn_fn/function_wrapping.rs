@@ -5,6 +5,19 @@ use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
 
 /// A function that can be registered into and called from Yarn.
+/// It must have the following properties:
+/// - It is allowed to have zero or more parameters
+/// - Each parameter must be one of the following types:
+///   - [`bool`]
+///   - [`String`]
+///   - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
+///   - [`UntypedValue`], which means that this parameter may be any of any of the above types
+/// - Its parameters must be passed by value
+/// - It must have a return type
+/// - Its return type must be one of the following types:
+///     - [`bool`]
+///     - [`String`]
+///     - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
 pub trait YarnFn<Marker> {
     type Out: IntoUntypedValueFromNonUntypedValue + 'static;
     fn call(&self, input: Vec<UntypedValue>) -> Self::Out;
@@ -15,6 +28,7 @@ pub trait YarnFn<Marker> {
 }
 
 /// A [`YarnFn`] with the `Marker` type parameter erased.
+/// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug {
     fn call(&self, input: Vec<UntypedValue>) -> UntypedValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
