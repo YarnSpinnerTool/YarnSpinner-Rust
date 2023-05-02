@@ -185,7 +185,6 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
         .filter(|(name, _function)| !operators.contains(name.as_ref()))
         .map(|(name, function)| {
             let mut function_type = FunctionType::default();
-            println!("function: {:?}", function);
             let parameters = function
                 .parameter_types()
                 .into_iter()

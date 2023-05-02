@@ -177,13 +177,14 @@ pub struct Position {
 pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
     fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
         let start = Position {
-            line: self.start().get_line() as usize,
-            character: self.start().get_column() as usize + 1,
+            line: self.start().get_line() as usize - 1,
+            character: self.start().get_column() as usize,
         };
         let stop = Position {
-            line: self.stop().get_line() as usize,
+            line: self.stop().get_line() as usize - 1,
             character: self.start().get_column() as usize
-                + self.get_text_with_whitespace(token_stream).len(),
+                + self.get_text_with_whitespace(token_stream).len()
+                - 1,
         };
         start..=stop
     }

@@ -39,8 +39,17 @@ pub(crate) fn add_initial_value_registrations(
         }
     }
     compilation.declarations = state.derived_variable_declarations.clone();
-    let unique_diagnostics: HashSet<Diagnostic> =
+    let mut unique_diagnostics: HashSet<Diagnostic> =
         HashSet::from_iter(state.diagnostics.clone().into_iter());
-    compilation.diagnostics = unique_diagnostics.into_iter().collect();
+    let mut ordered_unique_diagnostics = Vec::new();
+
+    // preserve order
+    for diagnostic in compilation.diagnostics.iter() {
+        if unique_diagnostics.contains(diagnostic) {
+            ordered_unique_diagnostics.push(diagnostic.clone());
+            unique_diagnostics.remove(diagnostic);
+        }
+    }
+    compilation.diagnostics = ordered_unique_diagnostics;
     state
 }
