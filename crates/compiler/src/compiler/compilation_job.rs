@@ -8,7 +8,7 @@ use yarn_slinger_core::prelude::Library;
 ///
 /// Instances of this struct are used with `Compiler::compile` to produce
 /// `CompilationResult` objects.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct CompilationJob {
     /// The [`File`] structs that represent the content to parse..
     pub files: Vec<File>,
@@ -46,7 +46,7 @@ impl CompilationJob {
 }
 
 /// Represents the contents of a file to compile.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct File {
     /// The name of the file.
     ///
@@ -60,7 +60,7 @@ pub struct File {
 }
 
 /// The types of compilation that the compiler will do.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
 pub enum CompilationType {
     /// The compiler will do a full compilation, and generate a [`Program`],
     /// function declaration set, and string table.

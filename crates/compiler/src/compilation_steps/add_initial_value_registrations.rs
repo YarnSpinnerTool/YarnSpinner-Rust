@@ -9,14 +9,15 @@ pub(crate) fn add_initial_value_registrations(
     // Last step: take every variable declaration we found in all
     // of the inputs, and create an initial value registration for
     // it.
+    let Ok(compilation) = state.result.as_mut().unwrap().as_mut() else {
+        return state;
+    };
+
     let declarations = state
         .known_variable_declarations
         .iter()
         .filter(|decl| !matches!(decl.r#type, Some(Type::Function(_))))
         .filter(|decl| decl.r#type.is_some());
-    let Ok(compilation) = state.result.as_mut().unwrap().as_mut() else {
-        return state;
-    };
 
     for declaration in declarations {
         let Some(default_value) = declaration.default_value.clone() else {

@@ -23,20 +23,26 @@ pub fn compile(compilation_job: CompilationJob) -> Result<Compilation> {
         &parse_files,
         &register_strings,
         &validate_unique_node_names,
+        &break_on_job_with_only_strings,
         &get_declarations,
         &check_types,
         &find_tracking_nodes,
+        &create_declarations_for_tracking_nodes,
         &add_tracking_declarations,
         &generate_code,
-        &add_initial_value_registrations,
     ];
 
     let initial = CompilationIntermediate::from_job(&compilation_job);
-    compiler_steps
-        .into_iter()
-        .fold(initial, |state, step| step(state))
-        .result
-        .unwrap()
+    let intermediate = compiler_steps.into_iter().fold(initial, |state, step| {
+        if state.result.is_none() {
+            step(state)
+        } else {
+            state
+        }
+    });
+    let final_state = add_initial_value_registrations(intermediate);
+
+    final_state.result.unwrap()
 }
 
 type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
