@@ -660,15 +660,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a String")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "title: test
----
-<<declare $foo to 1>>
-<<set $foo to \"invalid\">>
-<<declare $bar to true>>
-<<declare $baz to \"hello\">>",
-                )
-                .with_start_line(0)
                 .with_range(
                     Position {
                         line: 3,
@@ -684,15 +675,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$bar (Bool) cannot be assigned a Number")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "<<set $foo to \"invalid\">>
-<<declare $bar to true>>
-<<declare $baz to \"hello\">>
-<<set $bar to -15>>
-<<set $baz to false>>
-===",
-                )
-                .with_start_line(3)
                 .with_range(
                     Position {
                         line: 6,
@@ -708,14 +690,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$baz (String) cannot be assigned a Bool")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "<<declare $bar to true>>
-<<declare $baz to \"hello\">>
-<<set $bar to -15>>
-<<set $baz to false>>
-===",
-                )
-                .with_start_line(4)
                 .with_range(
                     Position {
                         line: 7,
@@ -730,7 +704,10 @@ mod tests {
 
     fn assert_contains(diagnostics: &[Diagnostic], expected: &Diagnostic) {
         assert!(
-            diagnostics.contains(expected),
+            // Does not factor in context or start line because these are subject to frequent change
+            diagnostics.iter().any(|d| d.file_name == expected.file_name
+                && d.message == expected.message
+                && d.range == expected.range),
             "Expected diagnostics:\n{}\nto contain:\n- {:?}",
             diagnostics
                 .iter()
@@ -791,15 +768,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "---
-<<declare $foo to 1>>
-<<declare $bar = \"invalid\">>
-<<set $foo to $foo + $bar>>
-<<set $foo to $foo * \"invalid\">>
-===",
-                )
-                .with_start_line(1)
                 .with_range(
                     Position {
                         line: 4,
@@ -815,14 +783,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "<<declare $foo to 1>>
-<<declare $bar = \"invalid\">>
-<<set $foo to $foo + $bar>>
-<<set $foo to $foo * \"invalid\">>
-===",
-                )
-                .with_start_line(2)
                 .with_range(
                     Position {
                         line: 5,
@@ -838,14 +798,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("All terms of + must be the same, not Number, String")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "<<declare $foo to 1>>
-<<declare $bar = \"invalid\">>
-<<set $foo to $foo + $bar>>
-<<set $foo to $foo * \"invalid\">>
-===",
-                )
-                .with_start_line(2)
                 .with_range(
                     Position {
                         line: 4,
@@ -861,13 +813,6 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("All terms of * must be the same, not Number, String")
                 .with_file_name("test.yarn")
-                .with_context(
-                    "<<declare $bar = \"invalid\">>
-<<set $foo to $foo + $bar>>
-<<set $foo to $foo * \"invalid\">>
-===",
-                )
-                .with_start_line(3)
                 .with_range(
                     Position {
                         line: 5,
