@@ -23,8 +23,9 @@ use thiserror::Error;
 /// This type does not exist in the original implementation and was a added as a more idiomatic
 /// representation of the types than dynamic dispatch. The `Undefined` "variant", which was a simple `null`,
 /// was also replaced by the more idiomatic `Option::None`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum Type {
+    #[default]
     Any,
     Boolean,
     Function(FunctionType),

@@ -134,7 +134,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 .iter_mut()
                 .filter(|decl| decl.name == id)
                 .find_map(|decl| {
-                    if let Some(Type::Function(ref mut func)) = decl.r#type {
+                    if let Type::Function(ref mut func) = decl.r#type {
                         Some(func)
                     } else {
                         None
@@ -232,7 +232,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 let decl = Declaration::default()
                     .with_name(&var_name)
                     .with_description(format!("Implicitly declared in {file_name}{node}"))
-                    .with_type(expression_type.clone())
+                    .with_type(expression_type.clone().unwrap()) // Guaranteed to be Some
                     .with_default_value(default_value)
                     .with_source_file_name(self.file.name.clone())
                     .with_source_node_name_optional(self.current_node_name.clone())

@@ -265,7 +265,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .find(|decl| decl.name == function_name);
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
-            let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
+            let Type::Function(mut function_type) = function_declaration.r#type.clone() else {
                  unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
             };
 
@@ -276,7 +276,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     self.new_declarations.find_remove(&function_declaration);
                     function_type.set_return_type(hint);
                     let new_declaration = Declaration {
-                        r#type: Some(Type::from(function_type.clone())),
+                        r#type: Type::from(function_type.clone()),
                         ..function_declaration
                     };
                     self.new_declarations.push(new_declaration);
@@ -383,7 +383,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .into_iter()
             .find(|decl| decl.name == name)
         {
-            return declaration.r#type;
+            return Some(declaration.r#type);
         }
 
         // do we already have a potential warning about this?

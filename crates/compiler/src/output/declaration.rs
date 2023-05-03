@@ -50,7 +50,7 @@ pub struct Declaration {
 
     /// The type of the variable, as represented by an object found
     /// in a variant of [`Type`].
-    pub r#type: Option<Type>,
+    pub r#type: Type,
 
     /// The range of text at which this declaration occurs.
     ///
@@ -71,7 +71,20 @@ impl Declaration {
         self.range.as_ref()?.start.line.into()
     }
 
-    pub fn with_type(mut self, r#type: impl Into<Option<Type>>) -> Self {
+    pub fn of_type(r#type: impl Into<Type>) -> Self {
+        Self {
+            r#type: r#type.into(),
+            name: Default::default(),
+            default_value: Default::default(),
+            description: Default::default(),
+            source_file_name: Default::default(),
+            source_node_name: Default::default(),
+            is_implicit: Default::default(),
+            range: Default::default(),
+        }
+    }
+
+    pub fn with_type(mut self, r#type: impl Into<Type>) -> Self {
         self.r#type = r#type.into();
         self
     }

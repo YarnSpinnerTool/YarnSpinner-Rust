@@ -489,14 +489,14 @@ fn test_expressions_require_compatible_types() {
         assert!(result
             .declarations
             .iter()
-            .any(|d| d.name == "$int" && d.r#type == Some(Type::Number)));
+            .any(|d| d.name == "$int" && d.r#type == Type::Number));
         assert!(result
             .declarations
             .iter()
-            .any(|d| d.name == "$bool" && d.r#type == Some(Type::Boolean)));
+            .any(|d| d.name == "$bool" && d.r#type == Type::Boolean));
         assert!(result
             .declarations
             .iter()
-            .any(|d| d.name == "$str" && d.r#type == Some(Type::String)));
+            .any(|d| d.name == "$str" && d.r#type == Type::String));
     }
 }

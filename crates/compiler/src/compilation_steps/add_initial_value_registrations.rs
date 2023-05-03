@@ -15,8 +15,7 @@ pub(crate) fn add_initial_value_registrations(
     let declarations = state
         .known_variable_declarations
         .iter()
-        .filter(|decl| !matches!(decl.r#type, Some(Type::Function(_))))
-        .filter(|decl| decl.r#type.is_some());
+        .filter(|decl| !matches!(decl.r#type, Type::Function(_)));
 
     for declaration in declarations {
         let Some(default_value) = declaration.default_value.clone() else {
@@ -26,7 +25,7 @@ pub(crate) fn add_initial_value_registrations(
                 continue;
             };
         if let Some(ref mut program) = compilation.program {
-            let value = match declaration.r#type.as_ref().unwrap() {
+            let value = match &declaration.r#type {
                     Type::String => Operand::from(String::try_from(default_value).unwrap()),
                     Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
                     Type::Boolean => Operand::from(bool::try_from(default_value).unwrap()),
