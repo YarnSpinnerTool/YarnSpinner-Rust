@@ -1,6 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/DeclarationVisitor.cs>
 
-use crate::compiler;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
@@ -193,7 +192,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             }
         }
         // We're done creating the declaration!
-        let description = compiler::get_document_comments(self.file.tokens(), ctx);
+        let description = get_document_comments(self.file.tokens(), ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
         if let Some(value) = value.as_ref() {
             let declaration = Declaration::default()

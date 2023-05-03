@@ -1,11 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CodeGenerationVisitor.cs>
 
-use crate::compiler;
 use crate::listeners::{CompilerListener, Emit};
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::ActualParserContext;
+use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
@@ -101,7 +100,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let formatted_text = ctx.line_formatted_text().unwrap();
         let expression_count =
             self.generate_code_for_expressions_in_formatted_text(formatted_text.get_children());
-        let line_id_tag = compiler::get_line_id_tag(&ctx.hashtag_all())
+        let line_id_tag = get_line_id_tag(&ctx.hashtag_all())
             .expect("Internal error: line should have an implicit or explicit line ID tag, but none was found. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
         let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
         self.compiler_listener.emit(
@@ -347,7 +346,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             );
 
             // Get the line ID from the hashtags if it has one
-            let line_id_tag = compiler::get_line_id_tag(&line_statement.hashtag_all())
+            let line_id_tag = get_line_id_tag(&line_statement.hashtag_all())
                 .expect("Internal error: no line ID provided. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
             let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
 

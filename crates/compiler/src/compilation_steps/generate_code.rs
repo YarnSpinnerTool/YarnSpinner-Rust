@@ -2,6 +2,7 @@ use crate::listeners::{CompilerListener, DiagnosticVec};
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::*;
 use crate::visitors::KnownTypes;
+use crate::Result;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate {

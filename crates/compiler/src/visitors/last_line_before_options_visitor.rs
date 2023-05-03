@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/LastLineBeforeOptionsVisitor.cs>
 
-use crate::compiler;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
+use crate::prelude::*;
 use antlr_rust::tree::ParseTreeVisitorCompat;
 use std::rc::Rc;
 
@@ -32,7 +32,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for LastLineBeforeOptionsVis
     // The line is tagged regardless of if there is a #lastline there already
     // technically unnecessary in that case but this feels uncommon enough to not bother edgecasing
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
-        compiler::add_hashtag_child(ctx, "lastline")
+        add_hashtag_child(ctx, "lastline")
     }
 
     // handles the statements inside of an if statement

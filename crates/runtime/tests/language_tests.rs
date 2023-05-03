@@ -16,8 +16,8 @@ fn test_example_script() {
 #[test]
 fn can_compile_space_demo() -> std::io::Result<()> {
     let test_base = TestBase::default();
-    let sally_path = TestBase::space_demo_scripts_path().join("Sally.yarn");
-    let ship_path = TestBase::space_demo_scripts_path().join("Ship.yarn");
+    let sally_path = space_demo_scripts_path().join("Sally.yarn");
+    let ship_path = space_demo_scripts_path().join("Ship.yarn");
 
     let compilation_job_sally = CompilationJob::default()
         .read_file(&sally_path)?
@@ -37,8 +37,8 @@ fn can_compile_space_demo() -> std::io::Result<()> {
 #[should_panic]
 fn test_merging_nodes() {
     let test_base = TestBase::default();
-    let sally_path = TestBase::space_demo_scripts_path().join("Sally.yarn");
-    let ship_path = TestBase::space_demo_scripts_path().join("Ship.yarn");
+    let sally_path = space_demo_scripts_path().join("Sally.yarn");
+    let ship_path = space_demo_scripts_path().join("Ship.yarn");
 
     let compilation_job_sally = CompilationJob::default()
         .read_file(&sally_path)
@@ -69,7 +69,7 @@ fn test_end_of_notes_with_options_not_added() {
 
 #[test]
 fn test_node_headers() {
-    let path = TestBase::test_data_path().join("Headers.yarn");
+    let path = test_data_path().join("Headers.yarn");
     let result = compile(CompilationJob::default().read_file(&path).unwrap()).unwrap_pretty();
     let program = result.program.as_ref().unwrap();
     assert_eq!(program.nodes.len(), 6);
@@ -132,9 +132,8 @@ fn test_node_headers() {
 }
 
 #[test]
-
 fn test_invalid_characters_in_node_title() {
-    let path = TestBase::test_data_path().join("InvalidNodeTitle.yarn");
+    let path = test_data_path().join("InvalidNodeTitle.yarn");
     let result = compile(CompilationJob::default().read_file(&path).unwrap());
     assert!(result.is_err());
 }

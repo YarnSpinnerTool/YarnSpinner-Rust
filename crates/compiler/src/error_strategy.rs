@@ -159,18 +159,13 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
             format!(
                 "Unexpected \"{}\" while reading {}",
                 e.base.offending_token.get_text(),
-                Self::get_friendly_name_for_rule_context_with_article(rule_context)
+                Self::get_friendly_name_for_rule_context(rule_context)
             )
         })
     }
 
     fn get_friendly_name_for_rule_context(ctx: &Rc<Ctx::Type>) -> String {
-        let rule_name = yarnspinnerparser::ruleNames[ctx.get_rule_index()];
-        rule_name.replace('_', " ")
-    }
-
-    fn get_friendly_name_for_rule_context_with_article(ctx: &Rc<Ctx::Type>) -> String {
-        let friendly_name = Self::get_friendly_name_for_rule_context(ctx);
+        let friendly_name = yarnspinnerparser::ruleNames[ctx.get_rule_index()].replace('_', " ");
         // If the friendly name's first character is a vowel, the
         // article is 'an'; otherwise, 'a'.
         let first_letter = friendly_name.chars().next().unwrap();

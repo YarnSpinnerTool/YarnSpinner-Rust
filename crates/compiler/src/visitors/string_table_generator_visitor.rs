@@ -1,5 +1,4 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs>
-use crate::compiler;
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -70,7 +69,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         if !self.current_node_name.is_empty() && tags.contains(&"rawText".to_owned()) {
             // This is a raw text node. Use its entire contents as a
             // string and don't use its contents.
-            let line_id = compiler::get_line_id_for_node_name(&self.current_node_name);
+            let line_id = get_line_id_for_node_name(&self.current_node_name);
             self.string_table_manager.insert(
                 line_id,
                 StringInfo {

@@ -1,6 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
-pub(crate) use self::{antlr_rust_ext::*, utils::*};
 use crate::compilation_steps::*;
 use crate::listeners::*;
 use crate::output::*;
@@ -10,9 +9,9 @@ use crate::visitors::*;
 pub use compilation_job::*;
 use std::collections::{HashMap, HashSet};
 
-mod antlr_rust_ext;
-mod compilation_job;
-mod utils;
+pub(crate) mod antlr_rust_ext;
+pub mod compilation_job;
+pub(crate) mod utils;
 
 pub type Result<T> = std::result::Result<T, CompilationError>;
 
