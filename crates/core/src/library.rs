@@ -87,7 +87,7 @@ impl Library {
 
     /// Registers the methods found inside a type.
     fn register_methods(&mut self, r#type: Type) {
-        for (name, function) in r#type.properties().methods.iter() {
+        for (name, function) in r#type.methods().iter() {
             let canonical_name = r#type.get_canonical_name_for_method(name);
             self.add_boxed(canonical_name, function.clone());
         }

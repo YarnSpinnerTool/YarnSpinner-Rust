@@ -642,7 +642,7 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
             has_method,
             "Codegen failed to get implementation type for {} given input type {}.",
             op,
-            r#type.properties().name,
+            r#type.name(),
         );
         let function_name = r#type.get_canonical_name_for_method(&method_name);
         // Call that function.

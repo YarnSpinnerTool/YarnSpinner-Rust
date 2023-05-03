@@ -972,3 +972,57 @@ fn test_variable_declaration_annotations() {
         assert_eq!(expected.description, actual.description);
     }
 }
+
+#[test]
+#[ignore]
+fn test_type_conversion() {
+    todo!("Not ported yet");
+}
+
+#[test]
+#[ignore]
+fn test_type_conversion_failure() {
+    todo!("Not ported yet");
+}
+
+#[test]
+#[ignore]
+
+fn test_implicit_function_declarations() {
+    todo!("Not ported yet");
+}
+
+/*
+       [Theory]
+       [InlineData("1", "Number")]
+       [InlineData("\"hello\"", "String")]
+       [InlineData("true", "Bool")]
+       public void TestImplicitVariableDeclarations(string value, string typeName) {
+           var source = CreateTestNode($@"
+           <<set $v = {value}>>
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("<input>", source));
+
+           result.Diagnostics.Should().BeEmpty();
+
+           result.Declarations.Should().ContainSingle(d => d.Name == "$v")
+               .Which.Type.Name.Should().Be(typeName);
+       }
+
+*/
+
+#[test]
+fn test_implicit_variable_declarations() {
+    for (value, type_name) in vec![("1", "Number"), ("\"hello\"", "String"), ("true", "Bool")] {
+        let compilation_job = CompilationJob::from_test_source(&format!("<<set $v = {value}>>"));
+
+        let result = compile(compilation_job).unwrap_pretty();
+
+        assert_eq!(1, result.declarations.len());
+        assert!(result
+            .declarations
+            .iter()
+            .any(|d| d.name == "$v" && d.r#type.name() == type_name));
+    }
+}

@@ -35,7 +35,7 @@ pub enum Type {
 
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = self.properties().name;
+        let name = self.name();
         match self {
             Type::Function(function) => Display::fmt(function, f),
             _ => write!(f, "{}", name),
@@ -64,7 +64,19 @@ impl TypeFormat for Type {
 }
 
 impl Type {
-    pub fn properties(&self) -> TypeProperties {
+    pub fn name(&self) -> &'static str {
+        self.properties().name
+    }
+
+    pub fn description(&self) -> String {
+        self.properties().description
+    }
+
+    pub fn methods(&self) -> YarnFnRegistry {
+        self.properties().methods
+    }
+
+    fn properties(&self) -> TypeProperties {
         match self {
             Type::Any => any_type_properties(),
             Type::Boolean => boolean_type_properties(),
@@ -80,12 +92,12 @@ impl Type {
     /// Adapted from the `FindImplementingTypeForMethod`, but massively simplified because
     /// we removed type hierarchies.
     pub fn has_method(&self, name: &str) -> bool {
-        self.properties().methods.contains_key(name)
+        self.methods().contains_key(name)
     }
 
     /// Does not check whether the method exists. Use [`has_method`] for that.
     pub fn get_canonical_name_for_method(&self, method_name: &str) -> String {
-        format!("{}.{}", self.properties().name, method_name)
+        format!("{}.{}", self.name(), method_name)
     }
 
     pub const EXPLICITLY_CONSTRUCTABLE: &'static [Type] = &[
