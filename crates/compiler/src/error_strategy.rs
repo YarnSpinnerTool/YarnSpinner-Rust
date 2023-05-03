@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorStrategy.cs>
 
 use crate::prelude::generated::yarnspinnerparser;
+use crate::prelude::*;
 use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -126,7 +127,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
                         // <<endif>>.
                         Some(format!(
                             "Expected an <<endif>> to match the <<if>> statement on line {}",
-                            rule_context.start().get_line()
+                            rule_context.start().get_line_as_usize()
                         ))
                     }
                     yarnspinnerparser::COMMAND_ELSE

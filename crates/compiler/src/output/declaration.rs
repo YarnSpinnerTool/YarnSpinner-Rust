@@ -6,7 +6,6 @@
 
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
-use antlr_rust::token::Token;
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
 use yarn_slinger_core::prelude::*;
@@ -179,12 +178,12 @@ pub(crate) trait ParserRuleContextExtRangeSource<'input>:
 {
     fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
         let start = Position {
-            line: self.start().get_line() as usize - 1,
-            character: self.start().get_column() as usize,
+            line: self.start().get_line_as_usize().saturating_sub(1),
+            character: self.start().get_column_as_usize(),
         };
         let stop = Position {
-            line: self.stop().get_line() as usize - 1,
-            character: self.start().get_column() as usize
+            line: self.stop().get_line_as_usize().saturating_sub(1),
+            character: self.start().get_column_as_usize()
                 + self.get_text_with_whitespace(token_stream).len()
                 - 1,
         };

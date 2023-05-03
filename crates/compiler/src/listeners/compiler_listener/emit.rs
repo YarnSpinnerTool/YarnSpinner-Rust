@@ -48,8 +48,8 @@ impl Emit {
 
     pub(crate) fn with_token(mut self, token: &(impl Token + ?Sized)) -> Self {
         self.source = Some(Position {
-            line: token.get_line() as usize - 1,
-            character: token.get_column() as usize,
+            line: token.get_line_as_usize().saturating_sub(1),
+            character: token.get_column_as_usize(),
         });
         self
     }

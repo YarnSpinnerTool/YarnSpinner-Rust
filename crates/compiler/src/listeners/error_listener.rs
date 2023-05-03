@@ -122,8 +122,8 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
                 }
             }
 
-            let line = (offending_symbol.get_line() - 1) as usize;
-            let column = offending_symbol.get_column() as usize;
+            let line = offending_symbol.get_line_as_usize().saturating_sub(1);
+            let column = offending_symbol.get_column_as_usize();
             let length = offending_symbol.get_text().len();
             diagnostic = diagnostic
                 .with_context(string)

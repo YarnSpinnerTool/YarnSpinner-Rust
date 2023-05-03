@@ -12,7 +12,7 @@ use super::generated::yarnspinnerlexer::{
 };
 use crate::listeners::Diagnostic;
 use crate::output::Position;
-use crate::prelude::{create_common_token, DiagnosticSeverity};
+use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
 use antlr_rust::token::CommonToken;
 use antlr_rust::{
     char_stream::CharStream,
@@ -353,12 +353,12 @@ where
 
 fn get_newline_indentation_range(token: &CommonToken<'_>) -> RangeInclusive<Position> {
     // +1 compared to similar code because we don't want to start at the newline
-    let line = token.get_line() as usize;
+    let line = token.get_line_as_usize();
 
     let start = Position { line, character: 0 };
     let stop = Position {
         line,
-        character: token.get_text().len() - 1,
+        character: token.get_text().len().saturating_sub(1),
     };
 
     start..=stop

@@ -46,7 +46,7 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         let whole_file = token_stream.get_all_text();
         let start = self.start().get_start() as usize;
         let stop = self.stop().get_stop() as usize + 1;
-        let first_line = self.start().get_line() as usize;
+        let first_line = self.start().get_line_as_usize();
 
         let head = &whole_file[..start];
         let body = &whole_file[start..stop];

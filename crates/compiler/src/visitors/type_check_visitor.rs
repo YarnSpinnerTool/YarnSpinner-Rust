@@ -289,8 +289,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             let mut function_type = FunctionType::default();
             // because it is an implicit declaration we will use the type hint to give us a return type
             function_type.set_return_type(hint);
-            let line = ctx.start().get_line();
-            let column = ctx.start().get_column();
+            let line = ctx.start().get_line_as_usize();
+            let column = ctx.start().get_column_as_usize();
             let function_declaration = Declaration::default()
                 .with_type(Type::from(function_type.clone()))
                 .with_name(&function_name)
