@@ -6,6 +6,10 @@
 
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
+use antlr_rust::rule_context::CustomRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::token_factory::TokenFactory;
+use antlr_rust::CoerceTo;
 use std::fmt::{Debug, Display};
 use std::ops::Range;
 use yarn_slinger_core::prelude::*;
@@ -188,22 +192,29 @@ pub struct Position {
 
 pub(crate) trait ParserRuleContextExtRangeSource<'input>:
     ParserRuleContextExt<'input>
+where
+    <<<<Self as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
+        Into<String>,
 {
     fn range(&self, token_stream: &ActualTokenStream<'input>) -> Range<Position> {
         let start = Position {
             line: self.start().get_line_as_usize().saturating_sub(1),
             character: self.start().get_column_as_usize(),
         };
+        let text: String = self.stop().get_text().to_owned().into();
         let stop = Position {
             line: self.stop().get_line_as_usize().saturating_sub(1),
-            character: self.start().get_column_as_usize()
-                + self.get_text_with_whitespace(token_stream).len(),
+            character: self.stop().get_column_as_usize() + text.len(),
         };
         start..stop
     }
 }
 
-impl<'input, T: ParserRuleContextExt<'input>> ParserRuleContextExtRangeSource<'input> for T {}
+impl<'input, T: ParserRuleContextExt<'input>> ParserRuleContextExtRangeSource<'input> for T where
+    <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
+        Into<String>
+{
+}
 
 impl Display for DeclarationSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

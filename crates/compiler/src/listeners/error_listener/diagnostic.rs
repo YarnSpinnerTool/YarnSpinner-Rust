@@ -4,6 +4,9 @@ use annotate_snippets::{
     display_list::{DisplayList, FormatOptions},
     snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
 };
+use antlr_rust::rule_context::CustomRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::token_factory::TokenFactory;
 use std::fmt::{Display, Formatter};
 use std::ops::Range;
 
@@ -49,14 +52,19 @@ impl Diagnostic {
         }
     }
 
-    pub(crate) fn with_parser_context<'input>(
+    pub(crate) fn with_parser_context<'input, T>(
         self,
-        ctx: &impl ParserRuleContextExt<'input>,
+        ctx: &T,
         token_stream: &ActualTokenStream<'input>,
-    ) -> Self {
+    ) -> Self
+    where
+        T: ParserRuleContextExt<'input>,
+    <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
+        Into<String>
+    {
         let lines_above_and_below_offending_line = 2;
         let lines_around = ctx.get_lines_around(token_stream, lines_above_and_below_offending_line);
-        let range = ctx.range(token_stream);
+        let range = dbg!(ctx.range(token_stream));
         self.with_range(range)
             .with_context(lines_around.lines)
             .with_start_line(lines_around.first_line)
@@ -103,14 +111,14 @@ impl Display for Diagnostic {
             }),
             footer: vec![],
             slices: vec![Slice {
-                source: self.context.as_deref().unwrap_or("<unknown line>"),
+                source: dbg!(self.context.as_deref().unwrap_or("<unknown line>")),
                 line_start: self.start_line + 1,
                 origin: self.file_name.as_deref(),
                 fold: false,
                 annotations: vec![SourceAnnotation {
                     label: "",
                     annotation_type,
-                    range: convert_absolute_range_to_relative(self),
+                    range: dbg!(convert_absolute_range_to_relative(self)),
                 }],
             }],
             opt: FormatOptions {
@@ -133,6 +141,7 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
     let Some(context) = diagnostic.context.as_ref() else {
         return (0, 0);
     };
+    println!("range: {:?}", range);
 
     let relative_start_line = range.start.line - diagnostic.start_line;
     let annotated_lines = range.end.line - range.start.line;

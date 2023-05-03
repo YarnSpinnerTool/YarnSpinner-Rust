@@ -6,6 +6,9 @@ use crate::visitors::type_check_visitor::{
 };
 use crate::visitors::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::rule_context::CustomRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
 use std::cmp::Ordering;
@@ -22,14 +25,17 @@ impl<'input> TypeCheckVisitor<'input> {
     /// then at the end if there are still unknowns we check if the operation itself forces a type
     /// so if we have say Undefined = Undefined + Number then we know that only one operation supports + Number and that is Number + Number
     /// so we can slot the type into the various parts
-    pub(super) fn check_operation(
+    pub(super) fn check_operation<T>(
         &mut self,
-        context: &impl ParserRuleContext<'input>,
+        context: &T,
         terms: &[Term<'input>],
         operation_type: impl Into<Option<Operator>>,
         operation_description: &str,
         permitted_types: &[Type],
-    ) -> Option<Type> {
+    ) -> Option<Type>
+    where
+        T: ParserRuleContextExt<'input>,
+    <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned: Into<String>{
         let operation_type = operation_type.into();
         let mut term_types = Vec::new();
         let mut expression_type = None;
