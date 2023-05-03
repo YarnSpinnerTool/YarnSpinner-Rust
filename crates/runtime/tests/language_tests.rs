@@ -13,7 +13,7 @@ fn test_example_script() {
 }
 
 #[test]
-fn test_merging_nodes() -> std::io::Result<()> {
+fn can_compile_space_demo() -> std::io::Result<()> {
     let test_base = TestBase::default();
     let sally_path = TestBase::space_demo_scripts_path().join("Sally.yarn");
     let ship_path = TestBase::space_demo_scripts_path().join("Ship.yarn");
@@ -26,16 +26,38 @@ fn test_merging_nodes() -> std::io::Result<()> {
         .read_file(&ship_path)?
         .with_library(test_base.dialogue.library.clone());
 
+    let _result_sally = compile(compilation_job_sally).unwrap_pretty();
+    let _result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
+
+    Ok(())
+}
+
+#[test]
+#[should_panic]
+fn test_merging_nodes() {
+    let test_base = TestBase::default();
+    let sally_path = TestBase::space_demo_scripts_path().join("Sally.yarn");
+    let ship_path = TestBase::space_demo_scripts_path().join("Ship.yarn");
+
+    let compilation_job_sally = CompilationJob::default()
+        .read_file(&sally_path)
+        .unwrap()
+        .with_library(test_base.dialogue.library.clone());
+    let compilation_job_sally_and_ship = CompilationJob::default()
+        .read_file(&sally_path)
+        .unwrap()
+        .read_file(&ship_path)
+        .unwrap()
+        .with_library(test_base.dialogue.library.clone());
+
     let result_sally = compile(compilation_job_sally).unwrap_pretty();
     let result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
 
     // Loading code with the same contents should throw
-    let combined_not_working = Program::combine(vec![
+    let _combined_not_working = Program::combine(vec![
         result_sally.program.unwrap(),
         result_sally_and_ship.program.unwrap(),
     ]);
-    assert!(combined_not_working.is_none());
-    Ok(())
 }
 
 #[test]

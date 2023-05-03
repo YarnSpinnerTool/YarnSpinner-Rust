@@ -20,6 +20,8 @@ impl Dialogue {
     pub fn with_variable_storage(variable_storage: impl VariableStorage + 'static) -> Self {
         let mut library = Library::default();
         library.import(Library::standard_library());
+        library.add("visited", |_node: String| -> bool { todo!() });
+        library.add("visited_count", |_node: String| -> f32 { todo!() });
         Self {
             variable_storage: Box::new(variable_storage),
             library,
