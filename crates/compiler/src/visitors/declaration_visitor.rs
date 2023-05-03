@@ -349,7 +349,7 @@ mod tests {
             diagnostics[1],
             Diagnostic::from_message("Can't figure out the type of variable $foo given its context. Specify its type with a <<declare>> statement.".to_string())
                 .with_file_name("test.yarn".to_string())
-                .with_context(file.source))
+                .with_context(file.source)
                 .with_range(
                     Position {
                         line: 2,

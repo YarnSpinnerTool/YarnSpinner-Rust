@@ -111,14 +111,14 @@ impl Display for Diagnostic {
             }),
             footer: vec![],
             slices: vec![Slice {
-                source: dbg!(self.context.as_deref().unwrap_or("<unknown line>")),
+                source: self.context.as_deref().unwrap_or("<unknown line>"),
                 line_start: self.start_line + 1,
                 origin: self.file_name.as_deref(),
                 fold: false,
                 annotations: vec![SourceAnnotation {
                     label: "",
                     annotation_type,
-                    range: dbg!(convert_absolute_range_to_relative(self)),
+                    range: convert_absolute_range_to_relative(self),
                 }],
             }],
             opt: FormatOptions {
@@ -141,7 +141,6 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
     let Some(context) = diagnostic.context.as_ref() else {
         return (0, 0);
     };
-    println!("range: {:?}", range);
 
     let relative_start_line = range.start.line - diagnostic.start_line;
     let annotated_lines = range.end.line - range.start.line;
