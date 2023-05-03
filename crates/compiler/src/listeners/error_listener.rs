@@ -125,15 +125,18 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
             let line = (offending_symbol.get_line() - 1) as usize;
             let column = offending_symbol.get_column() as usize;
             let length = offending_symbol.get_text().len();
-            diagnostic = diagnostic.with_context(string).with_range(
-                Position {
-                    line,
-                    character: column,
-                }..=Position {
-                    line,
-                    character: column + length,
-                },
-            );
+            diagnostic = diagnostic
+                .with_context(string)
+                .with_start_line(line)
+                .with_range(
+                    Position {
+                        line,
+                        character: column,
+                    }..=Position {
+                        line,
+                        character: column + length,
+                    },
+                );
         }
         self.diagnostics.borrow_mut().push(diagnostic);
     }

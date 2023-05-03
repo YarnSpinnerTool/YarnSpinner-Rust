@@ -318,6 +318,7 @@ where
                 Diagnostic::from_message("Indentation contains tabs and spaces")
                     .with_range(get_newline_indentation_range(current_token))
                     .with_context(get_newline_indentation_text(current_token))
+                    .with_start_line(current_token.line as usize)
                     .with_file_name(self.file_name.clone())
                     .with_severity(DiagnosticSeverity::Warning),
             );

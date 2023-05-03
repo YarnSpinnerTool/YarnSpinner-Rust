@@ -226,6 +226,7 @@ mod tests {
         assert_eq!(
             Diagnostic::from_message("Indentation contains tabs and spaces")
                 .with_context("\t   ")
+                .with_start_line(3)
                 .with_file_name("test.yarn")
                 .with_range(
                     Position {

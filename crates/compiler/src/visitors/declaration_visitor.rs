@@ -333,7 +333,7 @@ mod tests {
             .to_string(),
         };
         let result = compile(CompilationJob {
-            files: vec![file],
+            files: vec![file.clone()],
             library: None,
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
@@ -345,7 +345,7 @@ mod tests {
             diagnostics[0],
             Diagnostic::from_message("Type string does not match value 1 (Number)".to_string())
                 .with_file_name("test.yarn".to_string())
-                .with_context("<<declare $foo to 1 as string>>")
+                .with_context(file.source.clone())
                 .with_range(
                     Position {
                         line: 2,
@@ -360,7 +360,7 @@ mod tests {
             diagnostics[1],
             Diagnostic::from_message("Can't figure out the type of variable $foo given its context. Specify its type with a <<declare>> statement.".to_string())
                 .with_file_name("test.yarn".to_string())
-                .with_context("$foo")
+                .with_context(file.source.clone())
                 .with_range(
                     Position {
                         line: 2,

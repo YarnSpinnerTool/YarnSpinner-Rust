@@ -103,8 +103,8 @@ impl Display for Diagnostic {
             }),
             footer: vec![],
             slices: vec![Slice {
-                source: dbg!(self.context.as_deref().unwrap_or("<unknown line>")),
-                line_start: dbg!(self.start_line + 1),
+                source: self.context.as_deref().unwrap_or("<unknown line>"),
+                line_start: self.start_line + 1,
                 origin: self.file_name.as_deref(),
                 fold: false,
                 annotations: vec![SourceAnnotation {

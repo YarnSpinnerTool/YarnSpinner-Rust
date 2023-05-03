@@ -326,6 +326,7 @@ a {very} cool expression
                 .with_file_name("test.yarn".to_string())
                 .with_range(range.clone())
                 .with_context(context.clone())
+                .with_start_line(4)
                 .with_severity(DiagnosticSeverity::Error);
 
         let second_expected =
@@ -333,6 +334,7 @@ a {very} cool expression
                 .with_file_name("test.yarn".to_string())
                 .with_range(range)
                 .with_context(context)
+                .with_start_line(4)
                 .with_severity(DiagnosticSeverity::Error);
         if diagnostics[0] == first_expected {
             assert_eq!(diagnostics[1], second_expected);
