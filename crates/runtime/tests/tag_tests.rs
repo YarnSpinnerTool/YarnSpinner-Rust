@@ -12,7 +12,7 @@ fn test_no_options_line_not_tagged() {
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:1"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 #[test]
@@ -23,7 +23,7 @@ fn test_line_before_options_tagged_last_line() {
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:1"];
-    assert!(contains_last_line_tag(&info));
+    assert!(contains_last_line_tag(info));
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn test_line_not_before_options_not_tagged_last_line() {
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:0"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn test_line_after_options_not_tagged_last_line() {
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:2"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 #[test]
@@ -65,10 +65,10 @@ line before options #line:1
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:1"];
-    assert!(contains_last_line_tag(&info));
+    assert!(contains_last_line_tag(info));
 
     let info = &result.string_table["line:1b"];
-    assert!(contains_last_line_tag(&info));
+    assert!(contains_last_line_tag(info));
 }
 
 #[test]
@@ -85,7 +85,7 @@ line before options #line:0
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:0"];
-    assert!(contains_last_line_tag(&info));
+    assert!(contains_last_line_tag(info));
 }
 
 #[test]
@@ -102,7 +102,7 @@ line before options #line:0
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:0"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn test_nested_option_lines_not_tagged() {
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:1a"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 #[test]
@@ -143,15 +143,15 @@ line before call #line:4
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:0"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
     let info = &result.string_table["line:1"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
     let info = &result.string_table["line:2"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
     let info = &result.string_table["line:3"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
     let info = &result.string_table["line:4"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn test_line_is_last_before_another_node_not_tagged() {
     let result = compile(compilation_job).unwrap_pretty();
 
     let info = &result.string_table["line:0"];
-    assert!(!contains_last_line_tag(&info));
+    assert!(!contains_last_line_tag(info));
 }
 
 fn contains_last_line_tag(info: &StringInfo) -> bool {

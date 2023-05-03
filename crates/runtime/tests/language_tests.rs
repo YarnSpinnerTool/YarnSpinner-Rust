@@ -24,8 +24,8 @@ fn can_compile_space_demo() -> std::io::Result<()> {
         .with_library(test_base.dialogue.library.clone());
     let compilation_job_sally_and_ship = CompilationJob::default()
         .read_file(&sally_path)?
-        .read_file(&ship_path)?
-        .with_library(test_base.dialogue.library.clone());
+        .read_file(ship_path)?
+        .with_library(test_base.dialogue.library);
 
     let _result_sally = compile(compilation_job_sally).unwrap_pretty();
     let _result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
@@ -47,9 +47,9 @@ fn test_merging_nodes() {
     let compilation_job_sally_and_ship = CompilationJob::default()
         .read_file(&sally_path)
         .unwrap()
-        .read_file(&ship_path)
+        .read_file(ship_path)
         .unwrap()
-        .with_library(test_base.dialogue.library.clone());
+        .with_library(test_base.dialogue.library);
 
     let result_sally = compile(compilation_job_sally).unwrap_pretty();
     let result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
@@ -134,7 +134,7 @@ fn test_node_headers() {
 #[test]
 fn test_invalid_characters_in_node_title() {
     let path = test_data_path().join("InvalidNodeTitle.yarn");
-    let result = compile(CompilationJob::default().read_file(&path).unwrap());
+    let result = compile(CompilationJob::default().read_file(path).unwrap());
     assert!(result.is_err());
 }
 

@@ -82,7 +82,7 @@ fn test_variable_declarations_parsed() {
 
     let actual_declarations = result.declarations;
     for (expected, actual) in expected_declarations
-        .into_iter()
+        .iter()
         .zip(actual_declarations.into_iter())
     {
         assert_eq!(expected.name, actual.name);
@@ -392,7 +392,7 @@ fn test_explicit_types() {
     let variable_declarations: Vec<_> = result
         .declarations
         .iter()
-        .filter(|d| d.name.starts_with("$"))
+        .filter(|d| d.name.starts_with('$'))
         .collect();
 
     assert!(variable_declarations
@@ -505,7 +505,7 @@ fn test_implicit_function_declarations() {
 
 #[test]
 fn test_implicit_variable_declarations() {
-    for (value, type_name) in vec![("1", "Number"), ("\"hello\"", "String"), ("true", "Bool")] {
+    for (value, type_name) in [("1", "Number"), ("\"hello\"", "String"), ("true", "Bool")] {
         let compilation_job = CompilationJob::from_test_source(&format!("<<set $v = {value}>>"));
 
         let result = compile(compilation_job).unwrap_pretty();
