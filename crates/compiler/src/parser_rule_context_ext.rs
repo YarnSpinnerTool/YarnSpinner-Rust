@@ -37,23 +37,49 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         }
     }
 
-    fn get_lines_around(&self, token_stream: &ActualTokenStream<'input>) -> String {
+    fn get_lines_around(&self, token_stream: &ActualTokenStream<'input>) -> LinesAroundResult {
         let start = self.start().get_token_index();
         let stop = self.stop().get_token_index();
+        let first_line = self.start().get_line() as usize;
+
         let head = token_stream.get_text_from_interval(0, start - 1);
         let body = token_stream.get_text_from_interval(start, stop);
         let tail = token_stream.get_text_from_interval(stop + 1, token_stream.size() - 1);
-        let last_line = head.rfind('\n').map(|index| index + 1).unwrap_or(0);
-        let head = head[last_line..].to_string();
-        let next_line = tail.find('\n').unwrap_or(tail.len());
-        let tail = tail[..next_line].to_string();
-        head + &body + &tail
+        let head_start_index = head.rfind('\n').map(|index| index + 1).unwrap_or(0);
+
+        let (head_start_index, first_line) = (0..2).fold(
+            (head_start_index, first_line),
+            |(head_start_index, first_line), _| {
+                let head = &head[..head_start_index - 1];
+                if let Some(head_start_index) = head.rfind('\n').map(|index| index + 1) {
+                    (head_start_index, first_line - 1)
+                } else {
+                    (0, first_line)
+                }
+            },
+        );
+        let tail_end_index = tail.find('\n').unwrap_or(tail.len());
+        let tail_end_index = (0..2).fold(tail_end_index, |tail_end_index, _| {
+            let tail = &tail[tail_end_index + 1..];
+            if let Some(tail_end_index) = tail.find('\n') {
+                tail_end_index
+            } else {
+                tail.len()
+            }
+        });
+
+        let head = &head[head_start_index..];
+        let tail = &tail[..tail_end_index];
+        LinesAroundResult {
+            lines: format!("{head}{body}{tail}"),
+            first_line,
+        }
     }
 }
 
 pub(crate) struct LinesAroundResult {
     pub(crate) lines: String,
-    pub(crate) line_offset: usize,
+    pub(crate) first_line: usize,
 }
 
 impl<'input, T: ?Sized> ParserRuleContextExt<'input> for T where T: ParserRuleContext<'input> {}

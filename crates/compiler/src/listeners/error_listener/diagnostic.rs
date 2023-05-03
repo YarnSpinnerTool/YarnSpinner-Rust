@@ -32,6 +32,9 @@ pub struct Diagnostic {
 
     /// The severity of the issue.
     pub severity: DiagnosticSeverity,
+
+    /// The line the context starts on.
+    pub start_line: usize,
 }
 
 impl Diagnostic {
@@ -42,6 +45,7 @@ impl Diagnostic {
             range: Default::default(),
             context: Default::default(),
             severity: Default::default(),
+            start_line: Default::default(),
         }
     }
 
@@ -50,10 +54,11 @@ impl Diagnostic {
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,
     ) -> Self {
+        let lines_around = ctx.get_lines_around(token_stream);
         let range = ctx.range(token_stream);
-        self.range = Some(range);
-        self.context = Some(ctx.get_lines_around(token_stream));
-        self
+        self.with_range(range)
+            .with_context(lines_around.lines)
+            .with_start_line(lines_around.first_line)
     }
 
     pub fn with_file_name(mut self, file_name: impl Into<String>) -> Self {
@@ -68,6 +73,11 @@ impl Diagnostic {
 
     pub fn with_context(mut self, context: impl Into<String>) -> Self {
         self.context = Some(context.into());
+        self
+    }
+
+    pub fn with_start_line(mut self, start_line: usize) -> Self {
+        self.start_line = start_line;
         self
     }
 
@@ -92,13 +102,8 @@ impl Display for Diagnostic {
             }),
             footer: vec![],
             slices: vec![Slice {
-                source: self.context.as_deref().unwrap_or("<unknown line>"),
-                line_start: self
-                    .range
-                    .as_ref()
-                    .map(|r| r.start().line)
-                    .unwrap_or_default()
-                    + 1,
+                source: dbg!(self.context.as_deref().unwrap_or("<unknown line>")),
+                line_start: dbg!(self.start_line + 1),
                 origin: self.file_name.as_deref(),
                 fold: true,
                 annotations: vec![SourceAnnotation {
