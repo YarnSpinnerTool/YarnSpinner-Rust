@@ -7,9 +7,9 @@ use antlr_rust::parser::ParserNodeType;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use yarn_slinger_core::prelude::Value;
+use yarn_slinger_core::prelude::InternalValue;
 
-/// A visitor that visits any valid constant value, and returns a [`Value`].
+/// A visitor that visits any valid constant value, and returns a [`InternalValue`].
 /// Currently only supports terminals, not expressions,
 /// even if those expressions would be constant.
 #[derive(Clone)]
@@ -50,7 +50,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
     fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
         let text = ctx.get_text();
         if let Ok(number) = text.parse::<f32>() {
-            Value::from(number).into()
+            InternalValue::from(number).into()
         } else {
             let message = format!("Failed to parse {text} as a float",);
             self.diagnostics.push(
@@ -61,21 +61,21 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
             // This default value seems very "JavaScript-y" with the pseudo-sensible default value on errors.
             // But this is not so! We just pushed an error diagnostic, so there will be no program emitted from this compilation attempt.
             // All this does is allow the compiler to continue and potentially collect further useful diagnostics!
-            Value::from(0.0).into()
+            InternalValue::from(0.0).into()
         }
     }
 
     fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'input>) -> Self::Return {
-        Value::from(true).into()
+        InternalValue::from(true).into()
     }
 
     fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'input>) -> Self::Return {
-        Value::from(false).into()
+        InternalValue::from(false).into()
     }
 
     fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
         let text = ctx.STRING().unwrap().get_text();
-        Value::from(text.trim_matches('"')).into()
+        InternalValue::from(text.trim_matches('"')).into()
     }
 
     fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
@@ -93,7 +93,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// Needed because ANTLR needs visitors' return values to have a default.
 /// While the C# implementation allows overriding a `DefaultResult` property,
 /// the Rust implementation simply takes the `Default` implementation of the associated `Return` type.
-/// However, we don't have a default [`Value`], which wouldn't make much sense, but panic when it would have been built by antl4rust,
+/// However, we don't have a default [`InternalValue`], which wouldn't make much sense, but panic when it would have been built by antl4rust,
 /// so we use this wrapper to accomplish that.
 ///
 /// This seems weird, I know. The original implementation writes a `Diagnostic` whenever the default value is constructed.
@@ -104,10 +104,10 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// We cannot write a diagnostic in the default implementation because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
-pub(crate) struct ConstantValue(pub(crate) Option<Value>);
+pub(crate) struct ConstantValue(pub(crate) Option<InternalValue>);
 
 impl Deref for ConstantValue {
-    type Target = Option<Value>;
+    type Target = Option<InternalValue>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -120,8 +120,8 @@ impl DerefMut for ConstantValue {
     }
 }
 
-impl From<Value> for ConstantValue {
-    fn from(value: Value) -> Self {
+impl From<InternalValue> for ConstantValue {
+    fn from(value: InternalValue) -> Self {
         Self(Some(value))
     }
 }

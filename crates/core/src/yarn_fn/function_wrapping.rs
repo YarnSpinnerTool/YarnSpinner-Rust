@@ -1,43 +1,59 @@
-use crate::prelude::Value;
+use crate::prelude::*;
 use std::any::TypeId;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
 
-pub trait YarnFnWithMarker<Marker> {
-    type Out: Into<Value> + 'static;
-    fn call(&self, input: Vec<Value>) -> Self::Out;
+/// A function that can be registered into and called from Yarn.
+/// It must have the following properties:
+/// - It is allowed to have zero or more parameters
+/// - Each parameter must be one of the following types:
+///   - [`bool`]
+///   - [`String`]
+///   - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
+///   - [`UntypedValue`], which means that this parameter may be any of any of the above types
+/// - Its parameters must be passed by value
+/// - It must have a return type
+/// - Its return type must be one of the following types:
+///     - [`bool`]
+///     - [`String`]
+///     - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
+pub trait YarnFn<Marker> {
+    type Out: IntoUntypedValueFromNonUntypedValue + 'static;
+    fn call(&self, input: Vec<UntypedValue>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
     }
 }
 
-pub trait YarnFn: Debug {
-    fn call(&self, input: Vec<Value>) -> Value;
-    fn clone_box(&self) -> Box<dyn YarnFn>;
+/// A [`YarnFn`] with the `Marker` type parameter erased.
+/// See its documentation for more information about what kind of functions are allowed.
+pub trait UntypedYarnFn: Debug {
+    fn call(&self, input: Vec<UntypedValue>) -> UntypedValue;
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
 
-impl Clone for Box<dyn YarnFn> {
+impl Clone for Box<dyn UntypedYarnFn> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
 }
 
-impl<Marker, F> YarnFn for YarnFnWrapper<Marker, F>
+impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static + Clone,
-    F: YarnFnWithMarker<Marker> + 'static + Clone,
-    F::Out: Into<Value> + 'static + Clone,
+    F: YarnFn<Marker> + 'static + Clone,
+    F::Out: IntoUntypedValueFromNonUntypedValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<Value>) -> Value {
+    fn call(&self, input: Vec<UntypedValue>) -> UntypedValue {
         let output = self.function.call(input);
-        output.as_value()
+        output.into_untyped_value()
     }
 
-    fn clone_box(&self) -> Box<dyn YarnFn> {
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
         Box::new(self.clone())
     }
 
@@ -50,24 +66,10 @@ where
     }
 }
 
-/// Necessary because [`Into`] requires `self` to be consumed and thus be [`Sized`], which in turn means no trait objects.
-pub trait IntoValue {
-    fn as_value(&self) -> Value;
-}
-
-impl<T> IntoValue for T
-where
-    T: Into<Value> + Clone,
-{
-    fn as_value(&self) -> Value {
-        self.clone().into()
-    }
-}
-
 #[derive(Clone)]
-pub struct YarnFnWrapper<Marker, F>
+pub(crate) struct YarnFnWrapper<Marker, F>
 where
-    F: YarnFnWithMarker<Marker>,
+    F: YarnFn<Marker>,
 {
     function: F,
 
@@ -77,7 +79,7 @@ where
 
 impl<Marker, F> From<F> for YarnFnWrapper<Marker, F>
 where
-    F: YarnFnWithMarker<Marker>,
+    F: YarnFn<Marker>,
 {
     fn from(function: F) -> Self {
         Self {
@@ -89,7 +91,7 @@ where
 
 impl<Marker, F> Debug for YarnFnWrapper<Marker, F>
 where
-    F: YarnFnWithMarker<Marker>,
+    F: YarnFn<Marker>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let signature = std::any::type_name::<Marker>();
@@ -99,7 +101,7 @@ where
     }
 }
 
-impl PartialEq for Box<dyn YarnFn> {
+impl PartialEq for Box<dyn UntypedYarnFn> {
     fn eq(&self, other: &Self) -> bool {
         // Not guaranteed to be unique, but that's good enough for our purposes.
         let debug = format!("{:?}", self);
@@ -108,21 +110,21 @@ impl PartialEq for Box<dyn YarnFn> {
     }
 }
 
-impl Eq for Box<dyn YarnFn> {}
+impl Eq for Box<dyn UntypedYarnFn> {}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<F, O, $($param,)*> YarnFnWithMarker<fn($($param,)*) -> O> for F
+        impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
                 F: Fn($($param,)*) -> O,
-                O: Into<Value> + 'static,
-                $($param: TryFrom<Value> + 'static,)*
+                O: IntoUntypedValueFromNonUntypedValue + 'static,
+                $($param: TryFrom<UntypedValue> + 'static,)*
             {
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, input: Vec<Value>) -> Self::Out {
+                fn call(&self, input: Vec<UntypedValue>) -> Self::Out {
                     let [$($param,)*] = &input[..] else {
                         panic!("Wrong number of arguments")
                     };

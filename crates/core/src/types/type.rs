@@ -1,5 +1,5 @@
 use crate::prelude::types::*;
-use crate::prelude::{Value, YarnFnRegistry};
+use crate::prelude::*;
 use crate::types::any::any_type_properties;
 use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
@@ -196,35 +196,17 @@ impl From<&str> for Type {
     }
 }
 
-pub trait AnyExt {
-    fn r#type() -> Type;
-}
-
-impl AnyExt for Box<dyn Any> {
-    fn r#type() -> Type {
-        Type::Any
-    }
-}
-
-impl From<&Box<dyn Any>> for Type {
-    fn from(_value: &Box<dyn Any>) -> Self {
-        Type::Any
-    }
-}
-
-impl From<Box<dyn Any>> for Type {
-    fn from(_value: Box<dyn Any>) -> Self {
-        Type::Any
-    }
-}
-
 impl TryFrom<TypeId> for Type {
     type Error = InvalidDowncastError;
 
     fn try_from(r#type: TypeId) -> Result<Self, Self::Error> {
         let string_type = TypeId::of::<String>();
         let bool_type = TypeId::of::<bool>();
-        let value_types = &[TypeId::of::<Value>(), TypeId::of::<Box<dyn Any>>()];
+        let value_types = &[
+            TypeId::of::<InternalValue>(),
+            TypeId::of::<UntypedValue>(),
+            TypeId::of::<Box<dyn Any>>(),
+        ];
         let number_types = &[
             TypeId::of::<f32>(),
             TypeId::of::<f64>(),

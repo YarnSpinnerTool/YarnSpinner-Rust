@@ -197,7 +197,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         let description_as_option = (!description.is_empty()).then_some(description);
         if let Some(value) = value.as_ref() {
             let declaration = Declaration::default()
-                .with_default_value(value.internal_value.clone())
+                .with_default_value(value.raw_value.clone())
                 .with_type(value.r#type.clone())
                 .with_name(variable_name)
                 .with_description_optional(description_as_option)

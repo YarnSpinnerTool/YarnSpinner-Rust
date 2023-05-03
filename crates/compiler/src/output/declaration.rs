@@ -5,11 +5,11 @@
 //! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
 
 use crate::parser_rule_context_ext::ParserRuleContextExt;
-use crate::prelude::{ActualTokenStream, Diagnostic};
+use crate::prelude::*;
 use antlr_rust::token::Token;
 use std::fmt::{Debug, Display};
 use std::ops::RangeInclusive;
-use yarn_slinger_core::prelude::convertible::Convertible;
+use yarn_slinger_core::prelude::*;
 use yarn_slinger_core::types::Type;
 
 /// Information about a declaration. Stored inside a declaration table,
@@ -25,7 +25,7 @@ pub struct Declaration {
     /// The default value of this declaration, if no value has been
     /// specified in code or is available from a [`Dialogue`]'s
     /// [`IVariableStorage`].
-    pub default_value: Option<Convertible>,
+    pub default_value: Option<UntypedValue>,
 
     /// A string describing the purpose of this declaration.
     pub description: Option<String>,
@@ -77,7 +77,7 @@ impl Declaration {
         self
     }
 
-    pub fn with_default_value(mut self, default_value: impl Into<Convertible>) -> Self {
+    pub fn with_default_value(mut self, default_value: impl Into<UntypedValue>) -> Self {
         self.default_value = Some(default_value.into());
         self
     }
