@@ -61,9 +61,6 @@ impl CompileResultExt for Result<Compilation, CompilationError> {
         match self {
             Ok(compilation) => compilation,
             Err(error) => {
-                for diagnostic in &error.diagnostics {
-                    eprintln!("{:?}", diagnostic);
-                }
                 for diagnostic in error.diagnostics {
                     eprintln!("{}", diagnostic);
                 }

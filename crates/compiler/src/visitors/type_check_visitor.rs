@@ -259,7 +259,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .get_token(yarnspinnerlexer::FUNC_ID, 0)
             .unwrap()
             .get_text();
-        println!("declarations: {:?}", self.declarations());
+
         let function_declaration = self
             .declarations()
             .into_iter()
