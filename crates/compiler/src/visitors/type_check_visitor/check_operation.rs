@@ -203,7 +203,6 @@ impl<'input> TypeCheckVisitor<'input> {
             .filter(|v| {
                 !self
                     .declarations()
-                    .iter()
                     .any(|d| d.name == v.VAR_ID().unwrap().get_text())
             })
             .collect();

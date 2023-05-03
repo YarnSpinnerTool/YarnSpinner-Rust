@@ -92,12 +92,18 @@ impl<'input> TypeCheckVisitor<'input> {
 
     /// Gets the collection of all declarations - both the ones we received
     /// at the start, and the new ones we've derived ourselves.
-    pub(crate) fn declarations(&self) -> Vec<Declaration> {
+    pub(crate) fn declarations(&self) -> impl Iterator<Item = &Declaration> + '_ {
         self.existing_declarations
             .iter()
-            .cloned()
-            .chain(self.new_declarations.iter().cloned())
-            .collect()
+            .chain(self.new_declarations.iter())
+    }
+
+    /// Gets the collection of all declarations mutably - both the ones we received
+    /// at the start, and the new ones we've derived ourselves.
+    pub(crate) fn declarations_mut(&mut self) -> impl Iterator<Item = &mut Declaration> + '_ {
+        self.existing_declarations
+            .iter_mut()
+            .chain(self.new_declarations.iter_mut())
     }
 }
 
@@ -262,8 +268,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
         let function_declaration = self
             .declarations()
-            .into_iter()
-            .find(|decl| decl.name == function_name);
+            .find(|decl| decl.name == function_name)
+            .cloned(); // Cloning to avoid borrow checker issues
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Type::Function(mut function_type) = function_declaration.r#type.clone() else {
@@ -278,7 +284,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     function_type.set_return_type(hint);
                     let new_declaration = Declaration {
                         r#type: Type::from(function_type.clone()),
-                        ..function_declaration
+                        ..function_declaration.clone()
                     };
                     self.new_declarations.push(new_declaration);
                 }
@@ -348,6 +354,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 // The type of this parameter hasn't yet been bound.
                 // Bind this parameter type to what we've resolved the
                 // type to.
+                let declaration = self
+                    .declarations_mut()
+                    .find(|decl| decl.name == function_name)
+                    .unwrap(); // Guaranteed to be Some
+                let Type::Function(function_type) = &mut declaration.r#type else {
+                    unreachable!();
+                };
+                function_type.parameters[i] = supplied_type.clone();
                 expected_type = &supplied_type;
             }
             if !supplied_type.is_sub_type_of(expected_type) {
@@ -361,6 +375,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 .with_file_name(&self.file.name)
                 .with_parser_context(ctx, self.file.tokens());
                 self.diagnostics.push(diagnostic);
+                return *function_type.return_type;
             }
         }
         // Cool, all the parameters check out!
@@ -379,12 +394,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             return None
         };
         let name = var_id.get_text();
-        if let Some(declaration) = self
-            .declarations()
-            .into_iter()
-            .find(|decl| decl.name == name)
-        {
-            return Some(declaration.r#type);
+        if let Some(declaration) = self.declarations().find(|decl| decl.name == name) {
+            return Some(declaration.r#type.clone());
         }
 
         // do we already have a potential warning about this?
