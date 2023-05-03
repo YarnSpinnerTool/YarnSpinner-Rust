@@ -106,7 +106,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         }
     }
 
-    fn visit_hashtag(&mut self, ctx: &HashtagContext<'input>) -> Self::Return {
+    fn visit_file_hashtag(&mut self, ctx: &File_hashtagContext<'input>) -> Self::Return {
         let hashtag_text = ctx.text.as_ref().unwrap();
         self.file_tags.push(hashtag_text.get_text().to_owned());
     }

@@ -124,11 +124,11 @@ fn test_node_headers() {
     }
 
     let path = path.to_string_lossy().to_string();
-    println!("{:?}", result.file_tags);
+
     assert!(result.file_tags.contains_key(&path));
     assert_eq!(1, result.file_tags.len());
-    assert_eq!(1, result.file_tags[&path].len());
     assert!(result.file_tags[&path].contains(&"file_header".to_owned()));
+    assert_eq!(1, result.file_tags[&path].len());
 }
 
 #[test]
