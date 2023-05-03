@@ -259,6 +259,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .get_token(yarnspinnerlexer::FUNC_ID, 0)
             .unwrap()
             .get_text();
+        println!("declarations: {:?}", self.declarations());
         let function_declaration = self
             .declarations()
             .into_iter()
@@ -289,6 +290,16 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             let mut function_type = FunctionType::default();
             // because it is an implicit declaration we will use the type hint to give us a return type
             function_type.set_return_type(hint);
+
+            // Create the array of parameters for this function based
+            // on how many we've seen in this call. Set them all to be
+            // undefined; we'll bind their type shortly.
+            let expressions = ctx.function_call().unwrap().expression_all();
+            let parameter_types = expressions.iter().map(|_| None);
+            for parameter_type in parameter_types {
+                function_type.add_parameter(parameter_type);
+            }
+
             let line = ctx.start().get_line_as_usize();
             let column = ctx.start().get_column_as_usize();
             let function_declaration =
@@ -299,15 +310,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     ))
                     .with_range(ctx.range(self.file.tokens()))
                     .with_implicit();
-
-            // Create the array of parameters for this function based
-            // on how many we've seen in this call. Set them all to be
-            // undefined; we'll bind their type shortly.
-            let expressions = ctx.function_call().unwrap().expression_all();
-            let parameter_types = expressions.iter().map(|_| None);
-            for parameter_type in parameter_types {
-                function_type.add_parameter(parameter_type);
-            }
             self.new_declarations.push(function_declaration);
             function_type
         };
