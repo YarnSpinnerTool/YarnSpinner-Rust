@@ -5,6 +5,7 @@ use antlr_rust::int_stream::IntStream;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_stream::TokenStream;
+use std::ops::Deref;
 
 pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     /// Returns the original text of this [`ParserRuleContext`], including all
@@ -38,42 +39,21 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     }
 
     fn get_lines_around(&self, token_stream: &ActualTokenStream<'input>) -> LinesAroundResult {
-        let start = self.start().get_token_index();
-        let stop = self.stop().get_token_index();
+        let whole_file = token_stream.get_all_text();
+        let start = self.start().get_start() as usize;
+        let stop = self.stop().get_stop() as usize + 1;
         let first_line = self.start().get_line() as usize;
 
-        let head = token_stream.get_text_from_interval(0, start - 1);
-        let body = token_stream.get_text_from_interval(start, stop);
-        let tail = token_stream.get_text_from_interval(stop + 1, token_stream.size() - 1);
-        let head_start_index = head.rfind('\n').map(|index| index + 1).unwrap_or(0);
+        let head = &whole_file[..start];
+        let body = dbg!(&whole_file[start..stop]);
+        let tail = &whole_file[stop..];
 
-        let (head_start_index, first_line) = (0..2).fold(
-            (head_start_index, first_line),
-            |(head_start_index, first_line), _| {
-                let head = &head[..head_start_index - 1];
-                if let Some(head_start_index) = head.rfind('\n').map(|index| index + 1) {
-                    (head_start_index, first_line - 1)
-                } else {
-                    (0, first_line)
-                }
-            },
-        );
-        let tail_end_index = tail.find('\n').unwrap_or(tail.len());
-        let tail_end_index = (0..2).fold(tail_end_index, |tail_end_index, _| {
-            let tail = &tail[tail_end_index + 1..];
-            if let Some(tail_end_index) = tail.find('\n') {
-                tail_end_index
-            } else {
-                tail.len()
-            }
-        });
-
-        let head = &head[head_start_index..];
-        let tail = &tail[..tail_end_index];
-        LinesAroundResult {
-            lines: format!("{head}{body}{tail}"),
-            first_line,
-        }
+        let head_lines: Vec<_> = head.lines().rev().take(3).collect();
+        let first_line = first_line - head_lines.len() + 1;
+        let head = head_lines.into_iter().rev().collect::<Vec<_>>().join("\n");
+        let tail = tail.lines().take(3).collect::<Vec<_>>().join("\n");
+        let lines = head + &body + &tail;
+        LinesAroundResult { lines, first_line }
     }
 }
 
