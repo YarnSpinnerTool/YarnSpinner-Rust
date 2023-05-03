@@ -36,12 +36,13 @@ pub(crate) fn parse_syntax_tree<'a>(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> FileParseResult<'a> {
     let input = CodePoint8BitCharStream::new(file.source.as_bytes());
-    let mut lexer = YarnSpinnerLexer::new(input);
+    let mut lexer = YarnSpinnerLexer::new(input, file.file_name.clone());
 
     // turning off the normal error listener and using ours
     let file_name = file.file_name.clone();
     let lexer_error_listener = LexerErrorListener::new(file_name.clone());
     let lexer_error_listener_diagnostics = lexer_error_listener.diagnostics.clone();
+    let lexer_diagnostics = lexer.diagnostics.clone();
     lexer.remove_error_listeners();
     lexer.add_error_listener(Box::new(lexer_error_listener));
 
@@ -57,10 +58,12 @@ pub(crate) fn parse_syntax_tree<'a>(
     // and we want to read them after.
     let tree = parser.dialogue().unwrap();
 
+    let lexer_diagnostics_borrowed = lexer_diagnostics.borrow();
     let lexer_error_listener_diagnostics_borrowed = lexer_error_listener_diagnostics.borrow();
     let parser_error_listener_diagnostics_borrowed = parser_error_listener_diagnostics.borrow();
     let new_diagnostics = lexer_error_listener_diagnostics_borrowed
         .iter()
+        .chain(lexer_diagnostics_borrowed.iter())
         .chain(parser_error_listener_diagnostics_borrowed.iter())
         .cloned();
     diagnostics.extend(new_diagnostics);
@@ -200,4 +203,41 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
                 .with_source_file_name(DeclarationSource::External)
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn warns_about_mixed_indentation() {
+        let mut diagnostics = Vec::new();
+        let mixed_indentation_input = File {
+            file_name: "test.yarn".to_owned(),
+            source: "title: Start
+---
+-> Option 1
+\t   Nice.
+==="
+            .to_owned(),
+        };
+        let _parsed_file = parse_syntax_tree(&mixed_indentation_input, &mut diagnostics);
+        assert_eq!(1, diagnostics.len());
+        assert_eq!(
+            Diagnostic::from_message("Indentation contains tabs and spaces")
+                .with_context("\t   ")
+                .with_file_name("test.yarn")
+                .with_range(
+                    Position {
+                        line: 3,
+                        character: 0
+                    }..=Position {
+                        line: 3,
+                        character: 4
+                    }
+                )
+                .with_severity(DiagnosticSeverity::Warning),
+            diagnostics[0]
+        );
+    }
 }

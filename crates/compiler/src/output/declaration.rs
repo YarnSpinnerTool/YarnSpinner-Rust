@@ -174,7 +174,9 @@ pub struct Position {
     pub character: usize,
 }
 
-pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
+pub(crate) trait ParserRuleContextExtRangeSource<'input>:
+    ParserRuleContextExt<'input>
+{
     fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
         let start = Position {
             line: self.start().get_line() as usize - 1,
@@ -190,7 +192,7 @@ pub trait RangeSource<'input>: ParserRuleContextExt<'input> {
     }
 }
 
-impl<'input, T: ParserRuleContextExt<'input>> RangeSource<'input> for T {}
+impl<'input, T: ParserRuleContextExt<'input>> ParserRuleContextExtRangeSource<'input> for T {}
 
 impl Display for DeclarationSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
