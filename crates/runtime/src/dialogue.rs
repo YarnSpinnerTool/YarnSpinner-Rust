@@ -1,5 +1,10 @@
+pub use self::{dialogue_option::*, handlers::*, line::*};
 use std::fmt::Debug;
 use yarn_slinger_core::prelude::*;
+
+mod dialogue_option;
+mod handlers;
+mod line;
 
 /// Co-ordinates the execution of Yarn programs.
 #[non_exhaustive]
