@@ -52,7 +52,7 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         let body = &whole_file[start..stop];
         let tail = &whole_file[stop..];
 
-        let head_lines_to_take = if head.ends_with('\n') {
+        let head_lines_to_take = if head.ends_with('\n') || body.starts_with('\n') {
             surrounding_lines
         } else {
             surrounding_lines + 1
@@ -67,7 +67,11 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         let first_line = first_line - head_lines.len();
         let head = head_lines.into_iter().rev().collect::<Vec<_>>().join("\n");
 
-        let tail_lines_to_take = surrounding_lines + 1;
+        let tail_lines_to_take = if body.ends_with('\n') || tail.starts_with('\n') {
+            surrounding_lines
+        } else {
+            surrounding_lines + 1
+        };
         let tail = tail
             .lines()
             .take(tail_lines_to_take)
@@ -78,6 +82,7 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct LinesAroundResult {
     pub(crate) lines: String,
     pub(crate) first_line: usize,
