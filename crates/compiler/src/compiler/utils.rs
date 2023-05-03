@@ -197,9 +197,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
             function_type.parameters = parameters;
             let return_type = Type::try_from(function.return_type()).unwrap();
             function_type.set_return_type(return_type);
-            Declaration::default()
-                .with_name(name.to_string())
-                .with_type(Type::from(function_type))
+            Declaration::new(name.clone(), function_type)
                 .with_source_file_name(DeclarationSource::External)
         })
         .collect()

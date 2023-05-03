@@ -229,10 +229,9 @@ impl<'input> TypeCheckVisitor<'input> {
                     .as_ref()
                     .map(|name| format!(", node {name}"))
                     .unwrap_or_default();
-                let decl = Declaration::default()
-                    .with_name(&var_name)
+                let r#type = expression_type.clone().unwrap(); // Guaranteed to be Some
+                let decl = Declaration::new(var_name.clone(), r#type)
                     .with_description(format!("Implicitly declared in {file_name}{node}"))
-                    .with_type(expression_type.clone().unwrap()) // Guaranteed to be Some
                     .with_default_value(default_value)
                     .with_source_file_name(self.file.name.clone())
                     .with_source_node_name_optional(self.current_node_name.clone())

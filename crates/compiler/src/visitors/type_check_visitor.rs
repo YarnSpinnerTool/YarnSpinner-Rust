@@ -291,15 +291,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             function_type.set_return_type(hint);
             let line = ctx.start().get_line_as_usize();
             let column = ctx.start().get_column_as_usize();
-            let function_declaration = Declaration::default()
-                .with_type(Type::from(function_type.clone()))
-                .with_name(&function_name)
-                .with_description(format!(
-                    "Implicit declaration of function at {}:{}:{}",
-                    self.file.name, line, column
-                ))
-                .with_range(ctx.range(self.file.tokens()))
-                .with_implicit();
+            let function_declaration =
+                Declaration::new(function_name.clone(), function_type.clone())
+                    .with_description(format!(
+                        "Implicit declaration of function at {}:{}:{}",
+                        self.file.name, line, column
+                    ))
+                    .with_range(ctx.range(self.file.tokens()))
+                    .with_implicit();
 
             // Create the array of parameters for this function based
             // on how many we've seen in this call. Set them all to be
@@ -474,14 +473,12 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                         // we can't get one, we can't create the definition.
                         if let Some(default_value) = expression_type.default_value() {
                             // Generate a declaration for this variable here.
-                            let decl = Declaration::default()
-                                .with_name(variable_name)
+                            let decl = Declaration::new(variable_name, expression_type.clone())
                                 .with_description(format!(
                                     "Implicitly declared in {}, node {}",
                                     get_filename(&self.file.name),
                                     self.current_node_name.as_ref().unwrap()
                                 ))
-                                .with_type(expression_type.clone())
                                 .with_default_value(default_value)
                                 .with_source_file_name(self.file.name.clone())
                                 .with_source_node_name_optional(self.current_node_name.clone())

@@ -195,10 +195,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         let description = get_document_comments(self.file.tokens(), ctx);
         let description_as_option = (!description.is_empty()).then_some(description);
         if let Some(value) = value.as_ref() {
-            let declaration = Declaration::default()
+            let declaration = Declaration::new(variable_name, value.r#type.clone())
                 .with_default_value(value.raw_value.clone())
-                .with_type(value.r#type.clone())
-                .with_name(variable_name)
                 .with_description_optional(description_as_option)
                 .with_source_file_name(self.file.name.clone())
                 .with_source_node_name_optional(self.current_node_name.clone())
@@ -246,10 +244,8 @@ mod tests {
         assert_eq!(result.declarations.len(), 4);
         assert_eq!(
             result.declarations[0],
-            Declaration::default()
+            Declaration::new("$foo", Type::Number)
                 .with_default_value(1.0)
-                .with_type(Type::Number)
-                .with_name("$foo")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
                 .with_range(
@@ -265,10 +261,8 @@ mod tests {
 
         assert_eq!(
             result.declarations[1],
-            Declaration::default()
+            Declaration::new("$bar", Type::String)
                 .with_default_value("2")
-                .with_type(Type::String)
-                .with_name("$bar")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
                 .with_range(
@@ -284,10 +278,8 @@ mod tests {
 
         assert_eq!(
             result.declarations[2],
-            Declaration::default()
+            Declaration::new("$baz", Type::Boolean)
                 .with_default_value(true)
-                .with_type(Type::Boolean)
-                .with_name("$baz")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
                 .with_range(
@@ -303,10 +295,8 @@ mod tests {
 
         assert_eq!(
             result.declarations[3],
-            Declaration::default()
+            Declaration::new("$quux", Type::String)
                 .with_default_value("hello there")
-                .with_type(Type::String)
-                .with_name("$quux")
                 .with_source_file_name("test.yarn")
                 .with_source_node_name("test")
                 .with_range(

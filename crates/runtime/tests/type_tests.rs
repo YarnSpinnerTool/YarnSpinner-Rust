@@ -117,9 +117,7 @@ fn test_variable_declarations_parsed() {
     );
     let result = compile(compilation_job).unwrap_pretty();
     let expected_declarations = &[
-        Declaration::default()
-            .with_name("$int")
-            .with_type(Type::Number)
+        Declaration::new("$int", Type::Number)
             .with_default_value(5.0)
             .with_range(
                 Position {
@@ -132,9 +130,7 @@ fn test_variable_declarations_parsed() {
             )
             .with_source_node_name("Start")
             .with_source_file_name("<input>"),
-        Declaration::default()
-            .with_name("$str")
-            .with_type(Type::String)
+        Declaration::new("$str", Type::String)
             .with_default_value("yes")
             .with_range(
                 Position {
@@ -147,9 +143,7 @@ fn test_variable_declarations_parsed() {
             )
             .with_source_node_name("Start")
             .with_source_file_name("<input>"),
-        Declaration::default()
-            .with_name("$bool")
-            .with_type(Type::Boolean)
+        Declaration::new("$bool", Type::Boolean)
             .with_default_value(true)
             .with_range(
                 Position {
@@ -276,10 +270,7 @@ fn test_importing_variable_declarations() {
     let compilation_job =
         CompilationJob::from_test_source("<<set $int = 6>> // no error; declaration is imported")
             .with_variable_declaration(
-                Declaration::default()
-                    .with_name("$int")
-                    .with_type(Type::Number)
-                    .with_default_value(0.0),
+                Declaration::new("$int", Type::Number).with_default_value(0.0),
             );
 
     let result = compile(compilation_job).unwrap_pretty();
