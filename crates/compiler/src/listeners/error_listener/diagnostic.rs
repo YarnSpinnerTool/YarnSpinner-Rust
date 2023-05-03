@@ -50,11 +50,12 @@ impl Diagnostic {
     }
 
     pub(crate) fn with_parser_context<'input>(
-        mut self,
+        self,
         ctx: &impl ParserRuleContextExt<'input>,
         token_stream: &ActualTokenStream<'input>,
     ) -> Self {
-        let lines_around = ctx.get_lines_around(token_stream);
+        let lines_above_and_below_offending_line = 2;
+        let lines_around = ctx.get_lines_around(token_stream, lines_above_and_below_offending_line);
         let range = ctx.range(token_stream);
         self.with_range(range)
             .with_context(lines_around.lines)
@@ -105,20 +106,11 @@ impl Display for Diagnostic {
                 source: dbg!(self.context.as_deref().unwrap_or("<unknown line>")),
                 line_start: dbg!(self.start_line + 1),
                 origin: self.file_name.as_deref(),
-                fold: true,
+                fold: false,
                 annotations: vec![SourceAnnotation {
                     label: "",
                     annotation_type,
-                    range: (
-                        self.range
-                            .as_ref()
-                            .map(|r| r.start().character)
-                            .unwrap_or_default(),
-                        self.range
-                            .as_ref()
-                            .map(|r| r.end().character)
-                            .unwrap_or_default(),
-                    ),
+                    range: convert_absolute_range_to_relative(self),
                 }],
             }],
             opt: FormatOptions {
@@ -132,6 +124,28 @@ impl Display for Diagnostic {
 
         Ok(())
     }
+}
+
+fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize) {
+    let Some(range) = diagnostic.range.as_ref() else {
+        return (0, 0);
+    };
+    let Some(context) = diagnostic.context.as_ref() else {
+        return (0, 0);
+    };
+
+    let relative_start_line = range.start().line - diagnostic.start_line;
+    let annotated_lines = range.end().line - range.start().line;
+    let line_lengths: Vec<_> = context.lines().map(|line| line.len() + 1).collect();
+    let relative_start =
+        line_lengths.iter().take(relative_start_line).sum::<usize>() + range.start().character;
+    let relative_end: usize = line_lengths
+        .iter()
+        .take(relative_start_line + annotated_lines)
+        .sum::<usize>()
+        + range.end().character;
+
+    (relative_start, relative_end)
 }
 
 pub trait DiagnosticVec {

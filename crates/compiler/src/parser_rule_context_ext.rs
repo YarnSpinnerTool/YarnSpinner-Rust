@@ -1,11 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/YarnSpinnerRuleContextExt.cs>
 
 use crate::prelude::*;
-use antlr_rust::int_stream::IntStream;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_stream::TokenStream;
-use std::ops::Deref;
 
 pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     /// Returns the original text of this [`ParserRuleContext`], including all
@@ -38,20 +36,29 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         }
     }
 
-    fn get_lines_around(&self, token_stream: &ActualTokenStream<'input>) -> LinesAroundResult {
+    fn get_lines_around(
+        &self,
+        token_stream: &ActualTokenStream<'input>,
+        surrounding_lines: usize,
+    ) -> LinesAroundResult {
         let whole_file = token_stream.get_all_text();
         let start = self.start().get_start() as usize;
         let stop = self.stop().get_stop() as usize + 1;
         let first_line = self.start().get_line() as usize;
 
         let head = &whole_file[..start];
-        let body = dbg!(&whole_file[start..stop]);
+        let body = &whole_file[start..stop];
         let tail = &whole_file[stop..];
 
-        let head_lines: Vec<_> = head.lines().rev().take(3).collect();
-        let first_line = first_line - head_lines.len() + 1;
+        let lines_to_take = surrounding_lines + 1;
+        let head_lines: Vec<_> = head.lines().rev().take(lines_to_take).collect();
+        let first_line = first_line - head_lines.len();
         let head = head_lines.into_iter().rev().collect::<Vec<_>>().join("\n");
-        let tail = tail.lines().take(3).collect::<Vec<_>>().join("\n");
+        let tail = tail
+            .lines()
+            .take(lines_to_take)
+            .collect::<Vec<_>>()
+            .join("\n");
         let lines = head + &body + &tail;
         LinesAroundResult { lines, first_line }
     }
