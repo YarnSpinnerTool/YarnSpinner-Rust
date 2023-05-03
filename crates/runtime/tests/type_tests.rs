@@ -5,6 +5,14 @@
 //! This affects the following tests:
 //! - `TestFailingFunctionDeclarationReturnType`
 //! - `TestFailingFunctionDeclarationParameterType`
+//!
+//! Our [`Declaration`] and [`types::FunctionType`] types already support builder semantics, so the following tests were omitted:
+//! - `TestDeclarationBuilderCanBuildDeclarations`
+//! - `TestFunctionTypeBuilderCanBuildTypes`
+//!
+//! Because of our different (and imo better) visibility granularity, we have no access to `Type::EXPLICITLY_CONSTRUCTABLE`,
+//! so the following (fairly useless) test was omitted:
+//! - `TestBuiltinTypesAreEnumerated`
 
 use crate::test_base::*;
 use yarn_slinger_compiler::prelude::*;
@@ -1059,11 +1067,92 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
         "#,
     );
 
-    let result = compile(compilation_job);
+    let result = compile(compilation_job).unwrap_err();
+    println!("{}", result);
 
-    assert!(result.is_err());
     assert_eq!(
         "Function \"func\" expects 1 parameter, but received 2",
-        result.unwrap_err().diagnostics[0].message,
+        result.diagnostics[0].message,
     );
+}
+
+/*
+       [Fact]
+       public void TestMultipleImplicitRedeclarationsOfFunctionParameterTypeFail()
+       {
+           var source = CreateTestNode(@"
+           {func(1)}
+           {func(true)} // wrong type of parameter (previous decl had number)
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source));
+
+           result.Diagnostics.Should().Contain(d => d.Message.Contains("expects a Number, not a Bool"));
+       }
+*/
+
+#[test]
+fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
+    let compilation_job = CompilationJob::from_test_source(
+        "
+        {func(1)}
+        {func(true)} // wrong type of parameter (previous decl had number)
+        ",
+    );
+
+    let result = compile(compilation_job).unwrap_err();
+    println!("{}", result);
+
+    assert!(result
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("expects a Number, not a Bool")));
+}
+
+/*
+ [Fact]
+       public void TestIfStatementExpressionsMustBeBoolean()
+       {
+           var source = CreateTestNode(@"
+           <<declare $str = ""hello"" as string>>
+           <<declare $bool = true>>
+
+           <<if $bool>> // ok
+           Hello
+           <<endif>>
+
+           <<if $str>> // error, must be a bool
+           Hello
+           <<endif>>
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source));
+
+           result.Diagnostics.Should().Contain(d => d.Message.Contains("Terms of 'if statement' must be Bool, not String"));
+       }
+*/
+
+#[test]
+fn test_if_statement_expressions_must_be_boolean() {
+    let compilation_job = CompilationJob::from_test_source(
+        r#"
+        <<declare $str = "hello" as string>>
+        <<declare $bool = true>>
+
+        <<if $bool>> // ok
+        Hello
+        <<endif>>
+
+        <<if $str>> // error, must be a bool
+        Hello
+        <<endif>>
+        "#,
+    );
+
+    let result = compile(compilation_job).unwrap_err();
+    println!("{}", result);
+
+    assert!(result.diagnostics.iter().any(|d| d
+        .message
+        .contains("Terms of 'if statement' must be Bool, not String")));
 }
