@@ -1,4 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TypeTests.cs>
+//!
+//! Tests that check runtime validation of registered functions were omitted,
+//! because Rust's type system already guarantees correctness at compile time.
+//! This affects the following tests:
+//! - `TestFailingFunctionDeclarationReturnType`
+//! - `TestFailingFunctionDeclarationParameterType`
 
 use crate::test_base::*;
 use yarn_slinger_compiler::prelude::*;
@@ -489,5 +495,480 @@ fn test_expressions_require_compatible_types() {
             .declarations
             .iter()
             .any(|d| d.name == "$str" && d.r#type == Type::String));
+    }
+}
+
+/*
+
+       [Fact]
+       public void TestNullNotAllowed()
+       {
+           var source = CreateTestNode(@"
+           <<declare $err = null>> // error, null not allowed
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source));
+
+           result.Diagnostics.Should().Contain(p => p.Message.Contains("Null is not a permitted type"));
+       }
+*/
+
+#[test]
+fn test_null_not_allowed() {
+    let compilation_job =
+        CompilationJob::from_test_source("<<declare $err = null>> // error, null not allowed");
+
+    let result = compile(compilation_job).unwrap_err();
+    println!("{}", result);
+    assert!(result
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("Null is not a permitted type")));
+}
+
+/*
+       [Theory]
+       [InlineData("<<set $bool = func_void_bool()>>")]
+       [InlineData("<<set $bool = func_int_bool(1)>>")]
+       [InlineData("<<set $bool = func_int_int_bool(1, 2)>>")]
+       [InlineData(@"<<set $bool = func_string_string_bool(""1"", ""2"")>>")]
+       public void TestFunctionSignatures(string source)
+       {
+           dialogue.Library.RegisterFunction("func_void_bool", () => true);
+           dialogue.Library.RegisterFunction("func_int_bool", (int i) => true);
+           dialogue.Library.RegisterFunction("func_int_int_bool", (int i, int j) => true);
+           dialogue.Library.RegisterFunction("func_string_string_bool", (string i, string j) => true);
+
+           var correctSource = CreateTestNode(source);
+
+           // Should compile with no exceptions
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", correctSource, dialogue.Library));
+
+           // We should have no diagnostics.
+           result.Diagnostics.Should().BeEmpty();
+
+           // The variable '$bool' should have an implicit declaration. The
+           // type of the variable should be Boolean, because that's the return
+           // type of all of the functions we declared.
+           result.Declarations.Where(d => d.Name == "$bool")
+               .Should().ContainSingle().Which.Type.Should().Be(BuiltinTypes.Boolean);
+       }
+*/
+
+#[test]
+fn test_function_signatures() {
+    let mut test_base = TestBase::default();
+    test_base
+        .dialogue
+        .library
+        .register_function("func_void_bool", || true)
+        .register_function("func_int_bool", |_i: i32| true)
+        .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
+        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+
+    for source in [
+        "<<set $bool = func_void_bool()>>",
+        "<<set $bool = func_int_bool(1)>>",
+        "<<set $bool = func_int_int_bool(1, 2)>>",
+        "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
+    ] {
+        let compilation_job = CompilationJob::from_test_source(source)
+            .with_library(test_base.dialogue.library.clone());
+        let result = compile(compilation_job).unwrap_pretty();
+
+        // The variable '$bool' should have an implicit declaration. The
+        // type of the variable should be Boolean, because that's the return
+        // type of all of the functions we declared.
+        assert!(result
+            .declarations
+            .iter()
+            .any(|d| d.name == "$bool" && d.r#type == Type::Boolean));
+    }
+}
+
+/*
+       public void TestOperatorsAreTypeChecked([CombinatorialValues(
+           "= 1 + 1",
+           "= 1 / 1",
+           "= 1 - 1",
+           "= 1 * 1",
+           "= 1 % 1",
+           "+= 1",
+           "-= 1",
+           "/= 1",
+           "*= 1"
+           )] string operation, bool declared)
+       {
+
+           string source = CreateTestNode($@"
+               {(declared ? "<<declare $var = 0>>" : "")}
+               <<set $var {operation}>>
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source, dialogue.Library));
+
+           result.Declarations.Should().Contain(d => d.Name == "$var")
+               .Which.Type.Should().Be(BuiltinTypes.Number);
+
+           result.Diagnostics.Should().BeEmpty();
+
+       }
+*/
+
+#[test]
+fn test_operators_are_type_checked() {
+    let test_base = TestBase::default();
+    for operation in [
+        "= 1 + 1", "= 1 / 1", "= 1 - 1", "= 1 * 1", "= 1 % 1", "+= 1", "-= 1", "/= 1", "*= 1",
+    ] {
+        for declared in [true, false] {
+            let source = format!(
+                "{}\n<<set $var {operation}>>",
+                declared
+                    .then_some("<<declare $var = 0>>")
+                    .unwrap_or_default(),
+            );
+
+            let compilation_job = CompilationJob::from_test_source(&source)
+                .with_library(test_base.dialogue.library.clone());
+            let result = compile(compilation_job).unwrap_pretty();
+
+            assert!(result
+                .declarations
+                .iter()
+                .any(|d| d.name == "$var" && d.r#type == Type::Number));
+        }
+    }
+}
+
+/*
+[Theory]
+       [InlineData("<<set $bool = func_void_bool(1)>>", "expects 0 parameters, but received 1")]
+       [InlineData("<<set $bool = func_int_bool()>>", "expects 1 parameter, but received 0")]
+       [InlineData("<<set $bool = func_int_bool(true)>>", "expects a Number, not a Bool")]
+       [InlineData(@"<<set $bool = func_string_string_bool(""1"", 2)>>", "expects a String, not a Number")]
+       [InlineData("<<set $int = func_void_bool()>>", @"$int (Number) cannot be assigned a Bool")]
+       public void TestFailingFunctionSignatures(string source, string expectedExceptionMessage)
+       {
+           dialogue.Library.RegisterFunction("func_void_bool", () => true);
+           dialogue.Library.RegisterFunction("func_int_bool", (int i) => true);
+           dialogue.Library.RegisterFunction("func_int_int_bool", (int i, int j) => true);
+           dialogue.Library.RegisterFunction("func_string_string_bool", (string i, string j) => true);
+
+           var failingSource = CreateTestNode($@"
+               <<declare $bool = false>>
+               <<declare $int = 1>>
+               {source}
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", failingSource, dialogue.Library));
+
+           var diagnosticMessages = result.Diagnostics.Select(d => d.Message);
+
+           diagnosticMessages.Should().ContainMatch($"*{expectedExceptionMessage}*");
+       }
+*/
+
+#[test]
+fn test_failing_function_signatures() {
+    let mut test_base = TestBase::default();
+    test_base
+        .dialogue
+        .library
+        .register_function("func_void_bool", || true)
+        .register_function("func_int_bool", |_i: i32| true)
+        .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
+        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+
+    for (source, expected_exception_message) in [
+        (
+            "<<set $bool = func_void_bool(1)>>",
+            "expects 0 parameters, but received 1",
+        ),
+        (
+            "<<set $bool = func_int_bool()>>",
+            "expects 1 parameter, but received 0",
+        ),
+        (
+            "<<set $bool = func_int_bool(true)>>",
+            "expects a Number, not a Bool",
+        ),
+        (
+            "<<set $bool = func_string_string_bool(\"1\", 2)>>",
+            "expects a String, not a Number",
+        ),
+        (
+            "<<set $int = func_void_bool()>>",
+            "$int (Number) cannot be assigned a Bool",
+        ),
+    ] {
+        let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
+
+        let compilation_job = CompilationJob::from_test_source(&failing_source)
+            .with_library(test_base.dialogue.library.clone());
+        let result = compile(compilation_job).unwrap_err();
+        println!("{}", result);
+
+        let diagnostic_messages = result
+            .diagnostics
+            .iter()
+            .map(|d| d.message.clone())
+            .collect::<Vec<_>>();
+
+        assert!(diagnostic_messages
+            .iter()
+            .any(|m| m.contains(expected_exception_message)));
+    }
+}
+
+#[test]
+#[ignore]
+fn test_initial_values() {
+    todo!("Not ported yet")
+}
+
+/*
+       [Fact]
+       public void TestExplicitTypes()
+       {
+           var source = CreateTestNode(@"
+           <<declare $str = ""hello"" as string>>
+           <<declare $int = 1 as number>>
+           <<declare $bool = false as bool>>
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source, dialogue.Library));
+
+           result.Diagnostics.Should().BeEmpty();
+
+           var variableDeclarations = result.Declarations.Where(d => d.Name.StartsWith("$"));
+
+           variableDeclarations.Should().Contain(d => d.Name == "$str").Which.Type.Should().Be(BuiltinTypes.String);
+           variableDeclarations.Should().Contain(d => d.Name == "$int").Which.Type.Should().Be(BuiltinTypes.Number);
+           variableDeclarations.Should().Contain(d => d.Name == "$bool").Which.Type.Should().Be(BuiltinTypes.Boolean);
+       }
+*/
+
+#[test]
+fn test_explicit_types() {
+    let compilation_job = CompilationJob::from_test_source(
+        r#"
+        <<declare $str = "hello" as string>>
+        <<declare $int = 1 as number>>
+        <<declare $bool = false as bool>>
+        "#,
+    );
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let variable_declarations: Vec<_> = result
+        .declarations
+        .iter()
+        .filter(|d| d.name.starts_with("$"))
+        .collect();
+
+    assert!(variable_declarations
+        .iter()
+        .any(|d| d.name == "$str" && d.r#type == Type::String));
+    assert!(variable_declarations
+        .iter()
+        .any(|d| d.name == "$int" && d.r#type == Type::Number));
+    assert!(variable_declarations
+        .iter()
+        .any(|d| d.name == "$bool" && d.r#type == Type::Boolean));
+}
+
+/*
+
+       [Theory]
+       [InlineData(@"<<declare $str = ""hello"" as number>>")]
+       [InlineData(@"<<declare $int = 1 as bool>>")]
+       [InlineData(@"<<declare $bool = false as string>>")]
+       public void TestExplicitTypesMustMatchValue(string test)
+       {
+           var source = CreateTestNode(test);
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source, dialogue.Library));
+
+           result.Diagnostics.Should().Contain(d => d.Severity == Diagnostic.DiagnosticSeverity.Error);
+       }
+*/
+
+#[test]
+fn test_explicit_types_must_match_value() {
+    for test in [
+        r#"<<declare $str = "hello" as number>>"#,
+        r#"<<declare $int = 1 as bool>>"#,
+        r#"<<declare $bool = false as string>>"#,
+    ] {
+        let compilation_job = CompilationJob::from_test_source(test);
+        let _result = compile(compilation_job).unwrap_err();
+    }
+}
+
+/*
+[Fact]
+        public void TestVariableDeclarationAnnotations()
+        {
+            var source = CreateTestNode(@"
+            /// prefix: a number
+            <<declare $prefix_int = 42>>
+
+            /// prefix: a string
+            <<declare $prefix_str = ""Hello"">>
+
+            /// prefix: a bool
+            <<declare $prefix_bool = true>>
+
+            <<declare $suffix_int = 42>> /// suffix: a number
+
+            <<declare $suffix_str = ""Hello"">> /// suffix: a string
+
+            <<declare $suffix_bool = true>> /// suffix: a bool
+
+            // No declaration before
+            <<declare $none_int = 42>> // No declaration after
+
+            /// Multi-line
+            /// doc comment
+            <<declare $multiline = 42>>
+
+            ");
+
+            var result = Compiler.Compile(CompilationJob.CreateFromString("input", source, dialogue.Library));
+
+            result.Diagnostics.Should().BeEmpty();
+
+            var expectedDeclarations = new List<Declaration>() {
+                new Declaration {
+                    Name = "$prefix_int",
+                    Type = BuiltinTypes.Number,
+                    DefaultValue = 42f,
+                    Description = "prefix: a number",
+                },
+                new Declaration {
+                    Name = "$prefix_str",
+                    Type = BuiltinTypes.String,
+                    DefaultValue = "Hello",
+                    Description = "prefix: a string",
+                },
+                new Declaration {
+                    Name = "$prefix_bool",
+                    Type = BuiltinTypes.Boolean,
+                    DefaultValue = true,
+                    Description = "prefix: a bool",
+                },
+                new Declaration {
+                    Name = "$suffix_int",
+                    Type = BuiltinTypes.Number,
+                    DefaultValue = 42f,
+                    Description = "suffix: a number",
+                },
+                new Declaration {
+                    Name = "$suffix_str",
+                    Type = BuiltinTypes.String,
+                    DefaultValue = "Hello",
+                    Description = "suffix: a string",
+                },
+                new Declaration {
+                    Name = "$suffix_bool",
+                    Type = BuiltinTypes.Boolean,
+                    DefaultValue = true,
+                    Description = "suffix: a bool",
+                },
+                new Declaration {
+                    Name = "$none_int",
+                    Type = BuiltinTypes.Number,
+                    DefaultValue = 42f,
+                    Description = null,
+                },
+                new Declaration {
+                    Name = "$multiline",
+                    Type = BuiltinTypes.Number,
+                    DefaultValue = 42f,
+                    Description = "Multi-line doc comment",
+                },
+            };
+
+            var actualDeclarations = new List<Declaration>(result.Declarations);
+
+            actualDeclarations.Count().Should().Be(expectedDeclarations.Count());
+
+            for (int i = 0; i < expectedDeclarations.Count; i++)
+            {
+                Declaration expected = expectedDeclarations[i];
+                Declaration actual = actualDeclarations[i];
+
+                actual.Name.Should().Be(expected.Name);
+                actual.Type.Should().Be(expected.Type);
+                actual.DefaultValue.Should().Be(expected.DefaultValue);
+                actual.Description.Should().Be(expected.Description);
+            }
+
+        }
+ */
+
+#[test]
+fn test_variable_declaration_annotations() {
+    let compilation_job = CompilationJob::from_test_source(
+        r#"
+        /// prefix: a number
+        <<declare $prefix_int = 42>>
+
+        /// prefix: a string
+        <<declare $prefix_str = "Hello">>
+
+        /// prefix: a bool
+        <<declare $prefix_bool = true>>
+
+        <<declare $suffix_int = 42>> /// suffix: a number
+
+        <<declare $suffix_str = "Hello">> /// suffix: a string
+
+        <<declare $suffix_bool = true>> /// suffix: a bool
+
+        // No declaration before
+        <<declare $none_int = 42>> // No declaration after
+
+        /// Multi-line
+        /// doc comment
+        <<declare $multiline = 42>>
+        "#,
+    );
+
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let expected_declarations = vec![
+        Declaration::new("$prefix_int", Type::Number)
+            .with_default_value(42.0)
+            .with_description("prefix: a number"),
+        Declaration::new("$prefix_str", Type::String)
+            .with_default_value("Hello")
+            .with_description("prefix: a string"),
+        Declaration::new("$prefix_bool", Type::Boolean)
+            .with_default_value(true)
+            .with_description("prefix: a bool"),
+        Declaration::new("$suffix_int", Type::Number)
+            .with_default_value(42.0)
+            .with_description("suffix: a number"),
+        Declaration::new("$suffix_str", Type::String)
+            .with_default_value("Hello")
+            .with_description("suffix: a string"),
+        Declaration::new("$suffix_bool", Type::Boolean)
+            .with_default_value(true)
+            .with_description("suffix: a bool"),
+        Declaration::new("$none_int", Type::Number).with_default_value(42.0),
+        Declaration::new("$multiline", Type::Number)
+            .with_default_value(42.0)
+            .with_description("Multi-line doc comment"),
+    ];
+    let actual_declarations = result.declarations;
+
+    assert_eq!(expected_declarations.len(), actual_declarations.len());
+
+    for (expected, actual) in expected_declarations.iter().zip(actual_declarations.iter()) {
+        assert_eq!(expected.name, actual.name);
+        assert_eq!(expected.r#type, actual.r#type);
+        assert_eq!(expected.default_value, actual.default_value);
+        assert_eq!(expected.description, actual.description);
     }
 }
