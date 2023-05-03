@@ -9,7 +9,6 @@ use crate::prelude::*;
 use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
-use antlr_rust::CoerceTo;
 use std::fmt::{Debug, Display};
 use std::ops::Range;
 use yarn_slinger_core::prelude::*;
@@ -196,7 +195,7 @@ where
     <<<<Self as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
         Into<String>,
 {
-    fn range(&self, token_stream: &ActualTokenStream<'input>) -> Range<Position> {
+    fn range(&self) -> Range<Position> {
         let start = Position {
             line: self.start().get_line_as_usize().saturating_sub(1),
             character: self.start().get_column_as_usize(),

@@ -171,7 +171,7 @@ impl<'input> PrivateCommonTokenStreamExt<'input> for ActualTokenStream<'input> {
             token = &tokens[token_index as usize];
         }
 
-        return token_index;
+        token_index
     }
 
     fn filter_for_channel(

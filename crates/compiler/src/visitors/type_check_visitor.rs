@@ -314,7 +314,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                         "Implicit declaration of function at {}:{}:{}",
                         self.file.name, line, column
                     ))
-                    .with_range(ctx.range(self.file.tokens()))
+                    .with_range(ctx.range())
                     .with_implicit();
             self.new_declarations.push(function_declaration);
             function_type
@@ -495,8 +495,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                                 .with_default_value(default_value)
                                 .with_source_file_name(self.file.name.clone())
                                 .with_source_node_name_optional(self.current_node_name.clone())
-                                .with_range(variable_context.range(self.file.tokens())
-                                )
+                                .with_range(variable_context.range())
                                 .with_implicit();
                             self.new_declarations.push(decl);
                         } else {

@@ -200,7 +200,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
                 .with_description_optional(description_as_option)
                 .with_source_file_name(self.file.name.clone())
                 .with_source_node_name_optional(self.current_node_name.clone())
-                .with_range(variable_context.range(self.file.tokens()));
+                .with_range(variable_context.range());
             self.new_declarations.push(declaration);
         }
     }
@@ -349,7 +349,7 @@ mod tests {
             diagnostics[1],
             Diagnostic::from_message("Can't figure out the type of variable $foo given its context. Specify its type with a <<declare>> statement.".to_string())
                 .with_file_name("test.yarn".to_string())
-                .with_context(file.source.clone())
+                .with_context(file.source))
                 .with_range(
                     Position {
                         line: 2,

@@ -64,7 +64,7 @@ impl Diagnostic {
     {
         let lines_above_and_below_offending_line = 2;
         let lines_around = ctx.get_lines_around(token_stream, lines_above_and_below_offending_line);
-        let range = dbg!(ctx.range(token_stream));
+        let range = ctx.range();
         self.with_range(range)
             .with_context(lines_around.lines)
             .with_start_line(lines_around.first_line)

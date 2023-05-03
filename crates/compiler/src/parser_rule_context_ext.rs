@@ -77,7 +77,7 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
             .take(tail_lines_to_take)
             .collect::<Vec<_>>()
             .join("\n");
-        let lines = head + &body + &tail;
+        let lines = head + body + &tail;
         LinesAroundResult { lines, first_line }
     }
 }

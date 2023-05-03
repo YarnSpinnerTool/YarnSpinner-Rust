@@ -5,7 +5,6 @@ use crate::visitors::type_check_visitor::{
     format_cannot_determine_variable_type_error, get_filename, DefaultValue,
 };
 use crate::visitors::*;
-use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
@@ -240,7 +239,7 @@ impl<'input> TypeCheckVisitor<'input> {
                     .with_default_value(default_value)
                     .with_source_file_name(self.file.name.clone())
                     .with_source_node_name_optional(self.current_node_name.clone())
-                    .with_range(undefined_variable_context.range(self.file.tokens()))
+                    .with_range(undefined_variable_context.range())
                     .with_implicit();
                 self.new_declarations.push(decl);
             } else {
