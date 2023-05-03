@@ -579,6 +579,7 @@ fn test_function_signatures() {
         // The variable '$bool' should have an implicit declaration. The
         // type of the variable should be Boolean, because that's the return
         // type of all of the functions we declared.
+        assert_eq!(1, result.declarations.len());
         assert!(result
             .declarations
             .iter()
@@ -1025,4 +1026,44 @@ fn test_implicit_variable_declarations() {
             .iter()
             .any(|d| d.name == "$v" && d.r#type.name() == type_name));
     }
+}
+
+#[test]
+#[ignore]
+fn test_nested_implicit_function_declarations() {
+    todo!("Not ported yet");
+}
+
+/*
+
+       [Fact]
+       public void TestMultipleImplicitRedeclarationsOfFunctionParameterCountFail()
+       {
+           var source = CreateTestNode(@"
+           {func(1)}
+           {func(2, 2)} // wrong number of parameters (previous decl had 1)
+           ");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromString("input", source));
+
+           result.Diagnostics.Select(d => d.Message).Should().ContainMatch("Function func expects 1 parameter, but received 2");
+       }
+*/
+
+#[test]
+fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
+    let compilation_job = CompilationJob::from_test_source(
+        r#"
+        {func(1)}
+        {func(2, 2)} // wrong number of parameters (previous decl had 1)
+        "#,
+    );
+
+    let result = compile(compilation_job);
+
+    assert!(result.is_err());
+    assert_eq!(
+        "Function \"func\" expects 1 parameter, but received 2",
+        result.unwrap_err().diagnostics[0].message,
+    );
 }
