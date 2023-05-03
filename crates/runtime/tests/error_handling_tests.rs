@@ -14,24 +14,6 @@ fn test_malformed_if_statement() {
         .contains("Expected an <<endif>> to match the <<if>> statement on line 3")));
 }
 
-/*
-       public void TestExtraneousElse() {
-           var source = CreateTestNode(@"
-           <<if true>>
-           One
-           <<else>>
-           Two
-           <<else>>
-           Three
-           <<endif>>");
-
-           var result = Compiler.Compile(CompilationJob.CreateFromString("<input>", source));
-
-           result.Diagnostics.Should().Contain(d => d.Message.Contains("More than one <<else>> statement in an <<if>> statement isn't allowed"));
-           result.Diagnostics.Should().Contain(d => d.Message.Contains("Unexpected \"endif\" while reading a statement"));
-
-       }
-*/
 #[test]
 fn test_extraneous_else() {
     let compilation_job = CompilationJob::from_test_source(
@@ -54,21 +36,6 @@ fn test_extraneous_else() {
         .contains("Unexpected \"endif\" while reading a statement")));
 }
 
-/*
-
-       [Fact]
-       public void TestEmptyCommand() {
-           var source = CreateTestNode(@"
-           <<>>
-           ");
-
-           var result = Compiler.Compile(CompilationJob.CreateFromString("<input>", source));
-
-           result.Diagnostics.Should().Contain(d => d.Message.Contains("Command text expected"));
-       }
-
-*/
-
 #[test]
 fn test_empty_command() {
     let compilation_job = CompilationJob::from_test_source("\n<<>>\n");
@@ -79,4 +46,36 @@ fn test_empty_command() {
         .diagnostics
         .iter()
         .any(|d| d.message.contains("Command text expected")));
+}
+
+#[test]
+fn test_invalid_variable_name_in_set_or_declare() {
+    let compilation_job = CompilationJob::from_test_source("\n<<set test = 1>>\n");
+    let result = compile(compilation_job).unwrap_err();
+
+    println!("{}", result);
+    assert!(result
+        .diagnostics
+        .iter()
+        .any(|d| d.message == "Variable names need to start with a $"));
+
+    let compilation_job = CompilationJob::from_test_source("\n<<declare test = 1>>\n");
+    let result = compile(compilation_job).unwrap_err();
+
+    println!("{}", result);
+    assert!(result
+        .diagnostics
+        .iter()
+        .any(|d| d.message == "Variable names need to start with a $"));
+}
+
+#[test]
+fn test_invalid_function_call() {
+    let compilation_job = CompilationJob::from_test_source("<<if someFunction(>><<endif>>");
+    let result = compile(compilation_job).unwrap_err();
+
+    println!("{}", result);
+    assert!(result.diagnostics.iter().any(|d| d
+        .message
+        .contains("Unexpected \">>\" while reading a function call")));
 }

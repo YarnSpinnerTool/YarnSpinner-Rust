@@ -100,7 +100,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
         {
             // We saw a << immediately followed by a >>. The programmer
             // forgot to include command text.
-            "You forgot to include command text between << and >>".to_owned()
+            "Command text expected".to_owned()
         } else {
             let rule_context = recognizer.get_parser_rule_context();
             format!(
@@ -150,7 +150,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
                 // We're parsing a variable (which starts with a '$'),
                 // but we encountered a FUNC_ID (which doesn't). The
                 // programmer forgot to include the '$'.
-                Some("Variables must start with a '$'".to_owned())
+                Some("Variable names need to start with a $".to_owned())
             }
             _ => None,
         };
