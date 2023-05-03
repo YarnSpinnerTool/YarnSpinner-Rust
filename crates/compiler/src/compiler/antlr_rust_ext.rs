@@ -18,8 +18,18 @@ pub(crate) trait CommonTokenStreamExt<'input> {
     /// Collect all tokens on specified channel to the left of
     /// the current token up until we see a token on
     /// [`Lexer::DefaultTokenChannel`].
-    /// If `channel` is -1, find any non default channel token.
+    /// If `channel` is `-1`, find any non default channel token.
     fn get_hidden_tokens_to_left(
+        &self,
+        token_index: isize,
+        channel: isize,
+    ) -> Vec<CommonToken<'input>>;
+
+    /// Collect all tokens on specified channel to the right of
+    /// the current token up until we see a token on
+    /// [`Lexer::DefaultTokenChannel`] or EOF.
+    /// If `channel` is `-1`, find any non default channel token.
+    fn get_hidden_tokens_to_right(
         &self,
         token_index: isize,
         channel: isize,
@@ -36,8 +46,7 @@ trait PrivateCommonTokenStreamExt<'input> {
     /// Given a starting index, return the index of the previous token on
     /// channel.
     ///
-    /// Given a starting index, return the index of the previous token on
-    /// channel.
+    /// Given a starting index, return the index of the previous token on channel.
     /// Return `token_index` if `tokens[token_index]` is on channel.
     /// Return -1 if there are no tokens on channel between
     /// `token_index` and 0.
@@ -45,6 +54,15 @@ trait PrivateCommonTokenStreamExt<'input> {
     /// index is returned. This is due to the fact that the EOF token is treated
     /// as though it were on every channel.
     fn previous_token_on_channel(&self, token_index: isize, channel: isize) -> isize;
+
+    /// Given a starting index, return the index of the next token on channel.
+    ///
+    /// Given a starting index, return the index of the next token on channel.
+    /// Return `token_index` if `tokens[token_index]` is on channel.
+    ///
+    /// Return the index of
+    /// the EOF token if there are no tokens on channel between `token_index` and EOF
+    fn next_token_on_channel(&self, token_index: isize, channel: isize) -> isize;
 
     fn filter_for_channel(
         &self,
@@ -79,6 +97,32 @@ impl<'input> CommonTokenStreamExt<'input> for ActualTokenStream<'input> {
         }
     }
 
+    fn get_hidden_tokens_to_right(
+        &self,
+        token_index: isize,
+        channel: isize,
+    ) -> Vec<CommonToken<'input>> {
+        // Adapted from <https://github.com/antlr/antlr4/blob/8dcc6526cfb154d688497f31cf1e0904801c6df2/runtime/CSharp/src/BufferedTokenStream.cs#L519>
+
+        // This method is private, but it should be alright to leave it out.
+        // this.setup();
+
+        if token_index < 0 || token_index >= self.size() {
+            panic!("{} not in 0..{}", token_index, self.size() - 1);
+        }
+        if token_index == 0 {
+            return vec![];
+        }
+        let next_on_channel = self.next_token_on_channel(token_index + 1, 0);
+        let from = token_index + 1;
+        let to = if next_on_channel != -1 {
+            next_on_channel
+        } else {
+            self.size() - 1
+        };
+        self.filter_for_channel(from, to, channel)
+    }
+
     fn get_tokens(&self) -> Vec<CommonToken<'input>> {
         // Not adapted from anywhere, ANTLR for C# directly exposes this.
         // Unfortunately, we go and collect the data ourselves.
@@ -104,6 +148,30 @@ impl<'input> PrivateCommonTokenStreamExt<'input> for ActualTokenStream<'input> {
             token_index -= 1;
         }
         token_index
+    }
+
+    fn next_token_on_channel(&self, mut token_index: isize, channel: isize) -> isize {
+        // Already in antlr4rust, but private
+        // This method is private, but it should be alright to leave it out.
+        // this.sync(token_index);
+
+        if token_index >= self.size() {
+            return self.size() - 1;
+        }
+
+        let tokens = self.get_tokens();
+        let mut token = &tokens[token_index as usize];
+        while token.get_channel() != channel {
+            if token.get_token_type() == antlr_rust::int_stream::EOF || token_index < 0 {
+                return token_index;
+            }
+
+            token_index += 1;
+            // self.sync(i);
+            token = &tokens[token_index as usize];
+        }
+
+        return token_index;
     }
 
     fn filter_for_channel(
