@@ -132,9 +132,11 @@ fn test_node_headers() {
 }
 
 #[test]
-#[ignore]
+
 fn test_invalid_characters_in_node_title() {
-    todo!("Not ported yet")
+    let path = TestBase::test_data_path().join("InvalidNodeTitle.yarn");
+    let result = compile(CompilationJob::default().read_file(&path).unwrap());
+    assert!(result.is_err());
 }
 
 #[test]
