@@ -315,7 +315,7 @@ a {very} cool expression
         let range = Position {
             line: 4,
             character: 7,
-        }..=Position {
+        }..Position {
             line: 4,
             character: 8,
         };

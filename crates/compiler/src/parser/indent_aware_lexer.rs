@@ -22,7 +22,7 @@ use antlr_rust::{
 };
 use collections::*;
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut, RangeInclusive};
+use std::ops::{Deref, DerefMut, Range};
 use std::rc::Rc;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
@@ -351,17 +351,17 @@ where
     }
 }
 
-fn get_newline_indentation_range(token: &CommonToken<'_>) -> RangeInclusive<Position> {
+fn get_newline_indentation_range(token: &CommonToken<'_>) -> Range<Position> {
     // +1 compared to similar code because we don't want to start at the newline
     let line = token.get_line_as_usize();
 
     let start = Position { line, character: 0 };
     let stop = Position {
         line,
-        character: token.get_text().len().saturating_sub(1),
+        character: token.get_text().len(),
     };
 
-    start..=stop
+    start..stop
 }
 
 fn get_newline_indentation_text(token: &CommonToken<'_>) -> String {

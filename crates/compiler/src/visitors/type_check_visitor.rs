@@ -664,9 +664,9 @@ mod tests {
                     Position {
                         line: 3,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 3,
-                        character: 24,
+                        character: 25,
                     },
                 ),
         );
@@ -679,9 +679,9 @@ mod tests {
                     Position {
                         line: 6,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 6,
-                        character: 18,
+                        character: 19,
                     },
                 ),
         );
@@ -694,9 +694,9 @@ mod tests {
                     Position {
                         line: 7,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 7,
-                        character: 20,
+                        character: 21,
                     },
                 ),
         );
@@ -772,9 +772,9 @@ mod tests {
                     Position {
                         line: 4,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 4,
-                        character: 26,
+                        character: 27,
                     },
                 ),
         );
@@ -787,9 +787,9 @@ mod tests {
                     Position {
                         line: 5,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 5,
-                        character: 31,
+                        character: 32,
                     },
                 ),
         );
@@ -802,9 +802,9 @@ mod tests {
                     Position {
                         line: 4,
                         character: 14,
-                    }..=Position {
+                    }..Position {
                         line: 4,
-                        character: 24,
+                        character: 25,
                     },
                 ),
         );
@@ -817,9 +817,9 @@ mod tests {
                     Position {
                         line: 5,
                         character: 14,
-                    }..=Position {
+                    }..Position {
                         line: 5,
-                        character: 29,
+                        character: 30,
                     },
                 ),
         );

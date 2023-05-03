@@ -256,9 +256,9 @@ mod tests {
                     Position {
                         line: 2,
                         character: 10,
-                    }..=Position {
+                    }..Position {
                         line: 2,
-                        character: 13,
+                        character: 14,
                     }
                 )
         );
@@ -275,9 +275,9 @@ mod tests {
                     Position {
                         line: 3,
                         character: 10,
-                    }..=Position {
+                    }..Position {
                         line: 3,
-                        character: 13,
+                        character: 14,
                     }
                 )
         );
@@ -294,9 +294,9 @@ mod tests {
                     Position {
                         line: 4,
                         character: 10,
-                    }..=Position {
+                    }..Position {
                         line: 4,
-                        character: 13,
+                        character: 14,
                     }
                 )
         );
@@ -313,9 +313,9 @@ mod tests {
                     Position {
                         line: 5,
                         character: 10,
-                    }..=Position {
+                    }..Position {
                         line: 5,
-                        character: 14,
+                        character: 15,
                     }
                 )
         );
@@ -349,9 +349,9 @@ mod tests {
                     Position {
                         line: 2,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 2,
-                        character: 30,
+                        character: 31,
                     }
                 )
         );
@@ -364,9 +364,9 @@ mod tests {
                     Position {
                         line: 2,
                         character: 10,
-                    }..=Position {
+                    }..Position {
                         line: 2,
-                        character: 13,
+                        character: 14,
                     }
                 )
         );

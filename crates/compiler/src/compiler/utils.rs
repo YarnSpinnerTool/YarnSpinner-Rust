@@ -232,9 +232,9 @@ mod tests {
                     Position {
                         line: 3,
                         character: 0
-                    }..=Position {
+                    }..Position {
                         line: 3,
-                        character: 4
+                        character: 5
                     }
                 )
                 .with_severity(DiagnosticSeverity::Warning),

@@ -2,12 +2,12 @@
 //!
 //! ## Implementation notes
 //!
-//! [`Range`] has been replaced with the more idiomatic [`RangeInclusive<Position>`].
+//! [`Range`] has been replaced with the more idiomatic [`Range<Position>`].
 
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
 use std::fmt::{Debug, Display};
-use std::ops::RangeInclusive;
+use std::ops::Range;
 use yarn_slinger_core::prelude::*;
 use yarn_slinger_core::types::Type;
 
@@ -58,7 +58,7 @@ pub struct Declaration {
     /// not any syntax surrounding it. For example, the declaration
     /// `<<declare $x = 1>>` would have a range referring to the `$x`
     /// symbol.
-    pub range: Option<RangeInclusive<Position>>,
+    pub range: Option<Range<Position>>,
 }
 
 impl Declaration {
@@ -68,7 +68,7 @@ impl Declaration {
     /// If this [`Declaration`] was not found in a Yarn source file,
     /// this will be [`None`].
     pub fn source_file_line(&self) -> Option<usize> {
-        self.range.as_ref()?.start().line.into()
+        self.range.as_ref()?.start.line.into()
     }
 
     pub fn with_type(mut self, r#type: impl Into<Option<Type>>) -> Self {
@@ -118,7 +118,7 @@ impl Declaration {
         self
     }
 
-    pub fn with_range(mut self, range: impl Into<RangeInclusive<Position>>) -> Self {
+    pub fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
         self.range = Some(range.into());
         self
     }
@@ -176,7 +176,7 @@ pub struct Position {
 pub(crate) trait ParserRuleContextExtRangeSource<'input>:
     ParserRuleContextExt<'input>
 {
-    fn range(&self, token_stream: &ActualTokenStream<'input>) -> RangeInclusive<Position> {
+    fn range(&self, token_stream: &ActualTokenStream<'input>) -> Range<Position> {
         let start = Position {
             line: self.start().get_line_as_usize().saturating_sub(1),
             character: self.start().get_column_as_usize(),
@@ -184,10 +184,9 @@ pub(crate) trait ParserRuleContextExtRangeSource<'input>:
         let stop = Position {
             line: self.stop().get_line_as_usize().saturating_sub(1),
             character: self.start().get_column_as_usize()
-                + self.get_text_with_whitespace(token_stream).len()
-                - 1,
+                + self.get_text_with_whitespace(token_stream).len(),
         };
-        start..=stop
+        start..stop
     }
 }
 

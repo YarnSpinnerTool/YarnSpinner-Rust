@@ -45,7 +45,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for LexerErrorListe
         let range = Position {
             line,
             character: column,
-        }..=Position {
+        }..Position {
             line,
             character: column + 1,
         };
@@ -88,7 +88,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
         let range = Position {
             line: (line - 1) as usize,
             character: (column + 1) as usize,
-        }..=Position {
+        }..Position {
             line: (line - 1) as usize,
             character: (column + 1) as usize,
         };
@@ -132,7 +132,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
                     Position {
                         line,
                         character: column,
-                    }..=Position {
+                    }..Position {
                         line,
                         character: column + length,
                     },

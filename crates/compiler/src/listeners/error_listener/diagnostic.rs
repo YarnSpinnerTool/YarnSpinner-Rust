@@ -5,7 +5,7 @@ use annotate_snippets::{
     snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
 };
 use std::fmt::{Display, Formatter};
-use std::ops::RangeInclusive;
+use std::ops::Range;
 
 /// A diagnostic message that describes an error, warning or informational
 /// message that the user can take action on.
@@ -22,7 +22,7 @@ pub struct Diagnostic {
     pub file_name: Option<String>,
 
     /// The range of the file indicated by the [`Diagnostic::file_name`] that the issue occurred in.
-    pub range: Option<RangeInclusive<Position>>,
+    pub range: Option<Range<Position>>,
 
     /// The description of the issue.
     pub message: String,
@@ -67,7 +67,7 @@ impl Diagnostic {
         self
     }
 
-    pub fn with_range(mut self, range: impl Into<RangeInclusive<Position>>) -> Self {
+    pub fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
         self.range = Some(range.into());
         self
     }
@@ -134,16 +134,18 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
         return (0, 0);
     };
 
-    let relative_start_line = range.start().line - diagnostic.start_line;
-    let annotated_lines = range.end().line - range.start().line;
+    let relative_start_line = range.start.line - diagnostic.start_line;
+    let annotated_lines = range.end.line - range.start.line;
     let line_lengths: Vec<_> = context.lines().map(|line| line.len() + 1).collect();
     let relative_start =
-        line_lengths.iter().take(relative_start_line).sum::<usize>() + range.start().character;
+        line_lengths.iter().take(relative_start_line).sum::<usize>() + range.start.character;
     let relative_end: usize = line_lengths
         .iter()
         .take(relative_start_line + annotated_lines)
         .sum::<usize>()
-        + range.end().character;
+        + range.end.character
+        // - 1 because the Diagnostic range is exclusive, but the annotation range is inclusive
+        - 1;
 
     (relative_start, relative_end)
 }
