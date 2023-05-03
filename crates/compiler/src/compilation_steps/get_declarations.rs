@@ -20,6 +20,7 @@ pub(crate) fn get_declarations(mut state: CompilationIntermediate) -> Compilatio
         state
             .diagnostics
             .extend_from_slice(&variable_declaration_visitor.diagnostics);
+
         state
             .file_tags
             .insert(file.name.clone(), variable_declaration_visitor.file_tags);

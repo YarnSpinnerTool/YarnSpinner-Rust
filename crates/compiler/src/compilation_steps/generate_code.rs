@@ -14,6 +14,7 @@ pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIn
         let template = Compilation {
             string_table: state.string_table.0.clone(),
             contains_implicit_string_tags: state.string_table.contains_implicit_string_tags(),
+            file_tags: state.file_tags.clone(),
             ..Default::default()
         };
         state

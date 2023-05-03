@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
 use crate::test_base::*;
+use std::collections::HashMap;
 use yarn_slinger_compiler::prelude::*;
 use yarn_slinger_core::prelude::*;
 
@@ -67,9 +68,67 @@ fn test_end_of_notes_with_options_not_added() {
 }
 
 #[test]
-#[ignore]
 fn test_node_headers() {
-    todo!("Not ported yet")
+    let path = TestBase::test_data_path().join("Headers.yarn");
+    let result = compile(CompilationJob::default().read_file(&path).unwrap()).unwrap_pretty();
+    let program = result.program.as_ref().unwrap();
+    assert_eq!(program.nodes.len(), 6);
+
+    for tag in &["one", "two", "three"].map(|s| s.to_owned()) {
+        assert!(program.nodes["Tags"].tags.contains(tag));
+    }
+
+    let headers: HashMap<_, _> = vec![
+        ("EmptyTags", vec![("title", "EmptyTags"), ("tags", "")]),
+        (
+            "ArbitraryHeaderWithValue",
+            vec![
+                ("title", "ArbitraryHeaderWithValue"),
+                ("arbitraryheader", "some-arbitrary-text"),
+            ],
+        ),
+        ("Tags", vec![("title", "Tags"), ("tags", "one two three")]),
+        ("SingleTagOnly", vec![("title", "SingleTagOnly")]),
+        (
+            "Comments",
+            vec![("title", "Comments"), ("tags", "one two three")],
+        ),
+        (
+            "LotsOfHeaders",
+            vec![
+                ("contains", "lots"),
+                ("title", "LotsOfHeaders"),
+                ("this", "node"),
+                ("of", ""),
+                ("blank", ""),
+                ("others", "are"),
+                ("headers", ""),
+                ("some", "are"),
+                ("not", ""),
+            ],
+        ),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(program.nodes.len(), headers.len());
+    for (node_name, expected_headers) in headers {
+        let node = &program.nodes[node_name];
+        assert_eq!(node.headers.len(), expected_headers.len());
+        for header in &node.headers {
+            let expected_header = expected_headers
+                .iter()
+                .find(|(k, _)| k == &header.key)
+                .unwrap();
+            assert_eq!(header.value, expected_header.1);
+        }
+    }
+
+    let path = path.to_string_lossy().to_string();
+    println!("{:?}", result.file_tags);
+    assert!(result.file_tags.contains_key(&path));
+    assert_eq!(1, result.file_tags.len());
+    assert_eq!(1, result.file_tags[&path].len());
+    assert!(result.file_tags[&path].contains(&"file_header".to_owned()));
 }
 
 #[test]
