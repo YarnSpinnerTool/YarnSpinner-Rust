@@ -20,7 +20,7 @@ impl<'input> CompilerListener<'input> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Emit {
     source: Option<Position>,
     op_code: OpCode,
@@ -46,9 +46,9 @@ impl Emit {
         self
     }
 
-    pub(crate) fn with_source_from_token(mut self, token: &(impl Token + ?Sized)) -> Self {
+    pub(crate) fn with_token(mut self, token: &(impl Token + ?Sized)) -> Self {
         self.source = Some(Position {
-            line: token.get_line() as usize,
+            line: token.get_line() as usize - 1,
             character: token.get_column() as usize,
         });
         self
