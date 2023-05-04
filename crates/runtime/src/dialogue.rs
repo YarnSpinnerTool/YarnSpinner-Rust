@@ -38,32 +38,31 @@ pub struct Dialogue {
 impl Default for Dialogue {
     fn default() -> Self {
         let variable_storage: Rc<dyn VariableStorage> = Rc::new(MemoryVariableStore::default());
-        let library = Library::standard_library();
 
-        let mut self_ = Self {
+        let library = {
+            let variable_storage = variable_storage.clone();
+            Library::standard_library()
+                .with_function("visited", move |node: String| -> bool {
+                    is_node_visited(variable_storage.clone(), &node)
+                })
+                .with_function("visited_count", |_node: String| -> f32 { todo!() })
+        };
+
+        Self {
             library,
             variable_storage,
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
             language_code: Default::default(),
             vm: Default::default(),
-        };
-        self_.init_library();
-        self_
+        }
     }
 }
 
 impl Dialogue {
     const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
-    fn init_library(&mut self) {
-        let storage = self.variable_storage.clone();
-        self.library
-            .register_function("visited", move |node: String| -> bool {
-                is_node_visited(storage.clone(), &node)
-            })
-            .register_function("visited_count", |_node: String| -> f32 { todo!() });
-    }
+    fn init_library(&mut self) {}
 
     /// Initializes a new instance of the [`Dialogue`] class.
     pub fn with_variable_storage(
