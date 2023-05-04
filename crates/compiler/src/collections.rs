@@ -1,17 +1,19 @@
+//! Thin newtypes around existing collections to better express their intent in regards to the corresponding dotnet types.
+
 use std::{collections::VecDeque, fmt::Debug};
 
 /// Represents a FIFO (First-In, First-Out) collection.
 ///
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1>
 #[derive(Debug, Clone)]
-pub(crate) struct Queue<T: Debug + Clone>(pub(crate) VecDeque<T>);
+pub struct Queue<T: Debug + Clone>(pub(crate) VecDeque<T>);
 
 impl<T: Debug + Clone> Queue<T> {
-    pub(crate) fn enqueue(&mut self, value: T) {
+    pub fn enqueue(&mut self, value: T) {
         self.0.push_back(value)
     }
 
-    pub(crate) fn dequeue(&mut self) -> Option<T> {
+    pub fn dequeue(&mut self) -> Option<T> {
         self.0.pop_front()
     }
 }
@@ -20,18 +22,18 @@ impl<T: Debug + Clone> Queue<T> {
 ///
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.stack-1>
 #[derive(Debug, Clone)]
-pub(crate) struct Stack<T: Debug + Clone>(pub(crate) VecDeque<T>);
+pub struct Stack<T: Debug + Clone>(pub(crate) VecDeque<T>);
 
 impl<T: Debug + Clone> Stack<T> {
-    pub(crate) fn push(&mut self, value: T) {
+    pub fn push(&mut self, value: T) {
         self.0.push_back(value)
     }
 
-    pub(crate) fn pop(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<T> {
         self.0.pop_back()
     }
 
-    pub(crate) fn peek(&self) -> Option<&T> {
+    pub fn peek(&self) -> Option<&T> {
         self.0.back()
     }
 }

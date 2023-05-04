@@ -5,11 +5,10 @@
 //! directly, and the `IndentAwareLexer` derives from the ANTLR Lexer base class.
 //! Instead of this, we use a proxy/wrapper around the generated lexer to handle everything correctly.
 
-mod collections;
-
 use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
+use crate::collections::*;
 use crate::listeners::Diagnostic;
 use crate::output::Position;
 use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
@@ -20,7 +19,6 @@ use antlr_rust::{
     token_factory::{CommonTokenFactory, TokenFactory},
     Lexer, TokenSource,
 };
-use collections::*;
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
 use std::rc::Rc;

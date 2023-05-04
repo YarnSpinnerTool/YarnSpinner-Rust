@@ -44,7 +44,7 @@ impl DerefMut for NodeName {
 }
 
 macro_rules! impl_function_newtype_with_no_params {
-    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: Fn())) => {
+    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: FnMut())) => {
         $(#[$attr])*
         #[derive(Debug, Clone)]
         pub struct $struct_name(pub Box<dyn $trait_name>);
@@ -62,15 +62,15 @@ macro_rules! impl_function_newtype_with_no_params {
         }
 
         pub trait $trait_name {
-            fn call(&self);
+            fn call(&mut self);
             fn clone_box(&self) -> Box<dyn $trait_name>;
         }
 
         impl<T> $trait_name for T
         where
-            T: Fn() + Clone + 'static,
+            T: FnMut() + Clone + 'static,
         {
-            fn call(&self) {
+            fn call(&mut self) {
                 self()
             }
 
@@ -82,7 +82,7 @@ macro_rules! impl_function_newtype_with_no_params {
 }
 
 macro_rules! impl_function_newtype {
-    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: Fn($param:ty))) => {
+    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: FnMut($param:ty))) => {
         $(#[$attr])*
         #[derive(Debug, Clone)]
         pub struct $struct_name(pub Box<dyn $trait_name>);
@@ -100,15 +100,15 @@ macro_rules! impl_function_newtype {
         }
 
         pub trait $trait_name {
-            fn call(&self, param: $param);
+            fn call(&mut self, param: $param);
             fn clone_box(&self) -> Box<dyn $trait_name>;
         }
 
         impl<T> $trait_name for T
         where
-            T: Fn($param) + Clone + 'static,
+            T: FnMut($param) + Clone + 'static,
         {
-            fn call(&self, param: $param) {
+            fn call(&mut self, param: $param) {
                 self(param)
             }
 
@@ -126,7 +126,7 @@ impl_function_newtype! {
     ///
     /// ## Params
     /// - The text that should be logged.
-    pub struct Logger(pub LoggerFn: Fn(String))
+    pub struct Logger(pub LoggerFn: FnMut(String))
 }
 
 impl_function_newtype! {
@@ -138,7 +138,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct LineHandler(pub LineHandlerFn: Fn(Line))
+    pub struct LineHandler(pub LineHandlerFn: FnMut(Line))
 }
 
 impl_function_newtype! {
@@ -150,7 +150,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct OptionsHandler(pub OptionsHandlerFn: Fn(DialogueOption))
+    pub struct OptionsHandler(pub OptionsHandlerFn: FnMut(DialogueOption))
 }
 
 impl_function_newtype! {
@@ -162,7 +162,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct CommandHandler(pub CommandHandlerFn: Fn(Command))
+    pub struct CommandHandler(pub CommandHandlerFn: FnMut(Command))
 }
 
 impl_function_newtype! {
@@ -176,7 +176,7 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: Fn(NodeName))
+    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: FnMut(NodeName))
 }
 
 impl_function_newtype! {
@@ -188,7 +188,7 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct NodeStartHandler(pub NodeStartHandlerFn: Fn(NodeName))
+    pub struct NodeStartHandler(pub NodeStartHandlerFn: FnMut(NodeName))
 }
 
 impl_function_newtype_with_no_params! {
@@ -200,7 +200,7 @@ impl_function_newtype_with_no_params! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
-    pub struct DialogueCompleteHandler(pub DialogueCompleteHandlerFn: Fn())
+    pub struct DialogueCompleteHandler(pub DialogueCompleteHandlerFn: FnMut())
 }
 
 impl_function_newtype! {
@@ -213,7 +213,7 @@ impl_function_newtype! {
     /// Not every line indicated in the provided `LineId`s may end up actually running.
     ///
     /// This method may be called any number of times during a dialogue session.
-    pub struct PrepareForLinesHandler(pub PrepareForLinesHandlerFn: Fn(Vec<LineId>))
+    pub struct PrepareForLinesHandler(pub PrepareForLinesHandlerFn: FnMut(Vec<LineId>))
 }
 
 #[cfg(test)]

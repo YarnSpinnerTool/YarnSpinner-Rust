@@ -3,15 +3,55 @@
 //! ## Implementation Notes
 //! The `Operand` extensions and the `Operator` enum were moved into upstream crates to make them not depend on the runtime.
 
+pub(crate) use self::execution_state::*;
+use self::state::*;
+use crate::prelude::*;
 use yarn_slinger_core::prelude::*;
 
-#[derive(Debug, Clone, Default)]
+mod execution_state;
+mod state;
+
+#[derive(Debug, Clone)]
 pub(crate) struct VirtualMachine {
     pub(crate) program: Program,
+    pub(crate) line_handler: LineHandler,
+    pub(crate) options_handler: OptionsHandler,
+    pub(crate) command_handler: CommandHandler,
+    pub(crate) node_start_handler: NodeStartHandler,
+    pub(crate) node_complete_handler: NodeCompleteHandler,
+    pub(crate) dialogue_complete_handler: DialogueCompleteHandler,
+    pub(crate) prepare_for_lines_handler: PrepareForLinesHandler,
+    pub(crate) current_node: Node,
+    state: State,
+    execution_state: ExecutionState,
+}
+
+impl Default for VirtualMachine {
+    fn default() -> Self {
+        todo!()
+    }
 }
 
 impl VirtualMachine {
     pub(crate) fn reset_state(&mut self) {
-        todo!()
+        self.state = State::default();
+    }
+
+    pub(crate) fn execution_state(&self) -> ExecutionState {
+        self.execution_state
+    }
+
+    pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {
+        self.execution_state = execution_state;
+        if self.execution_state == ExecutionState::Stopped {
+            self.reset_state()
+        }
+        self
+    }
+
+    /// # Implementation Notes
+    /// The original does not reset the state upon calling this. I suspect that's a bug.
+    pub(crate) fn stop(&mut self) -> &mut Self {
+        self.set_execution_state(ExecutionState::Stopped)
     }
 }

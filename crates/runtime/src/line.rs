@@ -18,15 +18,15 @@ use std::ops::{Deref, DerefMut};
 /// [`Dialogue::line_handler`]
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LineId(pub String);
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Line {
     /// The ID of the line in the string table.
     pub id: LineId,
     /// The values that should be inserted into the user-facing text before delivery.
     pub substitutions: Vec<String>,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LineId(pub String);
 
 impl Deref for LineId {
     type Target = String;
@@ -38,5 +38,11 @@ impl Deref for LineId {
 impl DerefMut for LineId {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl From<String> for LineId {
+    fn from(s: String) -> Self {
+        Self(s)
     }
 }
