@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
+use std::rc::Rc;
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -14,7 +15,7 @@ pub struct Dialogue {
     pub library: Library,
 
     /// The object that provides access to storing and retrieving the values of variables.
-    pub variable_storage: Box<dyn VariableStorage>,
+    pub variable_storage: Rc<dyn VariableStorage>,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -36,31 +37,39 @@ pub struct Dialogue {
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let library = Library::standard_library()
-            .with_function("visited", |_node: String| -> bool { todo!() })
-            .with_function("visited_count", |_node: String| -> f32 { todo!() });
-        let default_variable_storage = Box::new(MemoryVariableStore::default());
+        let variable_storage: Rc<dyn VariableStorage> = Rc::new(MemoryVariableStore::default());
+        let library = Library::standard_library();
 
-        Self {
+        let mut self_ = Self {
             library,
-            variable_storage: default_variable_storage,
+            variable_storage,
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
             language_code: Default::default(),
             vm: Default::default(),
-        }
+        };
+        self_.init_library();
+        self_
     }
 }
 
 impl Dialogue {
     const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
+    fn init_library(&mut self) {
+        self.library
+            .register_function("visited", |node: String| -> bool {
+                is_node_visited(self.variable_storage.clone(), &node)
+            })
+            .register_function("visited_count", |_node: String| -> f32 { todo!() });
+    }
+
     /// Initializes a new instance of the [`Dialogue`] class.
     pub fn with_variable_storage(
         mut self,
         variable_storage: impl VariableStorage + 'static,
     ) -> Self {
-        self.variable_storage = Box::new(variable_storage);
+        self.variable_storage = Rc::new(variable_storage);
         self
     }
 
@@ -212,8 +221,23 @@ impl Dialogue {
         }
         self
     }
+
+    fn get_node_visit_count(&self, node_name: String) -> f32 {
+        if let Some(YarnValue::Number(count)) = self.variable_storage.get(&node_name) {
+            count
+        } else {
+            0.0
+        }
+    }
 }
 
+fn is_node_visited(variable_storage: Rc<dyn VariableStorage>, node_name: &str) -> bool {
+    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
+        count > 0.0
+    } else {
+        false
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
