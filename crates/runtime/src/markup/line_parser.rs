@@ -16,8 +16,10 @@ impl<'a> LineParser<'a> {
         attribute_name: &'a str,
         processor: impl AttributeMarkerProcessor + 'static,
     ) {
-        self.marker_processors
+        let inserted = self
+            .marker_processors
             .insert(attribute_name, Box::new(processor));
+        assert!(inserted.is_none(), "A marker processor for the attribute '{attribute_name}' has already been added. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
     }
 }
 
