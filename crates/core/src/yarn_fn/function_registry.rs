@@ -19,7 +19,7 @@ impl YarnFnRegistry {
     where
         Marker: 'static + Clone,
         F: YarnFn<Marker> + 'static + Clone,
-        F::Out: IntoUntypedValueFromNonUntypedValue + 'static + Clone,
+        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);

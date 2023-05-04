@@ -1,14 +1,15 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Value.cs>
 
 use crate::prelude::types::Type;
-
-mod untyped_value;
-pub use untyped_value::*;
+use crate::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 
-/// A value as it appears to the compiler. As a consumer, you should not be facing this type.
+/// A value as it appears to the compiler. It has additional type checker information
+/// and may represent values not constructable by the user, like functions.
+///
+/// As a consumer, you should not be facing this type.
 ///
 /// ## Implementation Notes
 ///
@@ -16,8 +17,8 @@ pub use untyped_value::*;
 pub struct InternalValue {
     /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,
-    /// The actual value
-    pub raw_value: UntypedValue,
+    /// The actual value. If [`r#type`] is [`Type::Function`], this is the return type.
+    pub raw_value: YarnValue,
 }
 
 macro_rules! impl_from {

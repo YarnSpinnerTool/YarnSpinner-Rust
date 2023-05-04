@@ -1,10 +1,11 @@
-pub use self::{dialogue_option::*, handlers::*, line::*};
+pub use self::{dialogue_option::*, handlers::*, line::*, variable_storage::*};
 use std::fmt::Debug;
 use yarn_slinger_core::prelude::*;
 
 mod dialogue_option;
 mod handlers;
 mod line;
+mod variable_storage;
 
 /// Co-ordinates the execution of Yarn programs.
 #[non_exhaustive]
@@ -31,28 +32,5 @@ impl Dialogue {
             variable_storage: Box::new(variable_storage),
             library,
         }
-    }
-}
-
-/// Provides a mechanism for storing and retrieving instances
-/// of the [`InternalValue`] type.
-pub trait VariableStorage: Debug {
-    fn clone_box(&self) -> Box<dyn VariableStorage>;
-}
-
-impl Clone for Box<dyn VariableStorage> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-/// A simple concrete implementation of [`VariableStorage`]
-/// that keeps all variables in memory.
-#[derive(Debug, Clone, Default)]
-pub struct MemoryVariableStore {}
-
-impl VariableStorage for MemoryVariableStore {
-    fn clone_box(&self) -> Box<dyn VariableStorage> {
-        Box::new(self.clone())
     }
 }

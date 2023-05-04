@@ -592,21 +592,21 @@ fn get_filename(path: &str) -> &str {
 }
 
 trait DefaultValue {
-    fn default_value(&self) -> Option<UntypedValue>;
+    fn default_value(&self) -> Option<YarnValue>;
 }
 impl DefaultValue for Type {
-    fn default_value(&self) -> Option<UntypedValue> {
+    fn default_value(&self) -> Option<YarnValue> {
         match self {
-            Type::String => Some(UntypedValue::String(Default::default())),
-            Type::Number => Some(UntypedValue::Number(Default::default())),
-            Type::Boolean => Some(UntypedValue::Boolean(Default::default())),
+            Type::String => Some(YarnValue::String(Default::default())),
+            Type::Number => Some(YarnValue::Number(Default::default())),
+            Type::Boolean => Some(YarnValue::Boolean(Default::default())),
             _ => None,
         }
     }
 }
 
 impl DefaultValue for Option<Type> {
-    fn default_value(&self) -> Option<UntypedValue> {
+    fn default_value(&self) -> Option<YarnValue> {
         self.as_ref()?.default_value()
     }
 }

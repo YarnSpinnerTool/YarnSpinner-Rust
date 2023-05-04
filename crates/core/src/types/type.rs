@@ -217,7 +217,7 @@ impl TryFrom<TypeId> for Type {
         let bool_type = TypeId::of::<bool>();
         let value_types = &[
             TypeId::of::<InternalValue>(),
-            TypeId::of::<UntypedValue>(),
+            TypeId::of::<YarnValue>(),
             TypeId::of::<Box<dyn Any>>(),
         ];
         let number_types = &[
