@@ -40,12 +40,15 @@ impl Default for Dialogue {
         let variable_storage: Rc<dyn VariableStorage> = Rc::new(MemoryVariableStore::default());
 
         let library = {
-            let variable_storage = variable_storage.clone();
+            let storage_one = variable_storage.clone();
+            let storage_two = variable_storage.clone();
             Library::standard_library()
                 .with_function("visited", move |node: String| -> bool {
-                    is_node_visited(variable_storage.clone(), &node)
+                    is_node_visited(storage_one.as_ref(), &node)
                 })
-                .with_function("visited_count", |_node: String| -> f32 { todo!() })
+                .with_function("visited_count", move |node: String| -> f32 {
+                    get_node_visit_count(storage_two.as_ref(), &node)
+                })
         };
 
         Self {
@@ -221,23 +224,24 @@ impl Dialogue {
         }
         self
     }
-
-    fn get_node_visit_count(&self, node_name: String) -> f32 {
-        if let Some(YarnValue::Number(count)) = self.variable_storage.get(&node_name) {
-            count
-        } else {
-            0.0
-        }
-    }
 }
 
-fn is_node_visited(variable_storage: Rc<dyn VariableStorage>, node_name: &str) -> bool {
+fn is_node_visited(variable_storage: &dyn VariableStorage, node_name: &str) -> bool {
     if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
         count > 0.0
     } else {
         false
     }
 }
+
+fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str) -> f32 {
+    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
+        count
+    } else {
+        0.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
