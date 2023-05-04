@@ -1,1 +1,1 @@
-pub struct LineParser {}
+pub(crate) struct LineParser {}
