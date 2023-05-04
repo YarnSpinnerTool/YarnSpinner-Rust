@@ -43,117 +43,140 @@ impl DerefMut for NodeName {
     }
 }
 
-/// Represents a method that receives diagnostic messages and error information from a [`Dialogue`].
-///
-/// The text that this delegate receives may be output to a console, or sent to a log.
-///
-/// ## Params
-/// - The text that should be logged.
+macro_rules! impl_function_newtype {
+    ($(#[$attr:meta])* struct $struct_name:ident($trait_name:ident: Fn($($param:ty)?))) => {
+        $(#[$attr])*
+        #[derive(Debug, Clone)]
+        pub struct $struct_name(pub Box<dyn $trait_name>);
 
-#[derive(Debug, Clone)]
-pub struct Logger(pub Box<dyn LoggerTrait>);
+        impl Clone for Box<dyn $trait_name> {
+            fn clone(&self) -> Self {
+                self.clone_box()
+            }
+        }
 
-impl Clone for Box<dyn LoggerTrait> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
+        impl Debug for dyn $trait_name {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                write!(f, stringify!($struct_name))
+            }
+        }
+
+        pub trait $trait_name {
+            fn call(&self, $(param: $param)?);
+            fn clone_box(&self) -> Box<dyn $trait_name>;
+        }
+
+        impl<T> $trait_name for T
+        where
+            T: Fn($($param)?) + Clone + 'static,
+        {
+            fn call(&self, $(param: $param)?) {
+                self(param)
+            }
+
+            fn clone_box(&self) -> Box<dyn $trait_name> {
+                Box::new(self.clone())
+            }
+        }
+    };
 }
 
-impl Debug for dyn LoggerTrait {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Logger")
-    }
+impl_function_newtype! {
+    /// Represents a method that receives diagnostic messages and error information from a [`Dialogue`].
+    ///
+    /// The text that this delegate receives may be output to a console, or sent to a log.
+    ///
+    /// ## Params
+    /// - The text that should be logged.
+    struct Logger(LoggerFn: Fn(String))
 }
 
-pub trait LoggerTrait {
-    fn call(&self, message: String);
-    fn clone_box(&self) -> Box<dyn LoggerTrait>;
-}
-impl<T> LoggerTrait for T
-where
-    T: Fn(String),
-{
-    fn call(&self, message: String) {
-        self(message)
-    }
-
-    fn clone_box(&self) -> Box<dyn LoggerTrait> {
-        Box::new(self.clone())
-    }
+impl_function_newtype! {
+    /// Represents the method that is called when the [`Dialogue`] delivers a [`Line`].
+    ///
+    /// ## See also
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeStartHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    struct LineHandler(LineHandlerFn: Fn(Line))
 }
 
-/// Represents the method that is called when the [`Dialogue`] delivers a [`Line`].
-///
-/// ## See also
-/// - [`OptionsHandler`]
-/// - [`CommandHandler`]
-/// - [`NodeStartHandler`]
-/// - [`NodeCompleteHandler`]
-/// - [`DialogueCompleteHandler`]
-pub type LineHandler = dyn Fn(Line);
+impl_function_newtype! {
+    /// Represents the method that is called when the [`Dialogue`] delivers an [`OptionSet`].
+    ///
+    /// ## See also
+    /// - [`LineHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeStartHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    struct OptionsHandler(OptionsHandlerFn: Fn(DialogueOption))
+}
 
-/// Represents the method that is called when the [`Dialogue`] delivers an [`OptionSet`].
-///
-/// ## See also
-/// - [`LineHandler`]
-/// - [`CommandHandler`]
-/// - [`NodeStartHandler`]
-/// - [`NodeCompleteHandler`]
-/// - [`DialogueCompleteHandler`]
-pub type OptionsHandler = dyn Fn(Vec<DialogueOption>);
+impl_function_newtype! {
+    /// Represents the method that is called when the [`Dialogue`] delivers a [`Command`].
+    ///
+    /// ## See also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`NodeStartHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    struct CommandHandler(CommandHandlerFn: Fn(Command))
+}
 
-/// Represents the method that is called when the [`Dialogue`] delivers a [`Command`].
-///
-/// ## See also
-/// - [`LineHandler`]
-/// - [`OptionsHandler`]
-/// - [`NodeStartHandler`]
-/// - [`NodeCompleteHandler`]
-/// - [`DialogueCompleteHandler`]
-pub type CommandHandler = dyn Fn(Command);
+impl_function_newtype! {
+    /// Represents the method that is called when the [`Dialogue`] reaches the end of a node.
+    ///
+    /// This method may be called multiple times over the course of code execution. A node being complete does not necessarily represent the end of the conversation.
+    ///
+    /// ## See also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeStartHandler`]
+    /// - [`DialogueCompleteHandler`]
+    struct NodeCompleteHandler(NodeCompleteHandlerFn: Fn(NodeName))
+}
 
-/// Represents the method that is called when the [`Dialogue`] reaches the end of a node.
-///
-/// This method may be called multiple times over the course of code execution. A node being complete does not necessarily represent the end of the conversation.
-///
-/// ## See also
-/// - [`LineHandler`]
-/// - [`OptionsHandler`]
-/// - [`CommandHandler`]
-/// - [`NodeStartHandler`]
-/// - [`DialogueCompleteHandler`]
-pub type NodeCompleteHandler = dyn Fn(NodeName);
+impl_function_newtype! {
+    /// Represents the method that is called when the [`Dialogue`] begins executing a node.
+    ///
+    /// ## See also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    struct NodeStartHandler(NodeStartHandlerFn: Fn(NodeName))
+}
 
-/// Represents the method that is called when the [`Dialogue`] begins executing a node.
-///
-/// ## See also
-/// - [`LineHandler`]
-/// - [`OptionsHandler`]
-/// - [`CommandHandler`]
-/// - [`NodeCompleteHandler`]
-/// - [`DialogueCompleteHandler`]
-pub type NodeStartHandler = dyn Fn(NodeName);
+impl_function_newtype! {
+    /// Represents the method that is called when the dialogue has reached its end, and no more code remains to be run.
+    ///
+    /// ## See also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeStartHandler`]
+    /// - [`NodeCompleteHandler`]
+    struct DialogueCompleteHandler(DialogueCompleteHandlerFn: Fn())
+}
 
-/// Represents the method that is called when the dialogue has reached its end, and no more code remains to be run.
-///
-/// ## See also
-/// - [`LineHandler`]
-/// - [`OptionsHandler`]
-/// - [`CommandHandler`]
-/// - [`NodeStartHandler`]
-/// - [`NodeCompleteHandler`]
-pub type DialogueCompleteHandler = dyn Fn();
-
-/// Represents the method that is called when the dialogue anticipates that it will deliver lines.
-///
-/// This method should begin preparing to run the lines. For example, if a game delivers dialogue via voice-over,
-/// the appropriate audio files should be loaded.
-///
-/// This method serves to provide a hint to the game that a line _may_ be run.
-/// Not every line indicated in the provided `LineId`s may end up actually running.
-///
-/// This method may be called any number of times during a dialogue session.
-pub type PrepareForLinesHandler = dyn Fn(Vec<LineId>);
+impl_function_newtype! {
+    /// Represents the method that is called when the dialogue anticipates that it will deliver lines.
+    ///
+    /// This method should begin preparing to run the lines. For example, if a game delivers dialogue via voice-over,
+    /// the appropriate audio files should be loaded.
+    ///
+    /// This method serves to provide a hint to the game that a line _may_ be run.
+    /// Not every line indicated in the provided `LineId`s may end up actually running.
+    ///
+    /// This method may be called any number of times during a dialogue session.
+    struct PrepareForLinesHandler(PrepareForLinesHandlerFn: Fn(Vec<LineId>))
+}
 
 #[cfg(test)]
 mod tests {
@@ -162,6 +185,10 @@ mod tests {
     #[test]
     fn can_assign_handlers() {
         let logger = Logger(Box::new(|message| println!("{}", message)));
-        let clone = logger.clone();
+        let _clone = logger.clone();
+
+        let dialogue_complete_handler =
+            DialogueCompleteHandler(Box::new(|| println!("Dialogue complete!")));
+        let _clone = dialogue_complete_handler.clone();
     }
 }
