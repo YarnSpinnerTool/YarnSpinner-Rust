@@ -31,9 +31,10 @@ impl YarnFnRegistry {
         &mut self,
         name: impl Into<Cow<'static, str>>,
         function: Box<dyn UntypedYarnFn + Send + Sync>,
-    ) {
+    ) -> &mut Self {
         let name = name.into();
         self.insert(name, function);
+        self
     }
 
     pub fn contains_key(&self, name: &str) -> bool {
