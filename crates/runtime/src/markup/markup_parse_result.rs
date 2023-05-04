@@ -1,5 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/MarkupParseResult.cs>
 
+use yarn_slinger_compiler::prelude::Position;
+
 /// A value associated with a `MarkupProperty`
 ///
 /// You do not create instances of this struct yourself. It is created
@@ -23,9 +25,9 @@ trait AttributeMarkerProcessor {
 struct MarkupAttributeMarker {
     name: String,
     /// The position of the marker.
-    position: usize,
+    position: Position,
     /// The position of the marker in the original text.
-    source_position: usize,
+    source_position: Position,
     properties: Vec<MarkupProperty>,
     marker_type: TagType,
 }
