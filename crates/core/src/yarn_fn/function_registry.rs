@@ -7,7 +7,7 @@ use std::ops::{Deref, DerefMut};
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>);
+pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>);
 
 impl YarnFnRegistry {
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
@@ -30,7 +30,7 @@ impl YarnFnRegistry {
     pub fn add_boxed(
         &mut self,
         name: impl Into<Cow<'static, str>>,
-        function: Box<dyn UntypedYarnFn>,
+        function: Box<dyn UntypedYarnFn + Send + Sync>,
     ) {
         let name = name.into();
         self.insert(name, function);
@@ -40,13 +40,13 @@ impl YarnFnRegistry {
         self.get(name).is_some()
     }
 
-    pub fn get(&self, name: &str) -> Option<&dyn UntypedYarnFn> {
+    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn + Send + Sync)> {
         self.0.get(name).map(|f| f.as_ref())
     }
 }
 
 impl Deref for YarnFnRegistry {
-    type Target = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
+    type Target = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

@@ -31,12 +31,12 @@ pub trait YarnFn<Marker>: Send + Sync {
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Send + Sync {
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
-    fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
 
-impl Clone for Box<dyn UntypedYarnFn> {
+impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
@@ -53,7 +53,7 @@ where
         output.into_untyped_value()
     }
 
-    fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync> {
         Box::new(self.clone())
     }
 
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl PartialEq for Box<dyn UntypedYarnFn> {
+impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
     fn eq(&self, other: &Self) -> bool {
         // Not guaranteed to be unique, but that's good enough for our purposes.
         let debug = format!("{:?}", self);
@@ -110,7 +110,7 @@ impl PartialEq for Box<dyn UntypedYarnFn> {
     }
 }
 
-impl Eq for Box<dyn UntypedYarnFn> {}
+impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
