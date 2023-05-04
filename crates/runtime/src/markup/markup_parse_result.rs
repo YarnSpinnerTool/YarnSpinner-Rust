@@ -7,6 +7,7 @@ use yarn_slinger_compiler::prelude::Position;
 ///
 /// You do not create instances of this struct yourself. It is created
 ///  by objects that can parse markup, such as [`Dialogue`].
+#[derive(Default, Debug, Clone)]
 pub(crate) struct MarkupParseResult {
     /// The original text, with all parsed markers removed.
     pub(crate) text: String,
