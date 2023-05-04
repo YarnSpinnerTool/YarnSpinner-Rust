@@ -7,33 +7,40 @@ use yarn_slinger_compiler::prelude::Position;
 ///
 /// You do not create instances of this struct yourself. It is created
 ///  by objects that can parse markup, such as [`Dialogue`].
-pub struct MarkupParseResult {
+pub(crate) struct MarkupParseResult {
     /// The original text, with all parsed markers removed.
-    pub text: String,
+    pub(crate) text: String,
     /// The list of <see cref="MarkupAttribute"/>s in this parse result.
-    pub attributes: Vec<MarkupAttribute>,
+    pub(crate) attributes: Vec<MarkupAttribute>,
 }
 
 impl MarkupParseResult {
-    pub fn new(text: String, attributes: Vec<MarkupAttribute>) -> Self {
+    pub(crate) fn new(text: String, attributes: Vec<MarkupAttribute>) -> Self {
         Self { text, attributes }
     }
 
-    pub fn get_attribute_with_name(&self, name: &str) -> Option<&MarkupAttribute> {
-        self.attributes.iter().find(|attr| attr.name == name)
+    pub(crate) fn get_attribute_with_name(&self, name: &str) -> Option<&MarkupAttribute> {
+        self.attributes
+            .iter()
+            .find(|attr| attr.opening_marker.name == name)
     }
 
     /// Returns the substring of [`text`] covered by the [`attribute`]s Position and Length properties.
     ///
     /// ## Implementation notes:
     /// Instead of returning an empty string if the length is zero, we return none.
-    pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> Option<&str> {
-        if attribute.length == 0 {
-            None
-        } else {
-            Some(&self.text[attribute.position..attribute.position + attribute.length])
-        }
+    pub(crate) fn text_for_attribute(&self, attribute: &MarkupAttribute) -> Option<&str> {
+        (attribute.length != 0).then(|| {
+            &self.text[attribute.opening_marker.position.character
+                ..attribute.opening_marker.position.character + attribute.length]
+        })
     }
+}
+
+/// Represents a range of text in a marked-up string.
+pub(crate) struct MarkupAttribute {
+    opening_marker: MarkupAttributeMarker, // TODO: Check if this is sufficient or if we should flatten that?!
+    length: usize,
 }
 
 /// A value associated with a `MarkupProperty`
@@ -45,7 +52,7 @@ impl MarkupParseResult {
 ///
 /// The original has a discriminator and 4 properties. It's obviously supposed to resemble a discriminated union.
 // TODO: should we use YarnValue here? That one is missing integer, so we currently don't merge them.
-pub enum MarkupValue {
+pub(crate) enum MarkupValue {
     Integer(i32), // TODO: argue about size. In C# float(single) and int(32) are used.
     Float(f32),   // TODO: short is f16, but that doesnt even exist in rust?
     String(String),
@@ -74,7 +81,7 @@ pub(crate) struct MarkupAttributeMarker {
 }
 
 impl MarkupAttributeMarker {
-    pub fn get_property(&self, name: &str) -> Option<&MarkupValue> {
+    pub(crate) fn get_property(&self, name: &str) -> Option<&MarkupValue> {
         self.properties
             .iter()
             .find(|prop| prop.name == name)
@@ -82,7 +89,8 @@ impl MarkupAttributeMarker {
     }
 }
 
-enum TagType {
+#[derive(Copy, Clone)]
+pub(crate) enum TagType {
     /// An open marker. For example, `[a]`.
     Open,
 
@@ -100,7 +108,7 @@ enum TagType {
 ///
 /// You do not create instances of this struct yourself. It is created
 /// by objects that can parse markup, such as [`Dialogue`]
-struct MarkupProperty {
+pub(crate) struct MarkupProperty {
     name: String,
     value: MarkupValue,
 }
