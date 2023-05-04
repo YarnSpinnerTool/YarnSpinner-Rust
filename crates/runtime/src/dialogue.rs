@@ -310,7 +310,7 @@ impl Dialogue {
     ///
     /// This method repeatedly executes instructions until one of the following conditions is encountered:
     /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::continue_`] is called.
-    ///  [`Dialogue::continue_`] may be called from inside the [`LineHandler`] or [`CommandHandler`], or may be called at any future time.
+    ///  [`Dialogue::continue_`] may be called from inside the [`LineHandler`] or [`CommandHandler`] (TODO: May it?!), or may be called at any future time.
     /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
     /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::continue_`] is called.
     /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
