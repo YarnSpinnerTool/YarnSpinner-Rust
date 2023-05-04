@@ -5,18 +5,12 @@ use std::collections::HashMap;
 
 pub(crate) const REPLACEMENT_MARKER_CONTENTS: &str = "contents";
 
+#[derive(Default, Debug, Clone)]
 pub(crate) struct LineParser<'a> {
     marker_processors: HashMap<&'a str, &'a dyn AttributeMarkerProcessor>,
 }
 
 impl<'a> LineParser<'a> {
-    pub(crate) fn new() -> Self {
-        Self {
-            // Implementation note: See constructor in C#.
-            marker_processors: HashMap::from([("nomarkup", NoMarkupTextProcessor::new())]),
-        }
-    }
-
     pub(crate) fn add_marker_processor(
         &mut self,
         attribute_name: &'a str,
@@ -26,16 +20,20 @@ impl<'a> LineParser<'a> {
     }
 }
 
+impl<'a> Default for LineParser<'a> {
+    fn default() -> Self {
+        Self {
+            // Implementation note: See constructor in C#.
+            marker_processors: HashMap::from([("nomarkup", NoMarkupTextProcessor::new())]),
+        }
+    }
+}
+
 const EMPTY_STRING_MARKUP_VALUE: MarkupValue = MarkupValue::String("".to_owned());
 
 /// A markup text processor that implements the `[nomarkup]` attribute's behaviour.
+#[derive(Default, Debug, Clone)]
 struct NoMarkupTextProcessor {}
-
-impl NoMarkupTextProcessor {
-    fn new() -> &'static dyn AttributeMarkerProcessor {
-        &Self {}
-    }
-}
 
 impl AttributeMarkerProcessor for NoMarkupTextProcessor {
     fn replacement_text_for_marker(&mut self, marker: &MarkupAttributeMarker) -> String {
