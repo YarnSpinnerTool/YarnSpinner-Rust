@@ -15,8 +15,11 @@ pub(crate) struct MarkupParseResult {
 }
 
 impl MarkupParseResult {
-    pub(crate) fn new(text: String, attributes: Vec<MarkupAttribute>) -> Self {
-        Self { text, attributes }
+    pub(crate) fn new(text: impl Into<String>, attributes: Vec<MarkupAttribute>) -> Self {
+        Self {
+            text: text.into(),
+            attributes,
+        }
     }
 
     pub(crate) fn get_attribute_with_name(&self, name: &str) -> Option<&MarkupAttribute> {

@@ -24,7 +24,7 @@ impl<'a> LineParser<'a> {
 
     pub(crate) fn parse_markup(&self, input: &str) -> MarkupParseResult {
         if input.len() == 0 {
-            return MarkupParseResult::new("".to_string(), vec![]);
+            return MarkupParseResult::new("", vec![]);
         }
 
         todo!()
