@@ -1,5 +1,5 @@
 use crate::markup::markup_parse_result::{
-    AttributeMarkerProcessor, MarkupAttributeMarker, MarkupValue,
+    AttributeMarkerProcessor, MarkupAttributeMarker, MarkupParseResult, MarkupValue,
 };
 use std::collections::HashMap;
 
@@ -20,6 +20,14 @@ impl<'a> LineParser<'a> {
             .marker_processors
             .insert(attribute_name, Box::new(processor));
         assert!(inserted.is_none(), "A marker processor for the attribute '{attribute_name}' has already been added. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+    }
+
+    pub(crate) fn parse_markup(&self, input: &str) -> MarkupParseResult {
+        if input.len() == 0 {
+            return MarkupParseResult::new("".to_string(), vec![]);
+        }
+
+        todo!()
     }
 }
 
