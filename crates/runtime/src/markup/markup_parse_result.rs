@@ -3,6 +3,39 @@
 use std::fmt::Debug;
 use yarn_slinger_compiler::prelude::Position;
 
+/// The result of parsing a line of marked-up text.
+///
+/// You do not create instances of this struct yourself. It is created
+///  by objects that can parse markup, such as [`Dialogue`].
+pub struct MarkupParseResult {
+    /// The original text, with all parsed markers removed.
+    pub text: String,
+    /// The list of <see cref="MarkupAttribute"/>s in this parse result.
+    pub attributes: Vec<MarkupAttribute>,
+}
+
+impl MarkupParseResult {
+    pub fn new(text: String, attributes: Vec<MarkupAttribute>) -> Self {
+        Self { text, attributes }
+    }
+
+    pub fn get_attribute_with_name(&self, name: &str) -> Option<&MarkupAttribute> {
+        self.attributes.iter().find(|attr| attr.name == name)
+    }
+
+    /// Returns the substring of [`text`] covered by the [`attribute`]s Position and Length properties.
+    ///
+    /// ## Implementation notes:
+    /// Instead of returning an empty string if the length is zero, we return none.
+    pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> Option<&str> {
+        if attribute.length == 0 {
+            None
+        } else {
+            Some(&self.text[attribute.position..attribute.position + attribute.length])
+        }
+    }
+}
+
 /// A value associated with a `MarkupProperty`
 ///
 /// You do not create instances of this struct yourself. It is created
