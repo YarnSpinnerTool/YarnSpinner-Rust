@@ -43,8 +43,8 @@ impl DerefMut for NodeName {
     }
 }
 
-macro_rules! impl_function_newtype {
-    ($(#[$attr:meta])* struct $struct_name:ident($trait_name:ident: Fn($($param:ty)?))) => {
+macro_rules! impl_function_newtype_with_no_params {
+    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: Fn())) => {
         $(#[$attr])*
         #[derive(Debug, Clone)]
         pub struct $struct_name(pub Box<dyn $trait_name>);
@@ -62,15 +62,53 @@ macro_rules! impl_function_newtype {
         }
 
         pub trait $trait_name {
-            fn call(&self, $(param: $param)?);
+            fn call(&self);
             fn clone_box(&self) -> Box<dyn $trait_name>;
         }
 
         impl<T> $trait_name for T
         where
-            T: Fn($($param)?) + Clone + 'static,
+            T: Fn() + Clone + 'static,
         {
-            fn call(&self, $(param: $param)?) {
+            fn call(&self) {
+                self()
+            }
+
+            fn clone_box(&self) -> Box<dyn $trait_name> {
+                Box::new(self.clone())
+            }
+        }
+    };
+}
+
+macro_rules! impl_function_newtype {
+    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: Fn($param:ty))) => {
+        $(#[$attr])*
+        #[derive(Debug, Clone)]
+        pub struct $struct_name(pub Box<dyn $trait_name>);
+
+        impl Clone for Box<dyn $trait_name> {
+            fn clone(&self) -> Self {
+                self.clone_box()
+            }
+        }
+
+        impl Debug for dyn $trait_name {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                write!(f, stringify!($struct_name))
+            }
+        }
+
+        pub trait $trait_name {
+            fn call(&self, param: $param);
+            fn clone_box(&self) -> Box<dyn $trait_name>;
+        }
+
+        impl<T> $trait_name for T
+        where
+            T: Fn($param) + Clone + 'static,
+        {
+            fn call(&self, param: $param) {
                 self(param)
             }
 
@@ -88,7 +126,7 @@ impl_function_newtype! {
     ///
     /// ## Params
     /// - The text that should be logged.
-    struct Logger(LoggerFn: Fn(String))
+    pub struct Logger(pub LoggerFn: Fn(String))
 }
 
 impl_function_newtype! {
@@ -100,7 +138,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    struct LineHandler(LineHandlerFn: Fn(Line))
+    pub struct LineHandler(pub LineHandlerFn: Fn(Line))
 }
 
 impl_function_newtype! {
@@ -112,7 +150,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    struct OptionsHandler(OptionsHandlerFn: Fn(DialogueOption))
+    pub struct OptionsHandler(pub OptionsHandlerFn: Fn(DialogueOption))
 }
 
 impl_function_newtype! {
@@ -124,7 +162,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    struct CommandHandler(CommandHandlerFn: Fn(Command))
+    pub struct CommandHandler(pub CommandHandlerFn: Fn(Command))
 }
 
 impl_function_newtype! {
@@ -138,7 +176,7 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`DialogueCompleteHandler`]
-    struct NodeCompleteHandler(NodeCompleteHandlerFn: Fn(NodeName))
+    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: Fn(NodeName))
 }
 
 impl_function_newtype! {
@@ -150,10 +188,10 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    struct NodeStartHandler(NodeStartHandlerFn: Fn(NodeName))
+    pub struct NodeStartHandler(pub NodeStartHandlerFn: Fn(NodeName))
 }
 
-impl_function_newtype! {
+impl_function_newtype_with_no_params! {
     /// Represents the method that is called when the dialogue has reached its end, and no more code remains to be run.
     ///
     /// ## See also
@@ -162,7 +200,7 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
-    struct DialogueCompleteHandler(DialogueCompleteHandlerFn: Fn())
+    pub struct DialogueCompleteHandler(pub DialogueCompleteHandlerFn: Fn())
 }
 
 impl_function_newtype! {
@@ -175,7 +213,7 @@ impl_function_newtype! {
     /// Not every line indicated in the provided `LineId`s may end up actually running.
     ///
     /// This method may be called any number of times during a dialogue session.
-    struct PrepareForLinesHandler(PrepareForLinesHandlerFn: Fn(Vec<LineId>))
+    pub struct PrepareForLinesHandler(pub PrepareForLinesHandlerFn: Fn(Vec<LineId>))
 }
 
 #[cfg(test)]
