@@ -57,9 +57,10 @@ impl Dialogue {
     const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     fn init_library(&mut self) {
+        let storage = self.variable_storage.clone();
         self.library
-            .register_function("visited", |node: String| -> bool {
-                is_node_visited(self.variable_storage.clone(), &node)
+            .register_function("visited", move |node: String| -> bool {
+                is_node_visited(storage.clone(), &node)
             })
             .register_function("visited_count", |_node: String| -> f32 { todo!() });
     }
