@@ -14,6 +14,9 @@ pub struct Dialogue {
 
     /// The object that provides access to storing and retrieving the values of variables.
     pub variable_storage: Box<dyn VariableStorage>,
+
+    /// Invoked when the Dialogue needs to report debugging information.
+    pub log_debug_message: Box<Logger>,
 }
 
 impl Dialogue {

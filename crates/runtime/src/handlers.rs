@@ -6,6 +6,7 @@
 //! - Additional newtypes were introduced for strings.
 
 use crate::prelude::*;
+use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
 
 /// A command, sent from the [`Dialogue`] to the game.
@@ -48,7 +49,38 @@ impl DerefMut for NodeName {
 ///
 /// ## Params
 /// - The text that should be logged.
-pub type Logger = dyn Fn(String);
+
+#[derive(Debug, Clone)]
+pub struct Logger(pub Box<dyn LoggerTrait>);
+
+impl Clone for Box<dyn LoggerTrait> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
+impl Debug for dyn LoggerTrait {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Logger")
+    }
+}
+
+pub trait LoggerTrait {
+    fn call(&self, message: String);
+    fn clone_box(&self) -> Box<dyn LoggerTrait>;
+}
+impl<T> LoggerTrait for T
+where
+    T: Fn(String),
+{
+    fn call(&self, message: String) {
+        self(message)
+    }
+
+    fn clone_box(&self) -> Box<dyn LoggerTrait> {
+        Box::new(self.clone())
+    }
+}
 
 /// Represents the method that is called when the [`Dialogue`] delivers a [`Line`].
 ///
@@ -122,3 +154,14 @@ pub type DialogueCompleteHandler = dyn Fn();
 ///
 /// This method may be called any number of times during a dialogue session.
 pub type PrepareForLinesHandler = dyn Fn(Vec<LineId>);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_assign_handlers() {
+        let logger = Logger(Box::new(|message| println!("{}", message)));
+        let clone = logger.clone();
+    }
+}
