@@ -9,10 +9,9 @@ pub(crate) fn add_tracking_declarations(
         .tracking_nodes
         .iter()
         .map(|node| {
-            Declaration::default()
+            let name = Library::generate_unique_visited_variable_for_node(node);
+            Declaration::new(name, Type::Number)
                 .with_default_value(0.)
-                .with_name(Library::generate_unique_visited_variable_for_node(node))
-                .with_type(Type::Number)
                 .with_description(format!(
                     "The generated variable for tracking visits of node {node}"
                 ))

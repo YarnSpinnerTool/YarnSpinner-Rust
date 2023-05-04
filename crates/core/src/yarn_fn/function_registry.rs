@@ -11,7 +11,11 @@ pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>
 
 impl YarnFnRegistry {
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
-    pub fn add<Marker, F>(&mut self, name: impl Into<Cow<'static, str>>, function: F)
+    pub fn register_function<Marker, F>(
+        &mut self,
+        name: impl Into<Cow<'static, str>>,
+        function: F,
+    ) -> &mut Self
     where
         Marker: 'static + Clone,
         F: YarnFn<Marker> + 'static + Clone,
@@ -20,6 +24,7 @@ impl YarnFnRegistry {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);
         self.insert(name, Box::new(wrapped));
+        self
     }
 
     pub fn add_boxed(
@@ -60,7 +65,7 @@ macro_rules! yarn_fn_registry {
         {
             let mut map = YarnFnRegistry::default();
             $(
-                map.add($name, $function);
+                map.register_function($name, $function);
             )*
             map
         }
@@ -75,20 +80,20 @@ mod tests {
     #[test]
     fn can_add_fn_with_no_args() {
         let mut functions = YarnFnRegistry::default();
-        functions.add("test", || true);
+        functions.register_function("test", || true);
     }
 
     #[test]
     fn can_add_fn_with_one_arg() {
         let mut functions = YarnFnRegistry::default();
-        functions.add("test", |a: f32| a);
+        functions.register_function("test", |a: f32| a);
     }
 
     #[test]
     fn can_call_fn_with_no_args() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test", || true);
+        functions.register_function("test", || true);
         let function = functions.get("test").unwrap();
         let result: bool = function.call(vec![]).try_into().unwrap();
 
@@ -99,7 +104,7 @@ mod tests {
     fn can_call_fn_with_one_arg() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test", |a: f32| a);
+        functions.register_function("test", |a: f32| a);
         let function = functions.get("test").unwrap();
         let result: f32 = function.call(vec![1.0.into()]).try_into().unwrap();
 
@@ -110,15 +115,15 @@ mod tests {
     fn can_add_multiple_fns() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test1", || true);
-        functions.add("test2", |a: f32| a);
+        functions.register_function("test1", || true);
+        functions.register_function("test2", |a: f32| a);
     }
 
     #[test]
     fn can_call_multiple_fns() {
         let mut functions = YarnFnRegistry::default();
-        functions.add("test1", || true);
-        functions.add("test2", |a: f32| a);
+        functions.register_function("test1", || true);
+        functions.register_function("test2", |a: f32| a);
 
         let function1 = functions.get("test1").unwrap();
         let function2 = functions.get("test2").unwrap();
@@ -134,10 +139,10 @@ mod tests {
     fn can_call_multiple_fns_with_many_params() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test1", || true);
-        functions.add("test2", |a: f32, b: f32| a + b);
-        functions.add("test3", |a: f32, b: f32, c: f32| a + b * c);
-        functions.add(
+        functions.register_function("test1", || true);
+        functions.register_function("test2", |a: f32, b: f32| a + b);
+        functions.register_function("test3", |a: f32, b: f32, c: f32| a + b * c);
+        functions.register_function(
             "test4",
             |a: String, b: String, c: String, d: bool, e: f32| format!("{}{}{}{}{}", a, b, c, d, e),
         );
@@ -177,7 +182,7 @@ mod tests {
     fn debug_prints_signature() {
         let mut functions = YarnFnRegistry::default();
 
-        functions.add("test", |a: f32, b: f32| a + b);
+        functions.register_function("test", |a: f32, b: f32| a + b);
         let debug_string = format!("{:?}", functions);
 
         let element_start = debug_string.find('{').unwrap();

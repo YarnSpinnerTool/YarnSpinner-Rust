@@ -53,7 +53,7 @@ pub(crate) fn validate_unique_node_names(
             state.diagnostics.push(
                 Diagnostic::from_message(format!("More than one node is named {name}",))
                     .with_file_name(file.name.clone())
-                    .read_parser_rule_context(header_context.as_ref(), file.tokens()),
+                    .with_parser_context(header_context.as_ref(), file.tokens()),
             );
         }
     }

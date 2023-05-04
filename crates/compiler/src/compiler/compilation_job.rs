@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationJob.cs>
 
 use crate::output::Declaration;
+use std::path::Path;
 use yarn_slinger_core::prelude::Library;
 
 /// An object that contains Yarn source code to compile, and instructions on
@@ -27,6 +28,16 @@ impl CompilationJob {
     pub fn with_file(mut self, file: File) -> Self {
         self.files.push(file);
         self
+    }
+
+    pub fn read_file(mut self, file_path: impl AsRef<Path>) -> std::io::Result<Self> {
+        let file_name = file_path.as_ref().to_string_lossy().to_string();
+        let file_content = std::fs::read_to_string(file_path)?;
+        self.files.push(File {
+            file_name,
+            source: file_content,
+        });
+        Ok(self)
     }
 
     pub fn with_library(mut self, library: Library) -> Self {

@@ -45,7 +45,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for LexerErrorListe
         let range = Position {
             line,
             character: column,
-        }..=Position {
+        }..Position {
             line,
             character: column + 1,
         };
@@ -88,7 +88,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
         let range = Position {
             line: (line - 1) as usize,
             character: (column + 1) as usize,
-        }..=Position {
+        }..Position {
             line: (line - 1) as usize,
             character: (column + 1) as usize,
         };
@@ -122,18 +122,21 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
                 }
             }
 
-            let line = (offending_symbol.get_line() - 1) as usize;
-            let column = offending_symbol.get_column() as usize;
+            let line = offending_symbol.get_line_as_usize().saturating_sub(1);
+            let column = offending_symbol.get_column_as_usize();
             let length = offending_symbol.get_text().len();
-            diagnostic = diagnostic.with_context(string).with_range(
-                Position {
-                    line,
-                    character: column,
-                }..=Position {
-                    line,
-                    character: column + length,
-                },
-            );
+            diagnostic = diagnostic
+                .with_context(string)
+                .with_start_line(line)
+                .with_range(
+                    Position {
+                        line,
+                        character: column,
+                    }..Position {
+                        line,
+                        character: column + length,
+                    },
+                );
         }
         self.diagnostics.borrow_mut().push(diagnostic);
     }

@@ -1,5 +1,4 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs>
-use crate::compiler;
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -70,7 +69,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         if !self.current_node_name.is_empty() && tags.contains(&"rawText".to_owned()) {
             // This is a raw text node. Use its entire contents as a
             // string and don't use its contents.
-            let line_id = compiler::get_line_id_for_node_name(&self.current_node_name);
+            let line_id = get_line_id_for_node_name(&self.current_node_name);
             self.string_table_manager.insert(
                 line_id,
                 StringInfo {
@@ -103,7 +102,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
                 let line_id = line_id.get_text();
                 self.diagnostics.push(
                     Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .read_parser_rule_context(diagnostic_context.as_ref(), self.file.tokens())
+                        .with_parser_context(diagnostic_context.as_ref(), self.file.tokens())
                         .with_file_name(&self.file.name),
                 );
                 return;
@@ -316,7 +315,7 @@ a {very} cool expression
         let range = Position {
             line: 4,
             character: 7,
-        }..=Position {
+        }..Position {
             line: 4,
             character: 8,
         };
@@ -326,6 +325,7 @@ a {very} cool expression
                 .with_file_name("test.yarn".to_string())
                 .with_range(range.clone())
                 .with_context(context.clone())
+                .with_start_line(4)
                 .with_severity(DiagnosticSeverity::Error);
 
         let second_expected =
@@ -333,6 +333,7 @@ a {very} cool expression
                 .with_file_name("test.yarn".to_string())
                 .with_range(range)
                 .with_context(context)
+                .with_start_line(4)
                 .with_severity(DiagnosticSeverity::Error);
         if diagnostics[0] == first_expected {
             assert_eq!(diagnostics[1], second_expected);

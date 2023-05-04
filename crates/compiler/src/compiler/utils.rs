@@ -84,8 +84,12 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
 /// line as the declaration), then they may span multiple lines, as long
 /// as each line begins with a triple-slash.
 ///
+/// If there are both doc comments preceding the declaration and on the same line,
+/// only the the latter will be returned.
+///
 /// ## Implementation notes
-/// The flag `allowCommentsAfter` and its consequences were not ported because they are unused.
+///
+/// The flag `allowCommentsAfter` was not ported because it was always set to `true` anyway.
 pub(crate) fn get_document_comments<'input>(
     tokens: &ActualTokenStream<'input>,
     context: &impl YarnSpinnerParserContext<
@@ -94,6 +98,27 @@ pub(crate) fn get_document_comments<'input>(
         Ctx = YarnSpinnerParserContextType,
     >,
 ) -> String {
+    let subsequent_comments = tokens.get_hidden_tokens_to_right(
+        context.stop().get_token_index(),
+        yarnspinnerlexer::COMMENTS as isize,
+    );
+
+    let subsequent_doc_comment = subsequent_comments
+        .iter()
+        // This comment is on the same line as the end of
+        // the declaration
+        .filter(|t| t.get_line() == context.stop().get_line())
+        // The comment starts with a triple-slash
+        .filter(|t| t.get_text().starts_with("///"))
+        // Get its text
+        .map(|t| t.get_text().replace("///", "").trim().to_owned())
+        // Get the first one, or null
+        .next();
+
+    if let Some(subsequent_doc_comment) = subsequent_doc_comment {
+        return subsequent_doc_comment;
+    }
+
     let preceding_comments = tokens.get_hidden_tokens_to_left(
         context.start().get_token_index(),
         yarnspinnerlexer::COMMENTS as isize,
@@ -175,8 +200,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
         .iter()
         .flat_map(|r#type| {
             r#type
-                .properties()
-                .methods
+                .methods()
                 .keys()
                 .map(|name| r#type.get_canonical_name_for_method(name))
                 .collect::<Vec<_>>()
@@ -197,9 +221,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
             function_type.parameters = parameters;
             let return_type = Type::try_from(function.return_type()).unwrap();
             function_type.set_return_type(return_type);
-            Declaration::default()
-                .with_name(name.to_string())
-                .with_type(Type::from(function_type))
+            Declaration::new(name.clone(), function_type)
                 .with_source_file_name(DeclarationSource::External)
         })
         .collect()
@@ -226,14 +248,15 @@ mod tests {
         assert_eq!(
             Diagnostic::from_message("Indentation contains tabs and spaces")
                 .with_context("\t   ")
+                .with_start_line(3)
                 .with_file_name("test.yarn")
                 .with_range(
                     Position {
                         line: 3,
                         character: 0
-                    }..=Position {
+                    }..Position {
                         line: 3,
-                        character: 4
+                        character: 5
                     }
                 )
                 .with_severity(DiagnosticSeverity::Warning),

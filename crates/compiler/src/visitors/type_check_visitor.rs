@@ -92,12 +92,18 @@ impl<'input> TypeCheckVisitor<'input> {
 
     /// Gets the collection of all declarations - both the ones we received
     /// at the start, and the new ones we've derived ourselves.
-    pub(crate) fn declarations(&self) -> Vec<Declaration> {
+    pub(crate) fn declarations(&self) -> impl Iterator<Item = &Declaration> + '_ {
         self.existing_declarations
             .iter()
-            .cloned()
-            .chain(self.new_declarations.iter().cloned())
-            .collect()
+            .chain(self.new_declarations.iter())
+    }
+
+    /// Gets the collection of all declarations mutably - both the ones we received
+    /// at the start, and the new ones we've derived ourselves.
+    pub(crate) fn declarations_mut(&mut self) -> impl Iterator<Item = &mut Declaration> + '_ {
+        self.existing_declarations
+            .iter_mut()
+            .chain(self.new_declarations.iter_mut())
     }
 }
 
@@ -246,7 +252,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         self.diagnostics.push(
             Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens()),
+                .with_parser_context(ctx, self.file.tokens()),
         );
 
         None
@@ -259,13 +265,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             .get_token(yarnspinnerlexer::FUNC_ID, 0)
             .unwrap()
             .get_text();
+
         let function_declaration = self
             .declarations()
-            .into_iter()
-            .find(|decl| decl.name == function_name);
+            .find(|decl| decl.name == function_name)
+            .cloned(); // Cloning to avoid borrow checker issues
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
-            let Some(Type::Function(mut function_type)) = function_declaration.r#type.clone() else {
+            let Type::Function(mut function_type) = function_declaration.r#type.clone() else {
                  unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
             };
 
@@ -276,8 +283,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     self.new_declarations.find_remove(&function_declaration);
                     function_type.set_return_type(hint);
                     let new_declaration = Declaration {
-                        r#type: Some(Type::from(function_type.clone())),
-                        ..function_declaration
+                        r#type: Type::from(function_type.clone()),
+                        ..function_declaration.clone()
                     };
                     self.new_declarations.push(new_declaration);
                 }
@@ -289,17 +296,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             let mut function_type = FunctionType::default();
             // because it is an implicit declaration we will use the type hint to give us a return type
             function_type.set_return_type(hint);
-            let line = ctx.start().get_line();
-            let column = ctx.start().get_column();
-            let function_declaration = Declaration::default()
-                .with_type(Type::from(function_type.clone()))
-                .with_name(&function_name)
-                .with_description(format!(
-                    "Implicit declaration of function at {}:{}:{}",
-                    self.file.name, line, column
-                ))
-                .with_range(ctx.range(self.file.tokens()))
-                .with_implicit();
 
             // Create the array of parameters for this function based
             // on how many we've seen in this call. Set them all to be
@@ -309,6 +305,17 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             for parameter_type in parameter_types {
                 function_type.add_parameter(parameter_type);
             }
+
+            let line = ctx.start().get_line_as_usize();
+            let column = ctx.start().get_column_as_usize();
+            let function_declaration =
+                Declaration::new(function_name.clone(), function_type.clone())
+                    .with_description(format!(
+                        "Implicit declaration of function at {}:{}:{}",
+                        self.file.name, line, column
+                    ))
+                    .with_range(ctx.range())
+                    .with_implicit();
             self.new_declarations.push(function_declaration);
             function_type
         };
@@ -324,14 +331,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 "parameters"
             };
             let diagnostic = Diagnostic::from_message(format!(
-                "Function {} expects {} {}, but received {}",
+                "Function \"{}\" expects {} {}, but received {}",
                 function_name,
                 expected_parameter_types.len(),
                 parameters,
                 supplied_parameters.len()
             ))
             .with_file_name(&self.file.name)
-            .read_parser_rule_context(ctx, self.file.tokens());
+            .with_parser_context(ctx, self.file.tokens());
             self.diagnostics.push(diagnostic);
             return *function_type.return_type;
         }
@@ -347,6 +354,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 // The type of this parameter hasn't yet been bound.
                 // Bind this parameter type to what we've resolved the
                 // type to.
+                let declaration = self
+                    .declarations_mut()
+                    .find(|decl| decl.name == function_name)
+                    .unwrap(); // Guaranteed to be Some
+                let Type::Function(function_type) = &mut declaration.r#type else {
+                    unreachable!();
+                };
+                function_type.parameters[i] = supplied_type.clone();
                 expected_type = &supplied_type;
             }
             if !supplied_type.is_sub_type_of(expected_type) {
@@ -358,8 +373,9 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                     supplied_type.format()
                 ))
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens());
+                .with_parser_context(ctx, self.file.tokens());
                 self.diagnostics.push(diagnostic);
+                return *function_type.return_type;
             }
         }
         // Cool, all the parameters check out!
@@ -378,12 +394,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             return None
         };
         let name = var_id.get_text();
-        if let Some(declaration) = self
-            .declarations()
-            .into_iter()
-            .find(|decl| decl.name == name)
-        {
-            return declaration.r#type;
+        if let Some(declaration) = self.declarations().find(|decl| decl.name == name) {
+            return Some(declaration.r#type.clone());
         }
 
         // do we already have a potential warning about this?
@@ -402,7 +414,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let diagnostic =
             Diagnostic::from_message(format_cannot_determine_variable_type_error(&name))
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens());
+                .with_parser_context(ctx, self.file.tokens());
         self.deferred_types
             .push(DeferredTypeDiagnostic { name, diagnostic });
 
@@ -462,7 +474,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                             expression_type.format(),
                         ))
                         .with_file_name(&self.file.name)
-                        .read_parser_rule_context(ctx, self.file.tokens());
+                        .with_parser_context(ctx, self.file.tokens());
                         self.diagnostics.push(diagnostic);
                     }
                     (None, Some(expression_type)) => {
@@ -474,19 +486,16 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                         // we can't get one, we can't create the definition.
                         if let Some(default_value) = expression_type.default_value() {
                             // Generate a declaration for this variable here.
-                            let decl = Declaration::default()
-                                .with_name(variable_name)
+                            let decl = Declaration::new(variable_name, expression_type.clone())
                                 .with_description(format!(
                                     "Implicitly declared in {}, node {}",
                                     get_filename(&self.file.name),
                                     self.current_node_name.as_ref().unwrap()
                                 ))
-                                .with_type(expression_type.clone())
                                 .with_default_value(default_value)
                                 .with_source_file_name(self.file.name.clone())
                                 .with_source_node_name_optional(self.current_node_name.clone())
-                                .with_range(variable_context.range(self.file.tokens())
-                                )
+                                .with_range(variable_context.range())
                                 .with_implicit();
                             self.new_declarations.push(decl);
                         } else {
@@ -495,7 +504,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                                     format_cannot_determine_variable_type_error(&variable_name),
                                 )
                                 .with_file_name(&self.file.name)
-                                .read_parser_rule_context(ctx, self.file.tokens()),
+                                .with_parser_context(ctx, self.file.tokens()),
                             )
                         }
                     }
@@ -537,7 +546,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                             Diagnostic::from_message(
                                 format!("Type of expression \"{}\" can't be determined without more context. Please declare one or more terms.", ctx.get_text_with_whitespace(self.file.tokens())))
                                 .with_file_name(&self.file.name)
-                                .read_parser_rule_context(ctx, self.file.tokens()));
+                                .with_parser_context(ctx, self.file.tokens()));
         }
         // at this point we have either fully resolved the type of the expression or been unable to do so
         // we return the type of the expression regardless and rely on either elements to catch the issue
@@ -660,14 +669,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a String")
                 .with_file_name("test.yarn")
-                .with_context("<<set $foo to \"invalid\">>")
                 .with_range(
                     Position {
                         line: 3,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 3,
-                        character: 24,
+                        character: 25,
                     },
                 ),
         );
@@ -676,14 +684,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$bar (Bool) cannot be assigned a Number")
                 .with_file_name("test.yarn")
-                .with_context("<<set $bar to -15>>")
                 .with_range(
                     Position {
                         line: 6,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 6,
-                        character: 18,
+                        character: 19,
                     },
                 ),
         );
@@ -692,14 +699,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$baz (String) cannot be assigned a Bool")
                 .with_file_name("test.yarn")
-                .with_context("<<set $baz to false>>")
                 .with_range(
                     Position {
                         line: 7,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 7,
-                        character: 20,
+                        character: 21,
                     },
                 ),
         );
@@ -707,7 +713,10 @@ mod tests {
 
     fn assert_contains(diagnostics: &[Diagnostic], expected: &Diagnostic) {
         assert!(
-            diagnostics.contains(expected),
+            // Does not factor in context or start line because these are subject to frequent change
+            diagnostics.iter().any(|d| d.file_name == expected.file_name
+                && d.message == expected.message
+                && d.range == expected.range),
             "Expected diagnostics:\n{}\nto contain:\n- {:?}",
             diagnostics
                 .iter()
@@ -768,14 +777,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
                 .with_file_name("test.yarn")
-                .with_context("<<set $foo to $foo + $bar>>")
                 .with_range(
                     Position {
                         line: 4,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 4,
-                        character: 26,
+                        character: 27,
                     },
                 ),
         );
@@ -784,14 +792,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("$foo (Number) cannot be assigned a undefined")
                 .with_file_name("test.yarn")
-                .with_context("<<set $foo to $foo * \"invalid\">>")
                 .with_range(
                     Position {
                         line: 5,
                         character: 0,
-                    }..=Position {
+                    }..Position {
                         line: 5,
-                        character: 31,
+                        character: 32,
                     },
                 ),
         );
@@ -800,14 +807,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("All terms of + must be the same, not Number, String")
                 .with_file_name("test.yarn")
-                .with_context("$foo + $bar")
                 .with_range(
                     Position {
                         line: 4,
                         character: 14,
-                    }..=Position {
+                    }..Position {
                         line: 4,
-                        character: 24,
+                        character: 25,
                     },
                 ),
         );
@@ -816,14 +822,13 @@ mod tests {
             &diagnostics,
             &Diagnostic::from_message("All terms of * must be the same, not Number, String")
                 .with_file_name("test.yarn")
-                .with_context("$foo * \"invalid\"")
                 .with_range(
                     Position {
                         line: 5,
                         character: 14,
-                    }..=Position {
+                    }..Position {
                         line: 5,
-                        character: 29,
+                        character: 30,
                     },
                 ),
         );

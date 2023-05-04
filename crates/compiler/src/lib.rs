@@ -7,10 +7,22 @@ mod output;
 mod parser;
 pub(crate) mod parser_rule_context_ext;
 mod string_table_manager;
+pub(crate) mod token_ext;
 pub(crate) mod visitors;
 
+pub use crate::compiler::Result;
+
 pub mod prelude {
-    pub use crate::listeners::{Diagnostic, DiagnosticSeverity};
-    pub(crate) use crate::string_table_manager::*;
-    pub use crate::{compiler::*, file_parse_result::*, output::*, parser::*};
+    pub(crate) use crate::{
+        compiler::antlr_rust_ext::*, compiler::utils::*, compiler::CompilationIntermediate,
+        string_table_manager::*, token_ext::*,
+    };
+    pub use crate::{
+        compiler::compilation_job::*,
+        compiler::compile,
+        file_parse_result::*,
+        listeners::{Diagnostic, DiagnosticSeverity},
+        output::*,
+        parser::*,
+    };
 }

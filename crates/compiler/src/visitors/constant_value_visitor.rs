@@ -56,7 +56,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
             self.diagnostics.push(
                 Diagnostic::from_message(message)
                     .with_file_name(&self.file.name)
-                    .read_parser_rule_context(ctx, self.file.tokens()),
+                    .with_parser_context(ctx, self.file.tokens()),
             );
             // This default value seems very "JavaScript-y" with the pseudo-sensible default value on errors.
             // But this is not so! We just pushed an error diagnostic, so there will be no program emitted from this compilation attempt.
@@ -83,7 +83,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
         self.diagnostics.push(
             Diagnostic::from_message(message)
                 .with_file_name(&self.file.name)
-                .read_parser_rule_context(ctx, self.file.tokens()),
+                .with_parser_context(ctx, self.file.tokens()),
         );
         ConstantValue::non_panicking_default()
     }

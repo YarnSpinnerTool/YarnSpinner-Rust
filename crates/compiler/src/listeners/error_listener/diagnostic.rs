@@ -4,8 +4,11 @@ use annotate_snippets::{
     display_list::{DisplayList, FormatOptions},
     snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
 };
+use antlr_rust::rule_context::CustomRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::token_factory::TokenFactory;
 use std::fmt::{Display, Formatter};
-use std::ops::RangeInclusive;
+use std::ops::Range;
 
 /// A diagnostic message that describes an error, warning or informational
 /// message that the user can take action on.
@@ -22,7 +25,7 @@ pub struct Diagnostic {
     pub file_name: Option<String>,
 
     /// The range of the file indicated by the [`Diagnostic::file_name`] that the issue occurred in.
-    pub range: Option<RangeInclusive<Position>>,
+    pub range: Option<Range<Position>>,
 
     /// The description of the issue.
     pub message: String,
@@ -32,6 +35,9 @@ pub struct Diagnostic {
 
     /// The severity of the issue.
     pub severity: DiagnosticSeverity,
+
+    /// The line the context starts on.
+    pub start_line: usize,
 }
 
 impl Diagnostic {
@@ -42,18 +48,26 @@ impl Diagnostic {
             range: Default::default(),
             context: Default::default(),
             severity: Default::default(),
+            start_line: Default::default(),
         }
     }
 
-    pub fn read_parser_rule_context<'input>(
-        mut self,
-        ctx: &impl ParserRuleContextExt<'input>,
+    pub(crate) fn with_parser_context<'input, T>(
+        self,
+        ctx: &T,
         token_stream: &ActualTokenStream<'input>,
-    ) -> Self {
-        let range = ctx.range(token_stream);
-        self.range = Some(range);
-        self.context = Some(ctx.get_text_with_whitespace(token_stream));
-        self
+    ) -> Self
+    where
+        T: ParserRuleContextExt<'input>,
+    <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
+        Into<String>
+    {
+        let lines_above_and_below_offending_line = 2;
+        let lines_around = ctx.get_lines_around(token_stream, lines_above_and_below_offending_line);
+        let range = ctx.range();
+        self.with_range(range)
+            .with_context(lines_around.lines)
+            .with_start_line(lines_around.first_line)
     }
 
     pub fn with_file_name(mut self, file_name: impl Into<String>) -> Self {
@@ -61,13 +75,18 @@ impl Diagnostic {
         self
     }
 
-    pub fn with_range(mut self, range: impl Into<RangeInclusive<Position>>) -> Self {
+    pub fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
         self.range = Some(range.into());
         self
     }
 
     pub fn with_context(mut self, context: impl Into<String>) -> Self {
         self.context = Some(context.into());
+        self
+    }
+
+    pub fn with_start_line(mut self, start_line: usize) -> Self {
+        self.start_line = start_line;
         self
     }
 
@@ -93,26 +112,13 @@ impl Display for Diagnostic {
             footer: vec![],
             slices: vec![Slice {
                 source: self.context.as_deref().unwrap_or("<unknown line>"),
-                line_start: self
-                    .range
-                    .as_ref()
-                    .map(|r| r.start().line)
-                    .unwrap_or_default(),
+                line_start: self.start_line + 1,
                 origin: self.file_name.as_deref(),
-                fold: true,
+                fold: false,
                 annotations: vec![SourceAnnotation {
                     label: "",
                     annotation_type,
-                    range: (
-                        self.range
-                            .as_ref()
-                            .map(|r| r.start().character)
-                            .unwrap_or_default(),
-                        self.range
-                            .as_ref()
-                            .map(|r| r.end().character)
-                            .unwrap_or_default(),
-                    ),
+                    range: convert_absolute_range_to_relative(self),
                 }],
             }],
             opt: FormatOptions {
@@ -126,6 +132,30 @@ impl Display for Diagnostic {
 
         Ok(())
     }
+}
+
+fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize) {
+    let Some(range) = diagnostic.range.as_ref() else {
+        return (0, 0);
+    };
+    let Some(context) = diagnostic.context.as_ref() else {
+        return (0, 0);
+    };
+
+    let relative_start_line = range.start.line - diagnostic.start_line;
+    let annotated_lines = range.end.line - range.start.line;
+    let line_lengths: Vec<_> = context.lines().map(|line| line.len() + 1).collect();
+    let relative_start =
+        line_lengths.iter().take(relative_start_line).sum::<usize>() + range.start.character;
+    let relative_end: usize = line_lengths
+        .iter()
+        .take(relative_start_line + annotated_lines)
+        .sum::<usize>()
+        + range.end.character
+        // - 1 because the Diagnostic range is exclusive, but the annotation range is inclusive
+        - 1;
+
+    (relative_start, relative_end)
 }
 
 pub trait DiagnosticVec {

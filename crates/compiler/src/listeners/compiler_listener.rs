@@ -86,7 +86,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
             self.diagnostics.borrow_mut().push(
                 Diagnostic::from_message("Missing title header for node")
                     .with_file_name(self.file.name.clone())
-                    .read_parser_rule_context(ctx, self.file.tokens()),
+                    .with_parser_context(ctx, self.file.tokens()),
             );
         } else {
             if !self.program.borrow().nodes.contains_key(name) {
@@ -195,7 +195,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         }
         // We have exited the body; emit a 'stop' opcode here.
         self.emit(Emit::from_op_code(OpCode::Stop).with_source(Position {
-            line: ctx.stop().line as usize - 1,
+            line: (ctx.stop().line as usize).saturating_sub(1),
             character: 0,
         }));
     }

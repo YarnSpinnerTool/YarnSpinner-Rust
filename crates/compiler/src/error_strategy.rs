@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorStrategy.cs>
 
 use crate::prelude::generated::yarnspinnerparser;
+use crate::prelude::*;
 use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
@@ -100,7 +101,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
         {
             // We saw a << immediately followed by a >>. The programmer
             // forgot to include command text.
-            "You forgot to include command text between << and >>".to_owned()
+            "Command text expected".to_owned()
         } else {
             let rule_context = recognizer.get_parser_rule_context();
             format!(
@@ -126,7 +127,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
                         // <<endif>>.
                         Some(format!(
                             "Expected an <<endif>> to match the <<if>> statement on line {}",
-                            rule_context.start().get_line()
+                            rule_context.start().get_line_as_usize()
                         ))
                     }
                     yarnspinnerparser::COMMAND_ELSE
@@ -150,7 +151,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
                 // We're parsing a variable (which starts with a '$'),
                 // but we encountered a FUNC_ID (which doesn't). The
                 // programmer forgot to include the '$'.
-                Some("Variables must start with a '$'".to_owned())
+                Some("Variable names need to start with a $".to_owned())
             }
             _ => None,
         };
@@ -159,18 +160,13 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
             format!(
                 "Unexpected \"{}\" while reading {}",
                 e.base.offending_token.get_text(),
-                Self::get_friendly_name_for_rule_context_with_article(rule_context)
+                Self::get_friendly_name_for_rule_context(rule_context)
             )
         })
     }
 
     fn get_friendly_name_for_rule_context(ctx: &Rc<Ctx::Type>) -> String {
-        let rule_name = yarnspinnerparser::ruleNames[ctx.get_rule_index()];
-        rule_name.replace('_', " ")
-    }
-
-    fn get_friendly_name_for_rule_context_with_article(ctx: &Rc<Ctx::Type>) -> String {
-        let friendly_name = Self::get_friendly_name_for_rule_context(ctx);
+        let friendly_name = yarnspinnerparser::ruleNames[ctx.get_rule_index()].replace('_', " ");
         // If the friendly name's first character is a vowel, the
         // article is 'an'; otherwise, 'a'.
         let first_letter = friendly_name.chars().next().unwrap();

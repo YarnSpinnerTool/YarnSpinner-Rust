@@ -1,11 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CodeGenerationVisitor.cs>
 
-use crate::compiler;
 use crate::listeners::{CompilerListener, Emit};
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use crate::prelude::ActualParserContext;
+use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
@@ -101,12 +100,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let formatted_text = ctx.line_formatted_text().unwrap();
         let expression_count =
             self.generate_code_for_expressions_in_formatted_text(formatted_text.get_children());
-        let line_id_tag = compiler::get_line_id_tag(&ctx.hashtag_all())
+        let line_id_tag = get_line_id_tag(&ctx.hashtag_all())
             .expect("Internal error: line should have an implicit or explicit line ID tag, but none was found. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
         let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::RunLine)
-                .with_source_from_token(ctx.start().deref())
+                .with_token(ctx.start().deref())
                 .with_operand(line_id)
                 .with_operand(expression_count),
         );
@@ -164,11 +163,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let token = variable.start();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::StoreVariable)
-                .with_source_from_token(token.deref())
+                .with_token(token.deref())
                 .with_operand(variable_name),
         );
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(token.deref()));
+            .emit(Emit::from_op_code(OpCode::Pop).with_token(token.deref()));
     }
 
     fn visit_call_statement(&mut self, ctx: &Call_statementContext<'input>) -> Self::Return {
@@ -208,14 +207,13 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 // "stop" is a special command that immediately stops
                 // execution
                 self.compiler_listener.emit(
-                    Emit::from_op_code(OpCode::Stop)
-                        .with_source_from_token(formatted_text.start().deref()),
+                    Emit::from_op_code(OpCode::Stop).with_token(formatted_text.start().deref()),
                 );
             }
             _ => {
                 self.compiler_listener.emit(
                     Emit::from_op_code(OpCode::RunCommand)
-                        .with_source_from_token(formatted_text.start().deref())
+                        .with_token(formatted_text.start().deref())
                         .with_operand(composed_string)
                         .with_operand(expression_count),
                 );
@@ -235,7 +233,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // push the number of parameters onto the stack
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushFloat)
-                .with_source_from_token(token.deref())
+                .with_token(token.deref())
                 .with_operand(expressions.len()),
         );
 
@@ -243,7 +241,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let function_name = ctx.FUNC_ID().unwrap().get_text();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::CallFunc)
-                .with_source_from_token(token.deref())
+                .with_token(token.deref())
                 .with_operand(function_name),
         );
     }
@@ -347,14 +345,14 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             );
 
             // Get the line ID from the hashtags if it has one
-            let line_id_tag = compiler::get_line_id_tag(&line_statement.hashtag_all())
+            let line_id_tag = get_line_id_tag(&line_statement.hashtag_all())
                 .expect("Internal error: no line ID provided. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
             let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
 
             // And add this option to the list.
             self.compiler_listener.emit(
                 Emit::from_op_code(OpCode::AddOption)
-                    .with_source_from_token(line_statement.start().deref())
+                    .with_token(line_statement.start().deref())
                     .with_operand(line_id)
                     .with_operand(option_destination_label)
                     .with_operand(expression_count)
@@ -364,12 +362,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // All of the options that we intend to show are now ready to go.
         let token = ctx.stop();
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::ShowOptions).with_source_from_token(token.deref()));
+            .emit(Emit::from_op_code(OpCode::ShowOptions).with_token(token.deref()));
 
         // The top of the stack now contains the name of the label we want
         // to jump to. Jump to it now.
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Jump).with_source_from_token(token.deref()));
+            .emit(Emit::from_op_code(OpCode::Jump).with_token(token.deref()));
 
         // We'll now emit the labels and code associated with each option.
         for (option_count, shortcut) in ctx.shortcut_option_all().into_iter().enumerate() {
@@ -388,7 +386,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             // Jump to the end of this shortcut option group.
             self.compiler_listener.emit(
                 Emit::from_op_code(OpCode::JumpTo)
-                    .with_source_from_token(shortcut.stop().deref())
+                    .with_token(shortcut.stop().deref())
                     .with_operand(end_of_group_label.clone()),
             );
         }
@@ -399,7 +397,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             .labels
             .insert(end_of_group_label, current_node.instructions.len() as i32);
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Pop).with_source_from_token(token.deref()));
+            .emit(Emit::from_op_code(OpCode::Pop).with_token(token.deref()));
     }
 
     /// (expression)
@@ -506,7 +504,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let number: f32 = ctx.NUMBER().unwrap().get_text().parse().unwrap();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushFloat)
-                .with_source_from_token(ctx.start().deref())
+                .with_token(ctx.start().deref())
                 .with_operand(number),
         )
     }
@@ -514,7 +512,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
     fn visit_valueTrue(&mut self, ctx: &ValueTrueContext<'input>) -> Self::Return {
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushBool)
-                .with_source_from_token(ctx.start().deref())
+                .with_token(ctx.start().deref())
                 .with_operand(true),
         )
     }
@@ -522,7 +520,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
     fn visit_valueFalse(&mut self, ctx: &ValueFalseContext<'input>) -> Self::Return {
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushBool)
-                .with_source_from_token(ctx.start().deref())
+                .with_token(ctx.start().deref())
                 .with_operand(false),
         )
     }
@@ -531,7 +529,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let variable_name = ctx.VAR_ID().unwrap().get_text();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushVariable)
-                .with_source_from_token(ctx.start().deref())
+                .with_token(ctx.start().deref())
                 .with_operand(variable_name),
         )
     }
@@ -546,7 +544,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             .to_owned();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushString)
-                .with_source_from_token(ctx.start().deref())
+                .with_token(ctx.start().deref())
                 .with_operand(string_value),
         )
     }
@@ -559,7 +557,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
     /// null value
     fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::PushNull).with_source_from_token(ctx.start().deref()))
+            .emit(Emit::from_op_code(OpCode::PushNull).with_token(ctx.start().deref()))
     }
 
     fn visit_declare_statement(&mut self, _ctx: &Declare_statementContext<'input>) -> Self::Return {
@@ -574,11 +572,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         let destination = ctx.destination.as_ref().unwrap();
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushString)
-                .with_source_from_token(destination.deref())
+                .with_token(destination.deref())
                 .with_operand(destination.get_text().to_owned()),
         );
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::RunNode).with_source_from_token(ctx.start().deref()))
+            .emit(Emit::from_op_code(OpCode::RunNode).with_token(ctx.start().deref()))
     }
 
     /// A <<jump>> command, which immediately jumps to another node, given an
@@ -590,7 +588,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // Evaluate the expression, and jump to the result on the stack.
         self.visit(ctx.expression().unwrap().as_ref());
         self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::RunNode).with_source_from_token(ctx.start().deref()))
+            .emit(Emit::from_op_code(OpCode::RunNode).with_token(ctx.start().deref()))
     }
 }
 
@@ -633,7 +631,7 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
         // Indicate that we are pushing this many items for comparison
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::PushFloat)
-                .with_source_from_token(operator_token)
+                .with_token(operator_token)
                 .with_operand(operands.len()),
         );
         // Figure out the canonical name for the method that the VM should
@@ -644,13 +642,13 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
             has_method,
             "Codegen failed to get implementation type for {} given input type {}.",
             op,
-            r#type.properties().name,
+            r#type.name(),
         );
         let function_name = r#type.get_canonical_name_for_method(&method_name);
         // Call that function.
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::CallFunc)
-                .with_source_from_token(operator_token)
+                .with_token(operator_token)
                 .with_operand(function_name),
         );
     }
@@ -671,7 +669,7 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
 
             self.compiler_listener.emit(
                 Emit::from_op_code(OpCode::JumpIfFalse)
-                    .with_source_from_token(expression.start().deref())
+                    .with_token(expression.start().deref())
                     .with_operand(end_of_clause_label.clone()),
             );
         }
@@ -683,7 +681,7 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
 
         self.compiler_listener.emit(
             Emit::from_op_code(OpCode::JumpTo)
-                .with_source_from_token(ctx.stop().deref())
+                .with_token(ctx.stop().deref())
                 .with_operand(jump_label),
         );
 
@@ -692,9 +690,8 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
             current_node
                 .labels
                 .insert(end_of_clause_label, current_node.instructions.len() as i32);
-            self.compiler_listener.emit(
-                Emit::from_op_code(OpCode::Pop).with_source_from_token(expression.stop().deref()),
-            );
+            self.compiler_listener
+                .emit(Emit::from_op_code(OpCode::Pop).with_token(expression.stop().deref()));
         }
     }
 }

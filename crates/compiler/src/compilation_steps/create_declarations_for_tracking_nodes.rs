@@ -6,9 +6,8 @@ pub(crate) fn create_declarations_for_tracking_nodes(
     mut state: CompilationIntermediate,
 ) -> CompilationIntermediate {
     let tracking_declarations = state.tracking_nodes.iter().map(|node| {
-        Declaration::default()
-            .with_name(Library::generate_unique_visited_variable_for_node(node))
-            .with_type(Type::Number)
+        let name = Library::generate_unique_visited_variable_for_node(node);
+        Declaration::new(name, Type::Number)
             .with_default_value(0.0)
             .with_description(format!(
                 "The generated variable for tracking visits of node {node}"

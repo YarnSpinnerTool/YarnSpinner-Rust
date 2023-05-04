@@ -22,16 +22,14 @@ impl From<FunctionType> for Type {
 }
 
 impl FunctionType {
-    pub fn set_return_type(&mut self, return_type: impl Into<Option<Type>>) {
+    pub fn set_return_type(&mut self, return_type: impl Into<Option<Type>>) -> &mut Self {
         self.return_type = Box::new(return_type.into());
+        self
     }
 
-    pub fn add_parameter(&mut self, parameter: impl Into<Option<Type>>) {
+    pub fn add_parameter(&mut self, parameter: impl Into<Option<Type>>) -> &mut Self {
         self.parameters.push(parameter.into());
-    }
-
-    pub fn properties(&self) -> TypeProperties {
-        function_type_properties(self)
+        self
     }
 }
 
