@@ -18,7 +18,7 @@ use yarn_slinger_macros::all_tuples;
 ///     - [`bool`]
 ///     - [`String`]
 ///     - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
-pub trait YarnFn<Marker> {
+pub trait YarnFn<Marker>: Send + Sync {
     type Out: IntoYarnValueFromNonYarnValue + 'static;
     fn call(&self, input: Vec<YarnValue>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -29,7 +29,7 @@ pub trait YarnFn<Marker> {
 
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
-pub trait UntypedYarnFn: Debug {
+pub trait UntypedYarnFn: Debug + Send + Sync {
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -45,7 +45,7 @@ impl Clone for Box<dyn UntypedYarnFn> {
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static + Clone,
-    F: YarnFn<Marker> + 'static + Clone,
+    F: YarnFn<Marker> + 'static + Clone + Send + Sync,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
     fn call(&self, input: Vec<YarnValue>) -> YarnValue {
@@ -118,7 +118,7 @@ macro_rules! impl_yarn_fn_tuple {
         #[allow(non_snake_case)]
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
-                F: Fn($($param,)*) -> O,
+                F: Fn($($param,)*) -> O + Send + Sync,
                 O: IntoYarnValueFromNonYarnValue + 'static,
                 $($param: TryFrom<YarnValue> + 'static,)*
             {

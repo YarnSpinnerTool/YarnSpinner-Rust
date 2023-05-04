@@ -2,6 +2,7 @@ use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
 use std::rc::Rc;
+use std::sync::Arc;
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -15,7 +16,7 @@ pub struct Dialogue {
     pub library: Library,
 
     /// The object that provides access to storing and retrieving the values of variables.
-    pub variable_storage: Rc<dyn VariableStorage>,
+    pub variable_storage: Arc<dyn VariableStorage + Send + Sync>,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -37,7 +38,8 @@ pub struct Dialogue {
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let variable_storage: Rc<dyn VariableStorage> = Rc::new(MemoryVariableStore::default());
+        let variable_storage: Arc<dyn VariableStorage + Send + Sync> =
+            Arc::new(MemoryVariableStore::default());
 
         let library = {
             let storage_one = variable_storage.clone();
@@ -70,30 +72,39 @@ impl Dialogue {
     /// Initializes a new instance of the [`Dialogue`] class.
     pub fn with_variable_storage(
         mut self,
-        variable_storage: impl VariableStorage + 'static,
+        variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
-        self.variable_storage = Rc::new(variable_storage);
+        self.variable_storage = Arc::new(variable_storage);
         self
     }
 
-    pub fn with_log_debug_message(mut self, logger: impl Fn(String) + Clone + 'static) -> Self {
+    pub fn with_log_debug_message(
+        mut self,
+        logger: impl Fn(String) + Clone + 'static + Send + Sync,
+    ) -> Self {
         self.log_debug_message = Logger(Box::new(logger));
         self
     }
 
-    pub fn with_log_error_message(mut self, logger: impl Fn(String) + Clone + 'static) -> Self {
+    pub fn with_log_error_message(
+        mut self,
+        logger: impl Fn(String) + Clone + 'static + Send + Sync,
+    ) -> Self {
         self.log_error_message = Logger(Box::new(logger));
         self
     }
 
-    pub fn with_line_handler(mut self, line_handler: impl Fn(Line) + Clone + 'static) -> Self {
+    pub fn with_line_handler(
+        mut self,
+        line_handler: impl Fn(Line) + Clone + 'static + Send + Sync,
+    ) -> Self {
         self.vm.line_handler = LineHandler(Box::new(line_handler));
         self
     }
 
     pub fn with_options_handler(
         mut self,
-        options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static,
+        options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.options_handler = OptionsHandler(Box::new(options_handler));
         self
@@ -101,7 +112,7 @@ impl Dialogue {
 
     pub fn with_command_handler(
         mut self,
-        command_handler: impl Fn(Command) + Clone + 'static,
+        command_handler: impl Fn(Command) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.command_handler = CommandHandler(Box::new(command_handler));
         self
@@ -109,7 +120,7 @@ impl Dialogue {
 
     pub fn with_node_complete_handler(
         mut self,
-        node_complete_handler: impl Fn(NodeName) + Clone + 'static,
+        node_complete_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.node_complete_handler = NodeCompleteHandler(Box::new(node_complete_handler));
         self
@@ -117,7 +128,7 @@ impl Dialogue {
 
     pub fn with_node_start_handler(
         mut self,
-        node_start_handler: impl Fn(NodeName) + Clone + 'static,
+        node_start_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.node_start_handler = NodeStartHandler(Box::new(node_start_handler));
         self
@@ -125,7 +136,7 @@ impl Dialogue {
 
     pub fn with_dialogue_complete_handler(
         mut self,
-        dialogue_complete_handler: impl Fn() + Clone + 'static,
+        dialogue_complete_handler: impl Fn() + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.dialogue_complete_handler =
             DialogueCompleteHandler(Box::new(dialogue_complete_handler));
@@ -134,7 +145,7 @@ impl Dialogue {
 
     pub fn with_prepare_for_lines_handler(
         mut self,
-        prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static,
+        prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.prepare_for_lines_handler =
             PrepareForLinesHandler(Box::new(prepare_for_lines_handler));
@@ -253,4 +264,12 @@ mod tests {
             .with_options_handler(|_| {});
         let _cloned = dialogue.clone();
     }
+
+    #[test]
+    fn is_send_sync() {
+        let dialogue = Dialogue::default();
+        accept_send_sync(dialogue);
+    }
+
+    fn accept_send_sync(_: impl Send + Sync) {}
 }
