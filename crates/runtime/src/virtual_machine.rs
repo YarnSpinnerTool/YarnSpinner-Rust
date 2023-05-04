@@ -13,6 +13,7 @@ mod execution_state;
 mod state;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub(crate) struct VirtualMachine {
     pub(crate) program: Option<Program>,
     pub(crate) line_handler: LineHandler,
@@ -59,6 +60,7 @@ impl Default for VirtualMachine {
     }
 }
 
+#[allow(dead_code)]
 impl VirtualMachine {
     pub(crate) fn reset_state(&mut self) {
         self.state = State::default();

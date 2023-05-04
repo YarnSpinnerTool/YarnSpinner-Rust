@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
-use std::rc::Rc;
 use std::sync::Arc;
 use yarn_slinger_core::prelude::*;
 
@@ -65,9 +64,7 @@ impl Default for Dialogue {
 }
 
 impl Dialogue {
-    const DEFAULT_START_NODE_NAME: &'static str = "Start";
-
-    fn init_library(&mut self) {}
+    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     /// Initializes a new instance of the [`Dialogue`] class.
     pub fn with_variable_storage(
@@ -211,17 +208,17 @@ impl Dialogue {
         self.vm.execution_state() != ExecutionState::Stopped
     }
 
-    pub(crate) fn with_new_program(mut self, program: Program) -> Self {
+    pub fn with_new_program(mut self, program: Program) -> Self {
         self.set_program(program);
         self
     }
 
-    pub(crate) fn with_added_program(mut self, program: Program) -> Self {
+    pub fn with_added_program(mut self, program: Program) -> Self {
         self.add_program(program);
         self
     }
 
-    pub(crate) fn set_program(&mut self, program: Program) -> &mut Self {
+    pub fn set_program(&mut self, program: Program) -> &mut Self {
         self.vm.program = Some(program);
         self.vm.reset_state();
         self
@@ -259,10 +256,9 @@ mod tests {
 
     #[test]
     fn can_set_handler() {
-        let dialogue = Dialogue::default()
+        let _dialogue = Dialogue::default()
             .with_log_debug_message(|_| {})
             .with_options_handler(|_| {});
-        let _cloned = dialogue.clone();
     }
 
     #[test]

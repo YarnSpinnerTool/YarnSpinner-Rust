@@ -5,6 +5,7 @@ use yarn_slinger_compiler::collections::Stack;
 use yarn_slinger_core::prelude::*;
 
 #[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
 pub(crate) struct State {
     /// The name of the node that we're currently in.
     pub(crate) current_node_name: Option<NodeName>,
@@ -20,6 +21,7 @@ pub(crate) struct State {
     pub(crate) stack: Stack<InternalValue>,
 }
 
+#[allow(dead_code)]
 impl State {
     pub(crate) fn push(&mut self, value: impl Into<InternalValue>) {
         self.stack.push(value.into())

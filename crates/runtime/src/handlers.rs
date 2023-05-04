@@ -222,11 +222,9 @@ mod tests {
 
     #[test]
     fn can_assign_handlers() {
-        let logger = Logger(Box::new(|message| println!("{}", message)));
-        let _clone = logger.clone();
+        let _logger = Logger(Box::new(|message| println!("{}", message)));
 
-        let dialogue_complete_handler =
+        let _dialogue_complete_handler =
             DialogueCompleteHandler(Box::new(|| println!("Dialogue complete!")));
-        let _clone = dialogue_complete_handler.clone();
     }
 }
