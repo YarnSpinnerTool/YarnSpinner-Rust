@@ -269,29 +269,6 @@ impl Dialogue {
         self
     }
 
-    /*
-    /// <summary>
-    /// Prepares the <see cref="Dialogue"/> that the user intends to start
-    /// running a node.
-    /// </summary>
-    /// <param name="startNode">The name of the node that will be run. The
-    /// node have been loaded by calling <see cref="SetProgram(Program)"/>
-    /// or <see cref="AddProgram(Program)"/>.</param>
-    /// <remarks>
-    /// <para>
-    /// After this method is called, you call <see cref="Continue"/> to
-    /// start executing it.
-    /// </para>
-    /// <para>
-    /// If <see cref="PrepareForLinesHandler"/> has been set, it may be
-    /// called when this method is invoked, as the Dialogue determines which
-    /// lines may be delivered during the <paramref name="startNode"/>
-    /// node's execution.
-    /// </para>
-    /// </remarks>
-    /// <throws cref="DialogueException">Thrown when no node named
-    /// <c>startNode</c> has been loaded.</throws>
-     */
     /// Prepares the [`Dialogue`] that the user intends to start running a node.
     ///
     /// After this method is called, you call [`Dialogue::continue_`] to start executing it.
