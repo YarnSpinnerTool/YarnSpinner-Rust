@@ -16,7 +16,6 @@ use std::ops::{Deref, DerefMut};
 ///
 /// ## See also
 /// [`Dialogue::line_handler`]
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Line {
     /// The ID of the line in the string table.

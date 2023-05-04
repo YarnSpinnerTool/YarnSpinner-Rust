@@ -6,6 +6,7 @@
 pub(crate) use self::execution_state::*;
 use self::state::*;
 use crate::prelude::*;
+use log::*;
 use yarn_slinger_core::prelude::*;
 
 mod execution_state;
@@ -13,7 +14,7 @@ mod state;
 
 #[derive(Debug, Clone)]
 pub(crate) struct VirtualMachine {
-    pub(crate) program: Program,
+    pub(crate) program: Option<Program>,
     pub(crate) line_handler: LineHandler,
     pub(crate) options_handler: OptionsHandler,
     pub(crate) command_handler: CommandHandler,
@@ -28,7 +29,33 @@ pub(crate) struct VirtualMachine {
 
 impl Default for VirtualMachine {
     fn default() -> Self {
-        todo!()
+        Self {
+            line_handler: LineHandler(Box::new(|line| {
+                info!("Delivering line: {:?}", line);
+            })),
+            options_handler: OptionsHandler(Box::new(|options| {
+                info!("Delivering options: {:?}", options);
+            })),
+            command_handler: CommandHandler(Box::new(|command| {
+                info!("Executing command: {:?}", command);
+            })),
+            node_start_handler: NodeStartHandler(Box::new(|node_name| {
+                info!("Starting node: {:?}", node_name);
+            })),
+            node_complete_handler: NodeCompleteHandler(Box::new(|node_name| {
+                info!("Completed node: {:?}", node_name);
+            })),
+            dialogue_complete_handler: DialogueCompleteHandler(Box::new(|| {
+                info!("Dialogue complete");
+            })),
+            prepare_for_lines_handler: PrepareForLinesHandler(Box::new(|line_ids| {
+                info!("Preparing for lines: {:?}", line_ids);
+            })),
+            program: Default::default(),
+            current_node: Default::default(),
+            state: Default::default(),
+            execution_state: Default::default(),
+        }
     }
 }
 

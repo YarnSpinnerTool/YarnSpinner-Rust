@@ -31,9 +31,6 @@ pub struct Dialogue {
     /// used in the United States.
     pub language_code: Option<String>,
 
-    /// The node that execution will start from.
-    program: Option<Program>,
-
     vm: VirtualMachine,
 }
 
@@ -50,7 +47,6 @@ impl Default for Dialogue {
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
             language_code: Default::default(),
-            program: Default::default(),
             vm: Default::default(),
         }
     }
@@ -60,68 +56,77 @@ impl Dialogue {
     const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     /// Initializes a new instance of the [`Dialogue`] class.
-    pub fn with_variable_storage(self, variable_storage: impl VariableStorage + 'static) -> Self {
-        Self {
-            variable_storage: Box::new(variable_storage),
-            ..self
-        }
+    pub fn with_variable_storage(
+        mut self,
+        variable_storage: impl VariableStorage + 'static,
+    ) -> Self {
+        self.variable_storage = Box::new(variable_storage);
+        self
     }
 
-    pub fn with_log_debug_message(self, logger: impl Fn(String) + Clone + 'static) -> Self {
-        Self {
-            log_debug_message: Logger(Box::new(logger)),
-            ..self
-        }
+    pub fn with_log_debug_message(mut self, logger: impl Fn(String) + Clone + 'static) -> Self {
+        self.log_debug_message = Logger(Box::new(logger));
+        self
     }
 
-    pub fn with_log_error_message(self, logger: impl Fn(String) + Clone + 'static) -> Self {
-        Self {
-            log_error_message: Logger(Box::new(logger)),
-            ..self
-        }
+    pub fn with_log_error_message(mut self, logger: impl Fn(String) + Clone + 'static) -> Self {
+        self.log_error_message = Logger(Box::new(logger));
+        self
     }
 
-    pub fn with_line_handler(self, line_handler: impl Fn(Line) + Clone + 'static) -> Self {
-        todo!()
+    pub fn with_line_handler(mut self, line_handler: impl Fn(Line) + Clone + 'static) -> Self {
+        self.vm.line_handler = LineHandler(Box::new(line_handler));
+        self
     }
 
     pub fn with_options_handler(
-        self,
+        mut self,
         options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static,
     ) -> Self {
-        todo!()
+        self.vm.options_handler = OptionsHandler(Box::new(options_handler));
+        self
     }
 
-    pub fn with_command_handler(self, command_handler: impl Fn(Command) + Clone + 'static) -> Self {
-        todo!()
+    pub fn with_command_handler(
+        mut self,
+        command_handler: impl Fn(Command) + Clone + 'static,
+    ) -> Self {
+        self.vm.command_handler = CommandHandler(Box::new(command_handler));
+        self
     }
 
     pub fn with_node_complete_handler(
-        self,
+        mut self,
         node_complete_handler: impl Fn(NodeName) + Clone + 'static,
     ) -> Self {
-        todo!()
+        self.vm.node_complete_handler = NodeCompleteHandler(Box::new(node_complete_handler));
+        self
     }
 
     pub fn with_node_start_handler(
-        self,
+        mut self,
         node_start_handler: impl Fn(NodeName) + Clone + 'static,
     ) -> Self {
-        todo!()
+        self.vm.node_start_handler = NodeStartHandler(Box::new(node_start_handler));
+        self
     }
 
     pub fn with_dialogue_complete_handler(
-        self,
+        mut self,
         dialogue_complete_handler: impl Fn() + Clone + 'static,
     ) -> Self {
-        todo!()
+        self.vm.dialogue_complete_handler =
+            DialogueCompleteHandler(Box::new(dialogue_complete_handler));
+        self
     }
 
     pub fn with_prepare_for_lines_handler(
-        self,
+        mut self,
         prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static,
     ) -> Self {
-        todo!()
+        self.vm.prepare_for_lines_handler =
+            PrepareForLinesHandler(Box::new(prepare_for_lines_handler));
+        self
     }
 
     pub fn with_language_code(self, language_code: impl Into<String>) -> Self {
@@ -146,45 +151,41 @@ impl Dialogue {
     /// [`Dialogue::set_selected_option`] must be called to indicate which
     /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
     pub fn options_handler(&self) -> &OptionsHandler {
-        todo!()
+        &self.vm.options_handler
     }
 
     pub fn line_handler(&self) -> &LineHandler {
-        todo!()
+        &self.vm.line_handler
     }
 
     /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
     pub fn command_handler(&self) -> &CommandHandler {
-        todo!()
+        &self.vm.command_handler
     }
 
     /// The [`NodeCompleteHandler`] that is called when a node is complete.
     pub fn node_complete_handler(&self) -> &NodeCompleteHandler {
-        todo!()
+        &self.vm.node_complete_handler
     }
 
     /// The [`NodeStartHandler`] that is called when a node is started.
     pub fn node_start_handler(&self) -> &NodeStartHandler {
-        todo!()
+        &self.vm.node_start_handler
     }
 
     /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
     pub fn dialogue_complete_handler(&self) -> &DialogueCompleteHandler {
-        todo!()
+        &self.vm.dialogue_complete_handler
     }
 
     /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
     pub fn prepare_for_lines_handler(&self) -> &PrepareForLinesHandler {
-        todo!()
+        &self.vm.prepare_for_lines_handler
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
-        todo!()
-    }
-
-    pub(crate) fn program(&self) -> Option<&Program> {
-        self.program.as_ref()
+        self.vm.execution_state() != ExecutionState::Stopped
     }
 
     pub(crate) fn with_new_program(mut self, program: Program) -> Self {
@@ -198,14 +199,13 @@ impl Dialogue {
     }
 
     pub(crate) fn set_program(&mut self, program: Program) -> &mut Self {
-        self.program = Some(program.clone());
-        self.vm.program = program;
+        self.vm.program = Some(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
-        if let Some(existing_program) = &mut self.program {
+        if let Some(existing_program) = &mut self.vm.program {
             *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
         } else {
             self.set_program(program);

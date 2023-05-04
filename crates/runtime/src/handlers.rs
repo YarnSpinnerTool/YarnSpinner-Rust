@@ -150,7 +150,7 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct OptionsHandler(pub OptionsHandlerFn: FnMut(DialogueOption))
+    pub struct OptionsHandler(pub OptionsHandlerFn: FnMut(Vec<DialogueOption>))
 }
 
 impl_function_newtype! {

@@ -1,8 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/VirtualMachine.cs, which we split into multiple files
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub(crate) enum ExecutionState {
     /// The VirtualMachine is not running a node.
+    #[default]
     Stopped,
 
     /// The VirtualMachine is waiting on option selection. Call
@@ -16,7 +17,7 @@ pub(crate) enum ExecutionState {
     WaitingForContinue,
 
     /// The VirtualMachine is delivering a line, options, or a
-    /// commmand to the client game.
+    /// command to the client game.
     DeliveringContent,
 
     /// The VirtualMachine is in the middle of executing code.
