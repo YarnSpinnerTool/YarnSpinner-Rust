@@ -5,18 +5,19 @@ use std::collections::HashMap;
 
 pub(crate) const REPLACEMENT_MARKER_CONTENTS: &str = "contents";
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct LineParser<'a> {
-    marker_processors: HashMap<&'a str, &'a dyn AttributeMarkerProcessor>,
+    marker_processors: HashMap<&'a str, Box<dyn AttributeMarkerProcessor>>,
 }
 
 impl<'a> LineParser<'a> {
     pub(crate) fn add_marker_processor(
         &mut self,
         attribute_name: &'a str,
-        processor: &'a dyn AttributeMarkerProcessor,
+        processor: impl AttributeMarkerProcessor + 'static,
     ) {
-        self.marker_processors.insert(attribute_name, processor);
+        self.marker_processors
+            .insert(attribute_name, Box::new(processor));
     }
 }
 
@@ -24,12 +25,13 @@ impl<'a> Default for LineParser<'a> {
     fn default() -> Self {
         Self {
             // Implementation note: See constructor in C#.
-            marker_processors: HashMap::from([("nomarkup", NoMarkupTextProcessor::new())]),
+            marker_processors: HashMap::from([(
+                "nomarkup",
+                Box::new(NoMarkupTextProcessor::default()) as Box<dyn AttributeMarkerProcessor>,
+            )]),
         }
     }
 }
-
-const EMPTY_STRING_MARKUP_VALUE: MarkupValue = MarkupValue::String("".to_owned());
 
 /// A markup text processor that implements the `[nomarkup]` attribute's behaviour.
 #[derive(Default, Debug, Clone)]
@@ -45,5 +47,9 @@ impl AttributeMarkerProcessor for NoMarkupTextProcessor {
             None => "".to_string(),
             _ => unreachable!("A NoMarkup marker may only contain string values. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"),
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor> {
+        Box::new(self.clone())
     }
 }
