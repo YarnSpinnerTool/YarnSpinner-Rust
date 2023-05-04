@@ -18,18 +18,27 @@ pub enum MarkupValue {
     Bool(bool),
 }
 
-trait AttributeMarkerProcessor {
-    fn replacement_text_for_marker(&mut self, attribute_marker: &MarkupAttributeMarker) -> String;
+pub(crate) trait AttributeMarkerProcessor {
+    fn replacement_text_for_marker(&mut self, marker: &MarkupAttributeMarker) -> String;
 }
 
-struct MarkupAttributeMarker {
+pub(crate) struct MarkupAttributeMarker {
     name: String,
     /// The position of the marker.
     position: Position,
     /// The position of the marker in the original text.
     source_position: Position,
-    properties: Vec<MarkupProperty>,
+    properties: Vec<MarkupProperty>, // TODO: maybe a hashset is smarter? It really should not have duplicates in name.
     marker_type: TagType,
+}
+
+impl MarkupAttributeMarker {
+    pub fn get_property(&self, name: &str) -> Option<&MarkupValue> {
+        self.properties
+            .iter()
+            .find(|prop| prop.name == name)
+            .map(|prop| &prop.value)
+    }
 }
 
 enum TagType {
