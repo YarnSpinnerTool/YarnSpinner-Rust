@@ -87,6 +87,19 @@ macro_rules! impl_function_newtype {
         #[derive(Debug, Clone)]
         pub struct $struct_name(pub Box<dyn $trait_name + Send + Sync>);
 
+        impl Deref for $struct_name {
+            type Target = Box<dyn $trait_name + Send + Sync>;
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl DerefMut for $struct_name {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+
         impl Clone for Box<dyn $trait_name + Send + Sync> {
             fn clone(&self) -> Self {
                 self.clone_box()

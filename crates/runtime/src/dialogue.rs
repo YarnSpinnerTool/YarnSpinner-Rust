@@ -160,8 +160,16 @@ impl Dialogue {
         &self.log_debug_message
     }
 
+    pub fn log_debug_message_mut(&mut self) -> &mut Logger {
+        &mut self.log_debug_message
+    }
+
     pub fn log_error_message(&self) -> &Logger {
         &self.log_error_message
+    }
+
+    pub fn log_error_message_mut(&mut self) -> &mut Logger {
+        &mut self.log_error_message
     }
 
     /// The [`OptionsHandler`] that is called when a set of options are ready to be shown to the user.
@@ -174,8 +182,16 @@ impl Dialogue {
         &self.vm.options_handler
     }
 
+    pub fn options_handler_mut(&mut self) -> &mut OptionsHandler {
+        &mut self.vm.options_handler
+    }
+
     pub fn line_handler(&self) -> &LineHandler {
         &self.vm.line_handler
+    }
+
+    pub fn line_handler_mut(&mut self) -> &mut LineHandler {
+        &mut self.vm.line_handler
     }
 
     /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
@@ -183,9 +199,17 @@ impl Dialogue {
         &self.vm.command_handler
     }
 
+    pub fn command_handler_mut(&mut self) -> &mut CommandHandler {
+        &mut self.vm.command_handler
+    }
+
     /// The [`NodeCompleteHandler`] that is called when a node is complete.
     pub fn node_complete_handler(&self) -> &NodeCompleteHandler {
         &self.vm.node_complete_handler
+    }
+
+    pub fn node_complete_handler_mut(&mut self) -> &mut NodeCompleteHandler {
+        &mut self.vm.node_complete_handler
     }
 
     /// The [`NodeStartHandler`] that is called when a node is started.
@@ -193,14 +217,26 @@ impl Dialogue {
         &self.vm.node_start_handler
     }
 
+    pub fn node_start_handler_mut(&mut self) -> &mut NodeStartHandler {
+        &mut self.vm.node_start_handler
+    }
+
     /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
     pub fn dialogue_complete_handler(&self) -> &DialogueCompleteHandler {
         &self.vm.dialogue_complete_handler
     }
 
+    pub fn dialogue_complete_handler_mut(&mut self) -> &mut DialogueCompleteHandler {
+        &mut self.vm.dialogue_complete_handler
+    }
+
     /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
     pub fn prepare_for_lines_handler(&self) -> &PrepareForLinesHandler {
         &self.vm.prepare_for_lines_handler
+    }
+
+    pub fn prepare_for_lines_handler_mut(&mut self) -> &mut PrepareForLinesHandler {
+        &mut self.vm.prepare_for_lines_handler
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
@@ -338,6 +374,7 @@ fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str)
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::RwLock;
 
     #[test]
     fn can_set_handler() {
@@ -350,6 +387,22 @@ mod tests {
     fn is_send_sync() {
         let dialogue = Dialogue::default();
         accept_send_sync(dialogue);
+    }
+
+    #[test]
+    fn can_call_continue_in_handler() {
+        let dialogue = Arc::new(RwLock::new(Dialogue::default()));
+        let dialogue_clone = dialogue.clone();
+        *dialogue.try_write().unwrap().line_handler_mut() = LineHandler(Box::new(move |_| {
+            dialogue_clone.try_write().unwrap().continue_()
+        }));
+        let dialogue_guard = dialogue.try_read().unwrap();
+        let line_handler = dialogue_guard.line_handler();
+        let line = Line {
+            id: LineId("foo".to_string()),
+            substitutions: vec![],
+        };
+        line_handler.call(line);
     }
 
     fn accept_send_sync(_: impl Send + Sync) {}
