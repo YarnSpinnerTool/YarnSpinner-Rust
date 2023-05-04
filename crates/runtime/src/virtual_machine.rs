@@ -83,4 +83,16 @@ impl VirtualMachine {
     pub(crate) fn stop(&mut self) -> &mut Self {
         self.set_execution_state(ExecutionState::Stopped)
     }
+
+    pub(crate) fn set_node(&self, node_name: &str) {
+        todo!()
+    }
+
+    pub(crate) fn set_selected_option(&self, selected_option_id: OptionId) {
+        todo!()
+    }
+
+    pub(crate) fn continue_(&self) {
+        todo!()
+    }
 }

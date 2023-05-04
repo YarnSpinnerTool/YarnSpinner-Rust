@@ -167,7 +167,7 @@ impl Dialogue {
     /// The [`OptionsHandler`] that is called when a set of options are ready to be shown to the user.
     ///
     /// The Options Handler delivers a [`Vec`] of [`DialogueOption`] to the game.
-    /// Before [`Dialogue::continue`] can be called to resume execution,
+    /// Before [`Dialogue::continue_`] can be called to resume execution,
     /// [`Dialogue::set_selected_option`] must be called to indicate which
     /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
     pub fn options_handler(&self) -> &OptionsHandler {
@@ -231,6 +231,91 @@ impl Dialogue {
             self.set_program(program);
         }
         self
+    }
+
+    /*
+    /// <summary>
+    /// Prepares the <see cref="Dialogue"/> that the user intends to start
+    /// running a node.
+    /// </summary>
+    /// <param name="startNode">The name of the node that will be run. The
+    /// node have been loaded by calling <see cref="SetProgram(Program)"/>
+    /// or <see cref="AddProgram(Program)"/>.</param>
+    /// <remarks>
+    /// <para>
+    /// After this method is called, you call <see cref="Continue"/> to
+    /// start executing it.
+    /// </para>
+    /// <para>
+    /// If <see cref="PrepareForLinesHandler"/> has been set, it may be
+    /// called when this method is invoked, as the Dialogue determines which
+    /// lines may be delivered during the <paramref name="startNode"/>
+    /// node's execution.
+    /// </para>
+    /// </remarks>
+    /// <throws cref="DialogueException">Thrown when no node named
+    /// <c>startNode</c> has been loaded.</throws>
+     */
+    /// Prepares the [`Dialogue`] that the user intends to start running a node.
+    ///
+    /// After this method is called, you call [`Dialogue::continue_`] to start executing it.
+    ///
+    /// If [`Dialogue::prepare_for_lines_handler`] has been set, it may be called when this method is invoked,
+    /// as the Dialogue determines which lines may be delivered during the `start_node` node's execution.
+    ///
+    /// ## Panics
+    ///
+    /// Panics if no node named `start_node` has been loaded.
+    pub fn set_node(&mut self, start_node: &str) {
+        self.vm.set_node(start_node);
+    }
+
+    pub fn set_start_node(&mut self) {
+        self.set_node(Self::DEFAULT_START_NODE_NAME);
+    }
+
+    /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
+    ///
+    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::continue_`] is called.
+    ///
+    /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
+    /// field in the [`DialogueOption`] that represents the user's selection.
+    ///
+    /// ## Panics
+    /// - If the Dialogue is not expecting an option to be selected.
+    /// - If the option ID is not found in the current [`OptionSet`].
+    ///
+    /// ## See Also
+    /// - [`Dialogue::continue_`]
+    /// - [`OptionsHandler`]
+    /// - [`OptionSet`]
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
+        self.vm.set_selected_option(selected_option_id);
+    }
+
+    /// Starts, or continues, execution of the current program.
+    ///
+    /// This method repeatedly executes instructions until one of the following conditions is encountered:
+    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::continue_`] is called.
+    ///  [`Dialogue::continue_`] may be called from inside the [`LineHandler`] or [`CommandHandler`], or may be called at any future time.
+    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
+    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::continue_`] is called.
+    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
+    /// - An error occurs while executing the program
+    ///
+    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
+    ///
+    /// ## See Also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    pub fn continue_(&mut self) {
+        // Cannot 'continue' an already running VM.
+        if self.vm.execution_state() != ExecutionState::Running {
+            self.vm.continue_();
+        }
     }
 }
 
