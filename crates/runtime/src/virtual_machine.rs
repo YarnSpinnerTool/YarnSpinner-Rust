@@ -3,4 +3,15 @@
 //! ## Implementation Notes
 //! The `Operand` extensions and the `Operator` enum were moved into upstream crates to make them not depend on the runtime.
 
-pub(crate) struct VirtualMachine {}
+use yarn_slinger_core::prelude::*;
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct VirtualMachine {
+    pub(crate) program: Program,
+}
+
+impl VirtualMachine {
+    pub(crate) fn reset_state(&mut self) {
+        todo!()
+    }
+}

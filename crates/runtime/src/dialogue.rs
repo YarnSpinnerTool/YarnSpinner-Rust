@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use log::*;
 use std::fmt::Debug;
 use yarn_slinger_core::prelude::*;
 
@@ -16,7 +17,24 @@ pub struct Dialogue {
     pub variable_storage: Box<dyn VariableStorage>,
 
     /// Invoked when the Dialogue needs to report debugging information.
-    pub log_debug_message: Option<Logger>,
+    pub log_debug_message: Logger,
+
+    /// Invoked when the Dialogue needs to report an error.
+    pub log_error_message: Logger,
+
+    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
+    ///
+    /// This code is used to determine how the `plural` and `ordinal`
+    /// markers determine the plural class of numbers.
+    ///
+    /// For example, the code "en-US" represents the English language as
+    /// used in the United States.
+    pub language_code: String,
+
+    /// The node that execution will start from.
+    program: Option<Program>,
+
+    vm: VirtualMachine,
 }
 
 impl Default for Dialogue {
@@ -29,12 +47,18 @@ impl Default for Dialogue {
         Self {
             library,
             variable_storage: default_variable_storage,
-            log_debug_message: Default::default(),
+            log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
+            log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
+            language_code: "en".to_string(),
+            program: Default::default(),
+            vm: Default::default(),
         }
     }
 }
 
 impl Dialogue {
+    const DEFAULT_START_NODE_NAME: &'static str = "Start";
+
     /// Initializes a new instance of the [`Dialogue`] class.
     pub fn with_variable_storage(self, variable_storage: impl VariableStorage + 'static) -> Self {
         Self {
@@ -43,11 +67,86 @@ impl Dialogue {
         }
     }
 
-    pub fn with_logger(self, logger: impl Fn(String) + Clone + 'static) -> Self {
+    pub fn with_log_debug_message(self, logger: impl Fn(String) + Clone + 'static) -> Self {
         Self {
-            log_debug_message: Some(Logger(Box::new(logger))),
+            log_debug_message: Logger(Box::new(logger)),
             ..self
         }
+    }
+
+    pub fn with_log_error_message(self, logger: impl Fn(String) + Clone + 'static) -> Self {
+        Self {
+            log_error_message: Logger(Box::new(logger)),
+            ..self
+        }
+    }
+
+    pub fn with_line_handler(self, line_handler: impl Fn(Line) + Clone + 'static) -> Self {
+        todo!()
+    }
+
+    pub fn with_options_handler(
+        self,
+        options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static,
+    ) -> Self {
+        todo!()
+    }
+
+    pub fn with_command_handler(self, command_handler: impl Fn(Command) + Clone + 'static) -> Self {
+        todo!()
+    }
+
+    /// Gets or sets the <see cref="Yarn.OptionsHandler"/> that is called
+    /// when a set of options are ready to be shown to the user.
+    ///
+    /// The Options Handler delivers an <see cref="OptionSet"/> to the game.
+    /// Before <see cref="Continue"/> can be called to resume execution,
+    /// <see cref="SetSelectedOption"/> must be called to indicate which
+    /// <see cref="OptionSet.Option"/> was selected by the user. If <see
+    /// cref="SetSelectedOption"/> is not called, an exception is thrown.
+    /// </remarks>
+
+    /// The [`OptionsHandler`] that is called when a set of options are ready to be shown to the user.
+    ///
+    /// The Options Handler delivers a [`Vec`] of [`DialogueOption`] to the game.
+    /// Before [`Dialogue::continue`] can be called to resume execution,
+    /// [`Dialogue::set_selected_option`] must be called to indicate which
+    /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
+    pub fn options_handler(&self) -> OptionsHandler {
+        todo!()
+    }
+
+    pub fn line_handler(&self) -> LineHandler {
+        todo!()
+    }
+
+    /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
+    pub fn command_handler(&self) -> CommandHandler {
+        todo!()
+    }
+
+    /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
+    pub fn is_active(&self) -> bool {
+        todo!()
+    }
+
+    pub(crate) fn program(&self) -> Option<&Program> {
+        self.program.as_ref()
+    }
+
+    pub(crate) fn program_mut(&mut self) -> Option<&mut Program> {
+        self.program.as_mut()
+    }
+
+    pub(crate) fn with_program(mut self, program: Program) -> Self {
+        self.set_program(program);
+        self
+    }
+
+    pub(crate) fn set_program(&mut self, program: Program) {
+        self.program = Some(program.clone());
+        self.vm.program = program;
+        self.vm.reset_state();
     }
 }
 
@@ -57,7 +156,9 @@ mod tests {
 
     #[test]
     fn can_set_handler() {
-        let dialogue = Dialogue::default().with_logger(|_| {});
+        let dialogue = Dialogue::default()
+            .with_log_debug_message(|_| {})
+            .with_options_handler(|_| {});
         let _cloned = dialogue.clone();
     }
 }
