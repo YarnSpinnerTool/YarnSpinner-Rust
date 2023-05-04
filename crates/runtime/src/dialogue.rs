@@ -17,10 +17,10 @@ pub struct Dialogue {
     pub variable_storage: Box<dyn VariableStorage>,
 
     /// Invoked when the Dialogue needs to report debugging information.
-    pub log_debug_message: Logger,
+    log_debug_message: Logger,
 
     /// Invoked when the Dialogue needs to report an error.
-    pub log_error_message: Logger,
+    log_error_message: Logger,
 
     /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
     ///
@@ -29,7 +29,7 @@ pub struct Dialogue {
     ///
     /// For example, the code "en-US" represents the English language as
     /// used in the United States.
-    pub language_code: String,
+    pub language_code: Option<String>,
 
     /// The node that execution will start from.
     program: Option<Program>,
@@ -49,7 +49,7 @@ impl Default for Dialogue {
             variable_storage: default_variable_storage,
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
-            language_code: "en".to_string(),
+            language_code: Default::default(),
             program: Default::default(),
             vm: Default::default(),
         }
@@ -96,15 +96,48 @@ impl Dialogue {
         todo!()
     }
 
-    /// Gets or sets the <see cref="Yarn.OptionsHandler"/> that is called
-    /// when a set of options are ready to be shown to the user.
-    ///
-    /// The Options Handler delivers an <see cref="OptionSet"/> to the game.
-    /// Before <see cref="Continue"/> can be called to resume execution,
-    /// <see cref="SetSelectedOption"/> must be called to indicate which
-    /// <see cref="OptionSet.Option"/> was selected by the user. If <see
-    /// cref="SetSelectedOption"/> is not called, an exception is thrown.
-    /// </remarks>
+    pub fn with_node_complete_handler(
+        self,
+        node_complete_handler: impl Fn(NodeName) + Clone + 'static,
+    ) -> Self {
+        todo!()
+    }
+
+    pub fn with_node_start_handler(
+        self,
+        node_start_handler: impl Fn(NodeName) + Clone + 'static,
+    ) -> Self {
+        todo!()
+    }
+
+    pub fn with_dialogue_complete_handler(
+        self,
+        dialogue_complete_handler: impl Fn() + Clone + 'static,
+    ) -> Self {
+        todo!()
+    }
+
+    pub fn with_prepare_for_lines_handler(
+        self,
+        prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static,
+    ) -> Self {
+        todo!()
+    }
+
+    pub fn with_language_code(self, language_code: impl Into<String>) -> Self {
+        Self {
+            language_code: Some(language_code.into()),
+            ..self
+        }
+    }
+
+    pub fn log_debug_message(&self) -> &Logger {
+        &self.log_debug_message
+    }
+
+    pub fn log_error_message(&self) -> &Logger {
+        &self.log_error_message
+    }
 
     /// The [`OptionsHandler`] that is called when a set of options are ready to be shown to the user.
     ///
@@ -112,16 +145,36 @@ impl Dialogue {
     /// Before [`Dialogue::continue`] can be called to resume execution,
     /// [`Dialogue::set_selected_option`] must be called to indicate which
     /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
-    pub fn options_handler(&self) -> OptionsHandler {
+    pub fn options_handler(&self) -> &OptionsHandler {
         todo!()
     }
 
-    pub fn line_handler(&self) -> LineHandler {
+    pub fn line_handler(&self) -> &LineHandler {
         todo!()
     }
 
     /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
-    pub fn command_handler(&self) -> CommandHandler {
+    pub fn command_handler(&self) -> &CommandHandler {
+        todo!()
+    }
+
+    /// The [`NodeCompleteHandler`] that is called when a node is complete.
+    pub fn node_complete_handler(&self) -> &NodeCompleteHandler {
+        todo!()
+    }
+
+    /// The [`NodeStartHandler`] that is called when a node is started.
+    pub fn node_start_handler(&self) -> &NodeStartHandler {
+        todo!()
+    }
+
+    /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
+    pub fn dialogue_complete_handler(&self) -> &DialogueCompleteHandler {
+        todo!()
+    }
+
+    /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
+    pub fn prepare_for_lines_handler(&self) -> &PrepareForLinesHandler {
         todo!()
     }
 
@@ -134,19 +187,30 @@ impl Dialogue {
         self.program.as_ref()
     }
 
-    pub(crate) fn program_mut(&mut self) -> Option<&mut Program> {
-        self.program.as_mut()
-    }
-
-    pub(crate) fn with_program(mut self, program: Program) -> Self {
+    pub(crate) fn with_new_program(mut self, program: Program) -> Self {
         self.set_program(program);
         self
     }
 
-    pub(crate) fn set_program(&mut self, program: Program) {
+    pub(crate) fn with_added_program(mut self, program: Program) -> Self {
+        self.add_program(program);
+        self
+    }
+
+    pub(crate) fn set_program(&mut self, program: Program) -> &mut Self {
         self.program = Some(program.clone());
         self.vm.program = program;
         self.vm.reset_state();
+        self
+    }
+
+    pub fn add_program(&mut self, program: Program) -> &mut Self {
+        if let Some(existing_program) = &mut self.program {
+            *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
+        } else {
+            self.set_program(program);
+        }
+        self
     }
 }
 
