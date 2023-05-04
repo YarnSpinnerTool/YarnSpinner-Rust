@@ -19,7 +19,7 @@ pub enum MarkupValue {
     Bool(bool),
 }
 
-pub(crate) trait AttributeMarkerProcessor: Debug {
+pub(crate) trait AttributeMarkerProcessor: Debug + Send + Sync {
     fn replacement_text_for_marker(&mut self, marker: &MarkupAttributeMarker) -> String;
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor>;
 }
