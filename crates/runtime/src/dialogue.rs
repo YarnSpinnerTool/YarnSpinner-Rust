@@ -303,7 +303,7 @@ impl Dialogue {
     /// need to test for that yourself.
     pub fn get_string_id_for_node(&self, node_name: impl Into<NodeName>) -> Option<String> {
         let node_name = node_name.into();
-        self.get_node_logging_errors(node_name.clone())
+        self.get_node_logging_errors(&node_name)
             .map(|_| format!("line:{}", node_name.as_ref()))
     }
 
@@ -317,7 +317,8 @@ impl Dialogue {
         &self,
         node_name: impl Into<NodeName>,
     ) -> Option<impl Iterator<Item = &str>> {
-        self.get_node_logging_errors(node_name)
+        let node_name = node_name.into();
+        self.get_node_logging_errors(&node_name)
             .map(|node| node.tags.iter().map(|s| s.as_str()))
     }
 
@@ -350,8 +351,7 @@ impl Dialogue {
         todo!()
     }
 
-    fn get_node_logging_errors(&self, node_name: impl Into<NodeName>) -> Option<&Node> {
-        let node_name = node_name.into();
+    fn get_node_logging_errors(&self, node_name: &NodeName) -> Option<&Node> {
         if let Some(program) = self.program() {
             if program.nodes.is_empty() {
                 self.log_error_message
