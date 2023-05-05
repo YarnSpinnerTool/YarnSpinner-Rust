@@ -35,6 +35,17 @@ impl From<String> for Command {
         Self(s)
     }
 }
+impl Display for Command {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<str> for Command {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NodeName(pub String);
