@@ -310,7 +310,6 @@ impl Dialogue {
     ///
     /// This method repeatedly executes instructions until one of the following conditions is encountered:
     /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::continue_`] is called.
-    ///  [`Dialogue::continue_`] may be called from inside the [`LineHandler`] or [`CommandHandler`] (TODO: May it?!), or may be called at any future time.
     /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
     /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::continue_`] is called.
     /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
@@ -324,6 +323,12 @@ impl Dialogue {
     /// - [`CommandHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
+    ///
+    /// ## Implementation Notes
+    ///
+    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::continue_`]. Because of the borrow checker,
+    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
+    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
     pub fn continue_(&mut self) {
         // Cannot 'continue' an already running VM.
         if self.vm.execution_state() != ExecutionState::Running {
@@ -367,7 +372,8 @@ mod tests {
     }
 
     #[test]
-    fn can_call_continue_in_handler() {
+    #[should_panic]
+    fn cannot_call_continue_in_handler() {
         let dialogue = Arc::new(RwLock::new(Dialogue::default()));
         let dialogue_clone = dialogue.clone();
         *dialogue.try_write().unwrap().line_handler_mut() = LineHandler(Box::new(move |_| {
