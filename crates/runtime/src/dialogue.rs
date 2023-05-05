@@ -349,8 +349,9 @@ impl Dialogue {
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
         if let Some(program) = self.program() {
-            if program.nodes.len() == 0 {
-                self.log_error_message.call(format!("No nodes are loaded"));
+            if program.nodes.is_empty() {
+                self.log_error_message
+                    .call("No nodes are loaded".to_owned());
                 None
             } else if let Some(node) = program.nodes.get(node_name) {
                 Some(node)
@@ -399,7 +400,6 @@ fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str)
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::RwLock;
 
     #[test]
     fn can_set_handler() {

@@ -13,7 +13,6 @@ mod execution_state;
 mod state;
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub(crate) struct VirtualMachine {
     pub(crate) program: Option<Program>,
     pub(crate) line_handler: LineHandler,
@@ -23,7 +22,6 @@ pub(crate) struct VirtualMachine {
     pub(crate) node_complete_handler: NodeCompleteHandler,
     pub(crate) dialogue_complete_handler: DialogueCompleteHandler,
     pub(crate) prepare_for_lines_handler: PrepareForLinesHandler,
-    pub(crate) current_node: Node,
     state: State,
     execution_state: ExecutionState,
 }
@@ -53,14 +51,12 @@ impl Default for VirtualMachine {
                 info!("Preparing for lines: {:?}", line_ids);
             })),
             program: Default::default(),
-            current_node: Default::default(),
             state: Default::default(),
             execution_state: Default::default(),
         }
     }
 }
 
-#[allow(dead_code)]
 impl VirtualMachine {
     pub(crate) fn reset_state(&mut self) {
         self.state = State::default();
@@ -84,11 +80,11 @@ impl VirtualMachine {
         self.set_execution_state(ExecutionState::Stopped)
     }
 
-    pub(crate) fn set_node(&self, node_name: &str) {
+    pub(crate) fn set_node(&self, _node_name: &str) {
         todo!()
     }
 
-    pub(crate) fn set_selected_option(&self, selected_option_id: OptionId) {
+    pub(crate) fn set_selected_option(&self, _selected_option_id: OptionId) {
         todo!()
     }
 
