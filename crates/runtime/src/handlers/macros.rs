@@ -32,6 +32,14 @@ macro_rules! impl_function_newtype_inner {
             }
         }
 
+        impl<T> From<T> for $struct_name
+            where T: $fun($($param)?) + Clone + Send + Sync + 'static,
+        {
+            fn from(f: T) -> Self {
+                Self(Box::new(f))
+            }
+        }
+
         impl Clone for Box<dyn $trait_name + Send + Sync> {
             fn clone(&self) -> Self {
                 self.clone_box()

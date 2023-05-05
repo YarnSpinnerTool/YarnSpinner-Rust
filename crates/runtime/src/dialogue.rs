@@ -79,7 +79,7 @@ impl Dialogue {
         mut self,
         logger: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.log_debug_message = Logger(Box::new(logger));
+        self.log_debug_message = logger.into();
         self
     }
 
@@ -87,7 +87,7 @@ impl Dialogue {
         mut self,
         logger: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.log_error_message = Logger(Box::new(logger));
+        self.log_error_message = logger.into();
         self
     }
 
@@ -95,7 +95,7 @@ impl Dialogue {
         mut self,
         line_handler: impl Fn(Line) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.line_handler = LineHandler(Box::new(line_handler));
+        self.vm.line_handler = line_handler.into();
         self
     }
 
@@ -109,7 +109,7 @@ impl Dialogue {
         mut self,
         options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.options_handler = OptionsHandler(Box::new(options_handler));
+        self.vm.options_handler = options_handler.into();
         self
     }
 
@@ -118,7 +118,7 @@ impl Dialogue {
         mut self,
         command_handler: impl Fn(Command) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.command_handler = CommandHandler(Box::new(command_handler));
+        self.vm.command_handler = command_handler.into();
         self
     }
 
@@ -127,7 +127,7 @@ impl Dialogue {
         mut self,
         node_complete_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.node_complete_handler = NodeCompleteHandler(Box::new(node_complete_handler));
+        self.vm.node_complete_handler = node_complete_handler.into();
         self
     }
 
@@ -136,7 +136,7 @@ impl Dialogue {
         mut self,
         node_start_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.node_start_handler = NodeStartHandler(Box::new(node_start_handler));
+        self.vm.node_start_handler = node_start_handler.into();
         self
     }
 
@@ -145,8 +145,7 @@ impl Dialogue {
         mut self,
         dialogue_complete_handler: impl Fn() + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.dialogue_complete_handler =
-            DialogueCompleteHandler(Box::new(dialogue_complete_handler));
+        self.vm.dialogue_complete_handler = dialogue_complete_handler.into();
         self
     }
 
@@ -155,8 +154,7 @@ impl Dialogue {
         mut self,
         prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.prepare_for_lines_handler =
-            PrepareForLinesHandler(Box::new(prepare_for_lines_handler));
+        self.vm.prepare_for_lines_handler = prepare_for_lines_handler.into();
         self
     }
 
