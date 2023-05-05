@@ -6,45 +6,18 @@
 //! - Additional newtypes were introduced for strings.
 
 use crate::prelude::*;
-use std::fmt::{Debug, Display, Formatter};
-use std::ops::{Deref, DerefMut};
 #[macro_use]
-mod macros;
+mod impl_handler_macro;
+use crate::string_newtype;
 
-/// A command, sent from the [`Dialogue`] to the game.
-///
-/// You do not create instances of this struct yourself. They are created by the [`Dialogue`] during program execution.
-///
-/// ## See also
-/// [`CommandHandler`]
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Command(pub String);
-impl Deref for Command {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl DerefMut for Command {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-impl From<String> for Command {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-impl Display for Command {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AsRef<str> for Command {
-    fn as_ref(&self) -> &str {
-        self.0.as_ref()
-    }
+string_newtype! {
+    /// A command, sent from the [`Dialogue`] to the game.
+    ///
+    /// You do not create instances of this struct yourself. They are created by the [`Dialogue`] during program execution.
+    ///
+    /// ## See also
+    /// [`CommandHandler`]
+    pub struct Command(pub String);
 }
 
 impl_handler! {
