@@ -102,4 +102,8 @@ impl VirtualMachine {
             .as_ref()
             .map(|node_name| node_name.0.as_str())
     }
+
+    pub(crate) fn unload_programs(&mut self) {
+        self.program = None
+    }
 }

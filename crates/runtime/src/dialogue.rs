@@ -304,12 +304,56 @@ impl Dialogue {
     /// see if the string table contains an entry with the line ID. You will
     /// need to test for that yourself.
     pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
+        self.get_node_logging_errors(node_name)
+            .map(|_| format!("line:{node_name}"))
+    }
+
+    /// Returns the tags for the node `node_name`.
+    ///
+    /// The tags for a node are defined by setting the `tags` header in
+    /// the node's source code. This header must be a space-separated list
+    ///
+    /// Returns [`None`] if the node is not present in the program.
+    pub fn get_tags_for_node(&self, node_name: &str) -> Option<impl Iterator<Item = &str>> {
+        self.get_node_logging_errors(node_name)
+            .map(|node| node.tags.iter().map(|s| s.as_str()))
+    }
+
+    /// Gets a value indicating whether a specified node exists in the
+    /// Program.
+    pub fn node_exists(&self, node_name: &str) -> bool {
+        // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
+        if let Some(program) = self.program() {
+            program.nodes.contains_key(node_name)
+        } else {
+            self.log_error_message
+                .call("Tried to call NodeExists, but no program has been loaded".to_owned());
+            false
+        }
+    }
+
+    pub fn analyse(&mut self) {
+        // ## Implementation notes
+        // It would be more ergonomic to not expose this and call it automatically.
+        // We should probs remove this from the API.
+        // Call it when running the first `continue_` after adding a program or something.
+        todo!()
+    }
+
+    pub fn parse_markup(&mut self) {
+        // ## Implementation notes
+        // It would be more ergonomic to not expose this and call it automatically.
+        // We should probs remove this from the API.
+        // Pass the MarkupResult directly into the LineHandler
+    }
+
+    fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
         if let Some(program) = self.program() {
             if program.nodes.len() == 0 {
                 self.log_error_message.call(format!("No nodes are loaded"));
                 None
-            } else if program.nodes.contains_key(node_name) {
-                Some(format!("line:{node_name}"))
+            } else if let Some(node) = program.nodes.get(node_name) {
+                Some(node)
             } else {
                 self.log_error_message
                     .call(format!("No node named {node_name}"));
@@ -320,6 +364,11 @@ impl Dialogue {
                 .call("No program is loaded".to_owned());
             None
         }
+    }
+
+    /// Unloads all nodes from the Dialogue.
+    pub fn unload_all(&mut self) {
+        self.vm.unload_programs()
     }
 
     fn program(&self) -> Option<&Program> {
