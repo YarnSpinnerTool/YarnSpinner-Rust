@@ -47,7 +47,6 @@ impl AsRef<str> for Command {
     }
 }
 
-
 impl_handler! {
     /// Represents a method that receives diagnostic messages and error information from a [`Dialogue`].
     ///
