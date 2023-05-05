@@ -96,7 +96,7 @@ impl VirtualMachine {
         self.state
             .current_node_name
             .as_ref()
-            .map(|node_name| node_name.0.as_str())
+            .map(|node_name| node_name.0.as_ref())
     }
 
     pub(crate) fn unload_programs(&mut self) {

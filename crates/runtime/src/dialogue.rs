@@ -45,10 +45,10 @@ impl Default for Dialogue {
             let storage_two = variable_storage.clone();
             Library::standard_library()
                 .with_function("visited", move |node: String| -> bool {
-                    is_node_visited(storage_one.as_ref(), &node)
+                    is_node_visited(storage_one.as_ref(), node)
                 })
                 .with_function("visited_count", move |node: String| -> f32 {
-                    get_node_visit_count(storage_two.as_ref(), &node)
+                    get_node_visit_count(storage_two.as_ref(), node)
                 })
         };
 
@@ -301,9 +301,10 @@ impl Dialogue {
     /// of the contents of the string table, this method does not test to
     /// see if the string table contains an entry with the line ID. You will
     /// need to test for that yourself.
-    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
-        self.get_node_logging_errors(node_name)
-            .map(|_| format!("line:{node_name}"))
+    pub fn get_string_id_for_node(&self, node_name: impl Into<NodeName>) -> Option<String> {
+        let node_name = node_name.into();
+        self.get_node_logging_errors(node_name.clone())
+            .map(|_| format!("line:{}", node_name.as_ref()))
     }
 
     /// Returns the tags for the node `node_name`.
@@ -312,17 +313,20 @@ impl Dialogue {
     /// the node's source code. This header must be a space-separated list
     ///
     /// Returns [`None`] if the node is not present in the program.
-    pub fn get_tags_for_node(&self, node_name: &str) -> Option<impl Iterator<Item = &str>> {
+    pub fn get_tags_for_node(
+        &self,
+        node_name: impl Into<NodeName>,
+    ) -> Option<impl Iterator<Item = &str>> {
         self.get_node_logging_errors(node_name)
             .map(|node| node.tags.iter().map(|s| s.as_str()))
     }
 
     /// Gets a value indicating whether a specified node exists in the
     /// Program.
-    pub fn node_exists(&self, node_name: &str) -> bool {
+    pub fn node_exists(&self, node_name: impl Into<NodeName>) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
         if let Some(program) = self.program() {
-            program.nodes.contains_key(node_name)
+            program.nodes.contains_key(node_name.into().as_ref())
         } else {
             self.log_error_message
                 .call("Tried to call NodeExists, but no program has been loaded".to_owned());
@@ -346,13 +350,14 @@ impl Dialogue {
         todo!()
     }
 
-    fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
+    fn get_node_logging_errors(&self, node_name: impl Into<NodeName>) -> Option<&Node> {
+        let node_name = node_name.into();
         if let Some(program) = self.program() {
             if program.nodes.is_empty() {
                 self.log_error_message
                     .call("No nodes are loaded".to_owned());
                 None
-            } else if let Some(node) = program.nodes.get(node_name) {
+            } else if let Some(node) = program.nodes.get(node_name.as_ref()) {
                 Some(node)
             } else {
                 self.log_error_message
@@ -380,16 +385,19 @@ impl Dialogue {
     }
 }
 
-fn is_node_visited(variable_storage: &dyn VariableStorage, node_name: &str) -> bool {
-    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
+fn is_node_visited(variable_storage: &dyn VariableStorage, node_name: impl Into<NodeName>) -> bool {
+    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name.into().as_ref()) {
         count > 0.0
     } else {
         false
     }
 }
 
-fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str) -> f32 {
-    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
+fn get_node_visit_count(
+    variable_storage: &dyn VariableStorage,
+    node_name: impl Into<NodeName>,
+) -> f32 {
+    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name.into().as_ref()) {
         count
     } else {
         0.0

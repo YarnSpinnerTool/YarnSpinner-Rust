@@ -6,7 +6,8 @@
 //! - Additional newtypes were introduced for strings.
 
 use crate::prelude::*;
-use std::fmt::{Debug, Formatter};
+use std::borrow::Cow;
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Deref, DerefMut};
 #[macro_use]
 mod macros;
@@ -30,11 +31,16 @@ impl DerefMut for Command {
         &mut self.0
     }
 }
+impl From<String> for Command {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NodeName(pub String);
+pub struct NodeName(pub Cow<'static, str>);
 impl Deref for NodeName {
-    type Target = String;
+    type Target = Cow<'static, str>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -42,6 +48,25 @@ impl Deref for NodeName {
 impl DerefMut for NodeName {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+impl<T> From<T> for NodeName
+where
+    T: Into<Cow<'static, str>>,
+{
+    fn from(s: T) -> Self {
+        Self(s.into())
+    }
+}
+impl Display for NodeName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.to_string())
+    }
+}
+
+impl AsRef<str> for NodeName {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
     }
 }
 
