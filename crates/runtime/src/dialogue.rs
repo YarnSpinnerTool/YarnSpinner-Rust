@@ -125,7 +125,7 @@ impl Dialogue {
     /// The [`NodeCompleteHandler`] that is called when a node is complete.
     pub fn with_node_complete_handler(
         mut self,
-        node_complete_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
+        node_complete_handler: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.node_complete_handler = node_complete_handler.into();
         self
@@ -134,7 +134,7 @@ impl Dialogue {
     /// The [`NodeStartHandler`] that is called when a node is started.
     pub fn with_node_start_handler(
         mut self,
-        node_start_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
+        node_start_handler: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.vm.node_start_handler = node_start_handler.into();
         self

@@ -47,37 +47,6 @@ impl AsRef<str> for Command {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NodeName(pub String);
-impl Deref for NodeName {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl DerefMut for NodeName {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl From<String> for NodeName {
-    fn from(s: String) -> Self {
-        Self(s.into())
-    }
-}
-
-impl Display for NodeName {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AsRef<str> for NodeName {
-    fn as_ref(&self) -> &str {
-        self.0.as_ref()
-    }
-}
 
 impl_handler! {
     /// Represents a method that receives diagnostic messages and error information from a [`Dialogue`].
@@ -119,6 +88,7 @@ impl_handler! {
     pub struct CommandHandler(pub CommandHandlerFn: FnMut(Command));
 
     /// Represents the method that is called when the [`Dialogue`] reaches the end of a node.
+    /// The param is the node name.
     ///
     /// This method may be called multiple times over the course of code execution. A node being complete does not necessarily represent the end of the conversation.
     ///
@@ -128,9 +98,10 @@ impl_handler! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: FnMut(NodeName));
+    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: FnMut(String));
 
     /// Represents the method that is called when the [`Dialogue`] begins executing a node.
+    /// The param is the node name.
     ///
     /// ## See also
     /// - [`LineHandler`]
@@ -138,7 +109,7 @@ impl_handler! {
     /// - [`CommandHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct NodeStartHandler(pub NodeStartHandlerFn: FnMut(NodeName));
+    pub struct NodeStartHandler(pub NodeStartHandlerFn: FnMut(String));
 
     /// Represents the method that is called when the dialogue has reached its end, and no more code remains to be run.
     ///

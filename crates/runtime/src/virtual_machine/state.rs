@@ -8,7 +8,7 @@ use yarn_slinger_core::prelude::*;
 #[allow(dead_code)]
 pub(crate) struct State {
     /// The name of the node that we're currently in.
-    pub(crate) current_node_name: Option<NodeName>,
+    pub(crate) current_node_name: Option<String>,
 
     /// The instruction number in the current node.
     pub(crate) program_counter: usize,

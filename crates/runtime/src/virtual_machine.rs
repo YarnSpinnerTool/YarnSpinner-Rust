@@ -93,10 +93,7 @@ impl VirtualMachine {
     }
 
     pub(crate) fn current_node(&self) -> Option<&str> {
-        self.state
-            .current_node_name
-            .as_ref()
-            .map(|node_name| node_name.0.as_ref())
+        self.state.current_node_name.as_deref()
     }
 
     pub(crate) fn unload_programs(&mut self) {
