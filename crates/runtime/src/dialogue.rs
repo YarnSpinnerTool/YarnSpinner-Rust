@@ -345,6 +345,7 @@ impl Dialogue {
         // It would be more ergonomic to not expose this and call it automatically.
         // We should probs remove this from the API.
         // Pass the MarkupResult directly into the LineHandler
+        todo!()
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
