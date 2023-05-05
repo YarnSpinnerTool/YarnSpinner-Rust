@@ -117,7 +117,7 @@ impl_function_newtype! {
     pub struct NodeStartHandler(pub NodeStartHandlerFn: FnMut(NodeName))
 }
 
-impl_function_newtype_with_no_params! {
+impl_function_newtype! {
     /// Represents the method that is called when the dialogue has reached its end, and no more code remains to be run.
     ///
     /// ## See also
