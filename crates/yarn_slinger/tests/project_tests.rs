@@ -6,7 +6,7 @@
 //!   This is only used in a certain section of the Unity project importer.
 
 use crate::test_base::*;
-use yarn_slinger_compiler::prelude::*;
+use yarn_slinger::prelude::*;
 
 mod test_base;
 

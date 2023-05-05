@@ -1,8 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TestBase.cs#L49>
 
 use std::path::PathBuf;
-use yarn_slinger_compiler::prelude::*;
-use yarn_slinger_runtime::prelude::*;
+use yarn_slinger::prelude::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct TestBase {
