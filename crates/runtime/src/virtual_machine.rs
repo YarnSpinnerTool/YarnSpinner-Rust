@@ -84,8 +84,29 @@ impl VirtualMachine {
         todo!()
     }
 
-    pub(crate) fn set_selected_option(&self, _selected_option_id: OptionId) {
-        todo!()
+    pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) {
+        assert_ne!(ExecutionState::WaitingOnOptionSelection, self.execution_state, "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
+                This method should only be called after the Dialogue is waiting for the user to select an option.");
+
+        assert!(
+            selected_option_id.0 < self.state.current_options.len(),
+            "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {}.",
+            self.state.current_options.len() - 1
+        );
+
+        // We now know what number option was selected; push the
+        // corresponding node name to the stack.
+        let destination_node = self.state.current_options[selected_option_id.0]
+            .destination_node
+            .clone();
+        self.state.push(destination_node);
+
+        // We no longer need the accumulated list of options; clear it
+        // so that it's ready for the next one
+        self.state.current_options.clear();
+
+        // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
+        self.execution_state = ExecutionState::WaitingForContinue;
     }
 
     pub(crate) fn continue_(&self) {
