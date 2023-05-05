@@ -6,7 +6,7 @@ use std::{collections::VecDeque, fmt::Debug};
 ///
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1>
 #[derive(Debug, Clone)]
-pub struct Queue<T: Debug + Clone>(pub(crate) VecDeque<T>);
+pub struct Queue<T: Debug + Clone>(pub VecDeque<T>);
 
 impl<T: Debug + Clone> Queue<T> {
     pub fn enqueue(&mut self, value: T) {
@@ -22,7 +22,7 @@ impl<T: Debug + Clone> Queue<T> {
 ///
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.stack-1>
 #[derive(Debug, Clone)]
-pub struct Stack<T: Debug + Clone>(pub(crate) VecDeque<T>);
+pub struct Stack<T: Debug + Clone>(pub VecDeque<T>);
 
 impl<T: Debug + Clone> Stack<T> {
     pub fn push(&mut self, value: T) {

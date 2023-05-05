@@ -1,3 +1,4 @@
+pub mod collections;
 pub mod function_wrappers;
 mod generated;
 mod internal_value;
