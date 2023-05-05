@@ -99,6 +99,12 @@ impl Dialogue {
         self
     }
 
+    /// The [`OptionsHandler`] that is called when a set of options are ready to be shown to the user.
+    ///
+    /// The Options Handler delivers a [`Vec`] of [`DialogueOption`] to the game.
+    /// Before [`Dialogue::continue_`] can be called to resume execution,
+    /// [`Dialogue::set_selected_option`] must be called to indicate which
+    /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
     pub fn with_options_handler(
         mut self,
         options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static + Send + Sync,
@@ -107,6 +113,7 @@ impl Dialogue {
         self
     }
 
+    /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
     pub fn with_command_handler(
         mut self,
         command_handler: impl Fn(Command) + Clone + 'static + Send + Sync,
@@ -115,6 +122,7 @@ impl Dialogue {
         self
     }
 
+    /// The [`NodeCompleteHandler`] that is called when a node is complete.
     pub fn with_node_complete_handler(
         mut self,
         node_complete_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
@@ -123,6 +131,7 @@ impl Dialogue {
         self
     }
 
+    /// The [`NodeStartHandler`] that is called when a node is started.
     pub fn with_node_start_handler(
         mut self,
         node_start_handler: impl Fn(NodeName) + Clone + 'static + Send + Sync,
@@ -131,6 +140,7 @@ impl Dialogue {
         self
     }
 
+    /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
     pub fn with_dialogue_complete_handler(
         mut self,
         dialogue_complete_handler: impl Fn() + Clone + 'static + Send + Sync,
@@ -140,6 +150,7 @@ impl Dialogue {
         self
     }
 
+    /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
     pub fn with_prepare_for_lines_handler(
         mut self,
         prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static + Send + Sync,
@@ -156,89 +167,6 @@ impl Dialogue {
         }
     }
 
-    pub fn log_debug_message(&self) -> &Logger {
-        &self.log_debug_message
-    }
-
-    pub fn log_debug_message_mut(&mut self) -> &mut Logger {
-        &mut self.log_debug_message
-    }
-
-    pub fn log_error_message(&self) -> &Logger {
-        &self.log_error_message
-    }
-
-    pub fn log_error_message_mut(&mut self) -> &mut Logger {
-        &mut self.log_error_message
-    }
-
-    /// The [`OptionsHandler`] that is called when a set of options are ready to be shown to the user.
-    ///
-    /// The Options Handler delivers a [`Vec`] of [`DialogueOption`] to the game.
-    /// Before [`Dialogue::continue_`] can be called to resume execution,
-    /// [`Dialogue::set_selected_option`] must be called to indicate which
-    /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
-    pub fn options_handler(&self) -> &OptionsHandler {
-        &self.vm.options_handler
-    }
-
-    pub fn options_handler_mut(&mut self) -> &mut OptionsHandler {
-        &mut self.vm.options_handler
-    }
-
-    pub fn line_handler(&self) -> &LineHandler {
-        &self.vm.line_handler
-    }
-
-    pub fn line_handler_mut(&mut self) -> &mut LineHandler {
-        &mut self.vm.line_handler
-    }
-
-    /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
-    pub fn command_handler(&self) -> &CommandHandler {
-        &self.vm.command_handler
-    }
-
-    pub fn command_handler_mut(&mut self) -> &mut CommandHandler {
-        &mut self.vm.command_handler
-    }
-
-    /// The [`NodeCompleteHandler`] that is called when a node is complete.
-    pub fn node_complete_handler(&self) -> &NodeCompleteHandler {
-        &self.vm.node_complete_handler
-    }
-
-    pub fn node_complete_handler_mut(&mut self) -> &mut NodeCompleteHandler {
-        &mut self.vm.node_complete_handler
-    }
-
-    /// The [`NodeStartHandler`] that is called when a node is started.
-    pub fn node_start_handler(&self) -> &NodeStartHandler {
-        &self.vm.node_start_handler
-    }
-
-    pub fn node_start_handler_mut(&mut self) -> &mut NodeStartHandler {
-        &mut self.vm.node_start_handler
-    }
-
-    /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
-    pub fn dialogue_complete_handler(&self) -> &DialogueCompleteHandler {
-        &self.vm.dialogue_complete_handler
-    }
-
-    pub fn dialogue_complete_handler_mut(&mut self) -> &mut DialogueCompleteHandler {
-        &mut self.vm.dialogue_complete_handler
-    }
-
-    /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
-    pub fn prepare_for_lines_handler(&self) -> &PrepareForLinesHandler {
-        &self.vm.prepare_for_lines_handler
-    }
-
-    pub fn prepare_for_lines_handler_mut(&mut self) -> &mut PrepareForLinesHandler {
-        &mut self.vm.prepare_for_lines_handler
-    }
-
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
         self.vm.execution_state() != ExecutionState::Stopped
@@ -249,7 +177,7 @@ impl Dialogue {
         self
     }
 
-    pub fn with_added_program(mut self, program: Program) -> Self {
+    pub fn with_additional_program(mut self, program: Program) -> Self {
         self.add_program(program);
         self
     }
@@ -369,23 +297,6 @@ mod tests {
     fn is_send_sync() {
         let dialogue = Dialogue::default();
         accept_send_sync(dialogue);
-    }
-
-    #[test]
-    #[should_panic]
-    fn cannot_call_continue_in_handler() {
-        let dialogue = Arc::new(RwLock::new(Dialogue::default()));
-        let dialogue_clone = dialogue.clone();
-        *dialogue.try_write().unwrap().line_handler_mut() = LineHandler(Box::new(move |_| {
-            dialogue_clone.try_write().unwrap().continue_()
-        }));
-        let dialogue_guard = dialogue.try_read().unwrap();
-        let line_handler = dialogue_guard.line_handler();
-        let line = Line {
-            id: LineId("foo".to_string()),
-            substitutions: vec![],
-        };
-        line_handler.call(line);
     }
 
     fn accept_send_sync(_: impl Send + Sync) {}
