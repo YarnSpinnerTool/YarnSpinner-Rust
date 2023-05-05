@@ -80,6 +80,7 @@ impl Dialogue {
         logger: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.log_debug_message = logger.into();
+        self.vm.log_debug_message = self.log_debug_message.clone();
         self
     }
 
@@ -88,6 +89,7 @@ impl Dialogue {
         logger: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.log_error_message = logger.into();
+        self.vm.log_error_message = self.log_error_message.clone();
         self
     }
 
@@ -288,7 +290,7 @@ impl Dialogue {
     /// If [`Dialogue::continue_`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<&str> {
-        self.vm.current_node()
+        self.vm.current_node_name()
     }
 
     /// Returns the string ID that contains the original, uncompiled source

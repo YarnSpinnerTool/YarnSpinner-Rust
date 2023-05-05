@@ -16,6 +16,9 @@ mod state;
 pub(crate) struct VirtualMachine {
     pub(crate) program: Option<Program>,
     pub(crate) line_handler: LineHandler,
+
+    pub(crate) log_debug_message: Logger,
+    pub(crate) log_error_message: Logger,
     pub(crate) options_handler: OptionsHandler,
     pub(crate) command_handler: CommandHandler,
     pub(crate) node_start_handler: NodeStartHandler,
@@ -24,11 +27,14 @@ pub(crate) struct VirtualMachine {
     pub(crate) prepare_for_lines_handler: PrepareForLinesHandler,
     state: State,
     execution_state: ExecutionState,
+    current_node: Option<Node>,
 }
 
 impl Default for VirtualMachine {
     fn default() -> Self {
         Self {
+            log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
+            log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
             line_handler: LineHandler(Box::new(|line| {
                 info!("Delivering line: {:?}", line);
             })),
@@ -53,6 +59,7 @@ impl Default for VirtualMachine {
             program: Default::default(),
             state: Default::default(),
             execution_state: Default::default(),
+            current_node: Default::default(),
         }
     }
 }
@@ -109,15 +116,63 @@ impl VirtualMachine {
         self.execution_state = ExecutionState::WaitingForContinue;
     }
 
-    pub(crate) fn continue_(&self) {
-        todo!()
+    /// Resumes execution.
+    pub(crate) fn continue_(&mut self) {
+        self.assert_can_continue();
+        if self.execution_state == ExecutionState::DeliveringContent {
+            // We were delivering a line, option set, or command, and
+            // the client has called Continue() on us. We're still
+            // inside the stack frame of the client callback, so to
+            // avoid recursion, we'll note that our state has changed
+            // back to Running; when we've left the callback, we'll
+            // continue executing instructions.
+            self.execution_state = ExecutionState::Running;
+            return;
+        }
+
+        self.execution_state = ExecutionState::Running;
+
+        // Execute instructions until something forces us to stop
+        while self.execution_state == ExecutionState::Running {
+            let current_node = self.current_node.as_ref().unwrap();
+            let current_instruction = &current_node.instructions[self.state.program_counter];
+            self.run_instruction(current_instruction);
+
+            self.state.program_counter += 1;
+
+            if self.state.program_counter < current_node.instructions.len() {
+                continue;
+            }
+
+            self.node_complete_handler.call(current_node.name.clone());
+            self.execution_state = ExecutionState::Stopped;
+            self.dialogue_complete_handler.call();
+            self.log_debug_message.call("Run complete.".to_owned());
+        }
     }
 
-    pub(crate) fn current_node(&self) -> Option<&str> {
+    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't
+    fn assert_can_continue(&self) {
+        assert!(
+            self.current_node.is_some(),
+            "Cannot continue running dialogue. No node has been selected."
+        );
+        assert_eq!(
+            ExecutionState::WaitingOnOptionSelection,
+            self.execution_state,
+            "Cannot continue running dialogue. Still waiting on option selection."
+        );
+    }
+
+    pub(crate) fn current_node_name(&self) -> Option<&str> {
         self.state.current_node_name.as_deref()
     }
 
     pub(crate) fn unload_programs(&mut self) {
         self.program = None
+    }
+
+    fn run_instruction(&self, _current_instruction: &Instruction) {
+        todo!()
     }
 }
