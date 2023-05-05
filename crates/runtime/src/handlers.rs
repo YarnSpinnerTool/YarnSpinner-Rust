@@ -55,7 +55,7 @@ impl_function_newtype! {
     pub struct Logger(pub LoggerFn: Fn(String))
 }
 
-impl_function_newtype_mut! {
+impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] delivers a [`Line`].
     ///
     /// ## See also
@@ -67,7 +67,7 @@ impl_function_newtype_mut! {
     pub struct LineHandler(pub LineHandlerFn: FnMut(Line))
 }
 
-impl_function_newtype_mut! {
+impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] delivers an [`OptionSet`].
     ///
     /// ## See also
@@ -79,7 +79,7 @@ impl_function_newtype_mut! {
     pub struct OptionsHandler(pub OptionsHandlerFn: FnMut(Vec<DialogueOption>))
 }
 
-impl_function_newtype_mut! {
+impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] delivers a [`Command`].
     ///
     /// ## See also
@@ -91,7 +91,7 @@ impl_function_newtype_mut! {
     pub struct CommandHandler(pub CommandHandlerFn: FnMut(Command))
 }
 
-impl_function_newtype_mut! {
+impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] reaches the end of a node.
     ///
     /// This method may be called multiple times over the course of code execution. A node being complete does not necessarily represent the end of the conversation.
@@ -105,7 +105,7 @@ impl_function_newtype_mut! {
     pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: FnMut(NodeName))
 }
 
-impl_function_newtype_mut! {
+impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] begins executing a node.
     ///
     /// ## See also
@@ -129,7 +129,7 @@ impl_function_newtype_with_no_params! {
     pub struct DialogueCompleteHandler(pub DialogueCompleteHandlerFn: FnMut())
 }
 
-impl_function_newtype_mut! {
+impl_function_newtype! {
     /// Represents the method that is called when the dialogue anticipates that it will deliver lines.
     ///
     /// This method should begin preparing to run the lines. For example, if a game delivers dialogue via voice-over,
