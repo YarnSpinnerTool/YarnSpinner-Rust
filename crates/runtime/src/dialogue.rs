@@ -138,7 +138,7 @@ impl Dialogue {
         mut self,
         node_start_handler: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.node_start_handler = node_start_handler.into();
+        self.vm.node_start_handler = Some(node_start_handler.into());
         self
     }
 
@@ -147,7 +147,7 @@ impl Dialogue {
         mut self,
         dialogue_complete_handler: impl Fn() + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.dialogue_complete_handler = dialogue_complete_handler.into();
+        self.vm.dialogue_complete_handler = Some(dialogue_complete_handler.into());
         self
     }
 
@@ -156,7 +156,7 @@ impl Dialogue {
         mut self,
         prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.prepare_for_lines_handler = prepare_for_lines_handler.into();
+        self.vm.prepare_for_lines_handler = Some(prepare_for_lines_handler.into());
         self
     }
 

@@ -45,3 +45,9 @@ impl From<String> for LineId {
         Self(s)
     }
 }
+
+impl AsRef<str> for LineId {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}

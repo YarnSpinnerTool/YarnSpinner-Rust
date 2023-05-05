@@ -32,6 +32,50 @@ impl From<bool> for Operand {
     }
 }
 
+impl TryInto<String> for Operand {
+    type Error = ();
+
+    fn try_into(self) -> Result<String, Self::Error> {
+        match self.value {
+            Some(operand::Value::StringValue(s)) => Ok(s),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryInto<f32> for Operand {
+    type Error = ();
+
+    fn try_into(self) -> Result<f32, Self::Error> {
+        match self.value {
+            Some(operand::Value::FloatValue(f)) => Ok(f),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryInto<usize> for Operand {
+    type Error = ();
+
+    fn try_into(self) -> Result<usize, Self::Error> {
+        match self.value {
+            Some(operand::Value::FloatValue(f)) => Ok(f as usize),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryInto<bool> for Operand {
+    type Error = ();
+
+    fn try_into(self) -> Result<bool, Self::Error> {
+        match self.value {
+            Some(operand::Value::BoolValue(b)) => Ok(b),
+            _ => Err(()),
+        }
+    }
+}
+
 impl Program {
     /// Creates a new Program by merging multiple Programs together.
     ///
