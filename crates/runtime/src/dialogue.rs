@@ -189,7 +189,7 @@ impl Dialogue {
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
-        if let Some(existing_program) = &mut self.vm.program {
+        if let Some(existing_program) = self.program_mut() {
             *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
         } else {
             self.set_program(program);
@@ -207,12 +207,14 @@ impl Dialogue {
     /// ## Panics
     ///
     /// Panics if no node named `start_node` has been loaded.
-    pub fn set_node(&mut self, start_node: &str) {
+    pub fn set_node(&mut self, start_node: &str) -> &mut Self {
         self.vm.set_node(start_node);
+        self
     }
 
-    pub fn set_start_node(&mut self) {
+    pub fn set_start_node(&mut self) -> &mut Self {
         self.set_node(Self::DEFAULT_START_NODE_NAME);
+        self
     }
 
     /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
@@ -230,8 +232,9 @@ impl Dialogue {
     /// - [`Dialogue::continue_`]
     /// - [`OptionsHandler`]
     /// - [`OptionSet`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
         self.vm.set_selected_option(selected_option_id);
+        self
     }
 
     /// Starts, or continues, execution of the current program.
@@ -257,11 +260,74 @@ impl Dialogue {
     /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::continue_`]. Because of the borrow checker,
     /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
     /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
-    pub fn continue_(&mut self) {
+    pub fn continue_(&mut self) -> &mut Self {
         // Cannot 'continue' an already running VM.
         if self.vm.execution_state() != ExecutionState::Running {
             self.vm.continue_();
         }
+        self
+    }
+
+    /// Immediately stops the [`Dialogue`]
+    ///
+    /// The [`DialogueCompleteHandler`] will not be called if the
+    /// dialogue is ended this way.
+    pub fn stop(&mut self) -> &mut Self {
+        self.vm.stop();
+        self
+    }
+
+    /// Gets the names of the nodes in the currently loaded Program, if there is one.
+    pub fn node_names(&self) -> Option<impl Iterator<Item = &str>> {
+        self.vm
+            .program
+            .as_ref()
+            .map(|program| program.nodes.keys().map(|s| s.as_str()))
+    }
+
+    /// Gets the name of the node that this Dialogue is currently executing.
+    ///
+    /// If [`Dialogue::continue_`] has never been called, this value
+    /// will be [`None`].
+    pub fn current_node(&self) -> Option<&str> {
+        self.vm.current_node()
+    }
+
+    /// Returns the string ID that contains the original, uncompiled source
+    /// text for a node.
+    ///
+    /// A node's source text will only be present in the string table if its
+    /// `tags` header contains `rawText`.
+    ///
+    /// Because the [`Dialogue`] API is designed to be unaware
+    /// of the contents of the string table, this method does not test to
+    /// see if the string table contains an entry with the line ID. You will
+    /// need to test for that yourself.
+    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
+        if let Some(program) = self.program() {
+            if program.nodes.len() == 0 {
+                self.log_error_message.call(format!("No nodes are loaded"));
+                None
+            } else if program.nodes.contains_key(node_name) {
+                Some(format!("line:{node_name}"))
+            } else {
+                self.log_error_message
+                    .call(format!("No node named {node_name}"));
+                None
+            }
+        } else {
+            self.log_error_message
+                .call("No program is loaded".to_owned());
+            None
+        }
+    }
+
+    fn program(&self) -> Option<&Program> {
+        self.vm.program.as_ref()
+    }
+
+    fn program_mut(&mut self) -> Option<&mut Program> {
+        self.vm.program.as_mut()
     }
 }
 

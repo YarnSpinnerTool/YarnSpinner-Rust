@@ -95,4 +95,11 @@ impl VirtualMachine {
     pub(crate) fn continue_(&self) {
         todo!()
     }
+
+    pub(crate) fn current_node(&self) -> Option<&str> {
+        self.state
+            .current_node_name
+            .as_ref()
+            .map(|node_name| node_name.0.as_str())
+    }
 }
