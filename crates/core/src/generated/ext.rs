@@ -1,6 +1,9 @@
 //! Contains extensions to generated types that in the original implementation are sprinkled around the repo via partial classes
 
+use crate::prelude::instruction::OpCode;
 use crate::prelude::*;
+use std::fmt::Display;
+use thiserror::Error;
 
 impl From<String> for Operand {
     fn from(s: String) -> Self {
@@ -59,6 +62,11 @@ impl TryInto<usize> for Operand {
 
     fn try_into(self) -> Result<usize, Self::Error> {
         match self.value {
+            // [sic] TODO: we only have float operands, which is
+            // unpleasant. we should make 'int' operands a
+            // valid type, but doing that implies that the
+            // language differentiates between floats and
+            // ints itself. something to think about.
             Some(operand::Value::FloatValue(f)) => Ok(f as usize),
             _ => Err(()),
         }
@@ -73,6 +81,42 @@ impl TryInto<bool> for Operand {
             Some(operand::Value::BoolValue(b)) => Ok(b),
             _ => Err(()),
         }
+    }
+}
+
+impl TryFrom<i32> for OpCode {
+    type Error = InvalidOpCodeError;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(OpCode::JumpTo),
+            1 => Ok(OpCode::Jump),
+            2 => Ok(OpCode::RunLine),
+            3 => Ok(OpCode::RunCommand),
+            4 => Ok(OpCode::AddOption),
+            5 => Ok(OpCode::ShowOptions),
+            6 => Ok(OpCode::PushString),
+            7 => Ok(OpCode::PushFloat),
+            8 => Ok(OpCode::PushBool),
+            9 => Ok(OpCode::PushNull),
+            10 => Ok(OpCode::JumpIfFalse),
+            11 => Ok(OpCode::Pop),
+            12 => Ok(OpCode::CallFunc),
+            13 => Ok(OpCode::PushVariable),
+            14 => Ok(OpCode::StoreVariable),
+            15 => Ok(OpCode::Stop),
+            16 => Ok(OpCode::RunNode),
+            _ => Err(InvalidOpCodeError(value)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Error)]
+pub struct InvalidOpCodeError(pub i32);
+
+impl Display for InvalidOpCodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?} is not a valid OpCode", self.0)
     }
 }
 

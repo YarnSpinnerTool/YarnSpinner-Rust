@@ -24,6 +24,15 @@ pub struct Line {
     pub substitutions: Vec<String>,
 }
 
+impl Line {
+    pub fn new(id: LineId) -> Self {
+        Self {
+            id,
+            substitutions: Default::default(),
+        }
+    }
+}
+
 string_newtype! {
     pub struct LineId(pub String);
 }

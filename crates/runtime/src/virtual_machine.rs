@@ -126,9 +126,9 @@ impl VirtualMachine {
             // line or add an option; these are the two instructions
             // that will signal a line can appear to the player
             .filter_map(|instruction| {
+                let opcode: OpCode = instruction.opcode.try_into().unwrap();
                 [OpCode::RunLine, OpCode::AddOption]
-                    .map(Into::into)
-                    .contains(&instruction.opcode)
+                    .contains(&opcode)
                     .then(|| {
                         // Both RunLine and AddOption have the string ID
                         // they want to show as their first operand, so
@@ -184,7 +184,7 @@ impl VirtualMachine {
 
         // Execute instructions until something forces us to stop
         while self.execution_state == ExecutionState::Running {
-            let current_node = self.current_node.as_ref().unwrap();
+            let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
             self.run_instruction(current_instruction);
 
@@ -224,7 +224,100 @@ impl VirtualMachine {
         self.program = None
     }
 
-    fn run_instruction(&self, _current_instruction: &Instruction) {
-        todo!()
+    fn run_instruction(&mut self, instruction: &Instruction) {
+        let opcode: OpCode = instruction.opcode.try_into().unwrap();
+        match opcode {
+            OpCode::JumpTo => {
+                // Jumps to a named label
+                let label_name: String = instruction.operands[0].clone().try_into().unwrap();
+                self.state.program_counter = self.find_instruction_point_for_label(&label_name);
+            }
+            OpCode::Jump => {
+                // Jumps to a label whose name is on the stack.
+                let jump_destination: String =
+                    self.state.peek().unwrap().clone().try_into().unwrap();
+                self.state.program_counter =
+                    self.find_instruction_point_for_label(&jump_destination);
+            }
+            OpCode::RunLine => {
+                // Looks up a string from the string table and passes it to the client as a line
+
+                let string_id: String = instruction.operands[0].clone().try_into().unwrap();
+
+                // The second operand, if provided (compilers prior
+                // to v1.1 don't include it), indicates the number
+                // of expressions in the line. We need to pop these
+                // values off the stack and deliver them to the
+                // line handler.
+                assert!(instruction.operands.len() >= 2, "The Yarn script provided was compiled using an older compiler. \
+                    Please recompile it using the latest version of either Yarn Slinger or Yarn Spinner.");
+
+                let expression_count: usize = instruction.operands[1].clone().try_into().unwrap();
+                let strings = (0..expression_count)
+                    .rev()
+                    .map(|_| {
+                        let value = self.state.pop().unwrap();
+                        value.try_into().unwrap()
+                    })
+                    .collect();
+
+                let line = Line {
+                    id: string_id.into(),
+                    substitutions: strings,
+                };
+
+                // Suspend execution, because we're about to deliver content
+                self.execution_state = ExecutionState::DeliveringContent;
+
+                self.line_handler.call(line);
+
+                // Implementation note:
+                // In the original, this is only done if `execution_state` is still `DeliveringContent`,
+                // because the line handler is allowed to call `continue_`. However, we disallow that because of
+                // how this violates borrow checking. So, we'll always wait at this point instead until the user
+                // called `continue_` themselves outside of the line handler.
+                self.execution_state = ExecutionState::WaitingForContinue;
+            }
+            OpCode::RunCommand => {}
+            OpCode::AddOption => {}
+            OpCode::ShowOptions => {}
+            OpCode::PushString => {}
+            OpCode::PushFloat => {}
+            OpCode::PushBool => {}
+            OpCode::PushNull => {}
+            OpCode::JumpIfFalse => {}
+            OpCode::Pop => {}
+            OpCode::CallFunc => {}
+            OpCode::PushVariable => {}
+            OpCode::StoreVariable => {}
+            OpCode::Stop => {}
+            OpCode::RunNode => {}
+        }
+    }
+
+    /// Looks up the instruction number for a named label in the current node.
+    ///
+    /// # Panics
+    ///
+    /// Panics in the following cases:
+    /// - The label is not found in the current node
+    /// - The current node is unset
+    /// - The found instruction point is negative
+    fn find_instruction_point_for_label(&self, label_name: &str) -> usize {
+        self.current_node
+            .as_ref()
+            .unwrap()
+            .labels
+            .get(label_name)
+            .copied()
+            .unwrap_or_else(|| {
+                panic!(
+                    "Unknown label {} in node {}",
+                    label_name,
+                    self.state.current_node_name.as_ref().unwrap()
+                )
+            })
+            .try_into()
+            .unwrap()
     }
 }
