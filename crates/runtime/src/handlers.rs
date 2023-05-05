@@ -70,17 +70,15 @@ impl AsRef<str> for NodeName {
     }
 }
 
-impl_function_newtype! {
+impl_handler! {
     /// Represents a method that receives diagnostic messages and error information from a [`Dialogue`].
     ///
     /// The text that this delegate receives may be output to a console, or sent to a log.
     ///
     /// ## Params
     /// - The text that should be logged.
-    pub struct Logger(pub LoggerFn: Fn(String))
-}
+    pub struct Logger(pub LoggerFn: Fn(String));
 
-impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] delivers a [`Line`].
     ///
     /// ## See also
@@ -89,10 +87,8 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct LineHandler(pub LineHandlerFn: FnMut(Line))
-}
+    pub struct LineHandler(pub LineHandlerFn: FnMut(Line));
 
-impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] delivers an [`OptionSet`].
     ///
     /// ## See also
@@ -101,10 +97,8 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct OptionsHandler(pub OptionsHandlerFn: FnMut(Vec<DialogueOption>))
-}
+    pub struct OptionsHandler(pub OptionsHandlerFn: FnMut(Vec<DialogueOption>));
 
-impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] delivers a [`Command`].
     ///
     /// ## See also
@@ -113,10 +107,8 @@ impl_function_newtype! {
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct CommandHandler(pub CommandHandlerFn: FnMut(Command))
-}
+    pub struct CommandHandler(pub CommandHandlerFn: FnMut(Command));
 
-impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] reaches the end of a node.
     ///
     /// This method may be called multiple times over the course of code execution. A node being complete does not necessarily represent the end of the conversation.
@@ -127,10 +119,8 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: FnMut(NodeName))
-}
+    pub struct NodeCompleteHandler(pub NodeCompleteHandlerFn: FnMut(NodeName));
 
-impl_function_newtype! {
     /// Represents the method that is called when the [`Dialogue`] begins executing a node.
     ///
     /// ## See also
@@ -139,10 +129,8 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeCompleteHandler`]
     /// - [`DialogueCompleteHandler`]
-    pub struct NodeStartHandler(pub NodeStartHandlerFn: FnMut(NodeName))
-}
+    pub struct NodeStartHandler(pub NodeStartHandlerFn: FnMut(NodeName));
 
-impl_function_newtype! {
     /// Represents the method that is called when the dialogue has reached its end, and no more code remains to be run.
     ///
     /// ## See also
@@ -151,10 +139,8 @@ impl_function_newtype! {
     /// - [`CommandHandler`]
     /// - [`NodeStartHandler`]
     /// - [`NodeCompleteHandler`]
-    pub struct DialogueCompleteHandler(pub DialogueCompleteHandlerFn: FnMut())
-}
+    pub struct DialogueCompleteHandler(pub DialogueCompleteHandlerFn: FnMut());
 
-impl_function_newtype! {
     /// Represents the method that is called when the dialogue anticipates that it will deliver lines.
     ///
     /// This method should begin preparing to run the lines. For example, if a game delivers dialogue via voice-over,
@@ -164,7 +150,7 @@ impl_function_newtype! {
     /// Not every line indicated in the provided `LineId`s may end up actually running.
     ///
     /// This method may be called any number of times during a dialogue session.
-    pub struct PrepareForLinesHandler(pub PrepareForLinesHandlerFn: FnMut(Vec<LineId>))
+    pub struct PrepareForLinesHandler(pub PrepareForLinesHandlerFn: FnMut(Vec<LineId>));
 }
 
 #[cfg(test)]

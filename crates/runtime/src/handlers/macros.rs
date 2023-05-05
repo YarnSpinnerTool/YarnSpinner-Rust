@@ -1,19 +1,27 @@
-macro_rules! impl_function_newtype {
-    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: Fn($($param:ty)?))) => {
-        impl_function_newtype_inner! {
+macro_rules! impl_handler {
+    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: Fn($($param:ty)?));) => {
+        impl_handler_inner! {
             $(#[$attr])*
             pub struct $struct_name(pub $trait_name: Fn($($param)?)),
         }
     };
-    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: FnMut($($param:ty)?))) => {
-        impl_function_newtype_inner! {
+    ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: FnMut($($param:ty)?));) => {
+        impl_handler_inner! {
             $(#[$attr])*
             pub struct $struct_name(pub $trait_name: FnMut($($param)?)), mut
         }
     };
+    ($($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: $fun:ident($($param:ty)?));)+) => {
+        $(
+            impl_handler! {
+                $(#[$attr])*
+                pub struct $struct_name(pub $trait_name: $fun($($param)?));
+            }
+        )+
+    };
 }
 
-macro_rules! impl_function_newtype_inner {
+macro_rules! impl_handler_inner {
     ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: $fun:ident($($param:ty)?)), $($mutable:ident)?) => {
         $(#[$attr])*
         #[derive(Debug, Clone)]
