@@ -1,4 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TestBase.cs>
+//!
+//! ## Implementations notes
+//! Methods used for upgrade testing were not ported since we don't offer any upgrade functionality.
+//! This includes `DirectorySources`.
+//!
+//! Methods for tests we didn't port are also naturally not included. This includes `FormatParseTreeAsText`
 
 // Allowed because this is a common file and not all tests use the methods provided.
 // Everything is actually used, but the checker doesn't recognize it because all integration test files

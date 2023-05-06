@@ -1,4 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
+//!
+//! ## Implementation notes
+//!
+//! Because Rust has no concept of a current global culture setting,
+//! the test `TestCompilationShouldNotBeCultureDependent` was omitted.
 
 use std::collections::HashMap;
 use test_base::prelude::*;
