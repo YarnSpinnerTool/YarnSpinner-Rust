@@ -7,7 +7,7 @@ use antlr_rust::parser::ParserNodeType;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use yarn_slinger_core::prelude::InternalValue;
+use yarn_slinger_core::prelude::*;
 
 /// A visitor that visits any valid constant value, and returns a [`InternalValue`].
 /// Currently only supports terminals, not expressions,

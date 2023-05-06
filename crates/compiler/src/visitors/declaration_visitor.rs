@@ -7,7 +7,7 @@ use crate::visitors::constant_value_visitor::ConstantValueVisitor;
 use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
-use yarn_slinger_core::types::*;
+use yarn_slinger_core::prelude::{types::*, *};
 
 /// A visitor that extracts variable declarations from a parse tree.
 /// After visiting an entire parse tree for a file, the

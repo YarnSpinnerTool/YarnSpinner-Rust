@@ -1,6 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorListener.cs>
 
-use crate::output::Position;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContextType;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::prelude::*;
@@ -11,11 +10,12 @@ use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::ParseTreeListener;
-pub use diagnostic::*;
+pub(crate) use diagnostic_ext::*;
 use std::cell::RefCell;
 use std::rc::Rc;
+use yarn_slinger_core::prelude::*;
 
-mod diagnostic;
+mod diagnostic_ext;
 pub(crate) struct LexerErrorListener {
     pub(crate) diagnostics: RefCell<Vec<Diagnostic>>,
     file_name: String,

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use yarn_slinger_core::prelude::*;
-use yarn_slinger_core::types::{Type, TypeFormat};
+use yarn_slinger_core::types::TypeFormat;
 
 pub(crate) fn add_initial_value_registrations(
     mut state: CompilationIntermediate,

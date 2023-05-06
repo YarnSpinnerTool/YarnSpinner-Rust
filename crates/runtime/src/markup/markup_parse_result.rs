@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/MarkupParseResult.cs>
 
 use std::fmt::Debug;
-use yarn_slinger_compiler::prelude::Position;
+use yarn_slinger_core::prelude::*;
 
 /// The result of parsing a line of marked-up text.
 ///
@@ -42,6 +42,7 @@ impl MarkupParseResult {
 }
 
 /// Represents a range of text in a marked-up string.
+#[derive(Debug, Clone)]
 pub(crate) struct MarkupAttribute {
     opening_marker: MarkupAttributeMarker, // TODO: Check if this is sufficient or if we should flatten that?!
     length: usize,
@@ -74,6 +75,7 @@ impl Clone for Box<dyn AttributeMarkerProcessor> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct MarkupAttributeMarker {
     name: String,
     /// The position of the marker.

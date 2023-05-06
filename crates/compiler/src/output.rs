@@ -1,15 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationResult.cs>
 
-use crate::listeners::*;
-pub use crate::output::{debug_info::*, declaration::*, string_info::*};
+pub use self::{debug_info::*, string_info::*};
 use crate::prelude::StringTableManager;
 use std::collections::HashMap;
 use std::fmt::Display;
 use thiserror::Error;
-use yarn_slinger_core::prelude::Program;
+use yarn_slinger_core::prelude::*;
 
 mod debug_info;
-mod declaration;
 mod string_info;
 
 /// The result of a compilation.

@@ -13,8 +13,8 @@ use better_any::TidExt;
 use std::cmp::Ordering;
 use std::ops::Deref;
 use std::rc::Rc;
-use yarn_slinger_core::prelude::Operator;
-use yarn_slinger_core::types::{SubTypeOf, Type, TypeFormat};
+use yarn_slinger_core::prelude::*;
+use yarn_slinger_core::types::{SubTypeOf, TypeFormat};
 
 impl<'input> TypeCheckVisitor<'input> {
     /// ok so what do we actually need to do in here?

@@ -1,13 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
 use crate::compilation_steps::*;
-use crate::listeners::*;
 use crate::output::*;
 use crate::prelude::*;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 pub use compilation_job::*;
 use std::collections::{HashMap, HashSet};
+use yarn_slinger_core::prelude::*;
 
 pub(crate) mod antlr_rust_ext;
 pub mod compilation_job;

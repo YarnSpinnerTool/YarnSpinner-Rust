@@ -1,12 +1,8 @@
-use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
 use annotate_snippets::{
     display_list::{DisplayList, FormatOptions},
     snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
 };
-use antlr_rust::rule_context::CustomRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
 use std::fmt::{Display, Formatter};
 use std::ops::Range;
 
@@ -50,24 +46,6 @@ impl Diagnostic {
             severity: Default::default(),
             start_line: Default::default(),
         }
-    }
-
-    pub(crate) fn with_parser_context<'input, T>(
-        self,
-        ctx: &T,
-        token_stream: &ActualTokenStream<'input>,
-    ) -> Self
-    where
-        T: ParserRuleContextExt<'input>,
-    <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
-        Into<String>
-    {
-        let lines_above_and_below_offending_line = 2;
-        let lines_around = ctx.get_lines_around(token_stream, lines_above_and_below_offending_line);
-        let range = ctx.range();
-        self.with_range(range)
-            .with_context(lines_around.lines)
-            .with_start_line(lines_around.first_line)
     }
 
     pub fn with_file_name(mut self, file_name: impl Into<String>) -> Self {

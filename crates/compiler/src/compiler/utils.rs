@@ -12,8 +12,8 @@ use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::Parser;
 use std::collections::HashSet;
 use std::rc::Rc;
-use yarn_slinger_core::prelude::Library;
-use yarn_slinger_core::types::{FunctionType, Type};
+use yarn_slinger_core::prelude::*;
+use yarn_slinger_core::types::FunctionType;
 
 pub(crate) fn get_line_id_tag<'a>(
     hashtag_contexts: &[Rc<HashtagContextAll<'a>>],
