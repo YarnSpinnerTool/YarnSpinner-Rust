@@ -40,6 +40,7 @@ impl VirtualMachine {
     ) -> Self {
         let dialogue_data = ReadOnlyDialogue {
             program: Arc::new(RwLock::new(None)),
+            current_node_name: Arc::new(RwLock::new(None)),
             log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
             log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
         };
@@ -108,6 +109,10 @@ impl VirtualMachine {
             program.nodes.get(node_name).cloned()
         };
         self.reset_state();
+        {
+            let mut current_node_name = self.dialogue_data.current_node_name.write().unwrap();
+            *current_node_name = Some(node_name.to_owned());
+        }
         let current_node = self
             .current_node
             .as_mut()
@@ -232,10 +237,9 @@ impl VirtualMachine {
         // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
     }
 
-    pub(crate) fn current_node_name(&self) -> Option<&str> {
-        // ## Implementation note:
-        // The original uses an own member for this, but that is actually redundant, so we do it like this
-        self.current_node.as_ref().map(|node| node.name.as_str())
+    pub(crate) fn current_node_name(&self) -> Option<String> {
+        let current_node_name = self.dialogue_data.current_node_name.read().unwrap();
+        current_node_name.clone()
     }
 
     pub(crate) fn unload_programs(&mut self) {
@@ -482,7 +486,7 @@ impl VirtualMachine {
             }
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
-                let current_node_name = self.current_node_name().unwrap().to_owned();
+                let current_node_name = self.current_node_name().unwrap();
                 self.node_complete_handler.call(current_node_name);
                 if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
                     dialogue_complete_handler.call();

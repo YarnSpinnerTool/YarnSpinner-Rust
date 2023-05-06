@@ -168,7 +168,8 @@ impl Dialogue {
         }
     }
 
-    pub fn get_readonly_access(&self) -> ReadOnlyDialogue {
+    /// Retrieves a read-only view of the [`Dialogue`] that is safe to be passed to handlers.
+    pub fn get_read_only(&self) -> ReadOnlyDialogue {
         self.dialogue_data.clone()
     }
 
@@ -218,14 +219,6 @@ impl Dialogue {
             }
         }
         self
-    }
-
-    /// Gets the name of the node that this Dialogue is currently executing.
-    ///
-    /// If [`Dialogue::continue_`] has never been called, this value
-    /// will be [`None`].
-    pub fn current_node(&self) -> Option<&str> {
-        self.vm.current_node_name()
     }
 
     /// Prepares the [`Dialogue`] that the user intends to start running a node.

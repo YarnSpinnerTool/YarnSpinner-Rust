@@ -61,7 +61,7 @@ impl Default for TestBase {
                     let id = line.id;
                     let string_table = string_table.read().unwrap();
                     let string_info = string_table.get(&id).unwrap();
-                    let line_number = string_info.line_number;
+                    let _line_number = string_info.line_number;
                     // Can't go on because a handler cannot access the dialogue.
                 })
         };
@@ -122,9 +122,11 @@ impl TestBase {
     }
 
     pub fn get_composed_text_for_line(&self, line: Line) -> String {
-        let string_info = self.string_table.get(&line.id).unwrap();
+        let string_table = self.string_table.read().unwrap();
+        let string_info = string_table.get(&line.id).unwrap();
         let substitutions = line.substitutions.iter().map(|s| s.as_str());
-        let substituted_text = Dialogue::expand_substitutions(&string_info.text, substitutions);
+        let substituted_text =
+            ReadOnlyDialogue::expand_substitutions(&string_info.text, substitutions);
         self.dialogue.parse_markup(&substituted_text)
     }
 }

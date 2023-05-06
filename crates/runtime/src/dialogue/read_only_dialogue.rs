@@ -2,9 +2,12 @@ use crate::prelude::*;
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
+/// A read-only view of a [`Dialogue`]. Represents the methods that are okay to be called from handlers.
+/// Since this type is `Send + Sync`, you can get a copy with [`Dialogue::get_read_only`] and `move` it into a handler.
 #[derive(Debug, Clone)]
 pub struct ReadOnlyDialogue {
     pub(crate) program: Arc<RwLock<Option<Program>>>,
+    pub(crate) current_node_name: Arc<RwLock<Option<String>>>,
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
 }
@@ -76,6 +79,14 @@ impl ReadOnlyDialogue {
             .fold(text.to_owned(), |text, (i, substitution)| {
                 text.replace(&format!("{{{i}}}",), substitution)
             })
+    }
+
+    /// Gets the name of the node that this Dialogue is currently executing.
+    ///
+    /// If [`Dialogue::continue_`] has never been called, this value
+    /// will be [`None`].
+    pub fn current_node(&self) -> Option<String> {
+        self.current_node_name.read().unwrap().clone()
     }
 
     pub fn analyse(&self) -> ! {
