@@ -323,7 +323,7 @@ impl VirtualMachine {
 
                 let index = self.state.current_options.len();
                 let node_name = instruction.read_operand(1);
-                // Implementation note:
+                // ## Implementation note:
                 // The original calculates the ID in the `ShowOptions` opcode,
                 // but this way is cleaner because it allows us to store a `DialogueOption` instead of a bunch of values in a big tuple.
                 self.state.current_options.push(DialogueOption {
@@ -333,7 +333,29 @@ impl VirtualMachine {
                     is_available: line_condition_passed,
                 });
             }
-            OpCode::ShowOptions => {}
+            OpCode::ShowOptions => {
+                // If we have no options to show, immediately stop.
+                if self.state.current_options.is_empty() {
+                    self.execution_state = ExecutionState::Stopped;
+                    if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
+                        dialogue_complete_handler.call();
+                    }
+                    return;
+                }
+
+                // We can't continue until our client tell us which option to pick
+                self.execution_state = ExecutionState::WaitingOnOptionSelection;
+
+                // Pass the options set to the client, as well as a
+                // delegate for them to call when the user has made
+                // a selection
+                self.options_handler
+                    .call(self.state.current_options.clone());
+                // ## Implementation note:
+
+                // The original checks `WaitingForContinue` here, but we can't mutate the dialogue in handlers,
+                // so there's no need to check.
+            }
             OpCode::PushString => {}
             OpCode::PushFloat => {}
             OpCode::PushBool => {}
