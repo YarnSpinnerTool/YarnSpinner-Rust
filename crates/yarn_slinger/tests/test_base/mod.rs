@@ -51,12 +51,12 @@ impl Default for TestBase {
             .with_log_debug_message(|msg| {
                 println!("{}", msg);
             });
-        let read_only_dialogue = dialogue.get_read_only();
 
         let dialogue = {
             let runtime_errors_cause_panic = runtime_errors_cause_panic.clone();
             let string_table = string_table.clone();
             let test_plan = test_plan.clone();
+            let read_only_dialogue = dialogue.get_read_only();
 
             dialogue
                 .with_log_error_message(move |msg| {
@@ -66,7 +66,6 @@ impl Default for TestBase {
                     }
                 })
                 .with_line_handler(move |line| {
-                    let string_table = string_table.read().unwrap();
                     let text = get_composed_text_for_line_with_no_self(
                         &line,
                         &string_table,
@@ -74,16 +73,64 @@ impl Default for TestBase {
                     );
                     println!("Line: {text}");
                     let mut test_plan = test_plan.write().unwrap();
-                    if let Some(test_plan) = test_plan.as_mut() {
-                        test_plan.next();
+                    let Some(test_plan) = test_plan.as_mut() else {
+                        return;
+                    };
+                    test_plan.next();
 
-                        assert_eq!(ExpectedStepType::Line, test_plan.next_expected_step, "Received line {text}, but was expecting a {:?}", test_plan.next_expected_step);
-                        let Some(StepValue::String(expected_text)) = &test_plan.next_step_value else {
+                    assert_eq!(
+                        ExpectedStepType::Line,
+                        test_plan.next_expected_step,
+                        "Received line {text}, but was expecting a {:?}",
+                        test_plan.next_expected_step
+                    );
+                    let Some(StepValue::String(expected_text)) = &test_plan.next_step_value else {
                             unreachable!()
                         };
-                        assert_eq!(expected_text, &text);
-                    }
+                    assert_eq!(expected_text, &text);
                 })
+        };
+        let dialogue = {
+            let test_plan = test_plan.clone();
+            let read_only_dialogue = dialogue.get_read_only();
+            let string_table = string_table.clone();
+
+            dialogue.with_options_handler(move |options| {
+                println!("Options:");
+
+                let options: Vec<_> = options
+                    .into_iter()
+                    .map(|option| {
+                        let text = get_composed_text_for_line_with_no_self(
+                            &option.line,
+                            &string_table,
+                            &read_only_dialogue,
+                        );
+                        ProcessedOption {
+                            line: text,
+                            enabled: option.is_available,
+                        }
+                    })
+                    .collect();
+                for option in &options {
+                    println!(" - {} (available: {})", option.line, option.enabled);
+                }
+                let mut test_plan = test_plan.write().unwrap();
+                let Some(test_plan) = test_plan.as_mut() else {
+                    return;
+                };
+
+                test_plan.next();
+                assert_eq!(
+                    ExpectedStepType::Option,
+                    test_plan.next_expected_step,
+                    "Received {} options, but wasn't expecting them (was expecting {:?})",
+                    options.len(),
+                    test_plan.next_expected_step
+                );
+
+                assert_eq!(test_plan.next_expected_options, options);
+            })
         };
         let storage = dialogue.variable_storage();
         Self {
@@ -114,6 +161,18 @@ impl TestBase {
 
         self.dialogue.continue_();
         while self.dialogue.is_active() {
+            let test_plan = self.test_plan.read().unwrap();
+            if let Some(test_plan) = test_plan.as_ref() {
+                if test_plan.next_expected_step == ExpectedStepType::Option {
+                    if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
+                        self.dialogue
+                            .set_selected_option(OptionId::construct_for_debugging(selection));
+                    } else {
+                        self.dialogue
+                            .set_selected_option(OptionId::construct_for_debugging(0));
+                    }
+                }
+            }
             self.dialogue.continue_();
         }
     }
@@ -146,8 +205,7 @@ impl TestBase {
     }
 
     pub fn get_composed_text_for_line(&self, line: &Line) -> String {
-        let string_table = self.string_table.read().unwrap();
-        get_composed_text_for_line_with_no_self(line, &string_table, &self.dialogue)
+        get_composed_text_for_line_with_no_self(line, &self.string_table, &self.dialogue)
     }
 
     pub fn test_plan(&self) -> impl Deref<Target = Option<TestPlan>> + '_ {
@@ -161,9 +219,10 @@ impl TestBase {
 
 fn get_composed_text_for_line_with_no_self(
     line: &Line,
-    string_table: &HashMap<LineId, StringInfo>,
+    string_table: &RwLock<HashMap<LineId, StringInfo>>,
     dialogue: &ReadOnlyDialogue,
 ) -> String {
+    let string_table = string_table.read().unwrap();
     let string_info = string_table.get(&line.id).unwrap();
     let substitutions = line.substitutions.iter().map(|s| s.as_str());
     let substituted_text = ReadOnlyDialogue::expand_substitutions(&string_info.text, substitutions);

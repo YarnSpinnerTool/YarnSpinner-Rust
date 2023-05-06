@@ -33,3 +33,13 @@ pub struct DialogueOption {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OptionId(pub(crate) usize);
+
+impl OptionId {
+    /// Constructs a new `OptionId` from the given value.
+    /// A user is supposed to use the `OptionId`s constructed by the [`Dialogue`] and not create their own.
+    ///
+    /// So, only use this method for debugging purposes.
+    pub fn construct_for_debugging(value: usize) -> Self {
+        Self(value)
+    }
+}

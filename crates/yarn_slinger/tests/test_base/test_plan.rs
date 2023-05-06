@@ -7,14 +7,14 @@ use std::path::Path;
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct TestPlan {
     pub next_expected_step: ExpectedStepType,
-    pub next_expected_options: Vec<ExpectedOption>,
+    pub next_expected_options: Vec<ProcessedOption>,
     pub next_step_value: Option<StepValue>,
     steps: Vec<Step>,
     current_test_plan_step: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExpectedOption {
+pub struct ProcessedOption {
     pub line: String,
     pub enabled: bool,
 }
@@ -56,7 +56,7 @@ impl TestPlan {
                     panic!("Expected option line to be a string");
                 };
 
-                self.next_expected_options.push(ExpectedOption {
+                self.next_expected_options.push(ProcessedOption {
                     line,
                     enabled: current_step.expect_option_enabled,
                 });
