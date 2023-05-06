@@ -3,6 +3,7 @@
 use reader::*;
 use std::fmt::Debug;
 use std::str::FromStr;
+
 mod reader;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

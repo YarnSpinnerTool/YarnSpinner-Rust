@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TestPlan.cs>
 
-use crate::test_base::prelude::*;
+use crate::prelude::*;
 use std::fs;
 use std::path::Path;
 

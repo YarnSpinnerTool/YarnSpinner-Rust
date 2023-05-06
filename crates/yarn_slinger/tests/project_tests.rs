@@ -5,7 +5,7 @@
 //! - AddTagsToLines: Tests functionality that, quote: "Given Yarn source code, adds line tags to the ends of all lines that need one and do not already have one."
 //!   This is only used in a certain section of the Unity project importer.
 
-use crate::test_base::*;
+use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
 mod test_base;
