@@ -268,7 +268,7 @@ fn test_function_signatures() {
     let mut test_base = TestBase::default();
     test_base
         .dialogue
-        .library
+        .library_mut()
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
@@ -281,7 +281,7 @@ fn test_function_signatures() {
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
         let compilation_job = CompilationJob::from_test_source(source)
-            .with_library(test_base.dialogue.library.clone());
+            .with_library(test_base.dialogue.library().clone());
         let result = compile(compilation_job).unwrap_pretty();
 
         // The variable '$bool' should have an implicit declaration. The
@@ -309,7 +309,7 @@ fn test_operators_are_type_checked() {
             );
 
             let compilation_job = CompilationJob::from_test_source(&source)
-                .with_library(test_base.dialogue.library.clone());
+                .with_library(test_base.dialogue.library().clone());
             let result = compile(compilation_job).unwrap_pretty();
 
             assert!(result
@@ -325,7 +325,7 @@ fn test_failing_function_signatures() {
     let mut test_base = TestBase::default();
     test_base
         .dialogue
-        .library
+        .library_mut()
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
@@ -356,7 +356,7 @@ fn test_failing_function_signatures() {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
         let compilation_job = CompilationJob::from_test_source(&failing_source)
-            .with_library(test_base.dialogue.library.clone());
+            .with_library(test_base.dialogue.library().clone());
         let result = compile(compilation_job).unwrap_err();
         println!("{}", result);
 
