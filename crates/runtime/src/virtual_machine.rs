@@ -224,6 +224,8 @@ impl VirtualMachine {
     }
 
     pub(crate) fn current_node_name(&self) -> Option<&str> {
+        // ## Implementation note:
+        // The original uses an own member for this, but that is actually redundant, so we do it like this
         self.current_node.as_ref().map(|node| node.name.as_str())
     }
 
