@@ -1,5 +1,6 @@
+pub mod collections;
 pub mod function_wrappers;
-mod generated;
+pub mod generated;
 mod internal_value;
 mod library;
 mod operator;

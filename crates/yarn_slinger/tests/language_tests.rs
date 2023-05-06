@@ -2,8 +2,7 @@
 
 use crate::test_base::*;
 use std::collections::HashMap;
-use yarn_slinger_compiler::prelude::*;
-use yarn_slinger_core::prelude::*;
+use yarn_slinger::prelude::*;
 
 mod test_base;
 

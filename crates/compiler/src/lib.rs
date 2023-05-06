@@ -1,4 +1,3 @@
-pub mod collections;
 pub(crate) mod compilation_steps;
 pub(crate) mod compiler;
 pub(crate) mod error_strategy;
@@ -16,14 +15,12 @@ pub use crate::compiler::Result;
 pub mod prelude {
     pub(crate) use crate::{
         compiler::antlr_rust_ext::*, compiler::utils::*, compiler::CompilationIntermediate,
-        string_table_manager::*, token_ext::*,
+        file_parse_result::*, parser::*, string_table_manager::*, token_ext::*,
     };
     pub use crate::{
         compiler::compilation_job::*,
         compiler::compile,
-        file_parse_result::*,
         listeners::{Diagnostic, DiagnosticSeverity},
         output::*,
-        parser::*,
     };
 }
