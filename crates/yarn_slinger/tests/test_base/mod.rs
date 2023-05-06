@@ -1,9 +1,19 @@
-//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TestBase.cs#L49>
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TestBase.cs>
+
+// Allowed because this is a common file and not all tests use the methods provided.
+// Everything is actually used, but the checker doesn't recognize it because all integration test files
+// are separately compiled as their own crate.
+#![allow(dead_code)]
 
 use std::path::PathBuf;
 use yarn_slinger::prelude::*;
 
+mod step;
 mod test_plan;
+
+pub mod prelude {
+    pub use crate::test_base::{step::*, test_plan::*, *};
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct TestBase {
@@ -37,7 +47,6 @@ pub fn test_data_path() -> PathBuf {
     .collect()
 }
 
-#[allow(dead_code)] // Allowed because this is a common file and not all tests use this method.
 pub fn space_demo_scripts_path() -> PathBuf {
     let test_data_path = test_data_path();
     let test_data = test_data_path.to_str().unwrap();
