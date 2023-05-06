@@ -2,7 +2,7 @@
 
 use crate::prelude::instruction::OpCode;
 use crate::prelude::*;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use thiserror::Error;
 
 impl From<String> for Operand {
@@ -35,49 +35,49 @@ impl From<bool> for Operand {
     }
 }
 
-impl TryInto<String> for Operand {
+impl TryFrom<Operand> for String {
     type Error = ();
 
-    fn try_into(self) -> Result<String, Self::Error> {
-        match self.value {
+    fn try_from(value: Operand) -> Result<Self, Self::Error> {
+        match value.value {
             Some(operand::Value::StringValue(s)) => Ok(s),
             _ => Err(()),
         }
     }
 }
 
-impl TryInto<f32> for Operand {
+impl TryFrom<Operand> for f32 {
     type Error = ();
 
-    fn try_into(self) -> Result<f32, Self::Error> {
-        match self.value {
+    fn try_from(value: Operand) -> Result<Self, Self::Error> {
+        match value.value {
             Some(operand::Value::FloatValue(f)) => Ok(f),
             _ => Err(()),
         }
     }
 }
 
-impl TryInto<usize> for Operand {
+impl TryFrom<Operand> for usize {
     type Error = ();
 
-    fn try_into(self) -> Result<usize, Self::Error> {
-        match self.value {
+    fn try_from(value: Operand) -> Result<Self, Self::Error> {
+        match value.value {
             // [sic] TODO: we only have float operands, which is
             // unpleasant. we should make 'int' operands a
             // valid type, but doing that implies that the
             // language differentiates between floats and
-            // ints itself. something to think about.
+            // ints, which it doesn't.
             Some(operand::Value::FloatValue(f)) => Ok(f as usize),
             _ => Err(()),
         }
     }
 }
 
-impl TryInto<bool> for Operand {
+impl TryFrom<Operand> for bool {
     type Error = ();
 
-    fn try_into(self) -> Result<bool, Self::Error> {
-        match self.value {
+    fn try_from(value: Operand) -> Result<Self, Self::Error> {
+        match value.value {
             Some(operand::Value::BoolValue(b)) => Ok(b),
             _ => Err(()),
         }
@@ -141,5 +141,18 @@ impl Program {
             output.initial_values.extend(program.initial_values);
         }
         Some(output)
+    }
+}
+
+impl Instruction {
+    pub fn read_operand<T>(&self, index: usize) -> T
+    where
+        T: TryFrom<Operand>,
+        <T as TryFrom<Operand>>::Error: Debug,
+    {
+        self.operands[index]
+            .clone()
+            .try_into()
+            .unwrap_or_else(|e| panic!("Failed to convert operand {index}: {e:?}",))
     }
 }

@@ -7,6 +7,7 @@ pub(crate) use self::execution_state::*;
 use self::state::*;
 use crate::prelude::*;
 use log::*;
+use std::fmt::Debug;
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
 
@@ -229,20 +230,19 @@ impl VirtualMachine {
         match opcode {
             OpCode::JumpTo => {
                 // Jumps to a named label
-                let label_name: String = instruction.operands[0].clone().try_into().unwrap();
+                let label_name: String = instruction.read_operand(0);
                 self.state.program_counter = self.find_instruction_point_for_label(&label_name);
             }
             OpCode::Jump => {
                 // Jumps to a label whose name is on the stack.
-                let jump_destination: String =
-                    self.state.peek().unwrap().clone().try_into().unwrap();
+                let jump_destination: String = self.state.peek();
                 self.state.program_counter =
                     self.find_instruction_point_for_label(&jump_destination);
             }
             OpCode::RunLine => {
                 // Looks up a string from the string table and passes it to the client as a line
 
-                let string_id: String = instruction.operands[0].clone().try_into().unwrap();
+                let string_id: String = instruction.read_operand(0);
 
                 // The second operand, if provided (compilers prior
                 // to v1.1 don't include it), indicates the number
@@ -251,7 +251,9 @@ impl VirtualMachine {
                 // line handler.
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let strings = self.pop_substitutions(instruction).collect();
+                let strings = self
+                    .pop_substitutions_with_count_at_index(instruction, 1)
+                    .collect();
 
                 let line = Line {
                     id: string_id.into(),
@@ -272,14 +274,14 @@ impl VirtualMachine {
             }
             OpCode::RunCommand => {
                 // Passes a string to the client as a custom command
-                let command_text: String = instruction.operands[0].clone().try_into().unwrap();
+                let command_text: String = instruction.read_operand(0);
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
-                let command_text = self.pop_substitutions(instruction).enumerate().fold(
-                    command_text,
-                    |command_text, (i, substitution)| {
+                let command_text = self
+                    .pop_substitutions_with_count_at_index(instruction, 1)
+                    .enumerate()
+                    .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
-                    },
-                );
+                    });
                 self.execution_state = ExecutionState::DeliveringContent;
                 let command = Command(command_text);
 
@@ -292,7 +294,45 @@ impl VirtualMachine {
                 // called `continue_` themselves outside of the line handler.
                 self.execution_state = ExecutionState::WaitingForContinue;
             }
-            OpCode::AddOption => {}
+            OpCode::AddOption => {
+                // Add an option to the current state
+                let string_id: String = instruction.read_operand(0);
+                assert_up_to_date_compiler(instruction.operands.len() >= 4);
+                let strings = self
+                    .pop_substitutions_with_count_at_index(instruction, 2)
+                    .collect();
+                let line = Line {
+                    id: string_id.into(),
+                    substitutions: strings,
+                };
+
+                // Indicates whether the VM believes that the
+                // option should be shown to the user, based on any
+                // conditions that were attached to the option.
+                let line_condition_passed = if instruction.read_operand(3) {
+                    // The fourth operand is a bool that indicates
+                    // whether this option had a condition or not.
+                    // If it does, then a bool value will exist on
+                    // the stack indicating whether the condition
+                    // passed or not. We pass that information to
+                    // the game.
+                    self.state.pop()
+                } else {
+                    true
+                };
+
+                let index = self.state.current_options.len();
+                let node_name = instruction.read_operand(1);
+                // Implementation note:
+                // The original calculates the ID in the `ShowOptions` opcode,
+                // but this way is cleaner because it allows us to store a `DialogueOption` instead of a bunch of values in a big tuple.
+                self.state.current_options.push(DialogueOption {
+                    line,
+                    id: OptionId(index),
+                    destination_node: node_name,
+                    is_available: line_condition_passed,
+                });
+            }
             OpCode::ShowOptions => {}
             OpCode::PushString => {}
             OpCode::PushFloat => {}
@@ -334,15 +374,13 @@ impl VirtualMachine {
             .unwrap()
     }
 
-    fn pop_substitutions(
+    fn pop_substitutions_with_count_at_index(
         &mut self,
         instruction: &Instruction,
+        index: usize,
     ) -> impl Iterator<Item = String> + '_ {
-        let expression_count: usize = instruction.operands[1].clone().try_into().unwrap();
-        (0..expression_count).rev().map(|_| {
-            let value = self.state.pop().unwrap();
-            value.try_into().unwrap()
-        })
+        let expression_count: usize = instruction.operands[index].clone().try_into().unwrap();
+        (0..expression_count).rev().map(|_| self.state.pop())
     }
 }
 

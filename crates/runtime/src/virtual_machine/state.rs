@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/VirtualMachine.cs, which we split into multiple files
 
 use crate::prelude::*;
+use std::fmt::Debug;
 use yarn_slinger_core::collections::Stack;
 use yarn_slinger_core::prelude::*;
 
@@ -27,11 +28,42 @@ impl State {
         self.stack.push(value.into())
     }
 
-    pub(crate) fn pop(&mut self) -> Option<InternalValue> {
+    pub(crate) fn pop<T>(&mut self) -> T
+    where
+        T: TryFrom<InternalValue>,
+        <T as TryFrom<InternalValue>>::Error: Debug,
+    {
+        self.force_pop()
+            .try_into()
+            .unwrap_or_else(|e| panic!("Failed to convert popped value: {e:?}",))
+    }
+
+    pub(crate) fn pop_value(&mut self) -> Option<InternalValue> {
         self.stack.pop()
     }
 
-    pub(crate) fn peek(&self) -> Option<&InternalValue> {
+    pub(crate) fn peek<T>(&self) -> T
+    where
+        T: TryFrom<InternalValue>,
+        <T as TryFrom<InternalValue>>::Error: Debug,
+    {
+        self.force_peek()
+            .clone()
+            .try_into()
+            .unwrap_or_else(|e| panic!("Failed to convert popped value: {e:?}",))
+    }
+
+    pub(crate) fn peek_value(&self) -> Option<&InternalValue> {
         self.stack.peek()
+    }
+
+    fn force_pop(&mut self) -> InternalValue {
+        self.pop_value()
+            .unwrap_or_else(|| panic!("Tried to pop value, but the stack was empty."))
+    }
+
+    fn force_peek(&self) -> &InternalValue {
+        self.peek_value()
+            .unwrap_or_else(|| panic!("Tried to peek value, but the stack was empty."))
     }
 }
