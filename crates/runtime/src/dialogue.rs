@@ -8,12 +8,6 @@ use yarn_slinger_core::prelude::*;
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Dialogue {
-    /// Gets the [`Library`] that this Dialogue uses to locate functions.
-    ///
-    /// When the Dialogue is constructed, the Library is initialized with
-    /// the built-in operators like `+`, `-`, and so on.
-    pub library: Library,
-
     /// The object that provides access to storing and retrieving the values of variables.
     pub variable_storage: Arc<dyn VariableStorage + Send + Sync>,
 
@@ -40,10 +34,11 @@ impl Default for Dialogue {
         let variable_storage: Arc<dyn VariableStorage + Send + Sync> =
             Arc::new(MemoryVariableStore::default());
 
-        let library = {
+        let mut vm = VirtualMachine::default();
+        vm.library = {
             let storage_one = variable_storage.clone();
             let storage_two = variable_storage.clone();
-            Library::standard_library()
+            vm.library
                 .with_function("visited", move |node: String| -> bool {
                     is_node_visited(storage_one.as_ref(), &node)
                 })
@@ -53,7 +48,6 @@ impl Default for Dialogue {
         };
 
         Self {
-            library,
             variable_storage,
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
@@ -72,6 +66,11 @@ impl Dialogue {
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
         self.variable_storage = Arc::new(variable_storage);
+        self
+    }
+
+    pub fn with_library(mut self, library: Library) -> Self {
+        self.vm.library = library;
         self
     }
 
@@ -170,6 +169,19 @@ impl Dialogue {
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
         self.vm.execution_state() != ExecutionState::Stopped
+    }
+
+    /// Gets the [`Library`] that this Dialogue uses to locate functions.
+    ///
+    /// When the Dialogue is constructed, the Library is initialized with
+    /// the built-in operators like `+`, `-`, and so on.
+    pub fn library(&self) -> &Library {
+        &self.vm.library
+    }
+
+    /// See [`Dialogue::library`].
+    pub fn library_mut(&mut self) -> &mut Library {
+        &mut self.vm.library
     }
 
     pub fn with_new_program(mut self, program: Program) -> Self {

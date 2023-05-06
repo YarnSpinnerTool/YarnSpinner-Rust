@@ -26,6 +26,7 @@ pub(crate) struct VirtualMachine {
     pub(crate) node_complete_handler: NodeCompleteHandler,
     pub(crate) dialogue_complete_handler: Option<DialogueCompleteHandler>,
     pub(crate) prepare_for_lines_handler: Option<PrepareForLinesHandler>,
+    pub(crate) library: Library,
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,
@@ -55,6 +56,7 @@ impl Default for VirtualMachine {
             state: Default::default(),
             execution_state: Default::default(),
             current_node: Default::default(),
+            library: Library::standard_library(),
         }
     }
 }
@@ -388,7 +390,44 @@ impl VirtualMachine {
                 // Pops a value from the stack.
                 self.state.pop_value();
             }
-            OpCode::CallFunc => {}
+            OpCode::CallFunc => {
+                // Call a function, whose parameters are expected to be on the stack. Pushes the function's return value, if it returns one.
+                let function_name: String = instruction.read_operand(0);
+                let function = self.library.get(&function_name).unwrap_or_else(|| {
+                    panic!("Function \"{}\" not found in library", function_name)
+                });
+
+                // Expect the compiler to have placed the number of parameters
+                // actually passed at the top of the stack.
+                let actual_parameter_count: usize = self.state.pop();
+                let expected_parameter_count = function.parameter_types().len();
+
+                assert_eq!(
+                    expected_parameter_count, actual_parameter_count,
+                    "Function {function_name} expected {expected_parameter_count} parameters, but received {actual_parameter_count}",
+                );
+
+                // Get the parameters, which were pushed in reverse
+                let parameters: Vec<_> = (0..actual_parameter_count)
+                    .rev()
+                    .map(|_| self.state.pop_value().raw_value)
+                    .collect();
+
+                // Invoke the function
+                let return_value = function.call(parameters);
+                let return_type = function
+                    .return_type()
+                    .try_into()
+                    .unwrap_or_else(|e| panic!("Failed to get Yarn type for return type id of function {function_name}: {e:?}"));
+                let typed_return_value = InternalValue {
+                    raw_value: return_value,
+                    r#type: return_type,
+                };
+                // ## Implementation note:
+                // The original code first checks whether the return type is `void`. This is vestigial from the v1 compiler.
+                // In current Yarn, every function MUST return a valid typed value, so we skip that check.
+                self.state.push(typed_return_value);
+            }
             OpCode::PushVariable => {}
             OpCode::StoreVariable => {}
             OpCode::Stop => {}

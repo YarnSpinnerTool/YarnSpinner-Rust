@@ -3,9 +3,6 @@
 use crate::prelude::types::Type;
 use crate::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-#[non_exhaustive]
-
 /// A value as it appears to the compiler. It has additional type checker information
 /// and may represent values not constructable by the user, like functions.
 ///
@@ -14,6 +11,7 @@ use crate::prelude::*;
 /// ## Implementation Notes
 ///
 /// Corresponds to the internal `Value` class in the original C# implementation.
+#[derive(Debug, Clone, PartialEq)]
 pub struct InternalValue {
     /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,
