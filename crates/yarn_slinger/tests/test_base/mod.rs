@@ -50,14 +50,14 @@ impl TestBase {
     pub fn file_sources(subdir: impl AsRef<Path>) -> impl Iterator<Item = PathBuf> {
         let subdir: PathBuf = PathBuf::from(subdir.as_ref());
         let path = test_data_path().join(&subdir);
-        let allowed_extensions = ["node", "yarn"].map(|string| OsStr::new(string));
+        let allowed_extensions = ["node", "yarn"].map(OsStr::new);
         fs::read_dir(path)
             .unwrap()
             .filter_map(|entry| {
                 entry
-                    .or_else(|e| {
+                    .map_err(|e| {
                         println!("Warning: failed to read a directory entry: {e:?}");
-                        Err(e)
+                        e
                     })
                     .ok()
             })
