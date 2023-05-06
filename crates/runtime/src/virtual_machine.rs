@@ -105,6 +105,7 @@ impl VirtualMachine {
             .current_node
             .as_ref()
             .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."));
+
         self.state.current_node_name = Some(node_name.to_owned());
 
         if let Some(node_start_handler) = &mut self.node_start_handler {
@@ -510,7 +511,7 @@ impl VirtualMachine {
                 panic!(
                     "Unknown label {} in node {}",
                     label_name,
-                    self.state.current_node_name.as_ref().unwrap()
+                    self.current_node_name().as_ref().unwrap()
                 )
             })
             .try_into()
