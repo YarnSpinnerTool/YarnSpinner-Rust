@@ -32,7 +32,6 @@ pub mod prelude {
 
 #[derive(Debug, Clone)]
 pub struct TestBase {
-    pub storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     pub dialogue: Dialogue,
     test_plan: Arc<RwLock<Option<TestPlan>>>,
     string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
@@ -159,13 +158,11 @@ impl Default for TestBase {
                 );
             })
         };
-        let storage = dialogue.variable_storage();
         Self {
             dialogue,
             test_plan,
             string_table,
             runtime_errors_cause_panic,
-            storage,
         }
     }
 }
@@ -252,13 +249,13 @@ impl TestBase {
     }
 
     pub fn storage(&self) -> impl Deref<Target = dyn VariableStorage + Send + Sync> + '_ {
-        self.storage.read().unwrap()
+        self.dialogue.variable_storage()
     }
 
     pub fn storage_mut(
         &mut self,
     ) -> impl DerefMut<Target = dyn VariableStorage + Send + Sync> + '_ {
-        self.storage.write().unwrap()
+        self.dialogue.variable_storage_mut()
     }
 }
 

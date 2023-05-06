@@ -181,8 +181,16 @@ impl Dialogue {
     }
 
     /// The object that provides access to storing and retrieving the values of variables.
-    pub fn variable_storage(&self) -> Arc<RwLock<dyn VariableStorage + 'static + Send + Sync>> {
-        self.variable_storage.clone()
+    pub fn variable_storage(
+        &self,
+    ) -> impl Deref<Target = dyn VariableStorage + 'static + Send + Sync> + '_ {
+        self.variable_storage.read().unwrap()
+    }
+
+    pub fn variable_storage_mut(
+        &mut self,
+    ) -> impl DerefMut<Target = dyn VariableStorage + 'static + Send + Sync> + '_ {
+        self.variable_storage.write().unwrap()
     }
 
     /// See [`Dialogue::library`].
