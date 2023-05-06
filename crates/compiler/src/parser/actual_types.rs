@@ -6,13 +6,15 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::InputStream;
 use generated::yarnspinnerparser::*;
 
-pub type ActualInputStream<'input> = InputStream<&'input [u8]>;
-pub type ActualYarnSpinnerLexer<'input> = YarnSpinnerLexer<'input, ActualInputStream<'input>>;
-pub type ActualErrorStrategy<'input> = ErrorStrategy<'input, YarnSpinnerParserContextType>;
-pub type ActualTokenStream<'input> = CommonTokenStream<'input, ActualYarnSpinnerLexer<'input>>;
-pub type ActualYarnSpinnerParser<'input> =
+pub(crate) type ActualInputStream<'input> = InputStream<&'input [u8]>;
+pub(crate) type ActualYarnSpinnerLexer<'input> =
+    YarnSpinnerLexer<'input, ActualInputStream<'input>>;
+pub(crate) type ActualErrorStrategy<'input> = ErrorStrategy<'input, YarnSpinnerParserContextType>;
+pub(crate) type ActualTokenStream<'input> =
+    CommonTokenStream<'input, ActualYarnSpinnerLexer<'input>>;
+pub(crate) type ActualYarnSpinnerParser<'input> =
     YarnSpinnerParser<'input, ActualTokenStream<'input>, ActualErrorStrategy<'input>>;
-pub type ActualParserContext<'input> = dyn YarnSpinnerParserContext<
+pub(crate) type ActualParserContext<'input> = dyn YarnSpinnerParserContext<
     'input,
     Ctx = YarnSpinnerParserContextType,
     TF = LocalTokenFactory<'input>,

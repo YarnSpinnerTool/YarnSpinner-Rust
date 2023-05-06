@@ -46,9 +46,9 @@ impl Library {
 
     pub fn standard_library() -> Self {
         let mut library = Library(yarn_fn_registry!(
-            "string" => <String as From<UntypedValue >>::from,
-            "number" => |value: UntypedValue| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
-            "bool" => |value: UntypedValue| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
+            "string" => <String as From<YarnValue >>::from,
+            "number" => |value: YarnValue| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
+            "bool" => |value: YarnValue| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
         ));
         for r#type in [Type::Number, Type::String, Type::Boolean] {
             library.register_methods(r#type);
@@ -65,7 +65,7 @@ impl Library {
     where
         Marker: 'static + Clone,
         F: YarnFn<Marker> + 'static + Clone,
-        F::Out: IntoUntypedValueFromNonUntypedValue + 'static + Clone,
+        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
         self.0.register_function(name, function);
         self
@@ -79,7 +79,7 @@ impl Library {
     where
         Marker: 'static + Clone,
         F: YarnFn<Marker> + 'static + Clone,
-        F::Out: IntoUntypedValueFromNonUntypedValue + 'static + Clone,
+        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
         self.register_function(name, function);
         self

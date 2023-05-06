@@ -1,19 +1,11 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TestBase.cs#L49>
 
 use std::path::PathBuf;
-use yarn_slinger_compiler::prelude::*;
-use yarn_slinger_runtime::prelude::*;
+use yarn_slinger::prelude::*;
 
+#[derive(Debug, Clone, Default)]
 pub struct TestBase {
     pub dialogue: Dialogue,
-}
-
-impl Default for TestBase {
-    fn default() -> Self {
-        let variable_storage = MemoryVariableStore::default();
-        let dialogue = Dialogue::with_variable_storage(variable_storage);
-        Self { dialogue }
-    }
 }
 
 pub fn create_test_node(source: &str) -> String {

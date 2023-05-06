@@ -217,7 +217,7 @@ impl TryFrom<TypeId> for Type {
         let bool_type = TypeId::of::<bool>();
         let value_types = &[
             TypeId::of::<InternalValue>(),
-            TypeId::of::<UntypedValue>(),
+            TypeId::of::<YarnValue>(),
             TypeId::of::<Box<dyn Any>>(),
         ];
         let number_types = &[
@@ -242,6 +242,22 @@ impl TryFrom<TypeId> for Type {
             _ if number_types.contains(&r#type) => Ok(Type::Number),
             _ if value_types.contains(&r#type) => Ok(Type::Any),
             _ => Err(InvalidDowncastError::InvalidTypeId(r#type)),
+        }
+    }
+}
+
+impl From<YarnValue> for Type {
+    fn from(value: YarnValue) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl From<&YarnValue> for Type {
+    fn from(value: &YarnValue) -> Self {
+        match value {
+            YarnValue::Number(_) => Type::Number,
+            YarnValue::String(_) => Type::String,
+            YarnValue::Boolean(_) => Type::Boolean,
         }
     }
 }

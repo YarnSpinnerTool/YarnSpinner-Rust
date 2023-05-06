@@ -27,7 +27,7 @@ pub struct Declaration {
     /// The default value of this declaration, if no value has been
     /// specified in code or is available from a [`Dialogue`]'s
     /// [`IVariableStorage`].
-    pub default_value: Option<UntypedValue>,
+    pub default_value: Option<YarnValue>,
 
     /// A string describing the purpose of this declaration.
     pub description: Option<String>,
@@ -92,7 +92,7 @@ impl Declaration {
         self
     }
 
-    pub fn with_default_value(mut self, default_value: impl Into<UntypedValue>) -> Self {
+    pub fn with_default_value(mut self, default_value: impl Into<YarnValue>) -> Self {
         self.default_value = Some(default_value.into());
         self
     }
