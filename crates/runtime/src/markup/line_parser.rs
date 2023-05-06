@@ -27,8 +27,15 @@ impl<'a> LineParser<'a> {
             return MarkupParseResult::default();
         }
 
+        let originalText = normalize_to_form_c(input);
         todo!()
     }
+}
+
+/// Returns a new string whose textual value is the same as this string, but whose binary representation is in Unicode normalization form C.
+fn normalize_to_form_c() {
+    // Use https://docs.rs/unicode-normalization/latest/unicode_normalization/trait.UnicodeNormalization.html#tymethod.nfc
+    todo!()
 }
 
 impl<'a> Default for LineParser<'a> {
