@@ -249,17 +249,9 @@ impl VirtualMachine {
                 // of expressions in the line. We need to pop these
                 // values off the stack and deliver them to the
                 // line handler.
-                assert!(instruction.operands.len() >= 2, "The Yarn script provided was compiled using an older compiler. \
-                    Please recompile it using the latest version of either Yarn Slinger or Yarn Spinner.");
+                assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let expression_count: usize = instruction.operands[1].clone().try_into().unwrap();
-                let strings = (0..expression_count)
-                    .rev()
-                    .map(|_| {
-                        let value = self.state.pop().unwrap();
-                        value.try_into().unwrap()
-                    })
-                    .collect();
+                let strings = self.pop_substitutions(instruction).collect();
 
                 let line = Line {
                     id: string_id.into(),
@@ -278,7 +270,28 @@ impl VirtualMachine {
                 // called `continue_` themselves outside of the line handler.
                 self.execution_state = ExecutionState::WaitingForContinue;
             }
-            OpCode::RunCommand => {}
+            OpCode::RunCommand => {
+                // Passes a string to the client as a custom command
+                let command_text: String = instruction.operands[0].clone().try_into().unwrap();
+                assert_up_to_date_compiler(instruction.operands.len() >= 2);
+                let command_text = self.pop_substitutions(instruction).enumerate().fold(
+                    command_text,
+                    |command_text, (i, substitution)| {
+                        command_text.replace(&format!("{{{i}}}"), &substitution)
+                    },
+                );
+                self.execution_state = ExecutionState::DeliveringContent;
+                let command = Command(command_text);
+
+                self.command_handler.call(command);
+
+                // Implementation note:
+                // In the original, this is only done if `execution_state` is still `DeliveringContent`,
+                // because the line handler is allowed to call `continue_`. However, we disallow that because of
+                // how this violates borrow checking. So, we'll always wait at this point instead until the user
+                // called `continue_` themselves outside of the line handler.
+                self.execution_state = ExecutionState::WaitingForContinue;
+            }
             OpCode::AddOption => {}
             OpCode::ShowOptions => {}
             OpCode::PushString => {}
@@ -320,4 +333,23 @@ impl VirtualMachine {
             .try_into()
             .unwrap()
     }
+
+    fn pop_substitutions(
+        &mut self,
+        instruction: &Instruction,
+    ) -> impl Iterator<Item = String> + '_ {
+        let expression_count: usize = instruction.operands[1].clone().try_into().unwrap();
+        (0..expression_count).rev().map(|_| {
+            let value = self.state.pop().unwrap();
+            value.try_into().unwrap()
+        })
+    }
+}
+
+fn assert_up_to_date_compiler(predicate: bool) {
+    assert!(
+        predicate,
+        "The Yarn script provided was compiled using an older compiler. \
+        Please recompile it using the latest version of either Yarn Slinger or Yarn Spinner."
+    )
 }
