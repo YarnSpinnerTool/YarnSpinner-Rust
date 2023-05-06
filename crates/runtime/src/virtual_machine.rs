@@ -210,7 +210,7 @@ impl VirtualMachine {
         }
     }
 
-    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't
+    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't.
     fn assert_can_continue(&self) {
         assert!(
             self.current_node.is_some(),
@@ -221,6 +221,8 @@ impl VirtualMachine {
             self.execution_state,
             "Cannot continue running dialogue. Still waiting on option selection."
         );
+        // ## Implementation note:
+        // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
     }
 
     pub(crate) fn current_node_name(&self) -> Option<&str> {
