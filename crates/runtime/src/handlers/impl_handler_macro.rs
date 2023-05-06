@@ -27,14 +27,14 @@ macro_rules! impl_handler_inner {
         #[derive(Debug, Clone)]
         pub struct $struct_name(pub Box<dyn $trait_name + Send + Sync>);
 
-        impl Deref for $struct_name {
+        impl std::ops::Deref for $struct_name {
             type Target = Box<dyn $trait_name + Send + Sync>;
             fn deref(&self) -> &Self::Target {
                 &self.0
             }
         }
 
-        impl DerefMut for $struct_name {
+        impl std::ops::DerefMut for $struct_name {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.0
             }
@@ -54,8 +54,8 @@ macro_rules! impl_handler_inner {
             }
         }
 
-        impl Debug for dyn $trait_name + Send + Sync {
-            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        impl std::fmt::Debug for dyn $trait_name + Send + Sync {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, stringify!($struct_name))
             }
         }

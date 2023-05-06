@@ -3,7 +3,7 @@
 //! ## Implementation notes
 //! Introduced `LineId` newtype for better type safety
 
-use std::ops::{Deref, DerefMut};
+use crate::string_newtype;
 
 /// A line of dialogue, sent from the [`Dialogue`] to the game.
 ///
@@ -24,24 +24,15 @@ pub struct Line {
     pub substitutions: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LineId(pub String);
-
-impl Deref for LineId {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl Line {
+    pub fn new(id: LineId) -> Self {
+        Self {
+            id,
+            substitutions: Default::default(),
+        }
     }
 }
 
-impl DerefMut for LineId {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl From<String> for LineId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
+string_newtype! {
+    pub struct LineId(pub String);
 }

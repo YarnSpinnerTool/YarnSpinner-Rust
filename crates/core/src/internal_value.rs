@@ -3,9 +3,6 @@
 use crate::prelude::types::Type;
 use crate::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-#[non_exhaustive]
-
 /// A value as it appears to the compiler. It has additional type checker information
 /// and may represent values not constructable by the user, like functions.
 ///
@@ -14,6 +11,7 @@ use crate::prelude::*;
 /// ## Implementation Notes
 ///
 /// Corresponds to the internal `Value` class in the original C# implementation.
+#[derive(Debug, Clone, PartialEq)]
 pub struct InternalValue {
     /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,
@@ -80,5 +78,32 @@ impl From<String> for InternalValue {
 impl From<InternalValue> for String {
     fn from(value: InternalValue) -> Self {
         value.raw_value.into()
+    }
+}
+
+impl From<YarnValue> for InternalValue {
+    fn from(value: YarnValue) -> Self {
+        Self {
+            r#type: (&value).into(),
+            raw_value: value,
+        }
+    }
+}
+
+impl From<InternalValue> for YarnValue {
+    fn from(value: InternalValue) -> Self {
+        value.raw_value
+    }
+}
+
+impl AsRef<YarnValue> for InternalValue {
+    fn as_ref(&self) -> &YarnValue {
+        &self.raw_value
+    }
+}
+
+impl AsMut<YarnValue> for InternalValue {
+    fn as_mut(&mut self) -> &mut YarnValue {
+        &mut self.raw_value
     }
 }

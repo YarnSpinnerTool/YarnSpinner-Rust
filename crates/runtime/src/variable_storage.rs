@@ -13,7 +13,7 @@ use yarn_slinger_core::prelude::*;
 /// We also cannot use generics in this trait because we need to be able to clone this box.
 pub trait VariableStorage: Debug + Send + Sync {
     fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync>;
-    fn set(&mut self, name: &str, value: YarnValue);
+    fn set(&mut self, name: String, value: YarnValue);
     fn get(&self, name: &str) -> Option<YarnValue>;
     fn clear(&mut self);
 }
@@ -36,8 +36,8 @@ impl VariableStorage for MemoryVariableStore {
         Box::new(self.clone())
     }
 
-    fn set(&mut self, name: &str, value: YarnValue) {
-        self.variables.insert(name.to_string(), value);
+    fn set(&mut self, name: String, value: YarnValue) {
+        self.variables.insert(name, value);
     }
 
     fn get(&self, name: &str) -> Option<YarnValue> {

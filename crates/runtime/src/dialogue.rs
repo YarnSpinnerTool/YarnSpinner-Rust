@@ -1,21 +1,16 @@
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::ops::Deref;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Dialogue {
-    /// Gets the [`Library`] that this Dialogue uses to locate functions.
-    ///
-    /// When the Dialogue is constructed, the Library is initialized with
-    /// the built-in operators like `+`, `-`, and so on.
-    pub library: Library,
-
     /// The object that provides access to storing and retrieving the values of variables.
-    pub variable_storage: Arc<dyn VariableStorage + Send + Sync>,
+    pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -37,28 +32,26 @@ pub struct Dialogue {
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let variable_storage: Arc<dyn VariableStorage + Send + Sync> =
-            Arc::new(MemoryVariableStore::default());
+        let variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>> =
+            Arc::new(RwLock::new(MemoryVariableStore::default()));
 
-        let library = {
-            let storage_one = variable_storage.clone();
-            let storage_two = variable_storage.clone();
-            Library::standard_library()
-                .with_function("visited", move |node: String| -> bool {
-                    is_node_visited(storage_one.as_ref(), &node)
-                })
-                .with_function("visited_count", move |node: String| -> f32 {
-                    get_node_visit_count(storage_two.as_ref(), &node)
-                })
-        };
+        let mut vm = VirtualMachine::with_variable_storage(variable_storage.clone());
+        let storage_one = variable_storage.clone();
+        let storage_two = variable_storage.clone();
+        vm.library
+            .register_function("visited", move |node: String| -> bool {
+                is_node_visited(storage_one.read().unwrap().deref(), &node)
+            })
+            .register_function("visited_count", move |node: String| -> f32 {
+                get_node_visit_count(storage_two.read().unwrap().deref(), &node)
+            });
 
         Self {
-            library,
             variable_storage,
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
             language_code: Default::default(),
-            vm: Default::default(),
+            vm,
         }
     }
 }
@@ -71,7 +64,12 @@ impl Dialogue {
         mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
-        self.variable_storage = Arc::new(variable_storage);
+        self.variable_storage = Arc::new(RwLock::new(variable_storage));
+        self
+    }
+
+    pub fn with_library(mut self, library: Library) -> Self {
+        self.vm.library = library;
         self
     }
 
@@ -80,6 +78,7 @@ impl Dialogue {
         logger: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.log_debug_message = logger.into();
+        self.vm.log_debug_message = self.log_debug_message.clone();
         self
     }
 
@@ -88,6 +87,7 @@ impl Dialogue {
         logger: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
         self.log_error_message = logger.into();
+        self.vm.log_error_message = self.log_error_message.clone();
         self
     }
 
@@ -136,7 +136,7 @@ impl Dialogue {
         mut self,
         node_start_handler: impl Fn(String) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.node_start_handler = node_start_handler.into();
+        self.vm.node_start_handler = Some(node_start_handler.into());
         self
     }
 
@@ -145,7 +145,7 @@ impl Dialogue {
         mut self,
         dialogue_complete_handler: impl Fn() + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.dialogue_complete_handler = dialogue_complete_handler.into();
+        self.vm.dialogue_complete_handler = Some(dialogue_complete_handler.into());
         self
     }
 
@@ -154,7 +154,7 @@ impl Dialogue {
         mut self,
         prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.prepare_for_lines_handler = prepare_for_lines_handler.into();
+        self.vm.prepare_for_lines_handler = Some(prepare_for_lines_handler.into());
         self
     }
 
@@ -168,6 +168,19 @@ impl Dialogue {
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
         self.vm.execution_state() != ExecutionState::Stopped
+    }
+
+    /// Gets the [`Library`] that this Dialogue uses to locate functions.
+    ///
+    /// When the Dialogue is constructed, the Library is initialized with
+    /// the built-in operators like `+`, `-`, and so on.
+    pub fn library(&self) -> &Library {
+        &self.vm.library
+    }
+
+    /// See [`Dialogue::library`].
+    pub fn library_mut(&mut self) -> &mut Library {
+        &mut self.vm.library
     }
 
     pub fn with_new_program(mut self, program: Program) -> Self {
@@ -288,7 +301,7 @@ impl Dialogue {
     /// If [`Dialogue::continue_`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<&str> {
-        self.vm.current_node()
+        self.vm.current_node_name()
     }
 
     /// Returns the string ID that contains the original, uncompiled source

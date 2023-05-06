@@ -32,4 +32,4 @@ pub struct DialogueOption {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OptionId(pub(crate) String);
+pub struct OptionId(pub(crate) usize);

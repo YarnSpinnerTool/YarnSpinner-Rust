@@ -246,6 +246,22 @@ impl TryFrom<TypeId> for Type {
     }
 }
 
+impl From<YarnValue> for Type {
+    fn from(value: YarnValue) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl From<&YarnValue> for Type {
+    fn from(value: &YarnValue) -> Self {
+        match value {
+            YarnValue::Number(_) => Type::Number,
+            YarnValue::String(_) => Type::String,
+            YarnValue::Boolean(_) => Type::Boolean,
+        }
+    }
+}
+
 #[derive(Error, Debug)]
 /// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
 pub enum InvalidDowncastError {
