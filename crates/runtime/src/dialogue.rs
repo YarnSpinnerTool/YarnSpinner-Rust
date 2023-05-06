@@ -8,6 +8,16 @@ use yarn_slinger_core::prelude::*;
 mod read_only_dialogue;
 
 /// Co-ordinates the execution of Yarn programs.
+///
+/// ## Implementation notes
+///
+/// The original implementation allows calling [`Dialogue`] from handlers freely.
+/// Rust's ownership rules rightfully prevent us from doing that, so the methods that
+/// are useful to call from handlers are exposed in [`ReadOnlyDialogue`].
+///
+/// It implements [`Send`] and [`Sync`], so it can be freely moved into handlers after being retrieved via [`Dialogue::get_read_only`].
+/// [`Dialogue`] also implements [`Deref`] for [`ReadOnlyDialogue`], so you don't need to worry about this distinction if
+/// you're only calling the [`Dialogue`] from outside handlers.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Dialogue {
