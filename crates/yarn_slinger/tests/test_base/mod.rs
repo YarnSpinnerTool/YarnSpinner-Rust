@@ -35,7 +35,7 @@ pub struct TestBase {
     pub storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     pub dialogue: Dialogue,
     test_plan: Arc<RwLock<Option<TestPlan>>>,
-    pub string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
+    string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
     pub runtime_errors_cause_panic: Arc<AtomicBool>,
 }
 
@@ -44,7 +44,7 @@ impl Default for TestBase {
         let runtime_errors_cause_panic = Arc::new(AtomicBool::new(true));
         let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
             Arc::new(RwLock::new(HashMap::new()));
-        let test_plan = Arc::new(RwLock::new(None));
+        let test_plan: Arc<RwLock<Option<TestPlan>>> = Arc::new(RwLock::new(None));
 
         let dialogue = Dialogue::default()
             .with_language_code("en")
@@ -66,17 +66,23 @@ impl Default for TestBase {
                     }
                 })
                 .with_line_handler(move |line| {
-                    let id = &line.id;
                     let string_table = string_table.read().unwrap();
-                    let string_info = string_table.get(id).unwrap();
-                    let line_number = string_info.line_number;
                     let text = get_composed_text_for_line_with_no_self(
                         &line,
                         &string_table,
                         &read_only_dialogue,
                     );
                     println!("Line: {text}");
-                    let test_plan = test_plan.read().unwrap();
+                    let mut test_plan = test_plan.write().unwrap();
+                    if let Some(test_plan) = test_plan.as_mut() {
+                        test_plan.next();
+
+                        assert_eq!(ExpectedStepType::Line, test_plan.next_expected_step, "Received line {text}, but was expecting a {:?}", test_plan.next_expected_step);
+                        let Some(StepValue::String(expected_text)) = &test_plan.next_step_value else {
+                            unreachable!()
+                        };
+                        assert_eq!(expected_text, &text);
+                    }
                 })
         };
         let storage = dialogue.variable_storage();
