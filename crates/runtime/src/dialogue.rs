@@ -1,7 +1,8 @@
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::ops::Deref;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -9,7 +10,7 @@ use yarn_slinger_core::prelude::*;
 #[derive(Debug, Clone)]
 pub struct Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
-    pub variable_storage: Arc<dyn VariableStorage + Send + Sync>,
+    pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -31,28 +32,26 @@ pub struct Dialogue {
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let variable_storage: Arc<dyn VariableStorage + Send + Sync> =
-            Arc::new(MemoryVariableStore::default());
+        let variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>> =
+            Arc::new(RwLock::new(MemoryVariableStore::default()));
 
-        let mut vm = VirtualMachine::default();
-        vm.library = {
-            let storage_one = variable_storage.clone();
-            let storage_two = variable_storage.clone();
-            vm.library
-                .with_function("visited", move |node: String| -> bool {
-                    is_node_visited(storage_one.as_ref(), &node)
-                })
-                .with_function("visited_count", move |node: String| -> f32 {
-                    get_node_visit_count(storage_two.as_ref(), &node)
-                })
-        };
+        let mut vm = VirtualMachine::with_variable_storage(variable_storage.clone());
+        let storage_one = variable_storage.clone();
+        let storage_two = variable_storage.clone();
+        vm.library
+            .register_function("visited", move |node: String| -> bool {
+                is_node_visited(storage_one.read().unwrap().deref(), &node)
+            })
+            .register_function("visited_count", move |node: String| -> f32 {
+                get_node_visit_count(storage_two.read().unwrap().deref(), &node)
+            });
 
         Self {
             variable_storage,
             log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
             log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
             language_code: Default::default(),
-            vm: Default::default(),
+            vm,
         }
     }
 }
@@ -65,7 +64,7 @@ impl Dialogue {
         mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
-        self.variable_storage = Arc::new(variable_storage);
+        self.variable_storage = Arc::new(RwLock::new(variable_storage));
         self
     }
 

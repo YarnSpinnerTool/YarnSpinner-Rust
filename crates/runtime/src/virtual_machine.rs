@@ -8,6 +8,7 @@ use self::state::*;
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
 
@@ -27,13 +28,16 @@ pub(crate) struct VirtualMachine {
     pub(crate) dialogue_complete_handler: Option<DialogueCompleteHandler>,
     pub(crate) prepare_for_lines_handler: Option<PrepareForLinesHandler>,
     pub(crate) library: Library,
+    variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,
 }
 
-impl Default for VirtualMachine {
-    fn default() -> Self {
+impl VirtualMachine {
+    pub(crate) fn with_variable_storage(
+        variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+    ) -> Self {
         Self {
             log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
             log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
@@ -57,11 +61,10 @@ impl Default for VirtualMachine {
             execution_state: Default::default(),
             current_node: Default::default(),
             library: Library::standard_library(),
+            variable_storage,
         }
     }
-}
 
-impl VirtualMachine {
     pub(crate) fn reset_state(&mut self) {
         self.state = State::default();
     }
@@ -428,7 +431,31 @@ impl VirtualMachine {
                 // In current Yarn, every function MUST return a valid typed value, so we skip that check.
                 self.state.push(typed_return_value);
             }
-            OpCode::PushVariable => {}
+            OpCode::PushVariable => {
+                // Get the contents of a variable, push that onto the stack.
+                let variable_name: String = instruction.read_operand(0);
+                let loaded_value = self
+                    .variable_storage
+                    .read()
+                    .unwrap()
+                    .get(&variable_name)
+                    .unwrap_or_else(|| {
+                        // We don't have a value for this. The initial
+                        // value may be found in the program. (If it's
+                        // not, then the variable's value is undefined,
+                        // which isn't allowed.)
+                        self
+                            .program
+                            .as_ref()
+                            .unwrap()
+                            .initial_values
+                            .get(&variable_name)
+                            .unwrap_or_else(|| panic!("The loaded program does not contain an initial value for the variable {variable_name}"))
+                            .clone()
+                            .into()
+                    });
+                self.state.push(loaded_value);
+            }
             OpCode::StoreVariable => {}
             OpCode::Stop => {}
             OpCode::RunNode => {}

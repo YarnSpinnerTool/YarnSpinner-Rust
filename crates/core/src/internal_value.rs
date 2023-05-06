@@ -80,3 +80,12 @@ impl From<InternalValue> for String {
         value.raw_value.into()
     }
 }
+
+impl From<YarnValue> for InternalValue {
+    fn from(value: YarnValue) -> Self {
+        Self {
+            r#type: (&value).into(),
+            raw_value: value,
+        }
+    }
+}

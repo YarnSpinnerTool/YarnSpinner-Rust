@@ -84,6 +84,17 @@ impl TryFrom<Operand> for bool {
     }
 }
 
+impl From<Operand> for YarnValue {
+    fn from(value: Operand) -> Self {
+        let value = value.value.unwrap();
+        match value {
+            operand::Value::StringValue(s) => s.into(),
+            operand::Value::FloatValue(f) => f.into(),
+            operand::Value::BoolValue(b) => b.into(),
+        }
+    }
+}
+
 impl TryFrom<i32> for OpCode {
     type Error = InvalidOpCodeError;
 
