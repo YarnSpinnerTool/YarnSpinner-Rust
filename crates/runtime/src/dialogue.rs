@@ -13,7 +13,7 @@ mod read_only_dialogue;
 pub struct Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
     pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
-    pub dialogue_data: Arc<RwLock<ReadOnlyDialogue>>,
+    pub dialogue_data: ReadOnlyDialogue,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -197,19 +197,21 @@ impl Dialogue {
     }
 
     pub fn set_program(&mut self, program: Program) -> &mut Self {
-        self.dialogue_data.write().unwrap().program = Some(program);
+        *self.dialogue_data.program.write().unwrap() = Some(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
-        let mut dialogue_data = self.dialogue_data.write().unwrap();
-        if let Some(existing_program) = &mut dialogue_data.program {
-            *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
-            drop(dialogue_data);
-        } else {
-            drop(dialogue_data);
-            self.set_program(program);
+        {
+            let mut existing_program = self.dialogue_data.program.write().unwrap();
+            if let Some(existing_program) = existing_program.as_mut() {
+                *existing_program =
+                    Program::combine(vec![existing_program.clone(), program]).unwrap();
+            } else {
+                *existing_program = Some(program);
+                self.vm.reset_state();
+            }
         }
         self
     }

@@ -1,19 +1,22 @@
 use crate::prelude::*;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct ReadOnlyDialogue {
-    pub(crate) program: Option<Program>,
+    pub(crate) program: Arc<RwLock<Option<Program>>>,
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
 }
 
 impl ReadOnlyDialogue {
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
-    pub fn node_names(&self) -> Option<impl Iterator<Item = &str>> {
+    pub fn node_names(&self) -> Option<Vec<String>> {
         self.program
+            .read()
+            .unwrap()
             .as_ref()
-            .map(|program| program.nodes.keys().map(|s| s.as_str()))
+            .map(|program| program.nodes.keys().cloned().collect())
     }
 
     /// Returns the string ID that contains the original, uncompiled source
@@ -37,16 +40,16 @@ impl ReadOnlyDialogue {
     /// the node's source code. This header must be a space-separated list
     ///
     /// Returns [`None`] if the node is not present in the program.
-    pub fn get_tags_for_node(&self, node_name: &str) -> Option<impl Iterator<Item = &str>> {
+    pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
         self.get_node_logging_errors(node_name)
-            .map(|node| node.tags.iter().map(|s| s.as_str()))
+            .map(|node| node.tags)
     }
 
     /// Gets a value indicating whether a specified node exists in the
     /// Program.
     pub fn node_exists(&self, node_name: &str) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
-        if let Some(program) = &self.program {
+        if let Some(program) = self.program.read().unwrap().as_ref() {
             program.nodes.contains_key(node_name)
         } else {
             self.log_error_message
@@ -75,14 +78,14 @@ impl ReadOnlyDialogue {
             })
     }
 
-    fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
-        if let Some(program) = &self.program {
+    fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
+        if let Some(program) = self.program.read().unwrap().as_ref() {
             if program.nodes.is_empty() {
                 self.log_error_message
                     .call("No nodes are loaded".to_owned());
                 None
             } else if let Some(node) = program.nodes.get(node_name) {
-                Some(node)
+                Some(node.clone())
             } else {
                 self.log_error_message
                     .call(format!("No node named {node_name}"));
