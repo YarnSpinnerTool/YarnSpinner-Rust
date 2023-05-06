@@ -103,10 +103,10 @@ impl VirtualMachine {
         self.reset_state();
         let current_node = self
             .current_node
-            .as_ref()
+            .as_mut()
             .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."));
 
-        self.state.current_node_name = Some(node_name.to_owned());
+        current_node.name = node_name.to_owned();
 
         if let Some(node_start_handler) = &mut self.node_start_handler {
             node_start_handler.call(node_name.to_owned());
@@ -224,7 +224,7 @@ impl VirtualMachine {
     }
 
     pub(crate) fn current_node_name(&self) -> Option<&str> {
-        self.state.current_node_name.as_deref()
+        self.current_node.as_ref().map(|node| node.name.as_str())
     }
 
     pub(crate) fn unload_programs(&mut self) {
