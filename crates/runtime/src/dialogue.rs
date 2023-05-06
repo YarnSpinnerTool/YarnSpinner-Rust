@@ -12,7 +12,8 @@ mod read_only_dialogue;
 #[derive(Debug, Clone)]
 pub struct Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
-    pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+    variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+
     read_only_dialogue: ReadOnlyDialogue,
 
     /// Invoked when the Dialogue needs to report debugging information.
@@ -20,15 +21,6 @@ pub struct Dialogue {
 
     /// Invoked when the Dialogue needs to report an error.
     log_error_message: Logger,
-
-    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
-    ///
-    /// This code is used to determine how the `plural` and `ordinal`
-    /// markers determine the plural class of numbers.
-    ///
-    /// For example, the code "en-US" represents the English language as
-    /// used in the United States.
-    pub language_code: Option<String>,
 
     vm: VirtualMachine,
 }
@@ -53,7 +45,6 @@ impl Default for Dialogue {
             variable_storage,
             log_debug_message: vm.log_debug_message.clone(),
             log_error_message: vm.log_error_message.clone(),
-            language_code: Default::default(),
             vm,
             read_only_dialogue: dialogue_data,
         }
@@ -68,6 +59,7 @@ impl Dialogue {
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
         self.variable_storage = Arc::new(RwLock::new(variable_storage));
+        self.vm.variable_storage = self.variable_storage.clone();
         self
     }
 
@@ -162,10 +154,12 @@ impl Dialogue {
     }
 
     pub fn with_language_code(self, language_code: impl Into<String>) -> Self {
-        Self {
-            language_code: Some(language_code.into()),
-            ..self
-        }
+        self.read_only_dialogue
+            .language_code
+            .write()
+            .unwrap()
+            .replace(language_code.into());
+        self
     }
 
     /// Retrieves a read-only view of the [`Dialogue`] that is safe to be passed to handlers.
@@ -184,6 +178,11 @@ impl Dialogue {
     /// the built-in operators like `+`, `-`, and so on.
     pub fn library(&self) -> &Library {
         &self.vm.library
+    }
+
+    /// The object that provides access to storing and retrieving the values of variables.
+    pub fn variable_storage(&self) -> Arc<RwLock<dyn VariableStorage + 'static + Send + Sync>> {
+        self.variable_storage.clone()
     }
 
     /// See [`Dialogue::library`].

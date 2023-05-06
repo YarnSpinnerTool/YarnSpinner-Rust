@@ -17,6 +17,7 @@ pub struct ReadOnlyDialogue {
     pub(crate) current_node_name: Arc<RwLock<Option<String>>>,
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
+    pub(crate) language_code: Arc<RwLock<Option<String>>>,
 }
 
 impl Default for ReadOnlyDialogue {
@@ -26,6 +27,7 @@ impl Default for ReadOnlyDialogue {
             current_node_name: Arc::new(RwLock::new(None)),
             log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
             log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
+            language_code: Arc::new(RwLock::new(None)),
         }
     }
 }
@@ -107,16 +109,28 @@ impl ReadOnlyDialogue {
         self.current_node_name.read().unwrap().clone()
     }
 
+    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
+    ///
+    /// This code is used to determine how the `plural` and `ordinal`
+    /// markers determine the plural class of numbers.
+    ///
+    /// For example, the code "en-US" represents the English language as
+    /// used in the United States.
+    pub fn language_code(&self) -> Option<String> {
+        self.language_code.read().unwrap().clone()
+    }
+
     pub fn analyse(&self) -> ! {
         todo!()
     }
 
-    pub fn parse_markup(&self, _line: &str) -> ! {
+    pub fn parse_markup(&self, line: &str) -> String {
         // ## Implementation notes
         // It would be more ergonomic to not expose this and call it automatically.
         // We should probs remove this from the API.
         // Pass the MarkupResult directly into the LineHandler
-        todo!()
+        // todo!()
+        line.to_owned()
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {

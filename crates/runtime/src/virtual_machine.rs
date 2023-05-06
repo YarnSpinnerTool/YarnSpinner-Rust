@@ -28,7 +28,7 @@ pub(crate) struct VirtualMachine {
     pub(crate) dialogue_complete_handler: Option<DialogueCompleteHandler>,
     pub(crate) prepare_for_lines_handler: Option<PrepareForLinesHandler>,
     pub(crate) library: Library,
-    variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+    pub(crate) variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,

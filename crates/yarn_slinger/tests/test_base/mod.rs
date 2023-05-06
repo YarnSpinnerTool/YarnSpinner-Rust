@@ -15,6 +15,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
+use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
@@ -33,7 +34,7 @@ pub mod prelude {
 pub struct TestBase {
     pub storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     pub dialogue: Dialogue,
-    pub test_plan: TestPlan,
+    test_plan: Arc<RwLock<Option<TestPlan>>>,
     pub string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
     pub runtime_errors_cause_panic: Arc<AtomicBool>,
 }
@@ -43,14 +44,21 @@ impl Default for TestBase {
         let runtime_errors_cause_panic = Arc::new(AtomicBool::new(true));
         let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
             Arc::new(RwLock::new(HashMap::new()));
+        let test_plan = Arc::new(RwLock::new(None));
+
+        let dialogue = Dialogue::default()
+            .with_language_code("en")
+            .with_log_debug_message(|msg| {
+                println!("{}", msg);
+            });
+        let read_only_dialogue = dialogue.get_read_only();
+
         let dialogue = {
             let runtime_errors_cause_panic = runtime_errors_cause_panic.clone();
             let string_table = string_table.clone();
-            Dialogue::default()
-                .with_language_code("en")
-                .with_log_debug_message(|msg| {
-                    println!("{}", msg);
-                })
+            let test_plan = test_plan.clone();
+
+            dialogue
                 .with_log_error_message(move |msg| {
                     eprintln!("{}", msg);
                     if runtime_errors_cause_panic.load(Ordering::Relaxed) {
@@ -58,18 +66,24 @@ impl Default for TestBase {
                     }
                 })
                 .with_line_handler(move |line| {
-                    let id = line.id;
+                    let id = &line.id;
                     let string_table = string_table.read().unwrap();
-                    let string_info = string_table.get(&id).unwrap();
-                    let _line_number = string_info.line_number;
-                    // Can't go on because a handler cannot access the dialogue.
+                    let string_info = string_table.get(id).unwrap();
+                    let line_number = string_info.line_number;
+                    let text = get_composed_text_for_line_with_no_self(
+                        &line,
+                        &string_table,
+                        &read_only_dialogue,
+                    );
+                    println!("Line: {text}");
+                    let test_plan = test_plan.read().unwrap();
                 })
         };
-        let storage = dialogue.variable_storage.clone();
+        let storage = dialogue.variable_storage();
         Self {
             dialogue,
             storage,
-            test_plan: TestPlan::default(),
+            test_plan,
             string_table,
             runtime_errors_cause_panic,
         }
@@ -78,8 +92,12 @@ impl Default for TestBase {
 
 impl TestBase {
     /// Sets the current test plan to one loaded from a given path.
-    pub fn read_test_plan(mut self, path: &Path) -> Self {
-        self.test_plan = TestPlan::read(path);
+    pub fn read_test_plan(self, path: &Path) -> Self {
+        self.with_test_plan(TestPlan::read(path))
+    }
+
+    pub fn with_test_plan(self, test_plan: TestPlan) -> Self {
+        self.test_plan.write().unwrap().replace(test_plan);
         self
     }
 
@@ -121,12 +139,27 @@ impl TestBase {
             .map(move |entry| subdir.join(entry.file_name()))
     }
 
-    pub fn get_composed_text_for_line(&self, line: Line) -> String {
+    pub fn get_composed_text_for_line(&self, line: &Line) -> String {
         let string_table = self.string_table.read().unwrap();
-        let string_info = string_table.get(&line.id).unwrap();
-        let substitutions = line.substitutions.iter().map(|s| s.as_str());
-        let substituted_text =
-            ReadOnlyDialogue::expand_substitutions(&string_info.text, substitutions);
-        self.dialogue.parse_markup(&substituted_text)
+        get_composed_text_for_line_with_no_self(line, &string_table, &self.dialogue)
     }
+
+    pub fn test_plan(&self) -> impl Deref<Target = Option<TestPlan>> + '_ {
+        self.test_plan.read().unwrap()
+    }
+
+    pub fn test_plan_mut(&mut self) -> impl DerefMut<Target = Option<TestPlan>> + '_ {
+        self.test_plan.write().unwrap()
+    }
+}
+
+fn get_composed_text_for_line_with_no_self(
+    line: &Line,
+    string_table: &HashMap<LineId, StringInfo>,
+    dialogue: &ReadOnlyDialogue,
+) -> String {
+    let string_info = string_table.get(&line.id).unwrap();
+    let substitutions = line.substitutions.iter().map(|s| s.as_str());
+    let substituted_text = ReadOnlyDialogue::expand_substitutions(&string_info.text, substitutions);
+    dialogue.parse_markup(&substituted_text)
 }
