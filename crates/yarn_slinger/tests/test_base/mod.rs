@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use yarn_slinger::prelude::*;
+use yarn_slinger_core::prelude::YarnValue;
 
 mod extensions;
 mod paths;
@@ -132,14 +133,15 @@ impl Default for TestBase {
         let dialogue = {
             let test_plan = test_plan.clone();
 
-            dialogue.with_command_handler(move |command| {
-                println!("Command: {}", command.0);
-                let mut test_plan = test_plan.write().unwrap();
-                let Some(test_plan) = test_plan.as_mut() else {
+            dialogue
+                .with_command_handler(move |command| {
+                    println!("Command: {}", command.0);
+                    let mut test_plan = test_plan.write().unwrap();
+                    let Some(test_plan) = test_plan.as_mut() else {
                     return;
                 };
-                test_plan.next();
-                assert_eq!(
+                    test_plan.next();
+                    assert_eq!(
                     ExpectedStepType::Command,
                     test_plan.next_expected_step,
                     "Received command {}, but wasn't expecting to select one (was expecting {:?})",
@@ -147,17 +149,42 @@ impl Default for TestBase {
                     test_plan.next_expected_step
                 );
 
-                // We don't need to get the composed string for a
-                // command because it's been done for us in the
-                // virtual machine. The VM can do this because
-                // commands are not localised, so we don't need to
-                // refer to the string table to get the text.
+                    // We don't need to get the composed string for a
+                    // command because it's been done for us in the
+                    // virtual machine. The VM can do this because
+                    // commands are not localised, so we don't need to
+                    // refer to the string table to get the text.
+                    assert_eq!(
+                        test_plan.next_step_value,
+                        Some(StepValue::String(command.0))
+                    );
+                })
+                .with_node_complete_handler(|_| {})
+        };
+        let mut dialogue = {
+            let test_plan = test_plan.clone();
+            dialogue.with_dialogue_complete_handler(move || {
+                let mut test_plan = test_plan.write().unwrap();
+                let Some(test_plan) = test_plan.as_mut() else {
+                    return;
+                };
+                test_plan.next();
                 assert_eq!(
-                    test_plan.next_step_value,
-                    Some(StepValue::String(command.0))
+                    ExpectedStepType::Stop,
+                    test_plan.next_expected_step,
+                    "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
+                    test_plan.next_expected_step
                 );
             })
         };
+
+        dialogue
+            .library_mut()
+            .register_function("assert", |value: YarnValue| {
+                let is_truthy: bool = value.try_into().unwrap();
+                assert!(is_truthy);
+                true
+            });
         Self {
             dialogue,
             test_plan,
