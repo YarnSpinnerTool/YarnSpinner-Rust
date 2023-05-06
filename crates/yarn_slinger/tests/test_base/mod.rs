@@ -3,6 +3,8 @@
 use std::path::PathBuf;
 use yarn_slinger::prelude::*;
 
+mod test_plan;
+
 #[derive(Debug, Clone, Default)]
 pub struct TestBase {
     pub dialogue: Dialogue,
