@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use log::{debug, error};
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
@@ -10,6 +11,17 @@ pub struct ReadOnlyDialogue {
     pub(crate) current_node_name: Arc<RwLock<Option<String>>>,
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
+}
+
+impl Default for ReadOnlyDialogue {
+    fn default() -> Self {
+        ReadOnlyDialogue {
+            program: Arc::new(RwLock::new(None)),
+            current_node_name: Arc::new(RwLock::new(None)),
+            log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
+            log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
+        }
+    }
 }
 
 impl ReadOnlyDialogue {

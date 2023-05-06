@@ -13,7 +13,7 @@ mod read_only_dialogue;
 pub struct Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
     pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
-    dialogue_data: ReadOnlyDialogue,
+    read_only_dialogue: ReadOnlyDialogue,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -48,14 +48,14 @@ impl Default for Dialogue {
             .register_function("visited_count", move |node: String| -> f32 {
                 get_node_visit_count(storage_two.read().unwrap().deref(), &node)
             });
-        let dialogue_data = vm.dialogue_data.clone();
+        let dialogue_data = vm.read_only_dialogue.clone();
         Self {
             variable_storage,
             log_debug_message: vm.log_debug_message.clone(),
             log_error_message: vm.log_error_message.clone(),
             language_code: Default::default(),
             vm,
-            dialogue_data,
+            read_only_dialogue: dialogue_data,
         }
     }
 }
@@ -170,7 +170,7 @@ impl Dialogue {
 
     /// Retrieves a read-only view of the [`Dialogue`] that is safe to be passed to handlers.
     pub fn get_read_only(&self) -> ReadOnlyDialogue {
-        self.dialogue_data.clone()
+        self.read_only_dialogue.clone()
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
@@ -202,14 +202,14 @@ impl Dialogue {
     }
 
     pub fn set_program(&mut self, program: Program) -> &mut Self {
-        *self.dialogue_data.program.write().unwrap() = Some(program);
+        *self.read_only_dialogue.program.write().unwrap() = Some(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
         {
-            let mut existing_program = self.dialogue_data.program.write().unwrap();
+            let mut existing_program = self.read_only_dialogue.program.write().unwrap();
             if let Some(existing_program) = existing_program.as_mut() {
                 *existing_program =
                     Program::combine(vec![existing_program.clone(), program]).unwrap();
@@ -309,7 +309,7 @@ impl Dialogue {
 
 impl AsRef<ReadOnlyDialogue> for Dialogue {
     fn as_ref(&self) -> &ReadOnlyDialogue {
-        &self.dialogue_data
+        &self.read_only_dialogue
     }
 }
 
@@ -317,13 +317,13 @@ impl Deref for Dialogue {
     type Target = ReadOnlyDialogue;
 
     fn deref(&self) -> &Self::Target {
-        &self.dialogue_data
+        &self.read_only_dialogue
     }
 }
 
 impl DerefMut for Dialogue {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.dialogue_data
+        &mut self.read_only_dialogue
     }
 }
 
