@@ -1,7 +1,7 @@
 use crate::prelude::*;
 pub use read_only_dialogue::*;
 use std::fmt::Debug;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
@@ -13,7 +13,7 @@ mod read_only_dialogue;
 pub struct Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
     pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
-    pub dialogue_data: ReadOnlyDialogue,
+    dialogue_data: ReadOnlyDialogue,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -168,6 +168,10 @@ impl Dialogue {
         }
     }
 
+    pub fn get_readonly_access(&self) -> ReadOnlyDialogue {
+        self.dialogue_data.clone()
+    }
+
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
         self.vm.execution_state() != ExecutionState::Stopped
@@ -304,25 +308,29 @@ impl Dialogue {
         self
     }
 
-    pub fn analyse(&mut self) -> ! {
-        // ## Implementation notes
-        // It would be more ergonomic to not expose this and call it automatically.
-        // We should probs remove this from the API.
-        // Call it when running the first `continue_` after adding a program or something.
-        todo!()
-    }
-
-    pub fn parse_markup(&self, _line: &str) -> ! {
-        // ## Implementation notes
-        // It would be more ergonomic to not expose this and call it automatically.
-        // We should probs remove this from the API.
-        // Pass the MarkupResult directly into the LineHandler
-        todo!()
-    }
-
     /// Unloads all nodes from the Dialogue.
     pub fn unload_all(&mut self) {
         self.vm.unload_programs()
+    }
+}
+
+impl AsRef<ReadOnlyDialogue> for Dialogue {
+    fn as_ref(&self) -> &ReadOnlyDialogue {
+        &self.dialogue_data
+    }
+}
+
+impl Deref for Dialogue {
+    type Target = ReadOnlyDialogue;
+
+    fn deref(&self) -> &Self::Target {
+        &self.dialogue_data
+    }
+}
+
+impl DerefMut for Dialogue {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.dialogue_data
     }
 }
 
