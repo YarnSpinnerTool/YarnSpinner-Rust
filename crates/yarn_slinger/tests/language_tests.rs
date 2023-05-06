@@ -2,8 +2,7 @@
 
 use crate::test_base::*;
 use std::collections::HashMap;
-use yarn_slinger_compiler::prelude::*;
-use yarn_slinger_core::prelude::*;
+use yarn_slinger::prelude::*;
 
 mod test_base;
 
@@ -21,11 +20,11 @@ fn can_compile_space_demo() -> std::io::Result<()> {
 
     let compilation_job_sally = CompilationJob::default()
         .read_file(&sally_path)?
-        .with_library(test_base.dialogue.library.clone());
+        .with_library(test_base.dialogue.library().clone());
     let compilation_job_sally_and_ship = CompilationJob::default()
         .read_file(&sally_path)?
         .read_file(ship_path)?
-        .with_library(test_base.dialogue.library);
+        .with_library(test_base.dialogue.library().clone());
 
     let _result_sally = compile(compilation_job_sally).unwrap_pretty();
     let _result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
@@ -43,13 +42,13 @@ fn test_merging_nodes() {
     let compilation_job_sally = CompilationJob::default()
         .read_file(&sally_path)
         .unwrap()
-        .with_library(test_base.dialogue.library.clone());
+        .with_library(test_base.dialogue.library().clone());
     let compilation_job_sally_and_ship = CompilationJob::default()
         .read_file(&sally_path)
         .unwrap()
         .read_file(ship_path)
         .unwrap()
-        .with_library(test_base.dialogue.library);
+        .with_library(test_base.dialogue.library().clone());
 
     let result_sally = compile(compilation_job_sally).unwrap_pretty();
     let result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();

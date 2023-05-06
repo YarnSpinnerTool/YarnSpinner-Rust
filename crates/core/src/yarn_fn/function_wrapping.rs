@@ -11,16 +11,16 @@ use yarn_slinger_macros::all_tuples;
 ///   - [`bool`]
 ///   - [`String`]
 ///   - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
-///   - [`UntypedValue`], which means that this parameter may be any of any of the above types
+///   - [`YarnValue`], which means that this parameter may be any of any of the above types
 /// - Its parameters must be passed by value
 /// - It must have a return type
 /// - Its return type must be one of the following types:
 ///     - [`bool`]
 ///     - [`String`]
 ///     - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
-pub trait YarnFn<Marker> {
-    type Out: IntoUntypedValueFromNonUntypedValue + 'static;
-    fn call(&self, input: Vec<UntypedValue>) -> Self::Out;
+pub trait YarnFn<Marker>: Clone + Send + Sync {
+    type Out: IntoYarnValueFromNonYarnValue + 'static;
+    fn call(&self, input: Vec<YarnValue>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
@@ -29,14 +29,14 @@ pub trait YarnFn<Marker> {
 
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
-pub trait UntypedYarnFn: Debug {
-    fn call(&self, input: Vec<UntypedValue>) -> UntypedValue;
-    fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
+pub trait UntypedYarnFn: Debug + Send + Sync {
+    fn call(&self, input: Vec<YarnValue>) -> YarnValue;
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
 
-impl Clone for Box<dyn UntypedYarnFn> {
+impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
@@ -45,15 +45,15 @@ impl Clone for Box<dyn UntypedYarnFn> {
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static + Clone,
-    F: YarnFn<Marker> + 'static + Clone,
-    F::Out: IntoUntypedValueFromNonUntypedValue + 'static + Clone,
+    F: YarnFn<Marker> + 'static + Clone + Send + Sync,
+    F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<UntypedValue>) -> UntypedValue {
+    fn call(&self, input: Vec<YarnValue>) -> YarnValue {
         let output = self.function.call(input);
         output.into_untyped_value()
     }
 
-    fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync> {
         Box::new(self.clone())
     }
 
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl PartialEq for Box<dyn UntypedYarnFn> {
+impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
     fn eq(&self, other: &Self) -> bool {
         // Not guaranteed to be unique, but that's good enough for our purposes.
         let debug = format!("{:?}", self);
@@ -110,7 +110,7 @@ impl PartialEq for Box<dyn UntypedYarnFn> {
     }
 }
 
-impl Eq for Box<dyn UntypedYarnFn> {}
+impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
@@ -118,13 +118,13 @@ macro_rules! impl_yarn_fn_tuple {
         #[allow(non_snake_case)]
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
-                F: Fn($($param,)*) -> O,
-                O: IntoUntypedValueFromNonUntypedValue + 'static,
-                $($param: TryFrom<UntypedValue> + 'static,)*
+                F: Fn($($param,)*) -> O + Send + Sync + Clone,
+                O: IntoYarnValueFromNonYarnValue + 'static,
+                $($param: TryFrom<YarnValue> + 'static,)*
             {
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, input: Vec<UntypedValue>) -> Self::Out {
+                fn call(&self, input: Vec<YarnValue>) -> Self::Out {
                     let [$($param,)*] = &input[..] else {
                         panic!("Wrong number of arguments")
                     };

@@ -9,7 +9,7 @@ use std::rc::Rc;
 /// it provides access to the parse tree, and the stream of tokens used to
 /// produce that parse tree.
 #[derive(Clone)]
-pub struct FileParseResult<'input> {
+pub(crate) struct FileParseResult<'input> {
     pub name: String,
 
     pub tree: Rc<DialogueContextAll<'input>>,
@@ -22,7 +22,7 @@ pub struct FileParseResult<'input> {
 }
 
 impl<'input> FileParseResult<'input> {
-    pub fn new(
+    pub(crate) fn new(
         name: String,
         tree: Rc<DialogueContextAll<'input>>,
         parser: Rc<ActualYarnSpinnerParser<'input>>,
@@ -30,7 +30,7 @@ impl<'input> FileParseResult<'input> {
         Self { name, tree, parser }
     }
 
-    pub fn tokens(&self) -> &ActualTokenStream<'input> {
+    pub(crate) fn tokens(&self) -> &ActualTokenStream<'input> {
         &self.parser.input
     }
 }

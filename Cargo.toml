@@ -6,4 +6,5 @@ members = [
     "crates/core",
     "crates/macros",
     "crates/runtime",
+    "crates/yarn_slinger"
 ]
