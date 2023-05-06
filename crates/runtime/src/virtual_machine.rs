@@ -17,7 +17,7 @@ mod state;
 
 #[derive(Debug, Clone)]
 pub(crate) struct VirtualMachine {
-    pub(crate) program: Option<Program>,
+    pub(crate) dialogue_data: Arc<RwLock<ReadOnlyDialogue>>,
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
     pub(crate) line_handler: LineHandler,
@@ -38,9 +38,14 @@ impl VirtualMachine {
     pub(crate) fn with_variable_storage(
         variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     ) -> Self {
-        Self {
+        let dialogue_data = ReadOnlyDialogue {
+            program: None,
             log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
             log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
+        };
+        Self {
+            log_debug_message: dialogue_data.log_debug_message.clone(),
+            log_error_message: dialogue_data.log_error_message.clone(),
             line_handler: LineHandler(Box::new(|line| {
                 info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
             })),
@@ -56,7 +61,7 @@ impl VirtualMachine {
             })),
             dialogue_complete_handler: Default::default(),
             prepare_for_lines_handler: Default::default(),
-            program: Default::default(),
+            dialogue_data: Arc::new(RwLock::new(dialogue_data)),
             state: Default::default(),
             execution_state: Default::default(),
             current_node: Default::default(),
@@ -88,18 +93,21 @@ impl VirtualMachine {
     }
 
     pub(crate) fn set_node(&mut self, node_name: &str) {
-        let program = self.program.as_mut().unwrap_or_else(|| {
-            panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
-        });
-        assert!(
-            !program.nodes.is_empty(),
-            "Cannot load node \"{node_name}\": No nodes have been loaded.",
-        );
+        self.current_node = {
+            self.log_debug_message
+                .call(format!("Running node \"{node_name}\""));
 
-        self.log_debug_message
-            .call(format!("Running node \"{node_name}\""));
+            let mut dialogue_data = self.dialogue_data.write().unwrap();
+            let program = dialogue_data.program.as_mut().unwrap_or_else(|| {
+                panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
+            });
+            assert!(
+                !program.nodes.is_empty(),
+                "Cannot load node \"{node_name}\": No nodes have been loaded.",
+            );
 
-        self.current_node = program.nodes.get(node_name).cloned();
+            program.nodes.get(node_name).cloned()
+        };
         self.reset_state();
         let current_node = self
             .current_node
@@ -232,7 +240,7 @@ impl VirtualMachine {
     }
 
     pub(crate) fn unload_programs(&mut self) {
-        self.program = None
+        self.dialogue_data.write().unwrap().program = None
     }
 
     fn run_instruction(&mut self, instruction: &Instruction) {
@@ -449,7 +457,8 @@ impl VirtualMachine {
                         // value may be found in the program. (If it's
                         // not, then the variable's value is undefined,
                         // which isn't allowed.)
-                        self
+                        let dialogue_data = self.dialogue_data.read().unwrap();
+                        dialogue_data
                             .program
                             .as_ref()
                             .unwrap()

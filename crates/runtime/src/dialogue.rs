@@ -1,9 +1,11 @@
 use crate::prelude::*;
-use log::*;
+pub use read_only_dialogue::*;
 use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
+
+mod read_only_dialogue;
 
 /// Co-ordinates the execution of Yarn programs.
 #[non_exhaustive]
@@ -11,6 +13,7 @@ use yarn_slinger_core::prelude::*;
 pub struct Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
     pub variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+    pub dialogue_data: Arc<RwLock<ReadOnlyDialogue>>,
 
     /// Invoked when the Dialogue needs to report debugging information.
     log_debug_message: Logger,
@@ -45,13 +48,14 @@ impl Default for Dialogue {
             .register_function("visited_count", move |node: String| -> f32 {
                 get_node_visit_count(storage_two.read().unwrap().deref(), &node)
             });
-
+        let dialogue_data = vm.dialogue_data.clone();
         Self {
             variable_storage,
-            log_debug_message: Logger(Box::new(|msg| debug!("{msg}"))),
-            log_error_message: Logger(Box::new(|msg| error!("{msg}"))),
+            log_debug_message: vm.log_debug_message.clone(),
+            log_error_message: vm.log_error_message.clone(),
             language_code: Default::default(),
             vm,
+            dialogue_data,
         }
     }
 }
@@ -193,18 +197,29 @@ impl Dialogue {
     }
 
     pub fn set_program(&mut self, program: Program) -> &mut Self {
-        self.vm.program = Some(program);
+        self.dialogue_data.write().unwrap().program = Some(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
-        if let Some(existing_program) = self.program_mut() {
+        let mut dialogue_data = self.dialogue_data.write().unwrap();
+        if let Some(existing_program) = &mut dialogue_data.program {
             *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
+            drop(dialogue_data);
         } else {
+            drop(dialogue_data);
             self.set_program(program);
         }
         self
+    }
+
+    /// Gets the name of the node that this Dialogue is currently executing.
+    ///
+    /// If [`Dialogue::continue_`] has never been called, this value
+    /// will be [`None`].
+    pub fn current_node(&self) -> Option<&str> {
+        self.vm.current_node_name()
     }
 
     /// Prepares the [`Dialogue`] that the user intends to start running a node.
@@ -287,61 +302,6 @@ impl Dialogue {
         self
     }
 
-    /// Gets the names of the nodes in the currently loaded Program, if there is one.
-    pub fn node_names(&self) -> Option<impl Iterator<Item = &str>> {
-        self.vm
-            .program
-            .as_ref()
-            .map(|program| program.nodes.keys().map(|s| s.as_str()))
-    }
-
-    /// Gets the name of the node that this Dialogue is currently executing.
-    ///
-    /// If [`Dialogue::continue_`] has never been called, this value
-    /// will be [`None`].
-    pub fn current_node(&self) -> Option<&str> {
-        self.vm.current_node_name()
-    }
-
-    /// Returns the string ID that contains the original, uncompiled source
-    /// text for a node.
-    ///
-    /// A node's source text will only be present in the string table if its
-    /// `tags` header contains `rawText`.
-    ///
-    /// Because the [`Dialogue`] API is designed to be unaware
-    /// of the contents of the string table, this method does not test to
-    /// see if the string table contains an entry with the line ID. You will
-    /// need to test for that yourself.
-    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
-        self.get_node_logging_errors(node_name)
-            .map(|_| format!("line:{node_name}"))
-    }
-
-    /// Returns the tags for the node `node_name`.
-    ///
-    /// The tags for a node are defined by setting the `tags` header in
-    /// the node's source code. This header must be a space-separated list
-    ///
-    /// Returns [`None`] if the node is not present in the program.
-    pub fn get_tags_for_node(&self, node_name: &str) -> Option<impl Iterator<Item = &str>> {
-        self.get_node_logging_errors(node_name)
-            .map(|node| node.tags.iter().map(|s| s.as_str()))
-    }
-
-    /// Gets a value indicating whether a specified node exists in the
-    /// Program.
-    pub fn node_exists(&self, node_name: &str) -> bool {
-        // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
-        if let Some(program) = self.program() {
-            program.nodes.contains_key(node_name)
-        } else {
-            self.log_error_message
-                .call("Tried to call NodeExists, but no program has been loaded".to_owned());
-            false
-        }
-    }
-
     pub fn analyse(&mut self) -> ! {
         // ## Implementation notes
         // It would be more ergonomic to not expose this and call it automatically.
@@ -358,57 +318,9 @@ impl Dialogue {
         todo!()
     }
 
-    /// Replaces all substitution markers in a text with the given
-    /// substitution list.
-    ///
-    /// This method replaces substitution markers - for example, `{0}`
-    /// - with the corresponding entry in `substitutions`.
-    /// If `test` contains a substitution marker whose
-    /// index is not present in `substitutions`, it is
-    /// ignored.
-    pub fn expand_substitutions<'a>(
-        text: &str,
-        substitutions: impl IntoIterator<Item = &'a str>,
-    ) -> String {
-        substitutions
-            .into_iter()
-            .enumerate()
-            .fold(text.to_owned(), |text, (i, substitution)| {
-                text.replace(&format!("{{{i}}}",), substitution)
-            })
-    }
-
-    fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
-        if let Some(program) = self.program() {
-            if program.nodes.is_empty() {
-                self.log_error_message
-                    .call("No nodes are loaded".to_owned());
-                None
-            } else if let Some(node) = program.nodes.get(node_name) {
-                Some(node)
-            } else {
-                self.log_error_message
-                    .call(format!("No node named {node_name}"));
-                None
-            }
-        } else {
-            self.log_error_message
-                .call("No program is loaded".to_owned());
-            None
-        }
-    }
-
     /// Unloads all nodes from the Dialogue.
     pub fn unload_all(&mut self) {
         self.vm.unload_programs()
-    }
-
-    fn program(&self) -> Option<&Program> {
-        self.vm.program.as_ref()
-    }
-
-    fn program_mut(&mut self) -> Option<&mut Program> {
-        self.vm.program.as_mut()
     }
 }
 
