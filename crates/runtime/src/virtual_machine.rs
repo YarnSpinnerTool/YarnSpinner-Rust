@@ -456,9 +456,38 @@ impl VirtualMachine {
                     });
                 self.state.push(loaded_value);
             }
-            OpCode::StoreVariable => {}
-            OpCode::Stop => {}
-            OpCode::RunNode => {}
+            OpCode::StoreVariable => {
+                // Store the top value on the stack in a variable.
+                let top_value = self.state.peek_value().clone();
+                let variable_name: String = instruction.read_operand(0);
+                self.variable_storage
+                    .write()
+                    .unwrap()
+                    .set(variable_name, top_value.into());
+            }
+            OpCode::Stop => {
+                // Immediately stop execution, and report that fact.
+                let current_node_name = self.current_node_name().unwrap().to_owned();
+                self.node_complete_handler.call(current_node_name);
+                if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
+                    dialogue_complete_handler.call();
+                }
+                self.execution_state = ExecutionState::Stopped;
+            }
+            OpCode::RunNode => {
+                // Run a node
+
+                // Pop a string from the stack, and jump to a node
+                // with that name.
+                let node_name: String = self.state.pop();
+                self.node_complete_handler.call(node_name.clone());
+                self.set_node(&node_name);
+
+                // Decrement program counter here, because it will
+                // be incremented when this function returns, and
+                // would mean skipping the first instruction
+                self.state.program_counter -= 1;
+            }
         }
     }
 

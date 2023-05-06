@@ -89,3 +89,21 @@ impl From<YarnValue> for InternalValue {
         }
     }
 }
+
+impl From<InternalValue> for YarnValue {
+    fn from(value: InternalValue) -> Self {
+        value.raw_value
+    }
+}
+
+impl AsRef<YarnValue> for InternalValue {
+    fn as_ref(&self) -> &YarnValue {
+        &self.raw_value
+    }
+}
+
+impl AsMut<YarnValue> for InternalValue {
+    fn as_mut(&mut self) -> &mut YarnValue {
+        &mut self.raw_value
+    }
+}
