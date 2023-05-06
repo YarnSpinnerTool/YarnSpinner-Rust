@@ -356,12 +356,38 @@ impl VirtualMachine {
                 // The original checks `WaitingForContinue` here, but we can't mutate the dialogue in handlers,
                 // so there's no need to check.
             }
-            OpCode::PushString => {}
-            OpCode::PushFloat => {}
-            OpCode::PushBool => {}
-            OpCode::PushNull => {}
-            OpCode::JumpIfFalse => {}
-            OpCode::Pop => {}
+            OpCode::PushString => {
+                //Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
+                let string_table_index: String = instruction.read_operand(0);
+                self.state.push(string_table_index);
+            }
+            OpCode::PushFloat => {
+                // Pushes a floating point onto the stack.
+                let float: f32 = instruction.read_operand(0);
+                self.state.push(float);
+            }
+            OpCode::PushBool => {
+                // Pushes a boolean value onto the stack.
+                let boolean: bool = instruction.read_operand(0);
+                self.state.push(boolean);
+            }
+
+            OpCode::PushNull => {
+                println!("PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code.");
+            }
+            OpCode::JumpIfFalse => {
+                // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
+                let is_top_value_true: bool = self.state.pop();
+                if !is_top_value_true {
+                    let label_name: String = instruction.read_operand(0);
+                    let instruction_point = self.find_instruction_point_for_label(&label_name) - 1;
+                    self.state.program_counter = instruction_point;
+                }
+            }
+            OpCode::Pop => {
+                // Pops a value from the stack.
+                self.state.pop_value();
+            }
             OpCode::CallFunc => {}
             OpCode::PushVariable => {}
             OpCode::StoreVariable => {}

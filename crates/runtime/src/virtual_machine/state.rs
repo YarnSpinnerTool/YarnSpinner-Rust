@@ -28,42 +28,48 @@ impl State {
         self.stack.push(value.into())
     }
 
+    /// Pops a value from the stack and tries to convert it to the specified type.
+    ///
+    /// ## Panics
+    /// - Panics on an empty stack to mirror C# behavior.
+    /// - Panics if the value cannot be converted to the specified type.
     pub(crate) fn pop<T>(&mut self) -> T
     where
         T: TryFrom<InternalValue>,
         <T as TryFrom<InternalValue>>::Error: Debug,
     {
-        self.force_pop()
+        self.pop_value()
             .try_into()
             .unwrap_or_else(|e| panic!("Failed to convert popped value: {e:?}",))
     }
 
-    pub(crate) fn pop_value(&mut self) -> Option<InternalValue> {
-        self.stack.pop()
+    /// Pops a value from the stack. Panics on an empty stack to mirror C# behavior.
+    pub(crate) fn pop_value(&mut self) -> InternalValue {
+        self.stack
+            .pop()
+            .unwrap_or_else(|| panic!("Tried to pop value, but the stack was empty."))
     }
 
+    /// Peeks the top value of the stack. Panics on an empty stack to mirror C# behavior.
     pub(crate) fn peek<T>(&self) -> T
     where
         T: TryFrom<InternalValue>,
         <T as TryFrom<InternalValue>>::Error: Debug,
     {
-        self.force_peek()
+        self.peek_value()
             .clone()
             .try_into()
             .unwrap_or_else(|e| panic!("Failed to convert popped value: {e:?}",))
     }
 
-    pub(crate) fn peek_value(&self) -> Option<&InternalValue> {
-        self.stack.peek()
-    }
-
-    fn force_pop(&mut self) -> InternalValue {
-        self.pop_value()
-            .unwrap_or_else(|| panic!("Tried to pop value, but the stack was empty."))
-    }
-
-    fn force_peek(&self) -> &InternalValue {
-        self.peek_value()
+    /// Copies the top value of the stack and tries to convert it to the specified type.
+    ///
+    /// ## Panics
+    /// - Panics on an empty stack to mirror C# behavior.
+    /// - Panics if the value cannot be converted to the specified type.
+    pub(crate) fn peek_value(&self) -> &InternalValue {
+        self.stack
+            .peek()
             .unwrap_or_else(|| panic!("Tried to peek value, but the stack was empty."))
     }
 }
