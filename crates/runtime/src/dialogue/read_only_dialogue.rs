@@ -5,6 +5,12 @@ use yarn_slinger_core::prelude::*;
 
 /// A read-only view of a [`Dialogue`]. Represents the methods that are okay to be called from handlers.
 /// Since this type is `Send + Sync`, you can get a copy with [`Dialogue::get_read_only`] and `move` it into a handler.
+///
+/// ## Implementation notes
+///
+/// This type is not present in the original. We need to use it to cleanly borrow data from handlers.
+/// The original just calls [`Dialogue`] for both mutable and immutable access anywhere,
+/// which is of course a big no-no in Rust.
 #[derive(Debug, Clone)]
 pub struct ReadOnlyDialogue {
     pub(crate) program: Arc<RwLock<Option<Program>>>,
