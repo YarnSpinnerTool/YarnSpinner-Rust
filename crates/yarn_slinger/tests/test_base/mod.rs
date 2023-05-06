@@ -16,6 +16,8 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, RwLock};
 use yarn_slinger::prelude::*;
 
 mod extensions;
@@ -27,11 +29,51 @@ pub mod prelude {
     pub use crate::test_base::{extensions::*, paths::*, step::*, test_plan::*, *};
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct TestBase {
+    pub storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     pub dialogue: Dialogue,
     pub test_plan: TestPlan,
-    pub string_table: HashMap<LineId, StringInfo>,
+    pub string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
+    pub runtime_errors_cause_panic: Arc<AtomicBool>,
+}
+
+impl Default for TestBase {
+    fn default() -> Self {
+        let runtime_errors_cause_panic = Arc::new(AtomicBool::new(true));
+        let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
+            Arc::new(RwLock::new(HashMap::new()));
+        let dialogue = {
+            let runtime_errors_cause_panic = runtime_errors_cause_panic.clone();
+            let string_table = string_table.clone();
+            Dialogue::default()
+                .with_language_code("en")
+                .with_log_debug_message(|msg| {
+                    println!("{}", msg);
+                })
+                .with_log_error_message(move |msg| {
+                    eprintln!("{}", msg);
+                    if runtime_errors_cause_panic.load(Ordering::Relaxed) {
+                        assert!(msg.is_empty())
+                    }
+                })
+                .with_line_handler(move |line| {
+                    let id = line.id;
+                    let string_table = string_table.read().unwrap();
+                    let string_info = string_table.get(&id).unwrap();
+                    let line_number = string_info.line_number;
+                    // Can't go on because a handler cannot access the dialogue.
+                })
+        };
+        let storage = dialogue.variable_storage.clone();
+        Self {
+            dialogue,
+            storage,
+            test_plan: TestPlan::default(),
+            string_table,
+            runtime_errors_cause_panic,
+        }
+    }
 }
 
 impl TestBase {
@@ -74,7 +116,7 @@ impl TestBase {
                     .map(|ext| allowed_extensions.contains(&ext))
                     .unwrap_or_default()
             })
-            // don't include ".upgraded.yarn" (used in UpgraderTests)
+            // don't include ".upgraded.yarn" (used in upgrader tests)
             .filter(|entry| entry.path().ends_with(".upgraded.yarn"))
             .map(move |entry| subdir.join(entry.file_name()))
     }

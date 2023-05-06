@@ -59,7 +59,6 @@ impl Default for Dialogue {
 impl Dialogue {
     pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
-    /// Initializes a new instance of the [`Dialogue`] class.
     pub fn with_variable_storage(
         mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
