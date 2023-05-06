@@ -15,22 +15,9 @@ pub fn project_root_path() -> PathBuf {
 }
 
 pub fn test_data_path() -> PathBuf {
-    let project_root_path = project_root_path();
-    let project_root = project_root_path.to_str().unwrap();
-    [
-        project_root,
-        "..",
-        "..",
-        "third-party",
-        "YarnSpinner",
-        "Tests",
-    ]
-    .iter()
-    .collect()
+    project_root_path().join("../../third-party/YarnSpinner/Tests")
 }
 
 pub fn space_demo_scripts_path() -> PathBuf {
-    let test_data_path = test_data_path();
-    let test_data = test_data_path.to_str().unwrap();
-    [test_data, "Projects", "Space"].iter().collect()
+    test_data_path().join("Projects/Space")
 }

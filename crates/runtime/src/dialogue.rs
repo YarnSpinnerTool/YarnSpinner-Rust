@@ -343,7 +343,7 @@ impl Dialogue {
         }
     }
 
-    pub fn analyse(&mut self) {
+    pub fn analyse(&mut self) -> ! {
         // ## Implementation notes
         // It would be more ergonomic to not expose this and call it automatically.
         // We should probs remove this from the API.
@@ -351,12 +351,32 @@ impl Dialogue {
         todo!()
     }
 
-    pub fn parse_markup(&mut self) {
+    pub fn parse_markup(&self, _line: &str) -> ! {
         // ## Implementation notes
         // It would be more ergonomic to not expose this and call it automatically.
         // We should probs remove this from the API.
         // Pass the MarkupResult directly into the LineHandler
         todo!()
+    }
+
+    /// Replaces all substitution markers in a text with the given
+    /// substitution list.
+    ///
+    /// This method replaces substitution markers - for example, `{0}`
+    /// - with the corresponding entry in `substitutions`.
+    /// If `test` contains a substitution marker whose
+    /// index is not present in `substitutions`, it is
+    /// ignored.
+    pub fn expand_substitutions<'a>(
+        text: &str,
+        substitutions: impl IntoIterator<Item = &'a str>,
+    ) -> String {
+        substitutions
+            .into_iter()
+            .enumerate()
+            .fold(text.to_owned(), |text, (i, substitution)| {
+                text.replace(&format!("{{{i}}}",), substitution)
+            })
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<&Node> {
