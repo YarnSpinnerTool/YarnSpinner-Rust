@@ -22,11 +22,18 @@ pub struct HandlerSafeDialogue {
 
 impl Default for HandlerSafeDialogue {
     fn default() -> Self {
+        fn default_logger(msg: String, _dialogue: &HandlerSafeDialogue) {
+            debug!("{}", msg)
+        }
+
+        fn default_error(msg: String, _dialogue: &HandlerSafeDialogue) {
+            error!("{}", msg)
+        }
         HandlerSafeDialogue {
             program: Arc::new(RwLock::new(None)),
             current_node_name: Arc::new(RwLock::new(None)),
-            log_debug_message: Logger(Box::new(|msg, _| debug!("{}", msg))),
-            log_error_message: Logger(Box::new(|msg, _| error!("{}", msg))),
+            log_debug_message: Box::new(default_logger),
+            log_error_message: Box::new(default_error),
             language_code: Arc::new(RwLock::new(None)),
         }
     }

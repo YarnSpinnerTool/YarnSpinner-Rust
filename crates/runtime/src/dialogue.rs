@@ -53,7 +53,7 @@ impl Dialogue {
         mut self,
         logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.log_debug_message = logger.into();
+        self.vm.log_debug_message = Box::new(logger);
         self
     }
 
@@ -61,7 +61,7 @@ impl Dialogue {
         mut self,
         logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.log_error_message = logger.into();
+        self.vm.log_error_message = Box::new(logger);
         self
     }
 
@@ -69,7 +69,7 @@ impl Dialogue {
         mut self,
         line_handler: impl Fn(Line, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.line_handler = line_handler.into();
+        self.vm.line_handler = Box::new(line_handler);
         self
     }
 
@@ -87,7 +87,7 @@ impl Dialogue {
             + Send
             + Sync,
     ) -> Self {
-        self.vm.options_handler = options_handler.into();
+        self.vm.options_handler = Box::new(options_handler);
         self
     }
 
@@ -96,7 +96,7 @@ impl Dialogue {
         mut self,
         command_handler: impl FnMut(Command, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.command_handler = command_handler.into();
+        self.vm.command_handler = Box::new(command_handler);
         self
     }
 
@@ -105,7 +105,7 @@ impl Dialogue {
         mut self,
         node_complete_handler: impl FnMut(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.node_complete_handler = node_complete_handler.into();
+        self.vm.node_complete_handler = Box::new(node_complete_handler);
         self
     }
 
@@ -114,7 +114,7 @@ impl Dialogue {
         mut self,
         node_start_handler: impl FnMut(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.node_start_handler = Some(node_start_handler.into());
+        self.vm.node_start_handler = Some(Box::new(node_start_handler));
         self
     }
 
@@ -123,7 +123,7 @@ impl Dialogue {
         mut self,
         dialogue_complete_handler: impl FnMut(&HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> Self {
-        self.vm.dialogue_complete_handler = Some(dialogue_complete_handler.into());
+        self.vm.dialogue_complete_handler = Some(Box::new(dialogue_complete_handler));
         self
     }
 
@@ -136,7 +136,7 @@ impl Dialogue {
             + Send
             + Sync,
     ) -> Self {
-        self.vm.prepare_for_lines_handler = Some(prepare_for_lines_handler.into());
+        self.vm.prepare_for_lines_handler = Some(Box::new(prepare_for_lines_handler));
         self
     }
 
@@ -203,6 +203,7 @@ impl Dialogue {
                     Program::combine(vec![existing_program.clone(), program]).unwrap();
             } else {
                 *existing_program = Some(program);
+                drop(existing_program);
                 self.vm.reset_state();
             }
         }

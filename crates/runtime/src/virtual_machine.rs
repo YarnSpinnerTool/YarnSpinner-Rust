@@ -15,7 +15,7 @@ use yarn_slinger_core::prelude::*;
 mod execution_state;
 mod state;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct VirtualMachine {
     pub(crate) read_only_dialogue: HandlerSafeDialogue,
     pub(crate) log_debug_message: Logger,
@@ -39,22 +39,26 @@ impl VirtualMachine {
         variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     ) -> Self {
         let dialogue_data = HandlerSafeDialogue::default();
+        fn default_line_handler(line: Line, _dialogue: &HandlerSafeDialogue) {
+            info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
+        }
+        fn default_options_handler(options: Vec<DialogueOption>, _dialogue: &HandlerSafeDialogue) {
+            info!("Delivering options: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_options_handler`.", options);
+        }
+        fn default_command_handler(command: Command, _dialogue: &HandlerSafeDialogue) {
+            info!("Executing command: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_command_handler`.", command);
+        }
+        fn default_node_complete_handler(node_name: String, _dialogue: &HandlerSafeDialogue) {
+            info!("Completed node: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_node_complete_handler`.", node_name);
+        }
         Self {
             log_debug_message: dialogue_data.log_debug_message.clone(),
             log_error_message: dialogue_data.log_error_message.clone(),
-            line_handler: LineHandler(Box::new(|line, _| {
-                info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
-            })),
-            options_handler: OptionsHandler(Box::new(|options, _| {
-                info!("Delivering options: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_options_handler`.", options);
-            })),
-            command_handler: CommandHandler(Box::new(|command, _| {
-                info!("Executing command: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_command_handler`.", command);
-            })),
+            line_handler: Box::new(default_line_handler),
+            options_handler: Box::new(default_options_handler),
+            command_handler: Box::new(default_command_handler),
             node_start_handler: Default::default(),
-            node_complete_handler: NodeCompleteHandler(Box::new(|node_name, _| {
-                info!("Completed node: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_node_complete_handler`.", node_name);
-            })),
+            node_complete_handler: Box::new(default_node_complete_handler),
             dialogue_complete_handler: Default::default(),
             prepare_for_lines_handler: Default::default(),
             read_only_dialogue: dialogue_data,

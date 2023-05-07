@@ -24,56 +24,34 @@ macro_rules! impl_handler {
 macro_rules! impl_handler_inner {
     ($(#[$attr:meta])* pub struct $struct_name:ident(pub $trait_name:ident: $fun:ident($($param:ty)?)), $($mutable:ident)?) => {
         $(#[$attr])*
-        #[derive(Debug, Clone)]
-        pub struct $struct_name(pub Box<dyn $trait_name + Send + Sync>);
+        pub type $struct_name = Box<dyn $trait_name + Send + Sync>;
 
-        impl std::ops::Deref for $struct_name {
-            type Target = Box<dyn $trait_name + Send + Sync>;
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-
-        impl std::ops::DerefMut for $struct_name {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.0
-            }
-        }
-
-        impl<T> From<T> for $struct_name
-            where T: $fun($($param,)? &HandlerSafeDialogue) + Clone + Send + Sync + 'static,
-        {
-            fn from(f: T) -> Self {
-                Self(Box::new(f))
-            }
-        }
-
-        impl Clone for Box<dyn $trait_name + Send + Sync> {
+        impl Clone for $struct_name {
             fn clone(&self) -> Self {
                 self.clone_box()
             }
         }
 
-        impl std::fmt::Debug for dyn $trait_name + Send + Sync {
+        impl std::fmt::Debug for $struct_name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, stringify!($struct_name))
             }
         }
 
         pub trait $trait_name: Send + Sync {
-            fn call(&$($mutable)? self, $(param: $param,)? dialogue: &HandlerSafeDialogue);
-            fn clone_box(&self) -> Box<dyn $trait_name + Send + Sync>;
+            fn call<'a, 'b>(&'a $($mutable)? self, $(param: $param,)? dialogue: &'b HandlerSafeDialogue);
+            fn clone_box(&self) -> $struct_name;
         }
 
         impl<T> $trait_name for T
         where
             T: $fun($($param,)? &HandlerSafeDialogue) + Clone + Send + Sync + 'static,
         {
-            fn call(&$($mutable)? self, $(param: $param,)? dialogue: &HandlerSafeDialogue){
+            fn call<'a, 'b>(&'a $($mutable)? self, $(param: $param,)? dialogue: &'b HandlerSafeDialogue){
                 self($(param as $param,)? dialogue)
             }
 
-            fn clone_box(&self) -> Box<dyn $trait_name + Send + Sync> {
+            fn clone_box(&self) -> $struct_name {
                 Box::new(self.clone())
             }
         }
