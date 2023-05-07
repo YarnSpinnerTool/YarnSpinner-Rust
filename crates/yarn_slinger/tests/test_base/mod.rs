@@ -119,7 +119,7 @@ impl Default for TestBase {
 
                 test_plan.next();
                 assert_eq!(
-                    ExpectedStepType::Option,
+                    ExpectedStepType::Select,
                     test_plan.next_expected_step,
                     "Received {} options, but wasn't expecting them (was expecting {:?})",
                     options.len(),
@@ -240,7 +240,7 @@ impl TestBase {
         while self.dialogue.is_active() {
             let test_plan = self.test_plan.read().unwrap();
             if let Some(test_plan) = test_plan.as_ref() {
-                if test_plan.next_expected_step == ExpectedStepType::Option {
+                if test_plan.next_expected_step == ExpectedStepType::Select {
                     if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
                         self.dialogue
                             .set_selected_option(OptionId::construct_for_debugging(selection));
@@ -250,6 +250,9 @@ impl TestBase {
                     }
                 }
             }
+            // Needed because a handler called by dialogue wants to borrow test_plan mutably
+            drop(test_plan);
+
             self.dialogue.continue_();
         }
     }

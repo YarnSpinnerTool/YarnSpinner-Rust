@@ -50,11 +50,7 @@ impl Step {
             }
             ExpectedStepType::Select => {
                 let value = reader.read_next::<usize>();
-                Self {
-                    expected_step_type,
-                    value: Some(value.into()),
-                    expect_option_enabled: true,
-                }
+                Self::with_value_and_type(value, expected_step_type)
             }
             ExpectedStepType::Stop => Self::with_expected_step_type(expected_step_type),
         }
