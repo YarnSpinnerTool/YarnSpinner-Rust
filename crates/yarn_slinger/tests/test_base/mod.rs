@@ -196,7 +196,7 @@ impl Default for TestBase {
 
 impl TestBase {
     /// Sets the current test plan to one loaded from a given path.
-    pub fn read_test_plan(self, path: &Path) -> Self {
+    pub fn read_test_plan(self, path: impl AsRef<Path>) -> Self {
         self.with_test_plan(TestPlan::read(path))
     }
 
@@ -205,9 +205,29 @@ impl TestBase {
         self
     }
 
-    pub fn runtime_failure_causes_no_panic(self) -> Self {
+    pub fn with_runtime_failure_causes_no_panic(self) -> Self {
         self.runtime_errors_cause_panic
             .store(false, Ordering::Relaxed);
+        self
+    }
+
+    pub fn with_compilation(self, compilation: Compilation) -> Self {
+        let string_table = compilation
+            .string_table
+            .into_iter()
+            .map(|(k, v)| (LineId(k), v))
+            .collect();
+        self.with_program(compilation.program.unwrap())
+            .with_string_table(string_table)
+    }
+
+    pub fn with_program(mut self, program: Program) -> Self {
+        self.dialogue.add_program(program);
+        self
+    }
+
+    pub fn with_string_table(self, string_table: HashMap<LineId, StringInfo>) -> Self {
+        *self.string_table.write().unwrap() = string_table;
         self
     }
 

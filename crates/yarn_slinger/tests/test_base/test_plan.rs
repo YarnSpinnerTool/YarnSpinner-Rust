@@ -20,7 +20,7 @@ pub struct ProcessedOption {
 }
 
 impl TestPlan {
-    pub fn read(path: &Path) -> Self {
+    pub fn read(path: impl AsRef<Path>) -> Self {
         let steps = fs::read_to_string(path)
             .unwrap()
             .lines()
