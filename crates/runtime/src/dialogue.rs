@@ -13,11 +13,13 @@ mod shared_state;
 pub struct Dialogue {
     vm: VirtualMachine,
     shared_state: SharedState,
+    handler_safe_dialogue: HandlerSafeDialogue,
 }
 
 impl Default for Dialogue {
     fn default() -> Self {
         let shared_state = SharedState::default();
+        let handler_safe_dialogue = HandlerSafeDialogue::from_shared_state(shared_state.clone());
 
         let mut vm = VirtualMachine::with_shared_state(shared_state.clone());
         let storage_one = shared_state.variable_storage_shared();
@@ -29,7 +31,11 @@ impl Default for Dialogue {
             .register_function("visited_count", move |node: String| -> f32 {
                 get_node_visit_count(storage_two.read().unwrap().deref().as_ref(), &node)
             });
-        Self { vm, shared_state }
+        Self {
+            vm,
+            shared_state,
+            handler_safe_dialogue,
+        }
     }
 }
 
@@ -149,8 +155,19 @@ impl Dialogue {
         self.language_code_mut().replace(language_code.into());
         self
     }
+
+    pub fn with_new_program(mut self, program: Program) -> Self {
+        self.set_program(program);
+        self
+    }
+
+    pub fn with_additional_program(mut self, program: Program) -> Self {
+        self.add_program(program);
+        self
+    }
 }
 
+// VM proxy
 impl Dialogue {
     pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
@@ -176,16 +193,6 @@ impl Dialogue {
     /// See [`Dialogue::library`].
     pub fn library_mut(&mut self) -> &mut Library {
         &mut self.vm.library
-    }
-
-    pub fn with_new_program(mut self, program: Program) -> Self {
-        self.set_program(program);
-        self
-    }
-
-    pub fn with_additional_program(mut self, program: Program) -> Self {
-        self.add_program(program);
-        self
     }
 
     pub fn set_program(&mut self, program: Program) -> &mut Self {
@@ -272,6 +279,47 @@ impl Dialogue {
     /// Unloads all nodes from the Dialogue.
     pub fn unload_all(&mut self) {
         self.vm.unload_programs()
+    }
+}
+
+// HandlerSafeDialogue proxy
+impl Dialogue {
+    pub fn node_names(&self) -> Option<Vec<String>> {
+        self.handler_safe_dialogue.node_names()
+    }
+    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
+        self.handler_safe_dialogue.get_string_id_for_node(node_name)
+    }
+    pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
+        self.handler_safe_dialogue.get_tags_for_node(node_name)
+    }
+    pub fn node_exists(&self, node_name: &str) -> bool {
+        self.handler_safe_dialogue.node_exists(node_name)
+    }
+
+    pub fn expand_substitutions<'a>(
+        text: &str,
+        substitutions: impl IntoIterator<Item = &'a str>,
+    ) -> String {
+        HandlerSafeDialogue::expand_substitutions(text, substitutions)
+    }
+    pub fn current_node(&self) -> Option<String> {
+        self.handler_safe_dialogue.current_node()
+    }
+    pub fn language_code(&self) -> Option<String> {
+        self.handler_safe_dialogue.language_code()
+    }
+    pub fn analyse(&self) -> ! {
+        self.handler_safe_dialogue.analyse()
+    }
+    pub fn parse_markup(&self, line: &str) -> String {
+        self.handler_safe_dialogue.parse_markup(line)
+    }
+
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
+        self.handler_safe_dialogue
+            .set_selected_option(selected_option_id);
+        self
     }
 }
 
