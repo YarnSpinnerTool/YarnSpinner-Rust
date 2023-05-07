@@ -14,7 +14,28 @@ mod test_base;
 #[test]
 #[ignore]
 fn test_example_script() {
-    todo!("Not ported yet")
+    let path = test_data_path().join("Example.yarn");
+    let test_plan = path.with_extension("testplan");
+    let mut test_base = TestBase::default().with_runtime_causes_no_failures();
+
+    /*
+
+
+           runtimeErrorsCauseFailures = false;
+           var path = Path.Combine(TestDataPath, "Example.yarn");
+           var testPath = Path.ChangeExtension(path, ".testplan");
+
+           var result = Compiler.Compile(CompilationJob.CreateFromFiles(path));
+
+           result.Diagnostics.Should().BeEmpty();
+
+           dialogue.SetProgram(result.Program);
+           stringTable = result.StringTable;
+
+           this.LoadTestPlan(testPath);
+
+           RunStandardTestcase();
+    */
 }
 
 #[test]
