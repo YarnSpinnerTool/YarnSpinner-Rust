@@ -50,7 +50,9 @@ impl VariableStorage for MemoryVariableStore {
 
 /// A [`MemoryVariableStore`] that can sync its copies across threads.
 #[derive(Debug, Clone)]
-pub struct SharedMemoryVariableStore(pub(crate) Arc<RwLock<dyn VariableStorage>>);
+pub struct SharedMemoryVariableStore(
+    pub(crate) Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+);
 
 impl VariableStorage for SharedMemoryVariableStore {
     fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync> {

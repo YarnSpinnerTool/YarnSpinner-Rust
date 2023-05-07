@@ -1,51 +1,56 @@
 use crate::prelude::*;
-pub use read_only_dialogue::*;
+pub use handler_safe_dialogue::*;
+pub(crate) use shared_state::*;
 use std::fmt::Debug;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, RwLock};
+use std::ops::Deref;
 use yarn_slinger_core::prelude::*;
 
-mod read_only_dialogue;
+mod handler_safe_dialogue;
+mod shared_state;
 
 /// Co-ordinates the execution of Yarn programs.
-#[non_exhaustive]
 #[derive(Debug)]
 pub struct Dialogue {
     vm: VirtualMachine,
+    shared_state: SharedState,
 }
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>> =
-            Arc::new(RwLock::new(MemoryVariableStore::default()));
+        let shared_state = SharedState::default();
 
-        let mut vm = VirtualMachine::with_variable_storage(variable_storage.clone());
-        let storage_one = variable_storage.clone();
-        let storage_two = variable_storage.clone();
+        let mut vm = VirtualMachine::with_shared_state(shared_state.clone());
+        let storage_one = shared_state.variable_storage_shared();
+        let storage_two = storage_one.clone();
         vm.library
             .register_function("visited", move |node: String| -> bool {
-                is_node_visited(storage_one.read().unwrap().deref(), &node)
+                is_node_visited(storage_one.read().unwrap().deref().as_ref(), &node)
             })
             .register_function("visited_count", move |node: String| -> f32 {
-                get_node_visit_count(storage_two.read().unwrap().deref(), &node)
+                get_node_visit_count(storage_two.read().unwrap().deref().as_ref(), &node)
             });
-        Self { vm }
+        Self { vm, shared_state }
     }
 }
 
-impl Dialogue {
-    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
+impl SharedStateHolder for Dialogue {
+    fn shared_state(&self) -> &SharedState {
+        &self.shared_state
+    }
+}
 
-    pub fn with_variable_storage(
+// Builder API
+impl Dialogue {
+    pub fn with_variable_storage<T: VariableStorage + 'static + Send + Sync>(
         mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
-        self.vm.variable_storage = Arc::new(RwLock::new(variable_storage));
+        *self.variable_storage_mut() = Box::new(variable_storage);
         self
     }
 
     pub fn with_library(mut self, library: Library) -> Self {
-        self.vm.library = library;
+        *self.library_mut() = library;
         self
     }
 
@@ -140,24 +145,18 @@ impl Dialogue {
         self
     }
 
-    pub fn with_language_code(self, language_code: impl Into<String>) -> Self {
-        self.vm
-            .read_only_dialogue
-            .language_code
-            .write()
-            .unwrap()
-            .replace(language_code.into());
+    pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
+        self.language_code_mut().replace(language_code.into());
         self
     }
+}
 
-    /// Retrieves a view of the [`Dialogue`] that is safe to be passed to handlers.
-    pub fn get_handler_safe_dialogue(&self) -> HandlerSafeDialogue {
-        self.vm.read_only_dialogue.clone()
-    }
+impl Dialogue {
+    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
-        self.vm.execution_state() != ExecutionState::Stopped
+        *self.execution_state() != ExecutionState::Stopped
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
@@ -171,7 +170,7 @@ impl Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
     /// Be aware that accessing this object will block [`Dialogue::continue_`] and vice versa, so try to not cause a deadlock.
     pub fn variable_storage(&self) -> SharedMemoryVariableStore {
-        SharedMemoryVariableStore(self.vm.variable_storage.clone())
+        SharedMemoryVariableStore(self.variable_storage_shared())
     }
 
     /// See [`Dialogue::library`].
@@ -190,14 +189,14 @@ impl Dialogue {
     }
 
     pub fn set_program(&mut self, program: Program) -> &mut Self {
-        *self.vm.read_only_dialogue.program.write().unwrap() = Some(program);
+        self.vm.program_mut().replace(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
         {
-            let mut existing_program = self.vm.read_only_dialogue.program.write().unwrap();
+            let mut existing_program = self.program_mut();
             if let Some(existing_program) = existing_program.as_mut() {
                 *existing_program =
                     Program::combine(vec![existing_program.clone(), program]).unwrap();
@@ -230,26 +229,6 @@ impl Dialogue {
         self
     }
 
-    /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
-    ///
-    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::continue_`] is called.
-    ///
-    /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
-    /// field in the [`DialogueOption`] that represents the user's selection.
-    ///
-    /// ## Panics
-    /// - If the Dialogue is not expecting an option to be selected.
-    /// - If the option ID is not found in the current [`OptionSet`].
-    ///
-    /// ## See Also
-    /// - [`Dialogue::continue_`]
-    /// - [`OptionsHandler`]
-    /// - [`OptionSet`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
-        self.vm.set_selected_option(selected_option_id);
-        self
-    }
-
     /// Starts, or continues, execution of the current program.
     ///
     /// This method repeatedly executes instructions until one of the following conditions is encountered:
@@ -275,7 +254,7 @@ impl Dialogue {
     /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
     pub fn continue_(&mut self) -> &mut Self {
         // Cannot 'continue' an already running VM.
-        if self.vm.execution_state() != ExecutionState::Running {
+        if *self.execution_state() != ExecutionState::Running {
             self.vm.continue_();
         }
         self
