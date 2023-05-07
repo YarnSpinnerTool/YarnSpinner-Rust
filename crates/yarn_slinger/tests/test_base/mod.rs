@@ -205,7 +205,7 @@ impl TestBase {
         self
     }
 
-    pub fn with_runtime_causes_no_failures(self) -> Self {
+    pub fn runtime_failure_causes_no_panic(self) -> Self {
         self.runtime_errors_cause_panic
             .store(false, Ordering::Relaxed);
         self
