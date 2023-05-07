@@ -223,7 +223,7 @@ impl VirtualMachine {
             self.current_node.is_some(),
             "Cannot continue running dialogue. No node has been selected."
         );
-        assert_eq!(
+        assert_ne!(
             ExecutionState::WaitingOnOptionSelection,
             self.execution_state,
             "Cannot continue running dialogue. Still waiting on option selection."
