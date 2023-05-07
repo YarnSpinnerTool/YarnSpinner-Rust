@@ -280,15 +280,25 @@ impl TestBase {
     pub fn string_table_mut(&mut self) -> impl DerefMut<Target = HashMap<LineId, StringInfo>> + '_ {
         self.string_table.write().unwrap()
     }
+}
 
-    pub fn storage(&self) -> impl Deref<Target = dyn VariableStorage + Send + Sync> + '_ {
-        self.dialogue.variable_storage()
+impl Deref for TestBase {
+    type Target = Dialogue;
+
+    fn deref(&self) -> &Self::Target {
+        &self.dialogue
     }
+}
 
-    pub fn storage_mut(
-        &mut self,
-    ) -> impl DerefMut<Target = dyn VariableStorage + Send + Sync> + '_ {
-        self.dialogue.variable_storage_mut()
+impl DerefMut for TestBase {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.dialogue
+    }
+}
+
+impl AsRef<Dialogue> for TestBase {
+    fn as_ref(&self) -> &Dialogue {
+        &self.dialogue
     }
 }
 
