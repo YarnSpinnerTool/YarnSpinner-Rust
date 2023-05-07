@@ -73,7 +73,7 @@ impl Dialogue {
 
     pub fn set_line_handler(
         &mut self,
-        line_handler: impl Fn(Line, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+        line_handler: impl Fn(Line, &mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> &mut Self {
         self.vm.line_handler = Box::new(line_handler);
         self
@@ -87,7 +87,7 @@ impl Dialogue {
     /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
     pub fn set_options_handler(
         &mut self,
-        options_handler: impl FnMut(Vec<DialogueOption>, &HandlerSafeDialogue)
+        options_handler: impl FnMut(Vec<DialogueOption>, &mut HandlerSafeDialogue)
             + Clone
             + 'static
             + Send
@@ -100,7 +100,7 @@ impl Dialogue {
     /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
     pub fn set_command_handler(
         &mut self,
-        command_handler: impl FnMut(Command, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+        command_handler: impl FnMut(Command, &mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> &mut Self {
         self.vm.command_handler = Box::new(command_handler);
         self
@@ -109,7 +109,11 @@ impl Dialogue {
     /// The [`NodeCompleteHandler`] that is called when a node is complete.
     pub fn set_node_complete_handler(
         &mut self,
-        node_complete_handler: impl FnMut(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+        node_complete_handler: impl FnMut(String, &mut HandlerSafeDialogue)
+            + Clone
+            + 'static
+            + Send
+            + Sync,
     ) -> &mut Self {
         self.vm.node_complete_handler = Box::new(node_complete_handler);
         self
@@ -118,7 +122,7 @@ impl Dialogue {
     /// The [`NodeStartHandler`] that is called when a node is started.
     pub fn set_node_start_handler(
         &mut self,
-        node_start_handler: impl FnMut(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+        node_start_handler: impl FnMut(String, &mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> &mut Self {
         self.vm.node_start_handler = Some(Box::new(node_start_handler));
         self
@@ -127,7 +131,7 @@ impl Dialogue {
     /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
     pub fn set_dialogue_complete_handler(
         &mut self,
-        dialogue_complete_handler: impl FnMut(&HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+        dialogue_complete_handler: impl FnMut(&mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> &mut Self {
         self.vm.dialogue_complete_handler = Some(Box::new(dialogue_complete_handler));
         self
@@ -136,7 +140,7 @@ impl Dialogue {
     /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
     pub fn set_prepare_for_lines_handler(
         &mut self,
-        prepare_for_lines_handler: impl Fn(Vec<LineId>, &HandlerSafeDialogue)
+        prepare_for_lines_handler: impl Fn(Vec<LineId>, &mut HandlerSafeDialogue)
             + Clone
             + 'static
             + Send

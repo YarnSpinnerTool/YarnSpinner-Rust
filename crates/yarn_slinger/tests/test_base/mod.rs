@@ -122,6 +122,14 @@ impl Default for TestBase {
                 );
 
                 assert_eq!(test_plan.next_expected_options, options);
+
+                if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
+                    dlg
+                        .set_selected_option(OptionId::construct_for_debugging(selection));
+                } else {
+                    dlg
+                        .set_selected_option(OptionId::construct_for_debugging(0));
+                }
             });
         }
 
@@ -233,21 +241,6 @@ impl TestBase {
 
         self.dialogue.continue_();
         while self.dialogue.is_active() {
-            let test_plan = self.test_plan.read().unwrap();
-            if let Some(test_plan) = test_plan.as_ref() {
-                if test_plan.next_expected_step == ExpectedStepType::Select {
-                    if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
-                        self.dialogue
-                            .set_selected_option(OptionId::construct_for_debugging(selection));
-                    } else {
-                        self.dialogue
-                            .set_selected_option(OptionId::construct_for_debugging(0));
-                    }
-                }
-            }
-            // Needed because a handler called by dialogue wants to borrow test_plan mutably
-            drop(test_plan);
-
             self.dialogue.continue_();
         }
     }

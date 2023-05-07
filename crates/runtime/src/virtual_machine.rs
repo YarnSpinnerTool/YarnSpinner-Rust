@@ -38,16 +38,19 @@ impl SharedStateHolder for VirtualMachine {
 impl VirtualMachine {
     pub(crate) fn with_shared_state(shared_state: SharedState) -> Self {
         let dialogue_data = HandlerSafeDialogue::from_shared_state(shared_state.clone());
-        fn default_line_handler(line: Line, _dialogue: &HandlerSafeDialogue) {
+        fn default_line_handler(line: Line, _dialogue: &mut HandlerSafeDialogue) {
             info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
         }
-        fn default_options_handler(options: Vec<DialogueOption>, _dialogue: &HandlerSafeDialogue) {
+        fn default_options_handler(
+            options: Vec<DialogueOption>,
+            _dialogue: &mut HandlerSafeDialogue,
+        ) {
             info!("Delivering options: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_options_handler`.", options);
         }
-        fn default_command_handler(command: Command, _dialogue: &HandlerSafeDialogue) {
+        fn default_command_handler(command: Command, _dialogue: &mut HandlerSafeDialogue) {
             info!("Executing command: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_command_handler`.", command);
         }
-        fn default_node_complete_handler(node_name: String, _dialogue: &HandlerSafeDialogue) {
+        fn default_node_complete_handler(node_name: String, _dialogue: &mut HandlerSafeDialogue) {
             info!("Completed node: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_node_complete_handler`.", node_name);
         }
         Self {
@@ -115,7 +118,7 @@ impl VirtualMachine {
         }
 
         if let Some(node_start_handler) = &mut self.node_start_handler {
-            node_start_handler.call(node_name.to_owned(), &self.handler_safe_dialogue);
+            node_start_handler.call(node_name.to_owned(), &mut self.handler_safe_dialogue);
         }
 
         // Do we have a way to let the client know that certain lines
@@ -155,7 +158,7 @@ impl VirtualMachine {
             })
             .collect();
         let prepare_for_lines_handler = self.prepare_for_lines_handler.as_mut().unwrap();
-        prepare_for_lines_handler.call(string_ids, &self.handler_safe_dialogue);
+        prepare_for_lines_handler.call(string_ids, &mut self.handler_safe_dialogue);
     }
 
     /// Resumes execution.
@@ -187,10 +190,10 @@ impl VirtualMachine {
             }
 
             self.node_complete_handler
-                .call(current_node.name.clone(), &self.handler_safe_dialogue);
+                .call(current_node.name.clone(), &mut self.handler_safe_dialogue);
             *self.execution_state_mut() = ExecutionState::Stopped;
             if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                dialogue_complete_handler.call(&self.handler_safe_dialogue);
+                dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
             }
             self.log_debug_message
                 .call("Run complete.".to_owned(), &self.handler_safe_dialogue);
@@ -255,7 +258,8 @@ impl VirtualMachine {
                 // Suspend execution, because we're about to deliver content
                 *self.execution_state_mut() = ExecutionState::DeliveringContent;
 
-                self.line_handler.call(line, &self.handler_safe_dialogue);
+                self.line_handler
+                    .call(line, &mut self.handler_safe_dialogue);
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -278,7 +282,7 @@ impl VirtualMachine {
                 let command = Command(command_text);
 
                 self.command_handler
-                    .call(command, &self.handler_safe_dialogue);
+                    .call(command, &mut self.handler_safe_dialogue);
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -331,7 +335,7 @@ impl VirtualMachine {
                 if self.state().current_options.is_empty() {
                     *self.execution_state_mut() = ExecutionState::Stopped;
                     if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                        dialogue_complete_handler.call(&self.handler_safe_dialogue);
+                        dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
                     }
                     return;
                 }
@@ -344,7 +348,7 @@ impl VirtualMachine {
                 // a selection
                 let current_options = self.state().current_options.clone();
                 self.options_handler
-                    .call(current_options, &self.handler_safe_dialogue);
+                    .call(current_options, &mut self.handler_safe_dialogue);
                 // ## Implementation note:
 
                 // The original checks `WaitingForContinue` here, but we can't mutate the dialogue in handlers,
@@ -455,9 +459,9 @@ impl VirtualMachine {
                 // Immediately stop execution, and report that fact.
                 let current_node_name = self.current_node_name().clone().unwrap();
                 self.node_complete_handler
-                    .call(current_node_name, &self.handler_safe_dialogue);
+                    .call(current_node_name, &mut self.handler_safe_dialogue);
                 if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                    dialogue_complete_handler.call(&self.handler_safe_dialogue);
+                    dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
                 }
                 *self.execution_state_mut() = ExecutionState::Stopped;
             }
@@ -468,7 +472,7 @@ impl VirtualMachine {
                 // with that name.
                 let node_name: String = self.state_mut().pop();
                 self.node_complete_handler
-                    .call(node_name.clone(), &self.handler_safe_dialogue);
+                    .call(node_name.clone(), &mut self.handler_safe_dialogue);
                 self.set_node(&node_name);
 
                 // Decrement program counter here, because it will
