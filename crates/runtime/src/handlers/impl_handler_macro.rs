@@ -39,7 +39,7 @@ macro_rules! impl_handler_inner {
         }
 
         pub trait $trait_name: Send + Sync {
-            fn call<'a, 'b>(&'a $($mutable)? self, $(param: $param,)? dialogue: &'b HandlerSafeDialogue);
+            fn call(&$($mutable)? self, $(param: $param,)? dialogue: &HandlerSafeDialogue);
             fn clone_box(&self) -> $struct_name;
         }
 
@@ -47,7 +47,7 @@ macro_rules! impl_handler_inner {
         where
             T: $fun($($param,)? &HandlerSafeDialogue) + Clone + Send + Sync + 'static,
         {
-            fn call<'a, 'b>(&'a $($mutable)? self, $(param: $param,)? dialogue: &'b HandlerSafeDialogue){
+            fn call(&$($mutable)? self, $(param: $param,)? dialogue: &HandlerSafeDialogue){
                 self($(param as $param,)? dialogue)
             }
 

@@ -16,13 +16,13 @@ pub(crate) struct SharedState {
 impl Default for SharedState {
     fn default() -> Self {
         Self {
-            program: Arc::new(RwLock::new(None)),
-            current_node_name: Arc::new(RwLock::new(None)),
-            language_code: Arc::new(RwLock::new(None)),
-            variable_storage: Arc::new(RwLock::new(Box::new(MemoryVariableStore::default()))),
-            state: Arc::new(RwLock::new(State::default())),
-            execution_state: Arc::new(RwLock::new(ExecutionState::default())),
-            current_node: Arc::new(RwLock::new(None)),
+            program: Default::default(),
+            current_node_name: Default::default(),
+            language_code: Default::default(),
+            variable_storage: Arc::new(RwLock::new(Box::<MemoryVariableStore>::default())),
+            state: Default::default(),
+            execution_state: Default::default(),
+            current_node: Default::default(),
         }
     }
 }
