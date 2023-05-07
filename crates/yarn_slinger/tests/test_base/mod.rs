@@ -328,11 +328,12 @@ impl AsRef<Dialogue> for TestBase {
 fn get_composed_text_for_line_with_no_self(
     line: &Line,
     string_table: &RwLock<HashMap<LineId, StringInfo>>,
-    dialogue: &ReadOnlyDialogue,
+    dialogue: &HandlerSafeDialogue,
 ) -> String {
     let string_table = string_table.read().unwrap();
     let string_info = string_table.get(&line.id).unwrap();
     let substitutions = line.substitutions.iter().map(|s| s.as_str());
-    let substituted_text = ReadOnlyDialogue::expand_substitutions(&string_info.text, substitutions);
+    let substituted_text =
+        HandlerSafeDialogue::expand_substitutions(&string_info.text, substitutions);
     dialogue.parse_markup(&substituted_text)
 }

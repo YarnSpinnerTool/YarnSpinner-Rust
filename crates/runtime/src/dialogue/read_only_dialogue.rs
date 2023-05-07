@@ -3,8 +3,8 @@ use log::{debug, error};
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
-/// A read-only view of a [`Dialogue`]. Represents the methods that are okay to be called from handlers.
-/// Since this type is `Send + Sync`, you can get a copy with [`Dialogue::get_read_only`] and `move` it into a handler.
+/// A view of a [`Dialogue`]. Represents the subset of methods that are okay to be called from handlers.
+/// Since this type is `Send + Sync`, you can get a copy with [`Dialogue::get_handler_safe_dialogue`] and `move` it into a handler.
 ///
 /// ## Implementation notes
 ///
@@ -12,7 +12,7 @@ use yarn_slinger_core::prelude::*;
 /// The original just calls [`Dialogue`] for both mutable and immutable access anywhere,
 /// which is of course a big no-no in Rust.
 #[derive(Debug, Clone)]
-pub struct ReadOnlyDialogue {
+pub struct HandlerSafeDialogue {
     pub(crate) program: Arc<RwLock<Option<Program>>>,
     pub(crate) current_node_name: Arc<RwLock<Option<String>>>,
     pub(crate) log_debug_message: Logger,
@@ -20,19 +20,19 @@ pub struct ReadOnlyDialogue {
     pub(crate) language_code: Arc<RwLock<Option<String>>>,
 }
 
-impl Default for ReadOnlyDialogue {
+impl Default for HandlerSafeDialogue {
     fn default() -> Self {
-        ReadOnlyDialogue {
+        HandlerSafeDialogue {
             program: Arc::new(RwLock::new(None)),
             current_node_name: Arc::new(RwLock::new(None)),
-            log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
-            log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
+            log_debug_message: Logger(Box::new(|msg, _| debug!("{}", msg))),
+            log_error_message: Logger(Box::new(|msg, _| error!("{}", msg))),
             language_code: Arc::new(RwLock::new(None)),
         }
     }
 }
 
-impl ReadOnlyDialogue {
+impl HandlerSafeDialogue {
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
     pub fn node_names(&self) -> Option<Vec<String>> {
         self.program
@@ -75,8 +75,10 @@ impl ReadOnlyDialogue {
         if let Some(program) = self.program.read().unwrap().as_ref() {
             program.nodes.contains_key(node_name)
         } else {
-            self.log_error_message
-                .call("Tried to call NodeExists, but no program has been loaded".to_owned());
+            self.log_error_message.call(
+                "Tried to call NodeExists, but no program has been loaded".to_owned(),
+                self,
+            );
             false
         }
     }
@@ -137,18 +139,18 @@ impl ReadOnlyDialogue {
         if let Some(program) = self.program.read().unwrap().as_ref() {
             if program.nodes.is_empty() {
                 self.log_error_message
-                    .call("No nodes are loaded".to_owned());
+                    .call("No nodes are loaded".to_owned(), self);
                 None
             } else if let Some(node) = program.nodes.get(node_name) {
                 Some(node.clone())
             } else {
                 self.log_error_message
-                    .call(format!("No node named {node_name}"));
+                    .call(format!("No node named {node_name}"), self);
                 None
             }
         } else {
             self.log_error_message
-                .call("No program is loaded".to_owned());
+                .call("No program is loaded".to_owned(), self);
             None
         }
     }

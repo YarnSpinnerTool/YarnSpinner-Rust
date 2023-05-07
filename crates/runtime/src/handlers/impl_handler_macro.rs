@@ -41,7 +41,7 @@ macro_rules! impl_handler_inner {
         }
 
         impl<T> From<T> for $struct_name
-            where T: $fun($($param)?) + Clone + Send + Sync + 'static,
+            where T: $fun($($param,)? &HandlerSafeDialogue) + Clone + Send + Sync + 'static,
         {
             fn from(f: T) -> Self {
                 Self(Box::new(f))
@@ -61,16 +61,16 @@ macro_rules! impl_handler_inner {
         }
 
         pub trait $trait_name: Send + Sync {
-            fn call(&$($mutable)? self, $(param: $param)?);
+            fn call(&$($mutable)? self, $(param: $param,)? dialogue: &HandlerSafeDialogue);
             fn clone_box(&self) -> Box<dyn $trait_name + Send + Sync>;
         }
 
         impl<T> $trait_name for T
         where
-            T: $fun($($param)?) + Clone + Send + Sync + 'static,
+            T: $fun($($param,)? &HandlerSafeDialogue) + Clone + Send + Sync + 'static,
         {
-            fn call(&$($mutable)? self, $(param: $param)?) {
-                self($(param as $param)?)
+            fn call(&$($mutable)? self, $(param: $param,)? dialogue: &HandlerSafeDialogue){
+                self($(param as $param,)? dialogue)
             }
 
             fn clone_box(&self) -> Box<dyn $trait_name + Send + Sync> {

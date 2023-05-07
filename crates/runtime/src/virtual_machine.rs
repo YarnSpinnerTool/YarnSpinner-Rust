@@ -17,7 +17,7 @@ mod state;
 
 #[derive(Debug, Clone)]
 pub(crate) struct VirtualMachine {
-    pub(crate) read_only_dialogue: ReadOnlyDialogue,
+    pub(crate) read_only_dialogue: HandlerSafeDialogue,
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
     pub(crate) line_handler: LineHandler,
@@ -38,21 +38,21 @@ impl VirtualMachine {
     pub(crate) fn with_variable_storage(
         variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
     ) -> Self {
-        let dialogue_data = ReadOnlyDialogue::default();
+        let dialogue_data = HandlerSafeDialogue::default();
         Self {
             log_debug_message: dialogue_data.log_debug_message.clone(),
             log_error_message: dialogue_data.log_error_message.clone(),
-            line_handler: LineHandler(Box::new(|line| {
+            line_handler: LineHandler(Box::new(|line, _| {
                 info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
             })),
-            options_handler: OptionsHandler(Box::new(|options| {
+            options_handler: OptionsHandler(Box::new(|options, _| {
                 info!("Delivering options: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_options_handler`.", options);
             })),
-            command_handler: CommandHandler(Box::new(|command| {
+            command_handler: CommandHandler(Box::new(|command, _| {
                 info!("Executing command: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_command_handler`.", command);
             })),
             node_start_handler: Default::default(),
-            node_complete_handler: NodeCompleteHandler(Box::new(|node_name| {
+            node_complete_handler: NodeCompleteHandler(Box::new(|node_name, _| {
                 info!("Completed node: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_node_complete_handler`.", node_name);
             })),
             dialogue_complete_handler: Default::default(),
@@ -89,8 +89,10 @@ impl VirtualMachine {
     }
 
     pub(crate) fn set_node(&mut self, node_name: &str) {
-        self.log_debug_message
-            .call(format!("Running node \"{node_name}\""));
+        self.log_debug_message.call(
+            format!("Running node \"{node_name}\""),
+            &self.read_only_dialogue,
+        );
 
         self.current_node = {
             let program = self.read_only_dialogue.program.read().unwrap();
@@ -116,7 +118,7 @@ impl VirtualMachine {
         current_node.name = node_name.to_owned();
 
         if let Some(node_start_handler) = &mut self.node_start_handler {
-            node_start_handler.call(node_name.to_owned());
+            node_start_handler.call(node_name.to_owned(), &self.read_only_dialogue);
         }
 
         // Do we have a way to let the client know that certain lines
@@ -152,7 +154,7 @@ impl VirtualMachine {
                     })
             })
             .collect();
-        prepare_for_lines_handler.call(string_ids);
+        prepare_for_lines_handler.call(string_ids, &self.read_only_dialogue);
     }
 
     pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) {
@@ -208,12 +210,14 @@ impl VirtualMachine {
                 continue;
             }
 
-            self.node_complete_handler.call(current_node.name.clone());
+            self.node_complete_handler
+                .call(current_node.name.clone(), &self.read_only_dialogue);
             self.execution_state = ExecutionState::Stopped;
             if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                dialogue_complete_handler.call();
+                dialogue_complete_handler.call(&self.read_only_dialogue);
             }
-            self.log_debug_message.call("Run complete.".to_owned());
+            self.log_debug_message
+                .call("Run complete.".to_owned(), &self.read_only_dialogue);
         }
     }
 
@@ -279,7 +283,7 @@ impl VirtualMachine {
                 // Suspend execution, because we're about to deliver content
                 self.execution_state = ExecutionState::DeliveringContent;
 
-                self.line_handler.call(line);
+                self.line_handler.call(line, &self.read_only_dialogue);
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -301,7 +305,7 @@ impl VirtualMachine {
                 self.execution_state = ExecutionState::DeliveringContent;
                 let command = Command(command_text);
 
-                self.command_handler.call(command);
+                self.command_handler.call(command, &self.read_only_dialogue);
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -354,7 +358,7 @@ impl VirtualMachine {
                 if self.state.current_options.is_empty() {
                     self.execution_state = ExecutionState::Stopped;
                     if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                        dialogue_complete_handler.call();
+                        dialogue_complete_handler.call(&self.read_only_dialogue);
                     }
                     return;
                 }
@@ -366,7 +370,7 @@ impl VirtualMachine {
                 // delegate for them to call when the user has made
                 // a selection
                 self.options_handler
-                    .call(self.state.current_options.clone());
+                    .call(self.state.current_options.clone(), &self.read_only_dialogue);
                 // ## Implementation note:
 
                 // The original checks `WaitingForContinue` here, but we can't mutate the dialogue in handlers,
@@ -482,9 +486,10 @@ impl VirtualMachine {
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
                 let current_node_name = self.current_node_name().unwrap();
-                self.node_complete_handler.call(current_node_name);
+                self.node_complete_handler
+                    .call(current_node_name, &self.read_only_dialogue);
                 if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                    dialogue_complete_handler.call();
+                    dialogue_complete_handler.call(&self.read_only_dialogue);
                 }
                 self.execution_state = ExecutionState::Stopped;
             }
@@ -494,7 +499,8 @@ impl VirtualMachine {
                 // Pop a string from the stack, and jump to a node
                 // with that name.
                 let node_name: String = self.state.pop();
-                self.node_complete_handler.call(node_name.clone());
+                self.node_complete_handler
+                    .call(node_name.clone(), &self.read_only_dialogue);
                 self.set_node(&node_name);
 
                 // Decrement program counter here, because it will
