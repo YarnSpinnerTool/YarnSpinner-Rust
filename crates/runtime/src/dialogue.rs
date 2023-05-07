@@ -11,9 +11,6 @@ mod read_only_dialogue;
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Dialogue {
-    /// The object that provides access to storing and retrieving the values of variables.
-    variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
-
     read_only_dialogue: ReadOnlyDialogue,
 
     /// Invoked when the Dialogue needs to report debugging information.
@@ -42,7 +39,6 @@ impl Default for Dialogue {
             });
         let dialogue_data = vm.read_only_dialogue.clone();
         Self {
-            variable_storage,
             log_debug_message: vm.log_debug_message.clone(),
             log_error_message: vm.log_error_message.clone(),
             vm,
@@ -58,8 +54,7 @@ impl Dialogue {
         mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> Self {
-        self.variable_storage = Arc::new(RwLock::new(variable_storage));
-        self.vm.variable_storage = self.variable_storage.clone();
+        self.vm.variable_storage = Arc::new(RwLock::new(variable_storage));
         self
     }
 
@@ -181,16 +176,9 @@ impl Dialogue {
     }
 
     /// The object that provides access to storing and retrieving the values of variables.
-    pub fn variable_storage(
-        &self,
-    ) -> impl Deref<Target = dyn VariableStorage + 'static + Send + Sync> + '_ {
-        self.variable_storage.read().unwrap()
-    }
-
-    pub fn variable_storage_mut(
-        &mut self,
-    ) -> impl DerefMut<Target = dyn VariableStorage + 'static + Send + Sync> + '_ {
-        self.variable_storage.write().unwrap()
+    /// Be aware that accessing this object will block [`Dialogue::continue_`] and vice versa, so try to not cause a deadlock.
+    pub fn variable_storage(&self) -> SharedMemoryVariableStore {
+        SharedMemoryVariableStore(self.vm.variable_storage.clone())
     }
 
     /// See [`Dialogue::library`].
@@ -311,26 +299,6 @@ impl Dialogue {
     /// Unloads all nodes from the Dialogue.
     pub fn unload_all(&mut self) {
         self.vm.unload_programs()
-    }
-}
-
-impl AsRef<ReadOnlyDialogue> for Dialogue {
-    fn as_ref(&self) -> &ReadOnlyDialogue {
-        &self.read_only_dialogue
-    }
-}
-
-impl Deref for Dialogue {
-    type Target = ReadOnlyDialogue;
-
-    fn deref(&self) -> &Self::Target {
-        &self.read_only_dialogue
-    }
-}
-
-impl DerefMut for Dialogue {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.read_only_dialogue
     }
 }
 
