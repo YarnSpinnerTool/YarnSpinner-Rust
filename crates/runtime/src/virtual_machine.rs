@@ -389,7 +389,7 @@ impl VirtualMachine {
             }
 
             OpCode::PushNull => {
-                println!("PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code.");
+                panic!("PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code.");
             }
             OpCode::JumpIfFalse => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
