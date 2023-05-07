@@ -205,6 +205,12 @@ impl TestBase {
         self
     }
 
+    pub fn with_runtime_causes_no_failures(self) -> Self {
+        self.runtime_errors_cause_panic
+            .store(false, Ordering::Relaxed);
+        self
+    }
+
     /// Executes the named node, and checks any assertions made during
     /// execution. Fails the test if an assertion made in Yarn fails.
     pub fn run_standard_testcase(&mut self) {
