@@ -157,8 +157,69 @@ fn test_number_plurals() {
     todo!("Not ported yet")
 }
 
+/*
+Console.ForegroundColor = ConsoleColor.Blue;
+Console.WriteLine($"INFO: Loading file {file}");
+
+storage.Clear();
+
+var scriptFilePath = Path.Combine(TestDataPath, file);
+
+// Attempt to compile this. If there are errors, we do not expect an
+// exception to be thrown.
+CompilationJob compilationJob = CompilationJob.CreateFromFiles(scriptFilePath);
+compilationJob.Library = dialogue.Library;
+
+var testPlanFilePath = Path.ChangeExtension(scriptFilePath, ".testplan");
+
+bool testPlanExists = File.Exists(testPlanFilePath);
+
+if (testPlanExists == false)
+{
+    // No test plan for this file exists, which indicates that
+    // the file is not expected to compile. We'll actually make
+    // it a test failure if it _does_ compile.
+
+    var result = Compiler.Compile(compilationJob);
+    result.Diagnostics.Should().NotBeEmpty("{0} is expected to have compile errors", file);
+}
+else
+{
+    // Compile the job, and expect it to succeed.
+    var result = Compiler.Compile(compilationJob);
+
+    result.Diagnostics.Should().BeEmpty("{0} is expected to have no compile errors", file);
+
+    result.Program.Should().NotBeNull();
+
+    LoadTestPlan(testPlanFilePath);
+
+    dialogue.SetProgram(result.Program);
+    stringTable = result.StringTable;
+
+    // three basic dummy functions that can be used to test inference
+    dialogue.Library.RegisterFunction("dummy_bool", () => true);
+    dialogue.Library.RegisterFunction("dummy_number", () => 1);
+    dialogue.Library.RegisterFunction("dummy_string", () => "string");
+
+    // If this file contains a Start node, run the test case
+    // (otherwise, we're just testing its parseability, which
+    // we did in the last line)
+    if (dialogue.NodeExists("Start"))
+    {
+        RunStandardTestcase();
+    }
+}
+ */
 #[test]
 #[ignore]
 fn test_sources() {
+    for file in ["TestCases", "TestCases/ParseFailures", "Issues"]
+        .iter()
+        .flat_map(TestBase::file_sources)
+    {
+        println!("INFO: Loading file {}", file.display());
+        let path = test_data_path().join(file);
+    }
     todo!("Not ported yet")
 }
