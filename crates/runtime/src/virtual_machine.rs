@@ -182,8 +182,9 @@ impl VirtualMachine {
             let current_node = self.current_node().clone().unwrap();
             let current_instruction = &current_node.instructions[self.state().program_counter];
             self.run_instruction(current_instruction);
-
-            self.state_mut().program_counter += 1;
+            // ## Implementation note
+            // The original increments the program counter here, but that leads to intentional underflow on [`OpCode::RunNode`],
+            // so we do the incrementation in [`VirtualMachine::run_instruction`] instead.
 
             if self.state().program_counter < current_node.instructions.len() {
                 continue;
@@ -219,6 +220,9 @@ impl VirtualMachine {
         *self.program_mut() = None
     }
 
+    /// ## Implementation note
+    ///
+    /// Increments the program counter here instead of in `continue_` for cleaner code
     fn run_instruction(&mut self, instruction: &Instruction) {
         let opcode: OpCode = instruction.opcode.try_into().unwrap();
         match opcode {
@@ -267,6 +271,7 @@ impl VirtualMachine {
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
                 *self.execution_state_mut() = ExecutionState::WaitingForContinue;
+                self.state_mut().program_counter += 1;
             }
             OpCode::RunCommand => {
                 // Passes a string to the client as a custom command
@@ -290,6 +295,7 @@ impl VirtualMachine {
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
                 *self.execution_state_mut() = ExecutionState::WaitingForContinue;
+                self.state_mut().program_counter += 1;
             }
             OpCode::AddOption => {
                 // Add an option to the current state
@@ -329,6 +335,7 @@ impl VirtualMachine {
                     destination_node: node_name,
                     is_available: line_condition_passed,
                 });
+                self.state_mut().program_counter += 1;
             }
             OpCode::ShowOptions => {
                 // If we have no options to show, immediately stop.
@@ -337,6 +344,7 @@ impl VirtualMachine {
                     if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
                         dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
                     }
+                    self.state_mut().program_counter += 1;
                     return;
                 }
 
@@ -357,21 +365,25 @@ impl VirtualMachine {
                     // immediately.
                     *self.execution_state_mut() = ExecutionState::Running;
                 }
+                self.state_mut().program_counter += 1;
             }
             OpCode::PushString => {
                 //Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
                 let string_table_index: String = instruction.read_operand(0);
                 self.state_mut().push(string_table_index);
+                self.state_mut().program_counter += 1;
             }
             OpCode::PushFloat => {
                 // Pushes a floating point onto the stack.
                 let float: f32 = instruction.read_operand(0);
                 self.state_mut().push(float);
+                self.state_mut().program_counter += 1;
             }
             OpCode::PushBool => {
                 // Pushes a boolean value onto the stack.
                 let boolean: bool = instruction.read_operand(0);
                 self.state_mut().push(boolean);
+                self.state_mut().program_counter += 1;
             }
 
             OpCode::PushNull => {
@@ -382,13 +394,16 @@ impl VirtualMachine {
                 let is_top_value_true: bool = self.state_mut().pop();
                 if !is_top_value_true {
                     let label_name: String = instruction.read_operand(0);
-                    let instruction_point = self.find_instruction_point_for_label(&label_name) - 1;
+                    let instruction_point = self.find_instruction_point_for_label(&label_name);
                     self.state_mut().program_counter = instruction_point;
+                } else {
+                    self.state_mut().program_counter += 1;
                 }
             }
             OpCode::Pop => {
                 // Pops a value from the stack.
                 self.state_mut().pop_value();
+                self.state_mut().program_counter += 1;
             }
             OpCode::CallFunc => {
                 let actual_parameter_count: usize = self.state_mut().pop();
@@ -427,6 +442,7 @@ impl VirtualMachine {
                 // The original code first checks whether the return type is `void`. This is vestigial from the v1 compiler.
                 // In current Yarn, every function MUST return a valid typed value, so we skip that check.
                 self.state_mut().push(typed_return_value);
+                self.state_mut().program_counter += 1;
             }
             OpCode::PushVariable => {
                 // Get the contents of a variable, push that onto the stack.
@@ -451,6 +467,7 @@ impl VirtualMachine {
                             .into()
                     });
                 self.state_mut().push(loaded_value);
+                self.state_mut().program_counter += 1;
             }
             OpCode::StoreVariable => {
                 // Store the top value on the stack in a variable.
@@ -458,6 +475,7 @@ impl VirtualMachine {
                 let variable_name: String = instruction.read_operand(0);
                 self.variable_storage_mut()
                     .set(variable_name, top_value.into());
+                self.state_mut().program_counter += 1;
             }
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
@@ -468,6 +486,7 @@ impl VirtualMachine {
                     dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
                 }
                 *self.execution_state_mut() = ExecutionState::Stopped;
+                self.state_mut().program_counter += 1;
             }
             OpCode::RunNode => {
                 // Run a node
@@ -479,10 +498,7 @@ impl VirtualMachine {
                     .call(node_name.clone(), &mut self.handler_safe_dialogue);
                 self.set_node(&node_name);
 
-                // Decrement program counter here, because it will
-                // be incremented when this function returns, and
-                // would mean skipping the first instruction
-                self.state_mut().program_counter -= 1;
+                // No need to increment the program counter, since otherwise we'd skip the first instruction
             }
         }
     }
