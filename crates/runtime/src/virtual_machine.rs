@@ -349,10 +349,14 @@ impl VirtualMachine {
                 let current_options = self.state().current_options.clone();
                 self.options_handler
                     .call(current_options, &mut self.handler_safe_dialogue);
-                // ## Implementation note:
 
-                // The original checks `WaitingForContinue` here, but we can't mutate the dialogue in handlers,
-                // so there's no need to check.
+                if *self.execution_state() == ExecutionState::WaitingForContinue {
+                    // we are no longer waiting on an option
+                    // selection - the options handler must have
+                    // called SetSelectedOption! Continue running
+                    // immediately.
+                    *self.execution_state_mut() = ExecutionState::Running;
+                }
             }
             OpCode::PushString => {
                 //Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
