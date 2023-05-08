@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
@@ -111,6 +111,79 @@ impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
 }
 
 impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
+
+#[derive(Debug)]
+pub struct YarnValueWrapper {
+    raw: Option<YarnValue>,
+    converted: Option<Box<dyn Any>>,
+}
+
+impl From<YarnValue> for YarnValueWrapper {
+    fn from(value: YarnValue) -> Self {
+        Self {
+            raw: Some(value),
+            converted: None,
+        }
+    }
+}
+
+impl YarnValueWrapper {
+    fn convert<T>(&mut self)
+    where
+        T: TryFrom<YarnValue> + 'static,
+        <T as TryFrom<YarnValue>>::Error: Debug,
+    {
+        let raw = std::mem::take(&mut self.raw).unwrap();
+        let converted: T = raw.try_into().unwrap();
+        self.converted.replace(Box::new(converted));
+    }
+}
+
+pub trait YarnFnParam {
+    fn retrieve(value: &mut YarnValueWrapper) -> Self;
+}
+
+struct ResRef<'a, T: 'static>
+where
+    T: TryFrom<YarnValue> + 'static,
+    <T as TryFrom<YarnValue>>::Error: Debug,
+{
+    value: &'a T,
+}
+
+impl<'a, T: 'static> YarnFnParam for ResRef<'a, T>
+where
+    T: TryFrom<YarnValue> + 'static,
+    <T as TryFrom<YarnValue>>::Error: Debug,
+{
+    fn retrieve(value: &mut YarnValueWrapper) -> Self {
+        value.convert::<T>();
+        let converted = value.converted.as_ref().unwrap();
+        let value = converted.downcast_ref::<T>().unwrap();
+        ResRef { value }
+    }
+}
+
+struct ResOwned<T: 'static>
+where
+    T: TryFrom<YarnValue> + 'static,
+    <T as TryFrom<YarnValue>>::Error: Debug,
+{
+    value: T,
+}
+
+impl<T> YarnFnParam for ResOwned<T>
+where
+    T: TryFrom<YarnValue> + 'static,
+    <T as TryFrom<YarnValue>>::Error: Debug,
+{
+    fn retrieve(value: &mut YarnValueWrapper) -> Self {
+        value.convert::<T>();
+        let converted = value.converted.take().unwrap();
+        let value = *converted.downcast::<T>().unwrap();
+        ResOwned { value }
+    }
+}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
