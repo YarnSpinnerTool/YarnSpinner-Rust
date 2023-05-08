@@ -172,11 +172,6 @@ impl Dialogue {
 impl Dialogue {
     pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
-    /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
-    pub fn is_active(&self) -> bool {
-        *self.execution_state() != ExecutionState::Stopped
-    }
-
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
     ///
     /// When the Dialogue is constructed, the Library is initialized with
@@ -285,28 +280,70 @@ impl Dialogue {
 
 // HandlerSafeDialogue proxy
 impl Dialogue {
+    /// Gets the names of the nodes in the currently loaded Program, if there is one.
     pub fn node_names(&self) -> Option<Vec<String>> {
         self.handler_safe_dialogue.node_names()
     }
+
+    /// Returns the string ID that contains the original, uncompiled source
+    /// text for a node.
+    ///
+    /// A node's source text will only be present in the string table if its
+    /// `tags` header contains `rawText`.
+    ///
+    /// Because the [`Dialogue`] API is designed to be unaware
+    /// of the contents of the string table, this method does not test to
+    /// see if the string table contains an entry with the line ID. You will
+    /// need to test for that yourself.
     pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
         self.handler_safe_dialogue.get_string_id_for_node(node_name)
     }
+
+    /// Returns the tags for the node `node_name`.
+    ///
+    /// The tags for a node are defined by setting the `tags` header in
+    /// the node's source code. This header must be a space-separated list
+    ///
+    /// Returns [`None`] if the node is not present in the program.
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
         self.handler_safe_dialogue.get_tags_for_node(node_name)
     }
+
+    /// Gets a value indicating whether a specified node exists in the Program.
     pub fn node_exists(&self, node_name: &str) -> bool {
         self.handler_safe_dialogue.node_exists(node_name)
     }
 
+    /// Replaces all substitution markers in a text with the given
+    /// substitution list.
+    ///
+    /// This method replaces substitution markers - for example, `{0}`
+    /// - with the corresponding entry in `substitutions`.
+    /// If `test` contains a substitution marker whose
+    /// index is not present in `substitutions`, it is
+    /// ignored.
     pub fn expand_substitutions<'a>(
         text: &str,
         substitutions: impl IntoIterator<Item = &'a str>,
     ) -> String {
         HandlerSafeDialogue::expand_substitutions(text, substitutions)
     }
+
+    /// Gets the name of the node that this Dialogue is currently executing.
+    ///
+    /// If [`Dialogue::continue_`] has never been called, this value
+    /// will be [`None`].
     pub fn current_node(&self) -> Option<String> {
         self.handler_safe_dialogue.current_node()
     }
+
+    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
+    ///
+    /// This code is used to determine how the `plural` and `ordinal`
+    /// markers determine the plural class of numbers.
+    ///
+    /// For example, the code "en-US" represents the English language as
+    /// used in the United States.
     pub fn language_code(&self) -> Option<String> {
         self.handler_safe_dialogue.language_code()
     }
@@ -317,10 +354,29 @@ impl Dialogue {
         self.handler_safe_dialogue.parse_markup(line)
     }
 
+    /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
+    ///
+    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::continue_`] is called.
+    ///
+    /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
+    /// field in the [`DialogueOption`] that represents the user's selection.
+    ///
+    /// ## Panics
+    /// - If the Dialogue is not expecting an option to be selected.
+    /// - If the option ID is not found in the current [`OptionSet`].
+    ///
+    /// ## See Also
+    /// - [`Dialogue::continue_`]
+    /// - [`OptionsHandler`]
+    /// - [`OptionSet`]
     pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
         self.handler_safe_dialogue
             .set_selected_option(selected_option_id);
         self
+    }
+    /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
+    pub fn is_active(&self) -> bool {
+        self.handler_safe_dialogue.is_active()
     }
 }
 

@@ -76,8 +76,7 @@ impl HandlerSafeDialogue {
             .map(|node| node.tags)
     }
 
-    /// Gets a value indicating whether a specified node exists in the
-    /// Program.
+    /// Gets a value indicating whether a specified node exists in the Program.
     pub fn node_exists(&self, node_name: &str) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
         if let Some(program) = self.program().as_ref() {
@@ -178,7 +177,6 @@ impl HandlerSafeDialogue {
     /// - [`Dialogue::continue_`]
     /// - [`OptionsHandler`]
     /// - [`OptionSet`]
-
     pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
         assert_eq!(ExecutionState::WaitingOnOptionSelection, *self.execution_state(), "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
                 This method should only be called after the Dialogue is waiting for the user to select an option.");
@@ -202,5 +200,10 @@ impl HandlerSafeDialogue {
 
         // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
         *self.execution_state_mut() = ExecutionState::WaitingForContinue;
+    }
+
+    /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
+    pub fn is_active(&self) -> bool {
+        *self.execution_state() != ExecutionState::Stopped
     }
 }
