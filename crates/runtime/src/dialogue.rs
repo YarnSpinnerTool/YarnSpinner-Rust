@@ -57,6 +57,10 @@ impl SharedStateHolder for Dialogue {
 
 // Builder API
 impl Dialogue {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn set_variable_storage<T: VariableStorage + 'static + Send + Sync>(
         &mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
