@@ -1,11 +1,12 @@
 use crate::prelude::*;
-pub use read_only_dialogue::*;
+pub use handler_safe_dialogue::*;
+pub(crate) use shared_state::*;
 use std::fmt::Debug;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, RwLock};
+use std::ops::Deref;
 use yarn_slinger_core::prelude::*;
 
-mod read_only_dialogue;
+mod handler_safe_dialogue;
+mod shared_state;
 
 /// Co-ordinates the execution of Yarn programs.
 ///
@@ -18,89 +19,73 @@ mod read_only_dialogue;
 /// It implements [`Send`] and [`Sync`], so it can be freely moved into handlers after being retrieved via [`Dialogue::get_read_only`].
 /// [`Dialogue`] also implements [`Deref`] for [`ReadOnlyDialogue`], so you don't need to worry about this distinction if
 /// you're only calling the [`Dialogue`] from outside handlers.
-#[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Dialogue {
-    /// The object that provides access to storing and retrieving the values of variables.
-    variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
-
-    read_only_dialogue: ReadOnlyDialogue,
-
-    /// Invoked when the Dialogue needs to report debugging information.
-    log_debug_message: Logger,
-
-    /// Invoked when the Dialogue needs to report an error.
-    log_error_message: Logger,
-
     vm: VirtualMachine,
+    shared_state: SharedState,
+    handler_safe_dialogue: HandlerSafeDialogue,
 }
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>> =
-            Arc::new(RwLock::new(MemoryVariableStore::default()));
+        let shared_state = SharedState::default();
+        let handler_safe_dialogue = HandlerSafeDialogue::from_shared_state(shared_state.clone());
 
-        let mut vm = VirtualMachine::with_variable_storage(variable_storage.clone());
-        let storage_one = variable_storage.clone();
-        let storage_two = variable_storage.clone();
+        let mut vm = VirtualMachine::with_shared_state(shared_state.clone());
+        let storage_one = shared_state.variable_storage_shared();
+        let storage_two = storage_one.clone();
         vm.library
             .register_function("visited", move |node: String| -> bool {
-                is_node_visited(storage_one.read().unwrap().deref(), &node)
+                is_node_visited(storage_one.read().unwrap().deref().as_ref(), &node)
             })
             .register_function("visited_count", move |node: String| -> f32 {
-                get_node_visit_count(storage_two.read().unwrap().deref(), &node)
+                get_node_visit_count(storage_two.read().unwrap().deref().as_ref(), &node)
             });
-        let dialogue_data = vm.read_only_dialogue.clone();
         Self {
-            variable_storage,
-            log_debug_message: vm.log_debug_message.clone(),
-            log_error_message: vm.log_error_message.clone(),
             vm,
-            read_only_dialogue: dialogue_data,
+            shared_state,
+            handler_safe_dialogue,
         }
     }
 }
 
+impl SharedStateHolder for Dialogue {
+    fn shared_state(&self) -> &SharedState {
+        &self.shared_state
+    }
+}
+
+// Builder API
 impl Dialogue {
-    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
-
-    pub fn with_variable_storage(
-        mut self,
+    pub fn set_variable_storage<T: VariableStorage + 'static + Send + Sync>(
+        &mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
-    ) -> Self {
-        self.variable_storage = Arc::new(RwLock::new(variable_storage));
-        self.vm.variable_storage = self.variable_storage.clone();
+    ) -> &mut Self {
+        *self.variable_storage_mut() = Box::new(variable_storage);
         self
     }
 
-    pub fn with_library(mut self, library: Library) -> Self {
-        self.vm.library = library;
+    pub fn set_log_debug_message(
+        &mut self,
+        logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.vm.log_debug_message = Box::new(logger);
         self
     }
 
-    pub fn with_log_debug_message(
-        mut self,
-        logger: impl Fn(String) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.log_debug_message = logger.into();
-        self.vm.log_debug_message = self.log_debug_message.clone();
+    pub fn set_log_error_message(
+        &mut self,
+        logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.vm.log_error_message = Box::new(logger);
         self
     }
 
-    pub fn with_log_error_message(
-        mut self,
-        logger: impl Fn(String) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.log_error_message = logger.into();
-        self.vm.log_error_message = self.log_error_message.clone();
-        self
-    }
-
-    pub fn with_line_handler(
-        mut self,
-        line_handler: impl Fn(Line) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.line_handler = line_handler.into();
+    pub fn set_line_handler(
+        &mut self,
+        line_handler: impl Fn(Line, &mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.vm.line_handler = Box::new(line_handler);
         self
     }
 
@@ -110,76 +95,84 @@ impl Dialogue {
     /// Before [`Dialogue::continue_`] can be called to resume execution,
     /// [`Dialogue::set_selected_option`] must be called to indicate which
     /// [`DialogueOption`] was selected by the user. If [`Dialogue::set_selected_option`] is not called, a panic occurs.
-    pub fn with_options_handler(
-        mut self,
-        options_handler: impl Fn(Vec<DialogueOption>) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.options_handler = options_handler.into();
+    pub fn set_options_handler(
+        &mut self,
+        options_handler: impl FnMut(Vec<DialogueOption>, &mut HandlerSafeDialogue)
+            + Clone
+            + 'static
+            + Send
+            + Sync,
+    ) -> &mut Self {
+        self.vm.options_handler = Box::new(options_handler);
         self
     }
 
     /// The [`CommandHandler`] that is called when a command is to be delivered to the game.
-    pub fn with_command_handler(
-        mut self,
-        command_handler: impl Fn(Command) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.command_handler = command_handler.into();
+    pub fn set_command_handler(
+        &mut self,
+        command_handler: impl FnMut(Command, &mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.vm.command_handler = Box::new(command_handler);
         self
     }
 
     /// The [`NodeCompleteHandler`] that is called when a node is complete.
-    pub fn with_node_complete_handler(
-        mut self,
-        node_complete_handler: impl Fn(String) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.node_complete_handler = node_complete_handler.into();
+    pub fn set_node_complete_handler(
+        &mut self,
+        node_complete_handler: impl FnMut(String, &mut HandlerSafeDialogue)
+            + Clone
+            + 'static
+            + Send
+            + Sync,
+    ) -> &mut Self {
+        self.vm.node_complete_handler = Box::new(node_complete_handler);
         self
     }
 
     /// The [`NodeStartHandler`] that is called when a node is started.
-    pub fn with_node_start_handler(
-        mut self,
-        node_start_handler: impl Fn(String) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.node_start_handler = Some(node_start_handler.into());
+    pub fn set_node_start_handler(
+        &mut self,
+        node_start_handler: impl FnMut(String, &mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.vm.node_start_handler = Some(Box::new(node_start_handler));
         self
     }
 
     /// The [`DialogueCompleteHandler`] that is called when the Dialogue reaches its end.
-    pub fn with_dialogue_complete_handler(
-        mut self,
-        dialogue_complete_handler: impl Fn() + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.dialogue_complete_handler = Some(dialogue_complete_handler.into());
+    pub fn set_dialogue_complete_handler(
+        &mut self,
+        dialogue_complete_handler: impl FnMut(&mut HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.vm.dialogue_complete_handler = Some(Box::new(dialogue_complete_handler));
         self
     }
 
     /// The [`PrepareForLinesHandler`] that is called when the dialogue anticipates delivering some lines.
-    pub fn with_prepare_for_lines_handler(
-        mut self,
-        prepare_for_lines_handler: impl Fn(Vec<LineId>) + Clone + 'static + Send + Sync,
-    ) -> Self {
-        self.vm.prepare_for_lines_handler = Some(prepare_for_lines_handler.into());
+    pub fn set_prepare_for_lines_handler(
+        &mut self,
+        prepare_for_lines_handler: impl Fn(Vec<LineId>, &mut HandlerSafeDialogue)
+            + Clone
+            + 'static
+            + Send
+            + Sync,
+    ) -> &mut Self {
+        self.vm.prepare_for_lines_handler = Some(Box::new(prepare_for_lines_handler));
         self
     }
 
-    pub fn with_language_code(self, language_code: impl Into<String>) -> Self {
-        self.read_only_dialogue
-            .language_code
-            .write()
-            .unwrap()
-            .replace(language_code.into());
+    pub fn set_language_code(&mut self, language_code: impl Into<String>) -> &mut Self {
+        self.language_code_mut().replace(language_code.into());
         self
     }
+}
 
-    /// Retrieves a read-only view of the [`Dialogue`] that is safe to be passed to handlers.
-    pub fn get_read_only(&self) -> ReadOnlyDialogue {
-        self.read_only_dialogue.clone()
-    }
+// VM proxy
+impl Dialogue {
+    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
-        self.vm.execution_state() != ExecutionState::Stopped
+        *self.execution_state() != ExecutionState::Stopped
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
@@ -190,48 +183,32 @@ impl Dialogue {
         &self.vm.library
     }
 
-    /// The object that provides access to storing and retrieving the values of variables.
-    pub fn variable_storage(
-        &self,
-    ) -> impl Deref<Target = dyn VariableStorage + 'static + Send + Sync> + '_ {
-        self.variable_storage.read().unwrap()
-    }
-
-    pub fn variable_storage_mut(
-        &mut self,
-    ) -> impl DerefMut<Target = dyn VariableStorage + 'static + Send + Sync> + '_ {
-        self.variable_storage.write().unwrap()
-    }
-
     /// See [`Dialogue::library`].
     pub fn library_mut(&mut self) -> &mut Library {
         &mut self.vm.library
     }
 
-    pub fn with_new_program(mut self, program: Program) -> Self {
-        self.set_program(program);
-        self
+    /// The object that provides access to storing and retrieving the values of variables.
+    /// Be aware that accessing this object will block [`Dialogue::continue_`] and vice versa, so try to not cause a deadlock.
+    pub fn variable_storage(&self) -> SharedMemoryVariableStore {
+        SharedMemoryVariableStore(self.variable_storage_shared())
     }
 
-    pub fn with_additional_program(mut self, program: Program) -> Self {
-        self.add_program(program);
-        self
-    }
-
-    pub fn set_program(&mut self, program: Program) -> &mut Self {
-        *self.read_only_dialogue.program.write().unwrap() = Some(program);
+    pub fn replace_program(&mut self, program: Program) -> &mut Self {
+        self.vm.program_mut().replace(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
         {
-            let mut existing_program = self.read_only_dialogue.program.write().unwrap();
+            let mut existing_program = self.program_mut();
             if let Some(existing_program) = existing_program.as_mut() {
                 *existing_program =
                     Program::combine(vec![existing_program.clone(), program]).unwrap();
             } else {
                 *existing_program = Some(program);
+                drop(existing_program);
                 self.vm.reset_state();
             }
         }
@@ -253,28 +230,8 @@ impl Dialogue {
         self
     }
 
-    pub fn set_start_node(&mut self) -> &mut Self {
+    pub fn set_node_to_start(&mut self) -> &mut Self {
         self.set_node(Self::DEFAULT_START_NODE_NAME);
-        self
-    }
-
-    /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
-    ///
-    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::continue_`] is called.
-    ///
-    /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
-    /// field in the [`DialogueOption`] that represents the user's selection.
-    ///
-    /// ## Panics
-    /// - If the Dialogue is not expecting an option to be selected.
-    /// - If the option ID is not found in the current [`OptionSet`].
-    ///
-    /// ## See Also
-    /// - [`Dialogue::continue_`]
-    /// - [`OptionsHandler`]
-    /// - [`OptionSet`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
-        self.vm.set_selected_option(selected_option_id);
         self
     }
 
@@ -303,7 +260,7 @@ impl Dialogue {
     /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
     pub fn continue_(&mut self) -> &mut Self {
         // Cannot 'continue' an already running VM.
-        if self.vm.execution_state() != ExecutionState::Running {
+        if *self.execution_state() != ExecutionState::Running {
             self.vm.continue_();
         }
         self
@@ -324,23 +281,56 @@ impl Dialogue {
     }
 }
 
-impl AsRef<ReadOnlyDialogue> for Dialogue {
-    fn as_ref(&self) -> &ReadOnlyDialogue {
-        &self.read_only_dialogue
+// HandlerSafeDialogue proxy
+impl Dialogue {
+    pub fn node_names(&self) -> Option<Vec<String>> {
+        self.handler_safe_dialogue.node_names()
+    }
+    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
+        self.handler_safe_dialogue.get_string_id_for_node(node_name)
+    }
+    pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
+        self.handler_safe_dialogue.get_tags_for_node(node_name)
+    }
+    pub fn node_exists(&self, node_name: &str) -> bool {
+        self.handler_safe_dialogue.node_exists(node_name)
+    }
+
+    pub fn expand_substitutions<'a>(
+        text: &str,
+        substitutions: impl IntoIterator<Item = &'a str>,
+    ) -> String {
+        HandlerSafeDialogue::expand_substitutions(text, substitutions)
+    }
+    pub fn current_node(&self) -> Option<String> {
+        self.handler_safe_dialogue.current_node()
+    }
+    pub fn language_code(&self) -> Option<String> {
+        self.handler_safe_dialogue.language_code()
+    }
+    pub fn analyse(&self) -> ! {
+        self.handler_safe_dialogue.analyse()
+    }
+    pub fn parse_markup(&self, line: &str) -> String {
+        self.handler_safe_dialogue.parse_markup(line)
+    }
+
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
+        self.handler_safe_dialogue
+            .set_selected_option(selected_option_id);
+        self
     }
 }
 
-impl Deref for Dialogue {
-    type Target = ReadOnlyDialogue;
-
-    fn deref(&self) -> &Self::Target {
-        &self.read_only_dialogue
+impl AsRef<HandlerSafeDialogue> for Dialogue {
+    fn as_ref(&self) -> &HandlerSafeDialogue {
+        &self.handler_safe_dialogue
     }
 }
 
-impl DerefMut for Dialogue {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.read_only_dialogue
+impl AsMut<HandlerSafeDialogue> for Dialogue {
+    fn as_mut(&mut self) -> &mut HandlerSafeDialogue {
+        &mut self.handler_safe_dialogue
     }
 }
 
@@ -367,8 +357,8 @@ mod tests {
     #[test]
     fn can_set_handler() {
         let _dialogue = Dialogue::default()
-            .with_log_debug_message(|_| {})
-            .with_options_handler(|_| {});
+            .set_log_debug_message(|_, _| {})
+            .set_options_handler(|_, _| {});
     }
 
     #[test]

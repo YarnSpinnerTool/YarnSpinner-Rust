@@ -1,43 +1,51 @@
 use crate::prelude::*;
 use log::{debug, error};
-use std::sync::{Arc, RwLock};
+use std::ops::Deref;
 use yarn_slinger_core::prelude::*;
 
-/// A read-only view of a [`Dialogue`]. Represents the methods that are okay to be called from handlers.
-/// Since this type is `Send + Sync`, you can get a copy with [`Dialogue::get_read_only`] and `move` it into a handler.
+/// A view of a [`Dialogue`]. Represents the subset of methods that are okay to be called from handlers.
+/// Since this type is `Send + Sync`, you can get a copy with [`Dialogue::get_handler_safe_dialogue`] and `move` it into a handler.
 ///
 /// ## Implementation notes
 ///
 /// This type is not present in the original. We need to use it to cleanly borrow data from handlers.
 /// The original just calls [`Dialogue`] for both mutable and immutable access anywhere,
 /// which is of course a big no-no in Rust.
-#[derive(Debug, Clone)]
-pub struct ReadOnlyDialogue {
-    pub(crate) program: Arc<RwLock<Option<Program>>>,
-    pub(crate) current_node_name: Arc<RwLock<Option<String>>>,
+#[derive(Debug)]
+pub struct HandlerSafeDialogue {
     pub(crate) log_debug_message: Logger,
     pub(crate) log_error_message: Logger,
-    pub(crate) language_code: Arc<RwLock<Option<String>>>,
+    shared_state: SharedState,
 }
 
-impl Default for ReadOnlyDialogue {
-    fn default() -> Self {
-        ReadOnlyDialogue {
-            program: Arc::new(RwLock::new(None)),
-            current_node_name: Arc::new(RwLock::new(None)),
-            log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
-            log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
-            language_code: Arc::new(RwLock::new(None)),
-        }
+impl SharedStateHolder for HandlerSafeDialogue {
+    fn shared_state(&self) -> &SharedState {
+        &self.shared_state
     }
 }
 
-impl ReadOnlyDialogue {
+impl HandlerSafeDialogue {
+    pub(crate) fn from_shared_state(shared_state: SharedState) -> Self {
+        // Can't use a closure because the Rust type inference gets a bit confused :<
+        fn default_logger(msg: String, _dialogue: &HandlerSafeDialogue) {
+            debug!("{}", msg)
+        }
+
+        fn default_error(msg: String, _dialogue: &HandlerSafeDialogue) {
+            error!("{}", msg)
+        }
+
+        HandlerSafeDialogue {
+            log_debug_message: Box::new(default_logger),
+            log_error_message: Box::new(default_error),
+            shared_state,
+        }
+    }
+
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
     pub fn node_names(&self) -> Option<Vec<String>> {
-        self.program
-            .read()
-            .unwrap()
+        self.program()
+            .deref()
             .as_ref()
             .map(|program| program.nodes.keys().cloned().collect())
     }
@@ -72,11 +80,13 @@ impl ReadOnlyDialogue {
     /// Program.
     pub fn node_exists(&self, node_name: &str) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
-        if let Some(program) = self.program.read().unwrap().as_ref() {
+        if let Some(program) = self.program().as_ref() {
             program.nodes.contains_key(node_name)
         } else {
-            self.log_error_message
-                .call("Tried to call NodeExists, but no program has been loaded".to_owned());
+            self.log_error_message.call(
+                "Tried to call NodeExists, but no program has been loaded".to_owned(),
+                self,
+            );
             false
         }
     }
@@ -106,7 +116,7 @@ impl ReadOnlyDialogue {
     /// If [`Dialogue::continue_`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<String> {
-        self.current_node_name.read().unwrap().clone()
+        self.current_node_name().clone()
     }
 
     /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
@@ -117,7 +127,7 @@ impl ReadOnlyDialogue {
     /// For example, the code "en-US" represents the English language as
     /// used in the United States.
     pub fn language_code(&self) -> Option<String> {
-        self.language_code.read().unwrap().clone()
+        SharedStateHolder::language_code(self).clone()
     }
 
     pub fn analyse(&self) -> ! {
@@ -134,22 +144,63 @@ impl ReadOnlyDialogue {
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
-        if let Some(program) = self.program.read().unwrap().as_ref() {
+        if let Some(program) = self.program().as_ref() {
             if program.nodes.is_empty() {
                 self.log_error_message
-                    .call("No nodes are loaded".to_owned());
+                    .call("No nodes are loaded".to_owned(), self);
                 None
             } else if let Some(node) = program.nodes.get(node_name) {
                 Some(node.clone())
             } else {
                 self.log_error_message
-                    .call(format!("No node named {node_name}"));
+                    .call(format!("No node named {node_name}"), self);
                 None
             }
         } else {
             self.log_error_message
-                .call("No program is loaded".to_owned());
+                .call("No program is loaded".to_owned(), self);
             None
         }
+    }
+
+    /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
+    ///
+    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::continue_`] is called.
+    ///
+    /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
+    /// field in the [`DialogueOption`] that represents the user's selection.
+    ///
+    /// ## Panics
+    /// - If the Dialogue is not expecting an option to be selected.
+    /// - If the option ID is not found in the current [`OptionSet`].
+    ///
+    /// ## See Also
+    /// - [`Dialogue::continue_`]
+    /// - [`OptionsHandler`]
+    /// - [`OptionSet`]
+
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
+        assert_eq!(ExecutionState::WaitingOnOptionSelection, *self.execution_state(), "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
+                This method should only be called after the Dialogue is waiting for the user to select an option.");
+
+        assert!(
+            selected_option_id.0 < self.state().current_options.len(),
+            "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {}.",
+            self.state().current_options.len() - 1
+        );
+
+        // We now know what number option was selected; push the
+        // corresponding node name to the stack.
+        let destination_node = self.state().current_options[selected_option_id.0]
+            .destination_node
+            .clone();
+        self.state_mut().push(destination_node);
+
+        // We no longer need the accumulated list of options; clear it
+        // so that it's ready for the next one
+        self.state_mut().current_options.clear();
+
+        // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
+        *self.execution_state_mut() = ExecutionState::WaitingForContinue;
     }
 }

@@ -20,7 +20,7 @@ pub struct ProcessedOption {
 }
 
 impl TestPlan {
-    pub fn read(path: &Path) -> Self {
+    pub fn read(path: impl AsRef<Path>) -> Self {
         let steps = fs::read_to_string(path)
             .unwrap()
             .lines()
@@ -46,7 +46,7 @@ impl TestPlan {
             // we've now moved past that, so clear the list of expected
             // options.
             self.next_expected_options.clear();
-            self.next_step_value = None;
+            self.next_step_value = Some(StepValue::Number(0));
         }
 
         for current_step in self.steps.iter().skip(self.current_test_plan_step) {

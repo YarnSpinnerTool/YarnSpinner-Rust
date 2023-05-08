@@ -29,7 +29,7 @@ impl Step {
         match expected_step_type {
             ExpectedStepType::Line | ExpectedStepType::Option | ExpectedStepType::Command => {
                 let buf = reader.read_to_end();
-                let value = buf.trim();
+                let value = buf.trim().to_owned();
 
                 // Options whose text ends with " [disabled]"
                 // are expected to be present, but have their
@@ -45,45 +45,44 @@ impl Step {
                         expect_option_enabled: false,
                     }
                 } else {
-                    Self::with_expected_step_type(expected_step_type)
+                    Self::with_value_and_type(value, expected_step_type)
                 }
             }
             ExpectedStepType::Select => {
                 let value = reader.read_next::<usize>();
-                Self {
-                    expected_step_type,
-                    value: Some(value.into()),
-                    expect_option_enabled: true,
-                }
+                Self::with_value_and_type(value, expected_step_type)
             }
             ExpectedStepType::Stop => Self::with_expected_step_type(expected_step_type),
         }
     }
 
     pub(crate) fn from_line(line: impl Into<String>) -> Self {
-        Self::with_value_and_type(line.into().into(), ExpectedStepType::Line)
+        Self::with_value_and_type(line.into(), ExpectedStepType::Line)
     }
 
     pub(crate) fn from_option(line: impl Into<String>) -> Self {
-        Self::with_value_and_type(line.into().into(), ExpectedStepType::Option)
+        Self::with_value_and_type(line.into(), ExpectedStepType::Option)
     }
 
     pub(crate) fn from_command(line: impl Into<String>) -> Self {
-        Self::with_value_and_type(line.into().into(), ExpectedStepType::Command)
+        Self::with_value_and_type(line.into(), ExpectedStepType::Command)
     }
 
     pub(crate) fn from_select(selection: impl Into<usize>) -> Self {
-        Self::with_value_and_type(selection.into().into(), ExpectedStepType::Select)
+        Self::with_value_and_type(selection.into(), ExpectedStepType::Select)
     }
 
     pub(crate) fn from_stop() -> Self {
         Self::with_expected_step_type(ExpectedStepType::Stop)
     }
 
-    fn with_value_and_type(value: StepValue, expected_step_type: ExpectedStepType) -> Self {
+    fn with_value_and_type(
+        value: impl Into<StepValue>,
+        expected_step_type: ExpectedStepType,
+    ) -> Self {
         Self {
             expected_step_type,
-            value: Some(value),
+            value: Some(value.into()),
             expect_option_enabled: true,
         }
     }
@@ -156,12 +155,12 @@ impl FromStr for ExpectedStepType {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Line" => Ok(Self::Line),
-            "Option" => Ok(Self::Option),
-            "Select" => Ok(Self::Select),
-            "Command" => Ok(Self::Command),
-            "Stop" => Ok(Self::Stop),
+        match s.to_lowercase().as_str() {
+            "line" => Ok(Self::Line),
+            "option" => Ok(Self::Option),
+            "select" => Ok(Self::Select),
+            "command" => Ok(Self::Command),
+            "stop" => Ok(Self::Stop),
             _ => Err(()),
         }
     }

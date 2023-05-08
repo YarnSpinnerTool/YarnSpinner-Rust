@@ -31,7 +31,7 @@ pub mod prelude {
     pub use crate::test_base::{extensions::*, paths::*, step::*, test_plan::*, *};
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TestBase {
     pub dialogue: Dialogue,
     test_plan: Arc<RwLock<Option<TestPlan>>>,
@@ -46,31 +46,27 @@ impl Default for TestBase {
             Arc::new(RwLock::new(HashMap::new()));
         let test_plan: Arc<RwLock<Option<TestPlan>>> = Arc::new(RwLock::new(None));
 
-        let dialogue = Dialogue::default()
-            .with_language_code("en")
-            .with_log_debug_message(|msg| {
+        let mut dialogue = Dialogue::default();
+        dialogue
+            .set_language_code("en")
+            .set_log_debug_message(|msg, _| {
                 println!("{}", msg);
             });
 
-        let dialogue = {
+        {
             let runtime_errors_cause_panic = runtime_errors_cause_panic.clone();
             let string_table = string_table.clone();
             let test_plan = test_plan.clone();
-            let read_only_dialogue = dialogue.get_read_only();
 
             dialogue
-                .with_log_error_message(move |msg| {
+                .set_log_error_message(move |msg, _| {
                     eprintln!("{}", msg);
                     if runtime_errors_cause_panic.load(Ordering::Relaxed) {
                         assert!(msg.is_empty())
                     }
                 })
-                .with_line_handler(move |line| {
-                    let text = get_composed_text_for_line_with_no_self(
-                        &line,
-                        &string_table,
-                        &read_only_dialogue,
-                    );
+                .set_line_handler(move |line, dlg| {
+                    let text = get_composed_text_for_line_with_no_self(&line, &string_table, dlg);
                     println!("Line: {text}");
                     let mut test_plan = test_plan.write().unwrap();
                     let Some(test_plan) = test_plan.as_mut() else {
@@ -85,14 +81,13 @@ impl Default for TestBase {
                         test_plan.next_expected_step
                     );
                     assert_eq!(test_plan.next_step_value, Some(StepValue::String(text)));
-                })
-        };
-        let dialogue = {
+                });
+        }
+        {
             let test_plan = test_plan.clone();
-            let read_only_dialogue = dialogue.get_read_only();
             let string_table = string_table.clone();
 
-            dialogue.with_options_handler(move |options| {
+            dialogue.set_options_handler(move |options, dlg| {
                 println!("Options:");
 
                 let options: Vec<_> = options
@@ -101,7 +96,7 @@ impl Default for TestBase {
                         let text = get_composed_text_for_line_with_no_self(
                             &option.line,
                             &string_table,
-                            &read_only_dialogue,
+                            dlg,
                         );
                         ProcessedOption {
                             line: text,
@@ -119,7 +114,7 @@ impl Default for TestBase {
 
                 test_plan.next();
                 assert_eq!(
-                    ExpectedStepType::Option,
+                    ExpectedStepType::Select,
                     test_plan.next_expected_step,
                     "Received {} options, but wasn't expecting them (was expecting {:?})",
                     options.len(),
@@ -127,14 +122,23 @@ impl Default for TestBase {
                 );
 
                 assert_eq!(test_plan.next_expected_options, options);
-            })
-        };
 
-        let dialogue = {
+                if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
+                    let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
+                    println!("[Selecting option {}]", selection);
+                    dlg.set_selected_option(OptionId::construct_for_debugging(selection));
+                } else {
+                    println!("[Selecting option 0 implicitly]");
+                    dlg.set_selected_option(OptionId::construct_for_debugging(0));
+                }
+            });
+        }
+
+        {
             let test_plan = test_plan.clone();
 
             dialogue
-                .with_command_handler(move |command| {
+                .set_command_handler(move |command, _| {
                     println!("Command: {}", command.0);
                     let mut test_plan = test_plan.write().unwrap();
                     let Some(test_plan) = test_plan.as_mut() else {
@@ -159,11 +163,11 @@ impl Default for TestBase {
                         Some(StepValue::String(command.0))
                     );
                 })
-                .with_node_complete_handler(|_| {})
-        };
-        let mut dialogue = {
+                .set_node_complete_handler(|_, _| {});
+        }
+        {
             let test_plan = test_plan.clone();
-            dialogue.with_dialogue_complete_handler(move || {
+            dialogue.set_dialogue_complete_handler(move |_| {
                 let mut test_plan = test_plan.write().unwrap();
                 let Some(test_plan) = test_plan.as_mut() else {
                     return;
@@ -175,8 +179,8 @@ impl Default for TestBase {
                     "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
                     test_plan.next_expected_step
                 );
-            })
-        };
+            });
+        }
 
         dialogue
             .library_mut()
@@ -196,7 +200,7 @@ impl Default for TestBase {
 
 impl TestBase {
     /// Sets the current test plan to one loaded from a given path.
-    pub fn read_test_plan(self, path: &Path) -> Self {
+    pub fn read_test_plan(self, path: impl AsRef<Path>) -> Self {
         self.with_test_plan(TestPlan::read(path))
     }
 
@@ -205,31 +209,39 @@ impl TestBase {
         self
     }
 
-    pub fn runtime_failure_causes_no_panic(self) -> Self {
+    pub fn with_runtime_failure_causes_no_panic(self) -> Self {
         self.runtime_errors_cause_panic
             .store(false, Ordering::Relaxed);
+        self
+    }
+
+    pub fn with_compilation(self, compilation: Compilation) -> Self {
+        let string_table = compilation
+            .string_table
+            .into_iter()
+            .map(|(k, v)| (LineId(k), v))
+            .collect();
+        self.with_program(compilation.program.unwrap())
+            .with_string_table(string_table)
+    }
+
+    pub fn with_program(mut self, program: Program) -> Self {
+        self.dialogue.add_program(program);
+        self
+    }
+
+    pub fn with_string_table(self, string_table: HashMap<LineId, StringInfo>) -> Self {
+        *self.string_table.write().unwrap() = string_table;
         self
     }
 
     /// Executes the named node, and checks any assertions made during
     /// execution. Fails the test if an assertion made in Yarn fails.
     pub fn run_standard_testcase(&mut self) {
-        self.dialogue.set_start_node();
+        self.dialogue.set_node_to_start();
 
         self.dialogue.continue_();
         while self.dialogue.is_active() {
-            let test_plan = self.test_plan.read().unwrap();
-            if let Some(test_plan) = test_plan.as_ref() {
-                if test_plan.next_expected_step == ExpectedStepType::Option {
-                    if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
-                        self.dialogue
-                            .set_selected_option(OptionId::construct_for_debugging(selection));
-                    } else {
-                        self.dialogue
-                            .set_selected_option(OptionId::construct_for_debugging(0));
-                    }
-                }
-            }
             self.dialogue.continue_();
         }
     }
@@ -262,7 +274,7 @@ impl TestBase {
     }
 
     pub fn get_composed_text_for_line(&self, line: &Line) -> String {
-        get_composed_text_for_line_with_no_self(line, &self.string_table, &self.dialogue)
+        get_composed_text_for_line_with_no_self(line, &self.string_table, self.dialogue.as_ref())
     }
 
     pub fn test_plan(&self) -> impl Deref<Target = Option<TestPlan>> + '_ {
@@ -305,11 +317,12 @@ impl AsRef<Dialogue> for TestBase {
 fn get_composed_text_for_line_with_no_self(
     line: &Line,
     string_table: &RwLock<HashMap<LineId, StringInfo>>,
-    dialogue: &ReadOnlyDialogue,
+    dialogue: &HandlerSafeDialogue,
 ) -> String {
     let string_table = string_table.read().unwrap();
     let string_info = string_table.get(&line.id).unwrap();
     let substitutions = line.substitutions.iter().map(|s| s.as_str());
-    let substituted_text = ReadOnlyDialogue::expand_substitutions(&string_info.text, substitutions);
+    let substituted_text =
+        HandlerSafeDialogue::expand_substitutions(&string_info.text, substitutions);
     dialogue.parse_markup(&substituted_text)
 }
