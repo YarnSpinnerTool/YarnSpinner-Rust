@@ -139,11 +139,11 @@ impl YarnValueWrapper {
     }
 }
 
-pub trait YarnFnParam {
-    fn retrieve(value: &mut YarnValueWrapper) -> Self;
+pub trait YarnFnParam<'a> {
+    fn retrieve(value: &'a mut YarnValueWrapper) -> Self;
 }
 
-struct ResRef<'a, T: 'static>
+struct ResRef<'a, T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
@@ -151,12 +151,12 @@ where
     value: &'a T,
 }
 
-impl<'a, T: 'static> YarnFnParam for ResRef<'a, T>
+impl<'a, T> YarnFnParam<'a> for ResRef<'a, T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
-    fn retrieve(value: &mut YarnValueWrapper) -> Self {
+    fn retrieve(value: &'a mut YarnValueWrapper) -> Self {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -164,7 +164,7 @@ where
     }
 }
 
-struct ResOwned<T: 'static>
+struct ResOwned<T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
@@ -172,12 +172,12 @@ where
     value: T,
 }
 
-impl<T> YarnFnParam for ResOwned<T>
+impl<'a, T> YarnFnParam<'a> for ResOwned<T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
-    fn retrieve(value: &mut YarnValueWrapper) -> Self {
+    fn retrieve(value: &'a mut YarnValueWrapper) -> Self {
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();
