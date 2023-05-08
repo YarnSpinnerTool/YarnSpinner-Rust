@@ -36,7 +36,7 @@ pub struct TestBase {
     pub dialogue: Dialogue,
     test_plan: Arc<RwLock<Option<TestPlan>>>,
     string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
-    pub runtime_errors_cause_panic: Arc<AtomicBool>,
+    runtime_errors_cause_panic: Arc<AtomicBool>,
 }
 
 impl Default for TestBase {
