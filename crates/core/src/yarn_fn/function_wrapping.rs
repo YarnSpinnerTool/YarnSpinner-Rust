@@ -139,8 +139,9 @@ impl YarnValueWrapper {
     }
 }
 
-pub trait YarnFnParam<'a> {
-    fn retrieve(value: &'a mut YarnValueWrapper) -> Self;
+pub trait YarnFnParam {
+    type Item<'new>;
+    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r>;
 }
 
 struct ResRef<'a, T>
@@ -151,12 +152,13 @@ where
     value: &'a T,
 }
 
-impl<'a, T> YarnFnParam<'a> for ResRef<'a, T>
+impl<'res, T> YarnFnParam for ResRef<'res, T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
-    fn retrieve(value: &'a mut YarnValueWrapper) -> Self {
+    type Item<'new> = ResRef<'res, T>;
+    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -172,12 +174,13 @@ where
     value: T,
 }
 
-impl<'a, T> YarnFnParam<'a> for ResOwned<T>
+impl<'res, T> YarnFnParam for ResOwned<T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
-    fn retrieve(value: &'a mut YarnValueWrapper) -> Self {
+    type Item<'new> = ResOwned<T>;
+    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();
@@ -202,12 +205,12 @@ macro_rules! impl_yarn_fn_tuple {
                         panic!("Wrong number of arguments")
                     };
 
+                    let ($($param,)*) = (
+                        $(YarnValueWrapper::from($param),)*
+                    );
+
                     let input = (
-                        $($param
-                            .clone()
-                            .try_into()
-                            .unwrap_or_else(|_| panic!("Failed to convert")),
-                        )*
+                        $($param::retrieve(&mut $param),)*
                     );
                     let ($($param,)*) = input;
                     self($($param,)*)
