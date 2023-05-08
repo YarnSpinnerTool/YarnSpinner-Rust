@@ -15,8 +15,6 @@ mod state;
 
 #[derive(Debug)]
 pub(crate) struct VirtualMachine {
-    pub(crate) log_debug_message: Logger,
-    pub(crate) log_error_message: Logger,
     pub(crate) line_handler: LineHandler,
     pub(crate) options_handler: OptionsHandler,
     pub(crate) command_handler: CommandHandler,
@@ -27,6 +25,8 @@ pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
     handler_safe_dialogue: HandlerSafeDialogue,
     shared: SharedState,
+    log_debug_message: Logger,
+    log_error_message: Logger,
 }
 
 impl SharedStateHolder for VirtualMachine {
@@ -218,6 +218,24 @@ impl VirtualMachine {
 
     pub(crate) fn unload_programs(&mut self) {
         *self.program_mut() = None
+    }
+
+    pub(crate) fn set_log_debug_message(
+        &mut self,
+        logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.log_debug_message = Box::new(logger);
+        self.handler_safe_dialogue.log_debug_message = self.log_debug_message.clone();
+        self
+    }
+
+    pub(crate) fn set_log_error_message(
+        &mut self,
+        logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
+    ) -> &mut Self {
+        self.log_error_message = Box::new(logger);
+        self.handler_safe_dialogue.log_error_message = self.log_error_message.clone();
+        self
     }
 
     /// ## Implementation note

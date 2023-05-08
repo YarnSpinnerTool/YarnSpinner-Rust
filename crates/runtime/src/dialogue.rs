@@ -69,7 +69,8 @@ impl Dialogue {
         &mut self,
         logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> &mut Self {
-        self.vm.log_debug_message = Box::new(logger);
+        self.handler_safe_dialogue.log_debug_message = Box::new(logger.clone());
+        self.vm.set_log_debug_message(logger);
         self
     }
 
@@ -77,7 +78,8 @@ impl Dialogue {
         &mut self,
         logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
     ) -> &mut Self {
-        self.vm.log_error_message = Box::new(logger);
+        self.handler_safe_dialogue.log_error_message = Box::new(logger.clone());
+        self.vm.set_log_error_message(logger);
         self
     }
 
