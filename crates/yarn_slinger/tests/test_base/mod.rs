@@ -124,6 +124,7 @@ impl Default for TestBase {
                 assert_eq!(test_plan.next_expected_options, options);
 
                 if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
+                    let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
                     println!("[Selecting option {}]", selection);
                     dlg.set_selected_option(OptionId::construct_for_debugging(selection));
                 } else {
