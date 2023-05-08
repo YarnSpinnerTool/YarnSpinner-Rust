@@ -159,12 +159,6 @@ fn test_number_plurals() {
 
 #[test]
 #[ignore]
-fn test_compilation_should_not_be_culture_dependent() {
-    todo!("Not ported yet")
-}
-
-#[test]
-#[ignore]
 fn test_sources() {
     todo!("Not ported yet")
 }
