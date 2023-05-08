@@ -124,11 +124,11 @@ impl Default for TestBase {
                 assert_eq!(test_plan.next_expected_options, options);
 
                 if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
-                    dlg
-                        .set_selected_option(OptionId::construct_for_debugging(selection));
+                    println!("[Selecting option {}]", selection);
+                    dlg.set_selected_option(OptionId::construct_for_debugging(selection));
                 } else {
-                    dlg
-                        .set_selected_option(OptionId::construct_for_debugging(0));
+                    println!("[Selecting option 0 implicitly]");
+                    dlg.set_selected_option(OptionId::construct_for_debugging(0));
                 }
             });
         }
