@@ -20,7 +20,7 @@ fn test_example_script() {
     let result = compile(compilation_job).unwrap_pretty();
 
     TestBase::default()
-        .with_runtime_failure_causes_no_panic()
+        .with_runtime_errors_do_not_cause_failure()
         .with_compilation(result)
         .read_test_plan(test_plan)
         .run_standard_testcase();

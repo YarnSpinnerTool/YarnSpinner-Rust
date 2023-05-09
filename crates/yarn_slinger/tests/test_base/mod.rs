@@ -36,12 +36,12 @@ pub struct TestBase {
     pub dialogue: Dialogue,
     test_plan: Arc<RwLock<Option<TestPlan>>>,
     string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
-    runtime_errors_cause_panic: Arc<AtomicBool>,
+    runtime_errors_cause_failure: Arc<AtomicBool>,
 }
 
 impl Default for TestBase {
     fn default() -> Self {
-        let runtime_errors_cause_failures = Arc::new(AtomicBool::new(true));
+        let runtime_errors_cause_failure = Arc::new(AtomicBool::new(true));
         let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
             Arc::new(RwLock::new(HashMap::new()));
         let test_plan: Arc<RwLock<Option<TestPlan>>> = Arc::new(RwLock::new(None));
@@ -54,7 +54,7 @@ impl Default for TestBase {
             });
 
         {
-            let runtime_errors_cause_failures = runtime_errors_cause_failures.clone();
+            let runtime_errors_cause_failures = runtime_errors_cause_failure.clone();
             let string_table = string_table.clone();
             let test_plan = test_plan.clone();
 
@@ -193,7 +193,7 @@ impl Default for TestBase {
             dialogue,
             test_plan,
             string_table,
-            runtime_errors_cause_panic: runtime_errors_cause_failures,
+            runtime_errors_cause_failure,
         }
     }
 }
@@ -213,8 +213,8 @@ impl TestBase {
         self
     }
 
-    pub fn with_runtime_failure_causes_no_panic(self) -> Self {
-        self.runtime_errors_cause_panic
+    pub fn with_runtime_errors_do_not_cause_failure(self) -> Self {
+        self.runtime_errors_cause_failure
             .store(false, Ordering::Relaxed);
         self
     }

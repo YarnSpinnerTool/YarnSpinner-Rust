@@ -1,4 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/DialogueTests.cs>
+//!
+//! ## Implementation notes
+//! `TestDumpingCode` was not ported because `GetByteCode` is not used by a user directly and thus was not implemented at all.
 
 use test_base::prelude::*;
 use yarn_slinger::prelude::*;
@@ -23,4 +26,24 @@ fn test_node_exists() {
     // Test clearing everything
     dialogue.unload_all();
     assert!(!dialogue.node_exists("Sally"));
+}
+
+#[test]
+#[ignore = "Requires analyzer to be implemented, see https://github.com/yarn-slinger/yarn-slinger/issues/85"]
+fn test_analysis() {
+    todo!("Not ported yet")
+}
+
+#[test]
+#[should_panic(expected = "No node named \"THIS NODE DOES NOT EXIST\" has been loaded.")]
+fn test_missing_node() {
+    let path = test_data_path().join("TestCases").join("Smileys.yarn");
+
+    let compilation_job = CompilationJob::new().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let mut test_base = TestBase::new()
+        .with_program(result.program.unwrap())
+        .with_runtime_errors_do_not_cause_failure();
+    test_base.dialogue.set_node("THIS NODE DOES NOT EXIST");
 }
