@@ -194,14 +194,17 @@ macro_rules! impl_yarn_fn_tuple {
         #[allow(non_snake_case)]
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
-                F: Fn($($param,)*) -> O + Send + Sync + Clone,
-                O: IntoYarnValueFromNonYarnValue + 'static,
-                $($param: TryFrom<YarnValue> + 'static,)*
+            for <'a>F:
+                Send + Sync + Clone +
+                Fn($($param,)*) -> O +
+                Fn($(<$param as YarnFnParam>::Item<'a>,)*) -> O,
+            O: IntoYarnValueFromNonYarnValue + 'static,
+            $($param: YarnFnParam + 'static,)*
             {
                 type Out = O;
                 #[allow(non_snake_case)]
                 fn call(&self, input: Vec<YarnValue>) -> Self::Out {
-                    let [$($param,)*] = &input[..] else {
+                    let [$($param,)*] = input[..] else {
                         panic!("Wrong number of arguments")
                     };
 
@@ -223,4 +226,4 @@ macro_rules! impl_yarn_fn_tuple {
     };
 }
 
-all_tuples!(impl_yarn_fn_tuple, 0, 16, P);
+all_tuples!(impl_yarn_fn_tuple, 0, 1, P);
