@@ -2,8 +2,8 @@
 //!
 //! ## Implementation notes
 //!
-//! Because Rust has no concept of a current global culture setting,
-//! the test `TestCompilationShouldNotBeCultureDependent` was omitted.
+//! Because Rust has no concept of a current global culture setting, the test `TestCompilationShouldNotBeCultureDependent` was omitted.
+//! The test `TestNumberPlurals` was moved to a unit test in the `runtime` crate because it fits better there.
 
 use std::collections::HashMap;
 use test_base::prelude::*;
@@ -159,12 +159,6 @@ fn test_invalid_characters_in_node_title() {
     let path = test_data_path().join("InvalidNodeTitle.yarn");
     let result = compile(CompilationJob::default().read_file(path).unwrap());
     assert!(result.is_err());
-}
-
-#[test]
-#[ignore]
-fn test_number_plurals() {
-    todo!("Not ported yet")
 }
 
 #[test]
