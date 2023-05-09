@@ -112,7 +112,7 @@ where
 
 impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
     fn eq(&self, other: &Self) -> bool {
-        // Not guaranteed to be unique, but that's good enough for our purposes.
+        // Not guaranteed to be unique, but it's good enough for our purposes.
         let debug = format!("{:?}", self);
         let other_debug = format!("{:?}", other);
         debug == other_debug
