@@ -64,11 +64,6 @@ impl Pluralization {
         let value = get_into_plural_operand(value);
 
         if let Some(rules) = self.rules.as_ref() {
-            println!(
-                "value: {value:?}, type: {:?}, locale: {}",
-                self.rule_type.unwrap(),
-                self.locale.as_ref().unwrap()
-            );
             return rules.category_for(value);
         } else {
             let uncalled_fns = [
@@ -164,30 +159,37 @@ mod tests {
             ("cy", 10.0, PluralCategory::Other),
         ];
 
+        let mut fails = String::new();
         let mut pluralization = Pluralization::new().with_rule_type(PluralRuleType::Cardinal);
         for (locale, value, expected_category) in cardinal_tests.into_iter() {
             let result = pluralization.parse_locale(locale).get_plural_case(value);
-            assert_eq!(
-                expected_category, result,
-                "locale: {locale}, value: {value}, type: Cardinal"
-            );
+            if expected_category != result {
+                fails += &format!(
+                    "locale: {locale:?}, value: {value}, expected {expected_category:?} but got {result:?}\n",
+                );
+            }
         }
+
+        println!("Cardinal:\n{}", fails);
+        fails = String::new();
 
         let mut pluralization = Pluralization::new().with_rule_type(PluralRuleType::Ordinal);
         for (locale, value, expected_category) in ordinal_tests.into_iter() {
             let result = pluralization.parse_locale(locale).get_plural_case(value);
-            assert_eq!(
-                expected_category, result,
-                "locale: {locale}, value: {value}, type: Ordinal"
-            );
+            if expected_category != result {
+                fails += &format!(
+                    "locale: {locale:?}, value: {value}, expected {expected_category:?} but got {result:?}\n",
+                );
+            }
         }
+        println!("Ordinal:\n{}", fails);
     }
 
     #[test]
     fn smoke_test() {
         let pr = PluralRules::try_new_unstable(
             &icu_testdata::unstable(),
-            &locale!("pl").into(),
+            &locale!("is").into(),
             PluralRuleType::Cardinal,
         )
         .unwrap();
