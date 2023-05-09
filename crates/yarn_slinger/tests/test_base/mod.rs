@@ -41,7 +41,7 @@ pub struct TestBase {
 
 impl Default for TestBase {
     fn default() -> Self {
-        let runtime_errors_cause_panic = Arc::new(AtomicBool::new(true));
+        let runtime_errors_cause_failures = Arc::new(AtomicBool::new(true));
         let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
             Arc::new(RwLock::new(HashMap::new()));
         let test_plan: Arc<RwLock<Option<TestPlan>>> = Arc::new(RwLock::new(None));
@@ -54,15 +54,15 @@ impl Default for TestBase {
             });
 
         {
-            let runtime_errors_cause_panic = runtime_errors_cause_panic.clone();
+            let runtime_errors_cause_failures = runtime_errors_cause_failures.clone();
             let string_table = string_table.clone();
             let test_plan = test_plan.clone();
 
             dialogue
                 .set_log_error_message(move |msg, _| {
                     eprintln!("{msg}");
-                    if runtime_errors_cause_panic.load(Ordering::Relaxed) && !msg.is_empty() {
-                        panic!("Runtime error: {msg}");
+                    if runtime_errors_cause_failures.load(Ordering::Relaxed) {
+                        assert!(!msg.is_empty())
                     }
                 })
                 .set_line_handler(move |line, dlg| {
@@ -193,7 +193,7 @@ impl Default for TestBase {
             dialogue,
             test_plan,
             string_table,
-            runtime_errors_cause_panic,
+            runtime_errors_cause_panic: runtime_errors_cause_failures,
         }
     }
 }
