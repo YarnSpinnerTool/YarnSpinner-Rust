@@ -2,6 +2,7 @@
 
 use crate::prelude::*;
 use std::borrow::Cow;
+use std::fmt::Display;
 use std::ops::{Deref, DerefMut};
 
 /// A collection of functions that can be called from Yarn scripts.
@@ -91,5 +92,18 @@ impl Library {
             let canonical_name = r#type.get_canonical_name_for_method(name);
             self.add_boxed(canonical_name, function.clone());
         }
+    }
+}
+
+impl Display for Library {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut functions: Vec<_> = self.0.iter().collect();
+        functions.sort_by_key(|(name, _)| name.to_string());
+        writeln!(f, "{{")?;
+        for (name, function) in functions {
+            writeln!(f, "    {}: {}", name, function)?;
+        }
+        writeln!(f, "}}")?;
+        Ok(())
     }
 }

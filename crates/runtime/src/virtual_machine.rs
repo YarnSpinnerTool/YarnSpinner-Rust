@@ -435,7 +435,7 @@ impl VirtualMachine {
                 let function_name: String = instruction.read_operand(0);
                 let function = self.library.get(&function_name).unwrap_or_else(|| {
                     panic!(
-                        "Function \"{}\" not found in library: {:#?}",
+                        "Function \"{}\" not found in library: {}",
                         function_name, self.library
                     )
                 });
