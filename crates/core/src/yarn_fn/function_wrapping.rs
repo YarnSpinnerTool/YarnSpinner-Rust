@@ -196,39 +196,39 @@ where
     }
 }
 
-macro_rules! impl_ref_param {
-    ([$(&$param:ty $(=> $owned:ty)?),*]: YarnFnParam) => {
+macro_rules! impl_yarn_fn_param {
+    ([$(&$referenced:ty => $owned:ty),*]: YarnFnParam) => {
         $(
-            impl YarnFnParam for &$param {
-                type Item<'new> = &'new $param;
-
-                fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                    ResRef::<'r,$ ($owned,)? $param>::retrieve(value).value
-                }
+            impl_yarn_fn_param_inner!{
+                &$referenced => $owned: YarnFnParam
             }
         )*
+    }
+}
+
+macro_rules! impl_yarn_fn_param_inner {
+    (&$referenced:ty => $owned:ty: YarnFnParam) => {
+        impl YarnFnParam for &$referenced {
+            type Item<'new> = &'new $referenced;
+
+            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+                ResRef::<'r,$ ($owned,)? $referenced>::retrieve(value).value
+            }
+        }
+        
+        impl YarnFnParam for $owned {
+            type Item<'new> = $owned;
+
+            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+                ResOwned::<$owned>::retrieve(value).value
+            }
+        }
     };
 }
 
-macro_rules! impl_owned_param {
-    ([$($param: ty),*]: YarnFnParam) => {
-        $(
-            impl YarnFnParam for $param {
-                type Item<'new> = $param;
 
-                fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                    ResOwned::<$param>::retrieve(value).value
-                }
-            }
-        )*
-    };
-}
-
-impl_ref_param! {
-    [&str => String]: YarnFnParam
-}
-impl_owned_param! {
-    [String, usize]: YarnFnParam
+impl_yarn_fn_param! {
+    [&str => String, &usize => usize]: YarnFnParam
 }
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
