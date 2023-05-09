@@ -1,5 +1,10 @@
+//! This helper code allows us to pass params to YarnFns by value (e.g. `usize`), by reference (e.g. (`&usize`) or by [`std::borrow::Borrow`] (e.g. `String` -> `&str`)
+//!
+//! Inspired by <https://promethia-27.github.io/dependency_injection_like_bevy_from_scratch/chapter2/passing_references.html>
+
 use crate::prelude::*;
 use std::any::Any;
+use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -62,13 +67,13 @@ where
 }
 
 /// For types like `String`, of which a reference to `&str` and not `&String`.
-/// These kinds of types implement [`std::borrow::Borrow`], hence this struct's name
+/// These kinds of types implement [`Borrow`], hence this struct's name
 struct ResRefBorrow<'a, T, U>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
-    T: AsRef<U>,
-    U: ?Sized,
+    T: Borrow<U>,
+    U: ?Sized + 'static,
 {
     value: &'a U,
     phantom_data: PhantomData<T>,
@@ -78,8 +83,8 @@ impl<'res, T, U> YarnFnParam for ResRefBorrow<'res, T, U>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
-    T: AsRef<U>,
-    U: ?Sized,
+    T: Borrow<U>,
+    U: ?Sized + 'static,
 {
     type Item<'new> = ResRefBorrow<'new, T, U>;
     fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
@@ -87,7 +92,7 @@ where
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
         ResRefBorrow {
-            value: value.as_ref(),
+            value: value.borrow(),
             phantom_data: PhantomData,
         }
     }

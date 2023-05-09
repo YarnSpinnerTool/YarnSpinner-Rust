@@ -129,14 +129,23 @@ macro_rules! impl_yarn_fn_tuple {
                 type Out = O;
                 #[allow(non_snake_case)]
                 fn call(&self, input: Vec<YarnValue>) -> Self::Out {
-                    let [$($param,)*] = input[..] else {
+                    // Hack: mapping to Option to be able to tuple deconstruct by moving
+                    let mut input_options = input.into_iter().map(Some).collect::<Vec<_>>();
+                    // Tuple deconstruct to &mut Option<YarnValue>
+                    let [$($param,)*] = &mut input_options[..] else {
                         panic!("Wrong number of arguments")
                     };
-
+                    // `take` the YarnValue out of the Option, leaving None in its place
                     let ($($param,)*) = (
+                        $(std::mem::take($param).unwrap(),)*
+                    );
+                    // Now $param holds an owned YarnValue!
+
+                    let ($(mut $param,)*) = (
                         $(YarnValueWrapper::from($param),)*
                     );
 
+                    // the first $param is the type implementing YarnFnParam, the second is a variable name
                     let input = (
                         $($param::retrieve(&mut $param),)*
                     );
