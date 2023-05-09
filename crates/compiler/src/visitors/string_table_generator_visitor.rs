@@ -157,7 +157,7 @@ fn generate_formatted_text(ctx: &Line_formatted_textContext) -> String {
             expression_count += 1;
         }
     }
-    composed_string
+    composed_string.trim().to_owned()
 }
 
 fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
