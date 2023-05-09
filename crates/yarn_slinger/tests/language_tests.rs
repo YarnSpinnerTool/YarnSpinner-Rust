@@ -162,7 +162,7 @@ fn test_invalid_characters_in_node_title() {
 }
 
 #[test]
-#[ignore] // Because of failing markup tests: [#77](https://github.com/yarn-slinger/yarn-slinger/issues/77)
+#[ignore = "Cannot pass until markup parsing is implemented, see https://github.com/yarn-slinger/yarn-slinger/issues/77"]
 fn test_sources() {
     for file in [
         "TestCases",

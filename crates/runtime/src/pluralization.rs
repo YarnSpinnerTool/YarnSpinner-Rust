@@ -95,10 +95,9 @@ mod tests {
     //! Adapted from `TestNumberPlurals` in <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
     use super::*;
-    use icu_locid::locale;
 
     #[test]
-    #[ignore = "Bug in ICU crate, see https://github.com/unicode-org/icu4x/issues/3420"]
+    #[ignore = "fails because of bug in ICU crate, see https://github.com/unicode-org/icu4x/issues/3420"]
     fn test_number_plurals() {
         let cardinal_tests = [
             // English
