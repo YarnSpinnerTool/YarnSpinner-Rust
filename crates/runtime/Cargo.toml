@@ -8,6 +8,8 @@ license = "MIT OR Apache-2.0"
 yarn_slinger_core = { path = "../core" }
 log = "0.4"
 icu = { version = "1.2.0" }
+icu_plurals = { version = "1.2.0" }
 icu_provider = { version = "1.2.0" }
 icu_provider_adapters = { version = "1.2.0" }
 fixed_decimal = { version = "0.5.3", features = ["ryu"] }
+zerovec = { version = "0.9.4" }

@@ -1,5 +1,5 @@
+use crate::pluralization::generated::generate_provider;
 use fixed_decimal::{DoublePrecision, FixedDecimal};
-pub use generated::UnstableProvider;
 use icu::locid::Locale;
 pub use icu::plurals::{PluralCategory, PluralRuleType};
 use icu::plurals::{PluralOperands, PluralRules};
@@ -27,13 +27,10 @@ impl Pluralization {
         }
         self.locale = locale;
         if let Some(rule_type) = self.rule_type.as_ref() {
+            let provider = generate_provider();
             self.rules.replace(
-                PluralRules::try_new_unstable(
-                    &UnstableProvider,
-                    &self.locale.as_ref().unwrap(),
-                    *rule_type,
-                )
-                .unwrap(),
+                PluralRules::try_new_unstable(&provider, self.locale.as_ref().unwrap(), *rule_type)
+                    .unwrap(),
             );
         }
         self
@@ -50,9 +47,9 @@ impl Pluralization {
         }
         self.rule_type.replace(rule_type);
         if let Some(locale) = self.locale.as_ref() {
-            self.rules.replace(
-                PluralRules::try_new_unstable(&UnstableProvider, locale, rule_type).unwrap(),
-            );
+            let provider = generate_provider();
+            self.rules
+                .replace(PluralRules::try_new_unstable(&provider, locale, rule_type).unwrap());
         }
         self
     }
@@ -66,7 +63,7 @@ impl Pluralization {
         let value = get_into_plural_operand(value);
 
         if let Some(rules) = self.rules.as_ref() {
-            return rules.category_for(value);
+            rules.category_for(value)
         } else {
             let uncalled_fns = [
                 ("with_rule_type", self.rule_type.is_none()),
@@ -182,8 +179,9 @@ mod tests {
 
     #[test]
     fn smoke_test() {
+        let provider = generate_provider();
         let pr = PluralRules::try_new_unstable(
-            &UnstableProvider,
+            &provider,
             &locale!("en").into(),
             PluralRuleType::Cardinal,
         )

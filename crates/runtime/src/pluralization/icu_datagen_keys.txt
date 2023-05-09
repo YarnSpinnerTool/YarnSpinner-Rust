@@ -1,2 +1,9 @@
 plurals/cardinal@1
 plurals/ordinal@1
+
+# Locale fallback needed because of https://github.com/unicode-org/icu4x/issues/3331
+# Keys can be gathered from https://unicode-org.github.io/icu4x/docs/icu_provider_adapters/fallback/struct.LocaleFallbackProvider.html#impl-LocaleFallbackProvider%3CP%3E
+# See https://github.com/unicode-org/icu4x/pull/3334#discussion_r1167737551 for more details
+fallback/supplement/co@1
+fallback/parents@1
+fallback/likelysubtags@1
