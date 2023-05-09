@@ -144,25 +144,33 @@ pub trait YarnFnParam {
     fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r>;
 }
 
-struct ResRef<'a, T>
+struct ResRef<'a, T, U = T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
+    T: AsRef<U>,
+    U: ?Sized,
 {
-    value: &'a T,
+    value: &'a U,
+    phantom_data: PhantomData<T>,
 }
 
-impl<'res, T> YarnFnParam for ResRef<'res, T>
+impl<'res, T, U> YarnFnParam for ResRef<'res, T, U>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
+    T: AsRef<U>,
+    U: ?Sized,
 {
-    type Item<'new> = ResRef<'res, T>;
+    type Item<'new> = ResRef<'res, T, U>;
     fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
-        ResRef { value }
+        ResRef {
+            value: value.as_ref(),
+            phantom_data: PhantomData,
+        }
     }
 }
 
@@ -186,6 +194,41 @@ where
         let value = *converted.downcast::<T>().unwrap();
         ResOwned { value }
     }
+}
+
+macro_rules! impl_ref_param {
+    ([$(&$param:ty $(=> $owned:ty)?),*]: YarnFnParam) => {
+        $(
+            impl YarnFnParam for &$param {
+                type Item<'new> = &'new $param;
+
+                fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+                    ResRef::<'r,$ ($owned,)? $param>::retrieve(value).value
+                }
+            }
+        )*
+    };
+}
+
+macro_rules! impl_owned_param {
+    ([$($param: ty),*]: YarnFnParam) => {
+        $(
+            impl YarnFnParam for $param {
+                type Item<'new> = $param;
+
+                fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+                    ResOwned::<$param>::retrieve(value).value
+                }
+            }
+        )*
+    };
+}
+
+impl_ref_param! {
+    [&str => String]: YarnFnParam
+}
+impl_owned_param! {
+    [String, usize]: YarnFnParam
 }
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
@@ -227,3 +270,42 @@ macro_rules! impl_yarn_fn_tuple {
 }
 
 all_tuples!(impl_yarn_fn_tuple, 0, 1, P);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_no_params() {
+        fn f() -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_string() {
+        fn f(_: String) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_string_slice() {
+        fn f(_: &str) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_usize() {
+        fn f(_: usize) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    fn accept_yarn_fn<Marker>(_: impl YarnFn<Marker>) {}
+}
