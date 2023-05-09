@@ -37,7 +37,8 @@ impl YarnValueWrapper {
 
 pub trait YarnFnParam {
     type Item<'new>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r>;
+
+    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_>;
 }
 
 struct ResRef<'a, T>
@@ -55,12 +56,13 @@ where
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
     type Item<'new> = ResRef<'new, T>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+
+    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
         ResRef {
-            value: &value,
+            value,
             phantom_data: PhantomData,
         }
     }
@@ -87,7 +89,8 @@ where
     U: ?Sized + 'static,
 {
     type Item<'new> = ResRefBorrow<'new, T, U>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+
+    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -106,13 +109,14 @@ where
     value: T,
 }
 
-impl<'res, T> YarnFnParam for ResOwned<T>
+impl<T> YarnFnParam for ResOwned<T>
 where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
     type Item<'new> = ResOwned<T>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+
+    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();
@@ -135,15 +139,15 @@ macro_rules! impl_yarn_fn_param_inner {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
 
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                ResRef::<'r, $referenced>::retrieve(value).value
+            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+                ResRef::<$referenced>::retrieve(value).value
             }
         }
 
         impl YarnFnParam for $referenced {
             type Item<'new> = $referenced;
 
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
                 ResOwned::<$referenced>::retrieve(value).value
             }
         }
@@ -152,23 +156,23 @@ macro_rules! impl_yarn_fn_param_inner {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
 
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                ResRefBorrow::<'r, $owned, $referenced>::retrieve(value).value
+            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+                ResRefBorrow::<$owned, $referenced>::retrieve(value).value
             }
         }
 
         impl YarnFnParam for &$owned {
             type Item<'new> = &'new $owned;
 
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                ResRef::<'r, $owned>::retrieve(value).value
+            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+                ResRef::<$owned>::retrieve(value).value
             }
         }
 
         impl YarnFnParam for $owned {
             type Item<'new> = $owned;
 
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
+            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
                 ResOwned::<$owned>::retrieve(value).value
             }
         }

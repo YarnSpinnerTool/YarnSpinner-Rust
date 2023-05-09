@@ -1,6 +1,5 @@
 use crate::prelude::*;
-use std::any::{Any, TypeId};
-use std::borrow::Cow;
+use std::any::TypeId;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
@@ -237,5 +236,24 @@ mod tests {
         }
         accept_yarn_fn(f);
     }
+
+    #[test]
+    fn accepts_lots_of_different_types() {
+        #[allow(clippy::too_many_arguments)]
+        fn f(
+            _: String,
+            _: usize,
+            _: &str,
+            _: &YarnValue,
+            _: &bool,
+            _: isize,
+            _: String,
+            _: &u32,
+        ) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
     fn accept_yarn_fn<Marker>(_: impl YarnFn<Marker>) {}
 }
