@@ -584,9 +584,50 @@ fn test_type_conversion_failure_to_bool() {
 }
 
 #[test]
-#[ignore]
 fn test_implicit_function_declarations() {
-    todo!("Not ported yet");
+    let source = "
+            {func_void_bool()}
+            {func_void_bool() and bool(func_void_bool())}
+            { 1 + func_void_int() }
+            { \"he\" + func_void_str() }
+
+            {func_int_bool(1)}
+            {true and func_int_bool(1)}
+
+            {func_bool_bool(false)}
+            {true and func_bool_bool(false)}
+
+            {func_str_bool(\"hello\")}
+            {true and func_str_bool(\"hello\")}
+            ";
+    let mut test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("2")
+            .expect_line("hello")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true"),
+    );
+    test_base
+        .library_mut()
+        .register_function("func_void_bool", || true)
+        .register_function("func_void_int", || 1)
+        .register_function("func_void_str", || "llo".to_owned())
+        .register_function("func_int_bool", |_i: i64| true)
+        .register_function("func_bool_bool", |_b: bool| true)
+        .register_function("func_str_bool", |_s: String| true);
+
+    // the library is NOT attached to this compilation job; all
+    // functions will be implicitly declared
+    let compilations_job = CompilationJob::from_test_source(source);
+    let result = compile(compilations_job).unwrap_pretty();
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
