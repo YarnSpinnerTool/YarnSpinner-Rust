@@ -20,6 +20,10 @@ pub struct ProcessedOption {
 }
 
 impl TestPlan {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn read(path: impl AsRef<Path>) -> Self {
         let steps = fs::read_to_string(path)
             .unwrap()

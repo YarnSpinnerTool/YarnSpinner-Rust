@@ -199,6 +199,10 @@ impl Default for TestBase {
 }
 
 impl TestBase {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     /// Sets the current test plan to one loaded from a given path.
     pub fn read_test_plan(self, path: impl AsRef<Path>) -> Self {
         self.with_test_plan(TestPlan::read(path))

@@ -373,9 +373,56 @@ fn test_failing_function_signatures() {
 }
 
 #[test]
-#[ignore]
 fn test_initial_values() {
-    todo!("Not ported yet")
+    let source = "
+            <<declare $int = 42>>
+            <<declare $str = \"Hello\">>
+            <<declare $bool = true>>
+            // internal decls
+            {$int}
+            {$str}
+            {$bool}
+            // external decls
+            {$external_int}
+            {$external_str}
+            {$external_bool}
+            ";
+    let test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            // internal decls
+            .expect_line("42")
+            .expect_line("Hello")
+            // ## Implementation note:
+            // The original uses the default C# bool to string conversion, which capitalizes the first letter,
+            // so this would be "True" instead.
+            .expect_line("true")
+            // external decls
+            .expect_line("42")
+            .expect_line("Hello")
+            // ## Implementation note: See above
+            .expect_line("true"),
+    );
+
+    let compilations_job = CompilationJob::from_test_source(source)
+        .with_library(test_base.dialogue.library().clone())
+        .with_variable_declaration(
+            Declaration::new("$external_str", Type::String).with_default_value("Hello"),
+        )
+        .with_variable_declaration(
+            Declaration::new("$external_int", Type::Boolean).with_default_value(true),
+        )
+        .with_variable_declaration(
+            Declaration::new("$external_bool", Type::Number).with_default_value(42),
+        );
+
+    let result = compile(compilations_job).unwrap_pretty();
+
+    let mut variable_storage = test_base.variable_storage();
+    variable_storage.set("$external_str".to_string(), "Hello".into());
+    variable_storage.set("$external_int".to_string(), 42.into());
+    variable_storage.set("$external_bool".to_string(), true.into());
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 #[test]
 fn test_explicit_types() {
