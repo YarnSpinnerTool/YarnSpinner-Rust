@@ -25,6 +25,10 @@ pub struct CompilationJob {
 }
 
 impl CompilationJob {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn with_file(mut self, file: File) -> Self {
         self.files.push(file);
         self
