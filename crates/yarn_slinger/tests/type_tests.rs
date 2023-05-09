@@ -560,9 +560,27 @@ fn test_type_conversion() {
 }
 
 #[test]
-#[ignore]
-fn test_type_conversion_failure() {
-    todo!("Not ported yet");
+#[should_panic = "Failed to convert a Yarn value to a number: ParseFloatError(ParseFloatError { kind: Invalid })"]
+fn test_type_conversion_failure_to_number() {
+    let source = "{number(\"hello\")}";
+    let test_base =
+        TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
+    let compilations_job =
+        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+    let result = compile(compilations_job).unwrap_pretty();
+    test_base.with_compilation(result).run_standard_testcase();
+}
+
+#[test]
+#[should_panic = "Failed to convert a Yarn value to a bool: ParseBoolError(ParseBoolError"]
+fn test_type_conversion_failure_to_bool() {
+    let source = "{bool(\"hello\")}";
+    let test_base =
+        TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
+    let compilations_job =
+        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+    let result = compile(compilations_job).unwrap_pretty();
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
