@@ -280,8 +280,8 @@ fn test_function_signatures() {
         "<<set $bool = func_int_int_bool(1, 2)>>",
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
-        let compilation_job = CompilationJob::from_test_source(source)
-            .with_library(test_base.dialogue.library().clone());
+        let compilation_job =
+            CompilationJob::from_test_source(source).with_library(test_base.library().clone());
         let result = compile(compilation_job).unwrap_pretty();
 
         // The variable '$bool' should have an implicit declaration. The
@@ -308,8 +308,8 @@ fn test_operators_are_type_checked() {
                     .unwrap_or_default(),
             );
 
-            let compilation_job = CompilationJob::from_test_source(&source)
-                .with_library(test_base.dialogue.library().clone());
+            let compilation_job =
+                CompilationJob::from_test_source(&source).with_library(test_base.library().clone());
             let result = compile(compilation_job).unwrap_pretty();
 
             assert!(result
@@ -356,7 +356,7 @@ fn test_failing_function_signatures() {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
         let compilation_job = CompilationJob::from_test_source(&failing_source)
-            .with_library(test_base.dialogue.library().clone());
+            .with_library(test_base.library().clone());
         let result = compile(compilation_job).unwrap_err();
         println!("{}", result);
 
@@ -404,7 +404,7 @@ fn test_initial_values() {
     );
 
     let compilations_job = CompilationJob::from_test_source(source)
-        .with_library(test_base.dialogue.library().clone())
+        .with_library(test_base.library().clone())
         .with_variable_declaration(
             Declaration::new("$external_str", Type::String).with_default_value("Hello"),
         )
@@ -424,6 +424,7 @@ fn test_initial_values() {
 
     test_base.with_compilation(result).run_standard_testcase();
 }
+
 #[test]
 fn test_explicit_types() {
     let compilation_job = CompilationJob::from_test_source(
@@ -531,9 +532,31 @@ fn test_variable_declaration_annotations() {
 }
 
 #[test]
-#[ignore]
 fn test_type_conversion() {
-    todo!("Not ported yet");
+    let source = "
+            string + string(number): {\"1\" + string(1)}
+            string + string(bool): {\"1\" + string(true)}
+
+            number + number(string): {1 + number(\"1\")}
+            number + number(bool): {1 + number(true)}
+
+            bool and bool(string): {true and bool(\"true\")}
+            bool and bool(number): {true and bool(1)}
+            ";
+    let test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            .expect_line("string + string(number): 11")
+            .expect_line("string + string(bool): 1true")
+            .expect_line("number + number(string): 2")
+            .expect_line("number + number(bool): 2")
+            .expect_line("bool and bool(string): true")
+            .expect_line("bool and bool(number): true"),
+    );
+    let compilations_job =
+        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+    let result = compile(compilations_job).unwrap_pretty();
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
@@ -544,7 +567,6 @@ fn test_type_conversion_failure() {
 
 #[test]
 #[ignore]
-
 fn test_implicit_function_declarations() {
     todo!("Not ported yet");
 }
