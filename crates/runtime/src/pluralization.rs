@@ -1,7 +1,7 @@
 use fixed_decimal::{DoublePrecision, FixedDecimal};
 use icu_locid::Locale;
-use icu_plurals::PluralRules;
 pub use icu_plurals::{PluralCategory, PluralRuleType};
+use icu_plurals::{PluralOperands, PluralRules};
 use icu_provider::DataLocale;
 
 #[derive(Debug, Default)]
@@ -24,7 +24,7 @@ impl Pluralization {
         }
         self.locale = locale;
         if let Some(rule_type) = self.rule_type.as_ref() {
-            self.rules = Some(
+            self.rules.replace(
                 PluralRules::try_new_unstable(
                     &icu_testdata::unstable(),
                     &self.locale.as_ref().unwrap(),
@@ -45,9 +45,9 @@ impl Pluralization {
         if self.rule_type == Some(rule_type) {
             return self;
         }
-        self.rule_type = Some(rule_type);
+        self.rule_type.replace(rule_type);
         if let Some(locale) = self.locale.as_ref() {
-            self.rules = Some(
+            self.rules.replace(
                 PluralRules::try_new_unstable(&icu_testdata::unstable(), locale, rule_type)
                     .unwrap(),
             );
@@ -61,9 +61,15 @@ impl Pluralization {
     }
 
     pub fn get_plural_case(&self, value: f32) -> PluralCategory {
-        let value = FixedDecimal::try_from_f64(value as f64, DoublePrecision::Floating).unwrap();
+        let value = get_into_plural_operand(value);
+
         if let Some(rules) = self.rules.as_ref() {
-            return rules.category_for(&value);
+            println!(
+                "value: {value:?}, type: {:?}, locale: {}",
+                self.rule_type.unwrap(),
+                self.locale.as_ref().unwrap()
+            );
+            return rules.category_for(value);
         } else {
             let uncalled_fns = [
                 ("with_rule_type", self.rule_type.is_none()),
@@ -79,11 +85,22 @@ impl Pluralization {
     }
 }
 
+fn get_into_plural_operand(value: f32) -> PluralOperands {
+    let rounded = value.round();
+    let floating_point = (rounded - value).abs();
+    if floating_point < 1e-5 {
+        (value as isize).into()
+    } else {
+        (&FixedDecimal::try_from_f64(value as f64, DoublePrecision::Floating).unwrap()).into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     //! Adapted from `TestNumberPlurals` in <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
     use super::*;
+    use icu_locid::locale;
 
     #[test]
     fn test_number_plurals() {
@@ -164,5 +181,17 @@ mod tests {
                 "locale: {locale}, value: {value}, type: Ordinal"
             );
         }
+    }
+
+    #[test]
+    fn smoke_test() {
+        let pr = PluralRules::try_new_unstable(
+            &icu_testdata::unstable(),
+            &locale!("pl").into(),
+            PluralRuleType::Cardinal,
+        )
+        .unwrap();
+        let result = pr.category_for(1_usize);
+        assert_eq!(result, PluralCategory::One);
     }
 }
