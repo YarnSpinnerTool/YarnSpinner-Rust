@@ -63,9 +63,10 @@ impl<'input> CompilerListener<'input> {
     /// ## Params
     /// - `commentary` Any additional text to append to the end of the label.
     pub(crate) fn register_label<'b>(&mut self, commentary: impl Into<Option<&'b str>>) -> String {
-        self.label_count += 1;
         let commentary = commentary.into().unwrap_or_default();
-        format!("L{}{}", self.label_count, commentary)
+        let label = format!("L{}{}", self.label_count, commentary);
+        self.label_count += 1;
+        label
     }
 }
 
