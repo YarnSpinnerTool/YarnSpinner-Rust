@@ -94,3 +94,19 @@ fn test_getting_raw_source() {
 
     assert_eq!(source, "A: HAHAHA\n");
 }
+
+#[test]
+fn test_getting_tags() {
+    let path = test_data_path().join("Example.yarn");
+    let mut test_base = TestBase::new();
+
+    let compilation_job = CompilationJob::new().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    test_base = test_base.with_program(result.program.unwrap());
+    let dialogue = &test_base.dialogue;
+
+    let tags = dialogue.get_tags_for_node("LearnMore").unwrap();
+
+    assert_eq!(tags, vec!["rawText"]);
+}
