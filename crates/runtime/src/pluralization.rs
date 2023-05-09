@@ -94,9 +94,7 @@ mod tests {
     //! Adapted from `TestNumberPlurals` in <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
     use super::*;
-    use crate::pluralization::generated::UnstableProvider;
     use icu::locid::locale;
-    use icu_provider_adapters::fallback::LocaleFallbackProvider;
 
     #[test]
     fn test_number_plurals() {
