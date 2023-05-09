@@ -251,8 +251,8 @@ impl TestBase {
         let subdir: PathBuf = PathBuf::from(subdir.as_ref());
         let path = test_data_path().join(&subdir);
         let allowed_extensions = ["node", "yarn"].map(OsStr::new);
-        fs::read_dir(path)
-            .unwrap()
+        fs::read_dir(&path)
+            .unwrap_or_else(|e| panic!("Failed to read directory {}: {e}", path.display()))
             .filter_map(|entry| {
                 entry
                     .map_err(|e| {
@@ -269,7 +269,7 @@ impl TestBase {
                     .unwrap_or_default()
             })
             // don't include ".upgraded.yarn" (used in upgrader tests)
-            .filter(|entry| entry.path().ends_with(".upgraded.yarn"))
+            .filter(|entry| !entry.path().ends_with(".upgraded.yarn"))
             .map(move |entry| subdir.join(entry.file_name()))
     }
 

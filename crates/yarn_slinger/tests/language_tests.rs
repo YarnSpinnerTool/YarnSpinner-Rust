@@ -212,14 +212,53 @@ else
 }
  */
 #[test]
-#[ignore]
 fn test_sources() {
-    for file in ["TestCases", "TestCases/ParseFailures", "Issues"]
-        .iter()
-        .flat_map(TestBase::file_sources)
+    for file in [
+        "TestCases",
+        "TestCases/ParseFailures",
+        // ## Implementation note: this directory does not exist
+        // "Issues"
+    ]
+    .iter()
+    .flat_map(TestBase::file_sources)
     {
         println!("INFO: Loading file {}", file.display());
-        let path = test_data_path().join(file);
+        let path = test_data_path().join(&file);
+        let test_plan = path.with_extension("testplan");
+
+        let test_base = TestBase::default();
+        let compilation_job = CompilationJob::default()
+            .read_file(&path)
+            .unwrap()
+            .with_library(test_base.dialogue.library().clone());
+        let result = compile(compilation_job);
+
+        if !test_plan.exists() {
+            // No test plan for this file exists, which indicates that
+            // the file is not expected to compile. We'll actually make
+            // it a test failure if it _does_ compile.
+            assert!(
+                result.is_err(),
+                "{} is expected to have compile errors",
+                file.display()
+            );
+        } else {
+            let compilation = result.unwrap_pretty();
+            let mut test_base = test_base
+                .read_test_plan(test_plan)
+                .with_compilation(compilation);
+            test_base
+                .library_mut()
+                .register_function("dummy_bool", || true)
+                .register_function("dummy_number", || 1)
+                .register_function("dummy_string", || "string".to_owned());
+
+            // If this file contains a Start node, run the test case
+            // (otherwise, we're just testing its parseability, which
+            // we did in the last line)
+            if test_base.dialogue.node_exists("Start") {
+                test_base.run_standard_testcase();
+            }
+        }
     }
-    todo!("Not ported yet")
 }
