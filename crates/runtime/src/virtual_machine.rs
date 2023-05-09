@@ -409,7 +409,7 @@ impl VirtualMachine {
             }
             OpCode::JumpIfFalse => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
-                let is_top_value_true: bool = self.state_mut().pop();
+                let is_top_value_true: bool = self.state_mut().peek();
                 if !is_top_value_true {
                     let label_name: String = instruction.read_operand(0);
                     let instruction_point = self.find_instruction_point_for_label(&label_name);
