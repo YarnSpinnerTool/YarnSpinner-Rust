@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::any::{Any, TypeId};
+use std::borrow::Cow;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
@@ -112,125 +113,6 @@ impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
 
 impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
 
-#[derive(Debug)]
-pub struct YarnValueWrapper {
-    raw: Option<YarnValue>,
-    converted: Option<Box<dyn Any>>,
-}
-
-impl From<YarnValue> for YarnValueWrapper {
-    fn from(value: YarnValue) -> Self {
-        Self {
-            raw: Some(value),
-            converted: None,
-        }
-    }
-}
-
-impl YarnValueWrapper {
-    fn convert<T>(&mut self)
-    where
-        T: TryFrom<YarnValue> + 'static,
-        <T as TryFrom<YarnValue>>::Error: Debug,
-    {
-        let raw = std::mem::take(&mut self.raw).unwrap();
-        let converted: T = raw.try_into().unwrap();
-        self.converted.replace(Box::new(converted));
-    }
-}
-
-pub trait YarnFnParam {
-    type Item<'new>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r>;
-}
-
-struct ResRef<'a, T, U = T>
-where
-    T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
-    T: AsRef<U>,
-    U: ?Sized,
-{
-    value: &'a U,
-    phantom_data: PhantomData<T>,
-}
-
-impl<'res, T, U> YarnFnParam for ResRef<'res, T, U>
-where
-    T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
-    T: AsRef<U>,
-    U: ?Sized,
-{
-    type Item<'new> = ResRef<'res, T, U>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-        value.convert::<T>();
-        let converted = value.converted.as_ref().unwrap();
-        let value = converted.downcast_ref::<T>().unwrap();
-        ResRef {
-            value: value.as_ref(),
-            phantom_data: PhantomData,
-        }
-    }
-}
-
-struct ResOwned<T>
-where
-    T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
-{
-    value: T,
-}
-
-impl<'res, T> YarnFnParam for ResOwned<T>
-where
-    T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
-{
-    type Item<'new> = ResOwned<T>;
-    fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-        value.convert::<T>();
-        let converted = value.converted.take().unwrap();
-        let value = *converted.downcast::<T>().unwrap();
-        ResOwned { value }
-    }
-}
-
-macro_rules! impl_yarn_fn_param {
-    ([$(&$referenced:ty => $owned:ty),*]: YarnFnParam) => {
-        $(
-            impl_yarn_fn_param_inner!{
-                &$referenced => $owned: YarnFnParam
-            }
-        )*
-    }
-}
-
-macro_rules! impl_yarn_fn_param_inner {
-    (&$referenced:ty => $owned:ty: YarnFnParam) => {
-        impl YarnFnParam for &$referenced {
-            type Item<'new> = &'new $referenced;
-
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                ResRef::<'r,$ ($owned,)? $referenced>::retrieve(value).value
-            }
-        }
-        
-        impl YarnFnParam for $owned {
-            type Item<'new> = $owned;
-
-            fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
-                ResOwned::<$owned>::retrieve(value).value
-            }
-        }
-    };
-}
-
-
-impl_yarn_fn_param! {
-    [&str => String, &usize => usize]: YarnFnParam
-}
-
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
@@ -269,7 +151,7 @@ macro_rules! impl_yarn_fn_tuple {
     };
 }
 
-all_tuples!(impl_yarn_fn_tuple, 0, 1, P);
+all_tuples!(impl_yarn_fn_tuple, 0, 16, P);
 
 #[cfg(test)]
 mod tests {
@@ -292,6 +174,14 @@ mod tests {
     }
 
     #[test]
+    fn accepts_string_ref() {
+        fn f(_: &String) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
     fn accepts_string_slice() {
         fn f(_: &str) -> bool {
             true
@@ -307,5 +197,36 @@ mod tests {
         accept_yarn_fn(f);
     }
 
+    #[test]
+    fn accepts_usize_ref() {
+        fn f(_: &usize) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_yarn_value() {
+        fn f(_: YarnValue) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_yarn_value_ref() {
+        fn f(_: &YarnValue) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_multiple_strings() {
+        fn f(s: String, _: String, _: &str, _: String, _: &str) -> String {
+            s
+        }
+        accept_yarn_fn(f);
+    }
     fn accept_yarn_fn<Marker>(_: impl YarnFn<Marker>) {}
 }
