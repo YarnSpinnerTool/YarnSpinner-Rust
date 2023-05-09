@@ -1,0 +1,2 @@
+plurals/cardinal@1
+plurals/ordinal@1

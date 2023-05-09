@@ -1,8 +1,11 @@
 use fixed_decimal::{DoublePrecision, FixedDecimal};
-use icu_locid::Locale;
-pub use icu_plurals::{PluralCategory, PluralRuleType};
-use icu_plurals::{PluralOperands, PluralRules};
+pub use generated::UnstableProvider;
+use icu::locid::Locale;
+pub use icu::plurals::{PluralCategory, PluralRuleType};
+use icu::plurals::{PluralOperands, PluralRules};
 use icu_provider::DataLocale;
+
+mod generated;
 
 #[derive(Debug, Default)]
 pub struct Pluralization {
@@ -26,7 +29,7 @@ impl Pluralization {
         if let Some(rule_type) = self.rule_type.as_ref() {
             self.rules.replace(
                 PluralRules::try_new_unstable(
-                    &icu_testdata::unstable(),
+                    &UnstableProvider,
                     &self.locale.as_ref().unwrap(),
                     *rule_type,
                 )
@@ -48,8 +51,7 @@ impl Pluralization {
         self.rule_type.replace(rule_type);
         if let Some(locale) = self.locale.as_ref() {
             self.rules.replace(
-                PluralRules::try_new_unstable(&icu_testdata::unstable(), locale, rule_type)
-                    .unwrap(),
+                PluralRules::try_new_unstable(&UnstableProvider, locale, rule_type).unwrap(),
             );
         }
         self
@@ -95,9 +97,9 @@ mod tests {
     //! Adapted from `TestNumberPlurals` in <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
     use super::*;
+    use icu::locid::locale;
 
     #[test]
-    #[ignore = "fails because of bug in ICU crate, see https://github.com/unicode-org/icu4x/issues/3420"]
     fn test_number_plurals() {
         let cardinal_tests = [
             // English
@@ -176,5 +178,17 @@ mod tests {
                 "locale: {locale}, value: {value}, type: Ordinal"
             );
         }
+    }
+
+    #[test]
+    fn smoke_test() {
+        let pr = PluralRules::try_new_unstable(
+            &UnstableProvider,
+            &locale!("en").into(),
+            PluralRuleType::Cardinal,
+        )
+        .expect("Failed to construct a PluralRules struct.");
+
+        assert_eq!(pr.category_for(5_usize), PluralCategory::Other);
     }
 }

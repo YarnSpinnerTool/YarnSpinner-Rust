@@ -7,8 +7,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 yarn_slinger_core = { path = "../core" }
 log = "0.4"
-icu_plurals = { version = "1.2.0", features = ["std"] }
-icu_locid = { version = "1.2.0", features = ["std"] }
-icu_testdata = { version = "1.2.0", default-features = false, features = ["std", "icu_plurals"] }
-icu_provider = { version = "1.2.0", features = ["std"] }
-fixed_decimal = { version = "0.5.3", features = ["std", "ryu"] }
+icu = { version = "1.2.0" }
+icu_provider = { version = "1.2.0" }
+icu_provider_adapters = { version = "1.2.0" }
+fixed_decimal = { version = "0.5.3", features = ["ryu"] }
