@@ -9,7 +9,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-pub struct YarnValueWrapper {
+pub(crate) struct YarnValueWrapper {
     raw: Option<YarnValue>,
     converted: Option<Box<dyn Any>>,
 }
@@ -35,7 +35,7 @@ impl YarnValueWrapper {
     }
 }
 
-pub trait YarnFnParam {
+pub(crate) trait YarnFnParam {
     type Item<'new>;
 
     fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_>;
