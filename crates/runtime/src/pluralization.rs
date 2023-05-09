@@ -187,6 +187,7 @@ mod tests {
         )
         .expect("Failed to construct a PluralRules struct.");
 
+        assert_eq!(pr.category_for(1_usize), PluralCategory::One);
         assert_eq!(pr.category_for(5_usize), PluralCategory::Other);
     }
 }
