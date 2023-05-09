@@ -64,11 +64,6 @@ impl Pluralization {
         let value = get_into_plural_operand(value);
 
         if let Some(rules) = self.rules.as_ref() {
-            println!(
-                "value: {value:?}, type: {:?}, locale: {}",
-                self.rule_type.unwrap(),
-                self.locale.as_ref().unwrap()
-            );
             return rules.category_for(value);
         } else {
             let uncalled_fns = [
@@ -103,6 +98,7 @@ mod tests {
     use icu_locid::locale;
 
     #[test]
+    #[ignore = "Bug in ICU crate, see https://github.com/unicode-org/icu4x/issues/3420"]
     fn test_number_plurals() {
         let cardinal_tests = [
             // English
@@ -181,17 +177,5 @@ mod tests {
                 "locale: {locale}, value: {value}, type: Ordinal"
             );
         }
-    }
-
-    #[test]
-    fn smoke_test() {
-        let pr = PluralRules::try_new_unstable(
-            &icu_testdata::unstable(),
-            &locale!("pl").into(),
-            PluralRuleType::Cardinal,
-        )
-        .unwrap();
-        let result = pr.category_for(1_usize);
-        assert_eq!(result, PluralCategory::One);
     }
 }
