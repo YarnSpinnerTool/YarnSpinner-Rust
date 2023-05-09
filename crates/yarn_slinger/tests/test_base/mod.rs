@@ -60,9 +60,9 @@ impl Default for TestBase {
 
             dialogue
                 .set_log_error_message(move |msg, _| {
-                    eprintln!("{}", msg);
-                    if runtime_errors_cause_panic.load(Ordering::Relaxed) {
-                        assert!(msg.is_empty())
+                    eprintln!("{msg}");
+                    if runtime_errors_cause_panic.load(Ordering::Relaxed) && !msg.is_empty() {
+                        panic!("Runtime error: {msg}");
                     }
                 })
                 .set_line_handler(move |line, dlg| {
