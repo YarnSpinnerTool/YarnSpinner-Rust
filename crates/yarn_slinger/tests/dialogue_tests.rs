@@ -72,3 +72,25 @@ fn test_getting_current_node_name() {
     // Current node should now be null
     assert!(dialogue.current_node().is_none());
 }
+
+#[test]
+fn test_getting_raw_source() {
+    let path = test_data_path().join("Example.yarn");
+    let mut test_base = TestBase::new();
+
+    let compilation_job = CompilationJob::new().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    test_base = test_base.with_compilation(result);
+    let dialogue = &test_base.dialogue;
+
+    let source_id = dialogue.get_string_id_for_node("LearnMore").unwrap();
+    let source = test_base
+        .string_table()
+        .get(&LineId(source_id))
+        .unwrap()
+        .text
+        .clone();
+
+    assert_eq!(source, "A: HAHAHA\n");
+}
