@@ -49,7 +49,7 @@ where
     T: TryFrom<YarnValue> + 'static,
     <T as TryFrom<YarnValue>>::Error: Debug,
 {
-    type Item<'new> = ResRef<'res, T>;
+    type Item<'new> = ResRef<'new, T>;
     fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
@@ -81,7 +81,7 @@ where
     T: AsRef<U>,
     U: ?Sized,
 {
-    type Item<'new> = ResRefBorrow<'res, T, U>;
+    type Item<'new> = ResRefBorrow<'new, T, U>;
     fn retrieve<'r>(value: &'r mut YarnValueWrapper) -> Self::Item<'r> {
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
