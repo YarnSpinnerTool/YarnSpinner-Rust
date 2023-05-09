@@ -5,6 +5,3 @@ Cargo.lock
 .idea/
 !.idea/scopes/
 .vscode/
-
-# Generated files
-crates/runtime/src/pluralization/generated_output/

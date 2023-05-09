@@ -4,7 +4,8 @@ use icu_plurals::provider::{CardinalV1Marker, OrdinalV1Marker};
 use icu_provider_adapters::fallback::LocaleFallbackProvider;
 
 struct UnstableProvider;
-include!("./generated_output/mod.rs");
+include!(concat!(env!("OUT_DIR"), "/icu/mod.rs"));
+
 impl_data_provider!(UnstableProvider);
 
 pub(crate) fn generate_provider(

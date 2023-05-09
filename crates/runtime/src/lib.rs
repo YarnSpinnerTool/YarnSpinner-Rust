@@ -1,3 +1,5 @@
+extern crate alloc;
+
 mod dialogue;
 mod dialogue_option;
 mod handlers;
