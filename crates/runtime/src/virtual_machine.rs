@@ -65,7 +65,7 @@ impl VirtualMachine {
             prepare_for_lines_handler: Default::default(),
             handler_safe_dialogue: dialogue_data,
             shared: shared_state,
-            library: Library::default(),
+            library: Library::standard_library(),
         }
     }
 
@@ -434,7 +434,10 @@ impl VirtualMachine {
                 // Call a function, whose parameters are expected to be on the stack. Pushes the function's return value, if it returns one.
                 let function_name: String = instruction.read_operand(0);
                 let function = self.library.get(&function_name).unwrap_or_else(|| {
-                    panic!("Function \"{}\" not found in library", function_name)
+                    panic!(
+                        "Function \"{}\" not found in library: {:#?}",
+                        function_name, self.library
+                    )
                 });
 
                 // Expect the compiler to have placed the number of parameters
