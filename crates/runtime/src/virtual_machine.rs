@@ -268,9 +268,7 @@ impl VirtualMachine {
                 // line handler.
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let strings = self
-                    .pop_substitutions_with_count_at_index(instruction, 1)
-                    .collect();
+                let strings = self.pop_substitutions_with_count_at_index(instruction, 1);
 
                 let line = Line {
                     id: string_id.into(),
@@ -297,6 +295,7 @@ impl VirtualMachine {
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
                 let command_text = self
                     .pop_substitutions_with_count_at_index(instruction, 1)
+                    .into_iter()
                     .enumerate()
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
@@ -319,9 +318,7 @@ impl VirtualMachine {
                 // Add an option to the current state
                 let string_id: String = instruction.read_operand(0);
                 assert_up_to_date_compiler(instruction.operands.len() >= 4);
-                let strings = self
-                    .pop_substitutions_with_count_at_index(instruction, 2)
-                    .collect();
+                let strings = self.pop_substitutions_with_count_at_index(instruction, 2);
                 let line = Line {
                     id: string_id.into(),
                     substitutions: strings,
@@ -426,10 +423,14 @@ impl VirtualMachine {
             OpCode::CallFunc => {
                 let actual_parameter_count: usize = self.state_mut().pop();
                 // Get the parameters, which were pushed in reverse
-                let parameters: Vec<_> = (0..actual_parameter_count)
-                    .rev()
-                    .map(|_| self.state_mut().pop_value().raw_value)
-                    .collect();
+                let parameters = {
+                    let mut parameters: Vec<_> = (0..actual_parameter_count)
+                        .rev()
+                        .map(|_| self.state_mut().pop_value().raw_value)
+                        .collect();
+                    parameters.reverse();
+                    parameters
+                };
 
                 // Call a function, whose parameters are expected to be on the stack. Pushes the function's return value, if it returns one.
                 let function_name: String = instruction.read_operand(0);
@@ -554,9 +555,14 @@ impl VirtualMachine {
         &mut self,
         instruction: &Instruction,
         index: usize,
-    ) -> impl Iterator<Item = String> + '_ {
+    ) -> Vec<String> {
         let expression_count: usize = instruction.operands[index].clone().try_into().unwrap();
-        (0..expression_count).rev().map(|_| self.state_mut().pop())
+        let mut values: Vec<_> = (0..expression_count)
+            .rev()
+            .map(|_| self.state_mut().pop())
+            .collect();
+        values.reverse();
+        values
     }
 }
 
