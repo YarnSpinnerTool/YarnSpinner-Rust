@@ -646,9 +646,30 @@ fn test_implicit_variable_declarations() {
 }
 
 #[test]
-#[ignore]
 fn test_nested_implicit_function_declarations() {
-    todo!("Not ported yet");
+    let source = "
+    {func_bool_bool(bool(func_int_bool(1)))}
+    ";
+    let mut test_base = TestBase::new().with_test_plan(TestPlan::new().expect_line("true"));
+    test_base
+        .library_mut()
+        .register_function("func_int_bool", |i: i64| i == 1)
+        .register_function("func_bool_bool", |b: bool| b);
+
+    // the library is NOT attached to this compilation job; all
+    // functions will be implicitly declared
+    let compilations_job = CompilationJob::from_test_source(source);
+    let result = compile(compilations_job).unwrap_pretty();
+
+    assert_eq!(2, result.declarations.len());
+
+    // Both declarations that resulted from the compile should be functions found on line 1
+    for decl in &result.declarations {
+        assert_eq!(3, decl.range.as_ref().unwrap().start.line);
+        assert!(matches!(decl.r#type, Type::Function(_)));
+    }
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
