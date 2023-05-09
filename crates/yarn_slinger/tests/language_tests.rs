@@ -77,7 +77,7 @@ fn test_merging_nodes() {
 #[test]
 fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
-    let compilation_job = CompilationJob::default().read_file(&path).unwrap();
+    let compilation_job = CompilationJob::default().read_file(path).unwrap();
     let result = compile(compilation_job).unwrap_pretty();
 
     TestBase::default()
