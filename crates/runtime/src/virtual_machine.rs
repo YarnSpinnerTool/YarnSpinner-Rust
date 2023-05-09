@@ -71,6 +71,7 @@ impl VirtualMachine {
 
     pub(crate) fn reset_state(&mut self) {
         *self.state_mut() = State::default();
+        *self.current_node_name_mut() = None;
     }
 
     pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {

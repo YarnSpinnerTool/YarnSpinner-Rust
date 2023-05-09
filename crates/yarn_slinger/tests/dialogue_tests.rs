@@ -47,3 +47,28 @@ fn test_missing_node() {
         .with_runtime_errors_do_not_cause_failure();
     test_base.dialogue.set_node("THIS NODE DOES NOT EXIST");
 }
+
+#[test]
+fn test_getting_current_node_name() {
+    let path = space_demo_scripts_path().join("Sally.yarn");
+    let test_base = TestBase::new();
+
+    let compilation_job = CompilationJob::new()
+        .read_file(path)
+        .unwrap()
+        .with_library(test_base.library().clone());
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let mut dialogue = test_base.dialogue;
+    dialogue.replace_program(result.program.unwrap());
+
+    // dialogue should not be running yet
+    assert!(dialogue.current_node().is_none());
+
+    dialogue.set_node("Sally");
+    assert_eq!(dialogue.current_node(), Some("Sally".to_string()));
+
+    dialogue.stop();
+    // Current node should now be null
+    assert!(dialogue.current_node().is_none());
+}
