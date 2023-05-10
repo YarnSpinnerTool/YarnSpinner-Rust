@@ -113,37 +113,6 @@ pub enum CompilationType {
     StringsOnly,
 }
 
-pub trait CompileResultExt {
-    fn unwrap(self) -> Compilation;
-    fn expect(self, message: &str) -> Compilation;
-}
-
-impl CompileResultExt for Result<Compilation> {
-    fn unwrap(self) -> Compilation {
-        match self {
-            Ok(compilation) => compilation,
-            Err(error) => {
-                for diagnostic in error.diagnostics {
-                    eprintln!("{}", diagnostic);
-                }
-                panic!("Compilation failed due to Yarn errors")
-            }
-        }
-    }
-
-    fn expect(self, message: &str) -> Compilation {
-        match self {
-            Ok(compilation) => compilation,
-            Err(error) => {
-                for diagnostic in error.diagnostics {
-                    eprintln!("{}", diagnostic);
-                }
-                panic!("{}: Compilation failed due to Yarn errors", message)
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;

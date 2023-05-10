@@ -18,7 +18,7 @@ pub mod prelude {
         file_parse_result::*, parser::*, string_table_manager::*, token_ext::*,
     };
     pub use crate::{
-        compiler::{CompilationType, Compiler, File, CompileResultExt},
+        compiler::{CompilationType, Compiler, File},
         listeners::{Diagnostic, DiagnosticSeverity},
         output::*,
     };
