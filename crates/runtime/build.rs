@@ -1,5 +1,5 @@
-use icu::plurals::provider::*;
 use icu_datagen::prelude::*;
+use icu_plurals::provider::*;
 use icu_provider_adapters::fallback::provider::*;
 use std::path::PathBuf;
 
@@ -9,9 +9,12 @@ fn main() {
     let out_dir = std::env::var_os("OUT_DIR").unwrap();
     let mod_directory = PathBuf::from(out_dir).join("icu");
 
-    let mut options = BakedOptions::default();
-    // Overwrite the baked data if it was already present:
-    options.overwrite = true;
+    let options = {
+        let mut options = BakedOptions::default();
+        options.use_separate_crates = true;
+        options.overwrite = true;
+        options
+    };
     let should_filter_locales = None;
     icu_datagen::datagen(
         should_filter_locales,
