@@ -7,6 +7,7 @@ pub(crate) use self::{execution_state::*, state::*};
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::collections::Stack;
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
@@ -17,32 +18,39 @@ mod state;
 #[derive(Debug)]
 pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
-    shared: SharedState,
+    pub(crate) program: Option<Program>,
+    pub(crate) current_node_name: Option<String>,
+    pub(crate) variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+    state: State,
+    execution_state: ExecutionState,
+    current_node: Option<Node>,
     events: Stack<DialogueEvent>,
 }
 
-impl SharedStateHolder for VirtualMachine {
-    fn shared_state(&self) -> &SharedState {
-        &self.shared
-    }
-}
-
 impl VirtualMachine {
-    pub(crate) fn with_shared_state(shared_state: SharedState) -> Self {
+    pub(crate) fn new(
+        library: Library,
+        variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+    ) -> Self {
         Self {
-            shared: shared_state,
-            library: Library::standard_library(),
-            events: Stack::default(),
+            library,
+            variable_storage,
+            program: Default::default(),
+            current_node_name: Default::default(),
+            state: Default::default(),
+            execution_state: Default::default(),
+            current_node: Default::default(),
+            events: Default::default(),
         }
     }
 
     pub(crate) fn reset_state(&mut self) {
-        *self.state_mut() = State::default();
-        *self.current_node_name_mut() = None;
+        self.state = State::default();
+        self.current_node_name = None;
     }
 
     pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {
-        *self.execution_state_mut() = execution_state;
+        self.execution_state = execution_state;
         if execution_state == ExecutionState::Stopped {
             self.reset_state()
         }
@@ -58,29 +66,24 @@ impl VirtualMachine {
     pub(crate) fn set_node(&mut self, node_name: &str) {
         debug!("Running node \"{node_name}\"");
 
-        *self.current_node_mut() = {
-            let program = self.program();
-            let program = program.as_ref().unwrap_or_else(|| {
-                panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
-            });
-            assert!(
-                !program.nodes.is_empty(),
-                "Cannot load node \"{node_name}\": No nodes have been loaded.",
-            );
-            program.nodes.get(node_name).cloned()
-        };
-        self.reset_state();
-        {
-            *self.current_node_name_mut() = Some(node_name.to_owned());
-        }
-        {
-            let mut guard = self.current_node_mut();
-            let current_node = guard
-                .as_mut()
-                .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."));
+        let program = self.program.as_ref().unwrap_or_else(|| {
+            panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
+        });
+        assert!(
+            !program.nodes.is_empty(),
+            "Cannot load node \"{node_name}\": No nodes have been loaded.",
+        );
 
-            current_node.name = node_name.to_owned();
-        }
+        self.current_node = program
+            .nodes
+            .get(node_name)
+            .cloned()
+            .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."))
+            .into();
+
+        self.reset_state();
+
+        self.current_node_name = Some(node_name.to_owned());
 
         self.events
             .push(DialogueEvent::NodeStart(node_name.to_owned()));
@@ -94,7 +97,7 @@ impl VirtualMachine {
         // [sic] TODO: maybe this list could be reused to save on allocations?
 
         let string_ids = self
-            .current_node()
+            .current_node
             .as_ref()
             .unwrap()
             .instructions
@@ -125,24 +128,24 @@ impl VirtualMachine {
         }
         self.assert_can_continue();
 
-        *self.execution_state_mut() = ExecutionState::Running;
+        self.execution_state = ExecutionState::Running;
 
         // Execute instructions until something forces us to stop
-        while *self.execution_state() == ExecutionState::Running {
-            let current_node = self.current_node().clone().unwrap();
-            let current_instruction = &current_node.instructions[self.state().program_counter];
+        while self.execution_state == ExecutionState::Running {
+            let current_node = self.current_node.clone().unwrap();
+            let current_instruction = &current_node.instructions[self.state.program_counter];
             self.run_instruction(current_instruction);
             // ## Implementation note
             // The original increments the program counter here, but that leads to intentional underflow on [`OpCode::RunNode`],
             // so we do the incrementation in [`VirtualMachine::run_instruction`] instead.
 
-            if self.state().program_counter < current_node.instructions.len() {
+            if self.state.program_counter < current_node.instructions.len() {
                 continue;
             }
 
             self.events
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
-            *self.execution_state_mut() = ExecutionState::Stopped;
+            self.execution_state = ExecutionState::Stopped;
             self.events.push(DialogueEvent::DialogueComplete);
             debug!("Run complete.");
         }
@@ -152,12 +155,12 @@ impl VirtualMachine {
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't.
     fn assert_can_continue(&self) {
         assert!(
-            self.current_node().is_some(),
+            self.current_node.is_some(),
             "Cannot continue running dialogue. No node has been selected."
         );
         assert_ne!(
             ExecutionState::WaitingOnOptionSelection,
-            *self.execution_state(),
+            self.execution_state,
             "Cannot continue running dialogue. Still waiting on option selection."
         );
         // ## Implementation note:
@@ -165,7 +168,36 @@ impl VirtualMachine {
     }
 
     pub(crate) fn unload_programs(&mut self) {
-        *self.program_mut() = None
+        self.program = None
+    }
+
+    pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) {
+        assert_eq!(ExecutionState::WaitingOnOptionSelection, self.execution_state, "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
+                This method should only be called after the Dialogue is waiting for the user to select an option.");
+
+        assert!(
+            selected_option_id.0 < self.state.current_options.len(),
+            "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {}.",
+            self.state.current_options.len() - 1
+        );
+
+        // We now know what number option was selected; push the
+        // corresponding node name to the stack.
+        let destination_node = self.state.current_options[selected_option_id.0]
+            .destination_node
+            .clone();
+        self.state.push(destination_node);
+
+        // We no longer need the accumulated list of options; clear it
+        // so that it's ready for the next one
+        self.state.current_options.clear();
+
+        // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
+        self.execution_state = ExecutionState::WaitingForContinue;
+    }
+
+    pub(crate) fn is_active(&self) -> bool {
+        self.execution_state != ExecutionState::Stopped
     }
 
     /// ## Implementation note
@@ -177,13 +209,12 @@ impl VirtualMachine {
             OpCode::JumpTo => {
                 // Jumps to a named label
                 let label_name: String = instruction.read_operand(0);
-                self.state_mut().program_counter =
-                    self.find_instruction_point_for_label(&label_name);
+                self.state.program_counter = self.find_instruction_point_for_label(&label_name);
             }
             OpCode::Jump => {
                 // Jumps to a label whose name is on the stack.
-                let jump_destination: String = self.state().peek();
-                self.state_mut().program_counter =
+                let jump_destination: String = self.state.peek();
+                self.state.program_counter =
                     self.find_instruction_point_for_label(&jump_destination);
             }
             OpCode::RunLine => {
@@ -206,7 +237,7 @@ impl VirtualMachine {
                 };
 
                 // Suspend execution, because we're about to deliver content
-                *self.execution_state_mut() = ExecutionState::DeliveringContent;
+                self.execution_state = ExecutionState::DeliveringContent;
 
                 self.events.push(DialogueEvent::Line(line));
 
@@ -215,8 +246,8 @@ impl VirtualMachine {
                 // because the line handler is allowed to call `continue_`. However, we disallow that because of
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
-                *self.execution_state_mut() = ExecutionState::WaitingForContinue;
-                self.state_mut().program_counter += 1;
+                self.execution_state = ExecutionState::WaitingForContinue;
+                self.state.program_counter += 1;
             }
             OpCode::RunCommand => {
                 // Passes a string to the client as a custom command
@@ -229,7 +260,7 @@ impl VirtualMachine {
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
                     });
-                *self.execution_state_mut() = ExecutionState::DeliveringContent;
+                self.execution_state = ExecutionState::DeliveringContent;
                 let command = Command(command_text);
 
                 self.events.push(DialogueEvent::Command(command));
@@ -239,8 +270,8 @@ impl VirtualMachine {
                 // because the line handler is allowed to call `continue_`. However, we disallow that because of
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
-                *self.execution_state_mut() = ExecutionState::WaitingForContinue;
-                self.state_mut().program_counter += 1;
+                self.execution_state = ExecutionState::WaitingForContinue;
+                self.state.program_counter += 1;
             }
             OpCode::AddOption => {
                 // Add an option to the current state
@@ -262,68 +293,68 @@ impl VirtualMachine {
                     // the stack indicating whether the condition
                     // passed or not. We pass that information to
                     // the game.
-                    self.state_mut().pop()
+                    self.state.pop()
                 } else {
                     true
                 };
 
-                let index = self.state().current_options.len();
+                let index = self.state.current_options.len();
                 let node_name = instruction.read_operand(1);
                 // ## Implementation note:
                 // The original calculates the ID in the `ShowOptions` opcode,
                 // but this way is cleaner because it allows us to store a `DialogueOption` instead of a bunch of values in a big tuple.
-                self.state_mut().current_options.push(DialogueOption {
+                self.state.current_options.push(DialogueOption {
                     line,
                     id: OptionId(index),
                     destination_node: node_name,
                     is_available: line_condition_passed,
                 });
-                self.state_mut().program_counter += 1;
+                self.state.program_counter += 1;
             }
             OpCode::ShowOptions => {
                 // If we have no options to show, immediately stop.
-                if self.state().current_options.is_empty() {
-                    *self.execution_state_mut() = ExecutionState::Stopped;
+                if self.state.current_options.is_empty() {
+                    self.execution_state = ExecutionState::Stopped;
                     self.events.push(DialogueEvent::DialogueComplete);
-                    self.state_mut().program_counter += 1;
+                    self.state.program_counter += 1;
                     return;
                 }
 
                 // We can't continue until our client tell us which option to pick
-                *self.execution_state_mut() = ExecutionState::WaitingOnOptionSelection;
+                self.execution_state = ExecutionState::WaitingOnOptionSelection;
 
                 // Pass the options set to the client, as well as a
                 // delegate for them to call when the user has made
                 // a selection
-                let current_options = self.state().current_options.clone();
+                let current_options = self.state.current_options.clone();
                 self.events.push(DialogueEvent::Options(current_options));
 
-                if *self.execution_state() == ExecutionState::WaitingForContinue {
+                if self.execution_state == ExecutionState::WaitingForContinue {
                     // we are no longer waiting on an option
                     // selection - the options handler must have
                     // called SetSelectedOption! Continue running
                     // immediately.
-                    *self.execution_state_mut() = ExecutionState::Running;
+                    self.execution_state = ExecutionState::Running;
                 }
-                self.state_mut().program_counter += 1;
+                self.state.program_counter += 1;
             }
             OpCode::PushString => {
                 //Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
                 let string_table_index: String = instruction.read_operand(0);
-                self.state_mut().push(string_table_index);
-                self.state_mut().program_counter += 1;
+                self.state.push(string_table_index);
+                self.state.program_counter += 1;
             }
             OpCode::PushFloat => {
                 // Pushes a floating point onto the stack.
                 let float: f32 = instruction.read_operand(0);
-                self.state_mut().push(float);
-                self.state_mut().program_counter += 1;
+                self.state.push(float);
+                self.state.program_counter += 1;
             }
             OpCode::PushBool => {
                 // Pushes a boolean value onto the stack.
                 let boolean: bool = instruction.read_operand(0);
-                self.state_mut().push(boolean);
-                self.state_mut().program_counter += 1;
+                self.state.push(boolean);
+                self.state.program_counter += 1;
             }
 
             OpCode::PushNull => {
@@ -331,27 +362,27 @@ impl VirtualMachine {
             }
             OpCode::JumpIfFalse => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
-                let is_top_value_true: bool = self.state_mut().peek();
+                let is_top_value_true: bool = self.state.peek();
                 if !is_top_value_true {
                     let label_name: String = instruction.read_operand(0);
                     let instruction_point = self.find_instruction_point_for_label(&label_name);
-                    self.state_mut().program_counter = instruction_point;
+                    self.state.program_counter = instruction_point;
                 } else {
-                    self.state_mut().program_counter += 1;
+                    self.state.program_counter += 1;
                 }
             }
             OpCode::Pop => {
                 // Pops a value from the stack.
-                self.state_mut().pop_value();
-                self.state_mut().program_counter += 1;
+                self.state.pop_value();
+                self.state.program_counter += 1;
             }
             OpCode::CallFunc => {
-                let actual_parameter_count: usize = self.state_mut().pop();
+                let actual_parameter_count: usize = self.state.pop();
                 // Get the parameters, which were pushed in reverse
                 let parameters = {
                     let mut parameters: Vec<_> = (0..actual_parameter_count)
                         .rev()
-                        .map(|_| self.state_mut().pop_value().raw_value)
+                        .map(|_| self.state.pop_value().raw_value)
                         .collect();
                     parameters.reverse();
                     parameters
@@ -388,14 +419,14 @@ impl VirtualMachine {
                 // ## Implementation note:
                 // The original code first checks whether the return type is `void`. This is vestigial from the v1 compiler.
                 // In current Yarn, every function MUST return a valid typed value, so we skip that check.
-                self.state_mut().push(typed_return_value);
-                self.state_mut().program_counter += 1;
+                self.state.push(typed_return_value);
+                self.state.program_counter += 1;
             }
             OpCode::PushVariable => {
                 // Get the contents of a variable, push that onto the stack.
                 let variable_name: String = instruction.read_operand(0);
                 let loaded_value = self
-                    .variable_storage()
+                    .variable_storage.read().unwrap()
                     .get(&variable_name)
                     .unwrap_or_else(|| {
                         // We don't have a value for this. The initial
@@ -404,7 +435,7 @@ impl VirtualMachine {
                         // which isn't allowed.)
 
                         self
-                            .program()
+                            .program
                             .as_ref()
                             .unwrap()
                             .initial_values
@@ -413,32 +444,34 @@ impl VirtualMachine {
                             .clone()
                             .into()
                     });
-                self.state_mut().push(loaded_value);
-                self.state_mut().program_counter += 1;
+                self.state.push(loaded_value);
+                self.state.program_counter += 1;
             }
             OpCode::StoreVariable => {
                 // Store the top value on the stack in a variable.
-                let top_value = self.state().peek_value().clone();
+                let top_value = self.state.peek_value().clone();
                 let variable_name: String = instruction.read_operand(0);
-                self.variable_storage_mut()
+                self.variable_storage
+                    .write()
+                    .unwrap()
                     .set(variable_name, top_value.into());
-                self.state_mut().program_counter += 1;
+                self.state.program_counter += 1;
             }
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
-                let current_node_name = self.current_node_name().clone().unwrap();
+                let current_node_name = self.current_node_name.clone().unwrap();
                 self.events
                     .push(DialogueEvent::NodeComplete(current_node_name));
                 self.events.push(DialogueEvent::DialogueComplete);
-                *self.execution_state_mut() = ExecutionState::Stopped;
-                self.state_mut().program_counter += 1;
+                self.execution_state = ExecutionState::Stopped;
+                self.state.program_counter += 1;
             }
             OpCode::RunNode => {
                 // Run a node
 
                 // Pop a string from the stack, and jump to a node
                 // with that name.
-                let node_name: String = self.state_mut().pop();
+                let node_name: String = self.state.pop();
                 self.events
                     .push(DialogueEvent::NodeComplete(node_name.clone()));
                 self.set_node(&node_name);
@@ -457,7 +490,7 @@ impl VirtualMachine {
     /// - The current node is unset
     /// - The found instruction point is negative
     fn find_instruction_point_for_label(&self, label_name: &str) -> usize {
-        self.current_node()
+        self.current_node
             .as_ref()
             .unwrap()
             .labels
@@ -467,7 +500,7 @@ impl VirtualMachine {
                 panic!(
                     "Unknown label {} in node {}",
                     label_name,
-                    self.current_node_name().as_ref().unwrap()
+                    self.current_node_name.as_ref().unwrap()
                 )
             })
             .try_into()
@@ -482,7 +515,7 @@ impl VirtualMachine {
         let expression_count: usize = instruction.operands[index].clone().try_into().unwrap();
         let mut values: Vec<_> = (0..expression_count)
             .rev()
-            .map(|_| self.state_mut().pop())
+            .map(|_| self.state.pop())
             .collect();
         values.reverse();
         values

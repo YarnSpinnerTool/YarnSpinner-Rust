@@ -1,11 +1,9 @@
 use crate::prelude::*;
 use log::error;
-pub(crate) use shared_state::*;
 use std::fmt::Debug;
 use std::ops::Deref;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
-
-mod shared_state;
 
 /// Co-ordinates the execution of Yarn programs.
 ///
@@ -21,30 +19,35 @@ mod shared_state;
 #[derive(Debug)]
 pub struct Dialogue {
     vm: VirtualMachine,
-    shared_state: SharedState,
+    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
+    ///
+    /// This code is used to determine how the `plural` and `ordinal`
+    /// markers determine the plural class of numbers.
+    ///
+    /// For example, the code "en-US" represents the English language as
+    /// used in the United States.
+    pub language_code: Option<String>,
 }
 
 impl Default for Dialogue {
     fn default() -> Self {
-        let shared_state = SharedState::default();
+        let variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>> =
+            Arc::new(RwLock::new(Box::new(MemoryVariableStore::new())));
 
-        let mut vm = VirtualMachine::with_shared_state(shared_state.clone());
-        let storage_one = shared_state.variable_storage_shared();
+        let storage_one = variable_storage.clone();
         let storage_two = storage_one.clone();
-        vm.library
-            .register_function("visited", move |node: String| -> bool {
+
+        let library = Library::standard_library()
+            .with_function("visited", move |node: String| -> bool {
                 is_node_visited(storage_one.read().unwrap().deref().as_ref(), &node)
             })
-            .register_function("visited_count", move |node: String| -> f32 {
+            .with_function("visited_count", move |node: String| -> f32 {
                 get_node_visit_count(storage_two.read().unwrap().deref().as_ref(), &node)
             });
-        Self { vm, shared_state }
-    }
-}
-
-impl SharedStateHolder for Dialogue {
-    fn shared_state(&self) -> &SharedState {
-        &self.shared_state
+        Self {
+            vm: VirtualMachine::new(library, variable_storage),
+            language_code: None,
+        }
     }
 }
 
@@ -58,12 +61,12 @@ impl Dialogue {
         &mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> &mut Self {
-        *self.variable_storage_mut() = Box::new(variable_storage);
+        *self.vm.variable_storage.write().unwrap() = Box::new(variable_storage);
         self
     }
 
     pub fn set_language_code(&mut self, language_code: impl Into<String>) -> &mut Self {
-        self.language_code_mut().replace(language_code.into());
+        self.language_code.replace(language_code.into());
         self
     }
 }
@@ -88,27 +91,23 @@ impl Dialogue {
     /// The object that provides access to storing and retrieving the values of variables.
     /// Be aware that accessing this object will block [`Dialogue::continue_`] and vice versa, so try to not cause a deadlock.
     pub fn variable_storage(&self) -> SharedMemoryVariableStore {
-        SharedMemoryVariableStore(self.variable_storage_shared())
+        SharedMemoryVariableStore(self.vm.variable_storage.clone())
     }
 
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
-        self.vm.program_mut().replace(program);
+        self.vm.program.replace(program);
         self.vm.reset_state();
         self
     }
 
     pub fn add_program(&mut self, program: Program) -> &mut Self {
-        {
-            let mut existing_program = self.program_mut();
-            if let Some(existing_program) = existing_program.as_mut() {
-                *existing_program =
-                    Program::combine(vec![existing_program.clone(), program]).unwrap();
-            } else {
-                *existing_program = Some(program);
-                drop(existing_program);
-                self.vm.reset_state();
-            }
+        if let Some(existing_program) = self.vm.program.as_mut() {
+            *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
+        } else {
+            self.vm.program.replace(program);
+            self.vm.reset_state();
         }
+
         self
     }
 
@@ -179,8 +178,8 @@ impl Dialogue {
 impl Dialogue {
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
     pub fn node_names(&self) -> Option<Vec<String>> {
-        self.program()
-            .deref()
+        self.vm
+            .program
             .as_ref()
             .map(|program| program.nodes.keys().cloned().collect())
     }
@@ -214,7 +213,7 @@ impl Dialogue {
     /// Gets a value indicating whether a specified node exists in the Program.
     pub fn node_exists(&self, node_name: &str) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
-        if let Some(program) = self.program().as_ref() {
+        if let Some(program) = self.vm.program.as_ref() {
             program.nodes.contains_key(node_name)
         } else {
             error!("Tried to call NodeExists, but no program has been loaded");
@@ -247,18 +246,7 @@ impl Dialogue {
     /// If [`Dialogue::continue_`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<String> {
-        self.current_node_name().clone()
-    }
-
-    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
-    ///
-    /// This code is used to determine how the `plural` and `ordinal`
-    /// markers determine the plural class of numbers.
-    ///
-    /// For example, the code "en-US" represents the English language as
-    /// used in the United States.
-    pub fn language_code(&self) -> Option<String> {
-        SharedStateHolder::language_code(self).clone()
+        self.vm.current_node_name.clone()
     }
 
     pub fn analyse(&self) -> ! {
@@ -275,7 +263,7 @@ impl Dialogue {
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
-        if let Some(program) = self.program().as_ref() {
+        if let Some(program) = self.vm.program.as_ref() {
             if program.nodes.is_empty() {
                 error!("No nodes are loaded");
                 None
@@ -307,33 +295,12 @@ impl Dialogue {
     /// - [`OptionsHandler`]
     /// - [`OptionSet`]
     pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
-        assert_eq!(ExecutionState::WaitingOnOptionSelection, *self.execution_state(), "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
-                This method should only be called after the Dialogue is waiting for the user to select an option.");
-
-        assert!(
-            selected_option_id.0 < self.state().current_options.len(),
-            "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {}.",
-            self.state().current_options.len() - 1
-        );
-
-        // We now know what number option was selected; push the
-        // corresponding node name to the stack.
-        let destination_node = self.state().current_options[selected_option_id.0]
-            .destination_node
-            .clone();
-        self.state_mut().push(destination_node);
-
-        // We no longer need the accumulated list of options; clear it
-        // so that it's ready for the next one
-        self.state_mut().current_options.clear();
-
-        // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
-        *self.execution_state_mut() = ExecutionState::WaitingForContinue;
+        self.vm.set_selected_option(selected_option_id);
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
-        *self.execution_state() != ExecutionState::Stopped
+        self.vm.is_active()
     }
 }
 

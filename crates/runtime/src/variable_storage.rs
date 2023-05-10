@@ -30,6 +30,12 @@ impl Clone for Box<dyn VariableStorage + Send + Sync> {
 #[derive(Debug, Clone, Default)]
 pub struct MemoryVariableStore(HashMap<String, YarnValue>);
 
+impl MemoryVariableStore {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 impl VariableStorage for MemoryVariableStore {
     fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync> {
         Box::new(self.clone())
