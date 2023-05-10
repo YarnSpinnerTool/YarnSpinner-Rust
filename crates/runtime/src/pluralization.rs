@@ -1,8 +1,8 @@
 use crate::pluralization::generated::generate_provider;
 use fixed_decimal::{DoublePrecision, FixedDecimal};
-use icu::locid::Locale;
-pub use icu::plurals::{PluralCategory, PluralRuleType};
-use icu::plurals::{PluralOperands, PluralRules};
+use icu_locid::Locale;
+pub use icu_plurals::{PluralCategory, PluralRuleType};
+use icu_plurals::{PluralOperands, PluralRules};
 use icu_provider::DataLocale;
 
 mod generated;
@@ -94,7 +94,7 @@ mod tests {
     //! Adapted from `TestNumberPlurals` in <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
     use super::*;
-    use icu::locid::locale;
+    use icu_locid::locale;
 
     #[test]
     fn test_number_plurals() {
