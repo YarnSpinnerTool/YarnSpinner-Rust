@@ -10,25 +10,25 @@ macro_rules! string_newtype {
                 &self.0
             }
         }
-        
+
         impl std::ops::DerefMut for $name {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.0
             }
         }
-        
+
         impl From<String> for $name {
             fn from(s: String) -> Self {
                 Self(s)
             }
         }
-        
+
         impl From<&str> for $name {
             fn from(s: &str) -> Self {
                 Self(s.to_owned())
             }
         }
-        
+
         impl std::fmt::Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{}", self.0)
