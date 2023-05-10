@@ -27,7 +27,7 @@ impl_handler! {
     ///
     /// ## Params
     /// - The text that should be logged.
-    pub struct Logger(pub LoggerFn: Fn(String));
+    pub struct Logger(pub LoggerFn: Fn(String) + Clone);
 
     /// Represents the method that is called when the [`Dialogue`] delivers a [`Line`].
     ///

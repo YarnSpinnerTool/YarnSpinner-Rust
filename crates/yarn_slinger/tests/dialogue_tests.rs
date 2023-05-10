@@ -3,6 +3,7 @@
 //! ## Implementation notes
 //! `TestDumpingCode` was not ported because `GetByteCode` is not used by a user directly and thus was not implemented at all.
 
+use std::sync::{Arc, RwLock};
 use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
@@ -109,4 +110,32 @@ fn test_getting_tags() {
     let tags = dialogue.get_tags_for_node("LearnMore").unwrap();
 
     assert_eq!(tags, vec!["rawText"]);
+}
+
+#[test]
+fn test_prepare_for_line() {
+    let path = test_data_path().join("TaggedLines.yarn");
+
+    let compilation_job = CompilationJob::new().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let mut dialogue = TestBase::new().with_compilation(result).dialogue;
+
+    let prepare_for_lines_was_called = Arc::new(RwLock::new(false));
+    let prepare_for_lines_was_called_clone = prepare_for_lines_was_called.clone();
+    dialogue.set_prepare_for_lines_handler(move |lines, _| {
+        // When the Dialogue realises it's about to run the Start
+        // node, it will tell us that it's about to run these two
+        // line IDs
+        assert_eq!(lines.len(), 2);
+        assert!(lines.contains(&"line:test1".into()));
+        assert!(lines.contains(&"line:test2".into()));
+
+        // Ensure that these asserts were actually called
+        *prepare_for_lines_was_called_clone.write().unwrap() = true;
+    });
+
+    dialogue.set_node_to_start();
+
+    assert!(*prepare_for_lines_was_called.read().unwrap());
 }
