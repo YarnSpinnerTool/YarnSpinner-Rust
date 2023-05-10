@@ -186,7 +186,7 @@ fn test_function_argument_type_inference() {
     assert_eq!(3.0, float_value);
 
     let bool_value: bool = storage.get("$bool").unwrap().try_into().unwrap();
-    assert_eq!(false, bool_value);
+    assert!(!bool_value);
 }
 
 #[test]
