@@ -19,8 +19,8 @@ mod state;
 pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
     pub(crate) program: Option<Program>,
-    pub(crate) current_node_name: Option<String>,
     pub(crate) variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+    current_node_name: Option<String>,
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,
@@ -198,6 +198,10 @@ impl VirtualMachine {
 
     pub(crate) fn is_active(&self) -> bool {
         self.execution_state != ExecutionState::Stopped
+    }
+
+    pub(crate) fn current_node(&self) -> Option<String> {
+        self.current_node_name.clone()
     }
 
     /// ## Implementation note

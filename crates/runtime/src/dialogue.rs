@@ -246,7 +246,7 @@ impl Dialogue {
     /// If [`Dialogue::continue_`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<String> {
-        self.vm.current_node_name.clone()
+        self.vm.current_node()
     }
 
     pub fn analyse(&self) -> ! {
