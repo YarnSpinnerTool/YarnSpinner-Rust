@@ -232,12 +232,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(Compiler {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        })
+        }
+        .compile()
         .unwrap();
 
         assert!(result.warnings.is_empty());
@@ -321,12 +322,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(Compiler {
+        let result = Compiler {
             files: vec![file.clone()],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        }
+        .compile();
 
         let diagnostics = result.unwrap_err().diagnostics;
         assert_eq!(2, diagnostics.len());

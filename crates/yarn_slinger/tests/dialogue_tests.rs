@@ -53,10 +53,11 @@ fn test_getting_current_node_name() {
     let path = space_demo_scripts_path().join("Sally.yarn");
     let test_base = TestBase::new();
 
-    let compiler = Compiler::new()
+    let result = Compiler::new()
         .read_file(path)
-        .replace_library(test_base.library().clone());
-    let result = compile(compiler).unwrap_pretty();
+        .replace_library(test_base.library().clone())
+        .compile()
+        .unwrap();
 
     let mut dialogue = test_base.dialogue;
     dialogue.replace_program(result.program.unwrap());
@@ -77,8 +78,7 @@ fn test_getting_raw_source() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let compiler = Compiler::new().read_file(path).unwrap();
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::new().read_file(path).compile().unwrap();
 
     test_base = test_base.with_compilation(result);
     let dialogue = &test_base.dialogue;
@@ -99,8 +99,7 @@ fn test_getting_tags() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let compiler = Compiler::new().read_file(path).unwrap();
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::new().read_file(path).compile().unwrap();
 
     test_base = test_base.with_program(result.program.unwrap());
     let dialogue = &test_base.dialogue;
@@ -114,8 +113,7 @@ fn test_getting_tags() {
 fn test_prepare_for_line() {
     let path = test_data_path().join("TaggedLines.yarn");
 
-    let compiler = Compiler::new().read_file(path).unwrap();
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::new().read_file(path).compile().unwrap();
 
     let mut dialogue = TestBase::new().with_compilation(result).dialogue;
 
@@ -163,9 +161,10 @@ fn test_function_argument_type_inference() {
     <<set $bool = NegateBool(true)>>
     ";
 
-    let compiler =
-        Compiler::from_test_source(source).with_library(test_base.dialogue.library().clone());
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::from_test_source(source)
+        .replace_library(test_base.dialogue.library().clone())
+        .compile()
+        .unwrap();
 
     let storage = test_base
         .with_compilation(result)
@@ -274,8 +273,9 @@ fn test_selecting_option_from_inside_option_callback() {
             assert_eq!(ExpectedStepType::Stop, expected_step);
         });
 
-    let compiler = Compiler::from_test_source("-> option 1\n->option 2\nfinal line\n");
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::from_test_source("-> option 1\n->option 2\nfinal line\n")
+        .compile()
+        .unwrap();
 
     test_base.with_compilation(result).run_standard_testcase();
 }

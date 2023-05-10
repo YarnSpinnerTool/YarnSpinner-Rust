@@ -630,12 +630,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let _result = compile(Compiler {
+        let _result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        })
+        }
+        .compile()
         .unwrap();
     }
 
@@ -654,12 +655,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(Compiler {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        }
+        .compile();
 
         let diagnostics = result.unwrap_err().diagnostics;
 
@@ -740,12 +742,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let _result = compile(Compiler {
+        let _result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        })
+        }
+        .compile()
         .unwrap();
     }
 
@@ -762,12 +765,13 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(Compiler {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        }
+        .compile();
 
         let diagnostics = result.unwrap_err().diagnostics;
 

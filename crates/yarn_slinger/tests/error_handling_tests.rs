@@ -8,8 +8,9 @@ mod test_base;
 
 #[test]
 fn test_malformed_if_statement() {
-    let compiler = Compiler::from_test_source("<<if true>> // error: no endif");
-    let result = compile(compiler).unwrap_err();
+    let result = Compiler::from_test_source("<<if true>> // error: no endif")
+        .compile()
+        .unwrap_err();
 
     println!("{}", result);
     assert!(result.diagnostics.iter().any(|d| d
@@ -19,7 +20,7 @@ fn test_malformed_if_statement() {
 
 #[test]
 fn test_extraneous_else() {
-    let compiler = Compiler::from_test_source(
+    let result = Compiler::from_test_source(
         "<<if true>>\n\
             One\n\
             <<else>>\n\
@@ -27,8 +28,9 @@ fn test_extraneous_else() {
             <<else>> // error: more than one else\n\
             Three\n\
             <<endif>>",
-    );
-    let result = compile(compiler).unwrap_err();
+    )
+    .compile()
+    .unwrap_err();
 
     println!("{}", result);
     assert!(result.diagnostics.iter().any(|d| d
@@ -41,10 +43,11 @@ fn test_extraneous_else() {
 
 #[test]
 fn test_empty_command() {
-    let compiler = Compiler::from_test_source("\n<<>>\n");
-    let result = compile(compiler).unwrap_err();
-
+    let result = Compiler::from_test_source("\n<<>>\n")
+        .compile()
+        .unwrap_err();
     println!("{}", result);
+
     assert!(result
         .diagnostics
         .iter()
@@ -53,8 +56,9 @@ fn test_empty_command() {
 
 #[test]
 fn test_invalid_variable_name_in_set_or_declare() {
-    let compiler = Compiler::from_test_source("\n<<set test = 1>>\n");
-    let result = compile(compiler).unwrap_err();
+    let result = Compiler::from_test_source("\n<<set test = 1>>\n")
+        .compile()
+        .unwrap_err();
 
     println!("{}", result);
     assert!(result
@@ -62,8 +66,9 @@ fn test_invalid_variable_name_in_set_or_declare() {
         .iter()
         .any(|d| d.message == "Variable names need to start with a $"));
 
-    let compiler = Compiler::from_test_source("\n<<declare test = 1>>\n");
-    let result = compile(compiler).unwrap_err();
+    let result = Compiler::from_test_source("\n<<declare test = 1>>\n")
+        .compile()
+        .unwrap_err();
 
     println!("{}", result);
     assert!(result
@@ -74,8 +79,9 @@ fn test_invalid_variable_name_in_set_or_declare() {
 
 #[test]
 fn test_invalid_function_call() {
-    let compiler = Compiler::from_test_source("<<if someFunction(>><<endif>>");
-    let result = compile(compiler).unwrap_err();
+    let result = Compiler::from_test_source("<<if someFunction(>><<endif>>")
+        .compile()
+        .unwrap_err();
 
     println!("{}", result);
     assert!(result.diagnostics.iter().any(|d| d

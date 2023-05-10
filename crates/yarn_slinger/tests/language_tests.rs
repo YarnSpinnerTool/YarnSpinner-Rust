@@ -16,8 +16,7 @@ fn test_example_script() {
     let path = test_data_path().join("Example.yarn");
     let test_plan = path.with_extension("testplan");
 
-    let compiler = Compiler::default().read_file(path).unwrap();
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::default().read_file(path).compile().unwrap();
 
     TestBase::default()
         .with_runtime_errors_do_not_cause_failure()
@@ -27,23 +26,22 @@ fn test_example_script() {
 }
 
 #[test]
-fn can_compile_space_demo() -> std::io::Result<()> {
+fn can_compile_space_demo() {
     let test_base = TestBase::default();
     let sally_path = space_demo_scripts_path().join("Sally.yarn");
     let ship_path = space_demo_scripts_path().join("Ship.yarn");
 
-    let compiler_sally = Compiler::default()
-        .read_file(&sally_path)?
-        .with_library(test_base.library().clone());
-    let compiler_sally_and_ship = Compiler::default()
-        .read_file(&sally_path)?
-        .read_file(ship_path)?
-        .with_library(test_base.library().clone());
-
-    let _result_sally = compile(compiler_sally).unwrap_pretty();
-    let _result_sally_and_ship = compile(compiler_sally_and_ship).unwrap_pretty();
-
-    Ok(())
+    let _result_sally = Compiler::new()
+        .read_file(&sally_path)
+        .replace_library(test_base.library().clone())
+        .compile()
+        .unwrap();
+    let _result_sally_and_ship = Compiler::new()
+        .read_file(&sally_path)
+        .read_file(ship_path)
+        .replace_library(test_base.library().clone())
+        .compile()
+        .unwrap();
 }
 
 #[test]
@@ -53,19 +51,17 @@ fn test_merging_nodes() {
     let sally_path = space_demo_scripts_path().join("Sally.yarn");
     let ship_path = space_demo_scripts_path().join("Ship.yarn");
 
-    let compiler_sally = Compiler::default()
+    let result_sally = Compiler::default()
         .read_file(&sally_path)
-        .unwrap()
-        .with_library(test_base.library().clone());
-    let compiler_sally_and_ship = Compiler::default()
+        .replace_library(test_base.library().clone())
+        .compile()
+        .unwrap();
+    let result_sally_and_ship = Compiler::default()
         .read_file(&sally_path)
-        .unwrap()
         .read_file(ship_path)
-        .unwrap()
-        .with_library(test_base.library().clone());
-
-    let result_sally = compile(compiler_sally).unwrap_pretty();
-    let result_sally_and_ship = compile(compiler_sally_and_ship).unwrap_pretty();
+        .replace_library(test_base.library().clone())
+        .compile()
+        .unwrap();
 
     // Loading code with the same contents should throw
     let _combined_not_working = Program::combine(vec![
@@ -77,8 +73,7 @@ fn test_merging_nodes() {
 #[test]
 fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
-    let compiler = Compiler::default().read_file(path).unwrap();
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::default().read_file(path).compile().unwrap();
 
     TestBase::default()
         .with_compilation(result)
@@ -93,7 +88,7 @@ fn test_end_of_notes_with_options_not_added() {
 #[test]
 fn test_node_headers() {
     let path = test_data_path().join("Headers.yarn");
-    let result = compile(Compiler::default().read_file(&path).unwrap()).unwrap_pretty();
+    let result = Compiler::default().read_file(&path).compile().unwrap();
     let program = result.program.as_ref().unwrap();
     assert_eq!(program.nodes.len(), 6);
 
@@ -157,7 +152,7 @@ fn test_node_headers() {
 #[test]
 fn test_invalid_characters_in_node_title() {
     let path = test_data_path().join("InvalidNodeTitle.yarn");
-    let result = compile(Compiler::default().read_file(path).unwrap());
+    let result = Compiler::default().read_file(path).compile();
     assert!(result.is_err());
 }
 
@@ -178,11 +173,10 @@ fn test_sources() {
         let test_plan = path.with_extension("testplan");
 
         let test_base = TestBase::default();
-        let compiler = Compiler::default()
+        let result = Compiler::default()
             .read_file(&path)
-            .unwrap()
-            .with_library(test_base.library().clone());
-        let result = compile(compiler);
+            .replace_library(test_base.library().clone())
+            .compile();
 
         if !test_plan.exists() {
             // No test plan for this file exists, which indicates that
@@ -194,7 +188,7 @@ fn test_sources() {
                 file.display()
             );
         } else {
-            let compilation = result.unwrap_pretty();
+            let compilation = result.unwrap();
             let mut test_base = test_base
                 .read_test_plan(test_plan)
                 .with_compilation(compilation);

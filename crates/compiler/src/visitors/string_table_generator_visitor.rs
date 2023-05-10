@@ -246,13 +246,15 @@ a {1 + 3} cool expression
 ==="
             .to_string(),
         };
-        let result = compile(Compiler {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        })
+        }
+        .compile()
         .unwrap();
+
         let string_table = result.string_table;
         assert_eq!(string_table.len(), 3);
         assert_eq!(
@@ -302,12 +304,13 @@ a {very} cool expression
 ==="
             .to_string(),
         };
-        let result = compile(Compiler {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        }
+        .compile();
 
         let diagnostics = result.unwrap_err().diagnostics;
         assert_eq!(2, diagnostics.len());
