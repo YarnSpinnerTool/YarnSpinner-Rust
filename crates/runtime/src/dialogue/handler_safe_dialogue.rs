@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use log::{debug, error};
+use log::error;
 use std::ops::Deref;
 use yarn_slinger_core::prelude::*;
 
@@ -13,8 +13,6 @@ use yarn_slinger_core::prelude::*;
 /// which is of course a big no-no in Rust.
 #[derive(Debug)]
 pub struct HandlerSafeDialogue {
-    pub(crate) log_debug_message: Logger,
-    pub(crate) log_error_message: Logger,
     shared_state: SharedState,
 }
 
@@ -26,20 +24,7 @@ impl SharedStateHolder for HandlerSafeDialogue {
 
 impl HandlerSafeDialogue {
     pub(crate) fn from_shared_state(shared_state: SharedState) -> Self {
-        // Can't use a closure because the Rust type inference gets a bit confused :<
-        fn default_logger(msg: String, _dialogue: &HandlerSafeDialogue) {
-            debug!("{}", msg)
-        }
-
-        fn default_error(msg: String, _dialogue: &HandlerSafeDialogue) {
-            error!("{}", msg)
-        }
-
-        HandlerSafeDialogue {
-            log_debug_message: Box::new(default_logger),
-            log_error_message: Box::new(default_error),
-            shared_state,
-        }
+        HandlerSafeDialogue { shared_state }
     }
 
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
@@ -82,10 +67,7 @@ impl HandlerSafeDialogue {
         if let Some(program) = self.program().as_ref() {
             program.nodes.contains_key(node_name)
         } else {
-            self.log_error_message.call(
-                "Tried to call NodeExists, but no program has been loaded".to_owned(),
-                self,
-            );
+            error!("Tried to call NodeExists, but no program has been loaded");
             false
         }
     }
@@ -145,19 +127,16 @@ impl HandlerSafeDialogue {
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
         if let Some(program) = self.program().as_ref() {
             if program.nodes.is_empty() {
-                self.log_error_message
-                    .call("No nodes are loaded".to_owned(), self);
+                error!("No nodes are loaded");
                 None
             } else if let Some(node) = program.nodes.get(node_name) {
                 Some(node.clone())
             } else {
-                self.log_error_message
-                    .call(format!("No node named {node_name}"), self);
+                error!("No node named {node_name}");
                 None
             }
         } else {
-            self.log_error_message
-                .call("No program is loaded".to_owned(), self);
+            error!("No program is loaded");
             None
         }
     }

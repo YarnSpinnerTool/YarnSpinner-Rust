@@ -16,18 +16,8 @@ mod state;
 
 #[derive(Debug)]
 pub(crate) struct VirtualMachine {
-    pub(crate) line_handler: LineHandler,
-    pub(crate) options_handler: OptionsHandler,
-    pub(crate) command_handler: CommandHandler,
-    pub(crate) node_start_handler: Option<NodeStartHandler>,
-    pub(crate) node_complete_handler: NodeCompleteHandler,
-    pub(crate) dialogue_complete_handler: Option<DialogueCompleteHandler>,
-    pub(crate) prepare_for_lines_handler: Option<PrepareForLinesHandler>,
     pub(crate) library: Library,
-    handler_safe_dialogue: HandlerSafeDialogue,
     shared: SharedState,
-    log_debug_message: Logger,
-    log_error_message: Logger,
     events: Stack<DialogueEvent>,
 }
 
@@ -39,33 +29,7 @@ impl SharedStateHolder for VirtualMachine {
 
 impl VirtualMachine {
     pub(crate) fn with_shared_state(shared_state: SharedState) -> Self {
-        let dialogue_data = HandlerSafeDialogue::from_shared_state(shared_state.clone());
-        fn default_line_handler(line: Line, _dialogue: &mut HandlerSafeDialogue) {
-            info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
-        }
-        fn default_options_handler(
-            options: Vec<DialogueOption>,
-            _dialogue: &mut HandlerSafeDialogue,
-        ) {
-            info!("Delivering options: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_options_handler`.", options);
-        }
-        fn default_command_handler(command: Command, _dialogue: &mut HandlerSafeDialogue) {
-            info!("Executing command: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_command_handler`.", command);
-        }
-        fn default_node_complete_handler(node_name: String, _dialogue: &mut HandlerSafeDialogue) {
-            info!("Completed node: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_node_complete_handler`.", node_name);
-        }
         Self {
-            log_debug_message: dialogue_data.log_debug_message.clone(),
-            log_error_message: dialogue_data.log_error_message.clone(),
-            line_handler: Box::new(default_line_handler),
-            options_handler: Box::new(default_options_handler),
-            command_handler: Box::new(default_command_handler),
-            node_start_handler: Default::default(),
-            node_complete_handler: Box::new(default_node_complete_handler),
-            dialogue_complete_handler: Default::default(),
-            prepare_for_lines_handler: Default::default(),
-            handler_safe_dialogue: dialogue_data,
             shared: shared_state,
             library: Library::standard_library(),
             events: Stack::default(),
@@ -92,10 +56,7 @@ impl VirtualMachine {
     }
 
     pub(crate) fn set_node(&mut self, node_name: &str) {
-        self.log_debug_message.call(
-            format!("Running node \"{node_name}\""),
-            &self.handler_safe_dialogue,
-        );
+        debug!("Running node \"{node_name}\"");
 
         *self.current_node_mut() = {
             let program = self.program();
@@ -183,8 +144,7 @@ impl VirtualMachine {
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
             *self.execution_state_mut() = ExecutionState::Stopped;
             self.events.push(DialogueEvent::DialogueComplete);
-            self.log_debug_message
-                .call("Run complete.".to_owned(), &self.handler_safe_dialogue);
+            debug!("Run complete.");
         }
         self.events.pop()
     }
@@ -206,24 +166,6 @@ impl VirtualMachine {
 
     pub(crate) fn unload_programs(&mut self) {
         *self.program_mut() = None
-    }
-
-    pub(crate) fn set_log_debug_message(
-        &mut self,
-        logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
-    ) -> &mut Self {
-        self.log_debug_message = Box::new(logger);
-        self.handler_safe_dialogue.log_debug_message = self.log_debug_message.clone();
-        self
-    }
-
-    pub(crate) fn set_log_error_message(
-        &mut self,
-        logger: impl Fn(String, &HandlerSafeDialogue) + Clone + 'static + Send + Sync,
-    ) -> &mut Self {
-        self.log_error_message = Box::new(logger);
-        self.handler_safe_dialogue.log_error_message = self.log_error_message.clone();
-        self
     }
 
     /// ## Implementation note
