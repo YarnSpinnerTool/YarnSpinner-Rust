@@ -20,6 +20,17 @@ string_newtype! {
     pub struct Command(pub String);
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum DialogueEvent {
+    Line(Line),
+    Options(Vec<DialogueOption>),
+    Command(Command),
+    NodeComplete(String),
+    NodeStart(String),
+    PrepareForLines(Vec<LineId>),
+    DialogueComplete,
+}
+
 impl_handler! {
     /// Represents a method that receives diagnostic messages and error information from a [`Dialogue`].
     ///

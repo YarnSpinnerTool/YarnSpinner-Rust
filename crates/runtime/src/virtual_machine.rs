@@ -7,6 +7,7 @@ pub(crate) use self::{execution_state::*, state::*};
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
+use yarn_slinger_core::collections::Stack;
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
 
@@ -27,6 +28,7 @@ pub(crate) struct VirtualMachine {
     shared: SharedState,
     log_debug_message: Logger,
     log_error_message: Logger,
+    events: Stack<DialogueEvent>,
 }
 
 impl SharedStateHolder for VirtualMachine {
@@ -66,6 +68,7 @@ impl VirtualMachine {
             handler_safe_dialogue: dialogue_data,
             shared: shared_state,
             library: Library::standard_library(),
+            events: Stack::default(),
         }
     }
 
@@ -118,15 +121,8 @@ impl VirtualMachine {
             current_node.name = node_name.to_owned();
         }
 
-        if let Some(node_start_handler) = &mut self.node_start_handler {
-            node_start_handler.call(node_name.to_owned(), &mut self.handler_safe_dialogue);
-        }
-
-        // Do we have a way to let the client know that certain lines
-        // might be run?
-        if self.prepare_for_lines_handler.is_none() {
-            return;
-        };
+        self.events
+            .push(DialogueEvent::NodeStart(node_name.to_owned()));
 
         // If we have a prepare-for-lines handler, figure out what
         // lines we anticipate running
@@ -158,23 +154,15 @@ impl VirtualMachine {
                     })
             })
             .collect();
-        let prepare_for_lines_handler = self.prepare_for_lines_handler.as_mut().unwrap();
-        prepare_for_lines_handler.call(string_ids, &mut self.handler_safe_dialogue);
+        self.events.push(DialogueEvent::PrepareForLines(string_ids));
     }
 
     /// Resumes execution.
-    pub(crate) fn continue_(&mut self) {
-        self.assert_can_continue();
-        if *self.execution_state() == ExecutionState::DeliveringContent {
-            // We were delivering a line, option set, or command, and
-            // the client has called Continue() on us. We're still
-            // inside the stack frame of the client callback, so to
-            // avoid recursion, we'll note that our state has changed
-            // back to Running; when we've left the callback, we'll
-            // continue executing instructions.
-            *self.execution_state_mut() = ExecutionState::Running;
-            return;
+    pub(crate) fn continue_(&mut self) -> Option<DialogueEvent> {
+        if let Some(event) = self.events.pop() {
+            return Some(event);
         }
+        self.assert_can_continue();
 
         *self.execution_state_mut() = ExecutionState::Running;
 
@@ -191,15 +179,14 @@ impl VirtualMachine {
                 continue;
             }
 
-            self.node_complete_handler
-                .call(current_node.name.clone(), &mut self.handler_safe_dialogue);
+            self.events
+                .push(DialogueEvent::NodeComplete(current_node.name.clone()));
             *self.execution_state_mut() = ExecutionState::Stopped;
-            if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
-            }
+            self.events.push(DialogueEvent::DialogueComplete);
             self.log_debug_message
                 .call("Run complete.".to_owned(), &self.handler_safe_dialogue);
         }
+        self.events.pop()
     }
 
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't.
@@ -279,8 +266,7 @@ impl VirtualMachine {
                 // Suspend execution, because we're about to deliver content
                 *self.execution_state_mut() = ExecutionState::DeliveringContent;
 
-                self.line_handler
-                    .call(line, &mut self.handler_safe_dialogue);
+                self.events.push(DialogueEvent::Line(line));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -304,8 +290,7 @@ impl VirtualMachine {
                 *self.execution_state_mut() = ExecutionState::DeliveringContent;
                 let command = Command(command_text);
 
-                self.command_handler
-                    .call(command, &mut self.handler_safe_dialogue);
+                self.events.push(DialogueEvent::Command(command));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -357,9 +342,7 @@ impl VirtualMachine {
                 // If we have no options to show, immediately stop.
                 if self.state().current_options.is_empty() {
                     *self.execution_state_mut() = ExecutionState::Stopped;
-                    if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                        dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
-                    }
+                    self.events.push(DialogueEvent::DialogueComplete);
                     self.state_mut().program_counter += 1;
                     return;
                 }
@@ -371,8 +354,7 @@ impl VirtualMachine {
                 // delegate for them to call when the user has made
                 // a selection
                 let current_options = self.state().current_options.clone();
-                self.options_handler
-                    .call(current_options, &mut self.handler_safe_dialogue);
+                self.events.push(DialogueEvent::Options(current_options));
 
                 if *self.execution_state() == ExecutionState::WaitingForContinue {
                     // we are no longer waiting on an option
@@ -503,11 +485,9 @@ impl VirtualMachine {
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
                 let current_node_name = self.current_node_name().clone().unwrap();
-                self.node_complete_handler
-                    .call(current_node_name, &mut self.handler_safe_dialogue);
-                if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                    dialogue_complete_handler.call(&mut self.handler_safe_dialogue);
-                }
+                self.events
+                    .push(DialogueEvent::NodeComplete(current_node_name));
+                self.events.push(DialogueEvent::DialogueComplete);
                 *self.execution_state_mut() = ExecutionState::Stopped;
                 self.state_mut().program_counter += 1;
             }
@@ -517,8 +497,8 @@ impl VirtualMachine {
                 // Pop a string from the stack, and jump to a node
                 // with that name.
                 let node_name: String = self.state_mut().pop();
-                self.node_complete_handler
-                    .call(node_name.clone(), &mut self.handler_safe_dialogue);
+                self.events
+                    .push(DialogueEvent::NodeComplete(node_name.clone()));
                 self.set_node(&node_name);
 
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
