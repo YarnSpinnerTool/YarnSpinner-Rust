@@ -37,9 +37,7 @@ impl Library {
         self.0.extend(other.0 .0);
     }
 
-    pub fn iter<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = (&'a str, &'a (dyn UntypedYarnFn + Send + Sync))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn + Send + Sync))> {
         self.0.iter()
     }
 

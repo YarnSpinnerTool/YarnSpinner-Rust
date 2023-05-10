@@ -44,9 +44,7 @@ impl YarnFnRegistry {
         self
     }
 
-    pub fn iter<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = (&'a str, &'a (dyn UntypedYarnFn + Send + Sync))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn + Send + Sync))> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
