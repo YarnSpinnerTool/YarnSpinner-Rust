@@ -15,6 +15,10 @@ pub type Result<T> = std::result::Result<T, CompilationError>;
 /// how to compile it.
 ///
 /// Consume this information using [`Compiler::compile`] to produce a [`Compilation`] result.
+///
+/// ## Implementation note
+///
+/// This type is a combination of the original `CompilationStep` and `Compiler` types, optimized for easier, fluent calling.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Compiler {
     /// The [`File`] structs that represent the content to parse..
