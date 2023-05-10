@@ -111,6 +111,7 @@ pub enum CompilationType {
 
 pub trait CompileResultExt {
     fn unwrap(self) -> Compilation;
+    fn expect(self, message: &str) -> Compilation;
 }
 
 impl CompileResultExt for Result<Compilation> {
@@ -122,6 +123,18 @@ impl CompileResultExt for Result<Compilation> {
                     eprintln!("{}", diagnostic);
                 }
                 panic!("Compilation failed due to Yarn errors")
+            }
+        }
+    }
+
+    fn expect(self, message: &str) -> Compilation {
+        match self {
+            Ok(compilation) => compilation,
+            Err(error) => {
+                for diagnostic in error.diagnostics {
+                    eprintln!("{}", diagnostic);
+                }
+                panic!("{}: Compilation failed due to Yarn errors", message)
             }
         }
     }
