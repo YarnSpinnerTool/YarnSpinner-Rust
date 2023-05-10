@@ -4,7 +4,7 @@ use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
 use crate::prelude::StringTableManager;
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use thiserror::Error;
 use yarn_slinger_core::prelude::Program;
 
@@ -114,9 +114,27 @@ impl Compilation {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error)]
 pub struct CompilationError {
     pub diagnostics: Vec<Diagnostic>,
+}
+
+impl Debug for CompilationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // This looks evil, but we support really nice error messages through Display,
+        // which we want to print by default on `unwrap` and `expect`.
+        // If you really need the real debug print, call [`CompilationError::debug_fmt`].
+        Display::fmt(self, f)
+    }
+}
+
+impl CompilationError {
+    pub fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for diagnostic in &self.diagnostics {
+            writeln!(f, "{:?}", diagnostic)?;
+        }
+        Ok(())
+    }
 }
 
 impl Display for CompilationError {
