@@ -1,11 +1,10 @@
 use crate::prelude::*;
-pub use handler_safe_dialogue::*;
+use log::error;
 pub(crate) use shared_state::*;
 use std::fmt::Debug;
 use std::ops::Deref;
 use yarn_slinger_core::prelude::*;
 
-mod handler_safe_dialogue;
 mod shared_state;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -23,13 +22,11 @@ mod shared_state;
 pub struct Dialogue {
     vm: VirtualMachine,
     shared_state: SharedState,
-    handler_safe_dialogue: HandlerSafeDialogue,
 }
 
 impl Default for Dialogue {
     fn default() -> Self {
         let shared_state = SharedState::default();
-        let handler_safe_dialogue = HandlerSafeDialogue::from_shared_state(shared_state.clone());
 
         let mut vm = VirtualMachine::with_shared_state(shared_state.clone());
         let storage_one = shared_state.variable_storage_shared();
@@ -41,11 +38,7 @@ impl Default for Dialogue {
             .register_function("visited_count", move |node: String| -> f32 {
                 get_node_visit_count(storage_two.read().unwrap().deref().as_ref(), &node)
             });
-        Self {
-            vm,
-            shared_state,
-            handler_safe_dialogue,
-        }
+        Self { vm, shared_state }
     }
 }
 
@@ -186,7 +179,10 @@ impl Dialogue {
 impl Dialogue {
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
     pub fn node_names(&self) -> Option<Vec<String>> {
-        self.handler_safe_dialogue.node_names()
+        self.program()
+            .deref()
+            .as_ref()
+            .map(|program| program.nodes.keys().cloned().collect())
     }
 
     /// Returns the string ID that contains the original, uncompiled source
@@ -200,7 +196,8 @@ impl Dialogue {
     /// see if the string table contains an entry with the line ID. You will
     /// need to test for that yourself.
     pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
-        self.handler_safe_dialogue.get_string_id_for_node(node_name)
+        self.get_node_logging_errors(node_name)
+            .map(|_| format!("line:{node_name}"))
     }
 
     /// Returns the tags for the node `node_name`.
@@ -210,12 +207,19 @@ impl Dialogue {
     ///
     /// Returns [`None`] if the node is not present in the program.
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
-        self.handler_safe_dialogue.get_tags_for_node(node_name)
+        self.get_node_logging_errors(node_name)
+            .map(|node| node.tags)
     }
 
     /// Gets a value indicating whether a specified node exists in the Program.
     pub fn node_exists(&self, node_name: &str) -> bool {
-        self.handler_safe_dialogue.node_exists(node_name)
+        // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
+        if let Some(program) = self.program().as_ref() {
+            program.nodes.contains_key(node_name)
+        } else {
+            error!("Tried to call NodeExists, but no program has been loaded");
+            false
+        }
     }
 
     /// Replaces all substitution markers in a text with the given
@@ -230,7 +234,12 @@ impl Dialogue {
         text: &str,
         substitutions: impl IntoIterator<Item = &'a str>,
     ) -> String {
-        HandlerSafeDialogue::expand_substitutions(text, substitutions)
+        substitutions
+            .into_iter()
+            .enumerate()
+            .fold(text.to_owned(), |text, (i, substitution)| {
+                text.replace(&format!("{{{i}}}",), substitution)
+            })
     }
 
     /// Gets the name of the node that this Dialogue is currently executing.
@@ -238,7 +247,7 @@ impl Dialogue {
     /// If [`Dialogue::continue_`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<String> {
-        self.handler_safe_dialogue.current_node()
+        self.current_node_name().clone()
     }
 
     /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
@@ -249,13 +258,37 @@ impl Dialogue {
     /// For example, the code "en-US" represents the English language as
     /// used in the United States.
     pub fn language_code(&self) -> Option<String> {
-        self.handler_safe_dialogue.language_code()
+        SharedStateHolder::language_code(self).clone()
     }
+
     pub fn analyse(&self) -> ! {
-        self.handler_safe_dialogue.analyse()
+        todo!()
     }
+
     pub fn parse_markup(&self, line: &str) -> String {
-        self.handler_safe_dialogue.parse_markup(line)
+        // ## Implementation notes
+        // It would be more ergonomic to not expose this and call it automatically.
+        // We should probs remove this from the API.
+        // Pass the MarkupResult directly into the LineHandler
+        // todo!()
+        line.to_owned()
+    }
+
+    fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
+        if let Some(program) = self.program().as_ref() {
+            if program.nodes.is_empty() {
+                error!("No nodes are loaded");
+                None
+            } else if let Some(node) = program.nodes.get(node_name) {
+                Some(node.clone())
+            } else {
+                error!("No node named {node_name}");
+                None
+            }
+        } else {
+            error!("No program is loaded");
+            None
+        }
     }
 
     /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
@@ -273,26 +306,34 @@ impl Dialogue {
     /// - [`Dialogue::continue_`]
     /// - [`OptionsHandler`]
     /// - [`OptionSet`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
-        self.handler_safe_dialogue
-            .set_selected_option(selected_option_id);
-        self
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
+        assert_eq!(ExecutionState::WaitingOnOptionSelection, *self.execution_state(), "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
+                This method should only be called after the Dialogue is waiting for the user to select an option.");
+
+        assert!(
+            selected_option_id.0 < self.state().current_options.len(),
+            "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {}.",
+            self.state().current_options.len() - 1
+        );
+
+        // We now know what number option was selected; push the
+        // corresponding node name to the stack.
+        let destination_node = self.state().current_options[selected_option_id.0]
+            .destination_node
+            .clone();
+        self.state_mut().push(destination_node);
+
+        // We no longer need the accumulated list of options; clear it
+        // so that it's ready for the next one
+        self.state_mut().current_options.clear();
+
+        // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
+        *self.execution_state_mut() = ExecutionState::WaitingForContinue;
     }
+
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
     pub fn is_active(&self) -> bool {
-        self.handler_safe_dialogue.is_active()
-    }
-}
-
-impl AsRef<HandlerSafeDialogue> for Dialogue {
-    fn as_ref(&self) -> &HandlerSafeDialogue {
-        &self.handler_safe_dialogue
-    }
-}
-
-impl AsMut<HandlerSafeDialogue> for Dialogue {
-    fn as_mut(&mut self) -> &mut HandlerSafeDialogue {
-        &mut self.handler_safe_dialogue
+        *self.execution_state() != ExecutionState::Stopped
     }
 }
 
