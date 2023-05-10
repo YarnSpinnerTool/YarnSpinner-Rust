@@ -246,7 +246,7 @@ a {1 + 3} cool expression
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let result = compile(Compiler {
             files: vec![file],
             library: None,
             compilation_type: CompilationType::FullCompilation,
@@ -302,7 +302,7 @@ a {very} cool expression
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let result = compile(Compiler {
             files: vec![file],
             library: None,
             compilation_type: CompilationType::FullCompilation,

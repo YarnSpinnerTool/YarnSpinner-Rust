@@ -14,11 +14,11 @@ fn test_node_exists() {
     let path = space_demo_scripts_path().join("Sally.yarn");
     let test_base = TestBase::new();
 
-    let compilation_job = CompilationJob::new()
+    let compiler = Compiler::new()
         .read_file(path)
         .unwrap()
         .with_library(test_base.library().clone());
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = compile(compiler).unwrap_pretty();
 
     let mut dialogue = test_base.dialogue;
     dialogue.replace_program(result.program.unwrap());
@@ -40,8 +40,8 @@ fn test_analysis() {
 fn test_missing_node() {
     let path = test_data_path().join("TestCases").join("Smileys.yarn");
 
-    let compilation_job = CompilationJob::new().read_file(path).unwrap();
-    let result = compile(compilation_job).unwrap_pretty();
+    let compiler = Compiler::new().read_file(path).unwrap();
+    let result = compile(compiler).unwrap_pretty();
 
     let mut test_base = TestBase::new()
         .with_program(result.program.unwrap())
@@ -54,11 +54,11 @@ fn test_getting_current_node_name() {
     let path = space_demo_scripts_path().join("Sally.yarn");
     let test_base = TestBase::new();
 
-    let compilation_job = CompilationJob::new()
+    let compiler = Compiler::new()
         .read_file(path)
         .unwrap()
         .with_library(test_base.library().clone());
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = compile(compiler).unwrap_pretty();
 
     let mut dialogue = test_base.dialogue;
     dialogue.replace_program(result.program.unwrap());
@@ -79,8 +79,8 @@ fn test_getting_raw_source() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let compilation_job = CompilationJob::new().read_file(path).unwrap();
-    let result = compile(compilation_job).unwrap_pretty();
+    let compiler = Compiler::new().read_file(path).unwrap();
+    let result = compile(compiler).unwrap_pretty();
 
     test_base = test_base.with_compilation(result);
     let dialogue = &test_base.dialogue;
@@ -101,8 +101,8 @@ fn test_getting_tags() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let compilation_job = CompilationJob::new().read_file(path).unwrap();
-    let result = compile(compilation_job).unwrap_pretty();
+    let compiler = Compiler::new().read_file(path).unwrap();
+    let result = compile(compiler).unwrap_pretty();
 
     test_base = test_base.with_program(result.program.unwrap());
     let dialogue = &test_base.dialogue;
@@ -116,8 +116,8 @@ fn test_getting_tags() {
 fn test_prepare_for_line() {
     let path = test_data_path().join("TaggedLines.yarn");
 
-    let compilation_job = CompilationJob::new().read_file(path).unwrap();
-    let result = compile(compilation_job).unwrap_pretty();
+    let compiler = Compiler::new().read_file(path).unwrap();
+    let result = compile(compiler).unwrap_pretty();
 
     let mut dialogue = TestBase::new().with_compilation(result).dialogue;
 
@@ -165,9 +165,9 @@ fn test_function_argument_type_inference() {
     <<set $bool = NegateBool(true)>>
     ";
 
-    let compilation_job =
-        CompilationJob::from_test_source(source).with_library(test_base.dialogue.library().clone());
-    let result = compile(compilation_job).unwrap_pretty();
+    let compiler =
+        Compiler::from_test_source(source).with_library(test_base.dialogue.library().clone());
+    let result = compile(compiler).unwrap_pretty();
 
     let storage = test_base
         .with_compilation(result)
@@ -276,8 +276,8 @@ fn test_selecting_option_from_inside_option_callback() {
             assert_eq!(ExpectedStepType::Stop, expected_step);
         });
 
-    let compilation_job = CompilationJob::from_test_source("-> option 1\n->option 2\nfinal line\n");
-    let result = compile(compilation_job).unwrap_pretty();
+    let compiler = Compiler::from_test_source("-> option 1\n->option 2\nfinal line\n");
+    let result = compile(compiler).unwrap_pretty();
 
     test_base.with_compilation(result).run_standard_testcase();
 }

@@ -21,7 +21,7 @@ mod test_base;
 
 #[test]
 fn test_variable_declarations_parsed() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         r#"
             <<declare $int = 5>>
             <<declare $str = "yes">>
@@ -36,7 +36,7 @@ fn test_variable_declarations_parsed() {
             <<declare $bool = true>>
 "#,
     );
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = compile(compiler).unwrap_pretty();
     let expected_declarations = &[
         Declaration::new("$int", Type::Number)
             .with_default_value(5.0)
@@ -111,7 +111,7 @@ fn test_declarations_can_appear_in_other_files() {
             ",
         "NodeB",
     );
-    let compilation_job = CompilationJob::default()
+    let compiler = Compiler::default()
         .with_file(File {
             file_name: "sourceA".to_owned(),
             source: source_a,
@@ -120,18 +120,18 @@ fn test_declarations_can_appear_in_other_files() {
             file_name: "sourceB".to_owned(),
             source: source_b,
         });
-    let _result = compile(compilation_job).unwrap_pretty();
+    let _result = compile(compiler).unwrap_pretty();
 }
 
 #[test]
 fn test_importing_variable_declarations() {
-    let compilation_job =
-        CompilationJob::from_test_source("<<set $int = 6>> // no error; declaration is imported")
+    let compiler =
+        Compiler::from_test_source("<<set $int = 6>> // no error; declaration is imported")
             .with_variable_declaration(
                 Declaration::new("$int", Type::Number).with_default_value(0.0),
             );
 
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = compile(compiler).unwrap_pretty();
     // No variables are declared in the source code, so we should
     // expect an empty collection of variable declarations
     assert!(result.declarations.is_empty())
@@ -139,14 +139,14 @@ fn test_importing_variable_declarations() {
 
 #[test]
 fn test_variable_declarations_disallow_duplicates() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         "
             <<declare $int = 5>>
             <<declare $int = 6>> // error! redeclaration of $int
             ",
     );
 
-    let result = compile(compilation_job).unwrap_err();
+    let result = compile(compiler).unwrap_err();
     println!("{}", result);
     assert!(result
         .diagnostics
@@ -156,14 +156,14 @@ fn test_variable_declarations_disallow_duplicates() {
 
 #[test]
 fn test_expressions_disallow_mismatched_types() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         "
             <<declare $int = 5>>
             <<set $int = \"5\">> // error, can't assign string to a variable declared int
             ",
     );
 
-    let result = compile(compilation_job).unwrap_err();
+    let result = compile(compiler).unwrap_err();
     println!("{}", result);
     assert!(result
         .diagnostics
@@ -177,8 +177,8 @@ fn test_expressions_allows_using_undeclared_variable() {
         "<<set $str = \"hi\">>", //  // in commands
         "{$str + 1}",            // in inline expressions
     ] {
-        let compilation_job = CompilationJob::from_test_source(source);
-        let _result = compile(compilation_job).unwrap_pretty();
+        let compiler = Compiler::from_test_source(source);
+        let _result = compile(compiler).unwrap_pretty();
     }
 }
 
@@ -232,8 +232,8 @@ fn test_expressions_require_compatible_types() {
                 .unwrap_or_default()
         );
 
-        let compilation_job = CompilationJob::from_test_source(&source);
-        let result = compile(compilation_job).unwrap_pretty();
+        let compiler = Compiler::from_test_source(&source);
+        let result = compile(compiler).unwrap_pretty();
 
         assert!(result
             .declarations
@@ -252,10 +252,9 @@ fn test_expressions_require_compatible_types() {
 
 #[test]
 fn test_null_not_allowed() {
-    let compilation_job =
-        CompilationJob::from_test_source("<<declare $err = null>> // error, null not allowed");
+    let compiler = Compiler::from_test_source("<<declare $err = null>> // error, null not allowed");
 
-    let result = compile(compilation_job).unwrap_err();
+    let result = compile(compiler).unwrap_err();
     println!("{}", result);
     assert!(result
         .diagnostics
@@ -280,9 +279,8 @@ fn test_function_signatures() {
         "<<set $bool = func_int_int_bool(1, 2)>>",
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
-        let compilation_job =
-            CompilationJob::from_test_source(source).with_library(test_base.library().clone());
-        let result = compile(compilation_job).unwrap_pretty();
+        let compiler = Compiler::from_test_source(source).with_library(test_base.library().clone());
+        let result = compile(compiler).unwrap_pretty();
 
         // The variable '$bool' should have an implicit declaration. The
         // type of the variable should be Boolean, because that's the return
@@ -308,9 +306,9 @@ fn test_operators_are_type_checked() {
                     .unwrap_or_default(),
             );
 
-            let compilation_job =
-                CompilationJob::from_test_source(&source).with_library(test_base.library().clone());
-            let result = compile(compilation_job).unwrap_pretty();
+            let compiler =
+                Compiler::from_test_source(&source).with_library(test_base.library().clone());
+            let result = compile(compiler).unwrap_pretty();
 
             assert!(result
                 .declarations
@@ -355,9 +353,9 @@ fn test_failing_function_signatures() {
     ] {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
-        let compilation_job = CompilationJob::from_test_source(&failing_source)
-            .with_library(test_base.library().clone());
-        let result = compile(compilation_job).unwrap_err();
+        let compiler =
+            Compiler::from_test_source(&failing_source).with_library(test_base.library().clone());
+        let result = compile(compiler).unwrap_err();
         println!("{}", result);
 
         let diagnostic_messages = result
@@ -403,7 +401,7 @@ fn test_initial_values() {
             .expect_line("true"),
     );
 
-    let compilations_job = CompilationJob::from_test_source(source)
+    let compilations_job = Compiler::from_test_source(source)
         .with_library(test_base.library().clone())
         .with_variable_declaration(
             Declaration::new("$external_str", Type::String).with_default_value("Hello"),
@@ -427,14 +425,14 @@ fn test_initial_values() {
 
 #[test]
 fn test_explicit_types() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         r#"
         <<declare $str = "hello" as string>>
         <<declare $int = 1 as number>>
         <<declare $bool = false as bool>>
         "#,
     );
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = compile(compiler).unwrap_pretty();
 
     let variable_declarations: Vec<_> = result
         .declarations
@@ -460,14 +458,14 @@ fn test_explicit_types_must_match_value() {
         r#"<<declare $int = 1 as bool>>"#,
         r#"<<declare $bool = false as string>>"#,
     ] {
-        let compilation_job = CompilationJob::from_test_source(test);
-        let _result = compile(compilation_job).unwrap_err();
+        let compiler = Compiler::from_test_source(test);
+        let _result = compile(compiler).unwrap_err();
     }
 }
 
 #[test]
 fn test_variable_declaration_annotations() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         r#"
         /// prefix: a number
         <<declare $prefix_int = 42>>
@@ -493,7 +491,7 @@ fn test_variable_declaration_annotations() {
         "#,
     );
 
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = compile(compiler).unwrap_pretty();
 
     let expected_declarations = vec![
         Declaration::new("$prefix_int", Type::Number)
@@ -553,7 +551,7 @@ fn test_type_conversion() {
             .expect_line("bool and bool(number): true"),
     );
     let compilations_job =
-        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+        Compiler::from_test_source(source).with_library(test_base.library().clone());
     let result = compile(compilations_job).unwrap_pretty();
 
     test_base.with_compilation(result).run_standard_testcase();
@@ -566,7 +564,7 @@ fn test_type_conversion_failure_to_number() {
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
     let compilations_job =
-        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+        Compiler::from_test_source(source).with_library(test_base.library().clone());
     let result = compile(compilations_job).unwrap_pretty();
     test_base.with_compilation(result).run_standard_testcase();
 }
@@ -578,7 +576,7 @@ fn test_type_conversion_failure_to_bool() {
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
     let compilations_job =
-        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+        Compiler::from_test_source(source).with_library(test_base.library().clone());
     let result = compile(compilations_job).unwrap_pretty();
     test_base.with_compilation(result).run_standard_testcase();
 }
@@ -624,7 +622,7 @@ fn test_implicit_function_declarations() {
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared
-    let compilations_job = CompilationJob::from_test_source(source);
+    let compilations_job = Compiler::from_test_source(source);
     let result = compile(compilations_job).unwrap_pretty();
 
     test_base.with_compilation(result).run_standard_testcase();
@@ -633,9 +631,9 @@ fn test_implicit_function_declarations() {
 #[test]
 fn test_implicit_variable_declarations() {
     for (value, type_name) in [("1", "Number"), ("\"hello\"", "String"), ("true", "Bool")] {
-        let compilation_job = CompilationJob::from_test_source(&format!("<<set $v = {value}>>"));
+        let compiler = Compiler::from_test_source(&format!("<<set $v = {value}>>"));
 
-        let result = compile(compilation_job).unwrap_pretty();
+        let result = compile(compiler).unwrap_pretty();
 
         assert_eq!(1, result.declarations.len());
         assert!(result
@@ -658,7 +656,7 @@ fn test_nested_implicit_function_declarations() {
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared
-    let compilations_job = CompilationJob::from_test_source(source);
+    let compilations_job = Compiler::from_test_source(source);
     let result = compile(compilations_job).unwrap_pretty();
 
     assert_eq!(2, result.declarations.len());
@@ -674,14 +672,14 @@ fn test_nested_implicit_function_declarations() {
 
 #[test]
 fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         r#"
         {func(1)}
         {func(2, 2)} // wrong number of parameters (previous decl had 1)
         "#,
     );
 
-    let result = compile(compilation_job).unwrap_err();
+    let result = compile(compiler).unwrap_err();
     println!("{}", result);
 
     assert_eq!(
@@ -692,14 +690,14 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
 
 #[test]
 fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         "
         {func(1)}
         {func(true)} // wrong type of parameter (previous decl had number)
         ",
     );
 
-    let result = compile(compilation_job).unwrap_err();
+    let result = compile(compiler).unwrap_err();
     println!("{}", result);
 
     assert!(result
@@ -710,7 +708,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
 
 #[test]
 fn test_if_statement_expressions_must_be_boolean() {
-    let compilation_job = CompilationJob::from_test_source(
+    let compiler = Compiler::from_test_source(
         r#"
         <<declare $str = "hello" as string>>
         <<declare $bool = true>>
@@ -725,7 +723,7 @@ fn test_if_statement_expressions_must_be_boolean() {
         "#,
     );
 
-    let result = compile(compilation_job).unwrap_err();
+    let result = compile(compiler).unwrap_err();
     println!("{}", result);
 
     assert!(result.diagnostics.iter().any(|d| d

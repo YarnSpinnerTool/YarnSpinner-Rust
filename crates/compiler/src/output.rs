@@ -14,7 +14,7 @@ mod string_info;
 
 /// The result of a compilation.
 ///
-/// Instances of this struct are produced as a result of supplying a [`CompilationJob`] to [`compile`].
+/// Instances of this struct are produced as a result of calling [`Compiler::compile`].
 ///
 /// ## Implementation Notes
 ///
@@ -26,7 +26,7 @@ pub struct Compilation {
     /// produced.
     ///
     /// This value will be [`None`] if the
-    /// [`CompilationJob`] object's [`CompilationJob::CompilationType`] value was not
+    /// [`Compiler`] object's [`Compiler::CompilationType`] value was not
     /// [`CompilationType::FullCompilation`]
     pub program: Option<Program>,
 
@@ -42,7 +42,7 @@ pub struct Compilation {
     /// The collection of variable declarations that were found during
     /// compilation.
     ///
-    /// This value will be empty if the [`CompilationJob`] object's
+    /// This value will be empty if the [`Compiler`] object's
     /// [`CompilationType`] value was not [`CompilationType::FullCompilation`].
     pub declarations: Vec<Declaration>,
 
@@ -63,8 +63,8 @@ pub struct Compilation {
     /// The collection of file-level tags found in the source code.
     ///
     /// The keys of this dictionary are the file names (as
-    /// indicated by the [`CompilationJob.File.FileName`] property
-    /// of the [`CompilationJob`]'s [`CompilationJob.Files`] collection), and the values are the
+    /// indicated by the [`File::file_name`] field
+    /// of the [`Compiler`]'s [`Compiler::files`] collection), and the values are the
     /// file tags associated with that file.
     pub file_tags: HashMap<String, Vec<String>>,
 

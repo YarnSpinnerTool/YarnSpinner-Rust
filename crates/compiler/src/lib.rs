@@ -14,7 +14,7 @@ pub use crate::compiler::Result;
 
 pub mod prelude {
     pub(crate) use crate::{
-        compiler::antlr_rust_ext::*, compiler::utils::*, compiler::CompilationIntermediate,
+        compiler::antlr_rust_ext::*, compiler::run_compilation::*, compiler::utils::*,
         file_parse_result::*, parser::*, string_table_manager::*, token_ext::*,
     };
     pub use crate::{

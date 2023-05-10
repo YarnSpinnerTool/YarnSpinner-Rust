@@ -232,7 +232,7 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let result = compile(Compiler {
             files: vec![file],
             library: None,
             compilation_type: CompilationType::FullCompilation,
@@ -321,7 +321,7 @@ mod tests {
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let result = compile(Compiler {
             files: vec![file.clone()],
             library: None,
             compilation_type: CompilationType::FullCompilation,
