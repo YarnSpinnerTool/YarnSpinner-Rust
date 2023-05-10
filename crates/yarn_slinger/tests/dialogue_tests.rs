@@ -188,3 +188,96 @@ fn test_function_argument_type_inference() {
     let bool_value: bool = storage.get("$bool").unwrap().try_into().unwrap();
     assert_eq!(false, bool_value);
 }
+
+#[test]
+fn test_selecting_option_from_inside_option_callback() {
+    let mut test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            .expect_option("option 1")
+            .expect_option("option 2")
+            .then_select(0)
+            .expect_line("final line"),
+    );
+    let string_table = test_base.string_table_shared();
+    let test_plan = test_base.test_plan_shared();
+    test_base.dialogue.set_line_handler(move |line, dialogue| {
+        let line_text = string_table
+            .read()
+            .unwrap()
+            .get(&line.id)
+            .unwrap()
+            .text
+            .clone();
+        let parsed_text = dialogue.parse_markup(&line_text);
+        test_plan.write().unwrap().as_mut().unwrap().next();
+        let test_plan = test_plan.read().unwrap();
+        let test_plan = test_plan.as_ref().unwrap();
+
+        let expected_step = test_plan.next_expected_step;
+        let expected_value = test_plan.next_step_value.clone().unwrap();
+        assert_eq!(ExpectedStepType::Line, expected_step);
+        assert_eq!(StepValue::String(parsed_text), expected_value);
+    });
+
+    let test_plan = test_base.test_plan_shared();
+    let string_table = test_base.string_table_shared();
+    test_base
+        .dialogue
+        .set_options_handler(move |options, dialogue| {
+            test_plan.write().unwrap().as_mut().unwrap().next();
+            // Assert that the list of options we were given is
+            // identical to the list of options we expect
+            let actual_options: Vec<_> = options
+                .into_iter()
+                .map(|o| {
+                    let line =
+                        get_composed_text_for_line_with_no_self(&o.line, &string_table, dialogue);
+                    ProcessedOption {
+                        line,
+                        enabled: o.is_available,
+                    }
+                })
+                .collect();
+            let test_plan = test_plan.read().unwrap();
+            let test_plan = test_plan.as_ref().unwrap();
+            let next_expected_options = test_plan.next_expected_options.clone();
+            assert_eq!(next_expected_options, actual_options);
+
+            let expected_step = test_plan.next_expected_step;
+            assert_eq!(ExpectedStepType::Select, expected_step);
+            dialogue.set_selected_option(OptionId::construct_for_debugging(0));
+        });
+
+    let test_plan = test_base.test_plan_shared();
+    test_base
+        .dialogue
+        .set_command_handler(move |_command, _dialogue| {
+            test_plan.write().unwrap().as_mut().unwrap().next();
+            let expected_step = test_plan
+                .read()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .next_expected_step;
+            assert_eq!(ExpectedStepType::Command, expected_step);
+        });
+
+    let test_plan = test_base.test_plan_shared();
+    test_base
+        .dialogue
+        .set_dialogue_complete_handler(move |_dialogue| {
+            test_plan.write().unwrap().as_mut().unwrap().next();
+            let expected_step = test_plan
+                .read()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .next_expected_step;
+            assert_eq!(ExpectedStepType::Stop, expected_step);
+        });
+
+    let compilation_job = CompilationJob::from_test_source("-> option 1\n->option 2\nfinal line\n");
+    let result = compile(compilation_job).unwrap_pretty();
+
+    test_base.with_compilation(result).run_standard_testcase();
+}

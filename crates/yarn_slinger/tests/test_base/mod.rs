@@ -282,12 +282,20 @@ impl TestBase {
         get_composed_text_for_line_with_no_self(line, &self.string_table, self.dialogue.as_ref())
     }
 
+    pub fn test_plan_shared(&self) -> Arc<RwLock<Option<TestPlan>>> {
+        self.test_plan.clone()
+    }
+
     pub fn test_plan(&self) -> impl Deref<Target = Option<TestPlan>> + '_ {
         self.test_plan.read().unwrap()
     }
 
     pub fn test_plan_mut(&mut self) -> impl DerefMut<Target = Option<TestPlan>> + '_ {
         self.test_plan.write().unwrap()
+    }
+
+    pub fn string_table_shared(&self) -> Arc<RwLock<HashMap<LineId, StringInfo>>> {
+        self.string_table.clone()
     }
 
     pub fn string_table(&self) -> impl Deref<Target = HashMap<LineId, StringInfo>> + '_ {
@@ -319,7 +327,7 @@ impl AsRef<Dialogue> for TestBase {
     }
 }
 
-fn get_composed_text_for_line_with_no_self(
+pub fn get_composed_text_for_line_with_no_self(
     line: &Line,
     string_table: &RwLock<HashMap<LineId, StringInfo>>,
     dialogue: &HandlerSafeDialogue,

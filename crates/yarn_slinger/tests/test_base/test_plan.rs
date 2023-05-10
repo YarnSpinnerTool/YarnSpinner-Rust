@@ -91,7 +91,7 @@ impl TestPlan {
         self
     }
 
-    pub fn then_select(mut self, selection: impl Into<usize>) -> Self {
+    pub fn then_select(mut self, selection: usize) -> Self {
         self.steps.push(Step::from_select(selection));
         self
     }
