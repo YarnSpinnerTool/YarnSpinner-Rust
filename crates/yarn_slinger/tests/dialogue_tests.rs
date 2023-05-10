@@ -139,3 +139,52 @@ fn test_prepare_for_line() {
 
     assert!(*prepare_for_lines_was_called.read().unwrap());
 }
+
+#[test]
+fn test_function_argument_type_inference() {
+    let mut test_base = TestBase::new();
+    // Register some functions
+    test_base
+        .dialogue
+        .library_mut()
+        .register_function("ConcatString", |a: String, b: String| a + &b)
+        .register_function("AddInt", |a: i32, b: i32| a + b)
+        .register_function("AddFloat", |a: f32, b: f32| a + b)
+        .register_function("NegateBool", |a: bool| !a);
+
+    // Run some code to exercise these functions
+    let source = "\
+    <<declare $str = \"\">>
+    <<declare $int = 0>>
+    <<declare $float = 0.0>>
+    <<declare $bool = false>>
+
+    <<set $str = ConcatString(\"a\", \"b\")>>
+    <<set $int = AddInt(1,2)>>
+    <<set $float = AddFloat(1,2)>>
+    <<set $bool = NegateBool(true)>>
+    ";
+
+    let compilation_job =
+        CompilationJob::from_test_source(source).with_library(test_base.dialogue.library().clone());
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let storage = test_base
+        .with_compilation(result)
+        .run_standard_testcase()
+        .dialogue
+        .variable_storage();
+
+    // The values should be of the right type and value
+    let str_value: String = storage.get("$str").unwrap().into();
+    assert_eq!("ab", &str_value);
+
+    let int_value: i32 = storage.get("$int").unwrap().try_into().unwrap();
+    assert_eq!(3, int_value);
+
+    let float_value: f32 = storage.get("$float").unwrap().try_into().unwrap();
+    assert_eq!(3.0, float_value);
+
+    let bool_value: bool = storage.get("$bool").unwrap().try_into().unwrap();
+    assert_eq!(false, bool_value);
+}
