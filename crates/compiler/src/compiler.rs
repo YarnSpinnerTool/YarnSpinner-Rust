@@ -21,7 +21,7 @@ pub struct Compiler {
     pub files: Vec<File>,
 
     /// The [`Library`] that contains declarations for functions.
-    pub library: Option<Library>,
+    pub library: Library,
 
     /// The types of compilation that the compiler will do.
     pub compilation_type: CompilationType,
@@ -55,13 +55,17 @@ impl Compiler {
     }
 
     pub fn replace_library(&mut self, library: Library) -> &mut Self {
-        self.library.replace(library);
+        self.library = library;
         self
     }
 
-    pub fn extend_library(&mut self, mut extend_fn: impl FnMut(&mut Library)) -> &mut Self {
-        let library = self.library.get_or_insert_with(Library::default);
-        extend_fn(library);
+    pub fn extend_library(&mut self, library: Library) -> &mut Self {
+        self.library.extend(library.into_iter());
+        self
+    }
+
+    pub fn mutate_library(&mut self, mut mutate_fn: impl FnMut(&mut Library)) -> &mut Self {
+        mutate_fn(&mut self.library);
         self
     }
 
@@ -75,7 +79,7 @@ impl Compiler {
         self
     }
 
-    pub fn compile(self) -> Result<Compilation> {
+    pub fn compile(&self) -> Result<Compilation> {
         run_compilation::compile(self)
     }
 }

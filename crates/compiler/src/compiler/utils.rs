@@ -209,7 +209,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
     library
         .iter()
         // Operators are type checked by visitors instead
-        .filter(|(name, _function)| !operators.contains(name.as_ref()))
+        .filter(|(name, _function)| !operators.contains(*name))
         .map(|(name, function)| {
             let mut function_type = FunctionType::default();
             let parameters = function

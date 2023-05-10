@@ -7,7 +7,24 @@ use std::ops::{Deref, DerefMut};
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>);
+pub struct YarnFnRegistry(pub InnerRegistry);
+
+type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
+
+impl Extend<<InnerRegistry as IntoIterator>::Item> for YarnFnRegistry {
+    fn extend<T: IntoIterator<Item = <InnerRegistry as IntoIterator>::Item>>(&mut self, iter: T) {
+        self.0.extend(iter);
+    }
+}
+
+impl IntoIterator for YarnFnRegistry {
+    type Item = <InnerRegistry as IntoIterator>::Item;
+    type IntoIter = <InnerRegistry as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl YarnFnRegistry {
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
@@ -25,6 +42,14 @@ impl YarnFnRegistry {
         let wrapped = YarnFnWrapper::from(function);
         self.insert(name, Box::new(wrapped));
         self
+    }
+
+    pub fn iter<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = (&'a str, &'a (dyn UntypedYarnFn + Send + Sync))> {
+        self.0
+            .iter()
+            .map(|(key, value)| (key.as_ref(), value.as_ref()))
     }
 
     pub fn add_boxed(

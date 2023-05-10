@@ -14,11 +14,11 @@ fn test_node_exists() {
     let path = space_demo_scripts_path().join("Sally.yarn");
     let test_base = TestBase::new();
 
-    let compiler = Compiler::new()
+    let result = Compiler::new()
         .read_file(path)
-        .unwrap()
-        .with_library(test_base.library().clone());
-    let result = compile(compiler).unwrap_pretty();
+        .replace_library(test_base.library().clone())
+        .compile()
+        .unwrap();
 
     let mut dialogue = test_base.dialogue;
     dialogue.replace_program(result.program.unwrap());
@@ -40,8 +40,7 @@ fn test_analysis() {
 fn test_missing_node() {
     let path = test_data_path().join("TestCases").join("Smileys.yarn");
 
-    let compiler = Compiler::new().read_file(path).unwrap();
-    let result = compile(compiler).unwrap_pretty();
+    let result = Compiler::new().read_file(path).compile().unwrap();
 
     let mut test_base = TestBase::new()
         .with_program(result.program.unwrap())
@@ -56,8 +55,7 @@ fn test_getting_current_node_name() {
 
     let compiler = Compiler::new()
         .read_file(path)
-        .unwrap()
-        .with_library(test_base.library().clone());
+        .replace_library(test_base.library().clone());
     let result = compile(compiler).unwrap_pretty();
 
     let mut dialogue = test_base.dialogue;

@@ -3,7 +3,6 @@
 use crate::prelude::*;
 use std::borrow::Cow;
 use std::fmt::Display;
-use std::ops::{Deref, DerefMut};
 
 /// A collection of functions that can be called from Yarn scripts.
 ///
@@ -11,19 +10,20 @@ use std::ops::{Deref, DerefMut};
 /// class creates one for you, and you can access it through the
 /// [`Library`] property.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Library(pub YarnFnRegistry);
+pub struct Library(YarnFnRegistry);
 
-impl Deref for Library {
-    type Target = YarnFnRegistry;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl Extend<<YarnFnRegistry as IntoIterator>::Item> for Library {
+    fn extend<T: IntoIterator<Item = <YarnFnRegistry as IntoIterator>::Item>>(&mut self, iter: T) {
+        self.0.extend(iter);
     }
 }
 
-impl DerefMut for Library {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+impl IntoIterator for Library {
+    type Item = <YarnFnRegistry as IntoIterator>::Item;
+    type IntoIter = <YarnFnRegistry as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
@@ -35,6 +35,16 @@ impl Library {
     /// precedence.
     pub fn import(&mut self, other: Self) {
         self.0.extend(other.0 .0);
+    }
+
+    pub fn iter<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = (&'a str, &'a (dyn UntypedYarnFn + Send + Sync))> {
+        self.0.iter()
+    }
+
+    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn + Send + Sync)> {
+        self.0.get(name)
     }
 
     /// Generates a unique tracking variable name.
@@ -88,9 +98,9 @@ impl Library {
 
     /// Registers the methods found inside a type.
     fn register_methods(&mut self, r#type: Type) {
-        for (name, function) in r#type.methods().iter() {
-            let canonical_name = r#type.get_canonical_name_for_method(name);
-            self.add_boxed(canonical_name, function.clone());
+        for (name, function) in r#type.methods().into_iter() {
+            let canonical_name = r#type.get_canonical_name_for_method(name.as_ref());
+            self.0.add_boxed(canonical_name, function.clone());
         }
     }
 }

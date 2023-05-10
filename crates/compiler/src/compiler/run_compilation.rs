@@ -8,7 +8,7 @@ use crate::Result;
 use std::collections::{HashMap, HashSet};
 
 /// Compile Yarn code, as specified by a compilation job.
-pub(crate) fn compile(compiler: Compiler) -> Result<Compilation> {
+pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {
     let compiler_steps: Vec<&CompilationStep> = vec![
         &register_initial_variables,
         &parse_files,
@@ -26,7 +26,7 @@ pub(crate) fn compile(compiler: Compiler) -> Result<Compilation> {
         &add_initial_value_registrations,
     ];
 
-    let initial = CompilationIntermediate::from_job(&compiler);
+    let initial = CompilationIntermediate::from_job(compiler);
     let intermediate = compiler_steps.into_iter().fold(initial, |state, step| {
         if state.early_break {
             state
