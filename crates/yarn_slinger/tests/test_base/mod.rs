@@ -207,7 +207,7 @@ impl TestBase {
                     }
                     DialogueEvent::NodeComplete(_) => {}
                     DialogueEvent::NodeStart(_) => {}
-                    DialogueEvent::PrepareForLines(_) => {}
+                    DialogueEvent::LineHints(_) => {}
                     DialogueEvent::DialogueComplete => {
                         let Some(test_plan) = self.test_plan.as_mut() else {
                         continue;

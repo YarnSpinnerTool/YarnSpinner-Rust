@@ -108,8 +108,10 @@ fn test_getting_tags() {
     assert_eq!(tags, vec!["rawText"]);
 }
 
+/// ## Implementation note
+/// Corresponds to `TestPrepareForLine`
 #[test]
-fn test_prepare_for_line() {
+fn test_line_hints() {
     let path = test_data_path().join("TaggedLines.yarn");
 
     let result = Compiler::new().read_file(path).compile().unwrap();
@@ -117,13 +119,14 @@ fn test_prepare_for_line() {
     let mut dialogue = TestBase::new()
         .with_compilation(result)
         .dialogue
+        .with_should_send_line_hints()
         .with_node_at_start();
 
-    let mut prepare_for_lines_was_called = false;
+    let mut line_hints_were_sent = false;
 
     let events = dialogue.next().unwrap();
     for event in events {
-        if let DialogueEvent::PrepareForLines(lines) = event {
+        if let DialogueEvent::LineHints(lines) = event {
             // When the Dialogue realises it's about to run the Start
             // node, it will tell us that it's about to run these two line IDs
             assert_eq!(lines.len(), 2);
@@ -132,11 +135,11 @@ fn test_prepare_for_line() {
             assert!(lines.contains(&"line:test2".into()));
 
             // Ensure that these asserts were actually called
-            prepare_for_lines_was_called = true;
+            line_hints_were_sent = true;
         }
     }
 
-    assert!(prepare_for_lines_was_called);
+    assert!(line_hints_were_sent);
 }
 
 #[test]
@@ -247,7 +250,7 @@ fn test_selecting_option_from_inside_option_callback() {
                 DialogueEvent::Command(_)
                 | DialogueEvent::NodeComplete(_)
                 | DialogueEvent::NodeStart(_)
-                | DialogueEvent::PrepareForLines(_) => {}
+                | DialogueEvent::LineHints(_) => {}
             }
         }
     }

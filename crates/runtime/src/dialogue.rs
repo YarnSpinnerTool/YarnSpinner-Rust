@@ -97,6 +97,15 @@ impl Dialogue {
         self.set_node_to_start();
         self
     }
+
+    /// Activates [`Dialogue::next`] being able to return [`DialogueEvent::LineHints`] events.
+    /// Note that line hints for [`with_node_at_start`] and [`with_node_at`] will only be sent if this
+    /// method was called beforehand.
+    #[must_use]
+    pub fn with_should_send_line_hints(mut self) -> Self {
+        self.vm.should_send_line_hints = true;
+        self
+    }
 }
 
 // Accessors
@@ -132,10 +141,25 @@ impl Dialogue {
     pub fn library_mut(&mut self) -> &mut Library {
         &mut self.vm.library
     }
+
+    /// Gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
+    /// The default is `false`.
+    #[must_use]
+    pub fn should_send_line_hints(&self) -> bool {
+        self.vm.should_send_line_hints
+    }
+
+    /// Mutable gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
+    /// The default is `false`.
+    #[must_use]
+    pub fn should_send_line_hints_mut(&mut self) -> &mut bool {
+        &mut self.vm.should_send_line_hints
+    }
 }
 
 // VM proxy
 impl Dialogue {
+    /// The name used by [`Dialogue::set_node_to_start`] and [`Dialogue::with_node_at_start`].
     pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
@@ -159,7 +183,7 @@ impl Dialogue {
     ///
     /// After this method is called, you call [`Dialogue::next`] to start executing it.
     ///
-    /// If [`Dialogue::prepare_for_lines_handler`] has been set, it may be called when this method is invoked,
+    /// If [`Dialogue::should_send_line_hints`] has been set, the next [`Dialogue::next`] call will return a [`DialogueEvent::LineHints`],
     /// as the Dialogue determines which lines may be delivered during the `node_name` node's execution.
     ///
     /// ## Panics
@@ -170,6 +194,7 @@ impl Dialogue {
         self
     }
 
+    /// Calls [`Dialogue::set_node`] with the [`Dialogue::DEFAULT_START_NODE_NAME`].
     pub fn set_node_to_start(&mut self) -> &mut Self {
         self.set_node(Self::DEFAULT_START_NODE_NAME);
         self

@@ -25,6 +25,14 @@ pub enum DialogueEvent {
     Command(Command),
     NodeComplete(String),
     NodeStart(String),
-    PrepareForLines(Vec<LineId>),
+    /// Only emitted if `Dialogue::should_send_line_hints` is enabled.
+    ///
+    /// A hint that the contained line IDs might be encountered while progressing the dialogue.
+    /// These are not guaranteed to run, but give a caller the chance to pre-load resources for them if they want.
+    ///
+    /// ## Implementation note
+    ///
+    /// Corresponds to Yarn Spinner's `PrepareForLinesHandler`
+    LineHints(Vec<LineId>),
     DialogueComplete,
 }

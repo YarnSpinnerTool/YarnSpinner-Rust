@@ -18,6 +18,7 @@ pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
     pub(crate) program: Option<Program>,
     pub(crate) variable_storage: Box<dyn VariableStorage + Send + Sync>,
+    pub(crate) should_send_line_hints: bool,
     current_node_name: Option<String>,
     state: State,
     execution_state: ExecutionState,
@@ -47,6 +48,7 @@ impl VirtualMachine {
             execution_state: Default::default(),
             current_node: Default::default(),
             events: Default::default(),
+            should_send_line_hints: Default::default(),
         }
     }
 
@@ -84,8 +86,9 @@ impl VirtualMachine {
         self.events
             .push(DialogueEvent::NodeStart(node_name.to_owned()));
 
-        // If we have a prepare-for-lines handler, figure out what
-        // lines we anticipate running
+        if !self.should_send_line_hints {
+            return;
+        }
 
         // Create a list; we will never have more lines and options
         // than total instructions, so that's a decent capacity for
@@ -114,7 +117,7 @@ impl VirtualMachine {
                     })
             })
             .collect();
-        self.events.push(DialogueEvent::PrepareForLines(string_ids));
+        self.events.push(DialogueEvent::LineHints(string_ids));
     }
 
     fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
