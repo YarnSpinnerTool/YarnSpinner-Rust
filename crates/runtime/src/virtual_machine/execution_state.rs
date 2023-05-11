@@ -11,11 +11,11 @@ pub(crate) enum ExecutionState {
 
     /// The VirtualMachine is waiting on option selection. Call
     /// [`VirtualMachine::set_selected_option`] before calling
-    /// [`VirtualMachine::continue_`].
+    /// [`VirtualMachine::next`].
     WaitingOnOptionSelection,
 
     /// The VirtualMachine has finished delivering content to the
-    /// client game, and is waiting for [`VirtualMachine::continue_`]
+    /// client game, and is waiting for [`VirtualMachine::next`]
     /// to be called.
     WaitingForContinue,
 

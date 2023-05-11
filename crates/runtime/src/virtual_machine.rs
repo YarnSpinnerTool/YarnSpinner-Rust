@@ -26,6 +26,14 @@ pub(crate) struct VirtualMachine {
     events: Vec<DialogueEvent>,
 }
 
+impl Iterator for VirtualMachine {
+    type Item = Vec<DialogueEvent>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.r#continue()
+    }
+}
+
 impl VirtualMachine {
     pub(crate) fn new(
         library: Library,
@@ -121,8 +129,11 @@ impl VirtualMachine {
     }
 
     /// Resumes execution.
+    ///
+    /// ## Implementation note
+    /// Exposed via the more idiomatic [`Iterator::next`] implementation.
     #[must_use]
-    pub(crate) fn continue_(&mut self) -> Option<Vec<DialogueEvent>> {
+    fn r#continue(&mut self) -> Option<Vec<DialogueEvent>> {
         if let Some(events) = self.advance_events() {
             return Some(events);
         }
@@ -165,7 +176,7 @@ impl VirtualMachine {
         (!self.events.is_empty()).then(|| std::mem::take(&mut self.events))
     }
 
-    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't.
+    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.
     fn assert_can_continue(&self) {
         assert!(
             self.current_node.is_some(),

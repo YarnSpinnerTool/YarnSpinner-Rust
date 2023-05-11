@@ -120,7 +120,7 @@ impl TestBase {
     pub fn run_standard_testcase(&mut self) -> &mut Self {
         self.dialogue.set_node_to_start();
 
-        while let Some(events) = self.dialogue.continue_() {
+        while let Some(events) = self.dialogue.next() {
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {

@@ -121,7 +121,7 @@ fn test_prepare_for_line() {
 
     let mut prepare_for_lines_was_called = false;
 
-    let events = dialogue.continue_().unwrap();
+    let events = dialogue.next().unwrap();
     for event in events {
         if let DialogueEvent::PrepareForLines(lines) = event {
             // When the Dialogue realises it's about to run the Start
@@ -206,7 +206,7 @@ fn test_selecting_option_from_inside_option_callback() {
         .with_compilation(result);
     test_base.dialogue.set_node_to_start();
 
-    while let Some(events) = test_base.dialogue.continue_() {
+    while let Some(events) = test_base.dialogue.next() {
         for event in events {
             match event {
                 DialogueEvent::Line(line) => {

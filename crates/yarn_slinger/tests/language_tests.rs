@@ -79,7 +79,7 @@ fn test_end_of_notes_with_options_not_added() {
         .with_compilation(result)
         .dialogue
         .with_node_at_start();
-    while let Some(events) = dialogue.continue_() {
+    while let Some(events) = dialogue.next() {
         assert!(
             !events
                 .into_iter()

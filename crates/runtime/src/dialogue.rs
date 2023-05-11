@@ -51,6 +51,37 @@ impl Default for Dialogue {
     }
 }
 
+impl Iterator for Dialogue {
+    type Item = Vec<DialogueEvent>;
+    /// Starts, or continues, execution of the current program.
+    ///
+    /// This method repeatedly executes instructions until one of the following conditions is encountered:
+    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::next`] is called.
+    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
+    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::next`] is called.
+    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::next`] is called again.
+    /// - An error occurs while executing the program
+    ///
+    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
+    ///
+    /// ## See Also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    ///
+    /// ## Implementation Notes
+    ///
+    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::next`]. Because of the borrow checker,
+    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
+    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    #[must_use = "All dialogue events that are returned by the dialogue must be handled or explicitly ignored"]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.vm.next()
+    }
+}
+
 // Builder API
 impl Dialogue {
     pub fn new() -> Self {
@@ -108,7 +139,7 @@ impl Dialogue {
     }
 
     /// The object that provides access to storing and retrieving the values of variables.
-    /// Be aware that accessing this object will block [`Dialogue::continue_`] and vice versa, so try to not cause a deadlock.
+    /// Be aware that accessing this object will block [`Dialogue::next`] and vice versa, so try to not cause a deadlock.
     pub fn variable_storage(&self) -> SharedMemoryVariableStore {
         SharedMemoryVariableStore(self.vm.variable_storage.clone())
     }
@@ -137,7 +168,7 @@ impl Dialogue {
 
     /// Prepares the [`Dialogue`] that the user intends to start running a node.
     ///
-    /// After this method is called, you call [`Dialogue::continue_`] to start executing it.
+    /// After this method is called, you call [`Dialogue::next`] to start executing it.
     ///
     /// If [`Dialogue::prepare_for_lines_handler`] has been set, it may be called when this method is invoked,
     /// as the Dialogue determines which lines may be delivered during the `node_name` node's execution.
@@ -158,35 +189,6 @@ impl Dialogue {
     pub fn set_node_to_start(&mut self) -> &mut Self {
         self.set_node(Self::DEFAULT_START_NODE_NAME);
         self
-    }
-
-    /// Starts, or continues, execution of the current program.
-    ///
-    /// This method repeatedly executes instructions until one of the following conditions is encountered:
-    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::continue_`] is called.
-    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
-    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::continue_`] is called.
-    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
-    /// - An error occurs while executing the program
-    ///
-    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
-    ///
-    /// ## See Also
-    /// - [`LineHandler`]
-    /// - [`OptionsHandler`]
-    /// - [`CommandHandler`]
-    /// - [`NodeCompleteHandler`]
-    /// - [`DialogueCompleteHandler`]
-    ///
-    /// ## Implementation Notes
-    ///
-    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::continue_`]. Because of the borrow checker,
-    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
-    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
-    #[must_use]
-    pub fn continue_(&mut self) -> Option<Vec<DialogueEvent>> {
-        // Cannot 'continue' an already running VM.
-        self.vm.continue_()
     }
 
     /// Immediately stops the [`Dialogue`]
@@ -270,7 +272,7 @@ impl Dialogue {
 
     /// Gets the name of the node that this Dialogue is currently executing.
     ///
-    /// If [`Dialogue::continue_`] has never been called, this value
+    /// If [`Dialogue::next`] has never been called, this value
     /// will be [`None`].
     pub fn current_node(&self) -> Option<String> {
         self.vm.current_node()
@@ -308,7 +310,7 @@ impl Dialogue {
 
     /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
     ///
-    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::continue_`] is called.
+    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::next`] is called.
     ///
     /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
     /// field in the [`DialogueOption`] that represents the user's selection.
@@ -318,7 +320,7 @@ impl Dialogue {
     /// - If the option ID is not found in the current [`OptionSet`].
     ///
     /// ## See Also
-    /// - [`Dialogue::continue_`]
+    /// - [`Dialogue::next`]
     /// - [`OptionsHandler`]
     /// - [`OptionSet`]
     pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
