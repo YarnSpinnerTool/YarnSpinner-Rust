@@ -23,7 +23,7 @@ pub(crate) struct VirtualMachine {
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,
-    events: Vec<DialogueEvent>,
+    batched_events: Vec<DialogueEvent>,
 }
 
 impl Iterator for VirtualMachine {
@@ -47,7 +47,7 @@ impl VirtualMachine {
             state: Default::default(),
             execution_state: Default::default(),
             current_node: Default::default(),
-            events: Default::default(),
+            batched_events: Default::default(),
             should_send_line_hints: Default::default(),
         }
     }
@@ -83,7 +83,7 @@ impl VirtualMachine {
 
         self.current_node_name = Some(node_name.to_owned());
 
-        self.events
+        self.batched_events
             .push(DialogueEvent::NodeStart(node_name.to_owned()));
 
         if self.should_send_line_hints {
@@ -119,7 +119,8 @@ impl VirtualMachine {
                     })
             })
             .collect();
-        self.events.push(DialogueEvent::LineHints(string_ids));
+        self.batched_events
+            .push(DialogueEvent::LineHints(string_ids));
     }
 
     fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
@@ -140,7 +141,7 @@ impl VirtualMachine {
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
     #[must_use]
     fn r#continue(&mut self) -> Option<Vec<DialogueEvent>> {
-        if let Some(events) = self.advance_events() {
+        if let Some(events) = self.pop_batched_events() {
             return Some(events);
         }
         self.assert_can_continue();
@@ -161,17 +162,20 @@ impl VirtualMachine {
                 continue;
             }
 
-            self.events
+            self.batched_events
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
-            self.events.push(DialogueEvent::DialogueComplete);
+            self.batched_events.push(DialogueEvent::DialogueComplete);
             info!("Run complete.");
         }
-        self.advance_events()
+        self.pop_batched_events()
     }
 
     #[must_use]
-    fn advance_events(&mut self) -> Option<Vec<DialogueEvent>> {
-        if self.events.contains(&DialogueEvent::DialogueComplete) {
+    fn pop_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
+        if self
+            .batched_events
+            .contains(&DialogueEvent::DialogueComplete)
+        {
             // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
             // So, since we work through all events after they would have already been handled in the original, we only set the execution state here.
 
@@ -179,7 +183,7 @@ impl VirtualMachine {
             // which we don't want to do here since we need the current node name later
             self.execution_state = ExecutionState::Stopped;
         }
-        (!self.events.is_empty()).then(|| std::mem::take(&mut self.events))
+        (!self.batched_events.is_empty()).then(|| std::mem::take(&mut self.batched_events))
     }
 
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.
@@ -270,7 +274,7 @@ impl VirtualMachine {
                     substitutions: strings,
                 };
 
-                self.events.push(DialogueEvent::Line(line));
+                self.batched_events.push(DialogueEvent::Line(line));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -293,7 +297,7 @@ impl VirtualMachine {
                     });
                 let command = Command(command_text);
 
-                self.events.push(DialogueEvent::Command(command));
+                self.batched_events.push(DialogueEvent::Command(command));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
@@ -344,7 +348,7 @@ impl VirtualMachine {
             OpCode::ShowOptions => {
                 // If we have no options to show, immediately stop.
                 if self.state.current_options.is_empty() {
-                    self.events.push(DialogueEvent::DialogueComplete);
+                    self.batched_events.push(DialogueEvent::DialogueComplete);
                     self.state.program_counter += 1;
                     return;
                 }
@@ -356,7 +360,8 @@ impl VirtualMachine {
                 // delegate for them to call when the user has made
                 // a selection
                 let current_options = self.state.current_options.clone();
-                self.events.push(DialogueEvent::Options(current_options));
+                self.batched_events
+                    .push(DialogueEvent::Options(current_options));
 
                 // Implementation note:
                 // Not checking the execution state now since we have no line handler to call `continue_` from.
@@ -482,9 +487,9 @@ impl VirtualMachine {
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
                 let current_node_name = self.current_node_name.clone().unwrap();
-                self.events
+                self.batched_events
                     .push(DialogueEvent::NodeComplete(current_node_name));
-                self.events.push(DialogueEvent::DialogueComplete);
+                self.batched_events.push(DialogueEvent::DialogueComplete);
                 self.state.program_counter += 1;
             }
             OpCode::RunNode => {
@@ -493,7 +498,7 @@ impl VirtualMachine {
                 // Pop a string from the stack, and jump to a node
                 // with that name.
                 let node_name: String = self.state.pop();
-                self.events
+                self.batched_events
                     .push(DialogueEvent::NodeComplete(node_name.clone()));
                 self.set_node(&node_name);
 
