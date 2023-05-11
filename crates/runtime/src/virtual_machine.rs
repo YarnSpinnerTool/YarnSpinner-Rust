@@ -86,10 +86,12 @@ impl VirtualMachine {
         self.events
             .push(DialogueEvent::NodeStart(node_name.to_owned()));
 
-        if !self.should_send_line_hints {
-            return;
+        if self.should_send_line_hints {
+            self.send_line_hints();
         }
+    }
 
+    fn send_line_hints(&mut self) {
         // Create a list; we will never have more lines and options
         // than total instructions, so that's a decent capacity for
         // the list
