@@ -8,4 +8,4 @@ license = "MIT OR Apache-2.0"
 yarn_slinger_core = { path = "../core" }
 yarn_slinger_compiler = { path = "../compiler" }
 yarn_slinger_runtime = { path = "../runtime" }
-log = "0.4"
+log = { version = "0.4", features = ["std"] }

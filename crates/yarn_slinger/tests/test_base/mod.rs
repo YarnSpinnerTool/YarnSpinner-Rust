@@ -15,10 +15,9 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
-use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use yarn_slinger::prelude::*;
 use yarn_slinger_core::prelude::YarnValue;
 
@@ -28,7 +27,7 @@ mod paths;
 mod step;
 mod test_plan;
 use logger::*;
-use yarn_slinger::log::{LevelFilter, SetLoggerError};
+use yarn_slinger::log::{self, LevelFilter, SetLoggerError};
 
 pub mod prelude {
     pub use crate::test_base::{extensions::*, paths::*, step::*, test_plan::*, *};
@@ -36,7 +35,7 @@ pub mod prelude {
 
 pub fn init_logger(runtime_errors_cause_failure: Arc<AtomicBool>) -> Result<(), SetLoggerError> {
     let logger = TestLogger::new(runtime_errors_cause_failure);
-    log::set_logger(&logger).map(|()| log::set_max_level(LevelFilter::Info))
+    log::set_boxed_logger(Box::new(logger)).map(|()| log::set_max_level(LevelFilter::Info))
 }
 
 #[derive(Debug)]
@@ -50,7 +49,9 @@ pub struct TestBase {
 impl Default for TestBase {
     fn default() -> Self {
         let runtime_errors_cause_failure = Arc::new(AtomicBool::new(true));
-        init_logger(runtime_errors_cause_failure.clone()).unwrap();
+        if let Err(_e) = init_logger(runtime_errors_cause_failure.clone()) {
+            // We've set the logger twice, that's alright for the tests.
+        }
 
         let dialogue = Dialogue::default().with_language_code("en").extend_library(
             Library::new().with_function("assert", |value: YarnValue| {
@@ -99,8 +100,8 @@ impl TestBase {
             .with_string_table(string_table)
     }
 
-    pub fn extend_library(self, library: Library) -> Self {
-        self.dialogue.extend_library(library);
+    pub fn extend_library(mut self, library: Library) -> Self {
+        self.dialogue.library_mut().extend(library.into_iter());
         self
     }
 

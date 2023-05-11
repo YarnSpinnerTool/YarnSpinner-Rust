@@ -47,7 +47,6 @@ impl VirtualMachine {
     pub(crate) fn reset_state(&mut self) {
         self.state = State::default();
         self.current_node_name = None;
-        self.events.clear();
     }
 
     pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {
@@ -65,7 +64,7 @@ impl VirtualMachine {
     }
 
     pub(crate) fn set_node(&mut self, node_name: &str) {
-        debug!("Running node \"{node_name}\"");
+        info!("Running node \"{node_name}\"");
 
         let program = self.program.as_ref().unwrap_or_else(|| {
             panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
@@ -132,8 +131,7 @@ impl VirtualMachine {
 
         self.set_execution_state(ExecutionState::Running);
 
-        // Execute instructions until something forces us to stop
-        while self.execution_state == ExecutionState::Running {
+        while self.execution_state == ExecutionState::Running && self.events.is_empty() {
             let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
             self.run_instruction(current_instruction);
@@ -148,7 +146,7 @@ impl VirtualMachine {
             self.events
                 .enqueue(DialogueEvent::NodeComplete(current_node.name.clone()));
             self.events.enqueue(DialogueEvent::DialogueComplete);
-            debug!("Run complete.");
+            info!("Run complete.");
         }
         self.advance_events()
     }
