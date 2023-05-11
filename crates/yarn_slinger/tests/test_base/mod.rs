@@ -226,7 +226,7 @@ impl TestBase {
         self
     }
 
-    /// Returns the list of .node and.yarn files in the Tests/<directory> directory.
+    /// Returns the list of .node and.yarn files in the third-party/YarnSpinner/Tests/<subdir> directory.
     pub fn file_sources(subdir: impl AsRef<Path>) -> impl Iterator<Item = PathBuf> {
         let subdir: PathBuf = PathBuf::from(subdir.as_ref());
         let path = test_data_path().join(&subdir);

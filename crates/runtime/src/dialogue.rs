@@ -263,11 +263,10 @@ impl Dialogue {
         }
     }
 
-    /// Replaces all substitution markers in a text with the given
-    /// substitution list.
+    /// Replaces all substitution markers in a text with the given substitution list.
     ///
-    /// This method replaces substitution markers - for example, `{0}`
-    /// - with the corresponding entry in `substitutions`.
+    /// This method replaces substitution markers
+    /// -  for example, `{0}` - with the corresponding entry in `substitutions`.
     /// If `test` contains a substitution marker whose
     /// index is not present in `substitutions`, it is
     /// ignored.
@@ -286,8 +285,7 @@ impl Dialogue {
 
     /// Gets the name of the node that this Dialogue is currently executing.
     ///
-    /// If [`Dialogue::next`] has never been called, this value
-    /// will be [`None`].
+    /// If [`Dialogue::next`] has never been called, this value will be [`None`].
     #[must_use]
     pub fn current_node(&self) -> Option<String> {
         self.vm.current_node()
