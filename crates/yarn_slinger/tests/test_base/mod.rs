@@ -120,70 +120,71 @@ impl TestBase {
     pub fn run_standard_testcase(&mut self) -> &mut Self {
         self.dialogue.set_node_to_start();
 
-        while let Some(event) = self.dialogue.continue_() {
-            match event {
-                DialogueEvent::Line(line) => {
-                    let text = self.get_composed_text_for_line(&line);
-                    println!("Line: {text}");
-                    let Some(test_plan) =  self.test_plan.as_mut() else {
+        while let Some(events) = self.dialogue.continue_() {
+            for event in events {
+                match event {
+                    DialogueEvent::Line(line) => {
+                        let text = self.get_composed_text_for_line(&line);
+                        println!("Line: {text}");
+                        let Some(test_plan) =  self.test_plan.as_mut() else {
                         continue;
                     };
-                    test_plan.next();
+                        test_plan.next();
 
-                    assert_eq!(
-                        ExpectedStepType::Line,
-                        test_plan.next_expected_step,
-                        "Received line {text}, but was expecting a {:?}",
-                        test_plan.next_expected_step
-                    );
-                    assert_eq!(test_plan.next_step_value, Some(StepValue::String(text)));
-                }
-                DialogueEvent::Options(options) => {
-                    println!("Options:");
-
-                    let options: Vec<_> = options
-                        .into_iter()
-                        .map(|option| ProcessedOption {
-                            line: self.get_composed_text_for_line(&option.line),
-                            enabled: option.is_available,
-                        })
-                        .collect();
-                    for option in &options {
-                        println!(" - {} (available: {})", option.line, option.enabled);
+                        assert_eq!(
+                            ExpectedStepType::Line,
+                            test_plan.next_expected_step,
+                            "Received line {text}, but was expecting a {:?}",
+                            test_plan.next_expected_step
+                        );
+                        assert_eq!(test_plan.next_step_value, Some(StepValue::String(text)));
                     }
-                    let Some(test_plan) = self.test_plan.as_mut() else {
+                    DialogueEvent::Options(options) => {
+                        println!("Options:");
+
+                        let options: Vec<_> = options
+                            .into_iter()
+                            .map(|option| ProcessedOption {
+                                line: self.get_composed_text_for_line(&option.line),
+                                enabled: option.is_available,
+                            })
+                            .collect();
+                        for option in &options {
+                            println!(" - {} (available: {})", option.line, option.enabled);
+                        }
+                        let Some(test_plan) = self.test_plan.as_mut() else {
                         continue;
                     };
 
-                    test_plan.next();
-                    assert_eq!(
-                        ExpectedStepType::Select,
-                        test_plan.next_expected_step,
-                        "Received {} options, but wasn't expecting them (was expecting {:?})",
-                        options.len(),
-                        test_plan.next_expected_step
-                    );
+                        test_plan.next();
+                        assert_eq!(
+                            ExpectedStepType::Select,
+                            test_plan.next_expected_step,
+                            "Received {} options, but wasn't expecting them (was expecting {:?})",
+                            options.len(),
+                            test_plan.next_expected_step
+                        );
 
-                    assert_eq!(test_plan.next_expected_options, options);
+                        assert_eq!(test_plan.next_expected_options, options);
 
-                    if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
-                        let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
-                        println!("[Selecting option {}]", selection);
-                        self.dialogue
-                            .set_selected_option(OptionId::construct_for_debugging(selection));
-                    } else {
-                        println!("[Selecting option 0 implicitly]");
-                        self.dialogue
-                            .set_selected_option(OptionId::construct_for_debugging(0));
+                        if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
+                            let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
+                            println!("[Selecting option {}]", selection);
+                            self.dialogue
+                                .set_selected_option(OptionId::construct_for_debugging(selection));
+                        } else {
+                            println!("[Selecting option 0 implicitly]");
+                            self.dialogue
+                                .set_selected_option(OptionId::construct_for_debugging(0));
+                        }
                     }
-                }
-                DialogueEvent::Command(command) => {
-                    println!("Command: {}", command.0);
-                    let Some(test_plan) = self.test_plan.as_mut() else {
+                    DialogueEvent::Command(command) => {
+                        println!("Command: {}", command.0);
+                        let Some(test_plan) = self.test_plan.as_mut() else {
                         continue;
                     };
-                    test_plan.next();
-                    assert_eq!(
+                        test_plan.next();
+                        assert_eq!(
                         ExpectedStepType::Command,
                         test_plan.next_expected_step,
                         "Received command {}, but wasn't expecting to select one (was expecting {:?})",
@@ -191,30 +192,31 @@ impl TestBase {
                         test_plan.next_expected_step
                     );
 
-                    // We don't need to get the composed string for a
-                    // command because it's been done for us in the
-                    // virtual machine. The VM can do this because
-                    // commands are not localised, so we don't need to
-                    // refer to the string table to get the text.
-                    assert_eq!(
-                        test_plan.next_step_value,
-                        Some(StepValue::String(command.0))
-                    );
-                }
-                DialogueEvent::NodeComplete(_) => {}
-                DialogueEvent::NodeStart(_) => {}
-                DialogueEvent::PrepareForLines(_) => {}
-                DialogueEvent::DialogueComplete => {
-                    let Some(test_plan) = self.test_plan.as_mut() else {
+                        // We don't need to get the composed string for a
+                        // command because it's been done for us in the
+                        // virtual machine. The VM can do this because
+                        // commands are not localised, so we don't need to
+                        // refer to the string table to get the text.
+                        assert_eq!(
+                            test_plan.next_step_value,
+                            Some(StepValue::String(command.0))
+                        );
+                    }
+                    DialogueEvent::NodeComplete(_) => {}
+                    DialogueEvent::NodeStart(_) => {}
+                    DialogueEvent::PrepareForLines(_) => {}
+                    DialogueEvent::DialogueComplete => {
+                        let Some(test_plan) = self.test_plan.as_mut() else {
                         continue;
                     };
-                    test_plan.next();
-                    assert_eq!(
+                        test_plan.next();
+                        assert_eq!(
                         ExpectedStepType::Stop,
                         test_plan.next_expected_step,
                         "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
                         test_plan.next_expected_step
                     );
+                    }
                 }
             }
         }

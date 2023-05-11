@@ -121,20 +121,20 @@ fn test_prepare_for_line() {
 
     let mut prepare_for_lines_was_called = false;
 
-    let event = dialogue.continue_().unwrap();
-    if let DialogueEvent::PrepareForLines(lines) = event {
-        // When the Dialogue realises it's about to run the Start
-        // node, it will tell us that it's about to run these two
-        // line IDs
-        assert_eq!(lines.len(), 2);
-        println!("{:?}", lines);
-        assert!(lines.contains(&"line:test1".into()));
-        assert!(lines.contains(&"line:test2".into()));
+    let events = dialogue.continue_().unwrap();
+    for event in events {
+        if let DialogueEvent::PrepareForLines(lines) = event {
+            // When the Dialogue realises it's about to run the Start
+            // node, it will tell us that it's about to run these two
+            // line IDs
+            assert_eq!(lines.len(), 2);
+            println!("{:?}", lines);
+            assert!(lines.contains(&"line:test1".into()));
+            assert!(lines.contains(&"line:test2".into()));
 
-        // Ensure that these asserts were actually called
-        prepare_for_lines_was_called = true;
-    } else {
-        panic!("Expected PrepareForLines event")
+            // Ensure that these asserts were actually called
+            prepare_for_lines_was_called = true;
+        }
     }
 
     assert!(prepare_for_lines_was_called);
@@ -206,49 +206,51 @@ fn test_selecting_option_from_inside_option_callback() {
         .with_compilation(result);
     test_base.dialogue.set_node_to_start();
 
-    while let Some(event) = test_base.dialogue.continue_() {
-        match event {
-            DialogueEvent::Line(line) => {
-                let line_text = test_base.string_table.get(&line.id).unwrap().text.clone();
-                let parsed_text = test_base.dialogue.parse_markup(&line_text);
-                let test_plan = test_base.test_plan.as_mut().unwrap();
-                test_plan.next();
+    while let Some(events) = test_base.dialogue.continue_() {
+        for event in events {
+            match event {
+                DialogueEvent::Line(line) => {
+                    let line_text = test_base.string_table.get(&line.id).unwrap().text.clone();
+                    let parsed_text = test_base.dialogue.parse_markup(&line_text);
+                    let test_plan = test_base.test_plan.as_mut().unwrap();
+                    test_plan.next();
 
-                let expected_step = test_plan.next_expected_step;
-                let expected_value = test_plan.next_step_value.clone().unwrap();
-                assert_eq!(ExpectedStepType::Line, expected_step);
-                assert_eq!(StepValue::String(parsed_text), expected_value);
-            }
-            DialogueEvent::Options(options) => {
-                test_base.test_plan.as_mut().unwrap().next();
-                // Assert that the list of options we were given is
-                // identical to the list of options we expect
-                let actual_options: Vec<_> = options
-                    .into_iter()
-                    .map(|o| ProcessedOption {
-                        line: test_base.get_composed_text_for_line(&o.line),
-                        enabled: o.is_available,
-                    })
-                    .collect();
-                let test_plan = test_base.test_plan.as_ref().unwrap();
-                let next_expected_options = test_plan.next_expected_options.clone();
-                assert_eq!(next_expected_options, actual_options);
+                    let expected_step = test_plan.next_expected_step;
+                    let expected_value = test_plan.next_step_value.clone().unwrap();
+                    assert_eq!(ExpectedStepType::Line, expected_step);
+                    assert_eq!(StepValue::String(parsed_text), expected_value);
+                }
+                DialogueEvent::Options(options) => {
+                    test_base.test_plan.as_mut().unwrap().next();
+                    // Assert that the list of options we were given is
+                    // identical to the list of options we expect
+                    let actual_options: Vec<_> = options
+                        .into_iter()
+                        .map(|o| ProcessedOption {
+                            line: test_base.get_composed_text_for_line(&o.line),
+                            enabled: o.is_available,
+                        })
+                        .collect();
+                    let test_plan = test_base.test_plan.as_ref().unwrap();
+                    let next_expected_options = test_plan.next_expected_options.clone();
+                    assert_eq!(next_expected_options, actual_options);
 
-                let expected_step = test_plan.next_expected_step;
-                assert_eq!(ExpectedStepType::Select, expected_step);
-                test_base
-                    .dialogue
-                    .set_selected_option(OptionId::construct_for_debugging(0));
-            }
-            DialogueEvent::Command(_) => {}
-            DialogueEvent::NodeComplete(_) => {}
-            DialogueEvent::NodeStart(_) => {}
-            DialogueEvent::PrepareForLines(_) => {}
-            DialogueEvent::DialogueComplete => {
-                let test_plan = test_base.test_plan.as_mut().unwrap();
-                test_plan.next();
-                let expected_step = test_plan.next_expected_step;
-                assert_eq!(ExpectedStepType::Stop, expected_step);
+                    let expected_step = test_plan.next_expected_step;
+                    assert_eq!(ExpectedStepType::Select, expected_step);
+                    test_base
+                        .dialogue
+                        .set_selected_option(OptionId::construct_for_debugging(0));
+                }
+                DialogueEvent::Command(_) => {}
+                DialogueEvent::NodeComplete(_) => {}
+                DialogueEvent::NodeStart(_) => {}
+                DialogueEvent::PrepareForLines(_) => {}
+                DialogueEvent::DialogueComplete => {
+                    let test_plan = test_base.test_plan.as_mut().unwrap();
+                    test_plan.next();
+                    let expected_step = test_plan.next_expected_step;
+                    assert_eq!(ExpectedStepType::Stop, expected_step);
+                }
             }
         }
     }

@@ -182,7 +182,7 @@ impl Dialogue {
     /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::continue_`]. Because of the borrow checker,
     /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
     /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
-    pub fn continue_(&mut self) -> Option<DialogueEvent> {
+    pub fn continue_(&mut self) -> Option<Vec<DialogueEvent>> {
         // Cannot 'continue' an already running VM.
         self.vm.continue_()
     }

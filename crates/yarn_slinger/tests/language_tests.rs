@@ -79,9 +79,11 @@ fn test_end_of_notes_with_options_not_added() {
         .with_compilation(result)
         .dialogue
         .with_node_at_start();
-    while let Some(event) = dialogue.continue_() {
+    while let Some(events) = dialogue.continue_() {
         assert!(
-            !matches!(event, DialogueEvent::Options(_)),
+            !events
+                .into_iter()
+                .any(|event| matches!(event, DialogueEvent::Options(_))),
             "Options should not be shown to the user in this test."
         );
     }
