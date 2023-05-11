@@ -130,7 +130,7 @@ mod tests {
 
         functions.register_function("test", |a: f32| a);
         let function = functions.get("test").unwrap();
-        let result: f32 = function.call(vec![1.0.into()]).try_into().unwrap();
+        let result: f32 = function.call(to_function_params([1.0])).try_into().unwrap();
 
         assert_eq!(result, 1.0);
     }
@@ -153,7 +153,10 @@ mod tests {
         let function2 = functions.get("test2").unwrap();
 
         let result1: bool = function1.call(vec![]).try_into().unwrap();
-        let result2: f32 = function2.call(vec![1.0.into()]).try_into().unwrap();
+        let result2: f32 = function2
+            .call(to_function_params([1.0]))
+            .try_into()
+            .unwrap();
 
         assert!(result1);
         assert_eq!(result2, 1.0);
@@ -178,21 +181,21 @@ mod tests {
 
         let result1: bool = function1.call(vec![]).try_into().unwrap();
         let result2: f32 = function2
-            .call(vec![1.0.into(), 2.0.into()])
+            .call(to_function_params([1.0, 2.0]))
             .try_into()
             .unwrap();
         let result3: f32 = function3
-            .call(vec![1.0.into(), 2.0.into(), 3.0.into()])
+            .call(to_function_params([1.0, 2.0, 3.0]))
             .try_into()
             .unwrap();
-        let result4: String = funct ion4
-            .call(vec![
-                "a".into(),
+        let result4: String = function4
+            .call(to_function_params([
+                YarnValue::from("a"),
                 "b".into(),
                 "c".into(),
                 true.into(),
                 1.0.into(),
-            ])
+            ]))
             .try_into()
             .unwrap();
 
@@ -200,6 +203,12 @@ mod tests {
         assert_eq!(result2, 3.0);
         assert_eq!(result3, 7.0);
         assert_eq!(result4, "abctrue1".to_string());
+    }
+
+    fn to_function_params(
+        params: impl IntoIterator<Item = impl Into<YarnValue>>,
+    ) -> Vec<Option<YarnValue>> {
+        params.into_iter().map(Into::into).map(Some).collect()
     }
 
     #[test]

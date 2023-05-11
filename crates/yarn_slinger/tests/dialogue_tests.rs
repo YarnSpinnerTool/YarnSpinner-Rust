@@ -171,8 +171,8 @@ fn test_function_argument_type_inference() {
     let storage = test_base
         .with_compilation(result)
         .run_standard_testcase()
-        .dialogue
-        .variable_storage();
+        .variable_store
+        .clone_shallow();
 
     // The values should be of the right type and value
     let str_value: String = storage.get("$str").unwrap().into();

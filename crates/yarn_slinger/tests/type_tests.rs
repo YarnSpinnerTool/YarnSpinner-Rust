@@ -416,7 +416,7 @@ fn test_initial_values() {
         .compile()
         .unwrap();
 
-    let mut variable_storage = test_base.dialogue.variable_storage();
+    let mut variable_storage = test_base.variable_store.clone_shallow();
     variable_storage.set("$external_str".to_string(), "Hello".into());
     variable_storage.set("$external_int".to_string(), 42.into());
     variable_storage.set("$external_bool".to_string(), true.into());

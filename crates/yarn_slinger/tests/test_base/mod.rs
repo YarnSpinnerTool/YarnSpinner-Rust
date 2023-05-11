@@ -43,6 +43,7 @@ pub struct TestBase {
     pub dialogue: Dialogue,
     pub test_plan: Option<TestPlan>,
     pub string_table: HashMap<LineId, StringInfo>,
+    pub variable_store: MemoryVariableStore,
     runtime_errors_cause_failure: Arc<AtomicBool>,
 }
 
@@ -52,8 +53,9 @@ impl Default for TestBase {
         if let Err(_e) = init_logger(runtime_errors_cause_failure.clone()) {
             // We've set the logger twice, that's alright for the tests.
         }
+        let variable_store = MemoryVariableStore::new();
 
-        let dialogue = Dialogue::default()
+        let dialogue = Dialogue::new(Box::new(variable_store.clone()))
             .with_language_code("en")
             .with_extended_library(Library::new().with_function("assert", |value: YarnValue| {
                 let is_truthy: bool = value.try_into().unwrap();
@@ -63,6 +65,7 @@ impl Default for TestBase {
         Self {
             dialogue,
             runtime_errors_cause_failure,
+            variable_store,
             test_plan: Default::default(),
             string_table: Default::default(),
         }
