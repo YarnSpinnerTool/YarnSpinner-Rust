@@ -75,18 +75,14 @@ fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
     let result = Compiler::default().read_file(path).compile().unwrap();
 
-    let dialogue = TestBase::default()
+    let has_options = TestBase::default()
         .with_compilation(result)
         .dialogue
-        .with_node_at_start();
-    for events in dialogue {
-        assert!(
-            !events
-                .into_iter()
-                .any(|event| matches!(event, DialogueEvent::Options(_))),
-            "Options should not be shown to the user in this test."
-        );
-    }
+        .with_node_at_start()
+        .into_iter()
+        .flatten()
+        .any(|event| matches!(event, DialogueEvent::Options(_)));
+    assert!(!has_options);
 }
 
 #[test]
