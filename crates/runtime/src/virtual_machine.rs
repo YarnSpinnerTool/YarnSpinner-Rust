@@ -346,7 +346,7 @@ impl VirtualMachine {
                 self.state.program_counter += 1;
             }
             OpCode::PushString => {
-                //Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
+                // Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
                 let string_table_index: String = instruction.read_operand(0);
                 self.state.push(string_table_index);
                 self.state.program_counter += 1;
