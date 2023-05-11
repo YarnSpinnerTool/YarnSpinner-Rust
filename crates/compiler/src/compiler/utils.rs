@@ -209,7 +209,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
     library
         .iter()
         // Operators are type checked by visitors instead
-        .filter(|(name, _function)| !operators.contains(name.as_ref()))
+        .filter(|(name, _function)| !operators.contains(*name))
         .map(|(name, function)| {
             let mut function_type = FunctionType::default();
             let parameters = function
@@ -221,8 +221,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
             function_type.parameters = parameters;
             let return_type = Type::try_from(function.return_type()).unwrap();
             function_type.set_return_type(return_type);
-            Declaration::new(name.clone(), function_type)
-                .with_source_file_name(DeclarationSource::External)
+            Declaration::new(name, function_type).with_source_file_name(DeclarationSource::External)
         })
         .collect()
 }

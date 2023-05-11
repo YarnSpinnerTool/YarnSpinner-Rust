@@ -13,8 +13,7 @@ mod test_base;
 #[test]
 fn test_loading_nodes() {
     let path = test_data_path().join("Projects/Basic/Test.yarn");
-    let compilation_job = CompilationJob::new().read_file(path).unwrap();
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = Compiler::new().read_file(path).compile().unwrap();
 
     let dialogue = TestBase::default().with_compilation(result).dialogue;
 
@@ -33,9 +32,7 @@ fn test_debug_output_is_produced() {
         file_name: "input".to_owned(),
         source: create_test_node_with_name("This is a test node.", "DebugTesting"),
     };
-    let compilation_job = CompilationJob::default().with_file(file);
-
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = Compiler::new().add_file(file).compile().unwrap();
 
     // We should have a single DebugInfo object, because we compiled a single node
     assert_eq!(1, result.debug_info.len());
