@@ -75,11 +75,11 @@ fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
     let result = Compiler::default().read_file(path).compile().unwrap();
 
-    let mut dialogue = TestBase::default()
+    let dialogue = TestBase::default()
         .with_compilation(result)
         .dialogue
         .with_node_at_start();
-    while let Some(events) = dialogue.next() {
+    for events in dialogue {
         assert!(
             !events
                 .into_iter()
