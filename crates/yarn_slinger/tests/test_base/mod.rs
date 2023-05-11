@@ -53,13 +53,13 @@ impl Default for TestBase {
             // We've set the logger twice, that's alright for the tests.
         }
 
-        let dialogue = Dialogue::default().with_language_code("en").extend_library(
-            Library::new().with_function("assert", |value: YarnValue| {
+        let dialogue = Dialogue::default()
+            .with_language_code("en")
+            .with_extended_library(Library::new().with_function("assert", |value: YarnValue| {
                 let is_truthy: bool = value.try_into().unwrap();
                 assert!(is_truthy);
                 true
-            }),
-        );
+            }));
         Self {
             dialogue,
             runtime_errors_cause_failure,

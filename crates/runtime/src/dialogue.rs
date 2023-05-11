@@ -19,14 +19,7 @@ use yarn_slinger_core::prelude::*;
 #[derive(Debug)]
 pub struct Dialogue {
     vm: VirtualMachine,
-    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
-    ///
-    /// This code is used to determine how the `plural` and `ordinal`
-    /// markers determine the plural class of numbers.
-    ///
-    /// For example, the code "en-US" represents the English language as
-    /// used in the United States.
-    pub language_code: Option<String>,
+    language_code: Option<String>,
 }
 
 impl Default for Dialogue {
@@ -53,6 +46,7 @@ impl Default for Dialogue {
 
 impl Iterator for Dialogue {
     type Item = Vec<DialogueEvent>;
+
     /// Starts, or continues, execution of the current program.
     ///
     /// This method repeatedly executes instructions until one of the following conditions is encountered:
@@ -84,52 +78,71 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn set_variable_storage(
-        &mut self,
+    #[must_use]
+    pub fn with_variable_storage(
+        self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
-    ) -> &mut Self {
+    ) -> Self {
         *self.vm.variable_storage.write().unwrap() = Box::new(variable_storage);
         self
     }
 
-    pub fn with_variable_storage(
-        mut self,
-        variable_storage: impl VariableStorage + 'static + Send + Sync,
-    ) -> Self {
-        self.set_variable_storage(variable_storage);
-        self
-    }
-
+    #[must_use]
     pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
-        self.set_language_code(language_code);
+        self.language_code.replace(language_code.into());
         self
     }
 
-    pub fn set_language_code(&mut self, language_code: impl Into<String>) -> &mut Self {
-        self.language_code.replace(language_code.into());
+    #[must_use]
+    pub fn with_extended_library(mut self, library: Library) -> Self {
+        self.library_mut().extend(library.into_iter());
+        self
+    }
+
+    #[must_use]
+    pub fn with_node_at(mut self, node_name: &str) -> Self {
+        self.set_node(node_name);
+        self
+    }
+
+    #[must_use]
+    pub fn with_node_at_start(mut self) -> Self {
+        self.set_node_to_start();
         self
     }
 }
 
-// VM proxy
+// Accessors
 impl Dialogue {
-    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
+    /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
+    ///
+    /// This code is used to determine how the `plural` and `ordinal`
+    /// markers determine the plural class of numbers.
+    ///
+    /// For example, the code "en-US" represents the English language as
+    /// used in the United States.
+    #[must_use]
+    pub fn language_code(&self) -> Option<&str> {
+        self.language_code.as_deref()
+    }
+
+    #[must_use]
+    pub fn language_code_mut(&mut self) -> Option<&mut String> {
+        self.language_code.as_mut()
+    }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
     ///
     /// When the Dialogue is constructed, the Library is initialized with
     /// the built-in operators like `+`, `-`, and so on.
+    #[must_use]
     pub fn library(&self) -> &Library {
         &self.vm.library
-    }
-
-    pub fn extend_library(mut self, library: Library) -> Self {
-        self.library_mut().extend(library.into_iter());
-        self
     }
 
     /// See [`Dialogue::library`].
@@ -140,9 +153,15 @@ impl Dialogue {
 
     /// The object that provides access to storing and retrieving the values of variables.
     /// Be aware that accessing this object will block [`Dialogue::next`] and vice versa, so try to not cause a deadlock.
+    #[must_use]
     pub fn variable_storage(&self) -> SharedMemoryVariableStore {
         SharedMemoryVariableStore(self.vm.variable_storage.clone())
     }
+}
+
+// VM proxy
+impl Dialogue {
+    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
 
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
         self.vm.program.replace(program);
@@ -161,11 +180,6 @@ impl Dialogue {
         self
     }
 
-    pub fn with_node_at(mut self, node_name: &str) -> Self {
-        self.set_node(node_name);
-        self
-    }
-
     /// Prepares the [`Dialogue`] that the user intends to start running a node.
     ///
     /// After this method is called, you call [`Dialogue::next`] to start executing it.
@@ -178,11 +192,6 @@ impl Dialogue {
     /// Panics if no node named `node_name` has been loaded.
     pub fn set_node(&mut self, node_name: &str) -> &mut Self {
         self.vm.set_node(node_name);
-        self
-    }
-
-    pub fn with_node_at_start(mut self) -> Self {
-        self.set_node_to_start();
         self
     }
 
@@ -206,6 +215,7 @@ impl Dialogue {
     }
 
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
+    #[must_use]
     pub fn node_names(&self) -> Option<Vec<String>> {
         self.vm
             .program
@@ -223,6 +233,7 @@ impl Dialogue {
     /// of the contents of the string table, this method does not test to
     /// see if the string table contains an entry with the line ID. You will
     /// need to test for that yourself.
+    #[must_use]
     pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
         self.get_node_logging_errors(node_name)
             .map(|_| format!("line:{node_name}"))
@@ -234,12 +245,14 @@ impl Dialogue {
     /// the node's source code. This header must be a space-separated list
     ///
     /// Returns [`None`] if the node is not present in the program.
+    #[must_use]
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
         self.get_node_logging_errors(node_name)
             .map(|node| node.tags)
     }
 
     /// Gets a value indicating whether a specified node exists in the Program.
+    #[must_use]
     pub fn node_exists(&self, node_name: &str) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
         if let Some(program) = self.vm.program.as_ref() {
@@ -258,6 +271,7 @@ impl Dialogue {
     /// If `test` contains a substitution marker whose
     /// index is not present in `substitutions`, it is
     /// ignored.
+    #[must_use]
     pub fn expand_substitutions<'a>(
         text: &str,
         substitutions: impl IntoIterator<Item = &'a str>,
@@ -274,6 +288,7 @@ impl Dialogue {
     ///
     /// If [`Dialogue::next`] has never been called, this value
     /// will be [`None`].
+    #[must_use]
     pub fn current_node(&self) -> Option<String> {
         self.vm.current_node()
     }
@@ -282,6 +297,7 @@ impl Dialogue {
         todo!()
     }
 
+    #[must_use]
     pub fn parse_markup(&self, line: &str) -> String {
         // ## Implementation notes
         // It would be more ergonomic to not expose this and call it automatically.
@@ -329,6 +345,7 @@ impl Dialogue {
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.
+    #[must_use]
     pub fn is_active(&self) -> bool {
         self.vm.is_active()
     }
