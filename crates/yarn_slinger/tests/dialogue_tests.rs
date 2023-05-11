@@ -121,18 +121,20 @@ fn test_prepare_for_line() {
 
     let mut prepare_for_lines_was_called = false;
 
-    while let Some(event) = dialogue.continue_() {
-        if let DialogueEvent::PrepareForLines(lines) = event {
-            // When the Dialogue realises it's about to run the Start
-            // node, it will tell us that it's about to run these two
-            // line IDs
-            assert_eq!(lines.len(), 2);
-            assert!(lines.contains(&"line:test1".into()));
-            assert!(lines.contains(&"line:test2".into()));
+    let event = dialogue.continue_().unwrap();
+    if let DialogueEvent::PrepareForLines(lines) = event {
+        // When the Dialogue realises it's about to run the Start
+        // node, it will tell us that it's about to run these two
+        // line IDs
+        assert_eq!(lines.len(), 2);
+        println!("{:?}", lines);
+        assert!(lines.contains(&"line:test1".into()));
+        assert!(lines.contains(&"line:test2".into()));
 
-            // Ensure that these asserts were actually called
-            prepare_for_lines_was_called = true;
-        }
+        // Ensure that these asserts were actually called
+        prepare_for_lines_was_called = true;
+    } else {
+        panic!("Expected PrepareForLines event")
     }
 
     assert!(prepare_for_lines_was_called);
@@ -202,6 +204,7 @@ fn test_selecting_option_from_inside_option_callback() {
                 .expect_line("final line"),
         )
         .with_compilation(result);
+    test_base.dialogue.set_node_to_start();
 
     while let Some(event) = test_base.dialogue.continue_() {
         match event {

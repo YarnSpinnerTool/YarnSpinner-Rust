@@ -131,7 +131,9 @@ impl VirtualMachine {
 
         self.set_execution_state(ExecutionState::Running);
 
-        while self.execution_state == ExecutionState::Running && self.events.is_empty() {
+        while self.execution_state == ExecutionState::Running
+            && self.state.program_counter < self.current_node.as_ref().unwrap().instructions.len()
+        {
             let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
             self.run_instruction(current_instruction);
@@ -156,7 +158,10 @@ impl VirtualMachine {
         if event == DialogueEvent::DialogueComplete {
             // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
             // So, since we work through all events after they would have already been handled in the original, we only set the execution state here.
-            self.set_execution_state(ExecutionState::Stopped);
+
+            // This does not call `set_execution_state` because that would reset the state when encountering `ExecutionState::Stopped`,
+            // which we don't want to do here since we need the current node name later
+            self.execution_state = ExecutionState::Stopped;
         }
         Some(event)
     }
