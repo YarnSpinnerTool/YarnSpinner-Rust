@@ -125,8 +125,7 @@ fn test_prepare_for_line() {
     for event in events {
         if let DialogueEvent::PrepareForLines(lines) = event {
             // When the Dialogue realises it's about to run the Start
-            // node, it will tell us that it's about to run these two
-            // line IDs
+            // node, it will tell us that it's about to run these two line IDs
             assert_eq!(lines.len(), 2);
             println!("{:?}", lines);
             assert!(lines.contains(&"line:test1".into()));
@@ -222,8 +221,6 @@ fn test_selecting_option_from_inside_option_callback() {
                 }
                 DialogueEvent::Options(options) => {
                     test_base.test_plan.as_mut().unwrap().next();
-                    // Assert that the list of options we were given is
-                    // identical to the list of options we expect
                     let actual_options: Vec<_> = options
                         .into_iter()
                         .map(|o| ProcessedOption {
