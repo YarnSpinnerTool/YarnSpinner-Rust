@@ -1,7 +1,7 @@
 macro_rules! string_newtype {
     ($(#[$attr:meta])* pub struct $name:ident(pub String);) => {
         $(#[$attr])*
-        #[derive(Debug, Clone, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $name(pub String);
 
         impl std::ops::Deref for $name {

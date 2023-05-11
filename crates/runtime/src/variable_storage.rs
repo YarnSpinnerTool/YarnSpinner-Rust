@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
 /// Provides a mechanism for storing and retrieving instances
@@ -27,9 +28,7 @@ impl Clone for Box<dyn VariableStorage + Send + Sync> {
 /// A simple concrete implementation of [`VariableStorage`]
 /// that keeps all variables in memory.
 #[derive(Debug, Clone, Default)]
-pub struct MemoryVariableStore {
-    variables: HashMap<String, YarnValue>,
-}
+pub struct MemoryVariableStore(HashMap<String, YarnValue>);
 
 impl VariableStorage for MemoryVariableStore {
     fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync> {
@@ -37,14 +36,38 @@ impl VariableStorage for MemoryVariableStore {
     }
 
     fn set(&mut self, name: String, value: YarnValue) {
-        self.variables.insert(name, value);
+        self.0.insert(name, value);
     }
 
     fn get(&self, name: &str) -> Option<YarnValue> {
-        self.variables.get(name).cloned()
+        self.0.get(name).cloned()
     }
 
     fn clear(&mut self) {
-        self.variables.clear();
+        self.0.clear();
+    }
+}
+
+/// A [`MemoryVariableStore`] that can sync its copies across threads.
+#[derive(Debug, Clone)]
+pub struct SharedMemoryVariableStore(
+    pub(crate) Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+);
+
+impl VariableStorage for SharedMemoryVariableStore {
+    fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync> {
+        Box::new(self.clone())
+    }
+
+    fn set(&mut self, name: String, value: YarnValue) {
+        self.0.write().unwrap().set(name, value);
+    }
+
+    fn get(&self, name: &str) -> Option<YarnValue> {
+        self.0.read().unwrap().get(name)
+    }
+
+    fn clear(&mut self) {
+        self.0.write().unwrap().clear();
     }
 }

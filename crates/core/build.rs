@@ -1,14 +1,11 @@
 use std::io::Result;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn main() -> Result<()> {
-    let include_dir_path: PathBuf = ["..", "..", "third-party", "YarnSpinner", "YarnSpinner"]
-        .iter()
-        .collect();
-    let include_dir = include_dir_path.to_str().unwrap();
-    let proto_file_path: PathBuf = [include_dir, "yarn_spinner.proto"].iter().collect();
-    let proto_file = proto_file_path.to_str().unwrap();
-    println!("cargo:rerun-if-changed={proto_file}");
+    let include_dir: &Path = "../../third-party/YarnSpinner/YarnSpinner".as_ref();
+    let proto_file: PathBuf = include_dir.join("yarn_spinner.proto");
+    let file_string = proto_file.to_str().unwrap();
+    println!("cargo:rerun-if-changed={file_string}");
     prost_build::compile_protos(&[proto_file], &[include_dir])?;
     Ok(())
 }

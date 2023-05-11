@@ -14,7 +14,7 @@
 //! so the following (fairly useless) test was omitted:
 //! - `TestBuiltinTypesAreEnumerated`
 
-use crate::test_base::*;
+use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
 mod test_base;

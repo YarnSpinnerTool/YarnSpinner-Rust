@@ -1,15 +1,29 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
+//!
+//! ## Implementation notes
+//!
+//! Because Rust has no concept of a current global culture setting,
+//! the test `TestCompilationShouldNotBeCultureDependent` was omitted.
 
-use crate::test_base::*;
 use std::collections::HashMap;
+use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
 mod test_base;
 
 #[test]
-#[ignore]
 fn test_example_script() {
-    todo!("Not ported yet")
+    let path = test_data_path().join("Example.yarn");
+    let test_plan = path.with_extension("testplan");
+
+    let compilation_job = CompilationJob::default().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    TestBase::default()
+        .with_runtime_failure_causes_no_panic()
+        .with_compilation(result)
+        .read_test_plan(test_plan)
+        .run_standard_testcase();
 }
 
 #[test]
@@ -140,12 +154,6 @@ fn test_invalid_characters_in_node_title() {
 #[test]
 #[ignore]
 fn test_number_plurals() {
-    todo!("Not ported yet")
-}
-
-#[test]
-#[ignore]
-fn test_compilation_should_not_be_culture_dependent() {
     todo!("Not ported yet")
 }
 

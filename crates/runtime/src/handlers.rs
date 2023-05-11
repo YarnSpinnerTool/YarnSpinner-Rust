@@ -104,16 +104,3 @@ impl_handler! {
     /// This method may be called any number of times during a dialogue session.
     pub struct PrepareForLinesHandler(pub PrepareForLinesHandlerFn: FnMut(Vec<LineId>));
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn can_assign_handlers() {
-        let _logger = Logger(Box::new(|message| println!("{}", message)));
-
-        let _dialogue_complete_handler =
-            DialogueCompleteHandler(Box::new(|| println!("Dialogue complete!")));
-    }
-}
