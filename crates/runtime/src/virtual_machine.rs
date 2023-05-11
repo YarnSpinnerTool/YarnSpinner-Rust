@@ -72,18 +72,8 @@ impl VirtualMachine {
 
     pub(crate) fn set_node(&mut self, node_name: &str) {
         info!("Running node \"{node_name}\"");
-
-        let program = self.program.as_ref().unwrap_or_else(|| {
-            panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
-        });
-        assert!(
-            !program.nodes.is_empty(),
-            "Cannot load node \"{node_name}\": No nodes have been loaded.",
-        );
-
-        self.current_node = program
-            .nodes
-            .get(node_name)
+        self.current_node = self
+            .get_node_from_name(node_name)
             .cloned()
             .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."))
             .into();
@@ -126,6 +116,18 @@ impl VirtualMachine {
             })
             .collect();
         self.events.push(DialogueEvent::PrepareForLines(string_ids));
+    }
+
+    fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
+        let program = self.program.as_ref().unwrap_or_else(|| {
+            panic!("Cannot load node \"{node_name}\": No program has been loaded.")
+        });
+        assert!(
+            !program.nodes.is_empty(),
+            "Cannot load node \"{node_name}\": No nodes have been loaded.",
+        );
+
+        program.nodes.get(node_name)
     }
 
     /// Resumes execution.
