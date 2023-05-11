@@ -8,7 +8,7 @@ use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
-use yarn_slinger_core::collections::Stack;
+use yarn_slinger_core::collections::Queue;
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
 
@@ -24,7 +24,7 @@ pub(crate) struct VirtualMachine {
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,
-    events: Stack<DialogueEvent>,
+    events: Queue<DialogueEvent>,
 }
 
 impl VirtualMachine {
@@ -47,6 +47,7 @@ impl VirtualMachine {
     pub(crate) fn reset_state(&mut self) {
         self.state = State::default();
         self.current_node_name = None;
+        self.events.clear();
     }
 
     pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {
@@ -86,7 +87,7 @@ impl VirtualMachine {
         self.current_node_name = Some(node_name.to_owned());
 
         self.events
-            .push(DialogueEvent::NodeStart(node_name.to_owned()));
+            .enqueue(DialogueEvent::NodeStart(node_name.to_owned()));
 
         // If we have a prepare-for-lines handler, figure out what
         // lines we anticipate running
@@ -118,17 +119,18 @@ impl VirtualMachine {
                     })
             })
             .collect();
-        self.events.push(DialogueEvent::PrepareForLines(string_ids));
+        self.events
+            .enqueue(DialogueEvent::PrepareForLines(string_ids));
     }
 
     /// Resumes execution.
     pub(crate) fn continue_(&mut self) -> Option<DialogueEvent> {
-        if let Some(event) = self.events.pop() {
+        if let Some(event) = self.advance_events() {
             return Some(event);
         }
         self.assert_can_continue();
 
-        self.execution_state = ExecutionState::Running;
+        self.set_execution_state(ExecutionState::Running);
 
         // Execute instructions until something forces us to stop
         while self.execution_state == ExecutionState::Running {
@@ -144,12 +146,21 @@ impl VirtualMachine {
             }
 
             self.events
-                .push(DialogueEvent::NodeComplete(current_node.name.clone()));
-            self.execution_state = ExecutionState::Stopped;
-            self.events.push(DialogueEvent::DialogueComplete);
+                .enqueue(DialogueEvent::NodeComplete(current_node.name.clone()));
+            self.events.enqueue(DialogueEvent::DialogueComplete);
             debug!("Run complete.");
         }
-        self.events.pop()
+        self.advance_events()
+    }
+
+    fn advance_events(&mut self) -> Option<DialogueEvent> {
+        let event = self.events.dequeue()?;
+        if event == DialogueEvent::DialogueComplete {
+            // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
+            // So, since we work through all events after they would have already been handled in the original, we only set the execution state here.
+            self.set_execution_state(ExecutionState::Stopped);
+        }
+        Some(event)
     }
 
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't.
@@ -193,7 +204,7 @@ impl VirtualMachine {
         self.state.current_options.clear();
 
         // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
-        self.execution_state = ExecutionState::WaitingForContinue;
+        self.set_execution_state(ExecutionState::WaitingForContinue);
     }
 
     pub(crate) fn is_active(&self) -> bool {
@@ -240,17 +251,14 @@ impl VirtualMachine {
                     substitutions: strings,
                 };
 
-                // Suspend execution, because we're about to deliver content
-                self.execution_state = ExecutionState::DeliveringContent;
-
-                self.events.push(DialogueEvent::Line(line));
+                self.events.enqueue(DialogueEvent::Line(line));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
                 // because the line handler is allowed to call `continue_`. However, we disallow that because of
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
-                self.execution_state = ExecutionState::WaitingForContinue;
+                self.set_execution_state(ExecutionState::WaitingForContinue);
                 self.state.program_counter += 1;
             }
             OpCode::RunCommand => {
@@ -264,17 +272,16 @@ impl VirtualMachine {
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
                     });
-                self.execution_state = ExecutionState::DeliveringContent;
                 let command = Command(command_text);
 
-                self.events.push(DialogueEvent::Command(command));
+                self.events.enqueue(DialogueEvent::Command(command));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
                 // because the line handler is allowed to call `continue_`. However, we disallow that because of
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
-                self.execution_state = ExecutionState::WaitingForContinue;
+                self.set_execution_state(ExecutionState::WaitingForContinue);
                 self.state.program_counter += 1;
             }
             OpCode::AddOption => {
@@ -318,28 +325,22 @@ impl VirtualMachine {
             OpCode::ShowOptions => {
                 // If we have no options to show, immediately stop.
                 if self.state.current_options.is_empty() {
-                    self.execution_state = ExecutionState::Stopped;
-                    self.events.push(DialogueEvent::DialogueComplete);
+                    self.events.enqueue(DialogueEvent::DialogueComplete);
                     self.state.program_counter += 1;
                     return;
                 }
 
                 // We can't continue until our client tell us which option to pick
-                self.execution_state = ExecutionState::WaitingOnOptionSelection;
+                self.set_execution_state(ExecutionState::WaitingOnOptionSelection);
 
                 // Pass the options set to the client, as well as a
                 // delegate for them to call when the user has made
                 // a selection
                 let current_options = self.state.current_options.clone();
-                self.events.push(DialogueEvent::Options(current_options));
+                self.events.enqueue(DialogueEvent::Options(current_options));
 
-                if self.execution_state == ExecutionState::WaitingForContinue {
-                    // we are no longer waiting on an option
-                    // selection - the options handler must have
-                    // called SetSelectedOption! Continue running
-                    // immediately.
-                    self.execution_state = ExecutionState::Running;
-                }
+                // Implementation note:
+                // Not checking the execution state now since we have no line handler to call `continue_` from.
                 self.state.program_counter += 1;
             }
             OpCode::PushString => {
@@ -465,9 +466,8 @@ impl VirtualMachine {
                 // Immediately stop execution, and report that fact.
                 let current_node_name = self.current_node_name.clone().unwrap();
                 self.events
-                    .push(DialogueEvent::NodeComplete(current_node_name));
-                self.events.push(DialogueEvent::DialogueComplete);
-                self.execution_state = ExecutionState::Stopped;
+                    .enqueue(DialogueEvent::NodeComplete(current_node_name));
+                self.events.enqueue(DialogueEvent::DialogueComplete);
                 self.state.program_counter += 1;
             }
             OpCode::RunNode => {
@@ -477,7 +477,7 @@ impl VirtualMachine {
                 // with that name.
                 let node_name: String = self.state.pop();
                 self.events
-                    .push(DialogueEvent::NodeComplete(node_name.clone()));
+                    .enqueue(DialogueEvent::NodeComplete(node_name.clone()));
                 self.set_node(&node_name);
 
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
