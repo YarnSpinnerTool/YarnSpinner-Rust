@@ -115,7 +115,7 @@ impl Type {
 ///
 /// - Represents the `IType` interface in the original implementation.
 /// - `Parent` is not implemented because it is set to `AnyType` everywhere anyways.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeProperties {
     /// The name of this type.
     pub name: &'static str,

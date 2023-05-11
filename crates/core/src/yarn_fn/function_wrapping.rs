@@ -18,7 +18,7 @@ use yarn_slinger_macros::all_tuples;
 ///     - [`bool`]
 ///     - [`String`]
 ///     - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
-pub trait YarnFn<Marker>: Send + Sync {
+pub trait YarnFn<Marker>: Clone + Send + Sync {
     type Out: IntoYarnValueFromNonYarnValue + 'static;
     /// The `Option`s are guaranteed to be `Some` and are just typed like this to be able to `std::mem::take` them.
     fn call(&self, input: Vec<Option<YarnValue>>) -> Self::Out;
@@ -32,19 +32,30 @@ pub trait YarnFn<Marker>: Send + Sync {
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
     fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue;
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
 
+impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
-    Marker: 'static,
-    F: YarnFn<Marker> + 'static + Send + Sync,
-    F::Out: IntoYarnValueFromNonYarnValue + 'static,
+    Marker: 'static + Clone,
+    F: YarnFn<Marker> + 'static + Clone + Send + Sync,
+    F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
     fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue {
         let output = self.function.call(input);
         output.into_untyped_value()
+    }
+
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync> {
+        Box::new(self.clone())
     }
 
     fn parameter_types(&self) -> Vec<TypeId> {
@@ -56,6 +67,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct YarnFnWrapper<Marker, F>
 where
     F: YarnFn<Marker>,
@@ -117,7 +129,7 @@ macro_rules! impl_yarn_fn_tuple {
         #[allow(non_snake_case)]
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
-                F: Fn($($param,)*) -> O + Send + Sync,
+                F: Fn($($param,)*) -> O + Send + Sync + Clone,
                 O: IntoYarnValueFromNonYarnValue + 'static,
                 $($param: TryFrom<YarnValue> + 'static,)*
             {

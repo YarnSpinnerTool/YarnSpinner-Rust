@@ -19,7 +19,7 @@ pub type Result<T> = std::result::Result<T, CompilationError>;
 /// ## Implementation note
 ///
 /// This type is a combination of the original `CompilationStep` and `Compiler` types, optimized for easier, fluent calling.
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Compiler {
     /// The [`File`] structs that represent the content to parse..
     pub files: Vec<File>,

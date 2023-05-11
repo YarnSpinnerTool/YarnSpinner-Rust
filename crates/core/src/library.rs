@@ -9,7 +9,7 @@ use std::fmt::Display;
 /// You do not create instances of this class yourself. The [`Dialogue`]
 /// class creates one for you, and you can access it through the
 /// [`Library`] property.
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Library(YarnFnRegistry);
 
 impl Extend<<YarnFnRegistry as IntoIterator>::Item> for Library {
@@ -75,9 +75,9 @@ impl Library {
         function: F,
     ) -> &mut Self
     where
-        Marker: 'static,
-        F: YarnFn<Marker> + 'static,
-        F::Out: IntoYarnValueFromNonYarnValue + 'static,
+        Marker: 'static + Clone,
+        F: YarnFn<Marker> + 'static + Clone,
+        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
         self.0.register_function(name, function);
         self
@@ -89,9 +89,9 @@ impl Library {
         function: F,
     ) -> Self
     where
-        Marker: 'static,
-        F: YarnFn<Marker> + 'static,
-        F::Out: IntoYarnValueFromNonYarnValue + 'static,
+        Marker: 'static + Clone,
+        F: YarnFn<Marker> + 'static + Clone,
+        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
         self.register_function(name, function);
         self
@@ -101,7 +101,7 @@ impl Library {
     fn register_methods(&mut self, r#type: Type) {
         for (name, function) in r#type.methods().into_iter() {
             let canonical_name = r#type.get_canonical_name_for_method(name.as_ref());
-            self.0.add_boxed(canonical_name, function);
+            self.0.add_boxed(canonical_name, function.clone());
         }
     }
 }
