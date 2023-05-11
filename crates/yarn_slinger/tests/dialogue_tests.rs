@@ -241,16 +241,16 @@ fn test_selecting_option_from_inside_option_callback() {
                         .dialogue
                         .set_selected_option(OptionId::construct_for_debugging(0));
                 }
-                DialogueEvent::Command(_) => {}
-                DialogueEvent::NodeComplete(_) => {}
-                DialogueEvent::NodeStart(_) => {}
-                DialogueEvent::PrepareForLines(_) => {}
                 DialogueEvent::DialogueComplete => {
                     let test_plan = test_base.test_plan.as_mut().unwrap();
                     test_plan.next();
                     let expected_step = test_plan.next_expected_step;
                     assert_eq!(ExpectedStepType::Stop, expected_step);
                 }
+                DialogueEvent::Command(_)
+                | DialogueEvent::NodeComplete(_)
+                | DialogueEvent::NodeStart(_)
+                | DialogueEvent::PrepareForLines(_) => {}
             }
         }
     }
