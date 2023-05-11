@@ -6,7 +6,7 @@ use std::ops::{Deref, DerefMut};
 /// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default)]
 pub struct YarnFnRegistry(pub InnerRegistry);
 
 type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
@@ -34,9 +34,9 @@ impl YarnFnRegistry {
         function: F,
     ) -> &mut Self
     where
-        Marker: 'static + Clone,
-        F: YarnFn<Marker> + 'static + Clone,
-        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
+        Marker: 'static,
+        F: YarnFn<Marker> + 'static,
+        F::Out: IntoYarnValueFromNonYarnValue + 'static,
     {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);
