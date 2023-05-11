@@ -206,8 +206,11 @@ impl VirtualMachine {
     }
 
     pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) {
-        assert_eq!(ExecutionState::WaitingOnOptionSelection, self.execution_state, "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
-                This method should only be called after the Dialogue is waiting for the user to select an option.");
+        assert_eq!(
+            ExecutionState::WaitingOnOptionSelection,
+            self.execution_state,
+            "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
+            This method should only be called after the Dialogue is waiting for the user to select an option.");
 
         assert!(
             selected_option_id.0 < self.state.current_options.len(),
