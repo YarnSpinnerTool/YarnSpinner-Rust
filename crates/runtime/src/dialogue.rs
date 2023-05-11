@@ -102,6 +102,7 @@ impl Dialogue {
     }
 
     /// See [`Dialogue::library`].
+    #[must_use]
     pub fn library_mut(&mut self) -> &mut Library {
         &mut self.vm.library
     }
@@ -182,6 +183,7 @@ impl Dialogue {
     /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::continue_`]. Because of the borrow checker,
     /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
     /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    #[must_use]
     pub fn continue_(&mut self) -> Option<Vec<DialogueEvent>> {
         // Cannot 'continue' an already running VM.
         self.vm.continue_()
@@ -319,8 +321,9 @@ impl Dialogue {
     /// - [`Dialogue::continue_`]
     /// - [`OptionsHandler`]
     /// - [`OptionSet`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) {
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
         self.vm.set_selected_option(selected_option_id);
+        self
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.

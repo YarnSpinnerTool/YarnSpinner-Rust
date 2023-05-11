@@ -121,6 +121,7 @@ impl VirtualMachine {
     }
 
     /// Resumes execution.
+    #[must_use]
     pub(crate) fn continue_(&mut self) -> Option<Vec<DialogueEvent>> {
         if let Some(events) = self.advance_events() {
             return Some(events);
@@ -151,6 +152,7 @@ impl VirtualMachine {
         self.advance_events()
     }
 
+    #[must_use]
     fn advance_events(&mut self) -> Option<Vec<DialogueEvent>> {
         if self.events.contains(&DialogueEvent::DialogueComplete) {
             // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
