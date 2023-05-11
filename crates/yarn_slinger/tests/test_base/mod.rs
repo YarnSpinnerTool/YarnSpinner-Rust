@@ -99,6 +99,11 @@ impl TestBase {
             .with_string_table(string_table)
     }
 
+    pub fn extend_library(self, library: Library) -> Self {
+        self.dialogue.extend_library(library);
+        self
+    }
+
     pub fn with_program(mut self, program: Program) -> Self {
         self.dialogue.add_program(program);
         self

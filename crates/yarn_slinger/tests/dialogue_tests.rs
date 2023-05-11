@@ -85,7 +85,7 @@ fn test_getting_raw_source() {
 
     let source_id = dialogue.get_string_id_for_node("LearnMore").unwrap();
     let source = test_base
-        .string_table()
+        .string_table
         .get(&LineId(source_id))
         .unwrap()
         .text

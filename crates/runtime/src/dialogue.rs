@@ -129,18 +129,28 @@ impl Dialogue {
         self
     }
 
+    pub fn with_node_at(mut self, node_name: &str) -> Self {
+        self.set_node(node_name);
+        self
+    }
+
     /// Prepares the [`Dialogue`] that the user intends to start running a node.
     ///
     /// After this method is called, you call [`Dialogue::continue_`] to start executing it.
     ///
     /// If [`Dialogue::prepare_for_lines_handler`] has been set, it may be called when this method is invoked,
-    /// as the Dialogue determines which lines may be delivered during the `start_node` node's execution.
+    /// as the Dialogue determines which lines may be delivered during the `node_name` node's execution.
     ///
     /// ## Panics
     ///
-    /// Panics if no node named `start_node` has been loaded.
-    pub fn set_node(&mut self, start_node: &str) -> &mut Self {
-        self.vm.set_node(start_node);
+    /// Panics if no node named `node_name` has been loaded.
+    pub fn set_node(&mut self, node_name: &str) -> &mut Self {
+        self.vm.set_node(node_name);
+        self
+    }
+
+    pub fn with_node_at_start(mut self) -> Self {
+        self.set_node_to_start();
         self
     }
 
