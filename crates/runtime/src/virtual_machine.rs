@@ -7,7 +7,6 @@ pub(crate) use self::{execution_state::*, state::*};
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
 
@@ -18,7 +17,7 @@ mod state;
 pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
     pub(crate) program: Option<Program>,
-    pub(crate) variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+    pub(crate) variable_storage: Box<dyn VariableStorage + Send + Sync>,
     current_node_name: Option<String>,
     state: State,
     execution_state: ExecutionState,
@@ -37,7 +36,7 @@ impl Iterator for VirtualMachine {
 impl VirtualMachine {
     pub(crate) fn new(
         library: Library,
-        variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
+        variable_storage: Box<dyn VariableStorage + Send + Sync>,
     ) -> Self {
         Self {
             library,
@@ -446,7 +445,7 @@ impl VirtualMachine {
                 // Get the contents of a variable, push that onto the stack.
                 let variable_name: String = instruction.read_operand(0);
                 let loaded_value = self
-                    .variable_storage.read().unwrap()
+                    .variable_storage
                     .get(&variable_name)
                     .unwrap_or_else(|| {
                         // We don't have a value for this. The initial
@@ -471,10 +470,7 @@ impl VirtualMachine {
                 // Store the top value on the stack in a variable.
                 let top_value = self.state.peek_value().clone();
                 let variable_name: String = instruction.read_operand(0);
-                self.variable_storage
-                    .write()
-                    .unwrap()
-                    .set(variable_name, top_value.into());
+                self.variable_storage.set(variable_name, top_value.into());
                 self.state.program_counter += 1;
             }
             OpCode::Stop => {

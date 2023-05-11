@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
-use std::ops::Deref;
-use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -22,20 +20,18 @@ pub struct Dialogue {
     language_code: Option<String>,
 }
 
-impl Default for Dialogue {
-    fn default() -> Self {
-        let variable_storage: Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>> =
-            Arc::new(RwLock::new(Box::new(MemoryVariableStore::new())));
-
-        let storage_one = variable_storage.clone();
-        let storage_two = storage_one.clone();
+impl Dialogue {
+    #[must_use]
+    pub fn new(variable_storage: Box<dyn VariableStorage + Send + Sync>) -> Self {
+        let storage_one = variable_storage.clone_shallow();
+        let storage_two = storage_one.clone_shallow();
 
         let library = Library::standard_library()
             .with_function("visited", move |node: String| -> bool {
-                is_node_visited(storage_one.read().unwrap().deref().as_ref(), &node)
+                is_node_visited(storage_one.as_ref(), &node)
             })
             .with_function("visited_count", move |node: String| -> f32 {
-                get_node_visit_count(storage_two.read().unwrap().deref().as_ref(), &node)
+                get_node_visit_count(storage_two.as_ref(), &node)
             });
         Self {
             vm: VirtualMachine::new(library, variable_storage),
@@ -78,20 +74,6 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    #[must_use]
-    pub fn with_variable_storage(
-        self,
-        variable_storage: impl VariableStorage + 'static + Send + Sync,
-    ) -> Self {
-        *self.vm.variable_storage.write().unwrap() = Box::new(variable_storage);
-        self
-    }
-
     #[must_use]
     pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
         self.language_code.replace(language_code.into());
@@ -149,13 +131,6 @@ impl Dialogue {
     #[must_use]
     pub fn library_mut(&mut self) -> &mut Library {
         &mut self.vm.library
-    }
-
-    /// The object that provides access to storing and retrieving the values of variables.
-    /// Be aware that accessing this object will block [`Dialogue::next`] and vice versa, so try to not cause a deadlock.
-    #[must_use]
-    pub fn variable_storage(&self) -> SharedMemoryVariableStore {
-        SharedMemoryVariableStore(self.vm.variable_storage.clone())
     }
 }
 
@@ -373,7 +348,8 @@ mod tests {
 
     #[test]
     fn is_send_sync() {
-        let dialogue = Dialogue::default();
+        let variable_storage = Box::new(MemoryVariableStore::new());
+        let dialogue = Dialogue::new(variable_storage);
         accept_send_sync(dialogue);
     }
 
