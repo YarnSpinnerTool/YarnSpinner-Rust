@@ -57,11 +57,24 @@ impl Dialogue {
         Self::default()
     }
 
-    pub fn set_variable_storage<T: VariableStorage + 'static + Send + Sync>(
+    pub fn set_variable_storage(
         &mut self,
         variable_storage: impl VariableStorage + 'static + Send + Sync,
     ) -> &mut Self {
         *self.vm.variable_storage.write().unwrap() = Box::new(variable_storage);
+        self
+    }
+
+    pub fn with_variable_storage(
+        mut self,
+        variable_storage: impl VariableStorage + 'static + Send + Sync,
+    ) -> Self {
+        self.set_variable_storage(variable_storage);
+        self
+    }
+
+    pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
+        self.set_language_code(language_code);
         self
     }
 
@@ -81,6 +94,11 @@ impl Dialogue {
     /// the built-in operators like `+`, `-`, and so on.
     pub fn library(&self) -> &Library {
         &self.vm.library
+    }
+
+    pub fn extend_library(mut self, library: Library) -> Self {
+        self.library_mut().extend(library.into_iter());
+        self
     }
 
     /// See [`Dialogue::library`].
@@ -172,10 +190,7 @@ impl Dialogue {
     pub fn unload_all(&mut self) {
         self.vm.unload_programs()
     }
-}
 
-// HandlerSafeDialogue proxy
-impl Dialogue {
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
     pub fn node_names(&self) -> Option<Vec<String>> {
         self.vm
@@ -323,13 +338,6 @@ fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str)
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn can_set_handler() {
-        let _dialogue = Dialogue::default()
-            .set_log_debug_message(|_, _| {})
-            .set_options_handler(|_, _| {});
-    }
 
     #[test]
     fn is_send_sync() {

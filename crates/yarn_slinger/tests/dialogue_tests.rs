@@ -16,7 +16,7 @@ fn test_node_exists() {
 
     let result = Compiler::new()
         .read_file(path)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 
@@ -55,7 +55,7 @@ fn test_getting_current_node_name() {
 
     let result = Compiler::new()
         .read_file(path)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 
@@ -162,7 +162,7 @@ fn test_function_argument_type_inference() {
     ";
 
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.dialogue.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 

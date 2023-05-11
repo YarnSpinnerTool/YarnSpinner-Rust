@@ -23,177 +23,47 @@ use yarn_slinger::prelude::*;
 use yarn_slinger_core::prelude::YarnValue;
 
 mod extensions;
+mod logger;
 mod paths;
 mod step;
 mod test_plan;
+use logger::*;
+use yarn_slinger::log::{LevelFilter, SetLoggerError};
 
 pub mod prelude {
     pub use crate::test_base::{extensions::*, paths::*, step::*, test_plan::*, *};
 }
 
+pub fn init_logger(runtime_errors_cause_failure: Arc<AtomicBool>) -> Result<(), SetLoggerError> {
+    let logger = TestLogger::new(runtime_errors_cause_failure);
+    log::set_logger(&logger).map(|()| log::set_max_level(LevelFilter::Info))
+}
+
 #[derive(Debug)]
 pub struct TestBase {
     pub dialogue: Dialogue,
-    test_plan: Arc<RwLock<Option<TestPlan>>>,
-    string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
+    pub test_plan: Option<TestPlan>,
+    pub string_table: HashMap<LineId, StringInfo>,
     runtime_errors_cause_failure: Arc<AtomicBool>,
 }
 
 impl Default for TestBase {
     fn default() -> Self {
         let runtime_errors_cause_failure = Arc::new(AtomicBool::new(true));
-        let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
-            Arc::new(RwLock::new(HashMap::new()));
-        let test_plan: Arc<RwLock<Option<TestPlan>>> = Arc::new(RwLock::new(None));
+        init_logger(runtime_errors_cause_failure.clone()).unwrap();
 
-        let mut dialogue = Dialogue::default();
-        dialogue
-            .set_language_code("en")
-            .set_log_debug_message(|msg, _| {
-                println!("{}", msg);
-            });
-
-        {
-            let runtime_errors_cause_failures = runtime_errors_cause_failure.clone();
-            let string_table = string_table.clone();
-            let test_plan = test_plan.clone();
-
-            dialogue
-                .set_log_error_message(move |msg, _| {
-                    eprintln!("{msg}");
-                    if runtime_errors_cause_failures.load(Ordering::Relaxed) {
-                        assert!(!msg.is_empty())
-                    }
-                })
-                .set_line_handler(move |line, dlg| {
-                    let text = get_composed_text_for_line_with_no_self(&line, &string_table, dlg);
-                    println!("Line: {text}");
-                    let mut test_plan = test_plan.write().unwrap();
-                    let Some(test_plan) = test_plan.as_mut() else {
-                        return;
-                    };
-                    test_plan.next();
-
-                    assert_eq!(
-                        ExpectedStepType::Line,
-                        test_plan.next_expected_step,
-                        "Received line {text}, but was expecting a {:?}",
-                        test_plan.next_expected_step
-                    );
-                    assert_eq!(test_plan.next_step_value, Some(StepValue::String(text)));
-                });
-        }
-        {
-            let test_plan = test_plan.clone();
-            let string_table = string_table.clone();
-
-            dialogue.set_options_handler(move |options, dlg| {
-                println!("Options:");
-
-                let options: Vec<_> = options
-                    .into_iter()
-                    .map(|option| {
-                        let text = get_composed_text_for_line_with_no_self(
-                            &option.line,
-                            &string_table,
-                            dlg,
-                        );
-                        ProcessedOption {
-                            line: text,
-                            enabled: option.is_available,
-                        }
-                    })
-                    .collect();
-                for option in &options {
-                    println!(" - {} (available: {})", option.line, option.enabled);
-                }
-                let mut test_plan = test_plan.write().unwrap();
-                let Some(test_plan) = test_plan.as_mut() else {
-                    return;
-                };
-
-                test_plan.next();
-                assert_eq!(
-                    ExpectedStepType::Select,
-                    test_plan.next_expected_step,
-                    "Received {} options, but wasn't expecting them (was expecting {:?})",
-                    options.len(),
-                    test_plan.next_expected_step
-                );
-
-                assert_eq!(test_plan.next_expected_options, options);
-
-                if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
-                    let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
-                    println!("[Selecting option {}]", selection);
-                    dlg.set_selected_option(OptionId::construct_for_debugging(selection));
-                } else {
-                    println!("[Selecting option 0 implicitly]");
-                    dlg.set_selected_option(OptionId::construct_for_debugging(0));
-                }
-            });
-        }
-
-        {
-            let test_plan = test_plan.clone();
-
-            dialogue
-                .set_command_handler(move |command, _| {
-                    println!("Command: {}", command.0);
-                    let mut test_plan = test_plan.write().unwrap();
-                    let Some(test_plan) = test_plan.as_mut() else {
-                    return;
-                };
-                    test_plan.next();
-                    assert_eq!(
-                    ExpectedStepType::Command,
-                    test_plan.next_expected_step,
-                    "Received command {}, but wasn't expecting to select one (was expecting {:?})",
-                    command.0,
-                    test_plan.next_expected_step
-                );
-
-                    // We don't need to get the composed string for a
-                    // command because it's been done for us in the
-                    // virtual machine. The VM can do this because
-                    // commands are not localised, so we don't need to
-                    // refer to the string table to get the text.
-                    assert_eq!(
-                        test_plan.next_step_value,
-                        Some(StepValue::String(command.0))
-                    );
-                })
-                .set_node_complete_handler(|_, _| {});
-        }
-        {
-            let test_plan = test_plan.clone();
-            dialogue.set_dialogue_complete_handler(move |_| {
-                let mut test_plan = test_plan.write().unwrap();
-                let Some(test_plan) = test_plan.as_mut() else {
-                    return;
-                };
-                test_plan.next();
-                assert_eq!(
-                    ExpectedStepType::Stop,
-                    test_plan.next_expected_step,
-                    "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
-                    test_plan.next_expected_step
-                );
-            });
-        }
-
-        dialogue
-            .library_mut()
-            .register_function("assert", |value: YarnValue| {
+        let dialogue = Dialogue::default().with_language_code("en").extend_library(
+            Library::new().with_function("assert", |value: YarnValue| {
                 let is_truthy: bool = value.try_into().unwrap();
                 assert!(is_truthy);
                 true
-            });
+            }),
+        );
         Self {
             dialogue,
-            test_plan,
-            string_table,
             runtime_errors_cause_failure,
+            test_plan: Default::default(),
+            string_table: Default::default(),
         }
     }
 }
@@ -208,8 +78,8 @@ impl TestBase {
         self.with_test_plan(TestPlan::read(path))
     }
 
-    pub fn with_test_plan(self, test_plan: TestPlan) -> Self {
-        self.test_plan.write().unwrap().replace(test_plan);
+    pub fn with_test_plan(mut self, test_plan: TestPlan) -> Self {
+        self.test_plan.replace(test_plan);
         self
     }
 
@@ -234,8 +104,8 @@ impl TestBase {
         self
     }
 
-    pub fn with_string_table(self, string_table: HashMap<LineId, StringInfo>) -> Self {
-        *self.string_table.write().unwrap() = string_table;
+    pub fn with_string_table(mut self, string_table: HashMap<LineId, StringInfo>) -> Self {
+        self.string_table = string_table;
         self
     }
 
@@ -244,9 +114,103 @@ impl TestBase {
     pub fn run_standard_testcase(&mut self) -> &mut Self {
         self.dialogue.set_node_to_start();
 
-        self.dialogue.continue_();
-        while self.dialogue.is_active() {
-            self.dialogue.continue_();
+        while let Some(event) = self.dialogue.continue_() {
+            match event {
+                DialogueEvent::Line(line) => {
+                    let text = self.get_composed_text_for_line(&line);
+                    println!("Line: {text}");
+                    let Some(test_plan) =  self.test_plan.as_mut() else {
+                        continue;
+                    };
+                    test_plan.next();
+
+                    assert_eq!(
+                        ExpectedStepType::Line,
+                        test_plan.next_expected_step,
+                        "Received line {text}, but was expecting a {:?}",
+                        test_plan.next_expected_step
+                    );
+                    assert_eq!(test_plan.next_step_value, Some(StepValue::String(text)));
+                }
+                DialogueEvent::Options(options) => {
+                    println!("Options:");
+
+                    let options: Vec<_> = options
+                        .into_iter()
+                        .map(|option| ProcessedOption {
+                            line: self.get_composed_text_for_line(&option.line),
+                            enabled: option.is_available,
+                        })
+                        .collect();
+                    for option in &options {
+                        println!(" - {} (available: {})", option.line, option.enabled);
+                    }
+                    let Some(test_plan) = self.test_plan.as_mut() else {
+                        continue;
+                    };
+
+                    test_plan.next();
+                    assert_eq!(
+                        ExpectedStepType::Select,
+                        test_plan.next_expected_step,
+                        "Received {} options, but wasn't expecting them (was expecting {:?})",
+                        options.len(),
+                        test_plan.next_expected_step
+                    );
+
+                    assert_eq!(test_plan.next_expected_options, options);
+
+                    if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
+                        let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
+                        println!("[Selecting option {}]", selection);
+                        self.dialogue
+                            .set_selected_option(OptionId::construct_for_debugging(selection));
+                    } else {
+                        println!("[Selecting option 0 implicitly]");
+                        self.dialogue
+                            .set_selected_option(OptionId::construct_for_debugging(0));
+                    }
+                }
+                DialogueEvent::Command(command) => {
+                    println!("Command: {}", command.0);
+                    let Some(test_plan) = self.test_plan.as_mut() else {
+                        continue;
+                    };
+                    test_plan.next();
+                    assert_eq!(
+                        ExpectedStepType::Command,
+                        test_plan.next_expected_step,
+                        "Received command {}, but wasn't expecting to select one (was expecting {:?})",
+                        command.0,
+                        test_plan.next_expected_step
+                    );
+
+                    // We don't need to get the composed string for a
+                    // command because it's been done for us in the
+                    // virtual machine. The VM can do this because
+                    // commands are not localised, so we don't need to
+                    // refer to the string table to get the text.
+                    assert_eq!(
+                        test_plan.next_step_value,
+                        Some(StepValue::String(command.0))
+                    );
+                }
+                DialogueEvent::NodeComplete(_) => {}
+                DialogueEvent::NodeStart(_) => {}
+                DialogueEvent::PrepareForLines(_) => {}
+                DialogueEvent::DialogueComplete => {
+                    let Some(test_plan) = self.test_plan.as_mut() else {
+                        continue;
+                    };
+                    test_plan.next();
+                    assert_eq!(
+                        ExpectedStepType::Stop,
+                        test_plan.next_expected_step,
+                        "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
+                        test_plan.next_expected_step
+                    );
+                }
+            }
         }
         self
     }
@@ -279,63 +243,9 @@ impl TestBase {
     }
 
     pub fn get_composed_text_for_line(&self, line: &Line) -> String {
-        get_composed_text_for_line_with_no_self(line, &self.string_table, self.dialogue.as_ref())
+        let string_info = self.string_table.get(&line.id).unwrap();
+        let substitutions = line.substitutions.iter().map(|s| s.as_str());
+        let substituted_text = Dialogue::expand_substitutions(&string_info.text, substitutions);
+        self.dialogue.parse_markup(&substituted_text)
     }
-
-    pub fn test_plan_shared(&self) -> Arc<RwLock<Option<TestPlan>>> {
-        self.test_plan.clone()
-    }
-
-    pub fn test_plan(&self) -> impl Deref<Target = Option<TestPlan>> + '_ {
-        self.test_plan.read().unwrap()
-    }
-
-    pub fn test_plan_mut(&mut self) -> impl DerefMut<Target = Option<TestPlan>> + '_ {
-        self.test_plan.write().unwrap()
-    }
-
-    pub fn string_table_shared(&self) -> Arc<RwLock<HashMap<LineId, StringInfo>>> {
-        self.string_table.clone()
-    }
-
-    pub fn string_table(&self) -> impl Deref<Target = HashMap<LineId, StringInfo>> + '_ {
-        self.string_table.read().unwrap()
-    }
-
-    pub fn string_table_mut(&mut self) -> impl DerefMut<Target = HashMap<LineId, StringInfo>> + '_ {
-        self.string_table.write().unwrap()
-    }
-}
-
-impl Deref for TestBase {
-    type Target = Dialogue;
-
-    fn deref(&self) -> &Self::Target {
-        &self.dialogue
-    }
-}
-
-impl DerefMut for TestBase {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.dialogue
-    }
-}
-
-impl AsRef<Dialogue> for TestBase {
-    fn as_ref(&self) -> &Dialogue {
-        &self.dialogue
-    }
-}
-
-pub fn get_composed_text_for_line_with_no_self(
-    line: &Line,
-    string_table: &RwLock<HashMap<LineId, StringInfo>>,
-    dialogue: &HandlerSafeDialogue,
-) -> String {
-    let string_table = string_table.read().unwrap();
-    let string_info = string_table.get(&line.id).unwrap();
-    let substitutions = line.substitutions.iter().map(|s| s.as_str());
-    let substituted_text =
-        HandlerSafeDialogue::expand_substitutions(&string_info.text, substitutions);
-    dialogue.parse_markup(&substituted_text)
 }

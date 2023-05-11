@@ -281,7 +281,7 @@ fn test_function_signatures() {
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
         let result = Compiler::from_test_source(source)
-            .replace_library(test_base.library().clone())
+            .extend_library(test_base.dialogue.library().clone())
             .compile()
             .unwrap();
 
@@ -310,7 +310,7 @@ fn test_operators_are_type_checked() {
             );
 
             let result = Compiler::from_test_source(&source)
-                .replace_library(test_base.library().clone())
+                .extend_library(test_base.dialogue.library().clone())
                 .compile()
                 .unwrap();
 
@@ -358,7 +358,7 @@ fn test_failing_function_signatures() {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
         let result = Compiler::from_test_source(&failing_source)
-            .replace_library(test_base.library().clone())
+            .extend_library(test_base.dialogue.library().clone())
             .compile()
             .unwrap_err();
         println!("{}", result);
@@ -407,7 +407,7 @@ fn test_initial_values() {
     );
 
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .declare_variable(
             Declaration::new("$external_str", Type::String).with_default_value("Hello"),
         )
@@ -552,7 +552,7 @@ fn test_type_conversion() {
             .expect_line("bool and bool(number): true"),
     );
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 
@@ -566,7 +566,7 @@ fn test_type_conversion_failure_to_number() {
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
     test_base.with_compilation(result).run_standard_testcase();
@@ -579,7 +579,7 @@ fn test_type_conversion_failure_to_bool() {
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
     test_base.with_compilation(result).run_standard_testcase();

@@ -28,6 +28,9 @@ impl IntoIterator for Library {
 }
 
 impl Library {
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Loads functions from another [`Library`].
     ///
     /// If the other library contains a function with the same name as
