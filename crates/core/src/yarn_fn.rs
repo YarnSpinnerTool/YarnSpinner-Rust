@@ -4,5 +4,7 @@
 
 mod function_registry;
 mod function_wrapping;
+mod parameter_wrapping;
 
+pub(crate) use parameter_wrapping::*;
 pub use {function_registry::*, function_wrapping::*};
