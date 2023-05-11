@@ -65,12 +65,13 @@ impl VirtualMachine {
             prepare_for_lines_handler: Default::default(),
             handler_safe_dialogue: dialogue_data,
             shared: shared_state,
-            library: Library::default(),
+            library: Library::standard_library(),
         }
     }
 
     pub(crate) fn reset_state(&mut self) {
         *self.state_mut() = State::default();
+        *self.current_node_name_mut() = None;
     }
 
     pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {
@@ -268,9 +269,7 @@ impl VirtualMachine {
                 // line handler.
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let strings = self
-                    .pop_substitutions_with_count_at_index(instruction, 1)
-                    .collect();
+                let strings = self.pop_substitutions_with_count_at_index(instruction, 1);
 
                 let line = Line {
                     id: string_id.into(),
@@ -297,6 +296,7 @@ impl VirtualMachine {
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
                 let command_text = self
                     .pop_substitutions_with_count_at_index(instruction, 1)
+                    .into_iter()
                     .enumerate()
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
@@ -319,9 +319,7 @@ impl VirtualMachine {
                 // Add an option to the current state
                 let string_id: String = instruction.read_operand(0);
                 assert_up_to_date_compiler(instruction.operands.len() >= 4);
-                let strings = self
-                    .pop_substitutions_with_count_at_index(instruction, 2)
-                    .collect();
+                let strings = self.pop_substitutions_with_count_at_index(instruction, 2);
                 let line = Line {
                     id: string_id.into(),
                     substitutions: strings,
@@ -409,7 +407,7 @@ impl VirtualMachine {
             }
             OpCode::JumpIfFalse => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
-                let is_top_value_true: bool = self.state_mut().pop();
+                let is_top_value_true: bool = self.state_mut().peek();
                 if !is_top_value_true {
                     let label_name: String = instruction.read_operand(0);
                     let instruction_point = self.find_instruction_point_for_label(&label_name);
@@ -426,15 +424,22 @@ impl VirtualMachine {
             OpCode::CallFunc => {
                 let actual_parameter_count: usize = self.state_mut().pop();
                 // Get the parameters, which were pushed in reverse
-                let parameters: Vec<_> = (0..actual_parameter_count)
-                    .rev()
-                    .map(|_| self.state_mut().pop_value().raw_value)
-                    .collect();
+                let parameters = {
+                    let mut parameters: Vec<_> = (0..actual_parameter_count)
+                        .rev()
+                        .map(|_| self.state_mut().pop_value().raw_value)
+                        .collect();
+                    parameters.reverse();
+                    parameters
+                };
 
                 // Call a function, whose parameters are expected to be on the stack. Pushes the function's return value, if it returns one.
                 let function_name: String = instruction.read_operand(0);
                 let function = self.library.get(&function_name).unwrap_or_else(|| {
-                    panic!("Function \"{}\" not found in library", function_name)
+                    panic!(
+                        "Function \"{}\" not found in library: {}",
+                        function_name, self.library
+                    )
                 });
 
                 // Expect the compiler to have placed the number of parameters
@@ -551,9 +556,14 @@ impl VirtualMachine {
         &mut self,
         instruction: &Instruction,
         index: usize,
-    ) -> impl Iterator<Item = String> + '_ {
+    ) -> Vec<String> {
         let expression_count: usize = instruction.operands[index].clone().try_into().unwrap();
-        (0..expression_count).rev().map(|_| self.state_mut().pop())
+        let mut values: Vec<_> = (0..expression_count)
+            .rev()
+            .map(|_| self.state_mut().pop())
+            .collect();
+        values.reverse();
+        values
     }
 }
 

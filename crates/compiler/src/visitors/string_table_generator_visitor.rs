@@ -95,7 +95,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
 
         if let Some(line_id) = line_id {
-            if self.string_table_manager.contains_key(&line_id.to_string()) {
+            if self.string_table_manager.contains_key(line_id.get_text()) {
                 // The original has a fallback for when this is `null` / `None`,
                 // but this can logically not be the case in this scope.
                 let diagnostic_context = line_id_tag.clone().unwrap();
@@ -157,7 +157,7 @@ fn generate_formatted_text(ctx: &Line_formatted_textContext) -> String {
             expression_count += 1;
         }
     }
-    composed_string
+    composed_string.trim().to_owned()
 }
 
 fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {

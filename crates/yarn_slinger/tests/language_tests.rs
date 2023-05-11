@@ -2,8 +2,8 @@
 //!
 //! ## Implementation notes
 //!
-//! Because Rust has no concept of a current global culture setting,
-//! the test `TestCompilationShouldNotBeCultureDependent` was omitted.
+//! Because Rust has no concept of a current global culture setting, the test `TestCompilationShouldNotBeCultureDependent` was omitted.
+//! The test `TestNumberPlurals` was moved to a unit test in the `runtime` crate because it fits better there.
 
 use std::collections::HashMap;
 use test_base::prelude::*;
@@ -20,7 +20,7 @@ fn test_example_script() {
     let result = compile(compilation_job).unwrap_pretty();
 
     TestBase::default()
-        .with_runtime_failure_causes_no_panic()
+        .with_runtime_errors_do_not_cause_failure()
         .with_compilation(result)
         .read_test_plan(test_plan)
         .run_standard_testcase();
@@ -34,11 +34,11 @@ fn can_compile_space_demo() -> std::io::Result<()> {
 
     let compilation_job_sally = CompilationJob::default()
         .read_file(&sally_path)?
-        .with_library(test_base.dialogue.library().clone());
+        .with_library(test_base.library().clone());
     let compilation_job_sally_and_ship = CompilationJob::default()
         .read_file(&sally_path)?
         .read_file(ship_path)?
-        .with_library(test_base.dialogue.library().clone());
+        .with_library(test_base.library().clone());
 
     let _result_sally = compile(compilation_job_sally).unwrap_pretty();
     let _result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
@@ -56,13 +56,13 @@ fn test_merging_nodes() {
     let compilation_job_sally = CompilationJob::default()
         .read_file(&sally_path)
         .unwrap()
-        .with_library(test_base.dialogue.library().clone());
+        .with_library(test_base.library().clone());
     let compilation_job_sally_and_ship = CompilationJob::default()
         .read_file(&sally_path)
         .unwrap()
         .read_file(ship_path)
         .unwrap()
-        .with_library(test_base.dialogue.library().clone());
+        .with_library(test_base.library().clone());
 
     let result_sally = compile(compilation_job_sally).unwrap_pretty();
     let result_sally_and_ship = compile(compilation_job_sally_and_ship).unwrap_pretty();
@@ -75,9 +75,19 @@ fn test_merging_nodes() {
 }
 
 #[test]
-#[ignore]
 fn test_end_of_notes_with_options_not_added() {
-    todo!("Not ported yet")
+    let path = test_data_path().join("SkippedOptions.yarn");
+    let compilation_job = CompilationJob::default().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    TestBase::default()
+        .with_compilation(result)
+        .dialogue
+        .set_options_handler(|_, _| {
+            panic!("Options should not be shown to the user in this test.");
+        })
+        .set_node_to_start()
+        .continue_();
 }
 
 #[test]
@@ -152,13 +162,54 @@ fn test_invalid_characters_in_node_title() {
 }
 
 #[test]
-#[ignore]
-fn test_number_plurals() {
-    todo!("Not ported yet")
-}
-
-#[test]
-#[ignore]
+#[ignore = "Cannot pass until markup parsing is implemented, see https://github.com/yarn-slinger/yarn-slinger/issues/77"]
 fn test_sources() {
-    todo!("Not ported yet")
+    for file in [
+        "TestCases",
+        "TestCases/ParseFailures",
+        // ## Implementation note: this directory does not exist
+        // "Issues"
+    ]
+    .iter()
+    .flat_map(TestBase::file_sources)
+    {
+        println!("INFO: Loading file {}", file.display());
+        let path = test_data_path().join(&file);
+        let test_plan = path.with_extension("testplan");
+
+        let test_base = TestBase::default();
+        let compilation_job = CompilationJob::default()
+            .read_file(&path)
+            .unwrap()
+            .with_library(test_base.library().clone());
+        let result = compile(compilation_job);
+
+        if !test_plan.exists() {
+            // No test plan for this file exists, which indicates that
+            // the file is not expected to compile. We'll actually make
+            // it a test failure if it _does_ compile.
+            assert!(
+                result.is_err(),
+                "{} is expected to have compile errors",
+                file.display()
+            );
+        } else {
+            let compilation = result.unwrap_pretty();
+            let mut test_base = test_base
+                .read_test_plan(test_plan)
+                .with_compilation(compilation);
+            test_base
+                .library_mut()
+                .register_function("dummy_bool", || true)
+                .register_function("dummy_number", || 1)
+                .register_function("dummy_string", || "string".to_owned());
+
+            // If this file contains a Start node, run the test case
+            // (otherwise, we're just testing its parseability, which
+            // we did in the last line)
+            if test_base.dialogue.node_exists("Start") {
+                test_base.run_standard_testcase();
+            }
+        }
+    }
 }

@@ -11,9 +11,20 @@ use yarn_slinger::prelude::*;
 mod test_base;
 
 #[test]
-#[ignore]
 fn test_loading_nodes() {
-    todo!("Not ported yet")
+    let path = test_data_path().join("Projects/Basic/Test.yarn");
+    let compilation_job = CompilationJob::new().read_file(path).unwrap();
+    let result = compile(compilation_job).unwrap_pretty();
+
+    let dialogue = TestBase::default().with_compilation(result).dialogue;
+
+    // high-level test: load the file, verify it has the nodes we want,
+    // and run one
+
+    assert_eq!(3, dialogue.node_names().unwrap().len());
+    assert!(dialogue.node_exists("TestNode"));
+    assert!(dialogue.node_exists("AnotherTestNode"));
+    assert!(dialogue.node_exists("ThirdNode"));
 }
 
 #[test]

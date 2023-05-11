@@ -36,12 +36,12 @@ pub struct TestBase {
     pub dialogue: Dialogue,
     test_plan: Arc<RwLock<Option<TestPlan>>>,
     string_table: Arc<RwLock<HashMap<LineId, StringInfo>>>,
-    runtime_errors_cause_panic: Arc<AtomicBool>,
+    runtime_errors_cause_failure: Arc<AtomicBool>,
 }
 
 impl Default for TestBase {
     fn default() -> Self {
-        let runtime_errors_cause_panic = Arc::new(AtomicBool::new(true));
+        let runtime_errors_cause_failure = Arc::new(AtomicBool::new(true));
         let string_table: Arc<RwLock<HashMap<LineId, StringInfo>>> =
             Arc::new(RwLock::new(HashMap::new()));
         let test_plan: Arc<RwLock<Option<TestPlan>>> = Arc::new(RwLock::new(None));
@@ -54,15 +54,15 @@ impl Default for TestBase {
             });
 
         {
-            let runtime_errors_cause_panic = runtime_errors_cause_panic.clone();
+            let runtime_errors_cause_failures = runtime_errors_cause_failure.clone();
             let string_table = string_table.clone();
             let test_plan = test_plan.clone();
 
             dialogue
                 .set_log_error_message(move |msg, _| {
-                    eprintln!("{}", msg);
-                    if runtime_errors_cause_panic.load(Ordering::Relaxed) {
-                        assert!(msg.is_empty())
+                    eprintln!("{msg}");
+                    if runtime_errors_cause_failures.load(Ordering::Relaxed) {
+                        assert!(!msg.is_empty())
                     }
                 })
                 .set_line_handler(move |line, dlg| {
@@ -193,12 +193,16 @@ impl Default for TestBase {
             dialogue,
             test_plan,
             string_table,
-            runtime_errors_cause_panic,
+            runtime_errors_cause_failure,
         }
     }
 }
 
 impl TestBase {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     /// Sets the current test plan to one loaded from a given path.
     pub fn read_test_plan(self, path: impl AsRef<Path>) -> Self {
         self.with_test_plan(TestPlan::read(path))
@@ -209,8 +213,8 @@ impl TestBase {
         self
     }
 
-    pub fn with_runtime_failure_causes_no_panic(self) -> Self {
-        self.runtime_errors_cause_panic
+    pub fn with_runtime_errors_do_not_cause_failure(self) -> Self {
+        self.runtime_errors_cause_failure
             .store(false, Ordering::Relaxed);
         self
     }
@@ -237,13 +241,14 @@ impl TestBase {
 
     /// Executes the named node, and checks any assertions made during
     /// execution. Fails the test if an assertion made in Yarn fails.
-    pub fn run_standard_testcase(&mut self) {
+    pub fn run_standard_testcase(&mut self) -> &mut Self {
         self.dialogue.set_node_to_start();
 
         self.dialogue.continue_();
         while self.dialogue.is_active() {
             self.dialogue.continue_();
         }
+        self
     }
 
     /// Returns the list of .node and.yarn files in the Tests/<directory> directory.
@@ -251,8 +256,8 @@ impl TestBase {
         let subdir: PathBuf = PathBuf::from(subdir.as_ref());
         let path = test_data_path().join(&subdir);
         let allowed_extensions = ["node", "yarn"].map(OsStr::new);
-        fs::read_dir(path)
-            .unwrap()
+        fs::read_dir(&path)
+            .unwrap_or_else(|e| panic!("Failed to read directory {}: {e}", path.display()))
             .filter_map(|entry| {
                 entry
                     .map_err(|e| {
@@ -269,12 +274,16 @@ impl TestBase {
                     .unwrap_or_default()
             })
             // don't include ".upgraded.yarn" (used in upgrader tests)
-            .filter(|entry| entry.path().ends_with(".upgraded.yarn"))
+            .filter(|entry| !entry.path().ends_with(".upgraded.yarn"))
             .map(move |entry| subdir.join(entry.file_name()))
     }
 
     pub fn get_composed_text_for_line(&self, line: &Line) -> String {
         get_composed_text_for_line_with_no_self(line, &self.string_table, self.dialogue.as_ref())
+    }
+
+    pub fn test_plan_shared(&self) -> Arc<RwLock<Option<TestPlan>>> {
+        self.test_plan.clone()
     }
 
     pub fn test_plan(&self) -> impl Deref<Target = Option<TestPlan>> + '_ {
@@ -283,6 +292,10 @@ impl TestBase {
 
     pub fn test_plan_mut(&mut self) -> impl DerefMut<Target = Option<TestPlan>> + '_ {
         self.test_plan.write().unwrap()
+    }
+
+    pub fn string_table_shared(&self) -> Arc<RwLock<HashMap<LineId, StringInfo>>> {
+        self.string_table.clone()
     }
 
     pub fn string_table(&self) -> impl Deref<Target = HashMap<LineId, StringInfo>> + '_ {
@@ -314,7 +327,7 @@ impl AsRef<Dialogue> for TestBase {
     }
 }
 
-fn get_composed_text_for_line_with_no_self(
+pub fn get_composed_text_for_line_with_no_self(
     line: &Line,
     string_table: &RwLock<HashMap<LineId, StringInfo>>,
     dialogue: &HandlerSafeDialogue,

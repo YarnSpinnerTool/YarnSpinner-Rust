@@ -20,6 +20,10 @@ pub struct ProcessedOption {
 }
 
 impl TestPlan {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn read(path: impl AsRef<Path>) -> Self {
         let steps = fs::read_to_string(path)
             .unwrap()
@@ -87,7 +91,7 @@ impl TestPlan {
         self
     }
 
-    pub fn then_select(mut self, selection: impl Into<usize>) -> Self {
+    pub fn then_select(mut self, selection: usize) -> Self {
         self.steps.push(Step::from_select(selection));
         self
     }

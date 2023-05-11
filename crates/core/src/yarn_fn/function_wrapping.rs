@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use std::any::TypeId;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use yarn_slinger_macros::all_tuples;
 
@@ -38,7 +38,7 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
-pub trait UntypedYarnFn: Debug + Send + Sync {
+pub trait UntypedYarnFn: Debug + Display + Send + Sync {
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -107,6 +107,16 @@ where
         let function_path = std::any::type_name::<F>();
         let debug_message = format!("{signature} {{{function_path}}}");
         f.debug_struct(&debug_message).finish()
+    }
+}
+
+impl<Marker, F> Display for YarnFnWrapper<Marker, F>
+where
+    F: YarnFn<Marker>,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let signature = std::any::type_name::<Marker>();
+        f.write_str(signature)
     }
 }
 

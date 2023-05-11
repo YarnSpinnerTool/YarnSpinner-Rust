@@ -280,8 +280,8 @@ fn test_function_signatures() {
         "<<set $bool = func_int_int_bool(1, 2)>>",
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
-        let compilation_job = CompilationJob::from_test_source(source)
-            .with_library(test_base.dialogue.library().clone());
+        let compilation_job =
+            CompilationJob::from_test_source(source).with_library(test_base.library().clone());
         let result = compile(compilation_job).unwrap_pretty();
 
         // The variable '$bool' should have an implicit declaration. The
@@ -308,8 +308,8 @@ fn test_operators_are_type_checked() {
                     .unwrap_or_default(),
             );
 
-            let compilation_job = CompilationJob::from_test_source(&source)
-                .with_library(test_base.dialogue.library().clone());
+            let compilation_job =
+                CompilationJob::from_test_source(&source).with_library(test_base.library().clone());
             let result = compile(compilation_job).unwrap_pretty();
 
             assert!(result
@@ -356,7 +356,7 @@ fn test_failing_function_signatures() {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
         let compilation_job = CompilationJob::from_test_source(&failing_source)
-            .with_library(test_base.dialogue.library().clone());
+            .with_library(test_base.library().clone());
         let result = compile(compilation_job).unwrap_err();
         println!("{}", result);
 
@@ -373,10 +373,58 @@ fn test_failing_function_signatures() {
 }
 
 #[test]
-#[ignore]
 fn test_initial_values() {
-    todo!("Not ported yet")
+    let source = "
+            <<declare $int = 42>>
+            <<declare $str = \"Hello\">>
+            <<declare $bool = true>>
+            // internal decls
+            {$int}
+            {$str}
+            {$bool}
+            // external decls
+            {$external_int}
+            {$external_str}
+            {$external_bool}
+            ";
+    let test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            // internal decls
+            .expect_line("42")
+            .expect_line("Hello")
+            // ## Implementation note:
+            // The original uses the default C# bool to string conversion, which capitalizes the first letter,
+            // so this would be "True" instead.
+            .expect_line("true")
+            // external decls
+            .expect_line("42")
+            .expect_line("Hello")
+            // ## Implementation note: See above
+            .expect_line("true"),
+    );
+
+    let compilations_job = CompilationJob::from_test_source(source)
+        .with_library(test_base.library().clone())
+        .with_variable_declaration(
+            Declaration::new("$external_str", Type::String).with_default_value("Hello"),
+        )
+        .with_variable_declaration(
+            Declaration::new("$external_int", Type::Boolean).with_default_value(true),
+        )
+        .with_variable_declaration(
+            Declaration::new("$external_bool", Type::Number).with_default_value(42),
+        );
+
+    let result = compile(compilations_job).unwrap_pretty();
+
+    let mut variable_storage = test_base.variable_storage();
+    variable_storage.set("$external_str".to_string(), "Hello".into());
+    variable_storage.set("$external_int".to_string(), 42.into());
+    variable_storage.set("$external_bool".to_string(), true.into());
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
+
 #[test]
 fn test_explicit_types() {
     let compilation_job = CompilationJob::from_test_source(
@@ -484,22 +532,102 @@ fn test_variable_declaration_annotations() {
 }
 
 #[test]
-#[ignore]
 fn test_type_conversion() {
-    todo!("Not ported yet");
+    let source = "
+            string + string(number): {\"1\" + string(1)}
+            string + string(bool): {\"1\" + string(true)}
+
+            number + number(string): {1 + number(\"1\")}
+            number + number(bool): {1 + number(true)}
+
+            bool and bool(string): {true and bool(\"true\")}
+            bool and bool(number): {true and bool(1)}
+            ";
+    let test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            .expect_line("string + string(number): 11")
+            .expect_line("string + string(bool): 1true")
+            .expect_line("number + number(string): 2")
+            .expect_line("number + number(bool): 2")
+            .expect_line("bool and bool(string): true")
+            .expect_line("bool and bool(number): true"),
+    );
+    let compilations_job =
+        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+    let result = compile(compilations_job).unwrap_pretty();
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
-#[ignore]
-fn test_type_conversion_failure() {
-    todo!("Not ported yet");
+#[should_panic = "Failed to convert a Yarn value to a number: ParseFloatError(ParseFloatError { kind: Invalid })"]
+fn test_type_conversion_failure_to_number() {
+    let source = "{number(\"hello\")}";
+    let test_base =
+        TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
+    let compilations_job =
+        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+    let result = compile(compilations_job).unwrap_pretty();
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
-#[ignore]
+#[should_panic = "Failed to convert a Yarn value to a bool: ParseBoolError(ParseBoolError"]
+fn test_type_conversion_failure_to_bool() {
+    let source = "{bool(\"hello\")}";
+    let test_base =
+        TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
+    let compilations_job =
+        CompilationJob::from_test_source(source).with_library(test_base.library().clone());
+    let result = compile(compilations_job).unwrap_pretty();
+    test_base.with_compilation(result).run_standard_testcase();
+}
 
+#[test]
 fn test_implicit_function_declarations() {
-    todo!("Not ported yet");
+    let source = "
+            {func_void_bool()}
+            {func_void_bool() and bool(func_void_bool())}
+            { 1 + func_void_int() }
+            { \"he\" + func_void_str() }
+
+            {func_int_bool(1)}
+            {true and func_int_bool(1)}
+
+            {func_bool_bool(false)}
+            {true and func_bool_bool(false)}
+
+            {func_str_bool(\"hello\")}
+            {true and func_str_bool(\"hello\")}
+            ";
+    let mut test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("2")
+            .expect_line("hello")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true")
+            .expect_line("true"),
+    );
+    test_base
+        .library_mut()
+        .register_function("func_void_bool", || true)
+        .register_function("func_void_int", || 1)
+        .register_function("func_void_str", || "llo".to_owned())
+        .register_function("func_int_bool", |_i: i64| true)
+        .register_function("func_bool_bool", |_b: bool| true)
+        .register_function("func_str_bool", |_s: String| true);
+
+    // the library is NOT attached to this compilation job; all
+    // functions will be implicitly declared
+    let compilations_job = CompilationJob::from_test_source(source);
+    let result = compile(compilations_job).unwrap_pretty();
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
@@ -518,9 +646,30 @@ fn test_implicit_variable_declarations() {
 }
 
 #[test]
-#[ignore]
 fn test_nested_implicit_function_declarations() {
-    todo!("Not ported yet");
+    let source = "
+    {func_bool_bool(bool(func_int_bool(1)))}
+    ";
+    let mut test_base = TestBase::new().with_test_plan(TestPlan::new().expect_line("true"));
+    test_base
+        .library_mut()
+        .register_function("func_int_bool", |i: i64| i == 1)
+        .register_function("func_bool_bool", |b: bool| b);
+
+    // the library is NOT attached to this compilation job; all
+    // functions will be implicitly declared
+    let compilations_job = CompilationJob::from_test_source(source);
+    let result = compile(compilations_job).unwrap_pretty();
+
+    assert_eq!(2, result.declarations.len());
+
+    // Both declarations that resulted from the compile should be functions found on line 1
+    for decl in &result.declarations {
+        assert_eq!(3, decl.range.as_ref().unwrap().start.line);
+        assert!(matches!(decl.r#type, Type::Function(_)));
+    }
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
