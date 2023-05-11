@@ -402,6 +402,7 @@ impl VirtualMachine {
                     let mut parameters: Vec<_> = (0..actual_parameter_count)
                         .rev()
                         .map(|_| self.state.pop_value().raw_value)
+                        .map(Some)
                         .collect();
                     parameters.reverse();
                     parameters

@@ -20,7 +20,8 @@ use yarn_slinger_macros::all_tuples;
 ///     - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
 pub trait YarnFn<Marker>: Send + Sync {
     type Out: IntoYarnValueFromNonYarnValue + 'static;
-    fn call(&self, input: Vec<YarnValue>) -> Self::Out;
+    /// The `Option`s are guaranteed to be `Some` and are just typed like this to be able to `std::mem::take` them.
+    fn call(&self, input: Vec<Option<YarnValue>>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
@@ -30,7 +31,7 @@ pub trait YarnFn<Marker>: Send + Sync {
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
-    fn call(&self, input: Vec<YarnValue>) -> YarnValue;
+    fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
@@ -41,7 +42,7 @@ where
     F: YarnFn<Marker> + 'static + Send + Sync,
     F::Out: IntoYarnValueFromNonYarnValue + 'static,
 {
-    fn call(&self, input: Vec<YarnValue>) -> YarnValue {
+    fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue {
         let output = self.function.call(input);
         output.into_untyped_value()
     }
@@ -122,14 +123,14 @@ macro_rules! impl_yarn_fn_tuple {
             {
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, input: Vec<YarnValue>) -> Self::Out {
-                    let [$($param,)*] = &input[..] else {
+                fn call(&self, mut input: Vec<Option<YarnValue>>) -> Self::Out {
+                    let [$($param,)*] = &mut input[..] else {
                         panic!("Wrong number of arguments")
                     };
 
                     let input = (
-                        $($param
-                            .clone()
+                        $(std::mem::take($param)
+                            .unwrap()
                             .try_into()
                             .unwrap_or_else(|_| panic!("Failed to convert")),
                         )*
