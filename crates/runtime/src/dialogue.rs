@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
-use yarn_slinger_core::prelude::*;
+use yarn_slinger_core::{prelude::*, yarn_fn};
 
 /// Co-ordinates the execution of Yarn programs.
 ///
@@ -23,21 +23,22 @@ pub struct Dialogue {
 impl Dialogue {
     #[must_use]
     pub fn new(variable_storage: Box<dyn VariableStorage + Send + Sync>) -> Self {
-        let storage_one = variable_storage.clone_shallow();
-        let storage_two = storage_one.clone_shallow();
-
         let library = Library::standard_library()
-            .with_function("visited", move |node: String| -> bool {
-                is_node_visited(storage_one.as_ref(), &node)
-            })
-            .with_function("visited_count", move |node: String| -> f32 {
-                get_node_visit_count(storage_two.as_ref(), &node)
-            });
+            .with_function("visited", visited(variable_storage.clone()))
+            .with_function("visited_count", visited_count(variable_storage.clone()));
         Self {
             vm: VirtualMachine::new(library, variable_storage),
             language_code: None,
         }
     }
+}
+
+fn visited(storage: Box<dyn VariableStorage + Send + Sync>) -> yarn_fn!((String) -> bool) {
+    move |node: String| -> bool { is_node_visited(storage.as_ref(), &node) }
+}
+
+fn visited_count(storage: Box<dyn VariableStorage + Send + Sync>) -> yarn_fn!((String) -> f32) {
+    move |node: String| get_node_visit_count(storage.as_ref(), &node)
 }
 
 impl Iterator for Dialogue {
