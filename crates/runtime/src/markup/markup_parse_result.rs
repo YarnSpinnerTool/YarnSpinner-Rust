@@ -134,11 +134,13 @@ impl MarkupParseResult {
                     // that it begins at the point where this item and the
                     // item we're deleting stop overlapping.
                     let overlap = deletion_end - start;
-                    let new_start =
+                    let new_start = deletion_start;
+                    let new_length = attribute.length - overlap;
+                    attribute.position = new_start;
+                    attribute.length = new_length;
                 }
                 Some(attribute)
             })
-            .cloned()
             .collect();
         MarkupParseResult {
             text: edited_substring,
