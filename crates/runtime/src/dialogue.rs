@@ -35,13 +35,13 @@ impl Dialogue {
 
 fn visited(
     storage: Box<dyn VariableStorage + Send + Sync>,
-) -> yarn_fn_type!(impl Fn(String) -> bool) {
+) -> yarn_fn_type! { impl Fn(String) -> bool } {
     move |node: String| -> bool { is_node_visited(storage.as_ref(), &node) }
 }
 
 fn visited_count(
     storage: Box<dyn VariableStorage + Send + Sync>,
-) -> yarn_fn_type!(impl Fn(String) -> f32) {
+) -> yarn_fn_type! { impl Fn(String) -> f32 } {
     move |node: String| get_node_visit_count(storage.as_ref(), &node)
 }
 

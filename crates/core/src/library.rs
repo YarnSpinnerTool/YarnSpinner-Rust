@@ -76,7 +76,7 @@ impl Library {
     /// # let mut library = Library::default();
     /// library.register_function("length_times_two", string_length(2));
     ///
-    /// fn string_length(multiplier: usize) -> yarn_fn_type!(impl Fn(String) -> usize) {
+    /// fn string_length(multiplier: usize) -> yarn_fn_type! { impl Fn(String) -> usize } {
     ///     move |s: String| s.len() * multiplier
     /// }
     /// ```

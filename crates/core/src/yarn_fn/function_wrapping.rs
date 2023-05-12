@@ -162,7 +162,7 @@ impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
 /// # }
 /// takes_yarn_fn(string_length(2));
 ///
-/// fn string_length(multiplier: usize) -> yarn_fn_type!(impl Fn(String) -> usize) {
+/// fn string_length(multiplier: usize) -> yarn_fn_type! { impl Fn(String) -> usize } {
 ///     move |s: String| s.len() * multiplier
 /// }
 /// ```
