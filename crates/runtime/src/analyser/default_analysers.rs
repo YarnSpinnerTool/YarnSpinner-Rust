@@ -6,9 +6,9 @@ mod variable_lister;
 
 macro_rules! boxes {
     ($($x:ident),*) => {
-        vec![$(Box::new($x::default())),*]
+        vec![$(Box::new($x::new())),*]
     };
 }
 pub(crate) fn default_analysers() -> Vec<Box<dyn CompiledProgramAnalyser>> {
-    boxes![VariableLister]
+    boxes![VariableLister, UnusedVariableChecker]
 }
