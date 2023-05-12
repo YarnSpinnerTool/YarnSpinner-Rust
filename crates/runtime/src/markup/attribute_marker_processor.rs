@@ -12,4 +12,11 @@ pub(crate) trait AttributeMarkerProcessor: Debug + Send + Sync {
     /// position to its corresponding closing marker is provided as a string
     /// property called `contents`.
     fn replacement_text_for_marker(&mut self, marker: &MarkupAttribute) -> String;
+    fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor>;
+}
+
+impl Clone for Box<dyn AttributeMarkerProcessor> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
