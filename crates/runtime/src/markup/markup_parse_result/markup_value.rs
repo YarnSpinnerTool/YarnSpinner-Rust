@@ -8,7 +8,7 @@ use core::fmt::Display;
 /// You do not create instances of this struct yourself. It is created
 /// by objects that can parse markup, such as [`Dialogue`]
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum MarkupValue {
+pub enum MarkupValue {
     Integer(isize),
     Float(f32),
     String(String),

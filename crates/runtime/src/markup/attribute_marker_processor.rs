@@ -1,7 +1,11 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/IAttributeMarkerProcessor.cs>
 
-use crate::markup::MarkupAttribute;
+pub(crate) use self::{dialogue_attribute_marker_processor::*, no_markup_text_processor::*};
+use crate::markup::{MarkupAttribute, MarkupAttributeMarker};
 use core::fmt::Debug;
+
+mod dialogue_attribute_marker_processor;
+mod no_markup_text_processor;
 
 /// Provides a mechanism for producing replacement text for a marker.
 pub(crate) trait AttributeMarkerProcessor: Debug + Send + Sync {
@@ -11,7 +15,7 @@ pub(crate) trait AttributeMarkerProcessor: Debug + Send + Sync {
     /// If the marker is an `open` marker, the text from the marker's
     /// position to its corresponding closing marker is provided as a string
     /// property called `contents`.
-    fn replacement_text_for_marker(&mut self, marker: &MarkupAttribute) -> String;
+    fn replacement_text_for_marker(&mut self, marker: &MarkupAttributeMarker) -> String;
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor>;
 }
 
