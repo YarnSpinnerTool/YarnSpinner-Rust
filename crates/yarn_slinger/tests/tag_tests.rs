@@ -1,15 +1,16 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/TagTests.cs>
 
-use crate::test_base::*;
+use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
 mod test_base;
 
 #[test]
 fn test_no_options_line_not_tagged() {
-    let compilation_job =
-        CompilationJob::from_test_source("title:Start\n---\nline without options #line:1\n===\n");
-    let result = compile(compilation_job).unwrap_pretty();
+    let result =
+        Compiler::from_test_source("title:Start\n---\nline without options #line:1\n===\n")
+            .compile()
+            .unwrap();
 
     let info = &result.string_table["line:1"];
     assert!(!contains_last_line_tag(info));
@@ -17,10 +18,11 @@ fn test_no_options_line_not_tagged() {
 
 #[test]
 fn test_line_before_options_tagged_last_line() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "title:Start\n---\nline before options #line:1\n-> option 1\n-> option 2\n===\n",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:1"];
     assert!(contains_last_line_tag(info));
@@ -28,10 +30,9 @@ fn test_line_before_options_tagged_last_line() {
 
 #[test]
 fn test_line_not_before_options_not_tagged_last_line() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "title:Start\n---\nline not before options #line:0\nline before options #line:1\n-> option 1\n-> option 2\n===\n",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    ).compile().unwrap();
 
     let info = &result.string_table["line:0"];
     assert!(!contains_last_line_tag(info));
@@ -39,10 +40,9 @@ fn test_line_not_before_options_not_tagged_last_line() {
 
 #[test]
 fn test_line_after_options_not_tagged_last_line() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "title:Start\n---\nline before options #line:1\n-> option 1\n-> option 2\nline after options #line:2\n===\n",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    ).compile().unwrap();
 
     let info = &result.string_table["line:2"];
     assert!(!contains_last_line_tag(info));
@@ -50,7 +50,7 @@ fn test_line_after_options_not_tagged_last_line() {
 
 #[test]
 fn test_nested_option_lines_tagged_last_line() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
 line before options #line:1
 -> option 1
@@ -61,8 +61,9 @@ line before options #line:1
 -> option 2
 -> option 3
 ",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:1"];
     assert!(contains_last_line_tag(info));
@@ -73,7 +74,7 @@ line before options #line:1
 
 #[test]
 fn test_if_interior_lines_tagged_last_line() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
 <<if true>>
 line before options #line:0
@@ -81,8 +82,9 @@ line before options #line:0
 -> option 2
 <<endif>>
             ",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:0"];
     assert!(contains_last_line_tag(info));
@@ -90,7 +92,7 @@ line before options #line:0
 
 #[test]
 fn test_if_interior_lines_not_tagged_last_line() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
 <<if true>>
 line before options #line:0
@@ -98,8 +100,9 @@ line before options #line:0
 -> option 1
 -> option 2
 ",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:0"];
     assert!(!contains_last_line_tag(info));
@@ -107,15 +110,16 @@ line before options #line:0
 
 #[test]
 fn test_nested_option_lines_not_tagged() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
 -> option 1
     inside options #line:1a
 -> option 2
 -> option 3
 ",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:1a"];
     assert!(!contains_last_line_tag(info));
@@ -123,7 +127,7 @@ fn test_nested_option_lines_not_tagged() {
 
 #[test]
 fn test_interrupted_lines_not_tagged() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
 line before command #line:0
 <<custom command>>
@@ -139,8 +143,9 @@ line before jump #line:3
 line before call #line:4
 <<call function()>>
             ",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:0"];
     assert!(!contains_last_line_tag(info));
@@ -156,10 +161,11 @@ line before call #line:4
 
 #[test]
 fn test_line_is_last_before_another_node_not_tagged() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "title: Start\n---\nlast line #line:0\n===\ntitle: Second\n---\n-> option 1\n===\n",
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let info = &result.string_table["line:0"];
     assert!(!contains_last_line_tag(info));

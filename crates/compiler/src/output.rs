@@ -3,7 +3,7 @@
 pub use self::{debug_info::*, string_info::*};
 use crate::prelude::StringTableManager;
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use thiserror::Error;
 use yarn_slinger_core::prelude::*;
 
@@ -12,7 +12,7 @@ mod string_info;
 
 /// The result of a compilation.
 ///
-/// Instances of this struct are produced as a result of supplying a [`CompilationJob`] to [`compile`].
+/// Instances of this struct are produced as a result of calling [`Compiler::compile`].
 ///
 /// ## Implementation Notes
 ///
@@ -24,7 +24,7 @@ pub struct Compilation {
     /// produced.
     ///
     /// This value will be [`None`] if the
-    /// [`CompilationJob`] object's [`CompilationJob::CompilationType`] value was not
+    /// [`Compiler`] object's [`Compiler::CompilationType`] value was not
     /// [`CompilationType::FullCompilation`]
     pub program: Option<Program>,
 
@@ -40,7 +40,7 @@ pub struct Compilation {
     /// The collection of variable declarations that were found during
     /// compilation.
     ///
-    /// This value will be empty if the [`CompilationJob`] object's
+    /// This value will be empty if the [`Compiler`] object's
     /// [`CompilationType`] value was not [`CompilationType::FullCompilation`].
     pub declarations: Vec<Declaration>,
 
@@ -61,8 +61,8 @@ pub struct Compilation {
     /// The collection of file-level tags found in the source code.
     ///
     /// The keys of this dictionary are the file names (as
-    /// indicated by the [`CompilationJob.File.FileName`] property
-    /// of the [`CompilationJob`]'s [`CompilationJob.Files`] collection), and the values are the
+    /// indicated by the [`File::file_name`] field
+    /// of the [`Compiler`]'s [`Compiler::files`] collection), and the values are the
     /// file tags associated with that file.
     pub file_tags: HashMap<String, Vec<String>>,
 
@@ -112,9 +112,27 @@ impl Compilation {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error)]
 pub struct CompilationError {
     pub diagnostics: Vec<Diagnostic>,
+}
+
+impl Debug for CompilationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // This looks evil, but we support really nice error messages through Display,
+        // which we want to print by default on `unwrap` and `expect`.
+        // If you really need the real debug print, call [`CompilationError::debug_fmt`].
+        Display::fmt(self, f)
+    }
+}
+
+impl CompilationError {
+    pub fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for diagnostic in &self.diagnostics {
+            writeln!(f, "{:?}", diagnostic)?;
+        }
+        Ok(())
+    }
 }
 
 impl Display for CompilationError {

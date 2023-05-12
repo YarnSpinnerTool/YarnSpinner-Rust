@@ -33,7 +33,7 @@ impl<'a> LineParser<'a> {
 }
 
 /// Returns a new string whose textual value is the same as this string, but whose binary representation is in Unicode normalization form C.
-fn normalize_to_form_c() {
+fn normalize_to_form_c(_: &str) {
     // Use https://docs.rs/unicode-normalization/latest/unicode_normalization/trait.UnicodeNormalization.html#tymethod.nfc
     todo!()
 }

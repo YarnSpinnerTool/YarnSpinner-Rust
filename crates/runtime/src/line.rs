@@ -16,7 +16,7 @@ use crate::string_newtype;
 ///
 /// ## See also
 /// [`Dialogue::line_handler`]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Line {
     /// The ID of the line in the string table.
     pub id: LineId,

@@ -3,79 +3,63 @@
 //! ## Implementation Notes
 //! The `Operand` extensions and the `Operator` enum were moved into upstream crates to make them not depend on the runtime.
 
-pub(crate) use self::execution_state::*;
-use self::state::*;
+pub(crate) use self::{execution_state::*, state::*};
 use crate::prelude::*;
 use log::*;
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::instruction::OpCode;
 use yarn_slinger_core::prelude::*;
 
 mod execution_state;
 mod state;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct VirtualMachine {
-    pub(crate) program: Option<Program>,
-    pub(crate) log_debug_message: Logger,
-    pub(crate) log_error_message: Logger,
-    pub(crate) line_handler: LineHandler,
-    pub(crate) options_handler: OptionsHandler,
-    pub(crate) command_handler: CommandHandler,
-    pub(crate) node_start_handler: Option<NodeStartHandler>,
-    pub(crate) node_complete_handler: NodeCompleteHandler,
-    pub(crate) dialogue_complete_handler: Option<DialogueCompleteHandler>,
-    pub(crate) prepare_for_lines_handler: Option<PrepareForLinesHandler>,
     pub(crate) library: Library,
-    variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+    pub(crate) program: Option<Program>,
+    pub(crate) variable_storage: Box<dyn VariableStorage + Send + Sync>,
+    pub(crate) should_send_line_hints: bool,
+    current_node_name: Option<String>,
     state: State,
     execution_state: ExecutionState,
     current_node: Option<Node>,
+    batched_events: Vec<DialogueEvent>,
+}
+
+impl Iterator for VirtualMachine {
+    type Item = Vec<DialogueEvent>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.r#continue()
+    }
 }
 
 impl VirtualMachine {
-    pub(crate) fn with_variable_storage(
-        variable_storage: Arc<RwLock<dyn VariableStorage + Send + Sync>>,
+    pub(crate) fn new(
+        library: Library,
+        variable_storage: Box<dyn VariableStorage + Send + Sync>,
     ) -> Self {
         Self {
-            log_debug_message: Logger(Box::new(|msg: String| debug!("{}", msg))),
-            log_error_message: Logger(Box::new(|msg: String| error!("{}", msg))),
-            line_handler: LineHandler(Box::new(|line| {
-                info!("Delivering line: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_line_handler`.", line);
-            })),
-            options_handler: OptionsHandler(Box::new(|options| {
-                info!("Delivering options: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_options_handler`.", options);
-            })),
-            command_handler: CommandHandler(Box::new(|command| {
-                info!("Executing command: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_command_handler`.", command);
-            })),
-            node_start_handler: Default::default(),
-            node_complete_handler: NodeCompleteHandler(Box::new(|node_name| {
-                info!("Completed node: {:?}\nTo handle this command on your own, register a handler via `Dialogue::with_node_complete_handler`.", node_name);
-            })),
-            dialogue_complete_handler: Default::default(),
-            prepare_for_lines_handler: Default::default(),
+            library,
+            variable_storage,
             program: Default::default(),
+            current_node_name: Default::default(),
             state: Default::default(),
             execution_state: Default::default(),
             current_node: Default::default(),
-            library: Library::standard_library(),
-            variable_storage,
+            batched_events: Default::default(),
+            should_send_line_hints: Default::default(),
         }
     }
 
     pub(crate) fn reset_state(&mut self) {
         self.state = State::default();
-    }
-
-    pub(crate) fn execution_state(&self) -> ExecutionState {
-        self.execution_state
+        self.current_node_name = None;
     }
 
     pub(crate) fn set_execution_state(&mut self, execution_state: ExecutionState) -> &mut Self {
         self.execution_state = execution_state;
-        if self.execution_state == ExecutionState::Stopped {
+        if execution_state == ExecutionState::Stopped {
             self.reset_state()
         }
         self
@@ -88,45 +72,35 @@ impl VirtualMachine {
     }
 
     pub(crate) fn set_node(&mut self, node_name: &str) {
-        let program = self.program.as_mut().unwrap_or_else(|| {
-            panic!("Cannot load node \"{node_name}\": No nodes have been loaded.")
-        });
-        assert!(
-            !program.nodes.is_empty(),
-            "Cannot load node \"{node_name}\": No nodes have been loaded.",
-        );
+        info!("Running node \"{node_name}\"");
+        self.current_node = self
+            .get_node_from_name(node_name)
+            .cloned()
+            .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."))
+            .into();
 
-        self.log_debug_message
-            .call(format!("Running node \"{node_name}\""));
-
-        self.current_node = program.nodes.get(node_name).cloned();
         self.reset_state();
-        let current_node = self
-            .current_node
-            .as_mut()
-            .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."));
 
-        current_node.name = node_name.to_owned();
+        self.current_node_name = Some(node_name.to_owned());
 
-        if let Some(node_start_handler) = &mut self.node_start_handler {
-            node_start_handler.call(node_name.to_owned());
+        self.batched_events
+            .push(DialogueEvent::NodeStart(node_name.to_owned()));
+
+        if self.should_send_line_hints {
+            self.send_line_hints();
         }
+    }
 
-        // Do we have a way to let the client know that certain lines
-        // might be run?
-        let Some(prepare_for_lines_handler) = &mut self.prepare_for_lines_handler else {
-            return;
-        };
-
-        // If we have a prepare-for-lines handler, figure out what
-        // lines we anticipate running
-
+    fn send_line_hints(&mut self) {
         // Create a list; we will never have more lines and options
         // than total instructions, so that's a decent capacity for
         // the list
         // [sic] TODO: maybe this list could be reused to save on allocations?
 
-        let string_ids = current_node
+        let string_ids = self
+            .current_node
+            .as_ref()
+            .unwrap()
             .instructions
             .iter()
             // Loop over every instruction and find the ones that run a
@@ -145,12 +119,98 @@ impl VirtualMachine {
                     })
             })
             .collect();
-        prepare_for_lines_handler.call(string_ids);
+        self.batched_events
+            .push(DialogueEvent::LineHints(string_ids));
+    }
+
+    fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
+        let program = self.program.as_ref().unwrap_or_else(|| {
+            panic!("Cannot load node \"{node_name}\": No program has been loaded.")
+        });
+        assert!(
+            !program.nodes.is_empty(),
+            "Cannot load node \"{node_name}\": No nodes have been loaded.",
+        );
+
+        program.nodes.get(node_name)
+    }
+
+    /// Resumes execution.
+    ///
+    /// ## Implementation note
+    /// Exposed via the more idiomatic [`Iterator::next`] implementation.
+    #[must_use]
+    fn r#continue(&mut self) -> Option<Vec<DialogueEvent>> {
+        if let Some(events) = self.pop_batched_events() {
+            return Some(events);
+        }
+        self.assert_can_continue();
+
+        self.set_execution_state(ExecutionState::Running);
+
+        while self.execution_state == ExecutionState::Running
+            && self.state.program_counter < self.current_node.as_ref().unwrap().instructions.len()
+        {
+            let current_node = self.current_node.clone().unwrap();
+            let current_instruction = &current_node.instructions[self.state.program_counter];
+            self.run_instruction(current_instruction);
+            // ## Implementation note
+            // The original increments the program counter here, but that leads to intentional underflow on [`OpCode::RunNode`],
+            // so we do the incrementation in [`VirtualMachine::run_instruction`] instead.
+
+            if self.state.program_counter < current_node.instructions.len() {
+                continue;
+            }
+
+            self.batched_events
+                .push(DialogueEvent::NodeComplete(current_node.name.clone()));
+            self.batched_events.push(DialogueEvent::DialogueComplete);
+            info!("Run complete.");
+        }
+        self.pop_batched_events()
+    }
+
+    #[must_use]
+    fn pop_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
+        if self
+            .batched_events
+            .contains(&DialogueEvent::DialogueComplete)
+        {
+            // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
+            // So, since we work through all events after they would have already been handled in the original, we only set the execution state here.
+
+            // This does not call `set_execution_state` because that would reset the state when encountering `ExecutionState::Stopped`,
+            // which we don't want to do here since we need the current node name later
+            self.execution_state = ExecutionState::Stopped;
+        }
+        (!self.batched_events.is_empty()).then(|| std::mem::take(&mut self.batched_events))
+    }
+
+    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.
+    fn assert_can_continue(&self) {
+        assert!(
+            self.current_node.is_some(),
+            "Cannot continue running dialogue. No node has been selected."
+        );
+        assert_ne!(
+            ExecutionState::WaitingOnOptionSelection,
+            self.execution_state,
+            "Cannot continue running dialogue. Still waiting on option selection."
+        );
+        // ## Implementation note:
+        // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
+    }
+
+    pub(crate) fn unload_programs(&mut self) {
+        self.program = None
     }
 
     pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) {
-        assert_ne!(ExecutionState::WaitingOnOptionSelection, self.execution_state, "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
-                This method should only be called after the Dialogue is waiting for the user to select an option.");
+        assert_eq!(
+            ExecutionState::WaitingOnOptionSelection,
+            self.execution_state,
+            "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
+            This method should only be called after the Dialogue is waiting for the user to select an option.");
 
         assert!(
             selected_option_id.0 < self.state.current_options.len(),
@@ -170,71 +230,20 @@ impl VirtualMachine {
         self.state.current_options.clear();
 
         // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
-        self.execution_state = ExecutionState::WaitingForContinue;
+        self.set_execution_state(ExecutionState::WaitingForContinue);
     }
 
-    /// Resumes execution.
-    pub(crate) fn continue_(&mut self) {
-        self.assert_can_continue();
-        if self.execution_state == ExecutionState::DeliveringContent {
-            // We were delivering a line, option set, or command, and
-            // the client has called Continue() on us. We're still
-            // inside the stack frame of the client callback, so to
-            // avoid recursion, we'll note that our state has changed
-            // back to Running; when we've left the callback, we'll
-            // continue executing instructions.
-            self.execution_state = ExecutionState::Running;
-            return;
-        }
-
-        self.execution_state = ExecutionState::Running;
-
-        // Execute instructions until something forces us to stop
-        while self.execution_state == ExecutionState::Running {
-            let current_node = self.current_node.clone().unwrap();
-            let current_instruction = &current_node.instructions[self.state.program_counter];
-            self.run_instruction(current_instruction);
-
-            self.state.program_counter += 1;
-
-            if self.state.program_counter < current_node.instructions.len() {
-                continue;
-            }
-
-            self.node_complete_handler.call(current_node.name.clone());
-            self.execution_state = ExecutionState::Stopped;
-            if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                dialogue_complete_handler.call();
-            }
-            self.log_debug_message.call("Run complete.".to_owned());
-        }
+    pub(crate) fn is_active(&self) -> bool {
+        self.execution_state != ExecutionState::Stopped
     }
 
-    /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::continue_`] can be called. Panics if it can't.
-    fn assert_can_continue(&self) {
-        assert!(
-            self.current_node.is_some(),
-            "Cannot continue running dialogue. No node has been selected."
-        );
-        assert_eq!(
-            ExecutionState::WaitingOnOptionSelection,
-            self.execution_state,
-            "Cannot continue running dialogue. Still waiting on option selection."
-        );
-        // ## Implementation note:
-        // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
+    pub(crate) fn current_node(&self) -> Option<String> {
+        self.current_node_name.clone()
     }
 
-    pub(crate) fn current_node_name(&self) -> Option<&str> {
-        // ## Implementation note:
-        // The original uses an own member for this, but that is actually redundant, so we do it like this
-        self.current_node.as_ref().map(|node| node.name.as_str())
-    }
-
-    pub(crate) fn unload_programs(&mut self) {
-        self.program = None
-    }
-
+    /// ## Implementation note
+    ///
+    /// Increments the program counter here instead of in `continue_` for cleaner code
     fn run_instruction(&mut self, instruction: &Instruction) {
         let opcode: OpCode = instruction.opcode.try_into().unwrap();
         match opcode {
@@ -261,26 +270,22 @@ impl VirtualMachine {
                 // line handler.
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let strings = self
-                    .pop_substitutions_with_count_at_index(instruction, 1)
-                    .collect();
+                let strings = self.pop_substitutions_with_count_at_index(instruction, 1);
 
                 let line = Line {
                     id: string_id.into(),
                     substitutions: strings,
                 };
 
-                // Suspend execution, because we're about to deliver content
-                self.execution_state = ExecutionState::DeliveringContent;
-
-                self.line_handler.call(line);
+                self.batched_events.push(DialogueEvent::Line(line));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
                 // because the line handler is allowed to call `continue_`. However, we disallow that because of
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
-                self.execution_state = ExecutionState::WaitingForContinue;
+                self.set_execution_state(ExecutionState::WaitingForContinue);
+                self.state.program_counter += 1;
             }
             OpCode::RunCommand => {
                 // Passes a string to the client as a custom command
@@ -288,29 +293,28 @@ impl VirtualMachine {
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
                 let command_text = self
                     .pop_substitutions_with_count_at_index(instruction, 1)
+                    .into_iter()
                     .enumerate()
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
                     });
-                self.execution_state = ExecutionState::DeliveringContent;
                 let command = Command(command_text);
 
-                self.command_handler.call(command);
+                self.batched_events.push(DialogueEvent::Command(command));
 
                 // Implementation note:
                 // In the original, this is only done if `execution_state` is still `DeliveringContent`,
                 // because the line handler is allowed to call `continue_`. However, we disallow that because of
                 // how this violates borrow checking. So, we'll always wait at this point instead until the user
                 // called `continue_` themselves outside of the line handler.
-                self.execution_state = ExecutionState::WaitingForContinue;
+                self.set_execution_state(ExecutionState::WaitingForContinue);
+                self.state.program_counter += 1;
             }
             OpCode::AddOption => {
                 // Add an option to the current state
                 let string_id: String = instruction.read_operand(0);
                 assert_up_to_date_compiler(instruction.operands.len() >= 4);
-                let strings = self
-                    .pop_substitutions_with_count_at_index(instruction, 2)
-                    .collect();
+                let strings = self.pop_substitutions_with_count_at_index(instruction, 2);
                 let line = Line {
                     id: string_id.into(),
                     substitutions: strings,
@@ -342,84 +346,98 @@ impl VirtualMachine {
                     destination_node: node_name,
                     is_available: line_condition_passed,
                 });
+                self.state.program_counter += 1;
             }
             OpCode::ShowOptions => {
                 // If we have no options to show, immediately stop.
                 if self.state.current_options.is_empty() {
-                    self.execution_state = ExecutionState::Stopped;
-                    if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                        dialogue_complete_handler.call();
-                    }
+                    self.batched_events.push(DialogueEvent::DialogueComplete);
+                    self.state.program_counter += 1;
                     return;
                 }
 
                 // We can't continue until our client tell us which option to pick
-                self.execution_state = ExecutionState::WaitingOnOptionSelection;
+                self.set_execution_state(ExecutionState::WaitingOnOptionSelection);
 
                 // Pass the options set to the client, as well as a
                 // delegate for them to call when the user has made
                 // a selection
-                self.options_handler
-                    .call(self.state.current_options.clone());
-                // ## Implementation note:
+                let current_options = self.state.current_options.clone();
+                self.batched_events
+                    .push(DialogueEvent::Options(current_options));
 
-                // The original checks `WaitingForContinue` here, but we can't mutate the dialogue in handlers,
-                // so there's no need to check.
+                // Implementation note:
+                // Not checking the execution state now since we have no line handler to call `continue_` from.
+                self.state.program_counter += 1;
             }
             OpCode::PushString => {
-                //Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
+                // Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
                 let string_table_index: String = instruction.read_operand(0);
                 self.state.push(string_table_index);
+                self.state.program_counter += 1;
             }
             OpCode::PushFloat => {
                 // Pushes a floating point onto the stack.
                 let float: f32 = instruction.read_operand(0);
                 self.state.push(float);
+                self.state.program_counter += 1;
             }
             OpCode::PushBool => {
                 // Pushes a boolean value onto the stack.
                 let boolean: bool = instruction.read_operand(0);
                 self.state.push(boolean);
+                self.state.program_counter += 1;
             }
 
             OpCode::PushNull => {
-                println!("PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code.");
+                panic!("PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code.");
             }
             OpCode::JumpIfFalse => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
-                let is_top_value_true: bool = self.state.pop();
+                let is_top_value_true: bool = self.state.peek();
                 if !is_top_value_true {
                     let label_name: String = instruction.read_operand(0);
-                    let instruction_point = self.find_instruction_point_for_label(&label_name) - 1;
+                    let instruction_point = self.find_instruction_point_for_label(&label_name);
                     self.state.program_counter = instruction_point;
+                } else {
+                    self.state.program_counter += 1;
                 }
             }
             OpCode::Pop => {
                 // Pops a value from the stack.
                 self.state.pop_value();
+                self.state.program_counter += 1;
             }
             OpCode::CallFunc => {
+                let actual_parameter_count: usize = self.state.pop();
+                // Get the parameters, which were pushed in reverse
+                let parameters = {
+                    let mut parameters: Vec<_> = (0..actual_parameter_count)
+                        .rev()
+                        .map(|_| self.state.pop_value().raw_value)
+                        .map(Some)
+                        .collect();
+                    parameters.reverse();
+                    parameters
+                };
+
                 // Call a function, whose parameters are expected to be on the stack. Pushes the function's return value, if it returns one.
                 let function_name: String = instruction.read_operand(0);
                 let function = self.library.get(&function_name).unwrap_or_else(|| {
-                    panic!("Function \"{}\" not found in library", function_name)
+                    panic!(
+                        "Function \"{}\" not found in library: {}",
+                        function_name, self.library
+                    )
                 });
 
                 // Expect the compiler to have placed the number of parameters
                 // actually passed at the top of the stack.
-                let actual_parameter_count: usize = self.state.pop();
                 let expected_parameter_count = function.parameter_types().len();
 
                 assert_eq!(
                     expected_parameter_count, actual_parameter_count,
                     "Function {function_name} expected {expected_parameter_count} parameters, but received {actual_parameter_count}",
                 );
-
-                // Get the parameters, which were pushed in reverse
-                let parameters: Vec<_> = (0..actual_parameter_count)
-                    .rev()
-                    .map(|_| self.state.pop_value().raw_value)
-                    .collect();
 
                 // Invoke the function
                 let return_value = function.call(parameters);
@@ -435,20 +453,20 @@ impl VirtualMachine {
                 // The original code first checks whether the return type is `void`. This is vestigial from the v1 compiler.
                 // In current Yarn, every function MUST return a valid typed value, so we skip that check.
                 self.state.push(typed_return_value);
+                self.state.program_counter += 1;
             }
             OpCode::PushVariable => {
                 // Get the contents of a variable, push that onto the stack.
                 let variable_name: String = instruction.read_operand(0);
                 let loaded_value = self
                     .variable_storage
-                    .read()
-                    .unwrap()
                     .get(&variable_name)
                     .unwrap_or_else(|| {
                         // We don't have a value for this. The initial
                         // value may be found in the program. (If it's
                         // not, then the variable's value is undefined,
                         // which isn't allowed.)
+
                         self
                             .program
                             .as_ref()
@@ -460,24 +478,22 @@ impl VirtualMachine {
                             .into()
                     });
                 self.state.push(loaded_value);
+                self.state.program_counter += 1;
             }
             OpCode::StoreVariable => {
                 // Store the top value on the stack in a variable.
                 let top_value = self.state.peek_value().clone();
                 let variable_name: String = instruction.read_operand(0);
-                self.variable_storage
-                    .write()
-                    .unwrap()
-                    .set(variable_name, top_value.into());
+                self.variable_storage.set(variable_name, top_value.into());
+                self.state.program_counter += 1;
             }
             OpCode::Stop => {
                 // Immediately stop execution, and report that fact.
-                let current_node_name = self.current_node_name().unwrap().to_owned();
-                self.node_complete_handler.call(current_node_name);
-                if let Some(dialogue_complete_handler) = &mut self.dialogue_complete_handler {
-                    dialogue_complete_handler.call();
-                }
-                self.execution_state = ExecutionState::Stopped;
+                let current_node_name = self.current_node_name.clone().unwrap();
+                self.batched_events
+                    .push(DialogueEvent::NodeComplete(current_node_name));
+                self.batched_events.push(DialogueEvent::DialogueComplete);
+                self.state.program_counter += 1;
             }
             OpCode::RunNode => {
                 // Run a node
@@ -485,13 +501,11 @@ impl VirtualMachine {
                 // Pop a string from the stack, and jump to a node
                 // with that name.
                 let node_name: String = self.state.pop();
-                self.node_complete_handler.call(node_name.clone());
+                self.batched_events
+                    .push(DialogueEvent::NodeComplete(node_name.clone()));
                 self.set_node(&node_name);
 
-                // Decrement program counter here, because it will
-                // be incremented when this function returns, and
-                // would mean skipping the first instruction
-                self.state.program_counter -= 1;
+                // No need to increment the program counter, since otherwise we'd skip the first instruction
             }
         }
     }
@@ -515,7 +529,7 @@ impl VirtualMachine {
                 panic!(
                     "Unknown label {} in node {}",
                     label_name,
-                    self.current_node_name().as_ref().unwrap()
+                    self.current_node_name.as_ref().unwrap()
                 )
             })
             .try_into()
@@ -526,9 +540,14 @@ impl VirtualMachine {
         &mut self,
         instruction: &Instruction,
         index: usize,
-    ) -> impl Iterator<Item = String> + '_ {
+    ) -> Vec<String> {
         let expression_count: usize = instruction.operands[index].clone().try_into().unwrap();
-        (0..expression_count).rev().map(|_| self.state.pop())
+        let mut values: Vec<_> = (0..expression_count)
+            .rev()
+            .map(|_| self.state.pop())
+            .collect();
+        values.reverse();
+        values
     }
 }
 

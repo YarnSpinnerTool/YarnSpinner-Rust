@@ -3,7 +3,7 @@
 use crate::prelude::*;
 
 /// An option to be presented to the user.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct DialogueOption {
     /// The [`Line`] that should be presented to the user for this option.
     ///
@@ -31,5 +31,15 @@ pub struct DialogueOption {
     pub is_available: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OptionId(pub(crate) usize);
+
+impl OptionId {
+    /// Constructs a new `OptionId` from the given value.
+    /// A user is supposed to use the `OptionId`s constructed by the [`Dialogue`] and not create their own.
+    ///
+    /// So, only use this method for debugging purposes.
+    pub fn construct_for_debugging(value: usize) -> Self {
+        Self(value)
+    }
+}

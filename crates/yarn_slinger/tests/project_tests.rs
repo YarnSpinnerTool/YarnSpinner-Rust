@@ -5,15 +5,25 @@
 //! - AddTagsToLines: Tests functionality that, quote: "Given Yarn source code, adds line tags to the ends of all lines that need one and do not already have one."
 //!   This is only used in a certain section of the Unity project importer.
 
-use crate::test_base::*;
+use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
 mod test_base;
 
 #[test]
-#[ignore]
 fn test_loading_nodes() {
-    todo!("Not ported yet")
+    let path = test_data_path().join("Projects/Basic/Test.yarn");
+    let result = Compiler::new().read_file(path).compile().unwrap();
+
+    let dialogue = TestBase::default().with_compilation(result).dialogue;
+
+    // high-level test: load the file, verify it has the nodes we want,
+    // and run one
+
+    assert_eq!(3, dialogue.node_names().unwrap().len());
+    assert!(dialogue.node_exists("TestNode"));
+    assert!(dialogue.node_exists("AnotherTestNode"));
+    assert!(dialogue.node_exists("ThirdNode"));
 }
 
 #[test]
@@ -22,9 +32,7 @@ fn test_debug_output_is_produced() {
         file_name: "input".to_owned(),
         source: create_test_node_with_name("This is a test node.", "DebugTesting"),
     };
-    let compilation_job = CompilationJob::default().with_file(file);
-
-    let result = compile(compilation_job).unwrap_pretty();
+    let result = Compiler::new().add_file(file).compile().unwrap();
 
     // We should have a single DebugInfo object, because we compiled a single node
     assert_eq!(1, result.debug_info.len());

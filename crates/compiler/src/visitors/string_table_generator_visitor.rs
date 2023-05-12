@@ -96,7 +96,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
 
         if let Some(line_id) = line_id {
-            if self.string_table_manager.contains_key(&line_id.to_string()) {
+            if self.string_table_manager.contains_key(line_id.get_text()) {
                 // The original has a fallback for when this is `null` / `None`,
                 // but this can logically not be the case in this scope.
                 let diagnostic_context = line_id_tag.clone().unwrap();
@@ -158,7 +158,7 @@ fn generate_formatted_text(ctx: &Line_formatted_textContext) -> String {
             expression_count += 1;
         }
     }
-    composed_string
+    composed_string.trim().to_owned()
 }
 
 fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
@@ -247,13 +247,15 @@ a {1 + 3} cool expression
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        })
+        }
+        .compile()
         .unwrap();
+
         let string_table = result.string_table;
         assert_eq!(string_table.len(), 3);
         assert_eq!(
@@ -303,12 +305,13 @@ a {very} cool expression
 ==="
             .to_string(),
         };
-        let result = compile(CompilationJob {
+        let result = Compiler {
             files: vec![file],
-            library: None,
+            library: Default::default(),
             compilation_type: CompilationType::FullCompilation,
             variable_declarations: vec![],
-        });
+        }
+        .compile();
 
         let diagnostics = result.unwrap_err().diagnostics;
         assert_eq!(2, diagnostics.len());

@@ -477,13 +477,13 @@ This is the one and only line
     Nice.
 -> Option 2
     Nicer
-
+    
     This is part of the previous option statement due to indentation on the \"empty\" line above
 
     And this doesn't, as the indentation is reset beforehand.
-
+    
     This belongs to the previous statement, for the same reason.
-
+    
 ===";
 
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(

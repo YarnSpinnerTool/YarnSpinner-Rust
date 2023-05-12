@@ -7,7 +7,24 @@ use std::ops::{Deref, DerefMut};
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct YarnFnRegistry(pub HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>);
+pub struct YarnFnRegistry(pub InnerRegistry);
+
+type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
+
+impl Extend<<InnerRegistry as IntoIterator>::Item> for YarnFnRegistry {
+    fn extend<T: IntoIterator<Item = <InnerRegistry as IntoIterator>::Item>>(&mut self, iter: T) {
+        self.0.extend(iter);
+    }
+}
+
+impl IntoIterator for YarnFnRegistry {
+    type Item = <InnerRegistry as IntoIterator>::Item;
+    type IntoIter = <InnerRegistry as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl YarnFnRegistry {
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
@@ -25,6 +42,12 @@ impl YarnFnRegistry {
         let wrapped = YarnFnWrapper::from(function);
         self.insert(name, Box::new(wrapped));
         self
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn + Send + Sync))> {
+        self.0
+            .iter()
+            .map(|(key, value)| (key.as_ref(), value.as_ref()))
     }
 
     pub fn add_boxed(
@@ -107,7 +130,7 @@ mod tests {
 
         functions.register_function("test", |a: f32| a);
         let function = functions.get("test").unwrap();
-        let result: f32 = function.call(vec![1.0.into()]).try_into().unwrap();
+        let result: f32 = function.call(to_function_params([1.0])).try_into().unwrap();
 
         assert_eq!(result, 1.0);
     }
@@ -130,7 +153,10 @@ mod tests {
         let function2 = functions.get("test2").unwrap();
 
         let result1: bool = function1.call(vec![]).try_into().unwrap();
-        let result2: f32 = function2.call(vec![1.0.into()]).try_into().unwrap();
+        let result2: f32 = function2
+            .call(to_function_params([1.0]))
+            .try_into()
+            .unwrap();
 
         assert!(result1);
         assert_eq!(result2, 1.0);
@@ -155,21 +181,21 @@ mod tests {
 
         let result1: bool = function1.call(vec![]).try_into().unwrap();
         let result2: f32 = function2
-            .call(vec![1.0.into(), 2.0.into()])
+            .call(to_function_params([1.0, 2.0]))
             .try_into()
             .unwrap();
         let result3: f32 = function3
-            .call(vec![1.0.into(), 2.0.into(), 3.0.into()])
+            .call(to_function_params([1.0, 2.0, 3.0]))
             .try_into()
             .unwrap();
         let result4: String = function4
-            .call(vec![
-                "a".into(),
+            .call(to_function_params([
+                YarnValue::from("a"),
                 "b".into(),
                 "c".into(),
                 true.into(),
                 1.0.into(),
-            ])
+            ]))
             .try_into()
             .unwrap();
 
@@ -177,6 +203,12 @@ mod tests {
         assert_eq!(result2, 3.0);
         assert_eq!(result3, 7.0);
         assert_eq!(result4, "abctrue1".to_string());
+    }
+
+    fn to_function_params(
+        params: impl IntoIterator<Item = impl Into<YarnValue>>,
+    ) -> Vec<Option<YarnValue>> {
+        params.into_iter().map(Into::into).map(Some).collect()
     }
 
     #[test]

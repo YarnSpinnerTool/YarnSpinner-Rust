@@ -14,14 +14,14 @@
 //! so the following (fairly useless) test was omitted:
 //! - `TestBuiltinTypesAreEnumerated`
 
-use crate::test_base::*;
+use test_base::prelude::*;
 use yarn_slinger::prelude::*;
 
 mod test_base;
 
 #[test]
 fn test_variable_declarations_parsed() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         r#"
             <<declare $int = 5>>
             <<declare $str = "yes">>
@@ -35,8 +35,9 @@ fn test_variable_declarations_parsed() {
             // Declarations are allowed anywhere in the program
             <<declare $bool = true>>
 "#,
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
     let expected_declarations = &[
         Declaration::new("$int", Type::Number)
             .with_default_value(5.0)
@@ -111,27 +112,26 @@ fn test_declarations_can_appear_in_other_files() {
             ",
         "NodeB",
     );
-    let compilation_job = CompilationJob::default()
-        .with_file(File {
+    let _result = Compiler::default()
+        .add_file(File {
             file_name: "sourceA".to_owned(),
             source: source_a,
         })
-        .with_file(File {
+        .add_file(File {
             file_name: "sourceB".to_owned(),
             source: source_b,
-        });
-    let _result = compile(compilation_job).unwrap_pretty();
+        })
+        .compile()
+        .unwrap();
 }
 
 #[test]
 fn test_importing_variable_declarations() {
-    let compilation_job =
-        CompilationJob::from_test_source("<<set $int = 6>> // no error; declaration is imported")
-            .with_variable_declaration(
-                Declaration::new("$int", Type::Number).with_default_value(0.0),
-            );
-
-    let result = compile(compilation_job).unwrap_pretty();
+    let result =
+        Compiler::from_test_source("<<set $int = 6>> // no error; declaration is imported")
+            .declare_variable(Declaration::new("$int", Type::Number).with_default_value(0.0))
+            .compile()
+            .unwrap();
     // No variables are declared in the source code, so we should
     // expect an empty collection of variable declarations
     assert!(result.declarations.is_empty())
@@ -139,14 +139,15 @@ fn test_importing_variable_declarations() {
 
 #[test]
 fn test_variable_declarations_disallow_duplicates() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
             <<declare $int = 5>>
             <<declare $int = 6>> // error! redeclaration of $int
             ",
-    );
+    )
+    .compile()
+    .unwrap_err();
 
-    let result = compile(compilation_job).unwrap_err();
     println!("{}", result);
     assert!(result
         .diagnostics
@@ -156,14 +157,15 @@ fn test_variable_declarations_disallow_duplicates() {
 
 #[test]
 fn test_expressions_disallow_mismatched_types() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
             <<declare $int = 5>>
             <<set $int = \"5\">> // error, can't assign string to a variable declared int
             ",
-    );
+    )
+    .compile()
+    .unwrap_err();
 
-    let result = compile(compilation_job).unwrap_err();
     println!("{}", result);
     assert!(result
         .diagnostics
@@ -177,8 +179,7 @@ fn test_expressions_allows_using_undeclared_variable() {
         "<<set $str = \"hi\">>", //  // in commands
         "{$str + 1}",            // in inline expressions
     ] {
-        let compilation_job = CompilationJob::from_test_source(source);
-        let _result = compile(compilation_job).unwrap_pretty();
+        let _result = Compiler::from_test_source(source).compile().unwrap();
     }
 }
 
@@ -232,8 +233,7 @@ fn test_expressions_require_compatible_types() {
                 .unwrap_or_default()
         );
 
-        let compilation_job = CompilationJob::from_test_source(&source);
-        let result = compile(compilation_job).unwrap_pretty();
+        let result = Compiler::from_test_source(&source).compile().unwrap();
 
         assert!(result
             .declarations
@@ -252,10 +252,10 @@ fn test_expressions_require_compatible_types() {
 
 #[test]
 fn test_null_not_allowed() {
-    let compilation_job =
-        CompilationJob::from_test_source("<<declare $err = null>> // error, null not allowed");
+    let result = Compiler::from_test_source("<<declare $err = null>> // error, null not allowed")
+        .compile()
+        .unwrap_err();
 
-    let result = compile(compilation_job).unwrap_err();
     println!("{}", result);
     assert!(result
         .diagnostics
@@ -272,7 +272,7 @@ fn test_function_signatures() {
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for source in [
         "<<set $bool = func_void_bool()>>",
@@ -280,9 +280,10 @@ fn test_function_signatures() {
         "<<set $bool = func_int_int_bool(1, 2)>>",
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
-        let compilation_job = CompilationJob::from_test_source(source)
-            .with_library(test_base.dialogue.library().clone());
-        let result = compile(compilation_job).unwrap_pretty();
+        let result = Compiler::from_test_source(source)
+            .extend_library(test_base.dialogue.library().clone())
+            .compile()
+            .unwrap();
 
         // The variable '$bool' should have an implicit declaration. The
         // type of the variable should be Boolean, because that's the return
@@ -308,9 +309,10 @@ fn test_operators_are_type_checked() {
                     .unwrap_or_default(),
             );
 
-            let compilation_job = CompilationJob::from_test_source(&source)
-                .with_library(test_base.dialogue.library().clone());
-            let result = compile(compilation_job).unwrap_pretty();
+            let result = Compiler::from_test_source(&source)
+                .extend_library(test_base.dialogue.library().clone())
+                .compile()
+                .unwrap();
 
             assert!(result
                 .declarations
@@ -329,7 +331,7 @@ fn test_failing_function_signatures() {
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for (source, expected_exception_message) in [
         (
@@ -355,9 +357,10 @@ fn test_failing_function_signatures() {
     ] {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
-        let compilation_job = CompilationJob::from_test_source(&failing_source)
-            .with_library(test_base.dialogue.library().clone());
-        let result = compile(compilation_job).unwrap_err();
+        let result = Compiler::from_test_source(&failing_source)
+            .extend_library(test_base.dialogue.library().clone())
+            .compile()
+            .unwrap_err();
         println!("{}", result);
 
         let diagnostic_messages = result
@@ -373,20 +376,65 @@ fn test_failing_function_signatures() {
 }
 
 #[test]
-#[ignore]
 fn test_initial_values() {
-    todo!("Not ported yet")
+    let source = "
+            <<declare $int = 42>>
+            <<declare $str = \"Hello\">>
+            <<declare $bool = true>>
+            // internal decls
+            {$int}
+            {$str}
+            {$bool}
+            // external decls
+            {$external_int}
+            {$external_str}
+            {$external_bool}
+            ";
+    let test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            // internal decls
+            .expect_line("42")
+            .expect_line("Hello")
+            // ## Implementation note:
+            // The original uses the default C# bool to string conversion, which capitalizes the first letter,
+            // so this would be "True" instead.
+            .expect_line("true")
+            // external decls
+            .expect_line("42")
+            .expect_line("Hello")
+            // ## Implementation note: See above
+            .expect_line("true"),
+    );
+
+    let result = Compiler::from_test_source(source)
+        .extend_library(test_base.dialogue.library().clone())
+        .declare_variable(
+            Declaration::new("$external_str", Type::String).with_default_value("Hello"),
+        )
+        .declare_variable(Declaration::new("$external_int", Type::Boolean).with_default_value(true))
+        .declare_variable(Declaration::new("$external_bool", Type::Number).with_default_value(42))
+        .compile()
+        .unwrap();
+
+    let mut variable_storage = test_base.variable_store.clone_shallow();
+    variable_storage.set("$external_str".to_string(), "Hello".into());
+    variable_storage.set("$external_int".to_string(), 42.into());
+    variable_storage.set("$external_bool".to_string(), true.into());
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
+
 #[test]
 fn test_explicit_types() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         r#"
         <<declare $str = "hello" as string>>
         <<declare $int = 1 as number>>
         <<declare $bool = false as bool>>
         "#,
-    );
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let variable_declarations: Vec<_> = result
         .declarations
@@ -412,14 +460,13 @@ fn test_explicit_types_must_match_value() {
         r#"<<declare $int = 1 as bool>>"#,
         r#"<<declare $bool = false as string>>"#,
     ] {
-        let compilation_job = CompilationJob::from_test_source(test);
-        let _result = compile(compilation_job).unwrap_err();
+        let _result = Compiler::from_test_source(test).compile().unwrap_err();
     }
 }
 
 #[test]
 fn test_variable_declaration_annotations() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         r#"
         /// prefix: a number
         <<declare $prefix_int = 42>>
@@ -443,9 +490,9 @@ fn test_variable_declaration_annotations() {
         /// doc comment
         <<declare $multiline = 42>>
         "#,
-    );
-
-    let result = compile(compilation_job).unwrap_pretty();
+    )
+    .compile()
+    .unwrap();
 
     let expected_declarations = vec![
         Declaration::new("$prefix_int", Type::Number)
@@ -484,30 +531,114 @@ fn test_variable_declaration_annotations() {
 }
 
 #[test]
-#[ignore]
 fn test_type_conversion() {
-    todo!("Not ported yet");
+    let source = "
+            string + string(number): {\"1\" + string(1)}
+            string + string(bool): {\"1\" + string(true)}
+
+            number + number(string): {1 + number(\"1\")}
+            number + number(bool): {1 + number(true)}
+
+            bool and bool(string): {true and bool(\"true\")}
+            bool and bool(number): {true and bool(1)}
+            ";
+    let test_base = TestBase::new().with_test_plan(
+        TestPlan::new()
+            .expect_line("string + string(number): 11")
+            .expect_line("string + string(bool): 1true")
+            .expect_line("number + number(string): 2")
+            .expect_line("number + number(bool): 2")
+            .expect_line("bool and bool(string): true")
+            .expect_line("bool and bool(number): true"),
+    );
+    let result = Compiler::from_test_source(source)
+        .extend_library(test_base.dialogue.library().clone())
+        .compile()
+        .unwrap();
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
-#[ignore]
-fn test_type_conversion_failure() {
-    todo!("Not ported yet");
+#[should_panic = "Failed to convert a Yarn value to a number: ParseFloatError(ParseFloatError { kind: Invalid })"]
+fn test_type_conversion_failure_to_number() {
+    let source = "{number(\"hello\")}";
+    let test_base =
+        TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
+    let result = Compiler::from_test_source(source)
+        .extend_library(test_base.dialogue.library().clone())
+        .compile()
+        .unwrap();
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
-#[ignore]
+#[should_panic = "Failed to convert a Yarn value to a bool: ParseBoolError(ParseBoolError"]
+fn test_type_conversion_failure_to_bool() {
+    let source = "{bool(\"hello\")}";
+    let test_base =
+        TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
+    let result = Compiler::from_test_source(source)
+        .extend_library(test_base.dialogue.library().clone())
+        .compile()
+        .unwrap();
+    test_base.with_compilation(result).run_standard_testcase();
+}
 
+#[test]
 fn test_implicit_function_declarations() {
-    todo!("Not ported yet");
+    let source = "
+            {func_void_bool()}
+            {func_void_bool() and bool(func_void_bool())}
+            { 1 + func_void_int() }
+            { \"he\" + func_void_str() }
+
+            {func_int_bool(1)}
+            {true and func_int_bool(1)}
+
+            {func_bool_bool(false)}
+            {true and func_bool_bool(false)}
+
+            {func_str_bool(\"hello\")}
+            {true and func_str_bool(\"hello\")}
+            ";
+    let test_base = TestBase::new()
+        .with_test_plan(
+            TestPlan::new()
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("2")
+                .expect_line("hello")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true"),
+        )
+        .extend_library(
+            Library::new()
+                .with_function("func_void_bool", || true)
+                .with_function("func_void_int", || 1)
+                .with_function("func_void_str", || "llo".to_owned())
+                .with_function("func_int_bool", |_i: i64| true)
+                .with_function("func_bool_bool", |_b: bool| true)
+                .with_function("func_str_bool", |_s: &str| true),
+        );
+
+    // the library is NOT attached to this compilation job; all
+    // functions will be implicitly declared
+    let result = Compiler::from_test_source(source).compile().unwrap();
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
 fn test_implicit_variable_declarations() {
     for (value, type_name) in [("1", "Number"), ("\"hello\"", "String"), ("true", "Bool")] {
-        let compilation_job = CompilationJob::from_test_source(&format!("<<set $v = {value}>>"));
-
-        let result = compile(compilation_job).unwrap_pretty();
+        let result = Compiler::from_test_source(&format!("<<set $v = {value}>>"))
+            .compile()
+            .unwrap();
 
         assert_eq!(1, result.declarations.len());
         assert!(result
@@ -518,21 +649,44 @@ fn test_implicit_variable_declarations() {
 }
 
 #[test]
-#[ignore]
 fn test_nested_implicit_function_declarations() {
-    todo!("Not ported yet");
+    let source = "
+    {func_bool_bool(bool(func_int_bool(1)))}
+    ";
+    let test_base = TestBase::new()
+        .with_test_plan(TestPlan::new().expect_line("true"))
+        .extend_library(
+            Library::new()
+                .with_function("func_int_bool", |i: i64| i == 1)
+                .with_function("func_bool_bool", |b: bool| b),
+        );
+
+    // the library is NOT attached to this compilation job; all
+    // functions will be implicitly declared
+    let result = Compiler::from_test_source(source).compile().unwrap();
+
+    assert_eq!(2, result.declarations.len());
+
+    // Both declarations that resulted from the compile should be functions found on line 1
+    for decl in &result.declarations {
+        assert_eq!(3, decl.range.as_ref().unwrap().start.line);
+        assert!(matches!(decl.r#type, Type::Function(_)));
+    }
+
+    test_base.with_compilation(result).run_standard_testcase();
 }
 
 #[test]
 fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         r#"
         {func(1)}
         {func(2, 2)} // wrong number of parameters (previous decl had 1)
         "#,
-    );
+    )
+    .compile()
+    .unwrap_err();
 
-    let result = compile(compilation_job).unwrap_err();
     println!("{}", result);
 
     assert_eq!(
@@ -543,14 +697,15 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
 
 #[test]
 fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         "
         {func(1)}
         {func(true)} // wrong type of parameter (previous decl had number)
         ",
-    );
+    )
+    .compile()
+    .unwrap_err();
 
-    let result = compile(compilation_job).unwrap_err();
     println!("{}", result);
 
     assert!(result
@@ -561,7 +716,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
 
 #[test]
 fn test_if_statement_expressions_must_be_boolean() {
-    let compilation_job = CompilationJob::from_test_source(
+    let result = Compiler::from_test_source(
         r#"
         <<declare $str = "hello" as string>>
         <<declare $bool = true>>
@@ -574,9 +729,10 @@ fn test_if_statement_expressions_must_be_boolean() {
         Hello
         <<endif>>
         "#,
-    );
+    )
+    .compile()
+    .unwrap_err();
 
-    let result = compile(compilation_job).unwrap_err();
     println!("{}", result);
 
     assert!(result.diagnostics.iter().any(|d| d
