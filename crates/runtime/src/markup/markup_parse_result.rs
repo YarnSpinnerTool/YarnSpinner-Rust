@@ -19,7 +19,7 @@ mod tag_type;
 pub struct MarkupParseResult {
     /// The original text, with all parsed markers removed.
     pub text: String,
-    /// The list of <see cref="MarkupAttribute"/>s in this parse result.
+    /// The list of [`MarkupAttribute`] in this parse result.
     pub attributes: Vec<MarkupAttribute>,
 }
 
@@ -29,12 +29,51 @@ impl MarkupParseResult {
         self.attributes.iter().find(|attr| attr.name == name)
     }
 
-    /// Returns the substring of [`text`] covered by the [`attribute`]s Position and Length properties.
+    /// Returns the substring of [`text`] covered by the [`attribute`]s position and length fields.
+    pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
+        assert!(self.text.len() < attribute.position + attribute.length, "Attribute represents a range not representable by this text. Does this MarkupAttribute belong to this MarkupParseResult?");
+        &self.text[attribute.position..attribute.position + attribute.length]
+    }
+
+    /// Deletes an attribute from this markup.
+    /// This method deletes the range of text covered by `attribute_to_delete`,
+    /// and updates the other attributes in this markup as follows:
     ///
-    /// ## Implementation notes:
-    /// Instead of returning an empty string if the length is zero, we return none.
-    pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> Option<&str> {
-        (attribute.length != 0)
-            .then(|| &self.text[attribute.position..attribute.position + attribute.length])
+    /// - Attributes that start and end before the deleted attribute are
+    /// unmodified.
+    /// - Attributes that start before the deleted attribute and end inside it
+    /// are truncated to remove the part overlapping the deleted attribute.
+    /// - Attributes that have the same position and length as the deleted
+    /// attribute are deleted, if they apply to any text.
+    /// - Attributes that start and end within the deleted attribute are deleted.
+    /// - Attributes that start within the deleted attribute, and end outside
+    /// it, have their start truncated to remove the part overlapping the
+    /// deleted attribute.
+    /// - Attributes that start after the deleted attribute have their start
+    /// point adjusted to account for the deleted text.
+    ///
+    /// This method does not modify the current object. A new <see
+    /// [`MarkupParseResult`] is returned.
+    ///
+    /// If `attribute_to_delete` is not an attribute of this
+    /// [`MarkupParseResult`], the behaviour is undefined.
+    pub fn delete_range(&self, attribute_to_delete: MarkupAttribute) -> MarkupParseResult {
+        // Address the trivial case: if the attribute has a zero
+        // length, just create a new markup that doesn't include it.
+        // The plain text is left unmodified, because this attribute
+        // didn't apply to any text.
+        if attribute_to_delete.length == 0 {
+            let attributes = self
+                .attributes
+                .iter()
+                .filter(|attr| **attr != attribute_to_delete)
+                .cloned()
+                .collect();
+            return MarkupParseResult {
+                text: self.text.clone(),
+                attributes,
+            };
+        }
+        todo!()
     }
 }

@@ -11,17 +11,17 @@ use std::collections::HashMap;
 ///
 /// ## See also
 /// - [`Dialogue::parse_markup`]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct MarkupAttribute {
-    /// The position in the plain text where this attribute begins.
-    position: usize,
-    /// The number of text elements in the plain text that this attribute covers.
-    length: usize,
     /// The name of the attribute.
-    name: String,
+    pub name: String,
+    /// The position in the plain text where this attribute begins.
+    pub position: usize,
+    /// The number of text elements in the plain text that this attribute covers.
+    pub length: usize,
     /// The properties associated with this attribute.
-    properties: HashMap<String, MarkupValue>,
+    pub properties: HashMap<String, MarkupValue>,
     /// The position of the marker in the original text.
-    source_position: usize,
+    pub source_position: usize,
 }
