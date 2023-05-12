@@ -36,6 +36,8 @@ impl Context {
             .collect()
     }
 
+    /// ## Implementation notes
+    /// Corresponds to the original `AddProgramToAnalysis`
     pub(crate) fn diagnose_program(&mut self, program: &Program) {
         for analyser in &mut self.0 {
             analyser.diagnose(program);
