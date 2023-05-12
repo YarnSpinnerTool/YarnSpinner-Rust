@@ -30,7 +30,7 @@ fn test_node_exists() {
 
 #[test]
 fn test_analysis() {
-    let mut context = Context::with_default_analysers();
+    let mut context = Context::default_analysers();
     let test_base = TestBase::new();
 
     // this script has the following variables:
@@ -72,7 +72,7 @@ fn test_analysis_has_no_false_positives() {
         .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
-    let mut context = Context::with_default_analysers();
+    let mut context = Context::default_analysers();
     test_base
         .with_compilation(result)
         .dialogue

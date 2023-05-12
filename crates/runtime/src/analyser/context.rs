@@ -7,6 +7,21 @@ use yarn_slinger_core::prelude::*;
 #[derive(Debug)]
 pub struct Context(Vec<Box<dyn CompiledProgramAnalyser>>);
 
+impl IntoIterator for Context {
+    type Item = Box<dyn CompiledProgramAnalyser>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl Extend<Box<dyn CompiledProgramAnalyser>> for Context {
+    fn extend<T: IntoIterator<Item = Box<dyn CompiledProgramAnalyser>>>(&mut self, iter: T) {
+        self.0.extend(iter);
+    }
+}
+
 impl Context {
     #[must_use]
     pub fn empty() -> Self {
@@ -14,7 +29,7 @@ impl Context {
     }
 
     #[must_use]
-    pub fn with_default_analysers() -> Self {
+    pub fn default_analysers() -> Self {
         let mut context = Self::empty();
         for analyser in default_analysers() {
             context = context.add_analyser(analyser);
