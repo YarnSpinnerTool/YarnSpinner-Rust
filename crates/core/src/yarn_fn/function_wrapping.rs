@@ -54,7 +54,7 @@ impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
 
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
-    Marker: 'static + Clone,
+    Marker: 'static,
     F: YarnFn<Marker> + 'static + Clone + Send + Sync,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
@@ -76,7 +76,6 @@ where
     }
 }
 
-#[derive(Clone)]
 pub(crate) struct YarnFnWrapper<Marker, F>
 where
     F: YarnFn<Marker>,
@@ -85,6 +84,18 @@ where
 
     // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
     _marker: PhantomData<fn() -> Marker>,
+}
+
+impl<Marker, F> Clone for YarnFnWrapper<Marker, F>
+where
+    F: YarnFn<Marker>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            function: self.function.clone(),
+            _marker: self._marker.clone(),
+        }
+    }
 }
 
 impl<Marker, F> From<F> for YarnFnWrapper<Marker, F>
@@ -131,6 +142,13 @@ impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
 }
 
 impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
+
+#[macro_export]
+macro_rules! yarn_fn {
+    (($($param:ty),+) -> $ret:ty) => {
+        impl YarnFn<fn($($param),+) -> $ret, Out = $ret>
+    };
+}
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {

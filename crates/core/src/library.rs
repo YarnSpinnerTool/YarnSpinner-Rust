@@ -75,7 +75,7 @@ impl Library {
         function: F,
     ) -> &mut Self
     where
-        Marker: 'static + Clone,
+        Marker: 'static,
         F: YarnFn<Marker> + 'static + Clone,
         F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
@@ -89,7 +89,7 @@ impl Library {
         function: F,
     ) -> Self
     where
-        Marker: 'static + Clone,
+        Marker: 'static,
         F: YarnFn<Marker> + 'static + Clone,
         F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {
@@ -116,5 +116,21 @@ impl Display for Library {
         }
         writeln!(f, "}}")?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::yarn_fn;
+
+    use super::*;
+
+    #[test]
+    fn yarn_fn_can_be_created_in_function_and_passed_to_register() {
+        let _ = Library::default().with_function("test", yarn_function(42));
+    }
+
+    fn yarn_function(x: usize) -> yarn_fn!((String) -> usize) {
+        move |s: String| s.len() + x
     }
 }
