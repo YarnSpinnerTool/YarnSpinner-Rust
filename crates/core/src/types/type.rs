@@ -209,47 +209,24 @@ impl From<&str> for Type {
     }
 }
 
+macro_rules! type_ids {
+    ($($type:ty),*) => {
+        type_ids![$($type,)*]
+    };
+    ($($type:ty,)*) => {
+        vec![$(TypeId::of::<$type>(), TypeId::of::<&$type>()),*]
+    };
+}
+
 impl TryFrom<TypeId> for Type {
     type Error = InvalidDowncastError;
 
     fn try_from(type_id: TypeId) -> Result<Self, Self::Error> {
-        let string_types = vec![
-            TypeId::of::<String>(),
-            TypeId::of::<&String>(),
-            TypeId::of::<&str>(),
-        ];
-        let bool_types = vec![TypeId::of::<bool>(), TypeId::of::<&bool>()];
-        let value_types = vec![TypeId::of::<YarnValue>(), TypeId::of::<&YarnValue>()];
-        let number_types = vec![
-            TypeId::of::<f32>(),
-            TypeId::of::<f64>(),
-            TypeId::of::<i8>(),
-            TypeId::of::<i16>(),
-            TypeId::of::<i32>(),
-            TypeId::of::<i64>(),
-            TypeId::of::<i128>(),
-            TypeId::of::<u8>(),
-            TypeId::of::<u16>(),
-            TypeId::of::<u32>(),
-            TypeId::of::<u64>(),
-            TypeId::of::<u128>(),
-            TypeId::of::<usize>(),
-            TypeId::of::<isize>(),
-            TypeId::of::<&f32>(),
-            TypeId::of::<&f64>(),
-            TypeId::of::<&i8>(),
-            TypeId::of::<&i16>(),
-            TypeId::of::<&i32>(),
-            TypeId::of::<&i64>(),
-            TypeId::of::<&i128>(),
-            TypeId::of::<&u8>(),
-            TypeId::of::<&u16>(),
-            TypeId::of::<&u32>(),
-            TypeId::of::<&u64>(),
-            TypeId::of::<&u128>(),
-            TypeId::of::<&usize>(),
-            TypeId::of::<&isize>(),
-        ];
+        let string_types = type_ids![String, &str];
+        let bool_types = type_ids![bool];
+        let value_types = type_ids![YarnValue];
+        let number_types =
+            type_ids![f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
 
         [
             (string_types, Type::String),
@@ -258,7 +235,7 @@ impl TryFrom<TypeId> for Type {
             (value_types, Type::Any),
         ]
         .into_iter()
-        .find_map(|(types, r#type)| types.contains(&type_id).then_some(r#type))
+        .find_map(|(type_ids, r#type)| type_ids.contains(&type_id).then_some(r#type))
         .ok_or(InvalidDowncastError::InvalidTypeId(type_id))
     }
 }
