@@ -16,6 +16,14 @@ impl<T: Debug + Clone> Queue<T> {
     pub fn dequeue(&mut self) -> Option<T> {
         self.0.pop_front()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
 }
 
 /// Represents a FILO (First-In, Last-Out) collection.
@@ -35,6 +43,14 @@ impl<T: Debug + Clone> Stack<T> {
 
     pub fn peek(&self) -> Option<&T> {
         self.0.back()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear()
     }
 }
 

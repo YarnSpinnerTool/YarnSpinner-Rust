@@ -58,18 +58,8 @@ impl Compiler {
         self.try_read_file(file_path).unwrap()
     }
 
-    pub fn replace_library(&mut self, library: Library) -> &mut Self {
-        self.library = library;
-        self
-    }
-
     pub fn extend_library(&mut self, library: Library) -> &mut Self {
         self.library.extend(library.into_iter());
-        self
-    }
-
-    pub fn mutate_library(&mut self, mut mutate_fn: impl FnMut(&mut Library)) -> &mut Self {
-        mutate_fn(&mut self.library);
         self
     }
 

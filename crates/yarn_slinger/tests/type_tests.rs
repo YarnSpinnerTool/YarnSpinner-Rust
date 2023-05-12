@@ -272,7 +272,7 @@ fn test_function_signatures() {
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for source in [
         "<<set $bool = func_void_bool()>>",
@@ -281,7 +281,7 @@ fn test_function_signatures() {
         "<<set $bool = func_string_string_bool(\"1\", \"2\")>>",
     ] {
         let result = Compiler::from_test_source(source)
-            .replace_library(test_base.library().clone())
+            .extend_library(test_base.dialogue.library().clone())
             .compile()
             .unwrap();
 
@@ -310,7 +310,7 @@ fn test_operators_are_type_checked() {
             );
 
             let result = Compiler::from_test_source(&source)
-                .replace_library(test_base.library().clone())
+                .extend_library(test_base.dialogue.library().clone())
                 .compile()
                 .unwrap();
 
@@ -331,7 +331,7 @@ fn test_failing_function_signatures() {
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for (source, expected_exception_message) in [
         (
@@ -358,7 +358,7 @@ fn test_failing_function_signatures() {
         let failing_source = format!("<<declare $bool = false>>\n<<declare $int = 1>>\n{source}",);
 
         let result = Compiler::from_test_source(&failing_source)
-            .replace_library(test_base.library().clone())
+            .extend_library(test_base.dialogue.library().clone())
             .compile()
             .unwrap_err();
         println!("{}", result);
@@ -407,7 +407,7 @@ fn test_initial_values() {
     );
 
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .declare_variable(
             Declaration::new("$external_str", Type::String).with_default_value("Hello"),
         )
@@ -416,7 +416,7 @@ fn test_initial_values() {
         .compile()
         .unwrap();
 
-    let mut variable_storage = test_base.variable_storage();
+    let mut variable_storage = test_base.variable_store.clone_shallow();
     variable_storage.set("$external_str".to_string(), "Hello".into());
     variable_storage.set("$external_int".to_string(), 42.into());
     variable_storage.set("$external_bool".to_string(), true.into());
@@ -552,7 +552,7 @@ fn test_type_conversion() {
             .expect_line("bool and bool(number): true"),
     );
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 
@@ -566,7 +566,7 @@ fn test_type_conversion_failure_to_number() {
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
     test_base.with_compilation(result).run_standard_testcase();
@@ -579,7 +579,7 @@ fn test_type_conversion_failure_to_bool() {
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
     let result = Compiler::from_test_source(source)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
     test_base.with_compilation(result).run_standard_testcase();
@@ -602,27 +602,29 @@ fn test_implicit_function_declarations() {
             {func_str_bool(\"hello\")}
             {true and func_str_bool(\"hello\")}
             ";
-    let mut test_base = TestBase::new().with_test_plan(
-        TestPlan::new()
-            .expect_line("true")
-            .expect_line("true")
-            .expect_line("2")
-            .expect_line("hello")
-            .expect_line("true")
-            .expect_line("true")
-            .expect_line("true")
-            .expect_line("true")
-            .expect_line("true")
-            .expect_line("true"),
-    );
-    test_base
-        .library_mut()
-        .register_function("func_void_bool", || true)
-        .register_function("func_void_int", || 1)
-        .register_function("func_void_str", || "llo".to_owned())
-        .register_function("func_int_bool", |_i: i64| true)
-        .register_function("func_bool_bool", |_b: bool| true)
-        .register_function("func_str_bool", |_s: String| true);
+    let test_base = TestBase::new()
+        .with_test_plan(
+            TestPlan::new()
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("2")
+                .expect_line("hello")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true")
+                .expect_line("true"),
+        )
+        .extend_library(
+            Library::new()
+                .with_function("func_void_bool", || true)
+                .with_function("func_void_int", || 1)
+                .with_function("func_void_str", || "llo".to_owned())
+                .with_function("func_int_bool", |_i: i64| true)
+                .with_function("func_bool_bool", |_b: bool| true)
+                .with_function("func_str_bool", |_s: &str| true),
+        );
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared
@@ -651,11 +653,13 @@ fn test_nested_implicit_function_declarations() {
     let source = "
     {func_bool_bool(bool(func_int_bool(1)))}
     ";
-    let mut test_base = TestBase::new().with_test_plan(TestPlan::new().expect_line("true"));
-    test_base
-        .library_mut()
-        .register_function("func_int_bool", |i: i64| i == 1)
-        .register_function("func_bool_bool", |b: bool| b);
+    let test_base = TestBase::new()
+        .with_test_plan(TestPlan::new().expect_line("true"))
+        .extend_library(
+            Library::new()
+                .with_function("func_int_bool", |i: i64| i == 1)
+                .with_function("func_bool_bool", |b: bool| b),
+        );
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared

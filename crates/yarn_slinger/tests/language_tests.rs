@@ -33,13 +33,13 @@ fn can_compile_space_demo() {
 
     let _result_sally = Compiler::new()
         .read_file(&sally_path)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
     let _result_sally_and_ship = Compiler::new()
         .read_file(&sally_path)
         .read_file(ship_path)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 }
@@ -53,13 +53,13 @@ fn test_merging_nodes() {
 
     let result_sally = Compiler::default()
         .read_file(&sally_path)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
     let result_sally_and_ship = Compiler::default()
         .read_file(&sally_path)
         .read_file(ship_path)
-        .replace_library(test_base.library().clone())
+        .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
 
@@ -75,14 +75,13 @@ fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
     let result = Compiler::default().read_file(path).compile().unwrap();
 
-    TestBase::default()
+    let has_options = TestBase::default()
         .with_compilation(result)
         .dialogue
-        .set_options_handler(|_, _| {
-            panic!("Options should not be shown to the user in this test.");
-        })
-        .set_node_to_start()
-        .continue_();
+        .with_node_at_start()
+        .flatten()
+        .any(|event| matches!(event, DialogueEvent::Options(_)));
+    assert!(!has_options);
 }
 
 #[test]
@@ -175,7 +174,7 @@ fn test_sources() {
         let test_base = TestBase::default();
         let result = Compiler::default()
             .read_file(&path)
-            .replace_library(test_base.library().clone())
+            .extend_library(test_base.dialogue.library().clone())
             .compile();
 
         if !test_plan.exists() {
@@ -191,12 +190,13 @@ fn test_sources() {
             let compilation = result.unwrap();
             let mut test_base = test_base
                 .read_test_plan(test_plan)
-                .with_compilation(compilation);
-            test_base
-                .library_mut()
-                .register_function("dummy_bool", || true)
-                .register_function("dummy_number", || 1)
-                .register_function("dummy_string", || "string".to_owned());
+                .with_compilation(compilation)
+                .extend_library(
+                    Library::new()
+                        .with_function("dummy_bool", || true)
+                        .with_function("dummy_number", || 1)
+                        .with_function("dummy_string", || "string".to_owned()),
+                );
 
             // If this file contains a Start node, run the test case
             // (otherwise, we're just testing its parseability, which

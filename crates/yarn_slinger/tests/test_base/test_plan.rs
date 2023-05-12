@@ -28,9 +28,9 @@ impl TestPlan {
         let steps = fs::read_to_string(path)
             .unwrap()
             .lines()
-            // skip commented lines
+            // Skip commented lines
             .filter(|line| !line.trim_start().starts_with('#'))
-            // skip empty or blank lines
+            // Skip empty or blank lines
             .filter(|line| !line.trim().is_empty())
             .map(Step::read)
             .collect();

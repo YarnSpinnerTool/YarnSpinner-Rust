@@ -13,7 +13,7 @@ use yarn_slinger_core::prelude::*;
 /// which is more domain specific than the semi-corresponding `Convertible`.
 /// We also cannot use generics in this trait because we need to be able to clone this box.
 pub trait VariableStorage: Debug + Send + Sync {
-    fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync>;
+    fn clone_shallow(&self) -> Box<dyn VariableStorage + Send + Sync>;
     fn set(&mut self, name: String, value: YarnValue);
     fn get(&self, name: &str) -> Option<YarnValue>;
     fn clear(&mut self);
@@ -21,50 +21,32 @@ pub trait VariableStorage: Debug + Send + Sync {
 
 impl Clone for Box<dyn VariableStorage + Send + Sync> {
     fn clone(&self) -> Self {
-        self.clone_box()
+        self.clone_shallow()
     }
 }
 
 /// A simple concrete implementation of [`VariableStorage`]
 /// that keeps all variables in memory.
 #[derive(Debug, Clone, Default)]
-pub struct MemoryVariableStore(HashMap<String, YarnValue>);
+pub struct MemoryVariableStore(Arc<RwLock<HashMap<String, YarnValue>>>);
 
-impl VariableStorage for MemoryVariableStore {
-    fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync> {
-        Box::new(self.clone())
-    }
-
-    fn set(&mut self, name: String, value: YarnValue) {
-        self.0.insert(name, value);
-    }
-
-    fn get(&self, name: &str) -> Option<YarnValue> {
-        self.0.get(name).cloned()
-    }
-
-    fn clear(&mut self) {
-        self.0.clear();
+impl MemoryVariableStore {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
-/// A [`MemoryVariableStore`] that can sync its copies across threads.
-#[derive(Debug, Clone)]
-pub struct SharedMemoryVariableStore(
-    pub(crate) Arc<RwLock<Box<dyn VariableStorage + Send + Sync>>>,
-);
-
-impl VariableStorage for SharedMemoryVariableStore {
-    fn clone_box(&self) -> Box<dyn VariableStorage + Send + Sync> {
+impl VariableStorage for MemoryVariableStore {
+    fn clone_shallow(&self) -> Box<dyn VariableStorage + Send + Sync> {
         Box::new(self.clone())
     }
 
     fn set(&mut self, name: String, value: YarnValue) {
-        self.0.write().unwrap().set(name, value);
+        self.0.write().unwrap().insert(name, value);
     }
 
     fn get(&self, name: &str) -> Option<YarnValue> {
-        self.0.read().unwrap().get(name)
+        self.0.read().unwrap().get(name).cloned()
     }
 
     fn clear(&mut self) {

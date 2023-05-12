@@ -29,7 +29,8 @@ use yarn_slinger_macros::all_tuples;
 /// ```
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     type Out: IntoYarnValueFromNonYarnValue + 'static;
-    fn call(&self, input: Vec<YarnValue>) -> Self::Out;
+    /// The `Option`s are guaranteed to be `Some` and are just typed like this to be able to `std::mem::take` them.
+    fn call(&self, input: Vec<Option<YarnValue>>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
@@ -39,7 +40,7 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
-    fn call(&self, input: Vec<YarnValue>) -> YarnValue;
+    fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
@@ -57,7 +58,7 @@ where
     F: YarnFn<Marker> + 'static + Clone + Send + Sync,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<YarnValue>) -> YarnValue {
+    fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue {
         let output = self.function.call(input);
         output.into_untyped_value()
     }
@@ -146,11 +147,9 @@ macro_rules! impl_yarn_fn_tuple {
             {
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, input: Vec<YarnValue>) -> Self::Out {
-                    // Hack: mapping to Option to be able to tuple deconstruct by moving
-                    let mut input_options = input.into_iter().map(Some).collect::<Vec<_>>();
+                fn call(&self, mut input: Vec<Option<YarnValue>>) -> Self::Out {
                     // Tuple deconstruct to &mut Option<YarnValue>
-                    let [$($param,)*] = &mut input_options[..] else {
+                    let [$($param,)*] = &mut input[..] else {
                         panic!("Wrong number of arguments")
                     };
                     // `take` the YarnValue out of the Option, leaving None in its place
