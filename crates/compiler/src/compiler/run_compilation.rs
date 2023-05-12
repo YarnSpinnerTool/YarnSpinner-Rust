@@ -5,7 +5,6 @@ use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
 use crate::Result;
 use std::collections::{HashMap, HashSet};
-use yarn_slinger_core::prelude::*;
 
 /// Compile Yarn code, as specified by a compilation job.
 pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {

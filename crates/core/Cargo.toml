@@ -12,7 +12,6 @@ yarn_slinger_macros = { path = "../macros" }
 strum = "0.24.1"
 strum_macros = "0.24"
 thiserror = "1"
-annotate-snippets = { version = "0.9", features = ["color"] }
 
 [build-dependencies]
 prost-build = "0.11"

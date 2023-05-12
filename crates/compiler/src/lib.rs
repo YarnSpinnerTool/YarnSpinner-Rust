@@ -15,11 +15,12 @@ pub use crate::compiler::Result;
 pub mod prelude {
     pub(crate) use crate::{
         compiler::antlr_rust_ext::*, compiler::run_compilation::*, compiler::utils::*,
-        file_parse_result::*, listeners::DiagnosticExt, parser::*, parser_rule_context_ext::*,
-        string_table_manager::*, token_ext::*,
+        file_parse_result::*, parser::*, parser_rule_context_ext::*, string_table_manager::*,
+        token_ext::*,
     };
     pub use crate::{
         compiler::{CompilationType, Compiler, File},
+        listeners::{Diagnostic, DiagnosticSeverity},
         output::*,
     };
 }

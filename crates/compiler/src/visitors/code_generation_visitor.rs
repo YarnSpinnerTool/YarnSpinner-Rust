@@ -11,7 +11,7 @@ use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::ops::Deref;
 use std::rc::Rc;
 use yarn_slinger_core::prelude::instruction::OpCode;
-use yarn_slinger_core::prelude::Operator;
+use yarn_slinger_core::prelude::*;
 use yarn_slinger_core::types::Type;
 
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {

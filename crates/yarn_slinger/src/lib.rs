@@ -4,7 +4,7 @@ pub mod prelude {
     pub use yarn_slinger_compiler::prelude::*;
     pub use yarn_slinger_core::generated::*;
     pub use yarn_slinger_core::prelude::{
-        Declaration, InvalidCastError, Library, Position, Program, Type, YarnFn, YarnFnRegistry,
+        InvalidCastError, Library, Position, Program, Type, YarnFn, YarnFnRegistry,
     };
     pub use yarn_slinger_runtime::prelude::*;
 }

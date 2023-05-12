@@ -10,12 +10,12 @@ use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::tree::ParseTreeListener;
-pub(crate) use diagnostic_ext::*;
+pub use diagnostic::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use yarn_slinger_core::prelude::*;
 
-mod diagnostic_ext;
+mod diagnostic;
 pub(crate) struct LexerErrorListener {
     pub(crate) diagnostics: RefCell<Vec<Diagnostic>>,
     file_name: String,

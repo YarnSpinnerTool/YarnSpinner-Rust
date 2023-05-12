@@ -2,13 +2,9 @@
 
 use crate::prelude::*;
 use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
 use antlr_rust::token_stream::TokenStream;
 use std::iter;
-use std::ops::Range;
-use yarn_slinger_core::prelude::*;
 
 pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     /// Returns the original text of this [`ParserRuleContext`], including all
@@ -93,29 +89,3 @@ pub(crate) struct LinesAroundResult {
 }
 
 impl<'input, T: ?Sized> ParserRuleContextExt<'input> for T where T: ParserRuleContext<'input> {}
-
-pub(crate) trait ParserRuleContextExtRangeSource<'input>:
-    ParserRuleContextExt<'input>
-where
-    <<<<Self as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
-        Into<String>,
-{
-    fn range(&self) -> Range<Position> {
-        let start = Position {
-            line: self.start().get_line_as_usize().saturating_sub(1),
-            character: self.start().get_column_as_usize(),
-        };
-        let text: String = self.stop().get_text().to_owned().into();
-        let stop = Position {
-            line: self.stop().get_line_as_usize().saturating_sub(1),
-            character: self.stop().get_column_as_usize() + text.len(),
-        };
-        start..stop
-    }
-}
-
-impl<'input, T: ParserRuleContextExt<'input>> ParserRuleContextExtRangeSource<'input> for T where
-    <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
-        Into<String>
-{
-}

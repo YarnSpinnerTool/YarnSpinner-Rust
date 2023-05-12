@@ -8,7 +8,8 @@
 use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
-use crate::prelude::{create_common_token, TokenExt};
+use crate::listeners::Diagnostic;
+use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
 use antlr_rust::token::CommonToken;
 use antlr_rust::{
     char_stream::CharStream,
@@ -470,21 +471,7 @@ This is the one and only line
 
     #[test]
     fn correctly_indents_and_dedents_with_token() {
-        // Careful: IDE's love to break the following significant whitespace!
-        let option_indentation_relevant_input: &str = "title: Start
----
--> Option 1
-    Nice.
--> Option 2
-    Nicer
-    
-    This is part of the previous option statement due to indentation on the \"empty\" line above
-
-    And this doesn't, as the indentation is reset beforehand.
-    
-    This belongs to the previous statement, for the same reason.
-    
-===";
+        let option_indentation_relevant_input: &str = include_str!("significant_whitespace.yarn");
 
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(option_indentation_relevant_input),
@@ -499,7 +486,7 @@ This is the one and only line
             tokens.push(indent_aware_token_stream.iter().next().unwrap());
         }
 
-        let names: Vec<_> = tokens
+        let symbols: Vec<_> = tokens
             .into_iter()
             .map(|t| yarnspinnerlexer::_SYMBOLIC_NAMES[t as usize].unwrap())
             .collect();
@@ -551,25 +538,12 @@ This is the one and only line
             "BODY_END",
         ];
 
-        assert_eq!(expected, names);
+        assert_eq!(expected, symbols);
     }
 
     #[test]
     fn generated_lexer_output_is_same_as_reference() {
-        let option_indentation_relevant_input: &str = "title: Start
----
--> Option 1
-    Nice.
--> Option 2
-    Nicer
-
-    This is part of the previous option statement due to indentation on the empty line ahead
-
-    And this doesn't, as the indentation is reset beforehand.
-
-    This belongs to the previous statement, for the same reason.
-
-===";
+        let option_indentation_relevant_input: &str = include_str!("significant_whitespace.yarn");
 
         let generated_lexer =
             GeneratedYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
@@ -581,7 +555,7 @@ This is the one and only line
             tokens.push(reference_token_stream.iter().next().unwrap());
         }
 
-        let names: Vec<_> = tokens
+        let symbols: Vec<_> = tokens
             .into_iter()
             .map(|t| yarnspinnerlexer::_SYMBOLIC_NAMES[t as usize].unwrap())
             .collect();
@@ -627,6 +601,6 @@ This is the one and only line
             "BODY_END",
         ];
 
-        assert_eq!(expected, names);
+        assert_eq!(expected, symbols);
     }
 }

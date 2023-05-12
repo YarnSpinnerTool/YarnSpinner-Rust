@@ -1,10 +1,9 @@
-use crate::listeners::CompilerListener;
+use crate::listeners::{CompilerListener, DiagnosticVec};
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::*;
 use crate::visitors::KnownTypes;
 use crate::Result;
 use std::collections::{HashMap, HashSet};
-use yarn_slinger_core::prelude::*;
 
 pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIntermediate {
     let has_errors = state.diagnostics.has_errors();

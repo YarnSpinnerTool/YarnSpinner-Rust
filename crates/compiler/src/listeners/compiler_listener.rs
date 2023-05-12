@@ -1,23 +1,23 @@
 //! Adapted from the listener part of <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
+use crate::prelude::*;
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::token::Token;
+use antlr_rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
+use std::cell::RefCell;
+use std::collections::HashSet;
+use std::rc::Rc;
+use yarn_slinger_core::prelude::*;
+
+mod emit;
 use crate::parser::generated::yarnspinnerparser::{
     BodyContext, HeaderContext, NodeContext, YarnSpinnerParserContextType,
 };
 use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
-use crate::prelude::*;
 use crate::visitors::{CodeGenerationVisitor, KnownTypes};
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
 pub(crate) use emit::*;
-use std::cell::RefCell;
-use std::collections::HashSet;
-use std::rc::Rc;
 use yarn_slinger_core::prelude::instruction::OpCode;
-use yarn_slinger_core::prelude::*;
-
-mod emit;
 
 pub(crate) struct CompilerListener<'input> {
     pub(crate) debug_infos: Rc<RefCell<Vec<DebugInfo>>>,
