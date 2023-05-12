@@ -5,7 +5,7 @@ use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
 use paste::paste;
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
 
@@ -212,15 +212,15 @@ impl From<&str> for Type {
 impl TryFrom<TypeId> for Type {
     type Error = InvalidDowncastError;
 
-    fn try_from(r#type: TypeId) -> Result<Self, Self::Error> {
-        let string_type = TypeId::of::<String>();
-        let bool_type = TypeId::of::<bool>();
-        let value_types = &[
-            TypeId::of::<InternalValue>(),
-            TypeId::of::<YarnValue>(),
-            TypeId::of::<Box<dyn Any>>(),
+    fn try_from(type_id: TypeId) -> Result<Self, Self::Error> {
+        let string_types = vec![
+            TypeId::of::<String>(),
+            TypeId::of::<&String>(),
+            TypeId::of::<&str>(),
         ];
-        let number_types = &[
+        let bool_types = vec![TypeId::of::<bool>(), TypeId::of::<&bool>()];
+        let value_types = vec![TypeId::of::<YarnValue>(), TypeId::of::<&YarnValue>()];
+        let number_types = vec![
             TypeId::of::<f32>(),
             TypeId::of::<f64>(),
             TypeId::of::<i8>(),
@@ -235,14 +235,31 @@ impl TryFrom<TypeId> for Type {
             TypeId::of::<u128>(),
             TypeId::of::<usize>(),
             TypeId::of::<isize>(),
+            TypeId::of::<&f32>(),
+            TypeId::of::<&f64>(),
+            TypeId::of::<&i8>(),
+            TypeId::of::<&i16>(),
+            TypeId::of::<&i32>(),
+            TypeId::of::<&i64>(),
+            TypeId::of::<&i128>(),
+            TypeId::of::<&u8>(),
+            TypeId::of::<&u16>(),
+            TypeId::of::<&u32>(),
+            TypeId::of::<&u64>(),
+            TypeId::of::<&u128>(),
+            TypeId::of::<&usize>(),
+            TypeId::of::<&isize>(),
         ];
-        match r#type {
-            _ if r#type == string_type => Ok(Type::String),
-            _ if r#type == bool_type => Ok(Type::Boolean),
-            _ if number_types.contains(&r#type) => Ok(Type::Number),
-            _ if value_types.contains(&r#type) => Ok(Type::Any),
-            _ => Err(InvalidDowncastError::InvalidTypeId(r#type)),
-        }
+
+        [
+            (string_types, Type::String),
+            (bool_types, Type::Boolean),
+            (number_types, Type::Number),
+            (value_types, Type::Any),
+        ]
+        .into_iter()
+        .find_map(|(types, r#type)| types.contains(&type_id).then_some(r#type))
+        .ok_or(InvalidDowncastError::InvalidTypeId(type_id))
     }
 }
 

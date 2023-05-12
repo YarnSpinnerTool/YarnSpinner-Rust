@@ -272,7 +272,7 @@ fn test_function_signatures() {
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for source in [
         "<<set $bool = func_void_bool()>>",
@@ -331,7 +331,7 @@ fn test_failing_function_signatures() {
         .register_function("func_void_bool", || true)
         .register_function("func_int_bool", |_i: i32| true)
         .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: String, _j: String| true);
+        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for (source, expected_exception_message) in [
         (
@@ -623,7 +623,7 @@ fn test_implicit_function_declarations() {
                 .with_function("func_void_str", || "llo".to_owned())
                 .with_function("func_int_bool", |_i: i64| true)
                 .with_function("func_bool_bool", |_b: bool| true)
-                .with_function("func_str_bool", |_s: String| true),
+                .with_function("func_str_bool", |_s: &str| true),
         );
 
     // the library is NOT attached to this compilation job; all

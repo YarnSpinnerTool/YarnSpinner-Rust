@@ -147,7 +147,7 @@ fn test_function_argument_type_inference() {
     let test_base = TestBase::new().extend_library(
         Library::new()
             // Register some functions
-            .with_function("ConcatString", |a: String, b: String| a + &b)
+            .with_function("ConcatString", |a: &str, b: &str| format!("{a}{b}"))
             .with_function("AddInt", |a: i32, b: i32| a + b)
             .with_function("AddFloat", |a: f32, b: f32| a + b)
             .with_function("NegateBool", |a: bool| !a),
