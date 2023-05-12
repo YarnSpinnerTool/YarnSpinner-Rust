@@ -121,8 +121,6 @@ impl Display for Library {
 
 #[cfg(test)]
 mod tests {
-    use crate::yarn_fn;
-
     use super::*;
 
     #[test]

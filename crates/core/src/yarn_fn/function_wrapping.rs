@@ -146,9 +146,10 @@ impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
 #[macro_export]
 macro_rules! yarn_fn {
     (($($param:ty),+) -> $ret:ty) => {
-        impl YarnFn<fn($($param),+) -> $ret, Out = $ret>
+        impl $crate::prelude::YarnFn<fn($($param),+) -> $ret, Out = $ret>
     };
 }
+pub use yarn_fn;
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
