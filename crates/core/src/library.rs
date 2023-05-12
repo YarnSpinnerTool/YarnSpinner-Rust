@@ -69,6 +69,17 @@ impl Library {
     }
 
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
+    ///
+    /// ## Examples
+    /// ```
+    /// # use yarn_slinger_core::prelude::*;
+    /// # let mut library = Library::default();
+    /// library.register_function("length_times_two", string_length(2));
+    ///
+    /// fn string_length(multiplier: usize) -> yarn_fn_type!(impl Fn(String) -> usize) {
+    ///     move |s: String| s.len() * multiplier
+    /// }
+    /// ```
     pub fn register_function<Marker, F>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
@@ -116,19 +127,5 @@ impl Display for Library {
         }
         writeln!(f, "}}")?;
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn yarn_fn_can_be_created_in_function_and_passed_to_register() {
-        let _ = Library::default().with_function("test", yarn_function(42));
-    }
-
-    fn yarn_function(x: usize) -> yarn_fn!((String) -> usize) {
-        move |s: String| s.len() + x
     }
 }

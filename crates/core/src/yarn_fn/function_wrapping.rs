@@ -143,13 +143,36 @@ impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
 
 impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
 
+/// A macro for using [`YarnFn`] as a return type or parameter type without needing
+/// to know the implementation details of the [`YarnFn`] trait.
+///
+/// This is useful when registering functions in a [`Library`] with [`Library::register_function`].
+///
+/// ## Examples
+/// ```
+/// # use yarn_slinger_core::prelude::*;
+/// # fn takes_yarn_fn<Marker, F>(
+/// #     function: F,
+/// # )
+/// # where
+/// #     Marker: 'static,
+/// #     F: YarnFn<Marker> + 'static + Clone,
+/// #     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
+/// # {
+/// # }
+/// takes_yarn_fn(string_length(2));
+///
+/// fn string_length(multiplier: usize) -> yarn_fn_type!(impl Fn(String) -> usize) {
+///     move |s: String| s.len() * multiplier
+/// }
+/// ```
 #[macro_export]
-macro_rules! yarn_fn {
-    (($($param:ty),+) -> $ret:ty) => {
+macro_rules! yarn_fn_type {
+    (impl Fn($($param:ty),+) -> $ret:ty) => {
         impl $crate::prelude::YarnFn<fn($($param),+) -> $ret, Out = $ret>
     };
 }
-pub use yarn_fn;
+pub use yarn_fn_type;
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 macro_rules! impl_yarn_fn_tuple {
