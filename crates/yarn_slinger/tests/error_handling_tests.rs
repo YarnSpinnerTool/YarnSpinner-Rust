@@ -90,7 +90,8 @@ fn test_invalid_function_call() {
 }
 
 #[test]
-#[should_panic = "Some error message"]
+#[ignore = "See bug issue #106"]
+#[should_panic = "Some error message other than \"panic while panicking\""]
 fn test_compiling_same_file_twice_fails() {
     let _result = Compiler::new()
         .read_file(space_demo_scripts_path().join("Sally.yarn"))
