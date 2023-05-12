@@ -62,8 +62,8 @@ fn test_analysis() {
         .contains("Variable $bar is assigned, but never read from"));
 }
 
-#[test]
 /// Split off from `test_analysis`
+#[test]
 fn test_analysis_has_no_false_positives() {
     let test_base = TestBase::new();
     let result = Compiler::new()
