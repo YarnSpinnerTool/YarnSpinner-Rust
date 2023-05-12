@@ -71,13 +71,27 @@ impl Library {
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
     ///
     /// ## Examples
+    /// Registering a function:
+    ///
     /// ```
     /// # use yarn_slinger_core::prelude::*;
     /// # let mut library = Library::default();
-    /// library.register_function("length_times_two", string_length(2));
+    /// library.register_function("string_length", string_length);
     ///
-    /// fn string_length(multiplier: usize) -> yarn_fn_type! { impl Fn(String) -> usize } {
-    ///     move |s: String| s.len() * multiplier
+    /// fn string_length(string: String) -> usize {
+    ///     string.len()
+    /// }
+    /// ```
+    ///
+    /// Registering a function using a factory
+    /// (the return type can be specified using the [`yarn_fn_type`] macro):
+    /// ```
+    /// # use yarn_slinger_core::prelude::*;
+    /// # let mut library = Library::default();
+    /// library.register_function("length_times_two", string_length_multiplied(2));
+    ///
+    /// fn string_length_multiplied(factor: usize) -> yarn_fn_type! { impl Fn(String) -> usize } {
+    ///     move |s: String| s.len() * factor
     /// }
     /// ```
     pub fn register_function<Marker, F>(
