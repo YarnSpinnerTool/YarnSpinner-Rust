@@ -68,7 +68,7 @@ fn test_analysis_has_no_false_positives() {
     let test_base = TestBase::new();
     let result = Compiler::new()
         .read_file(space_demo_scripts_path().join("Sally.yarn"))
-        .read_file(space_demo_scripts_path().join("Sally.yarn"))
+        .read_file(space_demo_scripts_path().join("Ship.yarn"))
         .extend_library(test_base.dialogue.library().clone())
         .compile()
         .unwrap();
