@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/LineParser.cs>
 
-use crate::markup::markup_parse_result::{MarkupParseResult, MarkupValue};
+use crate::markup::markup_parse_result::MarkupParseResult;
 use crate::markup::{AttributeMarkerProcessor, NoMarkupTextProcessor};
 use std::collections::HashMap;
 
@@ -32,7 +32,7 @@ impl<'a> LineParser<'a> {
             return MarkupParseResult::default();
         }
 
-        let originalText = normalize_to_form_c(input);
+        let original_text = normalize_to_form_c(input);
         todo!()
     }
 }

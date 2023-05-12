@@ -1,8 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/MarkupParseResult.cs>
 
-pub(crate) use self::markup_attribute_marker::*;
-pub use self::{markup_attribute::*, markup_value::*, tag_type::*};
-use std::collections::{HashMap, HashSet};
+pub use self::{markup_attribute::*, markup_value::*};
+pub(crate) use self::{markup_attribute_marker::*, tag_type::*};
 use std::fmt::Debug;
 
 mod markup_attribute;
