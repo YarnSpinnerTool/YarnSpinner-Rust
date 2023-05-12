@@ -1,6 +1,7 @@
-use crate::markup::markup_parse_result::{
-    AttributeMarkerProcessor, MarkupAttributeMarker, MarkupParseResult, MarkupValue,
-};
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/LineParser.cs>
+
+use crate::markup::markup_parse_result::{MarkupAttributeMarker, MarkupParseResult, MarkupValue};
+use crate::markup::AttributeMarkerProcessor;
 use std::collections::HashMap;
 
 pub(crate) const REPLACEMENT_MARKER_CONTENTS: &str = "contents";

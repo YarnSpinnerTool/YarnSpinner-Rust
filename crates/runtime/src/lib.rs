@@ -1,10 +1,11 @@
 extern crate alloc;
+extern crate core;
 
 mod dialogue;
 mod dialogue_option;
 mod handlers;
 mod line;
-mod markup;
+pub mod markup;
 mod pluralization;
 mod string_newtype;
 mod variable_storage;
