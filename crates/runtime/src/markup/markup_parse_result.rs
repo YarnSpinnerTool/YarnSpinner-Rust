@@ -74,6 +74,75 @@ impl MarkupParseResult {
                 attributes,
             };
         }
-        todo!()
+        let deletion_start = attribute_to_delete.position;
+        let deletion_end = attribute_to_delete.position + attribute_to_delete.length;
+        let edited_substring = {
+            let mut text = self.text.clone();
+            text.replace_range(deletion_start..deletion_end, "");
+            text
+        };
+        let attributes = self
+            .attributes
+            .iter()
+            // This is the attribute we're deleting. Don't include it.
+            .filter(|attr| **attr != attribute_to_delete)
+            .filter_map(|attribute| {
+                let mut attribute = attribute.clone();
+                let start = attribute.position;
+                let end = attribute.position + attribute.length;
+                if start <= deletion_start {
+                    // The attribute starts before start point of the item
+                    // we're deleting.
+                    if end <= deletion_start {
+                        // This attribute is entirely before the item we're
+                        // deleting, and will be unmodified.
+                    } else if end <= deletion_end {
+                        // This attribute starts before the item we're
+                        // deleting, and ends inside it. The Position
+                        // doesn't need to change, but its Length is
+                        // trimmed so that it ends where the deleted
+                        // attribute begins.
+                        let original_length = attribute.length;
+                        attribute.length = deletion_start.saturating_sub(start);
+                        if original_length >= 0 && attribute.length <= 0 {
+                            // This attribute is now zero-length. It
+                            // doesn't apply to any text, so we can
+                            // discard it.
+                            return None;
+                        }
+                    } else {
+                        // This attribute starts before the item we're
+                        // deleting, and ends after it. Its length is
+                        // edited to remove the length of the item we're
+                        // deleting.
+                        attribute.length =
+                            attribute.length.saturating_sub(attribute_to_delete.length);
+                    }
+                } else if start >= deletion_end {
+                    // The item begins after the item we're deleting. Its
+                    // length isn't changing. We just need to offset its
+                    // start position.
+                    attribute.position = start.saturating_sub(attribute_to_delete.length);
+                } else if start >= deletion_start && end <= deletion_end {
+                    // The item is entirely within the item we're deleting.
+                    // It will be deleted too - we'll skip including it in
+                    // the updated attributes list.
+                    return None;
+                } else if start >= deletion_start && end > deletion_end {
+                    // The item starts within the item we're deleting, and
+                    // ends outside it. We'll adjust the start point so
+                    // that it begins at the point where this item and the
+                    // item we're deleting stop overlapping.
+                    let overlap = deletion_end - start;
+                    let new_start =
+                }
+                Some(attribute)
+            })
+            .cloned()
+            .collect();
+        MarkupParseResult {
+            text: edited_substring,
+            attributes,
+        }
     }
 }
