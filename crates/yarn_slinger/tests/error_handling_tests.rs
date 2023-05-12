@@ -88,3 +88,14 @@ fn test_invalid_function_call() {
         .message
         .contains("Unexpected \">>\" while reading a function call")));
 }
+
+#[test]
+#[should_panic = "Some error message"]
+fn test_compiling_same_file_twice_fails() {
+    let _result = Compiler::new()
+        .read_file(space_demo_scripts_path().join("Sally.yarn"))
+        .read_file(space_demo_scripts_path().join("Sally.yarn"))
+        .extend_library(TestBase::new().dialogue.library().clone())
+        .compile()
+        .unwrap();
+}
