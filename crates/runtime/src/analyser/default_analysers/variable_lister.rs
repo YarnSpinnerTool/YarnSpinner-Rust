@@ -34,7 +34,7 @@ impl CompiledProgramAnalyser for VariableLister {
         self.variables.extend(new_variables);
     }
 
-    fn gather_diagnoses(&self) -> Vec<Diagnosis> {
+    fn collect_diagnoses(&self) -> Vec<Diagnosis> {
         self.variables
             .iter()
             .map(|variable| {

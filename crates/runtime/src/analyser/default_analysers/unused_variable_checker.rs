@@ -45,7 +45,7 @@ impl CompiledProgramAnalyser for UnusedVariableChecker {
         }
     }
 
-    fn gather_diagnoses(&self) -> Vec<Diagnosis> {
+    fn collect_diagnoses(&self) -> Vec<Diagnosis> {
         // Report the write-only variables
         self.written_variables
             .difference(&self.read_variables)

@@ -47,7 +47,7 @@ impl Context {
     pub fn finish_analysis(&self) -> Vec<Diagnosis> {
         self.0
             .iter()
-            .flat_map(|analyser| analyser.gather_diagnoses())
+            .flat_map(|analyser| analyser.collect_diagnoses())
             .collect()
     }
 
