@@ -46,7 +46,7 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         let whole_file = token_stream.get_all_text();
         let start = self.start().get_start() as usize;
         let stop = self.stop().get_stop() as usize + 1;
-        let first_line = self.start().get_line_as_usize();
+        let first_line = self.start().get_line_as_usize().saturating_sub(1);
 
         let head = &whole_file[..start];
         let body = &whole_file[start..stop];
@@ -64,7 +64,7 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
         } else {
             head_lines.collect()
         };
-        let first_line = first_line - head_lines.len();
+        let first_line = first_line - head_lines.len().saturating_sub(1);
         let head = head_lines.into_iter().rev().collect::<Vec<_>>().join("\n");
 
         let tail_lines_to_take = if body.ends_with('\n') || tail.starts_with('\n') {

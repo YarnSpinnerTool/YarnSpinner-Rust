@@ -90,13 +90,14 @@ fn test_invalid_function_call() {
 }
 
 #[test]
-#[ignore = "See bug issue #106"]
-#[should_panic = "Some error message other than \"panic while panicking\""]
 fn test_compiling_same_file_twice_fails() {
-    let _result = Compiler::new()
+    let result = Compiler::new()
         .read_file(space_demo_scripts_path().join("Sally.yarn"))
         .read_file(space_demo_scripts_path().join("Sally.yarn"))
         .extend_library(TestBase::new().dialogue.library().clone())
-        .compile()
-        .unwrap();
+        .compile();
+    let diagnostics = result.unwrap_err().diagnostics;
+    assert!(diagnostics
+        .iter()
+        .any(|d| d.message.contains("Duplicate line ID line:794945")));
 }
