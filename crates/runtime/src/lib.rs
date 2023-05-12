@@ -1,5 +1,7 @@
 extern crate alloc;
 extern crate core;
+extern crate core;
+extern crate core;
 
 mod dialogue;
 mod dialogue_option;

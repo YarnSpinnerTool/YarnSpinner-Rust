@@ -2,6 +2,7 @@
 //! which was split into multiple files.
 
 use crate::markup::MarkupValue;
+use core::fmt::Display;
 use std::collections::HashMap;
 
 /// Represents a range of text in a marked-up string.
@@ -24,4 +25,20 @@ pub struct MarkupAttribute {
     pub properties: HashMap<String, MarkupValue>,
     /// The position of the marker in the original text.
     pub source_position: usize,
+}
+
+impl Display for MarkupAttribute {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let properties = (!self.properties.is_empty())
+            .then(|| format!(", {} properties", self.properties.len()))
+            .unwrap_or_default();
+        write!(
+            f,
+            "[{name}] - {start}-{end} ({length}{properties})",
+            name = self.name,
+            start = self.position,
+            end = self.position + self.length,
+            length = self.length
+        )
+    }
 }
