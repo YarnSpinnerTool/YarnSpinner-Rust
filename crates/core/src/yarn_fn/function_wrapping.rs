@@ -93,7 +93,7 @@ where
     fn clone(&self) -> Self {
         Self {
             function: self.function.clone(),
-            _marker: self._marker.clone(),
+            _marker: self._marker,
         }
     }
 }
