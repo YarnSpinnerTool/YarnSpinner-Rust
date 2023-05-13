@@ -15,7 +15,7 @@ impl NoMarkupTextProcessor {
 }
 
 impl AttributeMarkerProcessor for NoMarkupTextProcessor {
-    fn replacement_text_for_marker(&mut self, marker: &MarkupAttributeMarker) -> String {
+    fn replacement_text_for_marker(&self, marker: &MarkupAttributeMarker) -> String {
         match marker.properties.get(REPLACEMENT_MARKER_CONTENTS) {
             Some(MarkupValue::String(v)) => v.to_owned(),
             // this is only possible when this marker is self-closing (i.e.

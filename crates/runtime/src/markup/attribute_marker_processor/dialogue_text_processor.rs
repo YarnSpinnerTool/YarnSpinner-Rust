@@ -26,10 +26,7 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
     ///
     /// ## Panics
     /// Panics when the string contains a `plural` or `ordinal` marker, but the specified value cannot be parsed as a number.
-    fn replacement_text_for_marker(
-        &mut self,
-        marker: &crate::markup::MarkupAttributeMarker,
-    ) -> String {
+    fn replacement_text_for_marker(&self, marker: &crate::markup::MarkupAttributeMarker) -> String {
         let value_prop = marker
             .properties
             .get("value")

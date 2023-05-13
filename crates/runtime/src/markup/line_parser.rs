@@ -123,7 +123,7 @@ impl LineParser {
                         .unwrap_or_default();
                     if was_replacement_marker {
                         // Process it and get the replacement text!
-                        let replacement_text = self.process_replacement_marker(&mut marker);
+                        let replacement_text = self.process_replacement_marker(&mut marker)?;
 
                         // Insert it into our final string and update our position accordingly
                         text.push_str(&replacement_text);
@@ -315,8 +315,41 @@ impl LineParser {
     /// ## Returns
     ///
     /// The replacement text to insert.
-    fn process_replacement_marker(&self, marker: &mut MarkupAttributeMarker) -> String {
-        todo!()
+    fn process_replacement_marker(&self, marker: &mut MarkupAttributeMarker) -> Result<String> {
+        let name = marker.name.as_ref().unwrap().as_str();
+        match marker.tag_type {
+            TagType::Open => {
+                // this is an attribute that we want to replace with text!
+
+                // if this is an opening marker, we read up to the closing
+                // marker, the close-all marker, or the end of the string; this
+                // becomes the value of a property called "contents", and then
+                // we perform the replacement
+
+                // Read everything up to the closing tag
+                let marker_contents = self.parse_raw_text_up_to_attribute_close(name)?;
+
+                // Add this as a property
+                marker.properties.insert(
+                    REPLACEMENT_MARKER_CONTENTS.to_string(),
+                    marker_contents.into(),
+                );
+            }
+            TagType::SelfClosing => {}
+            TagType::CloseAll | TagType::Close => {
+                // If it's not an open or self-closing marker, we have no text
+                // to insert, so return the empty string
+                return Ok(String::new());
+            }
+        }
+        // Fetch the text that should be inserted into the string at
+        // this point
+        let replacement = self
+            .marker_processors
+            .get(name)
+            .unwrap()
+            .replacement_text_for_marker(marker);
+        Ok(replacement)
     }
 
     /// Peeks ahead in the input without consuming any characters, looking for whitespace.
@@ -401,6 +434,14 @@ impl LineParser {
     }
 
     fn parse_value(&self) -> Result<MarkupValue> {
+        todo!()
+    }
+
+    /// Parses text up to either a close marker with the given name, or
+    /// a close-all marker.
+    ///
+    /// The closing marker itself is not included in the returned text.
+    fn parse_raw_text_up_to_attribute_close(&self, name: &str) -> Result<String> {
         todo!()
     }
 }

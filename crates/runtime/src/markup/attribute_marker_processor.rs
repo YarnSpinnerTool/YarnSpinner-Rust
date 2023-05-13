@@ -15,7 +15,7 @@ pub(crate) trait AttributeMarkerProcessor: Debug + Send + Sync {
     /// If the marker is an `open` marker, the text from the marker's
     /// position to its corresponding closing marker is provided as a string
     /// property called `contents`.
-    fn replacement_text_for_marker(&mut self, marker: &MarkupAttributeMarker) -> String;
+    fn replacement_text_for_marker(&self, marker: &MarkupAttributeMarker) -> String;
     fn set_language_code(&mut self, language_code: String);
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor>;
 }
