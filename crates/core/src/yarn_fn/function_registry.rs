@@ -34,7 +34,7 @@ impl YarnFnRegistry {
         function: F,
     ) -> &mut Self
     where
-        Marker: 'static + Clone,
+        Marker: 'static,
         F: YarnFn<Marker> + 'static + Clone,
         F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
     {

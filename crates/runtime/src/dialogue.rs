@@ -27,28 +27,34 @@ pub struct Dialogue {
 impl Dialogue {
     #[must_use]
     pub fn new(variable_storage: Box<dyn VariableStorage + Send + Sync>) -> Self {
-        let storage_one = variable_storage.clone_shallow();
-        let storage_two = storage_one.clone_shallow();
-
         let library = Library::standard_library()
-            .with_function("visited", move |node: String| -> bool {
-                is_node_visited(storage_one.as_ref(), &node)
-            })
-            .with_function("visited_count", move |node: String| -> f32 {
-                get_node_visit_count(storage_two.as_ref(), &node)
-            });
+            .with_function("visited", visited(variable_storage.clone()))
+            .with_function("visited_count", visited_count(variable_storage.clone()));
 
         let dialogue_text_processor = Box::new(DialogueTextProcessor::new());
         let line_parser = LineParser::new()
             .register_marker_processor("select", dialogue_text_processor.clone())
             .register_marker_processor("plural", dialogue_text_processor.clone())
             .register_marker_processor("ordinal", dialogue_text_processor.clone());
+
         Self {
             vm: VirtualMachine::new(library, variable_storage),
             language_code: Default::default(),
             line_parser,
         }
     }
+}
+
+fn visited(
+    storage: Box<dyn VariableStorage + Send + Sync>,
+) -> yarn_fn_type! { impl Fn(String) -> bool } {
+    move |node: String| -> bool { is_node_visited(storage.as_ref(), &node) }
+}
+
+fn visited_count(
+    storage: Box<dyn VariableStorage + Send + Sync>,
+) -> yarn_fn_type! { impl Fn(String) -> f32 } {
+    move |node: String| get_node_visit_count(storage.as_ref(), &node)
 }
 
 impl Iterator for Dialogue {
