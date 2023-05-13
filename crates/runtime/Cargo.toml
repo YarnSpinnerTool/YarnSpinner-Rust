@@ -8,14 +8,16 @@ license = "MIT OR Apache-2.0"
 yarn_slinger_core = { path = "../core" }
 unicode-normalization = "0.1"
 log = "0.4"
-icu_plurals = "1.2"
-icu_locid = "1.2"
-icu_provider = "1.2"
-icu_provider_adapters = "1.2"
-fixed_decimal = { version = "0.5", features = ["ryu"] }
-zerovec = "0.9"
+icu_plurals = { version = "1.2", features = ["std"] }
+icu_locid = { version = "1.2", features = ["std"] }
+icu_provider = { version = "1.2", features = ["std"] }
+icu_provider_adapters = { version = "1.2", features = ["std"] }
+fixed_decimal = { version = "0.5", features = ["ryu", "std"] }
+zerovec =  { version = "0.9", features = ["std"] }
+once_cell = "1.17.1"
+regex = "1.8.1"
 
 [build-dependencies]
-icu_plurals = "1.2"
+icu_plurals = { version = "1.2", features = ["std"] }
 icu_datagen = "1.2"
-icu_provider_adapters = "1.2"
+icu_provider_adapters = { version = "1.2", features = ["std"] }

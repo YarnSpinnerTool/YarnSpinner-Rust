@@ -1,10 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/IAttributeMarkerProcessor.cs>
 
-pub(crate) use self::{dialogue_attribute_marker_processor::*, no_markup_text_processor::*};
+pub(crate) use self::{dialogue_text_processor::*, no_markup_text_processor::*};
 use crate::markup::MarkupAttributeMarker;
 use core::fmt::Debug;
 
-mod dialogue_attribute_marker_processor;
+mod dialogue_text_processor;
 mod no_markup_text_processor;
 
 /// Provides a mechanism for producing replacement text for a marker.
