@@ -314,8 +314,14 @@ impl Dialogue {
         self.vm.current_node()
     }
 
-    pub fn analyse(&self) -> ! {
-        todo!()
+    pub fn analyse(&self, context: &mut Context) -> &Self {
+        let program = self
+            .vm
+            .program
+            .as_ref()
+            .expect("Failed to analyse program: No program loaded");
+        context.diagnose_program(program);
+        self
     }
 
     /// Parses a line of text, and produces a [`MarkupParseResult`] containing the results.
