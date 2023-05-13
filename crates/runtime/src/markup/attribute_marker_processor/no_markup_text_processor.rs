@@ -26,6 +26,10 @@ impl AttributeMarkerProcessor for NoMarkupTextProcessor {
         }
     }
 
+    fn set_language_code(&mut self, _language_code: String) {
+        // no-op
+    }
+
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor> {
         Box::new(self.clone())
     }

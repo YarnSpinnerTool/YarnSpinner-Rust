@@ -57,17 +57,18 @@ impl LineParser {
     /// directly; the [`Dialogue`] uses this mechanism
     /// to implement the `select`, `plural` and `ordinal` markers.
     pub(crate) fn register_marker_processor(
-        &mut self,
+        mut self,
         attribute_name: impl Into<String>,
-        processor: impl AttributeMarkerProcessor + 'static,
-    ) {
+        processor: Box<dyn AttributeMarkerProcessor>,
+    ) -> Self {
         let attribute_name = attribute_name.into();
         let previous_value = self
             .marker_processors
-            .insert(attribute_name.clone(), Box::new(processor));
+            .insert(attribute_name.clone(), processor);
         assert!(previous_value.is_none(),
                 "A marker processor for the attribute '{attribute_name}' has already been added. \
                 This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+        self
     }
 
     /// Parses a line of text, and produces a [`ParsedMarkup`] containing the processed text
@@ -196,6 +197,13 @@ impl LineParser {
 
         attributes.push(character_attribute);
         Ok(ParsedMarkup { text, attributes })
+    }
+
+    pub(crate) fn set_language_code(&mut self, language_code: impl Into<String>) {
+        let language_code = language_code.into();
+        for processor in self.marker_processors.values_mut() {
+            processor.set_language_code(language_code.clone());
+        }
     }
 
     /// Parses an open, close, self-closing, or close-all attribute marker.

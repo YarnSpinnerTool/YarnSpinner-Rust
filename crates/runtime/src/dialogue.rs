@@ -1,5 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>
 
+use crate::markup::{DialogueTextProcessor, LineParser, ParsedMarkup};
 use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
@@ -20,6 +21,7 @@ use yarn_slinger_core::prelude::*;
 pub struct Dialogue {
     vm: VirtualMachine,
     language_code: Option<String>,
+    line_parser: LineParser,
 }
 
 impl Dialogue {
@@ -35,9 +37,16 @@ impl Dialogue {
             .with_function("visited_count", move |node: String| -> f32 {
                 get_node_visit_count(storage_two.as_ref(), &node)
             });
+
+        let dialogue_text_processor = Box::new(DialogueTextProcessor::new());
+        let line_parser = LineParser::new()
+            .register_marker_processor("select", dialogue_text_processor.clone())
+            .register_marker_processor("plural", dialogue_text_processor.clone())
+            .register_marker_processor("ordinal", dialogue_text_processor.clone());
         Self {
             vm: VirtualMachine::new(library, variable_storage),
-            language_code: None,
+            language_code: Default::default(),
+            line_parser,
         }
     }
 }
@@ -78,7 +87,7 @@ impl Iterator for Dialogue {
 impl Dialogue {
     #[must_use]
     pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
-        self.language_code.replace(language_code.into());
+        self.set_language_code(language_code);
         self
     }
 
@@ -119,14 +128,20 @@ impl Dialogue {
     ///
     /// For example, the code "en-US" represents the English language as
     /// used in the United States.
+    ///
+    /// ## Returns
+    ///
+    /// Returns the last language code.
     #[must_use]
     pub fn language_code(&self) -> Option<&str> {
         self.language_code.as_deref()
     }
 
-    #[must_use]
-    pub fn language_code_mut(&mut self) -> Option<&mut String> {
-        self.language_code.as_mut()
+    pub fn set_language_code(&mut self, language_code: impl Into<String>) -> Option<String> {
+        let language_code = language_code.into();
+        let previous = self.language_code.replace(language_code.clone());
+        self.line_parser.set_language_code(language_code);
+        previous
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
@@ -297,14 +312,12 @@ impl Dialogue {
         todo!()
     }
 
-    #[must_use]
-    pub fn parse_markup(&self, line: &str) -> String {
-        // ## Implementation notes
-        // It would be more ergonomic to not expose this and call it automatically.
-        // We should probs remove this from the API.
-        // Pass the MarkupResult directly into the LineHandler
-        // todo!()
-        line.to_owned()
+    /// Parses a line of text, and produces a [`MarkupParseResult`] containing the results.
+    ///
+    /// The [`MarkupParseResult`]'s [`MarkupParseResult::text`] will have any `select`,`plural` or `ordinal` markers
+    /// replaced with the appropriate text, following this [`Dialogue`]'s [`Dialogue::language_code`].
+    pub fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
+        self.line_parser.parse_markup(line)
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {

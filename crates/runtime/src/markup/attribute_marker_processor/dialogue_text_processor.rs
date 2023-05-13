@@ -11,6 +11,12 @@ pub(crate) struct DialogueTextProcessor {
     pub(crate) language_code: Option<String>,
 }
 
+impl DialogueTextProcessor {
+    pub(crate) fn new() -> Self {
+        Self::default()
+    }
+}
+
 /// A regex that matches any `%` as long as it's not preceded by a `\`.
 static VALUE_PLACEHOLDER_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<!\\)%").unwrap());
 
@@ -71,6 +77,10 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
         VALUE_PLACEHOLDER_REGEX
             .replace_all(&input, value)
             .to_string()
+    }
+
+    fn set_language_code(&mut self, language_code: String) {
+        self.language_code.replace(language_code);
     }
 
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor> {
