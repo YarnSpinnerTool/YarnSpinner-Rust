@@ -142,7 +142,6 @@ impl LineParser {
                                     name: marker.name,
                                     position: self.position,
                                     type_: prop.type_name().to_lowercase(),
-                                    prop: TRIM_WHITESPACE_PROPERTY.to_string(),
                                 });
                             };
                             trim_whitespace_if_able = *trim_whitespace;
