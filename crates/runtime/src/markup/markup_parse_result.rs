@@ -12,17 +12,24 @@ mod tag_type;
 /// The result of parsing a line of marked-up text.
 ///
 /// You do not create instances of this struct yourself. It is created
-///  by objects that can parse markup, such as [`Dialogue`].
-#[derive(Default, Debug, Clone)]
+/// by objects that can parse markup, such as [`Dialogue`].
+///
+/// ## Implementation Notes
+/// This is called `MarkupParseResult` in the original C# code, but was renamed because [`Result`] already carries meaning in Rust.
+#[derive(Debug, Default, Clone)]
 #[non_exhaustive]
-pub struct MarkupParseResult {
+pub struct ParsedMarkup {
     /// The original text, with all parsed markers removed.
     pub text: String,
     /// The list of [`MarkupAttribute`] in this parse result.
     pub attributes: Vec<MarkupAttribute>,
 }
 
-impl MarkupParseResult {
+impl ParsedMarkup {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Gets the first attribute with the specified name, if present.
     pub fn get_attribute(&self, name: &str) -> Option<&MarkupAttribute> {
         self.attributes.iter().find(|attr| attr.name == name)
@@ -52,11 +59,11 @@ impl MarkupParseResult {
     /// point adjusted to account for the deleted text.
     ///
     /// This method does not modify the current object. A new <see
-    /// [`MarkupParseResult`] is returned.
+    /// [`ParsedMarkup`] is returned.
     ///
     /// If `attribute_to_delete` is not an attribute of this
-    /// [`MarkupParseResult`], the behaviour is undefined.
-    pub fn delete_range(&self, attribute_to_delete: MarkupAttribute) -> MarkupParseResult {
+    /// [`ParsedMarkup`], the behaviour is undefined.
+    pub fn delete_range(&self, attribute_to_delete: MarkupAttribute) -> ParsedMarkup {
         // Address the trivial case: if the attribute has a zero
         // length, just create a new markup that doesn't include it.
         // The plain text is left unmodified, because this attribute
@@ -68,7 +75,7 @@ impl MarkupParseResult {
                 .filter(|attr| **attr != attribute_to_delete)
                 .cloned()
                 .collect();
-            return MarkupParseResult {
+            return ParsedMarkup {
                 text: self.text.clone(),
                 attributes,
             };
@@ -142,7 +149,7 @@ impl MarkupParseResult {
                 Some(attribute)
             })
             .collect();
-        MarkupParseResult {
+        ParsedMarkup {
             text: edited_substring,
             attributes,
         }

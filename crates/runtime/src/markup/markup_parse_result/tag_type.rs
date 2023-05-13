@@ -2,7 +2,7 @@
 //! which was split into multiple files.
 
 /// A type of [`MarkupAttributeMarker`].
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub(crate) enum TagType {
     /// An open marker. For example, `[a]`.
     Open,

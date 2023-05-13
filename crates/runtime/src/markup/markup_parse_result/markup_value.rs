@@ -15,6 +15,17 @@ pub enum MarkupValue {
     Bool(bool),
 }
 
+impl MarkupValue {
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            MarkupValue::Integer(_) => "Integer",
+            MarkupValue::Float(_) => "Float",
+            MarkupValue::String(_) => "String",
+            MarkupValue::Bool(_) => "Bool",
+        }
+    }
+}
+
 impl Display for MarkupValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -23,5 +34,35 @@ impl Display for MarkupValue {
             MarkupValue::String(s) => write!(f, "{s}"),
             MarkupValue::Bool(b) => write!(f, "{b}"),
         }
+    }
+}
+
+impl From<String> for MarkupValue {
+    fn from(s: String) -> Self {
+        MarkupValue::String(s)
+    }
+}
+
+impl From<&str> for MarkupValue {
+    fn from(s: &str) -> Self {
+        MarkupValue::String(s.to_string())
+    }
+}
+
+impl From<isize> for MarkupValue {
+    fn from(i: isize) -> Self {
+        MarkupValue::Integer(i)
+    }
+}
+
+impl From<f32> for MarkupValue {
+    fn from(f: f32) -> Self {
+        MarkupValue::Float(f)
+    }
+}
+
+impl From<bool> for MarkupValue {
+    fn from(b: bool) -> Self {
+        MarkupValue::Bool(b)
     }
 }

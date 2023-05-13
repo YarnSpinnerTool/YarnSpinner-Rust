@@ -31,7 +31,7 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
         let value = value_prop.to_string();
 
         // Apply the "select" marker
-        if marker.name == "select" {
+        if marker.name.as_ref().unwrap() == "select" {
             let replacement_prop = marker
                 .properties
                 .get(&value)
@@ -55,10 +55,10 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
         // Implementation note: no need to fiddle with locales here because ICU already does fallbacks for us.
 
         // I would love to cache this, but `icu_plural::PluralRules` is not `Send` because it contains an `Rc`, so even a mutex can't help here :(
-        let plural_case = match marker.name.as_str() {
+        let plural_case = match marker.name.as_ref().unwrap().as_str() {
             "plural" => Pluralization::new(language_code).get_cardinal_plural_case(value_as_float),
             "ordinal" => Pluralization::new(language_code).get_ordinal_plural_case(value_as_float),
-            _ => panic!("Invalid marker name {}", marker.name),
+            _ => panic!("Invalid marker name {:?}", marker.name),
         };
         let plural_case_name = plural_case_name(plural_case);
 

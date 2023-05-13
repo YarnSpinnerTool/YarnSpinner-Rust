@@ -11,7 +11,7 @@ use std::collections::HashMap;
 pub(crate) struct MarkupAttributeMarker {
     /// The name of the marker.
     /// For example, the marker `[wave]` has the name `wave`.
-    pub(crate) name: String,
+    pub(crate) name: Option<String>,
     /// The position of the marker in the plain text.
     pub(crate) position: usize,
     /// The list of properties associated with this marker.
