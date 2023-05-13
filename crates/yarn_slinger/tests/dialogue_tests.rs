@@ -213,7 +213,7 @@ fn test_selecting_option_from_inside_option_callback() {
             match event {
                 DialogueEvent::Line(line) => {
                     let line_text = test_base.string_table.get(&line.id).unwrap().text.clone();
-                    let parsed_text = test_base.dialogue.parse_markup(&line_text);
+                    let parsed_text = test_base.dialogue.parse_markup(&line_text).unwrap().text;
                     let test_plan = test_base.test_plan.as_mut().unwrap();
                     test_plan.next();
 

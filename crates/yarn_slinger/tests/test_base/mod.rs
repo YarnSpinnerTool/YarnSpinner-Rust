@@ -253,10 +253,10 @@ impl TestBase {
             .map(move |entry| subdir.join(entry.file_name()))
     }
 
-    pub fn get_composed_text_for_line(&self, line: &Line) -> String {
+    pub fn get_composed_text_for_line(&mut self, line: &Line) -> String {
         let string_info = self.string_table.get(&line.id).unwrap();
         let substitutions = line.substitutions.iter().map(|s| s.as_str());
         let substituted_text = Dialogue::expand_substitutions(&string_info.text, substitutions);
-        self.dialogue.parse_markup(&substituted_text)
+        self.dialogue.parse_markup(&substituted_text).unwrap().text
     }
 }
