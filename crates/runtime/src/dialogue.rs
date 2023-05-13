@@ -1,3 +1,5 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs
+
 use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
@@ -296,8 +298,14 @@ impl Dialogue {
         self.vm.current_node()
     }
 
-    pub fn analyse(&self) -> ! {
-        todo!()
+    pub fn analyse(&self, context: &mut Context) -> &Self {
+        let program = self
+            .vm
+            .program
+            .as_ref()
+            .expect("Failed to analyse program: No program loaded");
+        context.diagnose_program(program);
+        self
     }
 
     #[must_use]

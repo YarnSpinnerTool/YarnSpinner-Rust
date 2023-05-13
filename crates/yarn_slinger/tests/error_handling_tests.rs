@@ -88,3 +88,16 @@ fn test_invalid_function_call() {
         .message
         .contains("Unexpected \">>\" while reading a function call")));
 }
+
+#[test]
+fn test_compiling_same_file_twice_fails() {
+    let result = Compiler::new()
+        .read_file(space_demo_scripts_path().join("Sally.yarn"))
+        .read_file(space_demo_scripts_path().join("Sally.yarn"))
+        .extend_library(TestBase::new().dialogue.library().clone())
+        .compile();
+    let diagnostics = result.unwrap_err().diagnostics;
+    assert!(diagnostics
+        .iter()
+        .any(|d| d.message.contains("Duplicate line ID line:794945")));
+}

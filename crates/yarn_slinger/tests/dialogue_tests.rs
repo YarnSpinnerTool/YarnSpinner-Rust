@@ -29,9 +29,62 @@ fn test_node_exists() {
 }
 
 #[test]
-#[ignore = "Requires analyzer to be implemented, see https://github.com/yarn-slinger/yarn-slinger/issues/85"]
 fn test_analysis() {
-    todo!("Not ported yet")
+    let mut context = Context::default_analysers();
+    let test_base = TestBase::new();
+
+    // this script has the following variables:
+    // $foo is read from and written to
+    // $bar is written to but never read
+    // this means that there should be one diagnosis result
+    let path = test_data_path().join("AnalysisTest.yarn");
+    let result = Compiler::new()
+        .read_file(path)
+        .extend_library(test_base.dialogue.library().clone())
+        .compile()
+        .unwrap();
+
+    test_base
+        .with_compilation(result)
+        .dialogue
+        .analyse(&mut context);
+
+    let diagnoses: Vec<_> = context
+        .finish_analysis()
+        .into_iter()
+        .filter(|d| d.severity == DiagnosisSeverity::Warning)
+        .collect();
+    println!("{diagnoses:#?}");
+
+    assert_eq!(1, diagnoses.len());
+    assert!(diagnoses[0]
+        .message
+        .contains("Variable $bar is assigned, but never read from"));
+}
+
+/// Split off from `test_analysis`
+#[test]
+fn test_analysis_has_no_false_positives() {
+    let test_base = TestBase::new();
+    let result = Compiler::new()
+        .read_file(space_demo_scripts_path().join("Sally.yarn"))
+        .read_file(space_demo_scripts_path().join("Ship.yarn"))
+        .extend_library(test_base.dialogue.library().clone())
+        .compile()
+        .unwrap();
+    let mut context = Context::default_analysers();
+    test_base
+        .with_compilation(result)
+        .dialogue
+        .analyse(&mut context);
+
+    let diagnoses: Vec<_> = context
+        .finish_analysis()
+        .into_iter()
+        .filter(|d| d.severity == DiagnosisSeverity::Warning)
+        .collect();
+    println!("{diagnoses:#?}");
+    assert!(diagnoses.is_empty());
 }
 
 #[test]
