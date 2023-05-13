@@ -110,7 +110,7 @@ impl LineParser {
                     self.position = UnicodeSegmentation::graphemes(text.as_str(), true).count();
 
                     // The start of a marker!
-                    let mut marker = self.parse_attribute_marker();
+                    let mut marker = self.parse_attribute_marker()?;
 
                     let had_preceding_whitespace_or_line_start =
                         self.source_position == 0 || last_character.is_whitespace();
@@ -151,8 +151,7 @@ impl LineParser {
                     if trim_whitespace_if_able {
                         // If there's trailing whitespace, and we want to remove it, do so
                         if let Some(true) = self.peek_whitespace() {
-                            // Consume the single trailing whitespace
-                            // character (and don't update position)
+                            // Consume the single trailing whitespace character (and don't update position)
                             self.read_char();
                         }
                     }
@@ -207,7 +206,57 @@ impl LineParser {
     }
 
     /// Parses an open, close, self-closing, or close-all attribute marker.
-    fn parse_attribute_marker(&mut self) -> MarkupAttributeMarker {
+    fn parse_attribute_marker(&mut self) -> Result<MarkupAttributeMarker> {
+        let source_position_at_marker_start = self.source_position;
+        // We have already consumed the start of the marker '[' before
+        // we enter here. Increment the sourcePosition counter to
+        // account for it.
+        self.source_position += 1;
+
+        // Next, start parsing from the characters that can appear
+        // inside the marker
+        if let Some('/') = self.peek_char() {
+            // This is either the start of a closing tag or the start
+            // of the 'close-all' tag
+            self.parse_character('/')?;
+            if let Some(']') = self.peek_char() {
+                // It's the close-all tag!
+                self.parse_character(']')?;
+                return Ok(MarkupAttributeMarker {
+                    tag_type: TagType::CloseAll,
+                    name: None,
+                    properties: HashMap::new(),
+                    position: self.position,
+                    source_position: source_position_at_marker_start,
+                });
+            }
+            // It's a named closing tag!
+            let tag_name = self.parse_id()?;
+            self.parse_character(']')?;
+            return Ok(MarkupAttributeMarker {
+                tag_type: TagType::Close,
+                name: Some(tag_name),
+                properties: HashMap::new(),
+                position: self.position,
+                source_position: source_position_at_marker_start,
+            });
+        }
+
+        // If we're here, this is either an opening tag, or a
+        // self-closing tag.
+
+        // If the opening ID is not provided, the name of the attribute
+        // is taken from the first property.
+
+        // Tags always start with an ID, which is used as the name of
+        // the attribute.
+        let attribute_name = self.parse_id()?;
+
+        let mut properties: HashMap<String, MarkupValue> = HashMap::new();
+
+        // If the ID was immediately followed by an '=', this was the
+        // first property (its value is also used as the attribute
+        // name.)
         todo!()
     }
 
@@ -246,7 +295,54 @@ impl LineParser {
     }
 
     fn peek_char(&self) -> Option<char> {
+        todo!("This should sometimes eat whitespace, sometimes not. See the difference between this.stringReader.foo and this.foo"); // I checked `read_char` and that one's okay! :) it "counterpart" is `parse_character`
         self.input.chars().nth(self.source_position)
+    }
+
+    fn parse_character(&mut self, character: char) -> Result<()> {
+        self.consume_whitespace()?;
+        let next = self
+            .read_char()
+            .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                input: self.input.clone(),
+            })?;
+        if next != character {
+            return Err(MarkupParseError::UnexpectedCharacter {
+                input: self.input.clone(),
+                character,
+            });
+        }
+        Ok(())
+    }
+
+    /// Reads and discards whitespace, up to the first non-whitespace
+    /// character.
+    ///
+    /// ## Returns
+    ///
+    /// Returns `Err` when the end of the line is reached while consuming.
+    ///
+    /// ## Implementation notes
+    /// `allowEndOfLine` was not ported because it was always `false`
+    fn consume_whitespace(&mut self) -> Result<()> {
+        loop {
+            let next =
+                self.peek_char()
+                    .ok_or_else(|| MarkupParseError::UnexpectedWhitespaceEnd {
+                        input: self.input.clone(),
+                    })?;
+            if !next.is_whitespace() {
+                // no more whitespace ahead; don't consume it, but
+                // instead stop eating whitespace
+                break;
+            }
+            self.read_char().unwrap();
+        }
+        Ok(())
+    }
+
+    fn parse_id(&self) -> Result<String> {
+        todo!()
     }
 }
 

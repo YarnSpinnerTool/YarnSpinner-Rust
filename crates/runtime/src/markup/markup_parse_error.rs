@@ -10,4 +10,10 @@ pub enum MarkupParseError {
         position: usize,
         type_: String,
     },
+    #[error("Line ended when expecting whitespace instead: \"{input}\"")]
+    UnexpectedWhitespaceEnd { input: String },
+    #[error("Unexpected end of line inside markup in line \"{input}\"")]
+    UnexpectedEndOfLine { input: String },
+    #[error("Expected a {character} inside markup in line \"{input}\"")]
+    UnexpectedCharacter { input: String, character: char },
 }
