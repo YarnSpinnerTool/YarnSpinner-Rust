@@ -90,14 +90,14 @@ impl LineParser {
         let mut last_character = 0 as char;
 
         // Read the entirety of the line
-        while let Some(character) = self.read_char() {
+        while let Some(character) = self.read_next() {
             match character {
                 '\\' => {
                     // This may be the start of an escaped bracket ("\[" or "\]"). Peek ahead to see if it is.
-                    if let Some(next_character) = self.peek_char() {
+                    if let Some(next_character) = self.peek_next() {
                         if next_character == '[' || next_character == ']' {
                             // It is! We'll discard this '\', and read the next character as plain text.
-                            let character = self.read_char().unwrap();
+                            let character = self.read_next().unwrap();
                             text.push(character);
                             continue;
                         } else {
@@ -152,7 +152,7 @@ impl LineParser {
                         // If there's trailing whitespace, and we want to remove it, do so
                         if let Some(true) = self.peek_whitespace() {
                             // Consume the single trailing whitespace character (and don't update position)
-                            self.read_char();
+                            self.read_next();
                         }
                     }
                     markers.push(marker);
@@ -215,11 +215,11 @@ impl LineParser {
 
         // Next, start parsing from the characters that can appear
         // inside the marker
-        if let Some('/') = self.peek_char() {
+        if self.peek_character('/')? {
             // This is either the start of a closing tag or the start
             // of the 'close-all' tag
             self.parse_character('/')?;
-            if let Some(']') = self.peek_char() {
+            if self.peek_character(']')? {
                 // It's the close-all tag!
                 self.parse_character(']')?;
                 return Ok(MarkupAttributeMarker {
@@ -252,12 +252,62 @@ impl LineParser {
         // the attribute.
         let attribute_name = self.parse_id()?;
 
-        let mut properties: HashMap<String, MarkupValue> = HashMap::new();
+        let mut properties = HashMap::new();
 
         // If the ID was immediately followed by an '=', this was the
         // first property (its value is also used as the attribute
         // name.)
-        todo!()
+        if self.peek_character('=')? {
+            // This is also the first property!
+
+            // Parse the rest of the property now before we parse any
+            // others.
+            self.parse_character('=')?;
+            let value = self.parse_value()?;
+            properties.insert(attribute_name.clone(), value);
+        }
+
+        // parse all remaining properties
+        loop {
+            self.consume_whitespace()?;
+            let next = self
+                .peek_next()
+                .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                    input: self.input.clone(),
+                })?;
+            match next {
+                ']' => {
+                    // End of an Opening tag.
+                    self.parse_character(']')?;
+                    return Ok(MarkupAttributeMarker {
+                        tag_type: TagType::Open,
+                        name: Some(attribute_name),
+                        properties,
+                        position: self.position,
+                        source_position: source_position_at_marker_start,
+                    });
+                }
+                '/' => {
+                    // End of a self-closing tag.
+                    self.parse_character('/')?;
+                    self.parse_character(']')?;
+                    return Ok(MarkupAttributeMarker {
+                        tag_type: TagType::SelfClosing,
+                        name: Some(attribute_name),
+                        properties,
+                        position: self.position,
+                        source_position: source_position_at_marker_start,
+                    });
+                }
+                _ => {
+                    // Expect another property.
+                    let property_name = self.parse_id()?;
+                    self.parse_character('=')?;
+                    let value = self.parse_value()?;
+                    properties.insert(property_name, value);
+                }
+            }
+        }
     }
 
     /// Parses a marker and generates replacement text to insert into the plain text.
@@ -273,7 +323,7 @@ impl LineParser {
     ///
     /// This method returns [`None`] if the parser has reached the end of the line.
     fn peek_whitespace(&self) -> Option<bool> {
-        self.peek_char().map(|character| character.is_whitespace())
+        self.peek_next().map(|character| character.is_whitespace())
     }
 
     /// Creates a list of [`MarkupAttribute`]s from loose [MarkupAttributeMarker`]s
@@ -288,21 +338,26 @@ impl LineParser {
         todo!()
     }
 
-    fn read_char(&mut self) -> Option<char> {
+    fn read_next(&mut self) -> Option<char> {
         let character = self.input.chars().nth(self.source_position);
         self.source_position += 1;
         character
     }
 
-    fn peek_char(&self) -> Option<char> {
-        todo!("This should sometimes eat whitespace, sometimes not. See the difference between this.stringReader.foo and this.foo"); // I checked `read_char` and that one's okay! :) it "counterpart" is `parse_character`
+    fn peek_next(&self) -> Option<char> {
         self.input.chars().nth(self.source_position)
+    }
+
+    fn peek_character(&mut self, character: char) -> Result<bool> {
+        self.consume_whitespace()?;
+        let match_ = self.peek_next() == Some(character);
+        Ok(match_)
     }
 
     fn parse_character(&mut self, character: char) -> Result<()> {
         self.consume_whitespace()?;
         let next = self
-            .read_char()
+            .read_next()
             .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
                 input: self.input.clone(),
             })?;
@@ -327,7 +382,7 @@ impl LineParser {
     fn consume_whitespace(&mut self) -> Result<()> {
         loop {
             let next =
-                self.peek_char()
+                self.peek_next()
                     .ok_or_else(|| MarkupParseError::UnexpectedWhitespaceEnd {
                         input: self.input.clone(),
                     })?;
@@ -336,12 +391,16 @@ impl LineParser {
                 // instead stop eating whitespace
                 break;
             }
-            self.read_char().unwrap();
+            self.read_next().unwrap();
         }
         Ok(())
     }
 
     fn parse_id(&self) -> Result<String> {
+        todo!()
+    }
+
+    fn parse_value(&self) -> Result<MarkupValue> {
         todo!()
     }
 }
