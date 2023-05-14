@@ -151,6 +151,9 @@ where
             .next_buffer
             .take()
             .unwrap_or_else(|| self.base.next_token());
+        let mut next = self.base.next_token();
+        current.text = self.fix_non_ascii_text(&current, &next).into();
+
         match current.token_type {
             // Insert indents or dedents depending on the next token's
             // indentation, and enqueues the newline at the correct place
@@ -174,13 +177,14 @@ where
                 self.pending_tokens.enqueue(current.clone());
             }
             // ## Implementation note
-            // This is a massive hack because antlr4rust does not parse non-ascii VAR_IDs properly.
-            // This kind of hack might be necessary in other places as well.
+            // This is a massive hack because antlr4rust splits non-ascii VAR_IDs into one VAR_ID and multiple FUNC_IDs for some reason...
             yarnspinnerlexer::VAR_ID => {
                 let mut cumulative_var_id_token = current.clone();
                 loop {
-                    // Can't use `la` here because it would only return the token type, but we need `stop` and `column` as well.
-                    let next = self.base.next_token();
+                    next = self
+                        .next_buffer
+                        .take()
+                        .unwrap_or_else(|| self.base.next_token());
                     if next.token_type == yarnspinnerlexer::FUNC_ID {
                         cumulative_var_id_token.stop = next.stop;
                     } else {
@@ -193,9 +197,6 @@ where
                         cumulative_var_id_token.text = text.into();
                         self.pending_tokens.enqueue(cumulative_var_id_token.clone());
                         current = cumulative_var_id_token;
-
-                        // Make sure we actually process this token that we over-eagerly had to read.
-                        self.next_buffer = Some(next);
                         break;
                     }
                 }
@@ -203,6 +204,7 @@ where
             _ => self.pending_tokens.enqueue(current.clone()),
         }
 
+        self.next_buffer = Some(next);
         // TODO: but... really?
         self.last_token = Some(current);
     }
@@ -304,8 +306,7 @@ where
         &mut self,
         current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) {
-        // We're at the end of the file. Emit as many dedents as we
-        // currently have on the stack.
+        // We're at the end of the file. Emit as many dedents as we currently have on the stack.
         while let Some(_indent) = self.unbalanced_indents.pop() {
             // so that we don't end up printing <dedent from 8> into the stream we set the text to be empty
             // I dislike this and need to look into if you can set a debug text setting in ANTLR
@@ -381,6 +382,39 @@ where
         );
 
         self.pending_tokens.enqueue(token);
+    }
+
+    /// antlr4rust does not parse non-ASCII characters properly, so we have to do a second pass
+    fn fix_non_ascii_text(&self, current: &Box<CommonToken>, next: &Box<CommonToken>) -> String {
+        let start_line = (current.line as usize).saturating_sub(1);
+        let end_line = (next.line as usize).saturating_sub(1);
+        let start_column = current.column as usize;
+        let end_column = next.column as usize;
+        if start_line == end_line {
+            return self
+                .raw_input
+                .lines()
+                .nth(start_line)
+                .unwrap_or(self.raw_input)[start_column..end_column]
+                .to_string();
+        }
+
+        self.raw_input
+            .lines()
+            .enumerate()
+            .skip(start_line)
+            .take(end_line - start_line + 1)
+            .map(|(i, line)| {
+                if i == start_line {
+                    &line[start_column..]
+                } else if i == end_line {
+                    &line[..end_column]
+                } else {
+                    line
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
 
