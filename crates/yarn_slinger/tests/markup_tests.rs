@@ -290,3 +290,72 @@ fn test_markup_escaping() {
     assert_eq!(0, markup.attributes[0].position);
     assert_eq!(18, markup.attributes[0].length);
 }
+
+/*
+
+       [Fact]
+       public void TestNumericProperties() {
+           var line = @"[select value=1 1=one 2=two 3=three /]";
+           var markup = dialogue.ParseMarkup(line);
+
+           markup.Attributes.Should().ContainSingle();
+           markup.Attributes[0].Name.Should().Be("select");
+           markup.Attributes[0].Properties.Count.Should().Be(4);
+           markup.Attributes[0].Properties["value"].IntegerValue.Should().Be(1);
+           markup.Attributes[0].Properties["1"].StringValue.Should().Be("one");
+           markup.Attributes[0].Properties["2"].StringValue.Should().Be("two");
+           markup.Attributes[0].Properties["3"].StringValue.Should().Be("three");
+
+           markup.Text.Should().Be("one");
+       }
+*/
+
+#[test]
+fn test_numeric_properties() {
+    let line = "[select value=1 1=one 2=two 3=three /]";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    assert_eq!(1, markup.attributes.len());
+
+    let attribute = &markup.attributes[0];
+
+    assert_eq!("select", attribute.name);
+    assert_eq!(4, attribute.properties.len());
+    assert_eq!(
+        &MarkupValue::Integer(1),
+        attribute.properties.get("value").unwrap()
+    );
+    assert_eq!(
+        &MarkupValue::String("one".to_owned()),
+        attribute.properties.get("1").unwrap()
+    );
+    assert_eq!(
+        &MarkupValue::String("two".to_owned()),
+        attribute.properties.get("2").unwrap()
+    );
+    assert_eq!(
+        &MarkupValue::String("three".to_owned()),
+        attribute.properties.get("3").unwrap()
+    );
+
+    assert_eq!("one", markup.text);
+}
+
+#[test]
+fn test_number_pluralisation() {
+    for (value, locale, expected) in [
+        (1, "en", "a single cat"),
+        (2, "en", "2 cats"),
+        (3, "en", "3 cats"),
+        (1, "en-AU", "a single cat"),
+        (2, "en-AU", "2 cats"),
+        (3, "en-AU", "3 cats"),
+    ] {
+        let line = format!("[plural value={value} one=\"a single cat\" other=\"% cats\"/]",);
+
+        let mut dialogue = TestBase::new().dialogue.with_language_code(locale);
+        let markup = dialogue.parse_markup(&line).unwrap();
+
+        assert_eq!(expected, markup.text);
+    }
+}
