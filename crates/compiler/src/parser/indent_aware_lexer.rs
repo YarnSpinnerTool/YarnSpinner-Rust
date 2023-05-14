@@ -10,14 +10,12 @@ use super::generated::yarnspinnerlexer::{
 };
 use crate::listeners::Diagnostic;
 use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::CommonToken;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
     token_factory::{CommonTokenFactory, TokenFactory},
-    InputStream, Lexer, TokenSource,
+    Lexer, TokenSource,
 };
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
