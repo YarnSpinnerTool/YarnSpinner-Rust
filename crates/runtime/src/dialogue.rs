@@ -48,13 +48,27 @@ impl Dialogue {
 fn visited(
     storage: Box<dyn VariableStorage + Send + Sync>,
 ) -> yarn_fn_type! { impl Fn(String) -> bool } {
-    move |node: String| -> bool { is_node_visited(storage.as_ref(), &node) }
+    move |node: String| -> bool {
+        let name = Library::generate_unique_visited_variable_for_node(&node);
+        if let Some(YarnValue::Number(count)) = storage.get(&name) {
+            count > 0.0
+        } else {
+            false
+        }
+    }
 }
 
 fn visited_count(
     storage: Box<dyn VariableStorage + Send + Sync>,
 ) -> yarn_fn_type! { impl Fn(String) -> f32 } {
-    move |node: String| get_node_visit_count(storage.as_ref(), &node)
+    move |node: String| {
+        let name = Library::generate_unique_visited_variable_for_node(&node);
+        if let Some(YarnValue::Number(count)) = storage.get(&name) {
+            count
+        } else {
+            0.0
+        }
+    }
 }
 
 impl Iterator for Dialogue {
@@ -373,22 +387,6 @@ impl Dialogue {
     #[must_use]
     pub fn is_active(&self) -> bool {
         self.vm.is_active()
-    }
-}
-
-fn is_node_visited(variable_storage: &dyn VariableStorage, node_name: &str) -> bool {
-    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
-        count > 0.0
-    } else {
-        false
-    }
-}
-
-fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str) -> f32 {
-    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
-        count
-    } else {
-        0.0
     }
 }
 
