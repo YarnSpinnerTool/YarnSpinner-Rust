@@ -8,6 +8,7 @@ use std::collections::HashMap;
 ///
 /// You do not create instances of this struct yourself. It is created
 /// by objects that can parse markup, such as [`Dialogue`].
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct MarkupAttributeMarker {
     /// The name of the marker.
     /// For example, the marker `[wave]` has the name `wave`.

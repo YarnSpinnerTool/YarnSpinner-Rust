@@ -7,7 +7,7 @@ use crate::markup::{
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -167,7 +167,7 @@ impl LineParser {
             last_character = character;
         }
 
-        let mut attributes = self.build_attributes_from_markers(markers);
+        let mut attributes = self.build_attributes_from_markers(markers)?;
         let character_attribute_is_present = attributes
             .iter()
             .any(|attr| attr.name == CHARACTER_ATTRIBUTE);
@@ -361,14 +361,73 @@ impl LineParser {
 
     /// Creates a list of [`MarkupAttribute`]s from loose [MarkupAttributeMarker`]s
     ///
-    /// ## Panics
+    /// ## Retuns
     ///
-    /// Panics when a close marker is encountered, but no corresponding open marker for it exists.
+    /// Returns an `Err` when a close marker is encountered, but no corresponding open marker for it exists.
     fn build_attributes_from_markers(
         &self,
-        _markers: Vec<MarkupAttributeMarker>,
-    ) -> Vec<MarkupAttribute> {
-        todo!()
+        markers: Vec<MarkupAttributeMarker>,
+    ) -> Result<Vec<MarkupAttribute>> {
+        let mut unclosed_markers = VecDeque::new();
+        let mut attributes = Vec::with_capacity(markers.len());
+        for marker in markers {
+            match marker.tag_type {
+                TagType::Open => {
+                    // A new marker! Add it to the unclosed list at the
+                    // start (because there's a high chance that it
+                    // will be closed soon).
+                    unclosed_markers.push_front(marker);
+                }
+                TagType::Close => {
+                    // A close marker! Walk back through the
+                    // unclosed stack to find the most recent
+                    // marker of the same type to find its pair.
+                    assert!(marker.name.is_some());
+                    let matched_open_marker_index = unclosed_markers
+                        .iter()
+                        .position(|open_marker| open_marker.name == marker.name)
+                        .ok_or_else(|| MarkupParseError::UnmatchedCloseMarker {
+                            input: self.input.clone(),
+                            marker: marker.clone(),
+                        })?;
+
+                    // This attribute is now closed, so we can
+                    // remove the marker from the unmatched list
+                    let matched_open_marker =
+                        unclosed_markers.remove(matched_open_marker_index).unwrap();
+
+                    // We can now construct the attribute!
+                    let length = marker.position - matched_open_marker.position;
+                    let attribute = MarkupAttribute::from_marker(matched_open_marker, length);
+                    attributes.push(attribute);
+                }
+                TagType::SelfClosing => {
+                    // Self-closing markers create a zero-length
+                    // attribute where they appear
+                    let attribute = MarkupAttribute::from_marker(marker, 0);
+                    attributes.push(attribute);
+                }
+                TagType::CloseAll => {
+                    // Close all currently open markers
+
+                    // For each marker that we currently have open,
+                    // this marker has closed it, so create an
+                    // attribute for it
+                    let attributes_to_add = unclosed_markers.iter().map(|open_marker| {
+                        let length = marker.position - open_marker.position;
+                        MarkupAttribute::from_marker(open_marker.clone(), length)
+                    });
+                    attributes.extend(attributes_to_add);
+
+                    // We've now closed all markers, so we can
+                    // clear the unclosed list now
+                    unclosed_markers.clear();
+                }
+            }
+        }
+
+        attributes.sort_by_key(|attribute| attribute.source_position);
+        Ok(attributes)
     }
 
     fn read_next(&mut self) -> Option<char> {

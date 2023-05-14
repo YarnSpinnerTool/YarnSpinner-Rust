@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/MarkupParseResult.cs>
 //! which was split into multiple files.
 
-use crate::markup::MarkupValue;
+use crate::markup::{MarkupAttributeMarker, MarkupValue};
 use core::fmt::Display;
 use std::collections::HashMap;
 
@@ -25,6 +25,18 @@ pub struct MarkupAttribute {
     pub properties: HashMap<String, MarkupValue>,
     /// The position of the marker in the original text.
     pub source_position: usize,
+}
+
+impl MarkupAttribute {
+    pub(crate) fn from_marker(marker: MarkupAttributeMarker, length: usize) -> Self {
+        Self {
+            name: marker.name.unwrap(),
+            position: marker.position,
+            length,
+            properties: Default::default(),
+            source_position: marker.source_position,
+        }
+    }
 }
 
 impl Display for MarkupAttribute {

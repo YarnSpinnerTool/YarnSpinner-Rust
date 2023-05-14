@@ -1,4 +1,4 @@
-use crate::markup::TRIM_WHITESPACE_PROPERTY;
+use crate::markup::{MarkupAttributeMarker, TRIM_WHITESPACE_PROPERTY};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -16,4 +16,13 @@ pub enum MarkupParseError {
     UnexpectedEndOfLine { input: String },
     #[error("Expected a {character} inside markup in line \"{input}\"")]
     UnexpectedCharacter { input: String, character: char },
+    #[error(
+        "Unexpected close marker {name:?} at position {position} in line {input}",
+        name = marker.name,
+        position = marker.position,
+    )]
+    UnmatchedCloseMarker {
+        input: String,
+        marker: MarkupAttributeMarker,
+    },
 }
