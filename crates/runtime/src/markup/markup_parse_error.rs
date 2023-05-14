@@ -25,4 +25,6 @@ pub enum MarkupParseError {
         input: String,
         marker: MarkupAttributeMarker,
     },
+    #[error("Expected an identifier inside markup in line \"{input}\"")]
+    NoIdentifierFound { input: String },
 }

@@ -488,8 +488,41 @@ impl LineParser {
         Ok(())
     }
 
-    fn parse_id(&self) -> Result<String> {
-        todo!()
+    fn parse_id(&mut self) -> Result<String> {
+        self.consume_whitespace()?;
+        let mut id = String::new();
+
+        // Read the first character, which must be a letter, number, or underscore
+        let next = self
+            .read_next()
+            .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                input: self.input.clone(),
+            })?;
+
+        // Implementation notes: no surrogate checks because UTF-16 surrogates are not valid Rust chars
+        // See <https://github.com/rust-lang/rust/issues/94919>
+        if next.is_alphanumeric() || next == '_' {
+            id.push(next);
+        } else {
+            return Err(MarkupParseError::NoIdentifierFound {
+                input: self.input.clone(),
+            });
+        }
+
+        // Read zero or more letters, numbers, or underscores
+        while let Some(next) = self.peek_next() {
+            // Implementation notes: again, no surrogate checks. See above comment.
+            if next.is_alphanumeric() || next == '_' {
+                id.push(next);
+                // consume it
+                self.read_next().unwrap();
+            } else {
+                // no more
+                break;
+            }
+        }
+
+        Ok(id)
     }
 
     fn parse_value(&self) -> Result<MarkupValue> {
