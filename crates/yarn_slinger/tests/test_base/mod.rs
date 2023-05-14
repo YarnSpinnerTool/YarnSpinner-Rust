@@ -257,6 +257,12 @@ impl TestBase {
         let string_info = self.string_table.get(&line.id).unwrap();
         let substitutions = line.substitutions.iter().map(|s| s.as_str());
         let substituted_text = Dialogue::expand_substitutions(&string_info.text, substitutions);
-        self.dialogue.parse_markup(&substituted_text).unwrap().text
+        let markup_result = self.dialogue.parse_markup(&substituted_text);
+        match markup_result {
+            Ok(parsed_markup) => parsed_markup.text,
+            Err(e) => {
+                panic!("Warning: failed to parse markup: {e}");
+            }
+        }
     }
 }

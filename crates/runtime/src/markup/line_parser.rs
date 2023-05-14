@@ -100,10 +100,10 @@ impl LineParser {
                             let character = self.read_next().unwrap();
                             text.push(character);
                             continue;
-                        } else {
-                            // It wasn't an escaped bracket. Continue on, and parse the '\' as a normal character.
                         }
                     }
+                    // It wasn't an escaped bracket. Continue on, and parse the '\' as a normal character.
+                    text.push(character);
                 }
                 '[' => {
                     // How long is our current string, in text elements (i.e. visible glyphs)?
