@@ -562,8 +562,19 @@ impl LineParser {
         if self.peek_character('"')? {
             // A string
             let string = self.parse_string()?;
+            return Ok(string.into());
         }
-        todo!()
+
+        let word = self.parse_id()?;
+
+        // This ID is expected to be 'true', 'false', or something
+        // else. if it's 'true' or 'false', interpret it as a bool.
+        match word.as_str() {
+            "true" => Ok(true.into()),
+            "false" => Ok(false.into()),
+            // interpret this as a one-word string
+            _ => Ok(word.into()),
+        }
     }
 
     /// Parses text up to either a close marker with the given name, or
