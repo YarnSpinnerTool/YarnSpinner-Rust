@@ -27,4 +27,8 @@ pub enum MarkupParseError {
     },
     #[error("Expected an identifier inside markup in line \"{input}\"")]
     NoIdentifierFound { input: String },
+    #[error("Expected a string inside markup in line \"{input}\"")]
+    NoStringFound { input: String },
+    #[error("Invalid escaped character in line \"{input}\"")]
+    InvalidEscapeSequence { input: String },
 }

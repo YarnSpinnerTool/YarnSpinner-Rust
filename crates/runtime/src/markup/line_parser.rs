@@ -525,7 +525,44 @@ impl LineParser {
         Ok(id)
     }
 
-    fn parse_value(&self) -> Result<MarkupValue> {
+    /// Parses a property value.
+    ///
+    /// Permitted value types are:
+    ///
+    /// - Integers
+    /// - Floating-point numbers
+    /// - Strings (delimited by double quotes). (Strings may contain
+    /// escaped quotes with a backslash.)
+    /// - The words `true` or `false`
+    /// - Runs of alphanumeric characters, up to but not including a
+    /// whitespace or the end of a tag; these are interpreted as a string
+    /// (e.g. `[mood=happy]` is interpreted the same as `[mood="happy"]`
+    /// - Expressions (delimited by curly braces), which are processed
+    /// as inline expressions.
+    fn parse_value(&mut self) -> Result<MarkupValue> {
+        // parse integers or floats:
+        if self.peek_numeric()? {
+            // could be an int or a float
+            let integer = self.parse_integer()?;
+
+            // if there's a decimal separator, this is a float
+            if !self.peek_character('.')? {
+                // no decimal separator, so this is an integer
+                return Ok(integer.into());
+            }
+
+            // a float
+            self.parse_character('.')?;
+
+            // parse the fractional value
+            let fraction = self.parse_integer()?;
+            let float: f32 = format!("{integer}.{fraction}").parse().unwrap();
+            return Ok(float.into());
+        }
+        if self.peek_character('"')? {
+            // A string
+            let string = self.parse_string()?;
+        }
         todo!()
     }
 
@@ -535,6 +572,92 @@ impl LineParser {
     /// The closing marker itself is not included in the returned text.
     fn parse_raw_text_up_to_attribute_close(&self, name: &str) -> Result<String> {
         todo!()
+    }
+
+    /// Peeks ahead in the LineParser's input without consuming any
+    /// characters, looking for (ASCII) numeric characters.
+    ///
+    /// This method returns false if the parser has reached the end of
+    /// the line.
+    fn peek_numeric(&mut self) -> Result<bool> {
+        self.consume_whitespace()?;
+        let Some(next) = self.peek_next() else {
+            return Ok(false)
+        };
+        Ok(next.is_ascii_digit())
+    }
+
+    /// Parses an (ASCII) integer from the stream.
+    ///
+    /// This method returns false if the parser has reached the end of
+    /// the line.
+    fn parse_integer(&mut self) -> Result<u32> {
+        self.consume_whitespace()?;
+        let mut integer_string = String::new();
+        loop {
+            let next = self
+                .peek_next()
+                .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                    input: self.input.clone(),
+                })?;
+            if next.is_ascii_digit() {
+                self.read_next().unwrap();
+                integer_string.push(next);
+            } else {
+                // end of the integer! parse and return it
+                let integer = integer_string.parse().unwrap();
+                return Ok(integer);
+            }
+        }
+    }
+
+    fn parse_string(&mut self) -> Result<String> {
+        self.consume_whitespace()?;
+
+        let mut string = String::new();
+
+        let next = self
+            .read_next()
+            .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                input: self.input.clone(),
+            })?;
+
+        if next != '"' {
+            return Err(MarkupParseError::NoStringFound {
+                input: self.input.clone(),
+            });
+        }
+        loop {
+            let next = self
+                .read_next()
+                .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                    input: self.input.clone(),
+                })?;
+            match next {
+                '"' => {
+                    // end of string - consume it but don't append to the final collection
+                    return Ok(string);
+                }
+                '\\' => {
+                    // an escaped quote or backslash
+                    let next =
+                        self.read_next()
+                            .ok_or_else(|| MarkupParseError::UnexpectedEndOfLine {
+                                input: self.input.clone(),
+                            })?;
+                    if next == '"' || next == '\\' {
+                        string.push(next);
+                    } else {
+                        return Err(MarkupParseError::InvalidEscapeSequence {
+                            input: self.input.clone(),
+                        });
+                    }
+                }
+                _ => {
+                    string.push(next);
+                }
+            }
+        }
     }
 }
 

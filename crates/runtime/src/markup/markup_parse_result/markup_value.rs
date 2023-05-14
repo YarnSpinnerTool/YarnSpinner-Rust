@@ -9,7 +9,7 @@ use core::fmt::Display;
 /// by objects that can parse markup, such as [`Dialogue`]
 #[derive(Debug, Clone, PartialEq)]
 pub enum MarkupValue {
-    Integer(isize),
+    Integer(u32),
     Float(f32),
     String(String),
     Bool(bool),
@@ -49,7 +49,7 @@ impl From<&str> for MarkupValue {
     }
 }
 
-impl From<isize> for MarkupValue {
+impl From<u32> for MarkupValue {
     fn from(i: isize) -> Self {
         MarkupValue::Integer(i)
     }
