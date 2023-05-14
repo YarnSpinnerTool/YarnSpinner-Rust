@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/MarkupTests.cs>
 
 use test_base::prelude::*;
+use yarn_slinger_runtime::markup::MarkupValue;
 
 mod test_base;
 
@@ -75,4 +76,65 @@ fn test_attribute_removal() {
     assert_eq!("e", trimmed_markup.attributes[3].name);
     assert_eq!(5, trimmed_markup.attributes[3].position);
     assert_eq!(1, trimmed_markup.attributes[3].length);
+}
+
+#[test]
+fn test_finding_attributes() {
+    let line = "A [b]B[/b] [b]C[/b]";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    let attribute = markup.get_attribute("b").unwrap();
+    assert_eq!(attribute, &markup.attributes[0]);
+    assert_ne!(attribute, &markup.attributes[1]);
+
+    assert!(markup.get_attribute("c").is_none());
+}
+
+#[test]
+fn test_multibyte_character_parsing() {
+    for input in [
+        "á [á]S[/á]",
+        "á [a]á[/a]",
+        "á [a]S[/a]",
+        "S [á]S[/á]",
+        "S [a]á[/a]",
+        "S [a]S[/a]",
+    ] {
+        let markup = TestBase::new().dialogue.parse_markup(input).unwrap();
+
+        // All versions of this string should have the same position
+        // and length of the attribute, despite the presence of
+        // multibyte characters
+        assert_eq!(1, markup.attributes.len());
+        assert_eq!(2, markup.attributes[0].position);
+        assert_eq!(1, markup.attributes[0].length);
+    }
+}
+
+#[test]
+fn test_unexpected_close_marker_throws() {
+    for input in ["[a][/a][/b]", "[/b]", "[a][/][/b]"] {
+        let markup = TestBase::new().dialogue.parse_markup(input);
+
+        assert!(markup.is_err());
+    }
+}
+
+#[test]
+fn test_markup_shortcut_property_parsing() {
+    let line = "[a=1]s[/a]";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    // Should have a single attribute, "a", at position 0 and length 1
+    assert_eq!(1, markup.attributes.len());
+
+    let attribute = &markup.attributes[0];
+    assert_eq!("a", attribute.name);
+    assert_eq!(0, attribute.position);
+    assert_eq!(1, attribute.length);
+
+    // Should have a single property on this attribute, "a". Value should be an integer, 1
+    let value = attribute.properties.get("a").unwrap();
+
+    assert_eq!(&MarkupValue::Integer(1), value);
 }

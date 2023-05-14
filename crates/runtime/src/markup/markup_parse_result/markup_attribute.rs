@@ -33,7 +33,7 @@ impl MarkupAttribute {
             name: marker.name.unwrap(),
             position: marker.position,
             length,
-            properties: Default::default(),
+            properties: marker.properties,
             source_position: marker.source_position,
         }
     }
