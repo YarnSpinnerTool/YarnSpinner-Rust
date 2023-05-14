@@ -659,6 +659,8 @@ impl LineParser {
                     if next == '"' || next == '\\' {
                         string.push(next);
                     } else {
+                        // Implementation note:
+                        // Not an error in the original implementation, but that seems like an oversight.
                         return Err(MarkupParseError::InvalidEscapeSequence {
                             input: self.input.clone(),
                         });
