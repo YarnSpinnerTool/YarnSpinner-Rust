@@ -68,7 +68,7 @@ impl ParsedMarkup {
     ///
     /// If `attribute_to_delete` is not an attribute of this
     /// [`ParsedMarkup`], the behaviour is undefined.
-    pub fn delete_range(&self, attribute_to_delete: MarkupAttribute) -> ParsedMarkup {
+    pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> ParsedMarkup {
         // Address the trivial case: if the attribute has a zero
         // length, just create a new markup that doesn't include it.
         // The plain text is left unmodified, because this attribute
@@ -77,7 +77,7 @@ impl ParsedMarkup {
             let attributes = self
                 .attributes
                 .iter()
-                .filter(|attr| **attr != attribute_to_delete)
+                .filter(|attr| *attr != attribute_to_delete)
                 .cloned()
                 .collect();
             return ParsedMarkup {
@@ -96,7 +96,7 @@ impl ParsedMarkup {
             .attributes
             .iter()
             // This is the attribute we're deleting. Don't include it.
-            .filter(|attr| **attr != attribute_to_delete)
+            .filter(|attr| *attr != attribute_to_delete)
             .filter_map(|attribute| {
                 let mut attribute = attribute.clone();
                 let start = attribute.position;
