@@ -115,7 +115,7 @@ impl ParsedMarkup {
                         // attribute begins.
                         let original_length = attribute.length;
                         attribute.length = deletion_start.saturating_sub(start);
-                        if original_length > 0 && attribute.length <= 0 {
+                        if original_length > 0 && attribute.length == 0 {
                             // The attribute's length has been reduced to
                             // zero. All of the contents it previous had
                             // have been removed, so we will remove the

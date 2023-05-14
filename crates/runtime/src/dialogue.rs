@@ -35,7 +35,7 @@ impl Dialogue {
         let line_parser = LineParser::new()
             .register_marker_processor("select", dialogue_text_processor.clone())
             .register_marker_processor("plural", dialogue_text_processor.clone())
-            .register_marker_processor("ordinal", dialogue_text_processor.clone());
+            .register_marker_processor("ordinal", dialogue_text_processor);
 
         Self {
             vm: VirtualMachine::new(library, variable_storage),

@@ -77,7 +77,7 @@ impl LineParser {
     ///
     /// The original does not reset the internal `source_position`. This was likely a bug.
     pub(crate) fn parse_markup(&mut self, input: &str) -> Result<ParsedMarkup> {
-        if input.len() == 0 {
+        if input.is_empty() {
             // We got a null input; return an empty markup parse result
             return Ok(ParsedMarkup::new());
         }
