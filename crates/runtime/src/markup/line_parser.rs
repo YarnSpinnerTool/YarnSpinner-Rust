@@ -592,6 +592,7 @@ impl LineParser {
     ///
     /// The closing marker itself is not included in the returned text.
     fn parse_raw_text_up_to_attribute_close(&mut self, name: &str) -> Result<String> {
+        let original_source_position = self.source_position;
         let remainder_of_line = self.read_to_end();
 
         // Parse up to either [/name] or [/], allowing whitespace between any elements.
@@ -612,8 +613,8 @@ impl LineParser {
 
         // We've consumed all of this text in the string reader, so to
         // make it possible to parse the rest, we need to create a new
-        // string reader with the remaining text
-        self.position += close_marker_position;
+        // "string reader" with the remaining text
+        self.source_position = original_source_position + close_marker_position;
 
         Ok(raw_text_substring.to_string())
     }

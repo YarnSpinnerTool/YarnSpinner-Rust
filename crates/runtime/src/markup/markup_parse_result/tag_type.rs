@@ -6,13 +6,10 @@
 pub(crate) enum TagType {
     /// An open marker. For example, `[a]`.
     Open,
-
     /// A closing marker. For example, `[/a]`.
     Close,
-
     /// A self-closing marker. For example, `[a/]`.
     SelfClosing,
-
     /// The close-all marker, `[/]`.
     CloseAll,
 }
