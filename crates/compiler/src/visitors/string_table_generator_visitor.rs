@@ -217,7 +217,7 @@ A line with {$many} many {(1 -(1 * 2))}{$cool} expressions
     }
 
     fn process_input(input: &str) -> String {
-        let lexer = YarnSpinnerLexer::new(InputStream::new(input), "input.yarn".to_owned());
+        let lexer = YarnSpinnerLexer::new(InputStream::new(input), input, "input.yarn".to_owned());
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
         let line_formatted_text = parser
             .dialogue()

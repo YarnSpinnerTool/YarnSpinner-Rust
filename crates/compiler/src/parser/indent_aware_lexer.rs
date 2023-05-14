@@ -10,12 +10,14 @@ use super::generated::yarnspinnerlexer::{
 };
 use crate::listeners::Diagnostic;
 use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
+use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::CommonToken;
 use antlr_rust::{
     char_stream::CharStream,
     token::{Token, TOKEN_DEFAULT_CHANNEL},
     token_factory::{CommonTokenFactory, TokenFactory},
-    Lexer, TokenSource,
+    InputStream, Lexer, TokenSource,
 };
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
@@ -39,6 +41,7 @@ pub(crate) struct IndentAwareYarnSpinnerLexer<
     Input: CharStream<From<'input>>,
     TF: TokenFactory<'input> = LocalTokenFactory<'input>,
 > {
+    raw_input: &'input str,
     base: GeneratedYarnSpinnerLexer<'input, Input>,
     hit_eof: bool,
     /// Holds the last observed token from the stream.
@@ -126,9 +129,10 @@ impl<'input, Input: CharStream<From<'input>>> IndentAwareYarnSpinnerLexer<'input
 where
     &'input LocalTokenFactory<'input>: Default,
 {
-    pub fn new(input: Input, file_name: String) -> Self {
+    pub fn new(input: Input, raw_input: &'input str, file_name: String) -> Self {
         IndentAwareYarnSpinnerLexer {
             file_name,
+            raw_input,
             base: GeneratedYarnSpinnerLexer::new(input),
             hit_eof: false,
             last_token: Default::default(),
@@ -170,60 +174,27 @@ where
                 self.pending_tokens.enqueue(current.clone());
             }
             // ## Implementation note
+            // This is a massive hack because antlr4rust does not parse non-ascii VAR_IDs properly.
+            // This kind of hack might be necessary in other places as well.
             yarnspinnerlexer::VAR_ID => {
                 let mut cumulative_var_id_token = current.clone();
-                let mut text_bytes: Vec<_> = cumulative_var_id_token.get_text().bytes().collect();
-                if cumulative_var_id_token
-                    .get_text()
-                    .bytes()
-                    .collect::<Vec<_>>()
-                    != vec![36, 195, 165]
-                {
-                    self.pending_tokens.enqueue(current.clone());
-                    self.last_token = Some(current);
-                    return;
-                }
-                println!("got a var_id!");
-                println!(
-                    "It starts with TEXT: {} {:?}",
-                    cumulative_var_id_token.get_text(),
-                    cumulative_var_id_token
-                        .get_text()
-                        .bytes()
-                        .collect::<Vec<_>>()
-                );
-                let actual = &self
-                    .base
-                    .input
-                    .as_ref()
-                    .unwrap()
-                    .get_text(cumulative_var_id_token.start, cumulative_var_id_token.stop);
-                println!(
-                    "which might actually be: {} {:?}",
-                    actual,
-                    actual.bytes().collect::<Vec<_>>()
-                );
                 loop {
+                    // Can't use `la` here because it would only return the token type, but we need `stop` and `column` as well.
                     let next = self.base.next_token();
                     if next.token_type == yarnspinnerlexer::FUNC_ID {
-                        println!(
-                            "accumulating {} {:?}",
-                            next.get_text(),
-                            next.get_text().bytes().collect::<Vec<_>>()
-                        );
-                        text_bytes.extend(next.get_text().bytes());
                         cumulative_var_id_token.stop = next.stop;
                     } else {
-                        println!(
-                            "FINAL: {} {:?}",
-                            cumulative_var_id_token.get_text(),
-                            text_bytes
-                        );
-                        println!("SHOULD BE: $实验 {:?}", "$实验".bytes().collect::<Vec<_>>());
-                        cumulative_var_id_token.text =
-                            String::from_utf8_lossy(&text_bytes).to_string().into();
+                        let text = &self
+                            .raw_input
+                            .lines()
+                            .nth(cumulative_var_id_token.line as usize - 1)
+                            .unwrap()
+                            [cumulative_var_id_token.column as usize..next.column as usize];
+                        cumulative_var_id_token.text = text.into();
                         self.pending_tokens.enqueue(cumulative_var_id_token.clone());
                         current = cumulative_var_id_token;
+
+                        // Make sure we actually process this token that we over-eagerly had to read.
                         self.next_buffer = Some(next);
                         break;
                     }
@@ -499,6 +470,7 @@ This is the one and only line
         let generated_lexer = GeneratedYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(MINIMAL_INPUT),
+            MINIMAL_INPUT,
             "input.yarn".to_owned(),
         );
 
@@ -539,6 +511,7 @@ This is the one and only line
 
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(option_indentation_relevant_input),
+            option_indentation_relevant_input,
             "input.yarn".to_owned(),
         );
 

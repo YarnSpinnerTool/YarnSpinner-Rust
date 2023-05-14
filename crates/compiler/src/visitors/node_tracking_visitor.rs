@@ -134,7 +134,7 @@ tracking: always
     }
 
     fn process_input(input: &str) -> NodeTrackingVisitor {
-        let lexer = YarnSpinnerLexer::new(InputStream::new(input), "input.yarn".to_owned());
+        let lexer = YarnSpinnerLexer::new(InputStream::new(input), input, "input.yarn".to_owned());
         let mut parser = YarnSpinnerParser::new(CommonTokenStream::new(lexer));
         let tree = parser.dialogue().unwrap();
         let mut visitor = NodeTrackingVisitor::new();
