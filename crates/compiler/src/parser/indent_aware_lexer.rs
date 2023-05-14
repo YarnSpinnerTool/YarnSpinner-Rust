@@ -147,10 +147,7 @@ where
     }
 
     fn check_next_token(&mut self) {
-        let mut current = self
-            .next_buffer
-            .take()
-            .unwrap_or_else(|| self.base.next_token());
+        let mut current = self.read_next_token();
         let mut next = self.base.next_token();
         current.text = self.fix_non_ascii_text(&current, &next).into();
 
@@ -181,20 +178,13 @@ where
             yarnspinnerlexer::VAR_ID => {
                 let mut cumulative_var_id_token = current.clone();
                 loop {
-                    next = self
-                        .next_buffer
-                        .take()
-                        .unwrap_or_else(|| self.base.next_token());
+                    next = self.read_next_token();
                     if next.token_type == yarnspinnerlexer::FUNC_ID {
                         cumulative_var_id_token.stop = next.stop;
                     } else {
-                        let text = &self
-                            .raw_input
-                            .lines()
-                            .nth(cumulative_var_id_token.line as usize - 1)
-                            .unwrap()
-                            [cumulative_var_id_token.column as usize..next.column as usize];
-                        cumulative_var_id_token.text = text.into();
+                        cumulative_var_id_token.text = self
+                            .fix_non_ascii_text(&cumulative_var_id_token, &next)
+                            .into();
                         self.pending_tokens.enqueue(cumulative_var_id_token.clone());
                         current = cumulative_var_id_token;
                         break;
@@ -207,6 +197,12 @@ where
         self.next_buffer = Some(next);
         // TODO: but... really?
         self.last_token = Some(current);
+    }
+
+    fn read_next_token(&mut self) -> Box<CommonToken<'input>> {
+        self.next_buffer
+            .take()
+            .unwrap_or_else(|| self.base.next_token())
     }
 
     fn handle_newline_token(
