@@ -291,25 +291,6 @@ fn test_markup_escaping() {
     assert_eq!(18, markup.attributes[0].length);
 }
 
-/*
-
-       [Fact]
-       public void TestNumericProperties() {
-           var line = @"[select value=1 1=one 2=two 3=three /]";
-           var markup = dialogue.ParseMarkup(line);
-
-           markup.Attributes.Should().ContainSingle();
-           markup.Attributes[0].Name.Should().Be("select");
-           markup.Attributes[0].Properties.Count.Should().Be(4);
-           markup.Attributes[0].Properties["value"].IntegerValue.Should().Be(1);
-           markup.Attributes[0].Properties["1"].StringValue.Should().Be("one");
-           markup.Attributes[0].Properties["2"].StringValue.Should().Be("two");
-           markup.Attributes[0].Properties["3"].StringValue.Should().Be("three");
-
-           markup.Text.Should().Be("one");
-       }
-*/
-
 #[test]
 fn test_numeric_properties() {
     let line = "[select value=1 1=one 2=two 3=three /]";
