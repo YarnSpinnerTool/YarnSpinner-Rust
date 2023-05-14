@@ -62,6 +62,7 @@ pub(crate) struct IndentAwareYarnSpinnerLexer<
     /// Lets us work out if the blank line needs to end the option.
     last_seen_option_content: Option<isize>,
     file_name: String,
+    next_buffer: Option<Box<CommonToken<'input>>>,
     pub(crate) diagnostics: Rc<RefCell<Vec<Diagnostic>>>,
 }
 
@@ -137,12 +138,15 @@ where
             unbalanced_indents: Default::default(),
             last_seen_option_content: None,
             diagnostics: Default::default(),
+            next_buffer: None,
         }
     }
 
     fn check_next_token(&mut self) {
-        let current = self.base.next_token();
-
+        let mut current = self
+            .next_buffer
+            .take()
+            .unwrap_or_else(|| self.base.next_token());
         match current.token_type {
             // Insert indents or dedents depending on the next token's
             // indentation, and enqueues the newline at the correct place
@@ -164,6 +168,44 @@ where
                 self.last_seen_option_content = None;
                 // [sic from the original!] TODO: this should be empty by now actually...
                 self.pending_tokens.enqueue(current.clone());
+            }
+            // ## Implementation note
+            yarnspinnerlexer::VAR_ID => {
+                let mut cumulative_var_id_token = current.clone();
+                let mut text_bytes: Vec<_> = cumulative_var_id_token.get_text().bytes().collect();
+                println!("got a var_id!");
+                println!(
+                    "It starts with TEXT: {}",
+                    cumulative_var_id_token.get_text()
+                );
+                println!(
+                    "which is byteS: {:?}",
+                    cumulative_var_id_token
+                        .get_text()
+                        .bytes()
+                        .collect::<Vec<_>>()
+                );
+                loop {
+                    let next = self.base.next_token();
+                    if next.token_type == yarnspinnerlexer::FUNC_ID {
+                        println!(
+                            "accumulating bytes: {:?}",
+                            next.get_text().bytes().collect::<Vec<_>>()
+                        );
+                        text_bytes.extend(next.get_text().bytes());
+                        cumulative_var_id_token.stop = next.stop;
+                    } else {
+                        println!("TEXT BYTES: {:?}", text_bytes);
+                        println!("SHOULD BE: {:?}", "$实验".bytes().collect::<Vec<_>>());
+                        cumulative_var_id_token.text =
+                            String::from_utf8_lossy(&text_bytes).to_string().into();
+                        println!("TEXT: {}", cumulative_var_id_token.get_text());
+                        self.pending_tokens.enqueue(cumulative_var_id_token.clone());
+                        current = cumulative_var_id_token;
+                        self.next_buffer = Some(next);
+                        break;
+                    }
+                }
             }
             _ => self.pending_tokens.enqueue(current.clone()),
         }
