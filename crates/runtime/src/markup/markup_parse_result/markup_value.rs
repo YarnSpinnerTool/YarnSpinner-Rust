@@ -50,7 +50,7 @@ impl From<&str> for MarkupValue {
 }
 
 impl From<u32> for MarkupValue {
-    fn from(i: isize) -> Self {
+    fn from(i: u32) -> Self {
         MarkupValue::Integer(i)
     }
 }

@@ -315,7 +315,7 @@ impl LineParser {
     /// ## Returns
     ///
     /// The replacement text to insert.
-    fn process_replacement_marker(&self, marker: &mut MarkupAttributeMarker) -> Result<String> {
+    fn process_replacement_marker(&mut self, marker: &mut MarkupAttributeMarker) -> Result<String> {
         let name = marker.name.as_ref().unwrap().as_str();
         match marker.tag_type {
             TagType::Open => {
@@ -388,7 +388,8 @@ impl LineParser {
                         .position(|open_marker| open_marker.name == marker.name)
                         .ok_or_else(|| MarkupParseError::UnmatchedCloseMarker {
                             input: self.input.clone(),
-                            marker: marker.clone(),
+                            name: marker.name.unwrap(),
+                            position: marker.position,
                         })?;
 
                     // This attribute is now closed, so we can
@@ -438,6 +439,14 @@ impl LineParser {
 
     fn peek_next(&self) -> Option<char> {
         self.input.chars().nth(self.source_position)
+    }
+
+    fn read_to_end(&mut self) -> String {
+        let mut string = String::new();
+        while let Some(next) = self.read_next() {
+            string.push(next);
+        }
+        string
     }
 
     fn peek_character(&mut self, character: char) -> Result<bool> {
@@ -581,8 +590,31 @@ impl LineParser {
     /// a close-all marker.
     ///
     /// The closing marker itself is not included in the returned text.
-    fn parse_raw_text_up_to_attribute_close(&self, name: &str) -> Result<String> {
-        todo!()
+    fn parse_raw_text_up_to_attribute_close(&mut self, name: &str) -> Result<String> {
+        let remainder_of_line = self.read_to_end();
+
+        // Parse up to either [/name] or [/], allowing whitespace between any elements.
+        let regex = Regex::new(&format!(r"\[\s*\/\s*({name})?\s*\]")).unwrap();
+        let match_ =
+            regex
+                .find(&remainder_of_line)
+                .ok_or_else(|| MarkupParseError::UnterminatedMarker {
+                    input: self.input.clone(),
+                    name: name.to_string(),
+                    position: self.position,
+                })?;
+
+        // Split the line into the part up to the closing tag, and the
+        // part afterwards
+        let close_marker_position = match_.start();
+        let raw_text_substring = &remainder_of_line[..close_marker_position];
+
+        // We've consumed all of this text in the string reader, so to
+        // make it possible to parse the rest, we need to create a new
+        // string reader with the remaining text
+        self.position += close_marker_position;
+
+        Ok(raw_text_substring.to_string())
     }
 
     /// Peeks ahead in the LineParser's input without consuming any
