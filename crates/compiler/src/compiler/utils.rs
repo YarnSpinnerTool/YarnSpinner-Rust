@@ -7,7 +7,7 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
 use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
-use antlr_rust::input_stream::{CodePoint32BitCharStream, CodePoint8BitCharStream};
+use antlr_rust::input_stream::CodePoint32BitCharStream;
 use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::Parser;
 use std::collections::HashSet;
@@ -36,10 +36,9 @@ pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
     file_chars: &'a [u32],
     diagnostics: &mut Vec<Diagnostic>,
 ) -> FileParseResult<'a> {
+    // Using 32 bit codepoints because that's how big a Rust `char` is: 4 bytes.
     let input = CodePoint32BitCharStream::new(file_chars);
-    let lookahead_input = CodePoint32BitCharStream::new(file_chars);
-    let mut lexer =
-        YarnSpinnerLexer::new(input, lookahead_input, &file.source, file.file_name.clone());
+    let mut lexer = YarnSpinnerLexer::new(input, file.file_name.clone());
 
     // turning off the normal error listener and using ours
     let file_name = file.file_name.clone();

@@ -41,9 +41,7 @@ pub(crate) struct IndentAwareYarnSpinnerLexer<
     Input: CharStream<From<'input>>,
     TF: TokenFactory<'input> = LocalTokenFactory<'input>,
 > {
-    raw_input: &'input str,
     base: GeneratedYarnSpinnerLexer<'input, Input>,
-    lookahead_lexer: GeneratedYarnSpinnerLexer<'input, Input>,
     hit_eof: bool,
     /// Holds the last observed token from the stream.
     /// Used to see if a line is blank or not.
@@ -129,19 +127,10 @@ impl<'input, Input: CharStream<From<'input>>> IndentAwareYarnSpinnerLexer<'input
 where
     &'input LocalTokenFactory<'input>: Default,
 {
-    pub fn new(
-        input: Input,
-        lookahead_input: Input,
-        raw_input: &'input str,
-        file_name: String,
-    ) -> Self {
-        let mut lookahead_lexer = GeneratedYarnSpinnerLexer::new(lookahead_input);
-        lookahead_lexer.next_token();
+    pub fn new(input: Input, file_name: String) -> Self {
         IndentAwareYarnSpinnerLexer {
             file_name,
-            raw_input,
             base: GeneratedYarnSpinnerLexer::new(input),
-            lookahead_lexer,
             hit_eof: false,
             last_token: Default::default(),
             pending_tokens: Default::default(),
@@ -154,7 +143,7 @@ where
     }
 
     fn check_next_token(&mut self) {
-        let mut current = self.base.next_token();
+        let current = self.base.next_token();
 
         match current.token_type {
             // Insert indents or dedents depending on the next token's
@@ -183,10 +172,6 @@ where
 
         // TODO: but... really?
         self.last_token = Some(current);
-    }
-
-    fn next_lookahead_token(&mut self) -> Option<Box<CommonToken<'input>>> {
-        (self.lookahead_lexer.input().size() > 0).then(|| self.lookahead_lexer.next_token())
     }
 
     fn handle_newline_token(
@@ -363,68 +348,6 @@ where
 
         self.pending_tokens.enqueue(token);
     }
-
-    /// antlr4rust does not parse non-ASCII characters properly, so we have to do a second pass
-    fn fix_non_ascii_text(
-        &self,
-        current: &Box<CommonToken>,
-        next: &Option<Box<CommonToken>>,
-    ) -> String {
-        let original_text = current.get_text();
-        if original_text == "<EOF>" {
-            return original_text.to_string();
-        }
-
-        let start_line = (current.line as usize).saturating_sub(1);
-        let start_column = current.column as usize;
-
-        let (end_line, end_column) = if let Some(next) = next {
-            (next.line as usize - 1, next.column as usize)
-        } else {
-            (
-                self.raw_input.lines().count(),
-                self.raw_input.lines().last().unwrap().len(),
-            )
-        };
-
-        let fixed = if start_line == end_line {
-            self.raw_input
-                .lines()
-                .nth(start_line)
-                .unwrap_or(self.raw_input)[start_column..end_column]
-                .to_string()
-        } else {
-            self.raw_input
-                .lines()
-                .enumerate()
-                .skip(start_line)
-                .take(end_line - start_line + 1)
-                .map(|(i, line)| {
-                    if i == start_line {
-                        &line[start_column..]
-                    } else if i == end_line {
-                        &line[..end_column]
-                    } else {
-                        line
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("\n")
-        };
-
-        let mut fixed = fixed.as_str();
-        if original_text.trim_end() == original_text {
-            fixed = fixed.trim_end();
-        }
-        if original_text.trim_start() == original_text {
-            fixed = fixed.trim_start();
-        }
-        if !original_text.ends_with('\\') {
-            fixed = fixed.trim_end_matches('\\');
-        }
-
-        return fixed.to_string();
-    }
 }
 
 fn get_newline_indentation_range(token: &CommonToken<'_>) -> Range<Position> {
@@ -513,8 +436,6 @@ This is the one and only line
         let generated_lexer = GeneratedYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(MINIMAL_INPUT),
-            InputStream::new(MINIMAL_INPUT),
-            MINIMAL_INPUT,
             "input.yarn".to_owned(),
         );
 
@@ -555,8 +476,6 @@ This is the one and only line
 
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(option_indentation_relevant_input),
-            InputStream::new(option_indentation_relevant_input),
-            option_indentation_relevant_input,
             "input.yarn".to_owned(),
         );
 
