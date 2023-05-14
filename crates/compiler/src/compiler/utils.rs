@@ -36,7 +36,9 @@ pub(crate) fn parse_syntax_tree<'a>(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> FileParseResult<'a> {
     let input = CodePoint8BitCharStream::new(file.source.as_bytes());
-    let mut lexer = YarnSpinnerLexer::new(input, &file.source, file.file_name.clone());
+    let lookahead_input = CodePoint8BitCharStream::new(file.source.as_bytes());
+    let mut lexer =
+        YarnSpinnerLexer::new(input, lookahead_input, &file.source, file.file_name.clone());
 
     // turning off the normal error listener and using ours
     let file_name = file.file_name.clone();

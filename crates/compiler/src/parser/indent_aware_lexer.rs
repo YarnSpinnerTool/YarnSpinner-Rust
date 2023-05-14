@@ -43,6 +43,7 @@ pub(crate) struct IndentAwareYarnSpinnerLexer<
 > {
     raw_input: &'input str,
     base: GeneratedYarnSpinnerLexer<'input, Input>,
+    lookahead_lexer: GeneratedYarnSpinnerLexer<'input, Input>,
     hit_eof: bool,
     /// Holds the last observed token from the stream.
     /// Used to see if a line is blank or not.
@@ -65,7 +66,6 @@ pub(crate) struct IndentAwareYarnSpinnerLexer<
     /// Lets us work out if the blank line needs to end the option.
     last_seen_option_content: Option<isize>,
     file_name: String,
-    next_buffer: Option<Box<CommonToken<'input>>>,
     pub(crate) diagnostics: Rc<RefCell<Vec<Diagnostic>>>,
 }
 
@@ -95,7 +95,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             // We have hit the EOF, but we have tokens still pending.
             // Start returning those tokens.
             self.pending_tokens.dequeue().unwrap()
-        } else if self.base.input().size() == 0 && self.next_buffer.is_none() {
+        } else if self.base.input().size() == 0 {
             self.hit_eof = true;
             create_common_token(antlr_rust::token::TOKEN_EOF, "<EOF>")
         } else {
@@ -129,11 +129,19 @@ impl<'input, Input: CharStream<From<'input>>> IndentAwareYarnSpinnerLexer<'input
 where
     &'input LocalTokenFactory<'input>: Default,
 {
-    pub fn new(input: Input, raw_input: &'input str, file_name: String) -> Self {
+    pub fn new(
+        input: Input,
+        lookahead_input: Input,
+        raw_input: &'input str,
+        file_name: String,
+    ) -> Self {
+        let mut lookahead_lexer = GeneratedYarnSpinnerLexer::new(lookahead_input);
+        lookahead_lexer.next_token();
         IndentAwareYarnSpinnerLexer {
             file_name,
             raw_input,
             base: GeneratedYarnSpinnerLexer::new(input),
+            lookahead_lexer,
             hit_eof: false,
             last_token: Default::default(),
             pending_tokens: Default::default(),
@@ -142,13 +150,12 @@ where
             unbalanced_indents: Default::default(),
             last_seen_option_content: None,
             diagnostics: Default::default(),
-            next_buffer: None,
         }
     }
 
     fn check_next_token(&mut self) {
-        let mut current = self.read_next_token().unwrap();
-        let mut next = self.read_next_token();
+        let mut current = self.base.next_token();
+        let mut next = self.next_lookahead_token();
         current.text = self.fix_non_ascii_text(&current, &next).into();
 
         match current.token_type {
@@ -181,7 +188,8 @@ where
                     if let Some(inner_next) = &next {
                         if inner_next.token_type == yarnspinnerlexer::FUNC_ID {
                             cumulative_var_id_token.stop = inner_next.stop;
-                            next = self.read_next_token();
+                            next = self.next_lookahead_token();
+                            self.base.next_token();
                             continue;
                         }
                     }
@@ -197,15 +205,12 @@ where
             _ => self.pending_tokens.enqueue(current.clone()),
         }
 
-        self.next_buffer = next;
         // TODO: but... really?
         self.last_token = Some(current);
     }
 
-    fn read_next_token(&mut self) -> Option<Box<CommonToken<'input>>> {
-        self.next_buffer
-            .take()
-            .or_else(|| (self.base.input().size() > 0).then(|| self.base.next_token()))
+    fn next_lookahead_token(&mut self) -> Option<Box<CommonToken<'input>>> {
+        (self.lookahead_lexer.input().size() > 0).then(|| self.lookahead_lexer.next_token())
     }
 
     fn handle_newline_token(
@@ -532,6 +537,7 @@ This is the one and only line
         let generated_lexer = GeneratedYarnSpinnerLexer::new(InputStream::new(MINIMAL_INPUT));
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(MINIMAL_INPUT),
+            InputStream::new(MINIMAL_INPUT),
             MINIMAL_INPUT,
             "input.yarn".to_owned(),
         );
@@ -572,6 +578,7 @@ This is the one and only line
         let option_indentation_relevant_input: &str = include_str!("significant_whitespace.yarn");
 
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
+            InputStream::new(option_indentation_relevant_input),
             InputStream::new(option_indentation_relevant_input),
             option_indentation_relevant_input,
             "input.yarn".to_owned(),
