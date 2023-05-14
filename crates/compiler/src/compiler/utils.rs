@@ -7,7 +7,7 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
 use crate::prelude::*;
 use antlr_rust::common_token_stream::CommonTokenStream;
-use antlr_rust::input_stream::CodePoint8BitCharStream;
+use antlr_rust::input_stream::{CodePoint32BitCharStream, CodePoint8BitCharStream};
 use antlr_rust::token::{Token, TOKEN_DEFAULT_CHANNEL};
 use antlr_rust::Parser;
 use std::collections::HashSet;
@@ -31,12 +31,13 @@ pub(crate) fn get_line_id_tag<'a>(
         .cloned()
 }
 
-pub(crate) fn parse_syntax_tree<'a>(
-    file: &'a File,
+pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
+    file: &'b File,
+    file_chars: &'a [u32],
     diagnostics: &mut Vec<Diagnostic>,
 ) -> FileParseResult<'a> {
-    let input = CodePoint8BitCharStream::new(file.source.as_bytes());
-    let lookahead_input = CodePoint8BitCharStream::new(file.source.as_bytes());
+    let input = CodePoint32BitCharStream::new(file_chars);
+    let lookahead_input = CodePoint32BitCharStream::new(file_chars);
     let mut lexer =
         YarnSpinnerLexer::new(input, lookahead_input, &file.source, file.file_name.clone());
 
@@ -244,7 +245,12 @@ mod tests {
 ==="
             .to_owned(),
         };
-        let _parsed_file = parse_syntax_tree(&mixed_indentation_input, &mut diagnostics);
+        let chars: Vec<_> = mixed_indentation_input
+            .source
+            .chars()
+            .map(|c| c as u32)
+            .collect();
+        let _parsed_file = parse_syntax_tree(&mixed_indentation_input, &chars, &mut diagnostics);
         assert_eq!(1, diagnostics.len());
         assert_eq!(
             Diagnostic::from_message("Indentation contains tabs and spaces")

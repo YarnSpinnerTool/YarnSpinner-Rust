@@ -155,8 +155,6 @@ where
 
     fn check_next_token(&mut self) {
         let mut current = self.base.next_token();
-        let mut next = self.next_lookahead_token();
-        current.text = self.fix_non_ascii_text(&current, &next).into();
 
         match current.token_type {
             // Insert indents or dedents depending on the next token's
@@ -179,28 +177,6 @@ where
                 self.last_seen_option_content = None;
                 // [sic from the original!] TODO: this should be empty by now actually...
                 self.pending_tokens.enqueue(current.clone());
-            }
-            // ## Implementation note
-            // This is a massive hack because antlr4rust splits non-ascii VAR_IDs into one VAR_ID and multiple FUNC_IDs for some reason...
-            yarnspinnerlexer::VAR_ID => {
-                let mut cumulative_var_id_token = current.clone();
-                loop {
-                    if let Some(inner_next) = &next {
-                        if inner_next.token_type == yarnspinnerlexer::FUNC_ID {
-                            cumulative_var_id_token.stop = inner_next.stop;
-                            next = self.next_lookahead_token();
-                            self.base.next_token();
-                            continue;
-                        }
-                    }
-                    break;
-                }
-
-                cumulative_var_id_token.text = self
-                    .fix_non_ascii_text(&cumulative_var_id_token, &next)
-                    .into();
-                self.pending_tokens.enqueue(cumulative_var_id_token.clone());
-                current = cumulative_var_id_token;
             }
             _ => self.pending_tokens.enqueue(current.clone()),
         }

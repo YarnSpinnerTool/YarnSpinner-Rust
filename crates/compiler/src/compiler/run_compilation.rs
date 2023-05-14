@@ -25,7 +25,13 @@ pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {
         &add_initial_value_registrations,
     ];
 
-    let initial = CompilationIntermediate::from_job(compiler);
+    let chars: Vec<Vec<u32>> = compiler
+        .files
+        .iter()
+        .map(|file| file.source.chars().map(|c| c as u32).collect())
+        .collect();
+    let chars: Vec<_> = chars.iter().map(|c| c.as_slice()).collect();
+    let initial = CompilationIntermediate::from_job(compiler, chars);
     let intermediate = compiler_steps.into_iter().fold(initial, |state, step| {
         if state.early_break {
             state
@@ -36,13 +42,15 @@ pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {
     // Cleaning up diagnostics doesn't change the state but makes sure
     // that diagnostics are unique, there are no errors in the warnings, etc.
     // So we execute it even if we've had early breaks.
-    clean_up_diagnostics(intermediate).result.unwrap()
+    let result = clean_up_diagnostics(intermediate).result.unwrap();
+    result
 }
 
 type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;
 
 pub(crate) struct CompilationIntermediate<'input> {
     pub(crate) job: &'input Compiler,
+    pub(crate) file_chars: Vec<&'input [u32]>,
     pub(crate) result: Option<Result<Compilation>>,
     /// All variable declarations that we've encountered, PLUS the ones we knew about before
     pub(crate) known_variable_declarations: Vec<Declaration>,
@@ -59,9 +67,10 @@ pub(crate) struct CompilationIntermediate<'input> {
 }
 
 impl<'input> CompilationIntermediate<'input> {
-    pub(crate) fn from_job(compiler: &'input Compiler) -> Self {
+    pub(crate) fn from_job(compiler: &'input Compiler, chars: Vec<&'input [u32]>) -> Self {
         Self {
             job: compiler,
+            file_chars: chars,
             result: Default::default(),
             known_variable_declarations: Default::default(),
             derived_variable_declarations: Default::default(),
