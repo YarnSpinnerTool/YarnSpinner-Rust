@@ -208,10 +208,8 @@ impl LineParser {
     /// Parses an open, close, self-closing, or close-all attribute marker.
     fn parse_attribute_marker(&mut self) -> Result<MarkupAttributeMarker> {
         let source_position_at_marker_start = self.source_position;
-        // We have already consumed the start of the marker '[' before
-        // we enter here. Increment the sourcePosition counter to
-        // account for it.
-        self.source_position += 1;
+        // Implementation note: No need to advance position here,
+        // since we do so automatically on every read / parse_character
 
         // Next, start parsing from the characters that can appear
         // inside the marker
