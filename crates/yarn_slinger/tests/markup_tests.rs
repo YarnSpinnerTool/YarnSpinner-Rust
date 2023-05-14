@@ -138,3 +138,66 @@ fn test_markup_shortcut_property_parsing() {
 
     assert_eq!(&MarkupValue::Integer(1), value);
 }
+
+#[test]
+fn test_markup_multiple_property_parsing() {
+    let line = "[a p1=1 p2=2]s[/a]";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    assert_eq!(1, markup.attributes.len());
+
+    let attribute = &markup.attributes[0];
+    assert_eq!("a", attribute.name);
+    assert_eq!(2, attribute.properties.len());
+
+    let p1 = attribute.properties.get("p1").unwrap();
+    assert_eq!(&MarkupValue::Integer(1), p1);
+
+    let p2 = attribute.properties.get("p2").unwrap();
+    assert_eq!(&MarkupValue::Integer(2), p2);
+}
+
+#[test]
+fn test_markup_property_parsing() {
+    for (input, expected_value) in [
+        ("[a p=\"string\"]s[/a]", MarkupValue::from("string")),
+        ("[a p=\"str\\\"ing\"]s[/a]", "str\"ing".into()),
+        ("[a p=string]s[/a]", "string".into()),
+        ("[a p=42]s[/a]", 42.into()),
+        ("[a p=13.37]s[/a]", 13.37.into()),
+        ("[a p=true]s[/a]", true.into()),
+        ("[a p=false]s[/a]", false.into()),
+    ] {
+        let markup = TestBase::new().dialogue.parse_markup(input).unwrap();
+
+        let attribute = &markup.attributes[0];
+        let property_value = attribute.properties.get("p").unwrap();
+
+        assert_eq!(&expected_value, property_value);
+    }
+}
+
+#[test]
+fn test_multiple_attributes() {
+    for input in [
+        "A [b]B [c]C[/c][/b] D", // attributes can be closed
+        "A [b]B [c]C[/b][/c] D", // attributes can be closed out of order
+        "A [b]B [c]C[/] D",      // "[/]" closes all open attributes
+    ] {
+        let markup = TestBase::new().dialogue.parse_markup(input).unwrap();
+
+        assert_eq!("A B C D", markup.text);
+
+        assert_eq!(2, markup.attributes.len());
+
+        assert_eq!("b", markup.attributes[0].name);
+        assert_eq!(2, markup.attributes[0].position);
+        assert_eq!(2, markup.attributes[0].source_position);
+        assert_eq!(3, markup.attributes[0].length);
+
+        assert_eq!("c", markup.attributes[1].name);
+        assert_eq!(4, markup.attributes[1].position);
+        assert_eq!(7, markup.attributes[1].source_position);
+        assert_eq!(1, markup.attributes[1].length);
+    }
+}
