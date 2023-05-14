@@ -37,7 +37,12 @@ impl ParsedMarkup {
 
     /// Returns the substring of [`text`] covered by the [`attribute`]s position and length fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
-        assert!(self.text.len() < attribute.position + attribute.length, "Attribute represents a range not representable by this text. Does this MarkupAttribute belong to this MarkupParseResult?");
+        assert!(
+            self.text.len() <= attribute.position + attribute.length,
+            "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
+        Does this MarkupAttribute belong to this MarkupParseResult?",
+            self.text
+        );
         &self.text[attribute.position..attribute.position + attribute.length]
     }
 
