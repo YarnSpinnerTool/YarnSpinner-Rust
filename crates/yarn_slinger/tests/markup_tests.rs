@@ -201,3 +201,92 @@ fn test_multiple_attributes() {
         assert_eq!(1, markup.attributes[1].length);
     }
 }
+
+#[test]
+fn test_self_closing_attributes() {
+    let line = "A [a/] B";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    assert_eq!("A B", markup.text);
+
+    assert_eq!(1, markup.attributes.len());
+
+    assert_eq!("a", markup.attributes[0].name);
+    assert!(markup.attributes[0].properties.is_empty());
+    assert_eq!(2, markup.attributes[0].position);
+    assert_eq!(0, markup.attributes[0].length);
+}
+
+#[test]
+fn test_attributes_may_trim_trailing_whitespace() {
+    for (input, expected_text) in [
+        ("A [a/] B", "A B"),
+        ("A [a trimwhitespace=true/] B", "A B"),
+        ("A [a trimwhitespace=false/] B", "A  B"),
+        ("A [nomarkup/] B", "A  B"),
+        ("A [nomarkup trimwhitespace=false/] B", "A  B"),
+        ("A [nomarkup trimwhitespace=true/] B", "A B"),
+    ] {
+        let markup = TestBase::new().dialogue.parse_markup(input).unwrap();
+
+        assert_eq!(expected_text, markup.text);
+    }
+}
+
+#[test]
+fn test_implicit_character_attribute_parsing() {
+    for input in [
+        // character attribute can be implicit
+        "Mae: Wow!",
+        // character attribute can also be explicit
+        "[character name=\"Mae\"]Mae: [/character]Wow!",
+    ] {
+        let markup = TestBase::new().dialogue.parse_markup(input).unwrap();
+
+        assert_eq!("Mae: Wow!", markup.text);
+        assert_eq!(1, markup.attributes.len());
+
+        let attribute = &markup.attributes[0];
+        assert_eq!("character", attribute.name);
+        assert_eq!(0, attribute.position);
+        assert_eq!(5, attribute.length);
+
+        assert_eq!(1, attribute.properties.len());
+        assert_eq!(
+            &MarkupValue::String("Mae".to_owned()),
+            attribute.properties.get("name").unwrap()
+        );
+    }
+}
+
+#[test]
+fn test_no_markup_mode_parsing() {
+    let line = "S [a]S[/a] [nomarkup][a]S;][/a][/nomarkup]";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    assert_eq!("S S [a]S;][/a]", markup.text);
+
+    assert_eq!(2, markup.attributes.len());
+
+    assert_eq!("a", markup.attributes[0].name);
+    assert_eq!(2, markup.attributes[0].position);
+    assert_eq!(1, markup.attributes[0].length);
+
+    assert_eq!("nomarkup", markup.attributes[1].name);
+    assert_eq!(4, markup.attributes[1].position);
+    assert_eq!(10, markup.attributes[1].length);
+}
+
+#[test]
+fn test_markup_escaping() {
+    let line = r"[a]hello \[b\]hello\[/b\][/a]";
+    let markup = TestBase::new().dialogue.parse_markup(line).unwrap();
+
+    assert_eq!("hello [b]hello[/b]", markup.text);
+
+    assert_eq!(1, markup.attributes.len());
+
+    assert_eq!("a", markup.attributes[0].name);
+    assert_eq!(0, markup.attributes[0].position);
+    assert_eq!(18, markup.attributes[0].length);
+}
