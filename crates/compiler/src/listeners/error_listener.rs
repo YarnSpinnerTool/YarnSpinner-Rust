@@ -85,11 +85,12 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
         msg: &str,
         _error: Option<&ANTLRError>,
     ) {
+        let line = line as usize;
         let range = Position {
-            line: (line - 1) as usize,
+            line: line.saturating_sub(1),
             character: (column + 1) as usize,
         }..Position {
-            line: (line - 1) as usize,
+            line: line.saturating_sub(1),
             character: (column + 1) as usize,
         };
         let mut diagnostic = Diagnostic::from_message(msg)
@@ -101,7 +102,7 @@ impl<'input, T: Recognizer<'input>> ErrorListener<'input, T> for ParserErrorList
             // the line with the error on it
             let input = &self.file.source;
             let mut lines = input.lines();
-            let error_line = lines.nth((line - 1) as usize).unwrap();
+            let error_line = lines.nth(line.saturating_sub(1)).unwrap_or(input);
             string.push_str(error_line);
             string.push('\n');
 

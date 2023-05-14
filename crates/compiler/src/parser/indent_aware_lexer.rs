@@ -157,6 +157,10 @@ where
             // we are at the end of the node
             // depth no longer matters
             // clear the stack
+            yarnspinnerlexer::COMMAND_TEXT => {
+                self.diagnose_newlines_in_commands(&current);
+                self.pending_tokens.enqueue(current.clone());
+            }
             yarnspinnerlexer::BODY_END => {
                 self.line_contains_shortcut = false;
                 self.last_indent = 0;
@@ -345,6 +349,29 @@ where
         );
 
         self.pending_tokens.enqueue(token);
+    }
+
+    fn diagnose_newlines_in_commands(&mut self, token: &CommonToken<'input>) {
+        if token.get_text().contains('\n') {
+            let line_len = token.get_text().lines().count();
+            let last_line_len = token.get_text().lines().last().unwrap().len();
+            self.diagnostics.borrow_mut().push(
+                Diagnostic::from_message("Newlines are not allowed in commands")
+                    .with_range(
+                        Position {
+                            line: token.get_line_as_usize() - 1,
+                            character: token.get_column_as_usize(),
+                        }..Position {
+                            line: token.get_line_as_usize() - 1 + line_len,
+                            character: last_line_len,
+                        },
+                    )
+                    .with_context(token.get_text().to_string())
+                    .with_start_line(token.get_line_as_usize() - 1)
+                    .with_file_name(self.file_name.clone())
+                    .with_severity(DiagnosticSeverity::Error),
+            );
+        }
     }
 }
 
