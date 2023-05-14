@@ -173,33 +173,55 @@ where
             yarnspinnerlexer::VAR_ID => {
                 let mut cumulative_var_id_token = current.clone();
                 let mut text_bytes: Vec<_> = cumulative_var_id_token.get_text().bytes().collect();
+                if cumulative_var_id_token
+                    .get_text()
+                    .bytes()
+                    .collect::<Vec<_>>()
+                    != vec![36, 195, 165]
+                {
+                    self.pending_tokens.enqueue(current.clone());
+                    self.last_token = Some(current);
+                    return;
+                }
                 println!("got a var_id!");
                 println!(
-                    "It starts with TEXT: {}",
-                    cumulative_var_id_token.get_text()
-                );
-                println!(
-                    "which is byteS: {:?}",
+                    "It starts with TEXT: {} {:?}",
+                    cumulative_var_id_token.get_text(),
                     cumulative_var_id_token
                         .get_text()
                         .bytes()
                         .collect::<Vec<_>>()
                 );
+                let actual = &self
+                    .base
+                    .input
+                    .as_ref()
+                    .unwrap()
+                    .get_text(cumulative_var_id_token.start, cumulative_var_id_token.stop);
+                println!(
+                    "which might actually be: {} {:?}",
+                    actual,
+                    actual.bytes().collect::<Vec<_>>()
+                );
                 loop {
                     let next = self.base.next_token();
                     if next.token_type == yarnspinnerlexer::FUNC_ID {
                         println!(
-                            "accumulating bytes: {:?}",
+                            "accumulating {} {:?}",
+                            next.get_text(),
                             next.get_text().bytes().collect::<Vec<_>>()
                         );
                         text_bytes.extend(next.get_text().bytes());
                         cumulative_var_id_token.stop = next.stop;
                     } else {
-                        println!("TEXT BYTES: {:?}", text_bytes);
-                        println!("SHOULD BE: {:?}", "$实验".bytes().collect::<Vec<_>>());
+                        println!(
+                            "FINAL: {} {:?}",
+                            cumulative_var_id_token.get_text(),
+                            text_bytes
+                        );
+                        println!("SHOULD BE: $实验 {:?}", "$实验".bytes().collect::<Vec<_>>());
                         cumulative_var_id_token.text =
                             String::from_utf8_lossy(&text_bytes).to_string().into();
-                        println!("TEXT: {}", cumulative_var_id_token.get_text());
                         self.pending_tokens.enqueue(cumulative_var_id_token.clone());
                         current = cumulative_var_id_token;
                         self.next_buffer = Some(next);
