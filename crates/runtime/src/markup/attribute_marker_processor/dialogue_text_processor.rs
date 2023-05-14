@@ -3,8 +3,7 @@
 use crate::markup::AttributeMarkerProcessor;
 use crate::pluralization::Pluralization;
 use icu_plurals::PluralCategory;
-use once_cell::sync::Lazy;
-use regex::Regex;
+use std::collections::HashSet;
 
 #[derive(Default, Debug, Clone)]
 pub(crate) struct DialogueTextProcessor {
@@ -17,8 +16,10 @@ impl DialogueTextProcessor {
     }
 }
 
-/// A regex that matches any `%` as long as it's not preceded by a `\`.
-static VALUE_PLACEHOLDER_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<!\\)%").unwrap());
+// Emulates a regex that matches any `%` as long as it's not preceded by a `\`.
+// This is needed because the `regex` crate does not support negative lookbehind
+static CANDIDATE_VALUE_PLACEHOLDER: &str = "%";
+static INVALID_VALUE_PLACEHOLDER: &str = "\\%";
 
 impl AttributeMarkerProcessor for DialogueTextProcessor {
     /// Returns the text that should be used to replace the
@@ -40,9 +41,8 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
                 .get(&value)
                 .unwrap_or_else(|| panic!("error: no replacement for {value}"));
             let replacement = replacement_prop.to_string();
-            return VALUE_PLACEHOLDER_REGEX
-                .replace_all(&replacement, value)
-                .to_string();
+
+            return replace_value_placeholders(&replacement, &value);
         }
 
         // If it's not "select", then it's "plural" or "ordinal"
@@ -71,9 +71,8 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
             panic!("error: no replacement for {value}'s plural case of {plural_case_name}")
         });
         let input = replacement_value.to_string();
-        VALUE_PLACEHOLDER_REGEX
-            .replace_all(&input, value)
-            .to_string()
+
+        replace_value_placeholders(&input, &value)
     }
 
     fn set_language_code(&mut self, language_code: String) {
@@ -85,13 +84,36 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
     }
 }
 
+fn replace_value_placeholders(text: &str, value: &str) -> String {
+    let candidates: HashSet<_> = text
+        .match_indices(CANDIDATE_VALUE_PLACEHOLDER)
+        .map(|(i, _)| i)
+        .collect();
+    let invalids: HashSet<_> = text
+        .match_indices(INVALID_VALUE_PLACEHOLDER)
+        .map(|(i, _)| i + 1)
+        .collect();
+    let indices: HashSet<_> = candidates.difference(&invalids).collect();
+
+    text.chars()
+        .enumerate()
+        .map(|(i, c)| {
+            if indices.contains(&i) {
+                value.to_string()
+            } else {
+                c.to_string()
+            }
+        })
+        .collect()
+}
+
 fn plural_case_name(plural_case: PluralCategory) -> &'static str {
     match plural_case {
-        PluralCategory::Zero => "Zero",
-        PluralCategory::One => "One",
-        PluralCategory::Two => "Two",
-        PluralCategory::Few => "Few",
-        PluralCategory::Many => "Many",
-        PluralCategory::Other => "Other",
+        PluralCategory::Zero => "zero",
+        PluralCategory::One => "one",
+        PluralCategory::Two => "two",
+        PluralCategory::Few => "few",
+        PluralCategory::Many => "many",
+        PluralCategory::Other => "other",
     }
 }
