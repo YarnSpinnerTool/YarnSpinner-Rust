@@ -87,6 +87,31 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
         );
         ConstantValue::non_panicking_default()
     }
+
+    fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
+        let text = ctx.get_text();
+        let message =
+            format!("Variable declarations must be constant values, but `{text}` is a function",);
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file.name)
+                .with_parser_context(ctx, self.file.tokens()),
+        );
+        ConstantValue::non_panicking_default()
+    }
+
+    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
+        let text = ctx.get_text();
+        let message = format!(
+            "Variable declarations must be constant values, but `{text}` is another variable",
+        );
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file.name)
+                .with_parser_context(ctx, self.file.tokens()),
+        );
+        ConstantValue::non_panicking_default()
+    }
 }
 
 /// Needed because ANTLR needs visitors' return values to have a default.
