@@ -89,7 +89,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
     }
 }
 
-#[derive(Debug, Clone)]
 /// Needed because ANTLR needs visitors' return values to have a default.
 /// While the C# implementation allows overriding a `DefaultResult` property,
 /// the Rust implementation simply takes the `Default` implementation of the associated `Return` type.
@@ -104,6 +103,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// We cannot write a diagnostic in the default implementation because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
+#[derive(Debug, Clone)]
 pub(crate) struct ConstantValue(pub(crate) Option<InternalValue>);
 
 impl Deref for ConstantValue {
