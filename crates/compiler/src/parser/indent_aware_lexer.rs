@@ -95,7 +95,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             // We have hit the EOF, but we have tokens still pending.
             // Start returning those tokens.
             self.pending_tokens.dequeue().unwrap()
-        } else if self.base.input().size() == 0 {
+        } else if self.base.input().size() == 0 && self.next_buffer.is_none() {
             self.hit_eof = true;
             create_common_token(antlr_rust::token::TOKEN_EOF, "<EOF>")
         } else {
@@ -147,7 +147,7 @@ where
     }
 
     fn check_next_token(&mut self) {
-        let mut current = self.read_next_token();
+        let mut current = self.read_next_token().unwrap();
         let mut next = self.read_next_token();
         current.text = self.fix_non_ascii_text(&current, &next).into();
 
@@ -177,9 +177,15 @@ where
             // This is a massive hack because antlr4rust splits non-ascii VAR_IDs into one VAR_ID and multiple FUNC_IDs for some reason...
             yarnspinnerlexer::VAR_ID => {
                 let mut cumulative_var_id_token = current.clone();
-                while next.token_type == yarnspinnerlexer::FUNC_ID {
-                    cumulative_var_id_token.stop = next.stop;
-                    next = self.read_next_token();
+                loop {
+                    if let Some(inner_next) = &next {
+                        if inner_next.token_type == yarnspinnerlexer::FUNC_ID {
+                            cumulative_var_id_token.stop = inner_next.stop;
+                            next = self.read_next_token();
+                            continue;
+                        }
+                    }
+                    break;
                 }
 
                 cumulative_var_id_token.text = self
@@ -191,15 +197,15 @@ where
             _ => self.pending_tokens.enqueue(current.clone()),
         }
 
-        self.next_buffer = Some(next);
+        self.next_buffer = next;
         // TODO: but... really?
         self.last_token = Some(current);
     }
 
-    fn read_next_token(&mut self) -> Box<CommonToken<'input>> {
+    fn read_next_token(&mut self) -> Option<Box<CommonToken<'input>>> {
         self.next_buffer
             .take()
-            .unwrap_or_else(|| self.base.next_token())
+            .or_else(|| (self.base.input().size() > 0).then(|| self.base.next_token()))
     }
 
     fn handle_newline_token(
@@ -378,16 +384,27 @@ where
     }
 
     /// antlr4rust does not parse non-ASCII characters properly, so we have to do a second pass
-    fn fix_non_ascii_text(&self, current: &Box<CommonToken>, next: &Box<CommonToken>) -> String {
+    fn fix_non_ascii_text(
+        &self,
+        current: &Box<CommonToken>,
+        next: &Option<Box<CommonToken>>,
+    ) -> String {
         let original_text = current.get_text();
         if original_text == "<EOF>" {
             return original_text.to_string();
         }
 
         let start_line = (current.line as usize).saturating_sub(1);
-        let end_line = (next.line as usize).saturating_sub(1);
         let start_column = current.column as usize;
-        let end_column = next.column as usize;
+
+        let (end_line, end_column) = if let Some(next) = next {
+            (next.line as usize - 1, next.column as usize)
+        } else {
+            (
+                self.raw_input.lines().count(),
+                self.raw_input.lines().last().unwrap().len(),
+            )
+        };
 
         let fixed = if start_line == end_line {
             self.raw_input
