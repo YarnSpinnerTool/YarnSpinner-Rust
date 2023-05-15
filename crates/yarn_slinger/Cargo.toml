@@ -4,6 +4,19 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
+[features]
+serde = [
+    "yarn_slinger_core/serde",
+    "yarn_slinger_compiler/serde",
+    "yarn_slinger_runtime/serde",
+]
+
+bevy = [
+    "yarn_slinger_core/bevy",
+    "yarn_slinger_compiler/bevy",
+    "yarn_slinger_runtime/bevy",
+]
+
 [dependencies]
 yarn_slinger_core = { path = "../core" }
 yarn_slinger_compiler = { path = "../compiler" }

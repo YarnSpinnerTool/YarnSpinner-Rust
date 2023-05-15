@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-yarn_slinger = { path = "../yarn_slinger" }
+yarn_slinger = { path = "../yarn_slinger", features = ["serde", "bevy"] }
 
 [dependencies.bevy]
 version = "0.10"

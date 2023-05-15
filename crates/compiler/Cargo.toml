@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
+[features]
+serde = ["dep:serde"]
+bevy = ["dep:bevy_reflect"]
+
 [dependencies]
 antlr-rust = "0.3.0-beta"
 better_any = "0.2.0"
@@ -13,3 +17,5 @@ thiserror = "1"
 strum = "0.24.1"
 strum_macros = "0.24"
 annotate-snippets = { version = "0.9", features = ["color"] }
+serde = { version = "1", features = ["derive"] , optional = true }
+bevy_reflect = { version = "0.10", features = ["bevy", "documentation"], optional = true }
