@@ -6,6 +6,7 @@
 use crate::markup::normalize;
 use yarn_slinger_core::prelude::YarnValue;
 
+/// A custom command found in a Yarn file within the `<<` and `>>` characters.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Command {
     /// The command name, i.e. the first identifier that was passed in the command.
