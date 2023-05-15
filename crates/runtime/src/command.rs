@@ -167,4 +167,62 @@ mod tests {
             assert_eq!(expected_components, parsed_components);
         }
     }
+
+    #[test]
+    fn parses_command() {
+        for (input, expected_command) in [
+            (
+                "foo bar",
+                Command {
+                    name: "foo".to_string(),
+                    parameters: vec!["bar".into()],
+                    raw: "foo bar".to_string(),
+                },
+            ),
+            (
+                "ayy",
+                Command {
+                    name: "ayy".to_string(),
+                    parameters: vec![],
+                    raw: "ayy".to_string(),
+                },
+            ),
+            (
+                "foo \"bar baz\"",
+                Command {
+                    name: "foo".to_string(),
+                    parameters: vec!["bar baz".into()],
+                    raw: "foo \"bar baz\"".to_string(),
+                },
+            ),
+            (
+                "set_sprite ship \"very happy\" 12.3",
+                Command {
+                    name: "set_sprite".to_string(),
+                    parameters: vec!["ship".into(), "very happy".into(), "12.3".into()],
+                    raw: "set_sprite ship \"very happy\" 12.3".to_string(),
+                },
+            ),
+            (
+                "!@#$%^&*()⁄€‹›ﬁﬂ‡°·‚‘-=_+",
+                Command {
+                    name: "!@#$%^&*()⁄€‹›ﬁﬂ‡°·‚‘-=_+".to_string(),
+                    parameters: vec![],
+                    raw: "!@#$%^&*()⁄€‹›ﬁﬂ‡°·‚‘-=_+".to_string(),
+                },
+            ),
+            (
+                "\"A long name\"",
+                Command {
+                    name: "A long name".to_string(),
+                    parameters: vec![],
+                    raw: "\"A long name\"".to_string(),
+                },
+            ),
+        ] {
+            let parsed_command = Command::parse(input.to_string());
+
+            assert_eq!(expected_command, parsed_command);
+        }
+    }
 }
