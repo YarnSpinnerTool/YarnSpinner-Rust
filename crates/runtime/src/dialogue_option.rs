@@ -3,7 +3,7 @@
 use crate::prelude::*;
 
 /// An option to be presented to the user.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DialogueOption {
     /// The [`Line`] that should be presented to the user for this option.
     ///

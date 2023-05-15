@@ -3,6 +3,7 @@ mod dialogue;
 mod dialogue_option;
 mod events;
 mod line;
+mod line_provider;
 pub mod markup;
 pub mod pluralization;
 mod string_newtype;
@@ -21,6 +22,7 @@ pub mod prelude {
         dialogue_option::*,
         events::*,
         line::*,
+        line_provider::*,
         pluralization::*,
         variable_storage::*,
     };

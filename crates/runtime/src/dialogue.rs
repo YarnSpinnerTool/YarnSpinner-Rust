@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>
 
-use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError, ParsedMarkup};
+use crate::line_provider::LineProvider;
+use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
@@ -22,7 +23,6 @@ use yarn_slinger_core::prelude::*;
 pub struct Dialogue {
     vm: VirtualMachine,
     language_code: Option<String>,
-    line_parser: LineParser,
 }
 
 pub type Result<T> = std::result::Result<T, DialogueError>;
@@ -31,11 +31,19 @@ pub type Result<T> = std::result::Result<T, DialogueError>;
 pub enum DialogueError {
     #[error(transparent)]
     MarkupParseError(#[from] MarkupParseError),
+    #[error("Line ID {id} not found in line provider with language code {language_code:?}")]
+    LineProviderError {
+        id: LineId,
+        language_code: Option<String>,
+    },
 }
 
 impl Dialogue {
     #[must_use]
-    pub fn new(variable_storage: Box<dyn VariableStorage + Send + Sync>) -> Self {
+    pub fn new(
+        variable_storage: Box<dyn VariableStorage + Send + Sync>,
+        line_provider: Box<dyn LineProvider + Send + Sync>,
+    ) -> Self {
         let library = Library::standard_library()
             .with_function("visited", visited(variable_storage.clone()))
             .with_function("visited_count", visited_count(variable_storage.clone()));
@@ -47,9 +55,8 @@ impl Dialogue {
             .register_marker_processor("ordinal", dialogue_text_processor);
 
         Self {
-            vm: VirtualMachine::new(library, variable_storage),
+            vm: VirtualMachine::new(library, variable_storage, line_parser, line_provider),
             language_code: Default::default(),
-            line_parser,
         }
     }
 }
@@ -147,7 +154,7 @@ impl Dialogue {
     pub fn set_language_code(&mut self, language_code: impl Into<String>) -> Option<String> {
         let language_code = language_code.into();
         let previous = self.language_code.replace(language_code.clone());
-        self.line_parser.set_language_code(language_code);
+        self.vm.set_language_code(language_code);
         previous
     }
 
@@ -315,26 +322,6 @@ impl Dialogue {
         }
     }
 
-    /// Replaces all substitution markers in a text with the given substitution list.
-    ///
-    /// This method replaces substitution markers
-    /// -  for example, `{0}` - with the corresponding entry in `substitutions`.
-    /// If `test` contains a substitution marker whose
-    /// index is not present in `substitutions`, it is
-    /// ignored.
-    #[must_use]
-    pub fn expand_substitutions<'a>(
-        text: &str,
-        substitutions: impl IntoIterator<Item = &'a str>,
-    ) -> String {
-        substitutions
-            .into_iter()
-            .enumerate()
-            .fold(text.to_owned(), |text, (i, substitution)| {
-                text.replace(&format!("{{{i}}}",), substitution)
-            })
-    }
-
     /// Gets the name of the node that this Dialogue is currently executing.
     ///
     /// If [`Dialogue::next`] has never been called, this value will be [`None`].
@@ -351,14 +338,6 @@ impl Dialogue {
             .expect("Failed to analyse program: No program loaded");
         context.diagnose_program(program);
         self
-    }
-
-    /// Parses a line of text, and produces a [`MarkupParseResult`] containing the results.
-    ///
-    /// The [`MarkupParseResult`]'s [`MarkupParseResult::text`] will have any `select`,`plural` or `ordinal` markers
-    /// replaced with the appropriate text, following this [`Dialogue`]'s [`Dialogue::language_code`].
-    pub fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
-        self.line_parser.parse_markup(line)
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
