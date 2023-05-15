@@ -4,7 +4,9 @@
 //! The `Operand` extensions and the `Operator` enum were moved into upstream crates to make them not depend on the runtime.
 
 pub(crate) use self::{execution_state::*, state::*};
+use crate::markup::{LineParser, ParsedMarkup};
 use crate::prelude::*;
+use crate::Result;
 use log::*;
 use std::fmt::Debug;
 use yarn_slinger_core::prelude::instruction::OpCode;
@@ -24,13 +26,16 @@ pub(crate) struct VirtualMachine {
     execution_state: ExecutionState,
     current_node: Option<Node>,
     batched_events: Vec<DialogueEvent>,
+    line_parser: LineParser,
+    text_provider: Box<dyn TextProvider + Send + Sync>,
+    language_code: Option<String>,
 }
 
 impl Iterator for VirtualMachine {
     type Item = Vec<DialogueEvent>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.r#continue()
+        self.continue_().unwrap()
     }
 }
 
@@ -38,10 +43,15 @@ impl VirtualMachine {
     pub(crate) fn new(
         library: Library,
         variable_storage: Box<dyn VariableStorage + Send + Sync>,
+        line_parser: LineParser,
+        text_provider: Box<dyn TextProvider + Send + Sync>,
     ) -> Self {
         Self {
             library,
             variable_storage,
+            line_parser,
+            text_provider,
+            language_code: Default::default(),
             program: Default::default(),
             current_node_name: Default::default(),
             state: Default::default(),
@@ -50,6 +60,12 @@ impl VirtualMachine {
             batched_events: Default::default(),
             should_send_line_hints: Default::default(),
         }
+    }
+
+    pub(crate) fn set_language_code(&mut self, language_code: String) {
+        self.language_code.replace(language_code.clone());
+        self.line_parser.set_language_code(language_code.clone());
+        self.text_provider.set_language_code(language_code);
     }
 
     pub(crate) fn reset_state(&mut self) {
@@ -139,10 +155,9 @@ impl VirtualMachine {
     ///
     /// ## Implementation note
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
-    #[must_use]
-    fn r#continue(&mut self) -> Option<Vec<DialogueEvent>> {
+    pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
         if let Some(events) = self.pop_batched_events() {
-            return Some(events);
+            return Ok(Some(events));
         }
         self.assert_can_continue();
 
@@ -153,7 +168,7 @@ impl VirtualMachine {
         {
             let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
-            self.run_instruction(current_instruction);
+            self.run_instruction(current_instruction)?;
             // ## Implementation note
             // The original increments the program counter here, but that leads to intentional underflow on [`OpCode::RunNode`],
             // so we do the incrementation in [`VirtualMachine::run_instruction`] instead.
@@ -167,7 +182,11 @@ impl VirtualMachine {
             self.batched_events.push(DialogueEvent::DialogueComplete);
             info!("Run complete.");
         }
-        self.pop_batched_events()
+        Ok(self.pop_batched_events())
+    }
+
+    pub(crate) fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
+        self.line_parser.parse_markup(line)
     }
 
     #[must_use]
@@ -244,7 +263,7 @@ impl VirtualMachine {
     /// ## Implementation note
     ///
     /// Increments the program counter here instead of in `continue_` for cleaner code
-    fn run_instruction(&mut self, instruction: &Instruction) {
+    fn run_instruction(&mut self, instruction: &Instruction) -> crate::Result<()> {
         let opcode: OpCode = instruction.opcode.try_into().unwrap();
         match opcode {
             OpCode::JumpTo => {
@@ -262,6 +281,7 @@ impl VirtualMachine {
                 // Looks up a string from the string table and passes it to the client as a line
 
                 let string_id: String = instruction.read_operand(0);
+                let string_id: LineId = string_id.into();
 
                 // The second operand, if provided (compilers prior
                 // to v1.1 don't include it), indicates the number
@@ -270,12 +290,8 @@ impl VirtualMachine {
                 // line handler.
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let strings = self.pop_substitutions_with_count_at_index(instruction, 1);
-
-                let line = Line {
-                    id: string_id.into(),
-                    substitutions: strings,
-                };
+                let substitutions = self.pop_substitutions_with_count_at_index(instruction, 1);
+                let line = self.prepare_line(string_id, &substitutions)?;
 
                 self.batched_events.push(DialogueEvent::Line(line));
 
@@ -313,12 +329,10 @@ impl VirtualMachine {
             OpCode::AddOption => {
                 // Add an option to the current state
                 let string_id: String = instruction.read_operand(0);
+                let string_id: LineId = string_id.into();
                 assert_up_to_date_compiler(instruction.operands.len() >= 4);
-                let strings = self.pop_substitutions_with_count_at_index(instruction, 2);
-                let line = Line {
-                    id: string_id.into(),
-                    substitutions: strings,
-                };
+                let substitutions = self.pop_substitutions_with_count_at_index(instruction, 2);
+                let line = self.prepare_line(string_id, &substitutions)?;
 
                 // Indicates whether the VM believes that the
                 // option should be shown to the user, based on any
@@ -353,7 +367,7 @@ impl VirtualMachine {
                 if self.state.current_options.is_empty() {
                     self.batched_events.push(DialogueEvent::DialogueComplete);
                     self.state.program_counter += 1;
-                    return;
+                    return Ok(());
                 }
 
                 // We can't continue until our client tell us which option to pick
@@ -508,6 +522,24 @@ impl VirtualMachine {
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
             }
         }
+        Ok(())
+    }
+
+    fn prepare_line(&mut self, string_id: LineId, substitutions: &[String]) -> Result<Line> {
+        let line_text = self.text_provider.get_text(&string_id).ok_or_else(|| {
+            DialogueError::LineProviderError {
+                id: string_id.clone(),
+                language_code: self.language_code.clone(),
+            }
+        })?;
+        let substituted_text = expand_substitutions(&line_text, substitutions);
+        let markup = self.parse_markup(&substituted_text).unwrap();
+        let line = Line {
+            id: string_id,
+            text: markup.text,
+            attributes: markup.attributes,
+        };
+        Ok(line)
     }
 
     /// Looks up the instruction number for a named label in the current node.
@@ -557,4 +589,21 @@ fn assert_up_to_date_compiler(predicate: bool) {
         "The Yarn script provided was compiled using an older compiler. \
         Please recompile it using the latest version of either Yarn Slinger or Yarn Spinner."
     )
+}
+
+/// Replaces all substitution markers in a text with the given substitution list.
+///
+/// This method replaces substitution markers
+/// -  for example, `{0}` - with the corresponding entry in `substitutions`.
+/// If `test` contains a substitution marker whose
+/// index is not present in `substitutions`, it is
+/// ignored.
+#[must_use]
+fn expand_substitutions(text: &str, substitutions: &[String]) -> String {
+    substitutions
+        .iter()
+        .enumerate()
+        .fold(text.to_owned(), |text, (i, substitution)| {
+            text.replace(&format!("{{{i}}}",), substitution)
+        })
 }

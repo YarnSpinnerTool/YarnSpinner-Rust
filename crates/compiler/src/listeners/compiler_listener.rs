@@ -174,7 +174,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         } else {
             // We are a rawText node. Don't compile it; instead, note the string
             let current_node = self.current_node.as_mut().unwrap();
-            current_node.source_text_string_id = get_line_id_for_node_name(&current_node.name);
+            current_node.source_text_string_id = get_line_id_for_node_name(&current_node.name).0;
         }
     }
 

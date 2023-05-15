@@ -12,7 +12,7 @@ fn test_no_options_line_not_tagged() {
             .compile()
             .unwrap();
 
-    let info = &result.string_table["line:1"];
+    let info = &result.string_table[&"line:1".into()];
     assert!(!contains_last_line_tag(info));
 }
 
@@ -24,7 +24,7 @@ fn test_line_before_options_tagged_last_line() {
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:1"];
+    let info = &result.string_table[&"line:1".into()];
     assert!(contains_last_line_tag(info));
 }
 
@@ -34,7 +34,7 @@ fn test_line_not_before_options_not_tagged_last_line() {
         "title:Start\n---\nline not before options #line:0\nline before options #line:1\n-> option 1\n-> option 2\n===\n",
     ).compile().unwrap();
 
-    let info = &result.string_table["line:0"];
+    let info = &result.string_table[&"line:0".into()];
     assert!(!contains_last_line_tag(info));
 }
 
@@ -44,7 +44,7 @@ fn test_line_after_options_not_tagged_last_line() {
         "title:Start\n---\nline before options #line:1\n-> option 1\n-> option 2\nline after options #line:2\n===\n",
     ).compile().unwrap();
 
-    let info = &result.string_table["line:2"];
+    let info = &result.string_table[&"line:2".into()];
     assert!(!contains_last_line_tag(info));
 }
 
@@ -65,10 +65,10 @@ line before options #line:1
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:1"];
+    let info = &result.string_table[&"line:1".into()];
     assert!(contains_last_line_tag(info));
 
-    let info = &result.string_table["line:1b"];
+    let info = &result.string_table[&"line:1b".into()];
     assert!(contains_last_line_tag(info));
 }
 
@@ -86,7 +86,7 @@ line before options #line:0
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:0"];
+    let info = &result.string_table[&"line:0".into()];
     assert!(contains_last_line_tag(info));
 }
 
@@ -104,7 +104,7 @@ line before options #line:0
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:0"];
+    let info = &result.string_table[&"line:0".into()];
     assert!(!contains_last_line_tag(info));
 }
 
@@ -121,7 +121,7 @@ fn test_nested_option_lines_not_tagged() {
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:1a"];
+    let info = &result.string_table[&"line:1a".into()];
     assert!(!contains_last_line_tag(info));
 }
 
@@ -147,15 +147,15 @@ line before call #line:4
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:0"];
+    let info = &result.string_table[&"line:0".into()];
     assert!(!contains_last_line_tag(info));
-    let info = &result.string_table["line:1"];
+    let info = &result.string_table[&"line:1".into()];
     assert!(!contains_last_line_tag(info));
-    let info = &result.string_table["line:2"];
+    let info = &result.string_table[&"line:2".into()];
     assert!(!contains_last_line_tag(info));
-    let info = &result.string_table["line:3"];
+    let info = &result.string_table[&"line:3".into()];
     assert!(!contains_last_line_tag(info));
-    let info = &result.string_table["line:4"];
+    let info = &result.string_table[&"line:4".into()];
     assert!(!contains_last_line_tag(info));
 }
 
@@ -167,7 +167,7 @@ fn test_line_is_last_before_another_node_not_tagged() {
     .compile()
     .unwrap();
 
-    let info = &result.string_table["line:0"];
+    let info = &result.string_table[&"line:0".into()];
     assert!(!contains_last_line_tag(info));
 }
 

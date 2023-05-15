@@ -156,7 +156,6 @@ fn test_invalid_characters_in_node_title() {
 }
 
 #[test]
-#[ignore = "Cannot pass until markup parsing is implemented, see https://github.com/yarn-slinger/yarn-slinger/issues/77"]
 fn test_sources() {
     for file in [
         "TestCases",
@@ -171,7 +170,9 @@ fn test_sources() {
         let path = test_data_path().join(&file);
         let test_plan = path.with_extension("testplan");
 
-        let test_base = TestBase::default();
+        let test_base = TestBase::default().extend_library(
+            Library::new().with_function("add_three_operands", |a: i32, b: i32, c: i32| a + b + c),
+        );
         let result = Compiler::default()
             .read_file(&path)
             .extend_library(test_base.dialogue.library().clone())

@@ -3,7 +3,7 @@
 
 use crate::output::*;
 use std::path::Path;
-use yarn_slinger_core::prelude::Library;
+use yarn_slinger_core::prelude::*;
 
 pub(crate) mod antlr_rust_ext;
 pub(crate) mod run_compilation;

@@ -7,6 +7,7 @@
 
 use crate::prelude::*;
 use crate::string_newtype;
+use yarn_slinger_core::prelude::*;
 
 string_newtype! {
     /// A command, sent from the [`Dialogue`] to the game.
@@ -18,7 +19,7 @@ string_newtype! {
     pub struct Command(pub String);
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DialogueEvent {
     Line(Line),
     Options(Vec<DialogueOption>),

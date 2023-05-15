@@ -97,7 +97,13 @@ impl Step {
 
 impl From<String> for StepValue {
     fn from(value: String) -> Self {
-        Self::String(value)
+        Self::from(value.as_str())
+    }
+}
+
+impl From<&str> for StepValue {
+    fn from(value: &str) -> Self {
+        Self::String(to_rust_serialization(value))
     }
 }
 
@@ -164,4 +170,10 @@ impl FromStr for ExpectedStepType {
             _ => Err(()),
         }
     }
+}
+
+fn to_rust_serialization(line: &str) -> String {
+    // Need to do this because in Rust, booleans are not capitalized when converted to strings.
+    // But in C# and hence our test plans, they are: https://stackoverflow.com/questions/491334/why-does-boolean-tostring-output-true-and-not-true
+    line.replace("True", "true").replace("False", "false")
 }

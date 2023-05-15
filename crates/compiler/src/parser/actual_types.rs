@@ -6,7 +6,7 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::InputStream;
 use generated::yarnspinnerparser::*;
 
-pub(crate) type ActualInputStream<'input> = InputStream<&'input [u8]>;
+pub(crate) type ActualInputStream<'input> = InputStream<&'input [u32]>;
 pub(crate) type ActualYarnSpinnerLexer<'input> =
     YarnSpinnerLexer<'input, ActualInputStream<'input>>;
 pub(crate) type ActualErrorStrategy<'input> = ErrorStrategy<'input, YarnSpinnerParserContextType>;

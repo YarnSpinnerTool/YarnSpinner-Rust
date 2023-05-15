@@ -4,7 +4,6 @@
 //!
 //! [`Range`] has been replaced with the more idiomatic [`Range<Position>`].
 
-use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
 use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
@@ -177,16 +176,6 @@ impl From<&str> for DeclarationSource {
     fn from(file_name: &str) -> Self {
         file_name.to_owned().into()
     }
-}
-
-/// Represents a position in a multi-line string.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub struct Position {
-    /// The zero-indexed line of this position.
-    pub line: usize,
-
-    /// The zero-indexed character number of this position.
-    pub character: usize,
 }
 
 pub(crate) trait ParserRuleContextExtRangeSource<'input>:

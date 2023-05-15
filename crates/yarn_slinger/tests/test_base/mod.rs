@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use yarn_slinger::prelude::*;
-use yarn_slinger_core::prelude::YarnValue;
+use yarn_slinger_core::prelude::*;
 
 mod extensions;
 mod logger;
@@ -42,7 +42,7 @@ pub fn init_logger(runtime_errors_cause_failure: Arc<AtomicBool>) -> Result<(), 
 pub struct TestBase {
     pub dialogue: Dialogue,
     pub test_plan: Option<TestPlan>,
-    pub string_table: HashMap<LineId, StringInfo>,
+    pub string_table: StringTableTextProvider,
     pub variable_store: MemoryVariableStore,
     runtime_errors_cause_failure: Arc<AtomicBool>,
 }
@@ -54,20 +54,25 @@ impl Default for TestBase {
             // We've set the logger twice, that's alright for the tests.
         }
         let variable_store = MemoryVariableStore::new();
+        let string_table = StringTableTextProvider::new();
 
-        let dialogue = Dialogue::new(Box::new(variable_store.clone()))
-            .with_language_code("en")
-            .with_extended_library(Library::new().with_function("assert", |value: YarnValue| {
-                let is_truthy: bool = value.try_into().unwrap();
-                assert!(is_truthy);
-                true
-            }));
+        let dialogue = Dialogue::new(
+            Box::new(variable_store.clone()),
+            Box::new(string_table.clone()),
+        )
+        .with_language_code("en")
+        .with_extended_library(Library::new().with_function("assert", |value: YarnValue| {
+            let is_truthy: bool = value.try_into().unwrap();
+            assert!(is_truthy);
+            true
+        }));
+
         Self {
             dialogue,
             runtime_errors_cause_failure,
             variable_store,
+            string_table,
             test_plan: Default::default(),
-            string_table: Default::default(),
         }
     }
 }
@@ -94,11 +99,7 @@ impl TestBase {
     }
 
     pub fn with_compilation(self, compilation: Compilation) -> Self {
-        let string_table = compilation
-            .string_table
-            .into_iter()
-            .map(|(k, v)| (LineId(k), v))
-            .collect();
+        let string_table = compilation.string_table;
         self.with_program(compilation.program.unwrap())
             .with_string_table(string_table)
     }
@@ -114,7 +115,11 @@ impl TestBase {
     }
 
     pub fn with_string_table(mut self, string_table: HashMap<LineId, StringInfo>) -> Self {
-        self.string_table = string_table;
+        let string_table = string_table
+            .into_iter()
+            .map(|(id, info)| (id, info.text))
+            .collect();
+        self.string_table.set_string_table(string_table);
         self
     }
 
@@ -127,8 +132,7 @@ impl TestBase {
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {
-                        let text = self.get_composed_text_for_line(&line);
-                        println!("Line: {text}");
+                        println!("Line: {}", line.text);
                         let Some(test_plan) =  self.test_plan.as_mut() else {
                         continue;
                     };
@@ -137,10 +141,14 @@ impl TestBase {
                         assert_eq!(
                             ExpectedStepType::Line,
                             test_plan.next_expected_step,
-                            "Received line {text}, but was expecting a {:?}",
+                            "Received line {}, but was expecting a {:?}",
+                            line.text,
                             test_plan.next_expected_step
                         );
-                        assert_eq!(test_plan.next_step_value, Some(StepValue::String(text)));
+                        assert_eq!(
+                            test_plan.next_step_value,
+                            Some(StepValue::String(line.text))
+                        );
                     }
                     DialogueEvent::Options(options) => {
                         println!("Options:");
@@ -148,7 +156,7 @@ impl TestBase {
                         let options: Vec<_> = options
                             .into_iter()
                             .map(|option| ProcessedOption {
-                                line: self.get_composed_text_for_line(&option.line),
+                                line: option.line.text,
                                 enabled: option.is_available,
                             })
                             .collect();
@@ -251,12 +259,5 @@ impl TestBase {
             // don't include ".upgraded.yarn" (used in upgrader tests)
             .filter(|entry| !entry.path().ends_with(".upgraded.yarn"))
             .map(move |entry| subdir.join(entry.file_name()))
-    }
-
-    pub fn get_composed_text_for_line(&self, line: &Line) -> String {
-        let string_info = self.string_table.get(&line.id).unwrap();
-        let substitutions = line.substitutions.iter().map(|s| s.as_str());
-        let substituted_text = Dialogue::expand_substitutions(&string_info.text, substitutions);
-        self.dialogue.parse_markup(&substituted_text)
     }
 }

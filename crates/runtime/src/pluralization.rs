@@ -7,76 +7,58 @@ use icu_provider::DataLocale;
 
 mod generated;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Pluralization {
-    locale: Option<DataLocale>,
-    rule_type: Option<PluralRuleType>,
-    rules: Option<PluralRules>,
+    locale: Locale,
+    cardinal_rules: PluralRules,
+    ordinal_rules: PluralRules,
 }
 
 impl Pluralization {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(locale: &str) -> Self {
+        let locale: Locale = locale.parse().unwrap();
+        let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&locale);
+        Self {
+            locale,
+            cardinal_rules,
+            ordinal_rules,
+        }
     }
 
-    pub fn parse_locale(&mut self, locale: &str) -> &mut Self {
+    pub fn replace_locale(&mut self, locale: &str) -> &mut Self {
         let locale: Locale = locale.parse().unwrap();
-        let locale: Option<DataLocale> = Some(locale.into());
         if self.locale == locale {
             return self;
         }
         self.locale = locale;
-        if let Some(rule_type) = self.rule_type.as_ref() {
-            let provider = generate_provider();
-            self.rules.replace(
-                PluralRules::try_new_unstable(&provider, self.locale.as_ref().unwrap(), *rule_type)
-                    .unwrap(),
-            );
-        }
+        let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&self.locale);
+        self.cardinal_rules = cardinal_rules;
+        self.ordinal_rules = ordinal_rules;
+
         self
     }
 
-    pub fn with_parsed_locale(mut self, locale: &str) -> Self {
-        self.parse_locale(locale);
-        self
-    }
-
-    pub fn set_rule_type(&mut self, rule_type: PluralRuleType) -> &mut Self {
-        if self.rule_type == Some(rule_type) {
-            return self;
-        }
-        self.rule_type.replace(rule_type);
-        if let Some(locale) = self.locale.as_ref() {
-            let provider = generate_provider();
-            self.rules
-                .replace(PluralRules::try_new_unstable(&provider, locale, rule_type).unwrap());
-        }
-        self
-    }
-
-    pub fn with_rule_type(mut self, rule_type: PluralRuleType) -> Self {
-        self.set_rule_type(rule_type);
-        self
-    }
-
-    pub fn get_plural_case(&self, value: f32) -> PluralCategory {
+    pub fn get_cardinal_plural_case(&self, value: f32) -> PluralCategory {
         let value = get_into_plural_operand(value);
-
-        if let Some(rules) = self.rules.as_ref() {
-            rules.category_for(value)
-        } else {
-            let uncalled_fns = [
-                ("with_rule_type", self.rule_type.is_none()),
-                ("parse_locale", self.locale.is_none()),
-            ];
-            let uncalled_fns = uncalled_fns
-                .into_iter()
-                .filter_map(|(name, uncalled)| uncalled.then_some(name))
-                .collect::<Vec<_>>()
-                .join(", ");
-            panic!("Pluralization::get_plural_case() called without enough setup. Please call the following functions first: {}", uncalled_fns);
-        }
+        self.cardinal_rules.category_for(value)
     }
+
+    pub fn get_ordinal_plural_case(&self, value: f32) -> PluralCategory {
+        let value = get_into_plural_operand(value);
+        self.ordinal_rules.category_for(value)
+    }
+}
+
+fn construct_cardinal_and_ordinal_rules(
+    locale: impl Into<DataLocale>,
+) -> (PluralRules, PluralRules) {
+    let provider = generate_provider();
+    let locale = locale.into();
+    let cardinal_rules =
+        PluralRules::try_new_unstable(&provider, &locale, PluralRuleType::Cardinal).unwrap();
+    let ordinal_rules =
+        PluralRules::try_new_unstable(&provider, &locale, PluralRuleType::Ordinal).unwrap();
+    (cardinal_rules, ordinal_rules)
 }
 
 fn get_into_plural_operand(value: f32) -> PluralOperands {
@@ -158,18 +140,16 @@ mod tests {
             ("cy", 10.0, PluralCategory::Other),
         ];
 
-        let mut pluralization = Pluralization::new().with_rule_type(PluralRuleType::Cardinal);
         for (locale, value, expected_category) in cardinal_tests.into_iter() {
-            let result = pluralization.parse_locale(locale).get_plural_case(value);
+            let result = Pluralization::new(locale).get_cardinal_plural_case(value);
             assert_eq!(
                 expected_category, result,
                 "locale: {locale}, value: {value}, type: Cardinal"
             );
         }
 
-        let mut pluralization = Pluralization::new().with_rule_type(PluralRuleType::Ordinal);
         for (locale, value, expected_category) in ordinal_tests.into_iter() {
-            let result = pluralization.parse_locale(locale).get_plural_case(value);
+            let result = Pluralization::new(locale).get_ordinal_plural_case(value);
             assert_eq!(
                 expected_category, result,
                 "locale: {locale}, value: {value}, type: Ordinal"

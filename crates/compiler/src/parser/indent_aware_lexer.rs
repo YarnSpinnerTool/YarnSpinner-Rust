@@ -9,7 +9,6 @@ use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
 use crate::listeners::Diagnostic;
-use crate::output::Position;
 use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
 use antlr_rust::token::CommonToken;
 use antlr_rust::{
@@ -22,6 +21,7 @@ use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
 use std::rc::Rc;
 use yarn_slinger_core::collections::*;
+use yarn_slinger_core::prelude::*;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
 #[allow(dead_code)]
@@ -157,6 +157,10 @@ where
             // we are at the end of the node
             // depth no longer matters
             // clear the stack
+            yarnspinnerlexer::COMMAND_TEXT => {
+                self.diagnose_newlines_in_commands(&current);
+                self.pending_tokens.enqueue(current.clone());
+            }
             yarnspinnerlexer::BODY_END => {
                 self.line_contains_shortcut = false;
                 self.last_indent = 0;
@@ -269,8 +273,7 @@ where
         &mut self,
         current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) {
-        // We're at the end of the file. Emit as many dedents as we
-        // currently have on the stack.
+        // We're at the end of the file. Emit as many dedents as we currently have on the stack.
         while let Some(_indent) = self.unbalanced_indents.pop() {
             // so that we don't end up printing <dedent from 8> into the stream we set the text to be empty
             // I dislike this and need to look into if you can set a debug text setting in ANTLR
@@ -346,6 +349,29 @@ where
         );
 
         self.pending_tokens.enqueue(token);
+    }
+
+    fn diagnose_newlines_in_commands(&mut self, token: &CommonToken<'input>) {
+        if token.get_text().contains('\n') {
+            let line_len = token.get_text().lines().count();
+            let last_line_len = token.get_text().lines().last().unwrap().len();
+            self.diagnostics.borrow_mut().push(
+                Diagnostic::from_message("Newlines are not allowed in commands")
+                    .with_range(
+                        Position {
+                            line: token.get_line_as_usize() - 1,
+                            character: token.get_column_as_usize(),
+                        }..Position {
+                            line: token.get_line_as_usize() - 1 + line_len,
+                            character: last_line_len,
+                        },
+                    )
+                    .with_context(token.get_text().to_string())
+                    .with_start_line(token.get_line_as_usize() - 1)
+                    .with_file_name(self.file_name.clone())
+                    .with_severity(DiagnosticSeverity::Error),
+            );
+        }
     }
 }
 
@@ -471,21 +497,7 @@ This is the one and only line
 
     #[test]
     fn correctly_indents_and_dedents_with_token() {
-        // Careful: IDE's love to break the following significant whitespace!
-        let option_indentation_relevant_input: &str = "title: Start
----
--> Option 1
-    Nice.
--> Option 2
-    Nicer
-    
-    This is part of the previous option statement due to indentation on the \"empty\" line above
-
-    And this doesn't, as the indentation is reset beforehand.
-    
-    This belongs to the previous statement, for the same reason.
-    
-===";
+        let option_indentation_relevant_input: &str = include_str!("significant_whitespace.yarn");
 
         let indent_aware_lexer = IndentAwareYarnSpinnerLexer::new(
             InputStream::new(option_indentation_relevant_input),
@@ -500,7 +512,7 @@ This is the one and only line
             tokens.push(indent_aware_token_stream.iter().next().unwrap());
         }
 
-        let names: Vec<_> = tokens
+        let symbols: Vec<_> = tokens
             .into_iter()
             .map(|t| yarnspinnerlexer::_SYMBOLIC_NAMES[t as usize].unwrap())
             .collect();
@@ -552,25 +564,12 @@ This is the one and only line
             "BODY_END",
         ];
 
-        assert_eq!(expected, names);
+        assert_eq!(expected, symbols);
     }
 
     #[test]
     fn generated_lexer_output_is_same_as_reference() {
-        let option_indentation_relevant_input: &str = "title: Start
----
--> Option 1
-    Nice.
--> Option 2
-    Nicer
-
-    This is part of the previous option statement due to indentation on the empty line ahead
-
-    And this doesn't, as the indentation is reset beforehand.
-
-    This belongs to the previous statement, for the same reason.
-
-===";
+        let option_indentation_relevant_input: &str = include_str!("significant_whitespace.yarn");
 
         let generated_lexer =
             GeneratedYarnSpinnerLexer::new(InputStream::new(option_indentation_relevant_input));
@@ -582,7 +581,7 @@ This is the one and only line
             tokens.push(reference_token_stream.iter().next().unwrap());
         }
 
-        let names: Vec<_> = tokens
+        let symbols: Vec<_> = tokens
             .into_iter()
             .map(|t| yarnspinnerlexer::_SYMBOLIC_NAMES[t as usize].unwrap())
             .collect();
@@ -628,6 +627,6 @@ This is the one and only line
             "BODY_END",
         ];
 
-        assert_eq!(expected, names);
+        assert_eq!(expected, symbols);
     }
 }

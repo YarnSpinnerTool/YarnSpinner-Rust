@@ -16,6 +16,7 @@
 
 use test_base::prelude::*;
 use yarn_slinger::prelude::*;
+use yarn_slinger_core::prelude::*;
 
 mod test_base;
 

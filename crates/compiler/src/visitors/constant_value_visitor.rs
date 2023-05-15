@@ -7,7 +7,7 @@ use antlr_rust::parser::ParserNodeType;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use yarn_slinger_core::prelude::InternalValue;
+use yarn_slinger_core::prelude::*;
 
 /// A visitor that visits any valid constant value, and returns a [`InternalValue`].
 /// Currently only supports terminals, not expressions,
@@ -87,9 +87,33 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
         );
         ConstantValue::non_panicking_default()
     }
+
+    fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
+        let text = ctx.get_text();
+        let message =
+            format!("Variable declarations must be constant values, but `{text}` is a function",);
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file.name)
+                .with_parser_context(ctx, self.file.tokens()),
+        );
+        ConstantValue::non_panicking_default()
+    }
+
+    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
+        let text = ctx.get_text();
+        let message = format!(
+            "Variable declarations must be constant values, but `{text}` is another variable",
+        );
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file.name)
+                .with_parser_context(ctx, self.file.tokens()),
+        );
+        ConstantValue::non_panicking_default()
+    }
 }
 
-#[derive(Debug, Clone)]
 /// Needed because ANTLR needs visitors' return values to have a default.
 /// While the C# implementation allows overriding a `DefaultResult` property,
 /// the Rust implementation simply takes the `Default` implementation of the associated `Return` type.
@@ -104,6 +128,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
 /// We cannot write a diagnostic in the default implementation because we lack access to the diagnostics vector at that point.
 /// But, judging by the original wording, this case should not happen anyways and should be treated as an internal error / a bug.
 /// Thus, we panic instead with a call to action to report the bug.
+#[derive(Debug, Clone)]
 pub(crate) struct ConstantValue(pub(crate) Option<InternalValue>);
 
 impl Deref for ConstantValue {

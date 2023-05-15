@@ -1,8 +1,11 @@
-//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>
 
+use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
+use crate::text_provider::TextProvider;
 use log::error;
 use std::fmt::Debug;
+use thiserror::Error;
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -22,15 +25,38 @@ pub struct Dialogue {
     language_code: Option<String>,
 }
 
+pub type Result<T> = std::result::Result<T, DialogueError>;
+
+#[derive(Debug, Error)]
+pub enum DialogueError {
+    #[error(transparent)]
+    MarkupParseError(#[from] MarkupParseError),
+    #[error("Line ID {id} not found in line provider with language code {language_code:?}")]
+    LineProviderError {
+        id: LineId,
+        language_code: Option<String>,
+    },
+}
+
 impl Dialogue {
     #[must_use]
-    pub fn new(variable_storage: Box<dyn VariableStorage + Send + Sync>) -> Self {
+    pub fn new(
+        variable_storage: Box<dyn VariableStorage + Send + Sync>,
+        text_provider: Box<dyn TextProvider + Send + Sync>,
+    ) -> Self {
         let library = Library::standard_library()
             .with_function("visited", visited(variable_storage.clone()))
             .with_function("visited_count", visited_count(variable_storage.clone()));
+
+        let dialogue_text_processor = Box::new(DialogueTextProcessor::new());
+        let line_parser = LineParser::new()
+            .register_marker_processor("select", dialogue_text_processor.clone())
+            .register_marker_processor("plural", dialogue_text_processor.clone())
+            .register_marker_processor("ordinal", dialogue_text_processor);
+
         Self {
-            vm: VirtualMachine::new(library, variable_storage),
-            language_code: None,
+            vm: VirtualMachine::new(library, variable_storage, line_parser, text_provider),
+            language_code: Default::default(),
         }
     }
 }
@@ -38,41 +64,33 @@ impl Dialogue {
 fn visited(
     storage: Box<dyn VariableStorage + Send + Sync>,
 ) -> yarn_fn_type! { impl Fn(String) -> bool } {
-    move |node: String| -> bool { is_node_visited(storage.as_ref(), &node) }
+    move |node: String| -> bool {
+        let name = Library::generate_unique_visited_variable_for_node(&node);
+        if let Some(YarnValue::Number(count)) = storage.get(&name) {
+            count > 0.0
+        } else {
+            false
+        }
+    }
 }
 
 fn visited_count(
     storage: Box<dyn VariableStorage + Send + Sync>,
 ) -> yarn_fn_type! { impl Fn(String) -> f32 } {
-    move |node: String| get_node_visit_count(storage.as_ref(), &node)
+    move |node: String| {
+        let name = Library::generate_unique_visited_variable_for_node(&node);
+        if let Some(YarnValue::Number(count)) = storage.get(&name) {
+            count
+        } else {
+            0.0
+        }
+    }
 }
 
 impl Iterator for Dialogue {
     type Item = Vec<DialogueEvent>;
 
-    /// Starts, or continues, execution of the current program.
-    ///
-    /// This method repeatedly executes instructions until one of the following conditions is encountered:
-    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::next`] is called.
-    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
-    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::next`] is called.
-    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::next`] is called again.
-    /// - An error occurs while executing the program
-    ///
-    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
-    ///
-    /// ## See Also
-    /// - [`LineHandler`]
-    /// - [`OptionsHandler`]
-    /// - [`CommandHandler`]
-    /// - [`NodeCompleteHandler`]
-    /// - [`DialogueCompleteHandler`]
-    ///
-    /// ## Implementation Notes
-    ///
-    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::next`]. Because of the borrow checker,
-    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
-    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    /// Panicking version of [`Dialogue::continue_`].
     #[must_use = "All dialogue events that are returned by the dialogue must be handled or explicitly ignored"]
     fn next(&mut self) -> Option<Self::Item> {
         self.vm.next()
@@ -83,7 +101,7 @@ impl Iterator for Dialogue {
 impl Dialogue {
     #[must_use]
     pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
-        self.language_code.replace(language_code.into());
+        self.set_language_code(language_code);
         self
     }
 
@@ -124,14 +142,20 @@ impl Dialogue {
     ///
     /// For example, the code "en-US" represents the English language as
     /// used in the United States.
+    ///
+    /// ## Returns
+    ///
+    /// Returns the last language code.
     #[must_use]
     pub fn language_code(&self) -> Option<&str> {
         self.language_code.as_deref()
     }
 
-    #[must_use]
-    pub fn language_code_mut(&mut self) -> Option<&mut String> {
-        self.language_code.as_mut()
+    pub fn set_language_code(&mut self, language_code: impl Into<String>) -> Option<String> {
+        let language_code = language_code.into();
+        let previous = self.language_code.replace(language_code.clone());
+        self.vm.set_language_code(language_code);
+        previous
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
@@ -168,6 +192,34 @@ impl Dialogue {
 impl Dialogue {
     /// The name used by [`Dialogue::set_node_to_start`] and [`Dialogue::with_node_at_start`].
     pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
+
+    /// Starts, or continues, execution of the current program.
+    ///
+    /// This method repeatedly executes instructions until one of the following conditions is encountered:
+    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::next`] is called.
+    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
+    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::next`] is called.
+    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::next`] is called again.
+    /// - An error occurs while executing the program
+    ///
+    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
+    ///
+    /// ## See Also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    /// The [`Iterator`] implementation of [`Dialogue`] is a convenient way to call [`Dialogue::next`] repeatedly, although it panics if an error occurs.
+    ///
+    /// ## Implementation Notes
+    ///
+    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::next`]. Because of the borrow checker,
+    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
+    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    pub fn continue_(&mut self) -> Result<Option<Vec<DialogueEvent>>> {
+        self.vm.continue_()
+    }
 
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
         self.vm.program.replace(program);
@@ -230,7 +282,7 @@ impl Dialogue {
             .map(|program| program.nodes.keys().cloned().collect())
     }
 
-    /// Returns the string ID that contains the original, uncompiled source
+    /// Returns the line ID that contains the original, uncompiled source
     /// text for a node.
     ///
     /// A node's source text will only be present in the string table if its
@@ -241,9 +293,9 @@ impl Dialogue {
     /// see if the string table contains an entry with the line ID. You will
     /// need to test for that yourself.
     #[must_use]
-    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
+    pub fn get_line_id_for_node(&self, node_name: &str) -> Option<LineId> {
         self.get_node_logging_errors(node_name)
-            .map(|_| format!("line:{node_name}"))
+            .map(|_| format!("line:{node_name}").into())
     }
 
     /// Returns the tags for the node `node_name`.
@@ -270,26 +322,6 @@ impl Dialogue {
         }
     }
 
-    /// Replaces all substitution markers in a text with the given substitution list.
-    ///
-    /// This method replaces substitution markers
-    /// -  for example, `{0}` - with the corresponding entry in `substitutions`.
-    /// If `test` contains a substitution marker whose
-    /// index is not present in `substitutions`, it is
-    /// ignored.
-    #[must_use]
-    pub fn expand_substitutions<'a>(
-        text: &str,
-        substitutions: impl IntoIterator<Item = &'a str>,
-    ) -> String {
-        substitutions
-            .into_iter()
-            .enumerate()
-            .fold(text.to_owned(), |text, (i, substitution)| {
-                text.replace(&format!("{{{i}}}",), substitution)
-            })
-    }
-
     /// Gets the name of the node that this Dialogue is currently executing.
     ///
     /// If [`Dialogue::next`] has never been called, this value will be [`None`].
@@ -306,16 +338,6 @@ impl Dialogue {
             .expect("Failed to analyse program: No program loaded");
         context.diagnose_program(program);
         self
-    }
-
-    #[must_use]
-    pub fn parse_markup(&self, line: &str) -> String {
-        // ## Implementation notes
-        // It would be more ergonomic to not expose this and call it automatically.
-        // We should probs remove this from the API.
-        // Pass the MarkupResult directly into the LineHandler
-        // todo!()
-        line.to_owned()
     }
 
     fn get_node_logging_errors(&self, node_name: &str) -> Option<Node> {
@@ -362,22 +384,6 @@ impl Dialogue {
     }
 }
 
-fn is_node_visited(variable_storage: &dyn VariableStorage, node_name: &str) -> bool {
-    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
-        count > 0.0
-    } else {
-        false
-    }
-}
-
-fn get_node_visit_count(variable_storage: &dyn VariableStorage, node_name: &str) -> f32 {
-    if let Some(YarnValue::Number(count)) = variable_storage.get(node_name) {
-        count
-    } else {
-        0.0
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -385,7 +391,8 @@ mod tests {
     #[test]
     fn is_send_sync() {
         let variable_storage = Box::new(MemoryVariableStore::new());
-        let dialogue = Dialogue::new(variable_storage);
+        let text_provider = Box::new(StringTableTextProvider::new());
+        let dialogue = Dialogue::new(variable_storage, text_provider);
         accept_send_sync(dialogue);
     }
 

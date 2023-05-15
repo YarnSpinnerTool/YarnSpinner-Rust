@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
-use yarn_slinger_core::types::Type;
+use yarn_slinger_core::prelude::*;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub(crate) struct HashableInterval(Interval);

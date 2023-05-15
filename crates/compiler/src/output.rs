@@ -6,7 +6,7 @@ use crate::prelude::StringTableManager;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
-use yarn_slinger_core::prelude::Program;
+use yarn_slinger_core::prelude::*;
 
 mod debug_info;
 mod declaration;
@@ -37,7 +37,7 @@ pub struct Compilation {
     /// for each line - either through explicit line tags indicated through
     /// the `#line:` tag, or implicitly-generated line IDs that the
     /// compiler added during compilation.
-    pub string_table: HashMap<String, StringInfo>,
+    pub string_table: HashMap<LineId, StringInfo>,
 
     /// The collection of variable declarations that were found during
     /// compilation.
