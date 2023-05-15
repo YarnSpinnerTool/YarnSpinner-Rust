@@ -1,0 +1,26 @@
+[package]
+name = "bevy_yarn_slinger"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+yarn_slinger = { path = "../yarn_slinger" }
+
+[dependencies.bevy]
+version = "0.10"
+default-features = false
+
+[dev-dependencies.bevy]
+version = "0.10"
+default-features = false
+features = [
+    "bevy_asset",
+    "bevy_winit",
+    "x11",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_scene",
+    "bevy_sprite",
+    "bevy_ui",
+]
