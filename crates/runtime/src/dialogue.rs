@@ -260,7 +260,7 @@ impl Dialogue {
             .map(|program| program.nodes.keys().cloned().collect())
     }
 
-    /// Returns the string ID that contains the original, uncompiled source
+    /// Returns the line ID that contains the original, uncompiled source
     /// text for a node.
     ///
     /// A node's source text will only be present in the string table if its
@@ -271,9 +271,9 @@ impl Dialogue {
     /// see if the string table contains an entry with the line ID. You will
     /// need to test for that yourself.
     #[must_use]
-    pub fn get_string_id_for_node(&self, node_name: &str) -> Option<String> {
+    pub fn get_line_id_for_node(&self, node_name: &str) -> Option<LineId> {
         self.get_node_logging_errors(node_name)
-            .map(|_| format!("line:{node_name}"))
+            .map(|_| format!("line:{node_name}").into())
     }
 
     /// Returns the tags for the node `node_name`.

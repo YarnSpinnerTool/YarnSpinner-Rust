@@ -135,13 +135,8 @@ fn test_getting_raw_source() {
     test_base = test_base.with_compilation(result);
     let dialogue = &test_base.dialogue;
 
-    let source_id = dialogue.get_string_id_for_node("LearnMore").unwrap();
-    let source = test_base
-        .string_table
-        .get(&LineId(source_id))
-        .unwrap()
-        .text
-        .clone();
+    let source_id = dialogue.get_line_id_for_node("LearnMore").unwrap();
+    let source = test_base.string_table.get(&source_id).unwrap().text.clone();
 
     assert_eq!(source, "A: HAHAHA\n");
 }

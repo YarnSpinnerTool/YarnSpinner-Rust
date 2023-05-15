@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use yarn_slinger::prelude::*;
-use yarn_slinger_core::prelude::YarnValue;
+use yarn_slinger_core::prelude::*;
 
 mod extensions;
 mod logger;
@@ -94,11 +94,7 @@ impl TestBase {
     }
 
     pub fn with_compilation(self, compilation: Compilation) -> Self {
-        let string_table = compilation
-            .string_table
-            .into_iter()
-            .map(|(k, v)| (LineId(k), v))
-            .collect();
+        let string_table = compilation.string_table;
         self.with_program(compilation.program.unwrap())
             .with_string_table(string_table)
     }
