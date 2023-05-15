@@ -136,7 +136,7 @@ fn test_getting_raw_source() {
     let dialogue = &test_base.dialogue;
 
     let source_id = dialogue.get_line_id_for_node("LearnMore").unwrap();
-    let source = test_base.string_table.get_line(&source_id).unwrap();
+    let source = test_base.string_table.get_text(&source_id).unwrap();
 
     assert_eq!(source, "A: HAHAHA\n");
 }

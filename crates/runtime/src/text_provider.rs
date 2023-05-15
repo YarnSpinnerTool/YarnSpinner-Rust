@@ -4,25 +4,25 @@ use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
-pub trait LineProvider: Debug + Send + Sync {
-    fn clone_shallow(&self) -> Box<dyn LineProvider + Send + Sync>;
-    fn get_line(&self, id: &LineId) -> Option<String>;
+pub trait TextProvider: Debug + Send + Sync {
+    fn clone_shallow(&self) -> Box<dyn TextProvider + Send + Sync>;
+    fn get_text(&self, id: &LineId) -> Option<String>;
     fn set_language_code(&mut self, language_code: String);
 }
 
-impl Clone for Box<dyn LineProvider + Send + Sync> {
+impl Clone for Box<dyn TextProvider + Send + Sync> {
     fn clone(&self) -> Self {
         self.clone_shallow()
     }
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct StringTableLineProvider {
+pub struct StringTableTextProvider {
     string_table: Arc<RwLock<HashMap<LineId, String>>>,
     language_code: Arc<RwLock<Option<String>>>,
 }
 
-impl StringTableLineProvider {
+impl StringTableTextProvider {
     pub fn new() -> Self {
         Self::default()
     }
@@ -39,12 +39,12 @@ impl StringTableLineProvider {
     }
 }
 
-impl LineProvider for StringTableLineProvider {
-    fn clone_shallow(&self) -> Box<dyn LineProvider + Send + Sync> {
+impl TextProvider for StringTableTextProvider {
+    fn clone_shallow(&self) -> Box<dyn TextProvider + Send + Sync> {
         Box::new(self.clone())
     }
 
-    fn get_line(&self, id: &LineId) -> Option<String> {
+    fn get_text(&self, id: &LineId) -> Option<String> {
         self.string_table.read().unwrap().get(id).cloned()
     }
 

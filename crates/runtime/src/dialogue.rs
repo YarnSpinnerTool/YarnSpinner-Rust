@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>
 
-use crate::line_provider::LineProvider;
 use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
+use crate::text_provider::TextProvider;
 use log::error;
 use std::fmt::Debug;
 use thiserror::Error;
@@ -42,7 +42,7 @@ impl Dialogue {
     #[must_use]
     pub fn new(
         variable_storage: Box<dyn VariableStorage + Send + Sync>,
-        line_provider: Box<dyn LineProvider + Send + Sync>,
+        text_provider: Box<dyn TextProvider + Send + Sync>,
     ) -> Self {
         let library = Library::standard_library()
             .with_function("visited", visited(variable_storage.clone()))
@@ -55,7 +55,7 @@ impl Dialogue {
             .register_marker_processor("ordinal", dialogue_text_processor);
 
         Self {
-            vm: VirtualMachine::new(library, variable_storage, line_parser, line_provider),
+            vm: VirtualMachine::new(library, variable_storage, line_parser, text_provider),
             language_code: Default::default(),
         }
     }
@@ -391,8 +391,8 @@ mod tests {
     #[test]
     fn is_send_sync() {
         let variable_storage = Box::new(MemoryVariableStore::new());
-        let line_provider = Box::new(StringTableLineProvider::new());
-        let dialogue = Dialogue::new(variable_storage, line_provider);
+        let text_provider = Box::new(StringTableTextProvider::new());
+        let dialogue = Dialogue::new(variable_storage, text_provider);
         accept_send_sync(dialogue);
     }
 

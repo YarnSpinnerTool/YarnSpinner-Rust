@@ -42,7 +42,7 @@ pub fn init_logger(runtime_errors_cause_failure: Arc<AtomicBool>) -> Result<(), 
 pub struct TestBase {
     pub dialogue: Dialogue,
     pub test_plan: Option<TestPlan>,
-    pub string_table: StringTableLineProvider,
+    pub string_table: StringTableTextProvider,
     pub variable_store: MemoryVariableStore,
     runtime_errors_cause_failure: Arc<AtomicBool>,
 }
@@ -54,7 +54,7 @@ impl Default for TestBase {
             // We've set the logger twice, that's alright for the tests.
         }
         let variable_store = MemoryVariableStore::new();
-        let string_table = StringTableLineProvider::new();
+        let string_table = StringTableTextProvider::new();
 
         let dialogue = Dialogue::new(
             Box::new(variable_store.clone()),

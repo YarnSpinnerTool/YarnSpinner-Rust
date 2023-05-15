@@ -27,7 +27,7 @@ pub(crate) struct VirtualMachine {
     current_node: Option<Node>,
     batched_events: Vec<DialogueEvent>,
     line_parser: LineParser,
-    line_provider: Box<dyn LineProvider + Send + Sync>,
+    text_provider: Box<dyn TextProvider + Send + Sync>,
     language_code: Option<String>,
 }
 
@@ -44,13 +44,13 @@ impl VirtualMachine {
         library: Library,
         variable_storage: Box<dyn VariableStorage + Send + Sync>,
         line_parser: LineParser,
-        line_provider: Box<dyn LineProvider + Send + Sync>,
+        text_provider: Box<dyn TextProvider + Send + Sync>,
     ) -> Self {
         Self {
             library,
             variable_storage,
             line_parser,
-            line_provider,
+            text_provider,
             language_code: Default::default(),
             program: Default::default(),
             current_node_name: Default::default(),
@@ -65,7 +65,7 @@ impl VirtualMachine {
     pub(crate) fn set_language_code(&mut self, language_code: String) {
         self.language_code.replace(language_code.clone());
         self.line_parser.set_language_code(language_code.clone());
-        self.line_provider.set_language_code(language_code);
+        self.text_provider.set_language_code(language_code);
     }
 
     pub(crate) fn reset_state(&mut self) {
@@ -526,7 +526,7 @@ impl VirtualMachine {
     }
 
     fn prepare_line(&mut self, string_id: LineId, substitutions: &[String]) -> Result<Line> {
-        let line_text = self.line_provider.get_line(&string_id).ok_or_else(|| {
+        let line_text = self.text_provider.get_text(&string_id).ok_or_else(|| {
             DialogueError::LineProviderError {
                 id: string_id.clone(),
                 language_code: self.language_code.clone(),
