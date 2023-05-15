@@ -1,9 +1,10 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>
 
-use crate::markup::{DialogueTextProcessor, LineParser, ParsedMarkup};
+use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError, ParsedMarkup};
 use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
+use thiserror::Error;
 use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -22,6 +23,14 @@ pub struct Dialogue {
     vm: VirtualMachine,
     language_code: Option<String>,
     line_parser: LineParser,
+}
+
+pub type Result<T> = std::result::Result<T, DialogueError>;
+
+#[derive(Debug, Error)]
+pub enum DialogueError {
+    #[error(transparent)]
+    MarkupParseError(#[from] MarkupParseError),
 }
 
 impl Dialogue {
@@ -74,29 +83,7 @@ fn visited_count(
 impl Iterator for Dialogue {
     type Item = Vec<DialogueEvent>;
 
-    /// Starts, or continues, execution of the current program.
-    ///
-    /// This method repeatedly executes instructions until one of the following conditions is encountered:
-    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::next`] is called.
-    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
-    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::next`] is called.
-    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::next`] is called again.
-    /// - An error occurs while executing the program
-    ///
-    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
-    ///
-    /// ## See Also
-    /// - [`LineHandler`]
-    /// - [`OptionsHandler`]
-    /// - [`CommandHandler`]
-    /// - [`NodeCompleteHandler`]
-    /// - [`DialogueCompleteHandler`]
-    ///
-    /// ## Implementation Notes
-    ///
-    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::next`]. Because of the borrow checker,
-    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
-    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    /// Panicking version of [`Dialogue::continue_`].
     #[must_use = "All dialogue events that are returned by the dialogue must be handled or explicitly ignored"]
     fn next(&mut self) -> Option<Self::Item> {
         self.vm.next()
@@ -198,6 +185,34 @@ impl Dialogue {
 impl Dialogue {
     /// The name used by [`Dialogue::set_node_to_start`] and [`Dialogue::with_node_at_start`].
     pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
+
+    /// Starts, or continues, execution of the current program.
+    ///
+    /// This method repeatedly executes instructions until one of the following conditions is encountered:
+    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::next`] is called.
+    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
+    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::next`] is called.
+    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::next`] is called again.
+    /// - An error occurs while executing the program
+    ///
+    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
+    ///
+    /// ## See Also
+    /// - [`LineHandler`]
+    /// - [`OptionsHandler`]
+    /// - [`CommandHandler`]
+    /// - [`NodeCompleteHandler`]
+    /// - [`DialogueCompleteHandler`]
+    /// The [`Iterator`] implementation of [`Dialogue`] is a convenient way to call [`Dialogue::next`] repeatedly, although it panics if an error occurs.
+    ///
+    /// ## Implementation Notes
+    ///
+    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::next`]. Because of the borrow checker,
+    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
+    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    pub fn continue_(&mut self) -> Result<Option<Vec<DialogueEvent>>> {
+        self.vm.continue_()
+    }
 
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
         self.vm.program.replace(program);

@@ -30,7 +30,7 @@ impl Iterator for VirtualMachine {
     type Item = Vec<DialogueEvent>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.r#continue()
+        self.continue_().unwrap()
     }
 }
 
@@ -140,9 +140,9 @@ impl VirtualMachine {
     /// ## Implementation note
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
     #[must_use]
-    fn r#continue(&mut self) -> Option<Vec<DialogueEvent>> {
+    pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
         if let Some(events) = self.pop_batched_events() {
-            return Some(events);
+            return Ok(Some(events));
         }
         self.assert_can_continue();
 
@@ -167,7 +167,7 @@ impl VirtualMachine {
             self.batched_events.push(DialogueEvent::DialogueComplete);
             info!("Run complete.");
         }
-        self.pop_batched_events()
+        Ok(self.pop_batched_events())
     }
 
     #[must_use]
