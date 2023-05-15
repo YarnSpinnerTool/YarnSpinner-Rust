@@ -136,7 +136,7 @@ fn test_getting_raw_source() {
     let dialogue = &test_base.dialogue;
 
     let source_id = dialogue.get_line_id_for_node("LearnMore").unwrap();
-    let source = test_base.string_table.get(&source_id).unwrap().text.clone();
+    let source = test_base.string_table.get_line(&source_id).unwrap();
 
     assert_eq!(source, "A: HAHAHA\n");
 }
@@ -260,22 +260,20 @@ fn test_selecting_option_from_inside_option_callback() {
         for event in events {
             match event {
                 DialogueEvent::Line(line) => {
-                    let line_text = test_base.string_table.get(&line.id).unwrap().text.clone();
-                    let parsed_text = test_base.dialogue.parse_markup(&line_text).unwrap().text;
                     let test_plan = test_base.test_plan.as_mut().unwrap();
                     test_plan.next();
 
                     let expected_step = test_plan.next_expected_step;
                     let expected_value = test_plan.next_step_value.clone().unwrap();
                     assert_eq!(ExpectedStepType::Line, expected_step);
-                    assert_eq!(StepValue::String(parsed_text), expected_value);
+                    assert_eq!(StepValue::String(line.text), expected_value);
                 }
                 DialogueEvent::Options(options) => {
                     test_base.test_plan.as_mut().unwrap().next();
                     let actual_options: Vec<_> = options
                         .into_iter()
                         .map(|o| ProcessedOption {
-                            line: test_base.get_composed_text_for_line(&o.line),
+                            line: o.line.text,
                             enabled: o.is_available,
                         })
                         .collect();

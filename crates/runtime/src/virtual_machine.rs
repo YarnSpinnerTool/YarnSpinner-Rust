@@ -185,7 +185,7 @@ impl VirtualMachine {
         Ok(self.pop_batched_events())
     }
 
-    pub fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
+    pub(crate) fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
         self.line_parser.parse_markup(line)
     }
 

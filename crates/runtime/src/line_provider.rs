@@ -26,6 +26,17 @@ impl StringTableLineProvider {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn with_string_table(string_table: HashMap<LineId, String>) -> Self {
+        Self {
+            string_table: Arc::new(RwLock::new(string_table)),
+            language_code: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    pub fn set_string_table(&mut self, string_table: HashMap<LineId, String>) {
+        *self.string_table.write().unwrap() = string_table;
+    }
 }
 
 impl LineProvider for StringTableLineProvider {

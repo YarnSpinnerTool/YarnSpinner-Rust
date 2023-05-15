@@ -391,7 +391,8 @@ mod tests {
     #[test]
     fn is_send_sync() {
         let variable_storage = Box::new(MemoryVariableStore::new());
-        let dialogue = Dialogue::new(variable_storage);
+        let line_provider = Box::new(StringTableLineProvider::new());
+        let dialogue = Dialogue::new(variable_storage, line_provider);
         accept_send_sync(dialogue);
     }
 
