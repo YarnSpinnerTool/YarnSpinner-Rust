@@ -190,7 +190,7 @@ impl TestBase {
                         }
                     }
                     DialogueEvent::Command(command) => {
-                        println!("Command: {}", command.0);
+                        println!("Command: {}", command.raw);
                         let Some(test_plan) = self.test_plan.as_mut() else {
                         continue;
                     };
@@ -199,7 +199,7 @@ impl TestBase {
                         ExpectedStepType::Command,
                         test_plan.next_expected_step,
                         "Received command {}, but wasn't expecting to select one (was expecting {:?})",
-                        command.0,
+                        command.raw,
                         test_plan.next_expected_step
                     );
 
@@ -210,7 +210,7 @@ impl TestBase {
                         // refer to the string table to get the text.
                         assert_eq!(
                             test_plan.next_step_value,
-                            Some(StepValue::String(command.0))
+                            Some(StepValue::String(command.raw))
                         );
                     }
                     DialogueEvent::NodeComplete(_) => {}

@@ -290,7 +290,7 @@ impl VirtualMachine {
                 // line handler.
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
 
-                let substitutions = self.pop_substitutions_with_count_at_index(instruction, 1);
+                let substitutions = self.pop_substitutions_with_count_at_operand(instruction, 1);
                 let line = self.prepare_line(string_id, &substitutions)?;
 
                 self.batched_events.push(DialogueEvent::Line(line));
@@ -308,13 +308,13 @@ impl VirtualMachine {
                 let command_text: String = instruction.read_operand(0);
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
                 let command_text = self
-                    .pop_substitutions_with_count_at_index(instruction, 1)
+                    .pop_substitutions_with_count_at_operand(instruction, 1)
                     .into_iter()
                     .enumerate()
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
                     });
-                let command = Command(command_text);
+                let command = Command::parse(command_text);
 
                 self.batched_events.push(DialogueEvent::Command(command));
 
@@ -331,7 +331,7 @@ impl VirtualMachine {
                 let string_id: String = instruction.read_operand(0);
                 let string_id: LineId = string_id.into();
                 assert_up_to_date_compiler(instruction.operands.len() >= 4);
-                let substitutions = self.pop_substitutions_with_count_at_index(instruction, 2);
+                let substitutions = self.pop_substitutions_with_count_at_operand(instruction, 2);
                 let line = self.prepare_line(string_id, &substitutions)?;
 
                 // Indicates whether the VM believes that the
@@ -568,7 +568,7 @@ impl VirtualMachine {
             .unwrap()
     }
 
-    fn pop_substitutions_with_count_at_index(
+    fn pop_substitutions_with_count_at_operand(
         &mut self,
         instruction: &Instruction,
         index: usize,
