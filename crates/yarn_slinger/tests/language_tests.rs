@@ -208,3 +208,14 @@ fn test_sources() {
         }
     }
 }
+
+#[test]
+#[should_panic]
+fn crashes_on_command_expression_evaluating_whitespace() {
+    let result = Compiler::from_test_source("<<{0} {\"   \"}>>")
+        .compile()
+        .unwrap();
+    TestBase::new()
+        .with_compilation(result)
+        .run_standard_testcase();
+}

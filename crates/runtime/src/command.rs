@@ -31,6 +31,10 @@ pub struct Command {
 
 impl Command {
     pub(crate) fn parse(input: String) -> Self {
+        assert!(!input.trim().is_empty(), "Failed to parse the command \"{input}\" because it is composed entirely of whitespace. \
+            Help: You might have passed an expression that evaluates to whitespace, e.g. `{{0}} {{\"  \"}}`. \
+            If you think this is a bug, please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+
         let mut components = split_command_text(&input);
         assert!(
             !components.is_empty(),
