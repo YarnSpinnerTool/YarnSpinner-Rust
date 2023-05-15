@@ -73,8 +73,8 @@ pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
     FileParseResult::new(file_name, tree, Rc::new(parser))
 }
 
-pub(crate) fn get_line_id_for_node_name(name: &str) -> String {
-    format!("line:{name}")
+pub(crate) fn get_line_id_for_node_name(name: &str) -> LineId {
+    format!("line:{name}").into()
 }
 
 /// Gets the text of the documentation comments that either immediately

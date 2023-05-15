@@ -7,6 +7,7 @@
 
 use crate::prelude::*;
 use crate::string_newtype;
+use yarn_slinger_core::prelude::*;
 
 string_newtype! {
     /// A command, sent from the [`Dialogue`] to the game.

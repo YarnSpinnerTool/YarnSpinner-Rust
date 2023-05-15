@@ -2,6 +2,7 @@ pub mod collections;
 pub mod generated;
 mod internal_value;
 mod library;
+mod line_id;
 mod operator;
 mod position;
 pub mod types;
@@ -13,6 +14,7 @@ pub mod prelude {
         generated::*,
         internal_value::*,
         library::*,
+        line_id::*,
         operator::*,
         position::*,
         types::{self, Type},

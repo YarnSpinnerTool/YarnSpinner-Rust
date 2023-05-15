@@ -95,7 +95,10 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
 
         if let Some(line_id) = line_id {
-            if self.string_table_manager.contains_key(line_id.get_text()) {
+            if self
+                .string_table_manager
+                .contains_key(&line_id.get_text().into())
+            {
                 // The original has a fallback for when this is `null` / `None`,
                 // but this can logically not be the case in this scope.
                 let diagnostic_context = line_id_tag.clone().unwrap();
@@ -115,7 +118,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
 
         let string_id = self.string_table_manager.insert(
-            line_id.map(|t| t.get_text().to_owned()),
+            line_id.map(|t| t.get_text().into()),
             StringInfo {
                 text: composed_string,
                 node_name: self.current_node_name.clone(),
@@ -127,7 +130,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         );
 
         if line_id.is_none() {
-            add_hashtag_child(ctx, string_id);
+            add_hashtag_child(ctx, string_id.0);
         }
     }
 }
@@ -259,7 +262,7 @@ a {1 + 3} cool expression
         let string_table = result.string_table;
         assert_eq!(string_table.len(), 3);
         assert_eq!(
-            string_table["line:test.yarn-test-0"],
+            string_table[&"line:test.yarn-test-0".into()],
             StringInfo {
                 text: "foo".to_string(),
                 node_name: "test".to_string(),
@@ -270,7 +273,7 @@ a {1 + 3} cool expression
             }
         );
         assert_eq!(
-            string_table["line:test.yarn-test-1"],
+            string_table[&"line:test.yarn-test-1".into()],
             StringInfo {
                 text: "bar".to_string(),
                 node_name: "test".to_string(),
@@ -281,7 +284,7 @@ a {1 + 3} cool expression
             }
         );
         assert_eq!(
-            string_table["line:test.yarn-test-2"],
+            string_table[&"line:test.yarn-test-2".into()],
             StringInfo {
                 text: "a {0} cool expression".to_string(),
                 node_name: "test".to_string(),

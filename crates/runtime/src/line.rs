@@ -3,7 +3,7 @@
 //! ## Implementation notes
 //! Introduced `LineId` newtype for better type safety
 
-use crate::string_newtype;
+use yarn_slinger_core::prelude::*;
 
 /// A line of dialogue, sent from the [`Dialogue`] to the game.
 ///
@@ -31,8 +31,4 @@ impl Line {
             substitutions: Default::default(),
         }
     }
-}
-
-string_newtype! {
-    pub struct LineId(pub String);
 }
