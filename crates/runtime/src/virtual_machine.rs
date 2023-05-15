@@ -532,7 +532,7 @@ impl VirtualMachine {
                 language_code: self.language_code.clone(),
             }
         })?;
-        let substituted_text = expand_substitutions(&line_text, &substitutions);
+        let substituted_text = expand_substitutions(&line_text, substitutions);
         let markup = self.parse_markup(&substituted_text).unwrap();
         let line = Line {
             id: string_id,
@@ -599,9 +599,9 @@ fn assert_up_to_date_compiler(predicate: bool) {
 /// index is not present in `substitutions`, it is
 /// ignored.
 #[must_use]
-fn expand_substitutions<'a>(text: &str, substitutions: &[String]) -> String {
+fn expand_substitutions(text: &str, substitutions: &[String]) -> String {
     substitutions
-        .into_iter()
+        .iter()
         .enumerate()
         .fold(text.to_owned(), |text, (i, substitution)| {
             text.replace(&format!("{{{i}}}",), substitution)

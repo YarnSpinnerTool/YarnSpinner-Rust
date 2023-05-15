@@ -184,7 +184,7 @@ impl Line {
                 .filter(|attr| *attr != attribute_to_delete)
                 .cloned()
                 .collect();
-            Self {
+            return Self {
                 id: self.id.clone(),
                 text: self.text.clone(),
                 attributes,
