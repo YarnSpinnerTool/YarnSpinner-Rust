@@ -1,7 +1,7 @@
 mod analyser;
 mod dialogue;
 mod dialogue_option;
-mod handlers;
+mod events;
 mod line;
 pub mod markup;
 pub mod pluralization;
@@ -14,7 +14,7 @@ pub(crate) use string_newtype::string_newtype;
 pub mod prelude {
     pub(crate) use crate::virtual_machine::*;
     pub use crate::{
-        analyser::*, dialogue::*, dialogue_option::*, handlers::*, line::*, pluralization::*,
+        analyser::*, dialogue::*, dialogue_option::*, events::*, line::*, pluralization::*,
         variable_storage::*,
     };
 }
