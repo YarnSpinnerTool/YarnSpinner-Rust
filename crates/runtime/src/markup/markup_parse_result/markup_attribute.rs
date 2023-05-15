@@ -13,7 +13,6 @@ use std::collections::HashMap;
 /// ## See also
 /// - [`Dialogue::parse_markup`]
 #[derive(Debug, Clone, PartialEq)]
-#[non_exhaustive]
 pub struct MarkupAttribute {
     /// The name of the attribute.
     pub name: String,
@@ -36,6 +35,10 @@ impl MarkupAttribute {
             properties: marker.properties,
             source_position: marker.source_position,
         }
+    }
+
+    pub fn property(&self, name: &str) -> Option<&MarkupValue> {
+        self.properties.get(name)
     }
 }
 

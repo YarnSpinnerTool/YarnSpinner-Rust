@@ -3,7 +3,9 @@
 //! ## Implementation notes
 //! Introduced `LineId` newtype for better type safety
 
-use crate::markup::MarkupAttribute;
+use crate::markup::{
+    MarkupAttribute, MarkupValue, CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY,
+};
 use yarn_slinger_core::prelude::*;
 
 /// A line of dialogue, sent from the [`Dialogue`] to the game.
@@ -33,8 +35,108 @@ pub struct Line {
 
 impl Line {
     /// Gets the first attribute with the specified name, if present.
-    pub fn get_attribute(&self, name: &str) -> Option<&MarkupAttribute> {
+    ///
+    /// ## Implementation note
+    ///
+    /// Originally named `TryGetAttributeWithName`
+    pub fn attribute(&self, name: &str) -> Option<&MarkupAttribute> {
         self.attributes.iter().find(|attr| attr.name == name)
+    }
+
+    /// The name of the character, if present.
+    /// ## Examples
+    /// When there is a name:
+    /// ```rust
+    /// # use std::collections::HashMap;
+    /// # use yarn_slinger_core::prelude::*;
+    /// # use yarn_slinger_runtime::markup::*;
+    /// # use yarn_slinger_runtime::prelude::*;
+    /// # let line = Line {
+    /// #    id: "line".into(),
+    /// #    text: "Alice: Hello! How are you today?".to_owned(),
+    /// #    attributes: vec![MarkupAttribute {
+    /// #        name: "character".to_owned(),
+    /// #        position: 0,
+    /// #        length: 7,
+    /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
+    /// #        source_position: 0,
+    /// #    }]
+    /// # };
+    /// assert_eq!("Alice: Hello! How are you today?", line.text);
+    /// assert_eq!(Some("Alice"), line.character_name());
+    /// ```
+    ///
+    /// When there is no name:
+    /// ```rust
+    /// # use std::collections::HashMap;
+    /// # use yarn_slinger_core::prelude::*;
+    /// # use yarn_slinger_runtime::markup::*;
+    /// # use yarn_slinger_runtime::prelude::*;
+    /// # let line = Line {
+    /// #    id: "line".into(),
+    /// #    text: "Great, thanks".to_owned(),
+    /// #    attributes: vec![]
+    /// # };
+    /// assert_eq!("Great, thanks", line.text);
+    /// assert!(line.character_name().is_none());
+    pub fn character_name(&self) -> Option<&str> {
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
+            if let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY) {
+                let MarkupValue::String(name) = name else {
+                    panic!(
+                        "Attribute \"character\" has a \"name\" property, but it is not a string. \
+                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"
+                    );
+                };
+                return Some(name.as_str());
+            }
+        }
+        None
+    }
+
+    /// The underlying text for this line, with any `character` attribute removed.
+    ///
+    /// ## Examples
+    /// When there is a name:
+    /// ```rust
+    /// # use std::collections::HashMap;
+    /// # use yarn_slinger_core::prelude::*;
+    /// # use yarn_slinger_runtime::markup::*;
+    /// # use yarn_slinger_runtime::prelude::*;
+    /// # let line = Line {
+    /// #    id: "line".into(),
+    /// #    text: "Alice: Hello! How are you today?".to_owned(),
+    /// #    attributes: vec![MarkupAttribute {
+    /// #        name: "character".to_owned(),
+    /// #        position: 0,
+    /// #        length: 7,
+    /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
+    /// #        source_position: 0,
+    /// #    }]
+    /// # };
+    /// assert_eq!("Alice: Hello! How are you today?", line.text);
+    /// assert_eq!("Hello! How are you today?", &line.text_without_character_name());
+    /// ```
+    ///
+    /// When there is no name:
+    /// ```rust
+    /// # use std::collections::HashMap;
+    /// # use yarn_slinger_core::prelude::*;
+    /// # use yarn_slinger_runtime::markup::*;
+    /// # use yarn_slinger_runtime::prelude::*;
+    /// # let line = Line {
+    /// #    id: "line".into(),
+    /// #    text: "Great, thanks".to_owned(),
+    /// #    attributes: vec![]
+    /// # };
+    /// assert_eq!("Great, thanks", line.text);
+    /// assert_eq!("Great, thanks", &line.text_without_character_name());
+    pub fn text_without_character_name(&self) -> String {
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
+            self.delete_range(attribute).text
+        } else {
+            self.text.to_owned()
+        }
     }
 
     /// Returns the substring of [`text`] covered by the [`attribute`]s position and length fields.

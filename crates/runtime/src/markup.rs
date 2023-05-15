@@ -362,7 +362,7 @@ mod tests {
         fn as_line(&self) -> Line;
 
         fn get_attribute(&self, name: &str) -> Option<MarkupAttribute> {
-            self.as_line().get_attribute(name).cloned()
+            self.as_line().attribute(name).cloned()
         }
 
         fn text_for_attribute(&self, attribute: &MarkupAttribute) -> String {
