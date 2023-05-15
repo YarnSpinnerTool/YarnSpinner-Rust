@@ -1,18 +1,49 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/5944b0e03d319303cd185b08140772a5804a2762/Runtime/DialogueRunner.cs#L1169>
+//!
+//! ## Implementation notes
+//! The original delegates command parsing to the Unity plugin, but we think it's foundational enough to do it directly in the runtime.
 
 use crate::markup::normalize;
 use yarn_slinger_core::prelude::YarnValue;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Command {
-    name: Option<String>,
-    parameters: Vec<YarnValue>,
-    raw: String,
+    /// The command name, i.e. the first identifier that was passed in the command.
+    /// For example, in the command `<<set_sprite ship "happy">>`, the command name is `set_sprite`.
+    pub name: String,
+
+    /// The parameters passed to the command. Strings that are surrounded by quotes are passed as a single parameter.
+    ///
+    /// ## Examples
+    ///
+    /// - The command `<<set_sprite ship "happy">>` has the parameters `["ship", "happy"]`.
+    /// - The command `<<set_sprite ship "very happy">>`, the parameters are `["ship", "very happy"]`.
+    ///
+    /// ## Return value
+    ///
+    /// The parameters are returned without underlying type information, so you will have to convert them using `YarnValue::try_into`.
+    pub parameters: Vec<YarnValue>,
+
+    /// The raw, unprocessed command as it appeared in the yarn file between the `<<` and `>>` characters.
+    pub raw: String,
 }
 
 impl Command {
     pub(crate) fn parse(input: String) -> Self {
-        todo!()
+        let mut components = split_command_text(&input);
+        assert!(
+            !components.is_empty(),
+            "Parsing the command \"{}\" resulted in an empty list of components. \
+            This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new",
+            input
+        );
+        let name = components.remove(0);
+        let parameters = components.into_iter().map(YarnValue::from).collect();
+        Self {
+            name,
+            parameters,
+            raw: input,
+        }
     }
 }
 
