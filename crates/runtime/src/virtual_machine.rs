@@ -314,7 +314,7 @@ impl VirtualMachine {
                     .fold(command_text, |command_text, (i, substitution)| {
                         command_text.replace(&format!("{{{i}}}"), &substitution)
                     });
-                let command = Command(command_text);
+                let command = Command::parse(command_text);
 
                 self.batched_events.push(DialogueEvent::Command(command));
 

@@ -6,18 +6,7 @@
 //! - Additional newtypes were introduced for strings.
 
 use crate::prelude::*;
-use crate::string_newtype;
 use yarn_slinger_core::prelude::*;
-
-string_newtype! {
-    /// A command, sent from the [`Dialogue`] to the game.
-    ///
-    /// You do not create instances of this struct yourself. They are created by the [`Dialogue`] during program execution.
-    ///
-    /// ## See also
-    /// [`CommandHandler`]
-    pub struct Command(pub String);
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DialogueEvent {

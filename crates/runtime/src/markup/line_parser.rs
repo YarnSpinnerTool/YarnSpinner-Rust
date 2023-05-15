@@ -709,7 +709,7 @@ impl LineParser {
 }
 
 /// Returns a new string whose textual value is the same as this string, but whose binary representation is in Unicode normalization form C.
-fn normalize(string: &str) -> String {
+pub(crate) fn normalize(string: &str) -> String {
     string.nfc().to_string()
 }
 
