@@ -103,6 +103,7 @@ fn split_command_text(input: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
+    //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/5944b0e03d319303cd185b08140772a5804a2762/Tests/Runtime/DialogueRunnerTests/DialogueRunnerTests.cs#L465>
     use super::*;
 
     #[test]
