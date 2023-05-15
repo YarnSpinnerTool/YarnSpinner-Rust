@@ -4,6 +4,11 @@ use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
+/// A trait for providing text to a [`Dialogue`].
+///
+/// ## Implementation notes
+///
+/// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn TextProvider + Send + Sync>;
     fn get_text(&self, id: &LineId) -> Option<String>;
@@ -16,6 +21,7 @@ impl Clone for Box<dyn TextProvider + Send + Sync> {
     }
 }
 
+/// A basic implementation of [`TextProvider`] that uses a [`HashMap`] to store the text.
 #[derive(Debug, Clone, Default)]
 pub struct StringTableTextProvider {
     string_table: Arc<RwLock<HashMap<LineId, String>>>,
