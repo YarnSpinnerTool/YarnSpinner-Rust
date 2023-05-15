@@ -1,4 +1,5 @@
 pub mod collections;
+pub mod feature_traits;
 pub mod generated;
 mod internal_value;
 mod library;
@@ -10,6 +11,7 @@ mod yarn_fn;
 mod yarn_value;
 
 pub mod prelude {
+    pub(crate) use crate::feature_traits::*;
     pub use crate::{
         generated::*,
         internal_value::*,
