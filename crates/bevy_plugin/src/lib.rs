@@ -1,7 +1,6 @@
-use bevy::prelude::*;
+mod plugin;
 
-pub struct YarnSlingerPlugin;
-
-impl Plugin for YarnSlingerPlugin {
-    fn build(&self, _app: &mut App) {}
+pub mod prelude {
+    //! Everything you need to get starting using Yarn Slinger.
+    pub use crate::plugin::*;
 }
