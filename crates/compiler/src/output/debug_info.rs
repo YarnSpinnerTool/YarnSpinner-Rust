@@ -1,10 +1,18 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/DebugInfo.cs>
 
+use crate::prelude::*;
 use std::collections::HashMap;
 use yarn_slinger_core::prelude::*;
 
 /// Contains debug information for a node in a Yarn file.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct DebugInfo {
     /// The file that this DebugInfo was produced from.
     pub file_name: String,
@@ -56,7 +64,14 @@ impl DebugInfo {
 }
 
 /// Contains positional information about an instruction.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct LineInfo {
     /// The file name of the source that this instruction was produced from.
     pub file_name: String,

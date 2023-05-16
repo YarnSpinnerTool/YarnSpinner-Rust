@@ -20,7 +20,14 @@ mod string_info;
 ///
 /// In contrast to the original implementation, where this struct was called a `CompilationResult`, we return
 /// an actual [`Result`], so this type is guaranteed to only hold warnings as opposed to all diagnostics.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, Default))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct Compilation {
     /// The compiled Yarn program that the [`Compiler`] produced.
     /// produced.
@@ -114,7 +121,14 @@ impl Compilation {
     }
 }
 
-#[derive(Error)]
+#[derive(Error, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct CompilationError {
     pub diagnostics: Vec<Diagnostic>,
 }
