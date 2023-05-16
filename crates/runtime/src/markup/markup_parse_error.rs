@@ -1,6 +1,6 @@
 use crate::markup::TRIM_WHITESPACE_PROPERTY;
-use thiserror::Error;
 use crate::prelude::*;
+use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
