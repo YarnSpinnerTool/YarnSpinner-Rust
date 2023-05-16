@@ -1,5 +1,7 @@
 //! Thin newtypes around existing collections to better express their intent in regards to the corresponding dotnet types.
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, fmt::Debug};
 
 /// Represents a FIFO (First-In, First-Out) collection.
