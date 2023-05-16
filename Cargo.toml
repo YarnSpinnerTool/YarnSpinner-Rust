@@ -3,9 +3,10 @@ resolver = "2"
 
 members = [
     "crates/compiler",
+    "crates/codegen",
     "crates/core",
     "crates/macros",
     "crates/runtime",
     "crates/bevy_plugin",
-    "crates/yarn_slinger"
+    "crates/yarn_slinger",
 ]

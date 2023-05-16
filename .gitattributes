@@ -1,4 +1,5 @@
 /crates/compiler/src/parser/generated/*.rs linguist-generated=true
 /crates/compiler/src/parser/generated/*.interp linguist-generated=true
 /crates/compiler/src/parser/generated/*.tokens linguist-generated=true
+/crates/core/src/generated/yarn.rs linguist-generated=true
 .idea/**/* linguist-generated=true

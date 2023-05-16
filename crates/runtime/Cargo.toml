@@ -5,6 +5,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [features]
+default = []
 serde = ["dep:serde"]
 bevy = ["dep:bevy_reflect"]
 
