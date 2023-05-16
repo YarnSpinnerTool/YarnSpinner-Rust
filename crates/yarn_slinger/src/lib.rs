@@ -10,6 +10,7 @@ pub mod prelude {
         YarnFnRegistry, YarnValue,
     };
     pub mod runtime {
+        pub use yarn_slinger_runtime::markup::*;
         pub use yarn_slinger_runtime::prelude::*;
     }
 }

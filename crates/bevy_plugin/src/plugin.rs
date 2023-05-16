@@ -37,6 +37,8 @@ impl Plugin for YarnSlingerPlugin {
             .register_type::<runtime::Line>()
             .register_type::<runtime::Diagnosis>()
             .register_type::<runtime::DiagnosisSeverity>()
-            .register_type::<runtime::MarkupParseError>();
+            .register_type::<runtime::MarkupParseError>()
+            .register_type::<runtime::MarkupAttribute>()
+            .register_type::<runtime::MarkupValue>();
     }
 }

@@ -3,8 +3,8 @@ mod line_parser;
 mod markup_parse_error;
 mod parsed_markup;
 
-pub use self::markup_parse_error::*;
-pub(crate) use self::{attribute_marker_processor::*, line_parser::*, parsed_markup::*};
+pub(crate) use self::{attribute_marker_processor::*, line_parser::*};
+pub use self::{markup_parse_error::*, parsed_markup::*};
 
 #[cfg(test)]
 mod tests {
