@@ -20,11 +20,20 @@ pub type Result<T> = std::result::Result<T, CompilationError>;
 ///
 /// This type is a combination of the original `CompilationStep` and `Compiler` types, optimized for easier, fluent calling.
 #[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct Compiler {
     /// The [`File`] structs that represent the content to parse..
     pub files: Vec<File>,
 
     /// The [`Library`] that contains declarations for functions.
+    #[cfg_attr(feature = "bevy", reflect(ignore))]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub library: Library,
 
     /// The types of compilation that the compiler will do.
