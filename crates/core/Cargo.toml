@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [features]
 serde = ["dep:serde"]
-bevy = ["dep:bevy"]
+bevy = ["dep:bevy_reflect"]
 
 [dependencies]
 bytes = "1"
@@ -17,7 +17,7 @@ strum = "0.24.1"
 strum_macros = "0.24"
 thiserror = "1"
 serde = { version = "1", features = ["derive"] , optional = true }
-bevy = { version = "0.10", default-features = false, features = ["serialize"], optional = true }
+bevy_reflect = { version = "0.10", optional = true }
 cfg-if = "1.0.0"
 
 [build-dependencies]
