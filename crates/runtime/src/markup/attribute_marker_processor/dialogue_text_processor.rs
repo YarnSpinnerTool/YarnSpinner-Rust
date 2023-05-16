@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner/Dialogue.cs>, which was split into multiple files.
 
 use crate::markup::AttributeMarkerProcessor;
-use crate::pluralization::Pluralization;
+use crate::prelude::*;
 use icu_plurals::PluralCategory;
 use std::collections::HashSet;
 

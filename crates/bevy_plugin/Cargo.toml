@@ -9,8 +9,11 @@ default = []
 serde = ["yarn_slinger/serde", "bevy/serialize"]
 
 [dependencies]
+anyhow = "1"
 yarn_slinger = { path = "../yarn_slinger", features = ["bevy"] }
 
 [dependencies.bevy]
 version = "0.10"
 default-features = false
+features = ["bevy_asset"]
+

@@ -21,7 +21,6 @@ pub mod prelude {
         events::*,
         line::*,
         markup::MarkupParseError,
-        pluralization::*,
         text_provider::*,
         variable_storage::*,
     };
