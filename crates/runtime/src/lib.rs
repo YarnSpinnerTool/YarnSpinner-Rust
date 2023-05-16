@@ -5,7 +5,7 @@ mod dialogue_option;
 mod events;
 mod line;
 pub mod markup;
-pub mod pluralization;
+mod pluralization;
 mod text_provider;
 mod variable_storage;
 mod virtual_machine;
@@ -13,7 +13,6 @@ mod virtual_machine;
 pub use dialogue::Result;
 
 pub mod prelude {
-    pub(crate) use crate::virtual_machine::*;
     pub use crate::{
         analyser::*,
         command::*,
@@ -26,5 +25,6 @@ pub mod prelude {
         text_provider::*,
         variable_storage::*,
     };
+    pub(crate) use crate::{pluralization::*, virtual_machine::*};
     pub(crate) use yarn_slinger_core::prelude::*;
 }

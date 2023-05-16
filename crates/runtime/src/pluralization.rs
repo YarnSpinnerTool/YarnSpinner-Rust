@@ -1,14 +1,14 @@
 use crate::pluralization::generated::generate_provider;
 use fixed_decimal::{DoublePrecision, FixedDecimal};
 use icu_locid::Locale;
-pub use icu_plurals::{PluralCategory, PluralRuleType};
+use icu_plurals::{PluralCategory, PluralRuleType};
 use icu_plurals::{PluralOperands, PluralRules};
 use icu_provider::DataLocale;
 
 mod generated;
 
 #[derive(Debug)]
-pub struct Pluralization {
+pub(crate) struct Pluralization {
     locale: Locale,
     cardinal_rules: PluralRules,
     ordinal_rules: PluralRules,

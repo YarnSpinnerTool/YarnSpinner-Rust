@@ -39,7 +39,7 @@ macro_rules! impl_from {
             }
 
             impl TryFrom<InternalValue> for $from_type {
-                type Error = InvalidCastError;
+                type Error = YarnValueCastError;
 
                 fn try_from(value: InternalValue) -> Result<Self, Self::Error> {
                     value.raw_value.try_into()
