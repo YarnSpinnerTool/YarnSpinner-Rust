@@ -54,7 +54,6 @@ impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
 
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
-    Marker: 'static,
     F: YarnFn<Marker> + 'static + Clone + Send + Sync,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
@@ -79,7 +78,6 @@ where
 pub(crate) struct YarnFnWrapper<Marker, F>
 where
     F: YarnFn<Marker>,
-    Marker: 'static,
 {
     function: F,
 

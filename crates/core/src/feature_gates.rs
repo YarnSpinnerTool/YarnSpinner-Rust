@@ -1,5 +1,5 @@
 #[cfg(feature = "bevy")]
-pub(crate) use bevy_reflect::prelude::*;
+pub(crate) use bevy::prelude::{FromReflect, Reflect};
 #[cfg(feature = "serde")]
 pub(crate) use serde::{Deserialize, Serialize};
 
