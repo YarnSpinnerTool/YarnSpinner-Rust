@@ -31,8 +31,7 @@ pub struct Declaration {
     pub name: String,
 
     /// The default value of this declaration, if no value has been
-    /// specified in code or is available from a [`Dialogue`]'s
-    /// [`IVariableStorage`].
+    /// specified in code or is available from a Dialogue's variable storage.
     pub default_value: Option<YarnValue>,
 
     /// A string describing the purpose of this declaration.
@@ -165,7 +164,7 @@ impl Declaration {
 ///
 /// ## Implementation notes
 ///
-/// In the original implementation, [`External`] is just a magic string.
+/// In the original implementation, [`DeclarationSource::External`] is just a magic string.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

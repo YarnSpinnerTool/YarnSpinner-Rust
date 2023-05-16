@@ -9,10 +9,10 @@ use std::collections::HashMap;
 /// Represents a range of text in a marked-up string.
 ///
 /// You do not create instances of this struct yourself.
-/// It is created by objects that can parse markup, such as [`Dialogue`].
+/// It is created by [`Dialogue`] in [`Dialogue::continue_`] and passed to you through a [`DialogueEvent`].
 ///
 /// ## See also
-/// - [`Dialogue::parse_markup`]
+/// - [`Line`]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

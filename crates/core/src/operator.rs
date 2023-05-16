@@ -82,9 +82,7 @@ pub enum Operator {
     Modulo,
 }
 
-/// Implementing this is probably bad practice, but
-/// - This greatly reduced boilerplate when used with [`yarn_fn_registry!`] and
-/// - This type is only `pub(crate)`, so the user will not fall into any traps
+/// Implementing this is probably bad practice, but this greatly reduces boilerplate when used with `yarn_fn_registry!`
 impl From<Operator> for Cow<'static, str> {
     fn from(value: Operator) -> Self {
         value.to_string().into()

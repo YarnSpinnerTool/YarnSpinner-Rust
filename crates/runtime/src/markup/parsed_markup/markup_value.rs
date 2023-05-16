@@ -4,7 +4,7 @@
 use crate::prelude::*;
 use core::fmt::Display;
 
-/// A value associated with a [`MarkupProperty`]
+/// A value associated with a markup name.
 ///
 /// You do not create instances of this struct yourself. It is created
 /// by objects that can parse markup, such as [`Dialogue`]

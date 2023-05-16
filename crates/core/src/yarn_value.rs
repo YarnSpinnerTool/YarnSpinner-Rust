@@ -30,7 +30,7 @@ pub enum YarnValue {
 }
 
 /// Needed to ensure that the return type of a registered function is
-/// able to be turned into a [`Value`], but not a [`Value`] itself.
+/// able to be turned into a [`YarnValue`], but not a [`YarnValue`] itself.
 pub trait IntoYarnValueFromNonYarnValue {
     fn into_untyped_value(self) -> YarnValue;
 }

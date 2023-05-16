@@ -10,7 +10,7 @@ use yarn_slinger_macros::all_tuples;
 /// - Each parameter must be one of the following types or a reference to them:
 ///   - [`bool`]
 ///   - A numeric type or its reference, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`],
-///   - [`String`] (for a reference, [`&str`] may be used instead of [`&String`])
+///   - [`String`] (for a reference, [`&str`] may be used instead of `&String`)
 ///   - [`YarnValue`], which means that a parameter may be any of the above types
 /// - It must return a value.
 /// - Its return type must be one of the types listed above, but neither a reference nor a [`YarnValue`].

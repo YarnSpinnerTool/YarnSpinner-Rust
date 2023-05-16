@@ -33,7 +33,7 @@ pub struct Compilation {
     /// produced.
     ///
     /// This value will be [`None`] if the
-    /// [`Compiler`] object's [`Compiler::CompilationType`] value was not
+    /// [`Compiler`] object's [`Compiler::compilation_type`] value was not
     /// [`CompilationType::FullCompilation`]
     pub program: Option<Program>,
 

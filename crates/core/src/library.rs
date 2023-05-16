@@ -5,10 +5,6 @@ use std::borrow::Cow;
 use std::fmt::Display;
 
 /// A collection of functions that can be called from Yarn scripts.
-///
-/// You do not create instances of this class yourself. The [`Dialogue`]
-/// class creates one for you, and you can access it through the
-/// [`Library`] property.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Library(YarnFnRegistry);
 

@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 use yarn_slinger_core::prelude::*;
 
-/// A trait for providing text to a [`Dialogue`].
+/// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue).
 ///
 /// ## Implementation notes
 ///
