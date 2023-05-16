@@ -54,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-D warnings"
+      RUSTDOCFLAGS: '--deny warnings'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -64,7 +65,7 @@ jobs:
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo doc
-        run: cargo doc --workspace --all-features
+        run: cargo doc --no-deps --workspace --all-features
 
   test:
     runs-on: ubuntu-latest
