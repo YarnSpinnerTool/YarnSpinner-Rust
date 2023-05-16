@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 //! and <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationJob.cs>
 
-use crate::output::*;
+use crate::prelude::*;
 use std::path::Path;
 use yarn_slinger_core::prelude::*;
 
@@ -80,6 +80,13 @@ impl Compiler {
 
 /// Represents the contents of a file to compile.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct File {
     /// The name of the file.
     ///
@@ -94,6 +101,13 @@ pub struct File {
 
 /// The types of compilation that the compiler will do.
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash, Default))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub enum CompilationType {
     /// The compiler will do a full compilation, and generate a [`Program`],
     /// function declaration set, and string table.
