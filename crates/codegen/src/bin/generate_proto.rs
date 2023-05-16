@@ -1,12 +1,11 @@
 use std::env;
 use std::io::Result;
-use std::path::Path;
+use yarn_slinger_codegen::*;
 
 fn main() -> Result<()> {
-    let current_dir = Path::new(file!()).parent().unwrap();
-    let include_dir = current_dir.join("../../../../third-party/YarnSpinner/YarnSpinner");
+    let include_dir = path(ProjectPath::ThirdPersonYarnSpinner).join("YarnSpinner");
     let proto_file = include_dir.join("yarn_spinner.proto");
-    let output_dir = current_dir.join("../../../core/src/generated");
+    let output_dir = path(ProjectPath::Core).join("src/generated");
     env::set_var("OUT_DIR", output_dir);
 
     prost_build::Config::new()

@@ -26,7 +26,3 @@ thiserror = "1"
 serde = { version = "1", features = ["derive"] , optional = true }
 bevy_reflect = { version = "0.10", features = ["bevy", "documentation"], optional = true }
 
-[build-dependencies]
-icu_plurals = { version = "1", features = ["std"] }
-icu_datagen = "1"
-icu_provider_adapters = { version = "1", features = ["std"] }
