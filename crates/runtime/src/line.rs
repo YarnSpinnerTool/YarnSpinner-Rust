@@ -10,19 +10,18 @@ use crate::prelude::*;
 
 /// A line of dialogue, sent from the [`Dialogue`] to the game.
 ///
-/// When the game receives a [`Line`], it should do the following things to prepare the line for presentation to the user.
-/// - Use the value in the [`Line::ID`] field to look up the appropriate user-facing text in the string table.
-/// - Use [`Dialogue::expand_substitutions`] to replace all substitutions in the user-facing text.
-/// - Use [`Dialogue::parse_markup`] to parse all markup in the line.
-///
+/// A [`Line`] is automatically produced follows:
+/// - A localized text was fetched through the [`TextProvider`] registered in the [`Dialogue`].
+/// - Any expressions found in the text are evaluated
+/// - The text is parsed for markup
 /// You do not create instances of this struct yourself. They are created by the [`Dialogue`] during program execution.
 ///
 /// ## See also
-/// [`Dialogue::line_handler`]
+/// [`DialogueEvent::Line`]
 ///
 /// ## Implementation Notes
 ///
-/// `MarkupParseResult` was merged into this because we don't require consumers to manually fetch from string tables.
+/// `MarkupParseResult` and `ExpandSubstitutions` were merged into this because we don't require consumers to manually fetch from string tables.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -146,7 +145,7 @@ impl Line {
         }
     }
 
-    /// Returns the substring of [`text`] covered by the [`attribute`]s position and length fields.
+    /// Returns the substring of [`Line::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
         assert!(
             self.text.len() <= attribute.position + attribute.length,
@@ -174,12 +173,18 @@ impl Line {
     /// - Attributes that start after the deleted attribute have their start
     /// point adjusted to account for the deleted text.
     ///
-    /// This method does not modify the current object. A new <see
-    /// [`ParsedMarkup`] is returned.
+    /// This method does not modify the current object. A new  [`Line`] is returned.
     ///
-    /// If `attribute_to_delete` is not an attribute of this
-    /// [`ParsedMarkup`], the behaviour is undefined.
+    /// ## Panics
+    /// Panics if `attribute_to_delete` is not an attribute of this [`Line::attribute`].
     pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Self {
+        if !self
+            .attributes
+            .iter()
+            .any(|attr| attr == attribute_to_delete)
+        {
+            panic!("Attribute to delete is not an attribute of this line");
+        }
         // Address the trivial case: if the attribute has a zero
         // length, just create a new markup that doesn't include it.
         // The plain text is left unmodified, because this attribute

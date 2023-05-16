@@ -9,7 +9,6 @@ env:
   CARGO_TERM_COLOR: always
   # Sparse cargo registry for faster updates
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-  CARGO_INCREMENTAL: 1
 
 jobs:
   lint:
@@ -50,6 +49,23 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
         run: cargo fmt --check --all
+
+  doc:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+      RUSTDOCFLAGS: '--deny warnings'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Cache Cargo build files
+        uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Run cargo doc
+        run: cargo doc --no-deps --workspace --all-features
 
   test:
     runs-on: ubuntu-latest

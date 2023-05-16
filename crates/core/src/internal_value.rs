@@ -22,7 +22,7 @@ use crate::types::Type;
 pub struct InternalValue {
     /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,
-    /// The actual value. If [`r#type`] is [`Type::Function`], this is the return type.
+    /// The actual value. If [`InternalValue::type`] is [`Type::Function`], this is the return type.
     pub raw_value: YarnValue,
 }
 

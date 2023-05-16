@@ -101,7 +101,7 @@ pub struct File {
     ///
     /// This may be a full path, or just the filename or anything in
     /// between. This is useful for diagnostics, and for attributing
-    /// [`Line`] objects to their original source files.
+    /// dialogue lines to their original source files.
     pub file_name: String,
 
     /// The source code of this file.

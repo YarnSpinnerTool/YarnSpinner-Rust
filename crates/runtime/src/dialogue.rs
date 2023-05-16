@@ -2,7 +2,6 @@
 
 use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
-use crate::text_provider::TextProvider;
 use log::error;
 use std::fmt::Debug;
 use thiserror::Error;
@@ -10,15 +9,7 @@ use yarn_slinger_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
 ///
-/// ## Implementation notes
-///
-/// The original implementation allows calling [`Dialogue`] from handlers freely.
-/// Rust's ownership rules rightfully prevent us from doing that, so the methods that
-/// are useful to call from handlers are exposed in [`ReadOnlyDialogue`].
-///
-/// It implements [`Send`] and [`Sync`], so it can be freely moved into handlers after being retrieved via [`Dialogue::get_read_only`].
-/// [`Dialogue`] also implements [`Deref`] for [`ReadOnlyDialogue`], so you don't need to worry about this distinction if
-/// you're only calling the [`Dialogue`] from outside handlers.
+/// The main functions of interest are [`Dialogue::continue_`] and [`Dialogue::set_selected_option`].
 #[derive(Debug)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug))]
@@ -126,7 +117,7 @@ impl Dialogue {
     }
 
     /// Activates [`Dialogue::next`] being able to return [`DialogueEvent::LineHints`] events.
-    /// Note that line hints for [`with_node_at_start`] and [`with_node_at`] will only be sent if this
+    /// Note that line hints for [`Dialogue::with_node_at_start`] and [`Dialogue::with_node_at`] will only be sent if this
     /// method was called beforehand.
     #[must_use]
     pub fn with_should_send_line_hints(mut self) -> Self {
@@ -197,28 +188,22 @@ impl Dialogue {
 
     /// Starts, or continues, execution of the current program.
     ///
-    /// This method repeatedly executes instructions until one of the following conditions is encountered:
-    /// - The [`LineHandler`] or [`CommandHandler`] is called. After calling either of these handlers, the Dialogue will wait until [`Dialogue::next`] is called.
-    /// - The [`OptionsHandler`] is called. When this occurs, the Dialogue is waiting for the user to specify which of the options has been selected,
-    /// and [`Dialogue::set_selected_option`] must be called before [`Dialogue::next`] is called.
-    /// - The program reaches its end. When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::next`] is called again.
-    /// - An error occurs while executing the program
+    /// Calling this method returns a batch of [`DialogueEvent`]s that should be handled by the caller before calling [`Dialogue::continue_`] again.
+    /// Some events can be ignored, however this method will error if the following events are not properly handled:
+    /// - [`DialogueEvent::Options`] indicates that the program is waiting for the user to select an option.
+    /// The user's selection must be passed to [`Dialogue::set_selected_option`] before calling [`Dialogue::continue_`] again.
+    /// - [`DialogueEvent::DialogueComplete`] means that the program reached its end.
+    /// When this occurs, [`Dialogue::set_node`] or [`Dialogue::set_node_to_start`] must be called before [`Dialogue::continue_`] is called again.
     ///
-    /// This method has no effect if it is called while the [`Dialogue`] is currently in the process of executing instructions.
+    /// See the documentation of [`DialogueEvent`] for more information on how to handle each event.
     ///
-    /// ## See Also
-    /// - [`LineHandler`]
-    /// - [`OptionsHandler`]
-    /// - [`CommandHandler`]
-    /// - [`NodeCompleteHandler`]
-    /// - [`DialogueCompleteHandler`]
     /// The [`Iterator`] implementation of [`Dialogue`] is a convenient way to call [`Dialogue::next`] repeatedly, although it panics if an error occurs.
     ///
     /// ## Implementation Notes
     ///
-    /// The original states that the [`LineHandler`] and [`CommandHandler`] may call [`Dialogue::next`]. Because of the borrow checker,
-    /// this is action is very unidiomatic and impossible to do without introducing a lot of interior mutability all along the API.
-    /// For this reason, we disallow mutating the [`Dialogue`] within any handler.
+    /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
+    /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
+    /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
     pub fn continue_(&mut self) -> Result<Option<Vec<DialogueEvent>>> {
         self.vm.continue_()
     }
@@ -263,8 +248,7 @@ impl Dialogue {
 
     /// Immediately stops the [`Dialogue`]
     ///
-    /// The [`DialogueCompleteHandler`] will not be called if the
-    /// dialogue is ended this way.
+    /// No [`DialogueEvent::DialogueComplete`] will be emitted if the dialogue is ended this way.
     pub fn stop(&mut self) -> &mut Self {
         self.vm.stop();
         self
@@ -361,19 +345,17 @@ impl Dialogue {
 
     /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
     ///
-    /// After the Dialogue delivers an [`OptionSet`], this method must be called before [`Dialogue::next`] is called.
+    /// After the Dialogue emitted a [`DialogueEvent::Options`] in [`Dialogue::continue_`], this method must be called before [`Dialogue::next`] is called.
     ///
-    /// The ID number that should be passed as the parameter to this method should be the [`DialogueOption::Id`]
+    /// The ID number that should be passed as the parameter to this method should be the [`OptionId`]
     /// field in the [`DialogueOption`] that represents the user's selection.
     ///
     /// ## Panics
     /// - If the Dialogue is not expecting an option to be selected.
-    /// - If the option ID is not found in the current [`OptionSet`].
+    /// - If the option ID is not found in the vector of [`DialogueOption`] provided by [`DialogueEvent::Options`].
     ///
     /// ## See Also
-    /// - [`Dialogue::next`]
-    /// - [`OptionsHandler`]
-    /// - [`OptionSet`]
+    /// - [`Dialogue::continue_`]
     pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
         self.vm.set_selected_option(selected_option_id);
         self

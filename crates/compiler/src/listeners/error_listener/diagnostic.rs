@@ -15,7 +15,9 @@ use yarn_slinger_core::prelude::*;
 /// message that the user can take action on.
 ///
 /// Diagnostics are presented to the user as the result of compilation,
-/// through the [`CompilationResult`]'s [`CompilationResult::diagnostics`] field.
+/// through the [`Compilation`]'s [`Compilation::warnings`] field when not an error.
+/// Otherwise, they are contained in [`CompilerError`], which is in the [`Err`] variant
+/// of the [`Result`] returned by [`Compiler::compile`].
 ///
 /// ## Implementation notes
 ///

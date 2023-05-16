@@ -44,13 +44,13 @@ impl DebugInfo {
     ///
     /// # See also
     ///
-    /// * [`try_get_line_info`] for the fallible version.
+    /// * [`DebugInfo::try_get_line_info`] for the fallible version.
     pub fn get_line_info(&self, instruction_number: usize) -> LineInfo {
         self.try_get_line_info(instruction_number)
             .expect("instruction_number out of range")
     }
 
-    /// Fallible version of [`get_line_info`].
+    /// Fallible version of [`DebugInfo::get_line_info`].
     pub fn try_get_line_info(&self, instruction_number: usize) -> Option<LineInfo> {
         self.line_positions
             .get(&instruction_number)

@@ -102,7 +102,7 @@ impl Type {
         self.methods().contains_key(name)
     }
 
-    /// Does not check whether the method exists. Use [`has_method`] for that.
+    /// Does not check whether the method exists. Use [`Type::has_method`] for that.
     pub fn get_canonical_name_for_method(&self, method_name: &str) -> String {
         format!("{}.{}", self.name(), method_name)
     }
