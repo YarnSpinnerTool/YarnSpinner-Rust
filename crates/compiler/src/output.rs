@@ -2,7 +2,7 @@
 
 use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
-use crate::prelude::StringTableManager;
+use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
