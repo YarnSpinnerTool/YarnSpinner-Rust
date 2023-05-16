@@ -1,11 +1,13 @@
 //! Thin newtypes around existing collections to better express their intent in regards to the corresponding dotnet types.
 
+use crate::prelude::*;
 use std::{collections::VecDeque, fmt::Debug};
 
 /// Represents a FIFO (First-In, First-Out) collection.
 ///
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1>
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Queue<T: Debug + Clone>(pub VecDeque<T>);
 
 impl<T: Debug + Clone> Queue<T> {
@@ -30,6 +32,7 @@ impl<T: Debug + Clone> Queue<T> {
 ///
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.stack-1>
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Stack<T: Debug + Clone>(pub VecDeque<T>);
 
 impl<T: Debug + Clone> Stack<T> {

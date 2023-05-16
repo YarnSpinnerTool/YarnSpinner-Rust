@@ -12,6 +12,7 @@ use crate::prelude::*;
 ///
 /// Corresponds to the internal `Value` class in the original C# implementation.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct InternalValue {
     /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,
