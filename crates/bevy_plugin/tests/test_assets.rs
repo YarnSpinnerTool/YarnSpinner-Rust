@@ -6,7 +6,6 @@ use yarn_slinger::prelude::YarnFile;
 fn loads_yarn_assets() {
     let mut app = App::new();
 
-    // Add Score resource
     app.add_plugins(DefaultPlugins)
         .add_plugin(YarnSlingerPlugin);
 
