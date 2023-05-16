@@ -7,8 +7,8 @@ use std::ops::*;
 /// A type that bridges to [`f32`]
 pub(crate) fn number_type_properties() -> TypeProperties {
     TypeProperties::from_name("Number").with_methods(yarn_fn_registry! {
-        Operator::EqualTo => RustType::eq,
-        Operator::NotEqualTo => RustType::ne,
+        Operator::EqualTo => <RustType as PartialEq>::eq,
+        Operator::NotEqualTo => <RustType as PartialEq>::ne,
         Operator::Add => <RustType as Add>::add,
         Operator::Subtract => <RustType as Sub>::sub,
         Operator::Multiply => <RustType as Mul>::mul,

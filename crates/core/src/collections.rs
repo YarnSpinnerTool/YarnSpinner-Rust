@@ -9,8 +9,7 @@ use std::{collections::VecDeque, fmt::Debug};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(all(feature = "bevy", not(feature = "serde")), reflect(Debug))]
-#[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Debug))]
+#[cfg_attr(feature = "bevy", reflect(Debug))]
 pub struct Queue<T: Debug + Clone>(pub VecDeque<T>);
 
 impl<T: Debug + Clone> Queue<T> {
@@ -61,13 +60,19 @@ impl<T: Debug + Clone> Stack<T> {
 
 // Somehow auto-derive does not work with those types so a manual impl is needed?
 
-impl<T: Debug + Clone> Default for Queue<T> {
+impl<T> Default for Queue<T>
+where
+    T: 'static + Send + Sync + Debug + Clone + FeatureTraits,
+{
     fn default() -> Self {
         Self(Default::default())
     }
 }
 
-impl<T: Debug + Clone> Default for Stack<T> {
+impl<T> Default for Stack<T>
+where
+    T: 'static + Send + Sync + Debug + Clone + FeatureTraits,
+{
     fn default() -> Self {
         Self(Default::default())
     }
