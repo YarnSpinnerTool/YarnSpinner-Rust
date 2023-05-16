@@ -9,7 +9,7 @@ pub(crate) mod antlr_rust_ext;
 pub(crate) mod run_compilation;
 pub(crate) mod utils;
 
-pub type Result<T> = std::result::Result<T, CompilationError>;
+pub type Result<T> = std::result::Result<T, CompilerError>;
 
 /// An object that contains Yarn source code to compile, and instructions on
 /// how to compile it.

@@ -3,7 +3,6 @@
 
 use crate::prelude::*;
 use std::collections::HashSet;
-use yarn_slinger_core::prelude::instruction::*;
 use yarn_slinger_core::prelude::*;
 
 #[derive(Debug, Default)]

@@ -1,7 +1,7 @@
 use crate::listeners::CompilerListener;
 use crate::prelude::*;
 use antlr_rust::token::Token;
-use yarn_slinger_core::prelude::instruction::OpCode;
+use yarn_slinger_core::prelude::OpCode;
 use yarn_slinger_core::prelude::*;
 
 impl<'input> CompilerListener<'input> {

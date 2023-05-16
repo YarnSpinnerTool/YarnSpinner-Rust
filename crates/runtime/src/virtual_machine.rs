@@ -9,7 +9,7 @@ use crate::prelude::*;
 use crate::Result;
 use log::*;
 use std::fmt::Debug;
-use yarn_slinger_core::prelude::instruction::OpCode;
+use yarn_slinger_core::prelude::OpCode;
 use yarn_slinger_core::prelude::*;
 
 mod execution_state;

@@ -7,7 +7,6 @@ use crate::markup::{
     MarkupAttribute, MarkupValue, CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY,
 };
 use crate::prelude::*;
-use yarn_slinger_core::prelude::*;
 
 /// A line of dialogue, sent from the [`Dialogue`] to the game.
 ///

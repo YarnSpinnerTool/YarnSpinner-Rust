@@ -3,7 +3,6 @@ mod command;
 mod dialogue;
 mod dialogue_option;
 mod events;
-mod feature_gates;
 mod line;
 pub mod markup;
 pub mod pluralization;
@@ -14,6 +13,7 @@ mod virtual_machine;
 pub use dialogue::Result;
 
 pub mod prelude {
+    pub(crate) use crate::virtual_machine::*;
     pub use crate::{
         analyser::*,
         command::*,
@@ -26,5 +26,5 @@ pub mod prelude {
         text_provider::*,
         variable_storage::*,
     };
-    pub(crate) use crate::{feature_gates::*, virtual_machine::*};
+    pub(crate) use yarn_slinger_core::prelude::*;
 }

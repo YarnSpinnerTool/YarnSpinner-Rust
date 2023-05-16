@@ -2,7 +2,6 @@
 
 use crate::prelude::*;
 use std::collections::HashMap;
-use yarn_slinger_core::prelude::*;
 
 /// Contains debug information for a node in a Yarn file.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

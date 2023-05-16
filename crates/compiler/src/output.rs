@@ -129,11 +129,11 @@ impl Compilation {
     all(feature = "bevy", feature = "serde"),
     reflect(Serialize, Deserialize)
 )]
-pub struct CompilationError {
+pub struct CompilerError {
     pub diagnostics: Vec<Diagnostic>,
 }
 
-impl Debug for CompilationError {
+impl Debug for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // This looks evil, but we support really nice error messages through Display,
         // which we want to print by default on `unwrap` and `expect`.
@@ -142,7 +142,7 @@ impl Debug for CompilationError {
     }
 }
 
-impl CompilationError {
+impl CompilerError {
     pub fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for diagnostic in &self.diagnostics {
             writeln!(f, "{:?}", diagnostic)?;
@@ -151,7 +151,7 @@ impl CompilationError {
     }
 }
 
-impl Display for CompilationError {
+impl Display for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for diagnostic in &self.diagnostics {
             writeln!(f, "{}", diagnostic)?;

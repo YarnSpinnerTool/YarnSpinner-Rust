@@ -1,5 +1,5 @@
-pub mod feature_gates;
-pub mod generated;
+mod feature_gates;
+mod generated;
 mod internal_value;
 mod library;
 mod line_id;
@@ -10,15 +10,18 @@ mod yarn_fn;
 mod yarn_value;
 
 pub mod prelude {
-    pub(crate) use crate::feature_gates::*;
     pub use crate::{
-        generated::*,
+        feature_gates::*,
+        generated::{
+            instruction::OpCode, operand::Value as OperandValue, Header, Instruction,
+            InvalidOpCodeError, Node, Operand, Program,
+        },
         internal_value::*,
         library::*,
         line_id::*,
         operator::*,
         position::*,
-        types::{self, Type},
+        types::Type,
         yarn_fn::*,
         yarn_value::*,
     };

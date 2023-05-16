@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Value.cs>
 
-use crate::prelude::types::Type;
 use crate::prelude::*;
+use crate::types::Type;
 
 /// A value as it appears to the compiler. It has additional type checker information
 /// and may represent values not constructable by the user, like functions.

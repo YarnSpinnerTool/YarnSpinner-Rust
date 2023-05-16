@@ -1,9 +1,9 @@
-use crate::prelude::types::*;
 use crate::prelude::*;
 use crate::types::any::any_type_properties;
 use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
+use crate::types::*;
 use paste::paste;
 use std::any::TypeId;
 use std::fmt::{Debug, Display};

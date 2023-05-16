@@ -40,7 +40,7 @@ pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIn
             .cloned()
             .chain(state.diagnostics.iter().cloned())
             .collect();
-        Err(CompilationError {
+        Err(CompilerError {
             diagnostics: total_diagnostics,
         })
     } else {
@@ -77,7 +77,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
 
     // Don't attempt to generate debug information if compilation produced errors
     if compiler_diagnostics.borrow().has_errors() {
-        Err(CompilationError {
+        Err(CompilerError {
             diagnostics: compiler_diagnostics.borrow().clone(),
         })
     } else {

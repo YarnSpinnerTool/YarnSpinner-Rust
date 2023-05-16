@@ -10,7 +10,7 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::ops::Deref;
 use std::rc::Rc;
-use yarn_slinger_core::prelude::instruction::OpCode;
+use yarn_slinger_core::prelude::OpCode;
 use yarn_slinger_core::prelude::*;
 use yarn_slinger_core::types::Type;
 
