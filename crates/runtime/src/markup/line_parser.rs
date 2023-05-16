@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/LineParser.cs>
 
-use crate::markup::markup_parse_result::ParsedMarkup;
+use crate::markup::parsed_markup::ParsedMarkup;
 use crate::markup::{
     AttributeMarkerProcessor, MarkupAttribute, MarkupAttributeMarker, MarkupParseError,
     MarkupValue, NoMarkupTextProcessor, TagType,

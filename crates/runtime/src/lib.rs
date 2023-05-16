@@ -21,6 +21,7 @@ pub mod prelude {
         dialogue_option::*,
         events::*,
         line::*,
+        markup::MarkupParseError,
         pluralization::*,
         text_provider::*,
         variable_storage::*,
