@@ -1,3 +1,4 @@
+use crate::assets::YarnFileAssetLoader;
 use bevy::prelude::*;
 use yarn_slinger::prelude::*;
 
@@ -5,7 +6,17 @@ pub struct YarnSlingerPlugin;
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<YarnCompiler>()
+        app.register_yarn_types().register_assets();
+    }
+}
+
+trait YarnApp {
+    fn register_yarn_types(&mut self) -> &mut Self;
+    fn register_assets(&mut self) -> &mut Self;
+}
+impl YarnApp for App {
+    fn register_yarn_types(&mut self) -> &mut Self {
+        self.register_type::<YarnCompiler>()
             .register_type::<YarnFile>()
             .register_type::<CompilationType>()
             .register_type::<Compilation>()
@@ -36,6 +47,11 @@ impl Plugin for YarnSlingerPlugin {
             .register_type::<yarn_slinger::runtime::DiagnosisSeverity>()
             .register_type::<yarn_slinger::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
-            .register_type::<MarkupValue>();
+            .register_type::<MarkupValue>()
+    }
+
+    fn register_assets(&mut self) -> &mut Self {
+        self.add_asset::<YarnFile>()
+            .init_asset_loader::<YarnFileAssetLoader>()
     }
 }

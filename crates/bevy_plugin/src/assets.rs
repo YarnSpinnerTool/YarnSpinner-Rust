@@ -6,10 +6,10 @@ use bevy::{
 };
 use yarn_slinger::prelude::*;
 
-#[derive(Default)]
-pub struct CustomAssetLoader;
+#[derive(Debug, Default)]
+pub struct YarnFileAssetLoader;
 
-impl AssetLoader for CustomAssetLoader {
+impl AssetLoader for YarnFileAssetLoader {
     fn load<'a>(
         &'a self,
         bytes: &'a [u8],
