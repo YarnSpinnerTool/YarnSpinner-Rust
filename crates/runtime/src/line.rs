@@ -6,6 +6,7 @@
 use crate::markup::{
     MarkupAttribute, MarkupValue, CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY,
 };
+use crate::prelude::*;
 use yarn_slinger_core::prelude::*;
 
 /// A line of dialogue, sent from the [`Dialogue`] to the game.
@@ -24,6 +25,13 @@ use yarn_slinger_core::prelude::*;
 ///
 /// `MarkupParseResult` was merged into this because we don't require consumers to manually fetch from string tables.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct Line {
     /// The ID of the line in the string table.
     pub id: LineId,

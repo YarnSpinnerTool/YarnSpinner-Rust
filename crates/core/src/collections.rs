@@ -33,19 +33,19 @@ impl<T: Debug + Clone> Queue<T> {
 /// Models the behaviour of <https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.stack-1>
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Stack<T: Debug + Clone>(pub VecDeque<T>);
+pub struct Stack<T: Debug + Clone>(pub Vec<T>);
 
 impl<T: Debug + Clone> Stack<T> {
     pub fn push(&mut self, value: T) {
-        self.0.push_back(value)
+        self.0.push(value)
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        self.0.pop_back()
+        self.0.pop()
     }
 
     pub fn peek(&self) -> Option<&T> {
-        self.0.back()
+        self.0.last()
     }
 
     pub fn is_empty(&self) -> bool {

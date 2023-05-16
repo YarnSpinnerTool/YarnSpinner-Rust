@@ -9,6 +9,13 @@ use crate::prelude::*;
 use yarn_slinger_core::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub enum DialogueEvent {
     Line(Line),
     Options(Vec<DialogueOption>),

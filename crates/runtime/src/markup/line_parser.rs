@@ -5,6 +5,7 @@ use crate::markup::{
     AttributeMarkerProcessor, MarkupAttribute, MarkupAttributeMarker, MarkupParseError,
     MarkupValue, NoMarkupTextProcessor, TagType,
 };
+use crate::prelude::*;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::{HashMap, VecDeque};
@@ -14,10 +15,19 @@ use unicode_segmentation::UnicodeSegmentation;
 pub type Result<T> = std::result::Result<T, MarkupParseError>;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub(crate) struct LineParser {
     // ## Implementation notes
     // We don't port `stringReader` because [`BufReader`] is not [`Clone`]
     /// A map for the names of attributes to an object that can generate replacement text for those attributes.
+    #[cfg_attr(feature = "bevy", reflect(ignore))]
+    #[cfg_attr(feature = "serde", serde(skip))]
     marker_processors: HashMap<String, Box<dyn AttributeMarkerProcessor>>,
     /// The original text that this line parser is parsing.
     input: String,

@@ -2,6 +2,7 @@
 //! which was split into multiple files.
 
 use crate::markup::{MarkupAttributeMarker, MarkupValue};
+use crate::prelude::*;
 use core::fmt::Display;
 use std::collections::HashMap;
 
@@ -13,6 +14,13 @@ use std::collections::HashMap;
 /// ## See also
 /// - [`Dialogue::parse_markup`]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct MarkupAttribute {
     /// The name of the attribute.
     pub name: String,
