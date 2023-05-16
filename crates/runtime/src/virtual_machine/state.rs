@@ -2,10 +2,16 @@
 
 use crate::prelude::*;
 use std::fmt::Debug;
-use yarn_slinger_core::collections::Stack;
 use yarn_slinger_core::prelude::*;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub(crate) struct State {
     /// The instruction number in the current node.
     pub(crate) program_counter: usize,
@@ -15,7 +21,7 @@ pub(crate) struct State {
     pub(crate) current_options: Vec<DialogueOption>,
 
     /// The value stack.
-    pub(crate) stack: Stack<InternalValue>,
+    pub(crate) stack: Vec<InternalValue>,
 }
 
 impl State {
@@ -64,7 +70,7 @@ impl State {
     /// - Panics if the value cannot be converted to the specified type.
     pub(crate) fn peek_value(&self) -> &InternalValue {
         self.stack
-            .peek()
+            .last()
             .unwrap_or_else(|| panic!("Tried to peek value, but the stack was empty."))
     }
 }

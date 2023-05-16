@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 //! and <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationJob.cs>
 
-use crate::output::*;
+use crate::prelude::*;
 use std::path::Path;
 use yarn_slinger_core::prelude::*;
 
@@ -9,7 +9,7 @@ pub(crate) mod antlr_rust_ext;
 pub(crate) mod run_compilation;
 pub(crate) mod utils;
 
-pub type Result<T> = std::result::Result<T, CompilationError>;
+pub type Result<T> = std::result::Result<T, CompilerError>;
 
 /// An object that contains Yarn source code to compile, and instructions on
 /// how to compile it.
@@ -20,11 +20,20 @@ pub type Result<T> = std::result::Result<T, CompilationError>;
 ///
 /// This type is a combination of the original `CompilationStep` and `Compiler` types, optimized for easier, fluent calling.
 #[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct Compiler {
     /// The [`File`] structs that represent the content to parse..
     pub files: Vec<File>,
 
     /// The [`Library`] that contains declarations for functions.
+    #[cfg_attr(feature = "bevy", reflect(ignore))]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub library: Library,
 
     /// The types of compilation that the compiler will do.
@@ -80,6 +89,13 @@ impl Compiler {
 
 /// Represents the contents of a file to compile.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct File {
     /// The name of the file.
     ///
@@ -94,6 +110,13 @@ pub struct File {
 
 /// The types of compilation that the compiler will do.
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash, Default))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub enum CompilationType {
     /// The compiler will do a full compilation, and generate a [`Program`],
     /// function declaration set, and string table.

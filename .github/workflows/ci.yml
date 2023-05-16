@@ -9,6 +9,7 @@ env:
   CARGO_TERM_COLOR: always
   # Sparse cargo registry for faster updates
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  CARGO_INCREMENTAL: 1
 
 jobs:
   lint:
@@ -24,12 +25,14 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
+      - name: Run cargo clippy for serde
+        run: cargo clippy --workspace --features serde
+      - name: Run cargo clippy for bevy
+        run: cargo clippy --workspace --features bevy
 
   format:
     runs-on: ubuntu-latest
@@ -43,8 +46,6 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo fmt
@@ -59,8 +60,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
       - name: Run cargo test

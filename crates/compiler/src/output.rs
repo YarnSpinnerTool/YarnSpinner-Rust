@@ -2,7 +2,7 @@
 
 use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
-use crate::prelude::StringTableManager;
+use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
@@ -20,7 +20,14 @@ mod string_info;
 ///
 /// In contrast to the original implementation, where this struct was called a `CompilationResult`, we return
 /// an actual [`Result`], so this type is guaranteed to only hold warnings as opposed to all diagnostics.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, Default))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct Compilation {
     /// The compiled Yarn program that the [`Compiler`] produced.
     /// produced.
@@ -114,12 +121,19 @@ impl Compilation {
     }
 }
 
-#[derive(Error)]
-pub struct CompilationError {
+#[derive(Error, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
+pub struct CompilerError {
     pub diagnostics: Vec<Diagnostic>,
 }
 
-impl Debug for CompilationError {
+impl Debug for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // This looks evil, but we support really nice error messages through Display,
         // which we want to print by default on `unwrap` and `expect`.
@@ -128,7 +142,7 @@ impl Debug for CompilationError {
     }
 }
 
-impl CompilationError {
+impl CompilerError {
     pub fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for diagnostic in &self.diagnostics {
             writeln!(f, "{:?}", diagnostic)?;
@@ -137,7 +151,7 @@ impl CompilationError {
     }
 }
 
-impl Display for CompilationError {
+impl Display for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for diagnostic in &self.diagnostics {
             writeln!(f, "{}", diagnostic)?;

@@ -1,6 +1,5 @@
 //! Contains extensions to generated types that in the original implementation are sprinkled around the repo via partial classes
 
-use crate::prelude::instruction::OpCode;
 use crate::prelude::*;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
@@ -8,7 +7,7 @@ use thiserror::Error;
 impl From<String> for Operand {
     fn from(s: String) -> Self {
         Self {
-            value: Some(operand::Value::StringValue(s)),
+            value: Some(OperandValue::StringValue(s)),
         }
     }
 }
@@ -16,7 +15,7 @@ impl From<String> for Operand {
 impl From<f32> for Operand {
     fn from(f: f32) -> Self {
         Self {
-            value: Some(operand::Value::FloatValue(f)),
+            value: Some(OperandValue::FloatValue(f)),
         }
     }
 }
@@ -30,7 +29,7 @@ impl From<usize> for Operand {
 impl From<bool> for Operand {
     fn from(b: bool) -> Self {
         Self {
-            value: Some(operand::Value::BoolValue(b)),
+            value: Some(OperandValue::BoolValue(b)),
         }
     }
 }
@@ -40,7 +39,7 @@ impl TryFrom<Operand> for String {
 
     fn try_from(value: Operand) -> Result<Self, Self::Error> {
         match value.value {
-            Some(operand::Value::StringValue(s)) => Ok(s),
+            Some(OperandValue::StringValue(s)) => Ok(s),
             _ => Err(()),
         }
     }
@@ -51,7 +50,7 @@ impl TryFrom<Operand> for f32 {
 
     fn try_from(value: Operand) -> Result<Self, Self::Error> {
         match value.value {
-            Some(operand::Value::FloatValue(f)) => Ok(f),
+            Some(OperandValue::FloatValue(f)) => Ok(f),
             _ => Err(()),
         }
     }
@@ -67,7 +66,7 @@ impl TryFrom<Operand> for usize {
             // valid type, but doing that implies that the
             // language differentiates between floats and
             // ints, which it doesn't.
-            Some(operand::Value::FloatValue(f)) => Ok(f as usize),
+            Some(OperandValue::FloatValue(f)) => Ok(f as usize),
             _ => Err(()),
         }
     }
@@ -78,7 +77,7 @@ impl TryFrom<Operand> for bool {
 
     fn try_from(value: Operand) -> Result<Self, Self::Error> {
         match value.value {
-            Some(operand::Value::BoolValue(b)) => Ok(b),
+            Some(OperandValue::BoolValue(b)) => Ok(b),
             _ => Err(()),
         }
     }
@@ -88,9 +87,9 @@ impl From<Operand> for YarnValue {
     fn from(value: Operand) -> Self {
         let value = value.value.unwrap();
         match value {
-            operand::Value::StringValue(s) => s.into(),
-            operand::Value::FloatValue(f) => f.into(),
-            operand::Value::BoolValue(b) => b.into(),
+            OperandValue::StringValue(s) => s.into(),
+            OperandValue::FloatValue(f) => f.into(),
+            OperandValue::BoolValue(b) => b.into(),
         }
     }
 }
@@ -122,7 +121,14 @@ impl TryFrom<i32> for OpCode {
     }
 }
 
-#[derive(Debug, Clone, Copy, Error)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct InvalidOpCodeError(pub i32);
 
 impl Display for InvalidOpCodeError {

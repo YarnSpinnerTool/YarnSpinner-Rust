@@ -1,7 +1,15 @@
 use crate::markup::TRIM_WHITESPACE_PROPERTY;
+use crate::prelude::*;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub enum MarkupParseError {
     #[error("Error parsing line {input}: attribute {name:?} at position {position} has a {type_} property \"{TRIM_WHITESPACE_PROPERTY}\" - this property is required to be a boolean value.")]
     TrimWhitespaceAttributeIsNotBoolean {

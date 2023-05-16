@@ -4,14 +4,19 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
+[features]
+default = []
+serde = ["dep:serde", "bevy?/serialize"]
+bevy = ["dep:bevy"]
+
 [dependencies]
 bytes = "1"
 paste = "1"
-prost = "0.11"
 yarn_slinger_macros = { path = "../macros" }
-strum = "0.24.1"
+strum = "0.24"
 strum_macros = "0.24"
 thiserror = "1"
+prost = "0.11"
+serde = { version = "1", features = ["derive"] , optional = true }
+bevy = { version = "0.10", default-features = false, optional = true }
 
-[build-dependencies]
-prost-build = "0.11"

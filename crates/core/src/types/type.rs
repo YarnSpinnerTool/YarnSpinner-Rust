@@ -1,9 +1,9 @@
-use crate::prelude::types::*;
 use crate::prelude::*;
 use crate::types::any::any_type_properties;
 use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
+use crate::types::*;
 use paste::paste;
 use std::any::TypeId;
 use std::fmt::{Debug, Display};
@@ -23,7 +23,14 @@ use thiserror::Error;
 /// This type does not exist in the original implementation and was a added as a more idiomatic
 /// representation of the types than dynamic dispatch. The `Undefined` "variant", which was a simple `null`,
 /// was also replaced by the more idiomatic `Option::None`.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub enum Type {
     #[default]
     Any,

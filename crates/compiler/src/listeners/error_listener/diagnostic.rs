@@ -21,6 +21,13 @@ use yarn_slinger_core::prelude::*;
 ///
 /// The properties marked as `Obsolete` were not implemented.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct Diagnostic {
     /// The path, URI or file-name that the issue occurred in.
     pub file_name: Option<String>,
@@ -176,6 +183,13 @@ impl DiagnosticVec for Vec<Diagnostic> {
 ///
 /// The `Info` variant was not implemented because it was unused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, strum_macros::Display)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default, Hash))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub enum DiagnosticSeverity {
     /// An error.
     ///

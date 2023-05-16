@@ -1,13 +1,10 @@
 use icu_datagen::prelude::*;
 use icu_plurals::provider::*;
 use icu_provider_adapters::fallback::provider::*;
-use std::path::PathBuf;
+use yarn_slinger_codegen::*;
 
 fn main() {
-    println!("cargo:rerun-if-changed=build.rs");
-
-    let out_dir = std::env::var_os("OUT_DIR").unwrap();
-    let mod_directory = PathBuf::from(out_dir).join("icu");
+    let mod_directory = path(ProjectPath::Runtime).join("src/pluralization/icu");
 
     let options = {
         let mut options = BakedOptions::default();

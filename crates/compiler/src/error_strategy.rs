@@ -12,7 +12,7 @@ use antlr_rust::tree::Tree;
 use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 use std::rc::Rc;
 
-pub struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
+pub(crate) struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
     default_error_strategy: DefaultErrorStrategy<'input, Ctx>,
 }
 

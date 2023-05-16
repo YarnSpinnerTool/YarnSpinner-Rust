@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Value.cs>
 
-use crate::prelude::types::Type;
 use crate::prelude::*;
+use crate::types::Type;
 
 /// A value as it appears to the compiler. It has additional type checker information
 /// and may represent values not constructable by the user, like functions.
@@ -12,6 +12,13 @@ use crate::prelude::*;
 ///
 /// Corresponds to the internal `Value` class in the original C# implementation.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(
+    all(feature = "bevy", feature = "serde"),
+    reflect(Serialize, Deserialize)
+)]
 pub struct InternalValue {
     /// The proper Yarn type of this value according to the type checker.
     pub r#type: Type,

@@ -20,6 +20,8 @@ use yarn_slinger_core::prelude::*;
 /// [`Dialogue`] also implements [`Deref`] for [`ReadOnlyDialogue`], so you don't need to worry about this distinction if
 /// you're only calling the [`Dialogue`] from outside handlers.
 #[derive(Debug)]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
+#[cfg_attr(feature = "bevy", reflect(Debug))]
 pub struct Dialogue {
     vm: VirtualMachine,
     language_code: Option<String>,

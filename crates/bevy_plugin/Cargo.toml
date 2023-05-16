@@ -1,0 +1,16 @@
+[package]
+name = "bevy_yarn_slinger"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[features]
+default = []
+serde = ["yarn_slinger/serde", "bevy/serialize"]
+
+[dependencies]
+yarn_slinger = { path = "../yarn_slinger", features = ["bevy"] }
+
+[dependencies.bevy]
+version = "0.10"
+default-features = false

@@ -17,7 +17,7 @@ use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::visitors::{CodeGenerationVisitor, KnownTypes};
 pub(crate) use emit::*;
-use yarn_slinger_core::prelude::instruction::OpCode;
+use yarn_slinger_core::prelude::OpCode;
 
 pub(crate) struct CompilerListener<'input> {
     pub(crate) debug_infos: Rc<RefCell<Vec<DebugInfo>>>,

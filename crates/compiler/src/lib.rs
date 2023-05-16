@@ -1,3 +1,4 @@
+mod collections;
 pub(crate) mod compilation_steps;
 pub(crate) mod compiler;
 pub(crate) mod error_strategy;
@@ -23,4 +24,5 @@ pub mod prelude {
         listeners::{Diagnostic, DiagnosticSeverity},
         output::*,
     };
+    pub(crate) use yarn_slinger_core::prelude::*;
 }
