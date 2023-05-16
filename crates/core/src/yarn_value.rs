@@ -6,7 +6,7 @@ use thiserror::Error;
 /// with the type being inferred from the type checker.
 ///
 /// The type implements meaningful conversions between types through [`TryFrom`] and [`From`].
-/// A failure to convert one variant to another will result in an [`InvalidCastError`].
+/// A failure to convert one variant to another will result in an [`YarnValueCastError`].
 ///
 /// ## Implementation Notes
 ///
@@ -64,7 +64,7 @@ macro_rules! impl_floating_point {
             }
 
             impl TryFrom<YarnValue> for $from_type {
-                type Error = InvalidCastError;
+                type Error = YarnValueCastError;
 
                 fn try_from(value: YarnValue) -> Result<Self, Self::Error> {
                     match value {
@@ -97,7 +97,7 @@ macro_rules! impl_whole_number {
             }
 
             impl TryFrom<YarnValue> for $from_type {
-                type Error = InvalidCastError;
+                type Error = YarnValueCastError;
 
                 fn try_from(value: YarnValue) -> Result<Self, Self::Error> {
                     f32::try_from(value).map(|value| value as $from_type)
@@ -145,7 +145,7 @@ impl IntoYarnValueFromNonYarnValue for String {
 }
 
 impl TryFrom<YarnValue> for bool {
-    type Error = InvalidCastError;
+    type Error = YarnValueCastError;
 
     fn try_from(value: YarnValue) -> Result<Self, Self::Error> {
         match value {
@@ -170,7 +170,7 @@ impl IntoYarnValueFromNonYarnValue for bool {
 
 #[derive(Error, Debug)]
 /// Represents a failure to convert one variant of [`YarnValue`] to a base type.
-pub enum InvalidCastError {
+pub enum YarnValueCastError {
     #[error(transparent)]
     ParseFloatError(#[from] std::num::ParseFloatError),
     #[error(transparent)]

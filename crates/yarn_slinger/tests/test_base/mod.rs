@@ -16,9 +16,12 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::result::Result;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use yarn_slinger::prelude::*;
+use yarn_slinger::compiler::*;
+use yarn_slinger::core::*;
+use yarn_slinger::runtime::*;
 
 mod extensions;
 mod logger;

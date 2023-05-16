@@ -15,7 +15,9 @@
 //! - `TestBuiltinTypesAreEnumerated`
 
 use test_base::prelude::*;
-use yarn_slinger::prelude::*;
+use yarn_slinger::compiler::*;
+use yarn_slinger::core::*;
+use yarn_slinger::runtime::*;
 
 mod test_base;
 

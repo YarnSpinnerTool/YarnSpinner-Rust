@@ -1,49 +1,34 @@
 use crate::pluralization::generated::generate_provider;
 use fixed_decimal::{DoublePrecision, FixedDecimal};
 use icu_locid::Locale;
-pub use icu_plurals::{PluralCategory, PluralRuleType};
+use icu_plurals::{PluralCategory, PluralRuleType};
 use icu_plurals::{PluralOperands, PluralRules};
 use icu_provider::DataLocale;
 
 mod generated;
 
 #[derive(Debug)]
-pub struct Pluralization {
-    locale: Locale,
+pub(crate) struct Pluralization {
     cardinal_rules: PluralRules,
     ordinal_rules: PluralRules,
 }
 
 impl Pluralization {
-    pub fn new(locale: &str) -> Self {
+    pub(crate) fn new(locale: &str) -> Self {
         let locale: Locale = locale.parse().unwrap();
         let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&locale);
         Self {
-            locale,
             cardinal_rules,
             ordinal_rules,
         }
     }
 
-    pub fn replace_locale(&mut self, locale: &str) -> &mut Self {
-        let locale: Locale = locale.parse().unwrap();
-        if self.locale == locale {
-            return self;
-        }
-        self.locale = locale;
-        let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&self.locale);
-        self.cardinal_rules = cardinal_rules;
-        self.ordinal_rules = ordinal_rules;
-
-        self
-    }
-
-    pub fn get_cardinal_plural_case(&self, value: f32) -> PluralCategory {
+    pub(crate) fn get_cardinal_plural_case(&self, value: f32) -> PluralCategory {
         let value = get_into_plural_operand(value);
         self.cardinal_rules.category_for(value)
     }
 
-    pub fn get_ordinal_plural_case(&self, value: f32) -> PluralCategory {
+    pub(crate) fn get_ordinal_plural_case(&self, value: f32) -> PluralCategory {
         let value = get_into_plural_operand(value);
         self.ordinal_rules.category_for(value)
     }

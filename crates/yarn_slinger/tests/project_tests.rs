@@ -6,7 +6,7 @@
 //!   This is only used in a certain section of the Unity project importer.
 
 use test_base::prelude::*;
-use yarn_slinger::prelude::*;
+use yarn_slinger::compiler::*;
 
 mod test_base;
 
