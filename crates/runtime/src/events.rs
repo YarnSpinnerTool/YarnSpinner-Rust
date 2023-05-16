@@ -16,11 +16,25 @@ use yarn_slinger_core::prelude::*;
     all(feature = "bevy", feature = "serde"),
     reflect(Serialize, Deserialize)
 )]
+/// An event encountered while running [`Dialogue::continue_`]. A caller is expected to handle these events and act accordingly.
+///
+/// ## Implementation note
+///
+/// Corresponds to Yarn Spinner's `<EventName>Handler`s.
 pub enum DialogueEvent {
+    /// A [`Line`] should be presented to the user.
     Line(Line),
+    /// A list of [`DialogueOption`]s should be presented to the user, who in turns must select one of them.
+    /// The selected option must be communicated to the [`Dialogue`] via [`Dialogue::set_selected_option`] before calling [`Dialogue::continue_`] again.
     Options(Vec<DialogueOption>),
+    /// A [`Command`] should be executed.
+    ///
+    /// It is not specified whether the command should be finished executing before calling [`Dialogue::continue_`] again or it is run in parallel.
+    /// A library wrapping Yarn Slinger for a game engine should specify this.
     Command(Command),
+    /// The node with the given name was completed.
     NodeComplete(String),
+    /// The node with the given name was entered.
     NodeStart(String),
     /// Only emitted if `Dialogue::should_send_line_hints` is enabled.
     ///
@@ -31,5 +45,6 @@ pub enum DialogueEvent {
     ///
     /// Corresponds to Yarn Spinner's `PrepareForLinesHandler`
     LineHints(Vec<LineId>),
+    /// The dialogue was completed. Set it to a new node via [`Dialogue::set_node`] or [`Dialogue::set_node_to_start`] before calling [`Dialogue::continue_`] again.
     DialogueComplete,
 }
