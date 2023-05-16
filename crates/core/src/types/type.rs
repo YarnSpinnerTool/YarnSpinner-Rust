@@ -24,6 +24,7 @@ use thiserror::Error;
 /// representation of the types than dynamic dispatch. The `Undefined` "variant", which was a simple `null`,
 /// was also replaced by the more idiomatic `Option::None`.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Type {
     #[default]
     Any,

@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Types/FunctionType.cs>
 
 use crate::prelude::types::TypeProperties;
+use crate::prelude::*;
 use crate::types::{Type, TypeFormat};
 use std::fmt::Display;
 
@@ -9,6 +10,7 @@ pub(crate) fn function_type_properties(function_type: &FunctionType) -> TypeProp
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FunctionType {
     pub parameters: Vec<Option<Type>>,
     // Needs to be on the heap because of type recursion
