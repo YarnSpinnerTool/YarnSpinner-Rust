@@ -1,3 +1,4 @@
+mod collections;
 pub(crate) mod compilation_steps;
 pub(crate) mod compiler;
 pub(crate) mod error_strategy;

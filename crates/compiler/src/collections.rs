@@ -1,6 +1,5 @@
 //! Thin newtypes around existing collections to better express their intent in regards to the corresponding dotnet types.
 
-use crate::prelude::*;
 use std::{collections::VecDeque, fmt::Debug};
 
 /// Represents a FIFO (First-In, First-Out) collection.
@@ -17,14 +16,6 @@ impl<T: Debug + Clone> Queue<T> {
 
     pub fn dequeue(&mut self) -> Option<T> {
         self.0.pop_front()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    pub fn clear(&mut self) {
-        self.0.clear()
     }
 }
 
@@ -46,14 +37,6 @@ impl<T: Debug + Clone> Stack<T> {
 
     pub fn peek(&self) -> Option<&T> {
         self.0.last()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    pub fn clear(&mut self) {
-        self.0.clear()
     }
 }
 

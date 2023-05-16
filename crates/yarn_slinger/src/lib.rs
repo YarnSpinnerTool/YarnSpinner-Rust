@@ -6,8 +6,10 @@ pub mod prelude {
     }
     pub use yarn_slinger_core::generated::*;
     pub use yarn_slinger_core::prelude::{
-        InvalidCastError, Library, LineId, Operator, Position, Program, YarnFn, YarnFnRegistry,
-        YarnValue,
+        InvalidCastError, Library, LineId, Operator, Position, Program, Type, YarnFn,
+        YarnFnRegistry, YarnValue,
     };
-    pub use yarn_slinger_runtime::prelude::*;
+    pub mod runtime {
+        pub use yarn_slinger_runtime::prelude::*;
+    }
 }

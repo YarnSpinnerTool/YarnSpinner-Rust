@@ -27,15 +27,16 @@ impl Plugin for YarnSlingerPlugin {
             .register_type::<Instruction>()
             .register_type::<instruction::OpCode>()
             .register_type::<Operand>()
+            .register_type::<Type>()
             .register_type::<operand::Value>()
-            .register_type::<Command>()
-            .register_type::<Dialogue>()
-            .register_type::<DialogueOption>()
-            .register_type::<OptionId>()
-            .register_type::<DialogueEvent>()
-            .register_type::<Line>()
-            .register_type::<Diagnosis>()
-            .register_type::<DiagnosisSeverity>()
-            .register_type::<MarkupParseError>();
+            .register_type::<runtime::Command>()
+            .register_type::<runtime::Dialogue>()
+            .register_type::<runtime::DialogueOption>()
+            .register_type::<runtime::OptionId>()
+            .register_type::<runtime::DialogueEvent>()
+            .register_type::<runtime::Line>()
+            .register_type::<runtime::Diagnosis>()
+            .register_type::<runtime::DiagnosisSeverity>()
+            .register_type::<runtime::MarkupParseError>();
     }
 }

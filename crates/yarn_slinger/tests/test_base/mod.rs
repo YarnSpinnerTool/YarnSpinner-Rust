@@ -18,8 +18,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use yarn_slinger::prelude::*;
-use yarn_slinger_core::prelude::*;
+use yarn_slinger::prelude::{compiler::*, runtime::*, *};
 
 mod extensions;
 mod logger;

@@ -8,6 +8,7 @@
 use super::generated::yarnspinnerlexer::{
     self, LocalTokenFactory, YarnSpinnerLexer as GeneratedYarnSpinnerLexer,
 };
+use crate::collections::*;
 use crate::listeners::Diagnostic;
 use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
 use antlr_rust::token::CommonToken;
@@ -20,7 +21,6 @@ use antlr_rust::{
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
 use std::rc::Rc;
-use yarn_slinger_core::collections::*;
 use yarn_slinger_core::prelude::*;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.

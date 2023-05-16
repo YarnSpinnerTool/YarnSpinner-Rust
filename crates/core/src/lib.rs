@@ -1,4 +1,3 @@
-pub mod collections;
 pub mod feature_gates;
 pub mod generated;
 mod internal_value;
