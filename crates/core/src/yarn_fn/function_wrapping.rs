@@ -1,6 +1,4 @@
 use crate::prelude::*;
-#[cfg(feature = "bevy")]
-use bevy_reflect::{FromReflect, Reflect};
 use std::any::TypeId;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
@@ -41,7 +39,7 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
-pub trait UntypedYarnFn: Debug + Display + Send + Sync + FeatureTraits {
+pub trait UntypedYarnFn: Debug + Display + Send + Sync {
     fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -57,7 +55,7 @@ impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static,
-    F: YarnFn<Marker> + 'static + Clone + Send + Sync + FeatureTraits,
+    F: YarnFn<Marker> + 'static + Clone + Send + Sync,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
     fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue {
@@ -78,7 +76,6 @@ where
     }
 }
 
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 pub(crate) struct YarnFnWrapper<Marker, F>
 where
     F: YarnFn<Marker>,
@@ -87,7 +84,6 @@ where
     function: F,
 
     // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
-    #[cfg_attr(feature = "bevy", reflect(ignore))]
     _marker: PhantomData<fn() -> Marker>,
 }
 

@@ -1,6 +1,4 @@
 use crate::prelude::*;
-#[cfg(feature = "bevy")]
-use bevy_reflect::{FromReflect, Reflect};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
@@ -9,7 +7,6 @@ use std::ops::{Deref, DerefMut};
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 pub struct YarnFnRegistry(pub InnerRegistry);
 
 type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
