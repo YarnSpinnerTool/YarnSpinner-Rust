@@ -4,7 +4,9 @@
 //! `TestDumpingCode` was not ported because `GetByteCode` is not used by a user directly and thus was not implemented at all.
 
 use test_base::prelude::*;
-use yarn_slinger::prelude::*;
+use yarn_slinger::compiler::*;
+use yarn_slinger::core::*;
+use yarn_slinger::runtime::*;
 
 mod test_base;
 

@@ -2,7 +2,7 @@
 
 use crate::test_base::*;
 use test_base::prelude::*;
-use yarn_slinger::prelude::*;
+use yarn_slinger::compiler::*;
 
 mod test_base;
 
