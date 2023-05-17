@@ -69,5 +69,5 @@ fn parse_source<'a, 'b: 'a>(
 
     let result = parse_syntax_tree(file, chars, &mut diagnostics);
 
-    return (result, diagnostics);
+    (result, diagnostics)
 }
