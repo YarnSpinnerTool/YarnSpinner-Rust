@@ -1,3 +1,5 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Utils.cs>
+
 use crate::listeners::{DiagnosticVec, UntaggedLineListener};
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::*;
@@ -25,9 +27,10 @@ impl Compiler {
     /// ## Return value
     /// Returns he modified source code, with line tags added.
     pub fn add_tags_to_lines(
-        contents: String,
+        contents: impl Into<String>,
         existing_line_tags: Vec<String>,
     ) -> crate::Result<String> {
+        let contents = contents.into();
         let chars: Vec<_> = contents.chars().map(|c| c as u32).collect();
         // First, get the parse tree for this source code.
         let file = File {

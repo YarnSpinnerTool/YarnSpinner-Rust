@@ -5,11 +5,11 @@ use crate::prelude::*;
 use std::path::Path;
 use yarn_slinger_core::prelude::*;
 
+mod add_tags_to_lines;
 pub(crate) mod antlr_rust_ext;
-mod append_line_ids;
 pub(crate) mod run_compilation;
 pub(crate) mod utils;
-pub use append_line_ids::*;
+pub use add_tags_to_lines::*;
 
 pub type Result<T> = std::result::Result<T, CompilerError>;
 
@@ -74,7 +74,7 @@ impl Compiler {
         self
     }
 
-    pub fn compile_until(&mut self, compilation_type: CompilationType) -> &mut Self {
+    pub fn with_compilation_type(&mut self, compilation_type: CompilationType) -> &mut Self {
         self.compilation_type = compilation_type;
         self
     }

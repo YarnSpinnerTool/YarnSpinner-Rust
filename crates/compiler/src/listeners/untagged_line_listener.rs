@@ -1,3 +1,5 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Utils.cs>
+
 use crate::parser::generated::yarnspinnerparser::Line_statementContext;
 use crate::prelude::generated::yarnspinnerparser::{
     Line_statementContextAttrs, YarnSpinnerParserContextType,
@@ -91,11 +93,13 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         // Record that we've used this new line ID, so that we don't
         // accidentally use it twice.
         self.existing_line_tags.push(new_line_id.clone());
+
         let string_index = previous_token.stop as usize + 1;
+        let byte_index = string_index * std::mem::size_of::<char>();
 
         self.rewritten_nodes
             .borrow_mut()
-            .insert_str(string_index, &format!(" #{new_line_id} "));
+            .insert_str(byte_index, &format!(" #{new_line_id} "));
     }
 }
 
