@@ -96,8 +96,13 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
 <<endif>>
 ===";
     {
+        let file = File {
+            file_name: "input".to_string(),
+            source: original_text.to_string(),
+        };
         // This original input should compile without errors.
-        Compiler::from_test_source(original_text)
+        Compiler::new()
+            .add_file(file)
             .with_compilation_type(CompilationType::StringsOnly)
             .compile()
             .unwrap();
@@ -106,7 +111,13 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
     // Act
 
     let output = Compiler::add_tags_to_lines(original_text, Vec::new()).unwrap();
-    let compilation = Compiler::from_test_source(&output)
+
+    let file = File {
+        file_name: "input".to_string(),
+        source: output.clone(),
+    };
+    let compilation = Compiler::new()
+        .add_file(file)
         .with_compilation_type(CompilationType::StringsOnly)
         .compile()
         .unwrap();

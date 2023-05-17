@@ -112,7 +112,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             }
         };
 
-        let line_number = ctx.start().get_column_as_usize();
+        let line_number = ctx.start().get_line_as_usize();
         let hashtag_texts = get_hashtag_texts(&hashtags);
 
         let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
