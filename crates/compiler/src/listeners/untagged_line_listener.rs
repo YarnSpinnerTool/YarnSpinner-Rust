@@ -93,25 +93,12 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         // accidentally use it twice.
         self.existing_line_tags.push(new_line_id.clone());
 
-        let string_index = previous_token.stop as usize - 1 + self.offset;
+        let mut string_index = previous_token.stop as usize + self.offset;
+        while !self.rewritten_nodes.borrow().is_char_boundary(string_index) {
+            string_index += 1;
+        }
         let inserted = format!(" #{new_line_id} ");
         self.offset += inserted.len();
-        let content = self.rewritten_nodes.borrow().clone();
-        if !content.is_char_boundary(string_index) {
-            let mut last_char_boundary = string_index;
-            while !content.is_char_boundary(last_char_boundary) {
-                last_char_boundary -= 1;
-            }
-            let mut next_char_boundary = string_index;
-            while !content.is_char_boundary(next_char_boundary) {
-                next_char_boundary += 1;
-            }
-            let mut context = content[last_char_boundary..next_char_boundary].to_string();
-            panic!(
-                "index {} with offset {} is not a char boundary. Context: {} ({last_char_boundary}:{next_char_boundary})",
-                string_index, self.offset, context
-            );
-        }
         self.rewritten_nodes
             .borrow_mut()
             .insert_str(string_index, &inserted);
@@ -130,7 +117,7 @@ fn index_of_previous_token_on_channel(
 ) -> Option<isize> {
     let default_token_channel = 0;
     // Are we beyond the list of tokens?
-    if index > token_stream.size() {
+    if index >= token_stream.size() {
         // Return the final token in the channel, which will be an EOF.
         return Some(token_stream.size() - 1);
     }
