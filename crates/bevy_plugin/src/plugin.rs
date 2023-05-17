@@ -54,6 +54,6 @@ impl YarnApp for App {
     fn register_assets(&mut self) -> &mut Self {
         self.add_asset::<YarnFile>()
             .init_asset_loader::<YarnFileAssetLoader>()
-            .init_resource::<YarnSlingerConfig>()
+            .init_resource::<YarnSlingerLocalizationConfig>()
     }
 }

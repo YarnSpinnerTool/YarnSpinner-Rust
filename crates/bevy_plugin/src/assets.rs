@@ -1,4 +1,4 @@
-use crate::config::YarnSlingerConfig;
+use crate::config::YarnSlingerLocalizationConfig;
 use anyhow::Context;
 use bevy::asset::LoadedAsset;
 use bevy::{
@@ -9,7 +9,7 @@ use yarn_slinger::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct YarnFileAssetLoader {
-    config: YarnSlingerConfig,
+    config: YarnSlingerLocalizationConfig,
 }
 
 impl AssetLoader for YarnFileAssetLoader {
