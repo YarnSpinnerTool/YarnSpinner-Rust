@@ -6,8 +6,10 @@ use std::path::Path;
 use yarn_slinger_core::prelude::*;
 
 pub(crate) mod antlr_rust_ext;
+mod append_line_ids;
 pub(crate) mod run_compilation;
 pub(crate) mod utils;
+pub use append_line_ids::*;
 
 pub type Result<T> = std::result::Result<T, CompilerError>;
 

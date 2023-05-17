@@ -163,7 +163,7 @@ fn generate_formatted_text(ctx: &Line_formatted_textContext) -> String {
     composed_string.trim().to_owned()
 }
 
-fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
+pub(crate) fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
     hashtags
         .iter()
         .map(|t| {
