@@ -2,7 +2,7 @@ use bevy::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Configuration for the [`YarnSlingerPlugin`]. Its default variant is inserted when the plugin is added.
+/// Configuration for the [`YarnSlingerPlugin`](crate::prelude::YarnSlingerPlugin). Its default variant is inserted when the plugin is added.
 #[derive(Debug, Clone, PartialEq, Eq, Resource, Reflect, FromReflect)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[reflect(Resource, PartialEq, Default)]
