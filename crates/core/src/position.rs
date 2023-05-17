@@ -14,5 +14,6 @@ pub struct Position {
     pub line: usize,
 
     /// The zero-indexed character number of this position.
+    /// Careful: This represents a unicode code point, not a byte, i.e. what you'd get with `string.chars().nth(character)`.
     pub character: usize,
 }

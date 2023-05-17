@@ -102,7 +102,7 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         let insertion_index = line
             .char_indices()
             .map(|(byte_pos, _char)| byte_pos)
-            .nth(previous_token.column as usize)
+            .nth(previous_token.get_column_as_usize())
             .unwrap_or_else(||
                 panic!("Internal error: failed to convert char pos to byte pos for insertion index on line {line_index}. \
                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"))

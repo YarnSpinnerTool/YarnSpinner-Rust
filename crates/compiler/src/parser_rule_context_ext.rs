@@ -44,13 +44,23 @@ pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {
     ) -> LinesAroundResult {
         // This seems expensive, but it's only used for error reporting.
         let whole_file = token_stream.get_all_text();
-        let start = self.start().get_start() as usize;
-        let stop = self.stop().get_stop() as usize + 1;
+        let char_start = self.start().get_start() as usize;
+        let char_stop = self.stop().get_stop() as usize + 1;
+        let byte_start = whole_file
+            .char_indices()
+            .map(|(byte_start, _)| byte_start)
+            .nth(char_start)
+            .unwrap();
+        let byte_stop = whole_file
+            .char_indices()
+            .map(|(byte_start, _)| byte_start)
+            .nth(char_stop)
+            .unwrap();
         let first_line = self.start().get_line_as_usize().saturating_sub(1);
 
-        let head = &whole_file[..start];
-        let body = &whole_file[start..stop];
-        let tail = &whole_file[stop..];
+        let head = &whole_file[..byte_start];
+        let body = &whole_file[byte_start..byte_stop];
+        let tail = &whole_file[byte_stop..];
 
         let head_lines_to_take = if head.ends_with('\n') || body.starts_with('\n') {
             surrounding_lines
