@@ -35,7 +35,7 @@ impl Compiler {
         // First, get the parse tree for this source code.
         let file = File {
             file_name: "<input>".to_string(),
-            source: contents.clone(),
+            source: contents,
         };
         let (parse_source, diagnostics) = parse_source(&file, &chars);
         let tree = parse_source.tree.clone();
@@ -46,11 +46,8 @@ impl Compiler {
         }
 
         // Create the line listener, which will produce TextReplacements for each new line tag.
-        let untagged_line_listener = Box::new(UntaggedLineListener::new(
-            existing_line_tags,
-            parse_source,
-            contents,
-        ));
+        let untagged_line_listener =
+            Box::new(UntaggedLineListener::new(existing_line_tags, parse_source));
         let rewritten_nodes = untagged_line_listener.rewritten_nodes.clone();
 
         // Walk the tree with this listener, and generate text replacements containing line tags.

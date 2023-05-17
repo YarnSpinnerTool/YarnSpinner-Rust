@@ -20,18 +20,17 @@ pub(crate) struct UntaggedLineListener<'input> {
     existing_line_tags: Vec<String>,
     file: FileParseResult<'input>,
     pub(crate) rewritten_nodes: Rc<RefCell<String>>,
+    offset: usize,
 }
 
 impl<'input> UntaggedLineListener<'input> {
-    pub fn new(
-        existing_line_tags: Vec<String>,
-        file: FileParseResult<'input>,
-        source: String,
-    ) -> Self {
+    pub fn new(existing_line_tags: Vec<String>, file: FileParseResult<'input>) -> Self {
+        let original_source = file.tokens().get_all_text();
         Self {
             existing_line_tags,
             file,
-            rewritten_nodes: Rc::new(RefCell::new(source)),
+            rewritten_nodes: Rc::new(RefCell::new(original_source)),
+            offset: 0,
         }
     }
 
@@ -94,12 +93,28 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         // accidentally use it twice.
         self.existing_line_tags.push(new_line_id.clone());
 
-        let string_index = previous_token.stop as usize + 1;
-        let byte_index = string_index * std::mem::size_of::<char>();
-
+        let string_index = previous_token.stop as usize - 1 + self.offset;
+        let inserted = format!(" #{new_line_id} ");
+        self.offset += inserted.len();
+        let content = self.rewritten_nodes.borrow().clone();
+        if !content.is_char_boundary(string_index) {
+            let mut last_char_boundary = string_index;
+            while !content.is_char_boundary(last_char_boundary) {
+                last_char_boundary -= 1;
+            }
+            let mut next_char_boundary = string_index;
+            while !content.is_char_boundary(next_char_boundary) {
+                next_char_boundary += 1;
+            }
+            let mut context = content[last_char_boundary..next_char_boundary].to_string();
+            panic!(
+                "index {} with offset {} is not a char boundary. Context: {} ({last_char_boundary}:{next_char_boundary})",
+                string_index, self.offset, context
+            );
+        }
         self.rewritten_nodes
             .borrow_mut()
-            .insert_str(byte_index, &format!(" #{new_line_id} "));
+            .insert_str(string_index, &inserted);
     }
 }
 
