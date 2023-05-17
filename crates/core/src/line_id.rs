@@ -1,3 +1,4 @@
+#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use std::fmt::Display;
 

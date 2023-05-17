@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Configuration for localization strategy used by the [`YarnSlingerPlugin`](crate::prelude::YarnSlingerPlugin).
-/// Its default variant, which is [`YarnSlingerLocalizationConfig::deactivate_localization`], is inserted when the plugin is added.
+/// Its default variant, which is [`YarnSlingerLocalizationConfig::noninteractive`], is inserted when the plugin is added.
 #[derive(Debug, Clone, PartialEq, Eq, Resource, Reflect, FromReflect)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[reflect(Resource, PartialEq, Default)]
@@ -48,7 +48,7 @@ pub struct YarnSlingerDefaultLocaleConfig {
     /// - The line is only available for the [`YarnSlingerDefaultLocaleConfig::default_locale`]
     pub remove_unused_line_ids_from_localization_files: bool,
     /// If active will fall back to the [`YarnSlingerDefaultLocaleConfig::default_locale`] if a localization is missing for a line while executing the program, emitting a warning.
-    /// Note that when [`YarnSlingerLocalizationConfig::error_on_missing_localization_when_loading_assets`] is active **and**
+    /// Note that when [`YarnSlingerLocalizationConfig::panic_on_missing_localization_when_loading_assets`] is active **and**
     /// [`YarnSlingerDefaultLocaleConfig::append_missing_line_ids_to_localization_files`] is not active, this can logically never happen.
     pub fall_back_to_default_locale_on_missing_localization_when_presenting_line: bool,
 }

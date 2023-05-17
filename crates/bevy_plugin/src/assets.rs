@@ -20,18 +20,6 @@ impl AssetLoader for YarnFileAssetLoader {
     ) -> BoxedFuture<'a, Result<(), Error>> {
         Box::pin(async move {
             let yarn_file = read_yarn_file(bytes, load_context)?;
-            if self.config.append_missing_line_ids_to_localization_files {
-                //todo!()
-            }
-            if self.config.generate_missing_localization_files {
-                //todo!()
-            }
-            if self.config.append_missing_line_ids_to_localization_files {
-                //todo!()
-            }
-            if self.config.error_on_missing_localization_on_load {
-                //todo!()
-            }
             load_context.set_default_asset(LoadedAsset::new(yarn_file));
             Ok(())
         })

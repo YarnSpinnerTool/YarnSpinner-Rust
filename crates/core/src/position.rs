@@ -1,3 +1,4 @@
+#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 
 /// Represents a position in a multi-line string.
