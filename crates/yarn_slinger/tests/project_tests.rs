@@ -204,37 +204,58 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
     let mut visited_ids = HashSet::new();
 
     for (tag, line) in expected_results
-        .into_iter()
+        .iter()
         .map(|(tag, line)| (tag.map(|s| LineId(s.to_string())), line.to_string()))
     {
+        println!("checking tag: {:#?} line: {:#?}", tag, line);
         if let Some(tag) = tag {
             assert_eq!(line, compilation.string_table.get(&tag).unwrap().text);
             // flagging this ID as having been visited
-            visited_ids.insert(tag);
+            let prev = visited_ids.insert(tag.clone());
+            if !prev {
+                println!(
+                    "{:#?}",
+                    compilation
+                        .string_table
+                        .iter()
+                        .filter(|(k, _)| **k == tag)
+                        .collect::<Vec<_>>()
+                );
+                panic!("Duplicate line tag: {}", tag);
+            }
         } else {
+            // Implementation note: this branch looks different from the original because the C# version depends on the order of the string table, which is not guaranteed.
+
             // a line exists that has this text
             let matching_entries = compilation
                 .string_table
                 .iter()
                 .filter(|(_, v)| v.text == line)
                 .filter(|(k, _)| !visited_ids.contains(k))
+                .filter(|(k, _)| expected_results.iter().all(|(t, _)| *t != Some(&k.0)))
                 .collect::<Vec<_>>();
-            assert!(!matching_entries.is_empty());
 
             // that line has a line tag
-            let line_tag = matching_entries[0].0;
-            assert!(line_tag.0.starts_with("line:"));
+            for (line_tag, _) in matching_entries {
+                assert!(line_tag.0.starts_with("line:"));
 
-            // that line is not a duplicate of any other line tag
-            let all_line_tags = compilation.string_table.keys();
-            assert_eq!(all_line_tags.filter(|t| t.0 == line_tag.0).count(), 1);
+                // that line is not a duplicate of any other line tag
+                let all_line_tags = compilation.string_table.keys();
+                assert_eq!(all_line_tags.filter(|t| t.0 == line_tag.0).count(), 1);
 
-            // flagging this ID as having been visited
-            visited_ids.insert(line_tag.clone());
+                // flagging this ID as having been visited
+                visited_ids.insert(line_tag.clone());
+            }
         }
     }
 
     // we have seen every line in the string table
+    let in_string_table_but_not_visited = compilation
+        .string_table
+        .iter()
+        .filter(|(k, _)| !visited_ids.contains(k))
+        .collect::<Vec<_>>();
+    println!("{:#?}", in_string_table_but_not_visited);
     assert_eq!(visited_ids.len(), compilation.string_table.len());
 }
 

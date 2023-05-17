@@ -22,7 +22,7 @@ pub struct StringInfo {
     /// The name of the node that this string was found in.
     pub node_name: String,
 
-    /// The line number at which this string was found in the file.
+    /// The 1-indexed line number at which this string was found in the file.
     pub line_number: usize,
 
     /// The name of the file this string was found in.
