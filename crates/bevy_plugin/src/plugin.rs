@@ -1,4 +1,5 @@
 use crate::assets::YarnFileAssetLoader;
+use crate::prelude::*;
 use bevy::prelude::*;
 use yarn_slinger::prelude::*;
 
@@ -53,5 +54,6 @@ impl YarnApp for App {
     fn register_assets(&mut self) -> &mut Self {
         self.add_asset::<YarnFile>()
             .init_asset_loader::<YarnFileAssetLoader>()
+            .init_resource::<YarnSlingerConfig>()
     }
 }
