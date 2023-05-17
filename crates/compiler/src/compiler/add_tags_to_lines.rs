@@ -48,14 +48,14 @@ impl Compiler {
         // Create the line listener, which will produce TextReplacements for each new line tag.
         let untagged_line_listener =
             Box::new(UntaggedLineListener::new(existing_line_tags, parse_source));
-        let rewritten_nodes = untagged_line_listener.rewritten_nodes.clone();
+        let rewritten_nodes = untagged_line_listener.rewritten_lines.clone();
 
         // Walk the tree with this listener, and generate text replacements containing line tags.
         YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref());
         // Apply these text replacements to the original source and return it.
 
         let result = rewritten_nodes.take();
-        Ok(result)
+        Ok(result.join("\n"))
     }
 }
 

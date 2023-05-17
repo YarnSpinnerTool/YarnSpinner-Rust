@@ -19,18 +19,21 @@ use std::rc::Rc;
 pub(crate) struct UntaggedLineListener<'input> {
     existing_line_tags: Vec<String>,
     file: FileParseResult<'input>,
-    pub(crate) rewritten_nodes: Rc<RefCell<String>>,
-    offset: usize,
+    pub(crate) rewritten_lines: Rc<RefCell<Vec<String>>>,
 }
 
 impl<'input> UntaggedLineListener<'input> {
     pub fn new(existing_line_tags: Vec<String>, file: FileParseResult<'input>) -> Self {
-        let original_source = file.tokens().get_all_text();
+        let original_source = file
+            .tokens()
+            .get_all_text()
+            .lines()
+            .map(|s| s.to_owned())
+            .collect();
         Self {
             existing_line_tags,
             file,
-            rewritten_nodes: Rc::new(RefCell::new(original_source)),
-            offset: 0,
+            rewritten_lines: Rc::new(RefCell::new(original_source)),
         }
     }
 
@@ -64,7 +67,7 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         let texts = get_hashtag_texts(&hashtags);
 
         // And then look for a line ID hashtag.
-        if !texts.iter().any(|tag| tag.starts_with("line:")) {
+        if texts.iter().any(|tag| tag.starts_with("line:")) {
             return;
         }
 
@@ -74,15 +77,15 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
 
         let tokens = self.file.tokens();
         let previous_token_index = index_of_previous_token_on_channel(tokens, index);
+        let line_index = ctx.start().get_line_as_usize().saturating_sub(1);
 
         // Did we find one?
         let previous_token_index = previous_token_index.unwrap_or_else(|| {
             // No token was found before this newline. This is an
             // internal error - there must be at least one symbol
             // besides the terminating newline.
-            panic!("Internal error: failed to find any tokens before the newline in line statement on line {}. \
-                   This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new",
-                   ctx.start().line - 1);
+            panic!("Internal error: failed to find any tokens before the newline in line statement on line {line_index}. \
+                   This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
         });
         // Get the token at this index. We'll put our tag after it.
         let previous_token = tokens.get(previous_token_index);
@@ -93,15 +96,18 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         // accidentally use it twice.
         self.existing_line_tags.push(new_line_id.clone());
 
-        let mut string_index = previous_token.stop as usize + self.offset;
-        while !self.rewritten_nodes.borrow().is_char_boundary(string_index) {
-            string_index += 1;
-        }
-        let inserted = format!(" #{new_line_id} ");
-        self.offset += inserted.len();
-        self.rewritten_nodes
-            .borrow_mut()
-            .insert_str(string_index, &inserted);
+        let mut lines = self.rewritten_lines.borrow_mut();
+        let line = lines.get_mut(line_index).unwrap();
+
+        let insertion_index = line
+            .char_indices()
+            .map(|(byte_pos, _char)| byte_pos)
+            .nth(previous_token.column as usize)
+            .unwrap_or_else(||
+                panic!("Internal error: failed to convert char pos to byte pos for insertion index on line {line_index}. \
+                        This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"))
+            + previous_token.get_text().len();
+        line.insert_str(insertion_index, &format!(" #{new_line_id} "));
     }
 }
 
