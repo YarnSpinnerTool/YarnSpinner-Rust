@@ -25,12 +25,15 @@ impl YarnSlingerPlugin {
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_yarn_types().register_sub_plugins();
+        app.register_yarn_types()
+            .init_resources(&self)
+            .register_sub_plugins();
     }
 }
 
 trait YarnApp {
     fn register_yarn_types(&mut self) -> &mut Self;
+    fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self;
     fn register_sub_plugins(&mut self) -> &mut Self;
 }
 impl YarnApp for App {
@@ -67,6 +70,13 @@ impl YarnApp for App {
             .register_type::<yarn_slinger::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
             .register_type::<MarkupValue>();
+        self
+    }
+
+    fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
+        if let Some(localizations) = plugin.localizations.clone() {
+            self.insert_resource(localizations);
+        }
         self
     }
 

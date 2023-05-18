@@ -74,7 +74,7 @@ fn generate_missing_line_ids_in_yarn_file(
                         .iter()
                         .collect();
 
-                std::fs::write(path_within_asset_dir, &source_with_added_ids).map_err(|e|
+                std::fs::write(&path_within_asset_dir, &source_with_added_ids).map_err(|e|
                         Error::new(e).context(format!("Failed to overwrite Yarn file at {} with new line IDs.\n\
                                 Aborting because localization requires all lines to have IDs, but this file is missing some.", path_within_asset_dir.display()))
                     )?;
@@ -88,10 +88,6 @@ fn generate_missing_line_ids_in_yarn_file(
 fn get_assets_dir_name() -> impl AsRef<Path> {
     // This could be customized, but AFAIK there's no way to get that info
     AssetPlugin::default().asset_folder
-}
-
-const fn can_access_fs() -> bool {
-    cfg!(not(target_arch = "wasm32"))
 }
 
 fn read_yarn_file<'a>(
