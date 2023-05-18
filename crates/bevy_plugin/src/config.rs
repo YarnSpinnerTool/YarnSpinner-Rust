@@ -38,18 +38,20 @@ pub struct YarnSlingerDefaultLocaleConfig {
     /// The default locale that is referenced by the other fields of [`YarnSlingerDefaultLocaleConfig`]
     pub default_locale: String,
     /// If active will generate a localization file on disk for a loaded yarn file if it does not have one already.
-    /// The generated file will contain all lines with IDs set to the [`YarnSlingerDefaultLocaleConfig::default_locale`].
+    /// The generated file will contain all lines with IDs set to the [`default_locale`](YarnSlingerDefaultLocaleConfig::default_locale).
     pub generate_missing_localization_files: bool,
     /// If active will append missing line IDs to a localization file on disk for a loaded yarn file.
-    /// If there is no localization file and [`YarnSlingerDefaultLocaleConfig::generate_missing_localization_files`] is not active, nothing happens.
+    /// It is recommended to combine this with [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html).
+    /// If there is no localization file and [`generate_missing_localization_files`](YarnSlingerDefaultLocaleConfig::generate_missing_localization_files) is not active, nothing happens.
     pub append_missing_line_ids_to_localization_files: bool,
     /// If active will remove line IDs from a localization file on disk if they are considered unused. For this to be the case, the following conditions must be met:
     /// - The line ID referenced in the localization file is not present in the yarn file
-    /// - The line is only available for the [`YarnSlingerDefaultLocaleConfig::default_locale`]
+    /// - The line is only available for the [`default_locale`](YarnSlingerDefaultLocaleConfig::default_locale)
+    /// It is recommended to combine this with [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html).
     pub remove_unused_line_ids_from_localization_files: bool,
-    /// If active will fall back to the [`YarnSlingerDefaultLocaleConfig::default_locale`] if a localization is missing for a line while executing the program, emitting a warning.
+    /// If active will fall back to the [`default_locale`](YarnSlingerDefaultLocaleConfig::default_locale) if a localization is missing for a line while executing the program, emitting a warning.
     /// Note that when [`YarnSlingerLocalizationConfig::panic_on_missing_localization_when_loading_assets`] is active **and**
-    /// [`YarnSlingerDefaultLocaleConfig::append_missing_line_ids_to_localization_files`] is not active, this can logically never happen.
+    /// [`append_missing_line_ids_to_localization_files`](YarnSlingerDefaultLocaleConfig::append_missing_line_ids_to_localization_files) is not active, this can logically never happen.
     pub fall_back_to_default_locale_on_missing_localization_when_presenting_line: bool,
 }
 
