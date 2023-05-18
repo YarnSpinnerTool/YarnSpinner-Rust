@@ -11,7 +11,7 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
     );
 }
 
-pub(crate) fn generate_missing_line_ids_in_yarn_file(
+pub fn generate_missing_line_ids_in_yarn_file(
     mut events: EventReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,

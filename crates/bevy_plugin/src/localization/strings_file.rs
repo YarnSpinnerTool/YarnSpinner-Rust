@@ -3,6 +3,13 @@ use bevy::asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 
+pub(crate) fn strings_file_plugin(app: &mut App) {
+    app.register_type::<StringsFile>()
+        .register_type::<StringsFileRecord>()
+        .add_asset::<StringsFile>()
+        .init_asset_loader::<StringsFileAssetLoader>();
+}
+
 #[derive(
     Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect, TypeUuid,
 )]
