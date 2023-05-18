@@ -1,3 +1,4 @@
+//! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
 use crate::localization::strings_file_asset::{StringsFile, StringsFileRecord};
 use crate::prelude::*;
 use bevy::prelude::*;

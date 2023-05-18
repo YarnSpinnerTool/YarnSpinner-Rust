@@ -44,13 +44,39 @@ impl StringsFile {
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub(crate) struct StringsFileRecord {
+    /// The language that the line is written in.
     pub(crate) language: Language,
+    /// The line ID for this line. This value will be the same across all localizations.
     pub(crate) id: LineId,
+    /// The text of this line, in the language specified by [`language`](StringsFileRecord::language).
     pub(crate) text: String,
+    /// The name of the Yarn script in which this line was originally found.
     pub(crate) file: String,
+    /// The name of the node in which this line was originally found.
+    ///
+    /// This node can be found in the file indicated by [`file`](StringsFileRecord::file).
     pub(crate) node: String,
+
+    /// The 1-indexed line number in the file indicated by [`file`](StringsFileRecord::file) at
+    /// which the original version of this line can be found.
     pub(crate) line_number: usize,
+    /// A string used as part of a mechanism for checking if translated
+    /// versions of this string are out of date.
+    ///
+    /// This field contains the first 8 characters of the SHA-256 hash of
+    /// the line's text as it appeared in the base localization CSV file.
+    ///
+    /// When a new StringTableEntry is created in a localized CSV file for a
+    /// .yarn file, the Lock value is copied over from the base CSV file,
+    /// and used for the translated entry.
+    ///
+    /// Because the base localization CSV is regenerated every time the
+    /// .yarn file is imported, the base localization Lock value will change
+    /// if a line's text changes. This means that if the base lock and
+    /// translated lock differ, the translated line is out of date, and
+    /// needs to be updated.
     pub(crate) lock: String,
+    /// A comment used to describe this line to translators.
     pub(crate) comment: String,
 }
 
