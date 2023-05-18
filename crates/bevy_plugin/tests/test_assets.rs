@@ -79,13 +79,15 @@ fn generates_localization_files() -> anyhow::Result<()> {
     let translation_strings_table = fs::read_to_string(&translation_strings_table_path)?;
     let line_ids_in_strings_table: Vec<_> = translation_strings_table
         .lines()
-        .map(|line| line.split(',').next().unwrap())
+        .skip(1)
+        .map(|line| line.split(',').nth(1).unwrap())
         .collect();
     assert_eq!(
         string_table_with_line_ids.len(),
         line_ids_in_strings_table.len()
     );
 
+    println!("{:?}", line_ids_in_strings_table);
     assert!(line_ids_in_strings_table
         .iter()
         .all(|line_id| string_table_with_line_ids.contains_key(&LineId(line_id.to_string()))));

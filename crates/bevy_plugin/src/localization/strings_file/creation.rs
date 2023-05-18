@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
 use crate::localization::strings_file::{Lock, StringsFile, StringsFileRecord};
 use crate::prelude::*;
+use anyhow::Context;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use std::fs::File;
@@ -69,9 +70,16 @@ fn create_strings_files(
                     comment: read_comments(&string_info.metadata),
                 })
                 .collect();
-            let path = get_assets_dir_path(&asset_server)?;
-            let path = path.as_ref();
-            let file = File::create(path).unwrap();
+            let assets_path = get_assets_dir_path(&asset_server)?;
+            let assets_path = assets_path.as_ref();
+            let path = assets_path.join(path);
+            let file = File::create(&path).with_context(|| {
+                format!(
+                    "Failed to create strings file \"{}\" for language {}.",
+                    path.display(),
+                    localization.language
+                )
+            })?;
             let mut writer = csv::Writer::from_writer(file);
             for record in strings_file_records.iter() {
                 writer.serialize(record)?;
@@ -85,10 +93,9 @@ fn create_strings_files(
             );
             strings_file_assets.add(strings_file)
         } else {
-            panic!(
+            return Err(Error::msg(format!(
                 "Can't load strings file \"{}\" because it does not exist on disk, but can't generate it either because the file generation mode is not set to \"Development\".",
-                path.display()
-            );
+                path.display())));
         };
         strings_files
             .0
