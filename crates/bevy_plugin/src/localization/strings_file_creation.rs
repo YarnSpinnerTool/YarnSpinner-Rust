@@ -8,7 +8,7 @@ pub(crate) fn strings_file_manipulation_plugin(app: &mut App) {
     app.init_resource::<StringsFiles>().add_system(
         create_strings_files
             .pipe(panic_on_err)
-            .run_if(resource_changed::<Localizations>()),
+            .run_if(resource_exists_and_changed::<Localizations>()),
     );
 }
 

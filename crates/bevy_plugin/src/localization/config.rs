@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 pub(crate) fn localization_config_plugin(app: &mut App) {
     app.register_type::<Localizations>()
@@ -38,6 +39,18 @@ pub struct Localization {
     pub language: Language,
     pub strings_file: PathBuf,
     pub assets_sub_folder: PathBuf,
+}
+
+impl From<String> for Localization {
+    fn from(language: String) -> Self {
+        Self::with_language(language)
+    }
+}
+
+impl From<&str> for Localization {
+    fn from(language: &str) -> Self {
+        Self::with_language(language)
+    }
 }
 
 impl Localization {
