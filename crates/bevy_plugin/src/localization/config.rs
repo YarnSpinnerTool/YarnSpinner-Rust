@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 pub(crate) fn localization_config_plugin(app: &mut App) {
     app.register_type::<Localizations>()
