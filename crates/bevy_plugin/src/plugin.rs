@@ -1,19 +1,18 @@
-use crate::assets::YarnFileAssetLoader;
+use crate::assets;
 use crate::prelude::*;
 use bevy::prelude::*;
-use yarn_slinger::prelude::*;
 
 pub struct YarnSlingerPlugin;
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_yarn_types().register_assets();
+        app.register_yarn_types().register_sub_plugins();
     }
 }
 
 trait YarnApp {
     fn register_yarn_types(&mut self) -> &mut Self;
-    fn register_assets(&mut self) -> &mut Self;
+    fn register_sub_plugins(&mut self) -> &mut Self;
 }
 impl YarnApp for App {
     fn register_yarn_types(&mut self) -> &mut Self {
@@ -48,15 +47,12 @@ impl YarnApp for App {
             .register_type::<yarn_slinger::runtime::DiagnosisSeverity>()
             .register_type::<yarn_slinger::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
-            .register_type::<MarkupValue>()
+            .register_type::<MarkupValue>();
+        self
     }
 
-    fn register_assets(&mut self) -> &mut Self {
-        self.register_type::<YarnSlingerLocalizationConfig>()
-            .register_type::<YarnSlingerDefaultLocaleConfig>()
-            .add_asset::<YarnFile>()
-            .init_resource::<YarnSlingerLocalizationConfig>()
-            .init_asset_loader::<YarnFileAssetLoader>()
-            .init_resource::<YarnSlingerLocalizationConfig>()
+    fn register_sub_plugins(&mut self) -> &mut Self {
+        self.add_plugin(assets::YarnSlingerAssetLoaderPlugin);
+        self
     }
 }

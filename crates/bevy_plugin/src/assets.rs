@@ -1,14 +1,27 @@
-use crate::config::YarnSlingerLocalizationConfig;
-use anyhow::Context;
+use crate::prelude::*;
 use bevy::asset::LoadedAsset;
+use bevy::prelude::*;
 use bevy::{
-    asset::{AssetLoader, Error, LoadContext},
+    asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
 };
-use yarn_slinger::prelude::*;
+
+#[derive(Debug)]
+pub(crate) struct YarnSlingerAssetLoaderPlugin;
+impl Plugin for YarnSlingerAssetLoaderPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<YarnSlingerLocalizationConfig>()
+            .register_type::<YarnSlingerDefaultLocaleConfig>()
+            .add_asset::<YarnFile>()
+            .init_resource::<YarnSlingerLocalizationConfig>()
+            .init_asset_loader::<YarnFileAssetLoader>()
+            .init_resource::<YarnSlingerLocalizationConfig>()
+            .add_system(generate_missing_line_ids_in_yarn_file.pipe(yarn_plugin_panic));
+    }
+}
 
 #[derive(Debug, Default)]
-pub struct YarnFileAssetLoader {
+struct YarnFileAssetLoader {
     config: YarnSlingerLocalizationConfig,
 }
 
@@ -17,7 +30,7 @@ impl AssetLoader for YarnFileAssetLoader {
         &'a self,
         bytes: &'a [u8],
         load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<(), Error>> {
+    ) -> BoxedFuture<'a, SystemResult> {
         Box::pin(async move {
             let mut yarn_file = read_yarn_file(bytes, load_context)?;
             if self.config.generate_missing_line_ids_in_yarn_file && can_access_fs() {
@@ -35,6 +48,26 @@ impl AssetLoader for YarnFileAssetLoader {
     fn extensions(&self) -> &[&str] {
         &["yarn"]
     }
+}
+
+fn generate_missing_line_ids_in_yarn_file(
+    mut events: EventReader<AssetEvent<YarnFile>>,
+    mut assets: ResMut<Assets<YarnFile>>,
+    asset_server: Res<AssetServer>,
+) -> SystemResult {
+    for event in events.iter() {
+        if let AssetEvent::Created { handle } = event {
+            let file = assets.get_mut(handle).unwrap();
+            if let Some(source_with_added_ids) = add_tags_to_lines(file.clone())? {
+                let asset_path = asset_server.get_handle_path(handle.clone()).unwrap();
+                std::fs::write(asset_path.path(), &source_with_added_ids).unwrap_or_else(|e| {
+                    error!("Failed to write Yarn file with new line IDs: {e}");
+                });
+                file.source = source_with_added_ids;
+            }
+        }
+    }
+    Ok(())
 }
 
 const fn can_access_fs() -> bool {
