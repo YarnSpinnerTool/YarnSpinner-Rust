@@ -5,6 +5,17 @@ use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
 };
+use bevy::utils::HashMap;
+use bevy::reflect::TypeUuid;
+use yarn_slinger::prelude::YarnFile as InnerYarnFile;
+
+#[derive(Debug, Clone, Eq, PartialEq, Reflect, FromReflect, TypeUuid, Serialize, Deserialize)]
+#[reflect(Debug, PartialEq, Serialize, Deserialize)]
+#[uuid = "32570e61-d69d-4f87-9552-9da2a62ecfd1"]
+pub struct YarnFile {
+    pub file: InnerYarnFile,
+    pub string_table: std::collections::HashMap<LineId, StringInfo>,
+}
 
 pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
     app.add_asset::<YarnFile>()
@@ -44,5 +55,12 @@ fn read_yarn_file<'a>(
         .to_str()
         .context("Yarn file name is not valid UTF-8")?
         .to_owned();
-    Ok(YarnFile { file_name, source })
+    let file = InnerYarnFile { file_name, source };
+    let string_table = YarnCompiler::new()
+        .with_compilation_type(CompilationType::StringsOnly)
+        .add_file(file.clone())
+        .compile()
+        .unwrap()
+        .string_table;
+    Ok(YarnFile { file, string_table })
 }

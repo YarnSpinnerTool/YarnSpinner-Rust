@@ -1,15 +1,16 @@
 pub use self::config::*;
-use crate::localization::line_id_generation::line_id_generation_plugin;
-use crate::localization::strings_file::strings_file_plugin;
+use self::{line_id_generation::*, strings_file_asset::*, strings_file_manipulation::*};
 use crate::prelude::*;
 use bevy::prelude::*;
 
 mod config;
 mod line_id_generation;
-mod strings_file;
+mod strings_file_asset;
+mod strings_file_manipulation;
 
 pub(crate) fn localization_plugin(app: &mut App) {
     app.fn_plugin(localization_config_plugin)
         .fn_plugin(line_id_generation_plugin)
-        .fn_plugin(strings_file_plugin);
+        .fn_plugin(strings_file_asset_plugin)
+        .fn_plugin(strings_file_manipulation_plugin);
 }

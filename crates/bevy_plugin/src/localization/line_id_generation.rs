@@ -11,15 +11,15 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
     );
 }
 
-pub fn generate_missing_line_ids_in_yarn_file(
+fn generate_missing_line_ids_in_yarn_file(
     mut events: EventReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
 ) -> SystemResult {
     for event in events.iter() {
         if let AssetEvent::Created { handle } = event {
-            let file = assets.get_mut(handle).unwrap();
-            let Some(source_with_added_ids) = add_tags_to_lines(file.clone())? else {
+            let yarn_file = assets.get_mut(handle).unwrap();
+            let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? else {
                 // File already contains all line IDs.
                 return Ok(())
             };
@@ -36,7 +36,7 @@ pub fn generate_missing_line_ids_in_yarn_file(
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
                                 path_within_asset_dir.display()))?;
             }
-            file.source = source_with_added_ids;
+            yarn_file.file.source = source_with_added_ids;
         }
     }
     Ok(())
@@ -53,14 +53,9 @@ fn get_assets_dir_name(asset_server: &AssetServer) -> Result<impl AsRef<Path> + 
 
 /// Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Console/blob/main/src/YarnSpinner.Console/Commands/TagCommand.cs#L11>
 fn add_tags_to_lines(yarn_file: YarnFile) -> YarnCompilerResult<Option<String>> {
-    let existing_tags = YarnCompiler::new()
-        .with_compilation_type(CompilationType::StringsOnly)
-        .add_file(yarn_file.clone())
-        .compile()
-        .unwrap()
-        .string_table
+    let existing_tags = yarn_file.string_table
         .into_iter()
-        .filter_map(|(key, string_info)| (!string_info.is_implicit_tag).then_some(key))
+        .filter_map(|(key, string_info)| (!string_info.is_implicit_tag).then(|| key.clone()))
         .collect();
-    YarnCompiler::add_tags_to_lines(yarn_file.source, existing_tags)
+    YarnCompiler::add_tags_to_lines(yarn_file.file.source, existing_tags)
 }

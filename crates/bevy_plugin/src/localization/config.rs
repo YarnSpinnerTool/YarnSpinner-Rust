@@ -7,6 +7,7 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
         .register_type::<Localization>()
         .register_type::<FileGenerationMode>();
 }
+
 #[derive(
     Debug,
     Clone,
@@ -23,28 +24,24 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 #[reflect(Debug, Resource, Default, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
     pub base: Localization,
-    pub others: Vec<Localization>,
+    pub translations: Vec<Localization>,
     pub file_generation_mode: FileGenerationMode,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
+)]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub struct Localization {
-    /// IETF BCP 47 code. The default is "en-US".
-    pub language: String,
+    /// The default is "en-US".
+    pub language: Language,
     pub strings_file: PathBuf,
     pub assets_sub_folder: PathBuf,
 }
 
-impl Default for Localization {
-    fn default() -> Self {
-        Self::with_language("en-US")
-    }
-}
-
 impl Localization {
-    pub fn with_language(language: impl Into<String>) -> Self {
+    pub fn with_language(language: impl Into<Language>) -> Self {
         let language = language.into();
         let strings_file = PathBuf::from(format!("{language}.strings.csv"));
         let assets_sub_folder = PathBuf::from(format!("{language}/"));

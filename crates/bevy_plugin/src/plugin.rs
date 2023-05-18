@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::yarn_file_loader::yarn_slinger_asset_loader_plugin;
+use crate::yarn_file_asset::yarn_slinger_asset_loader_plugin;
 use bevy::prelude::*;
 
 #[derive(Debug)]
