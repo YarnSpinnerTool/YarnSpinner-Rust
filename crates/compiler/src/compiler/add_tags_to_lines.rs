@@ -3,6 +3,7 @@
 use crate::listeners::{DiagnosticVec, UntaggedLineListener};
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserTreeWalker;
 use crate::prelude::*;
+use std::sync::atomic::Ordering;
 
 impl Compiler {
     /// Given Yarn source code, adds line tags to the ends of all lines
@@ -26,10 +27,11 @@ impl Compiler {
     ///
     /// ## Return value
     /// Returns he modified source code, with line tags added.
+    /// If all nodes already have line tags, returns `None`.
     pub fn add_tags_to_lines(
         contents: impl Into<String>,
         existing_line_tags: Vec<String>,
-    ) -> crate::Result<String> {
+    ) -> crate::Result<Option<String>> {
         let contents = contents.into();
         let chars: Vec<_> = contents.chars().map(|c| c as u32).collect();
         // First, get the parse tree for this source code.
@@ -49,13 +51,18 @@ impl Compiler {
         let untagged_line_listener =
             Box::new(UntaggedLineListener::new(existing_line_tags, parse_source));
         let rewritten_nodes = untagged_line_listener.rewritten_lines.clone();
+        let rewrote_anything = untagged_line_listener.rewrote_anything.clone();
 
         // Walk the tree with this listener, and generate text replacements containing line tags.
         YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref());
         // Apply these text replacements to the original source and return it.
 
-        let result = rewritten_nodes.take();
-        Ok(result.join("\n"))
+        if rewrote_anything.load(Ordering::Relaxed) {
+            let result = rewritten_nodes.take();
+            Ok(Some(result.join("\n")))
+        } else {
+            Ok(None)
+        }
     }
 }
 

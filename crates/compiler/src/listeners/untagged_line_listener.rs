@@ -15,11 +15,13 @@ use antlr_rust::tree::ParseTreeListener;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::atomic::AtomicBool;
 
 pub(crate) struct UntaggedLineListener<'input> {
     existing_line_tags: Vec<String>,
     file: FileParseResult<'input>,
     pub(crate) rewritten_lines: Rc<RefCell<Vec<String>>>,
+    pub(crate) rewrote_anything: Rc<AtomicBool>,
 }
 
 impl<'input> UntaggedLineListener<'input> {
@@ -34,6 +36,7 @@ impl<'input> UntaggedLineListener<'input> {
             existing_line_tags,
             file,
             rewritten_lines: Rc::new(RefCell::new(original_source)),
+            rewrote_anything: Default::default(),
         }
     }
 
@@ -108,6 +111,8 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"))
             + previous_token.get_text().len();
         line.insert_str(insertion_index, &format!(" #{new_line_id} "));
+        self.rewrote_anything
+            .store(true, std::sync::atomic::Ordering::Relaxed);
     }
 }
 

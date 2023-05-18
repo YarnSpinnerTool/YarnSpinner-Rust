@@ -52,7 +52,10 @@ impl YarnApp for App {
     }
 
     fn register_assets(&mut self) -> &mut Self {
-        self.add_asset::<YarnFile>()
+        self.register_type::<YarnSlingerLocalizationConfig>()
+            .register_type::<YarnSlingerDefaultLocaleConfig>()
+            .add_asset::<YarnFile>()
+            .init_resource::<YarnSlingerLocalizationConfig>()
             .init_asset_loader::<YarnFileAssetLoader>()
             .init_resource::<YarnSlingerLocalizationConfig>()
     }

@@ -19,7 +19,16 @@ impl AssetLoader for YarnFileAssetLoader {
         load_context: &'a mut LoadContext,
     ) -> BoxedFuture<'a, Result<(), Error>> {
         Box::pin(async move {
-            let yarn_file = read_yarn_file(bytes, load_context)?;
+            let mut yarn_file = read_yarn_file(bytes, load_context)?;
+            if self.config.generate_missing_line_ids_in_yarn_file {
+                if let Some(content_with_ids) =
+                    YarnCompiler::add_tags_to_lines(yarn_file.source.clone(), Vec::new())?
+                {
+                    std::fs::write(load_context.path(), &content_with_ids)
+                        .context("Failed to write Yarn file with new line IDs")?;
+                    yarn_file.source = content_with_ids;
+                }
+            }
             load_context.set_default_asset(LoadedAsset::new(yarn_file));
             Ok(())
         })
