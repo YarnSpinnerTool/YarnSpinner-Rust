@@ -21,7 +21,7 @@ pub(crate) fn strings_file_asset_plugin(app: &mut App) {
 pub(crate) struct StringsFile(pub(crate) Vec<StringsFileRecord>);
 
 impl StringsFile {
-    pub(crate) fn new(records: Vec<StringsFileRecord>) -> Self {
+    pub(crate) fn checked(records: Vec<StringsFileRecord>) -> Self {
         if !records.is_empty() {
             let language = &records[0].language;
             assert!(
@@ -92,7 +92,7 @@ impl AssetLoader for StringsFileAssetLoader {
         Box::pin(async move {
             let mut reader = csv::Reader::from_reader(bytes);
             let records: csv::Result<Vec<_>> = reader.deserialize().collect();
-            let strings_file = StringsFile::new(records?);
+            let strings_file = StringsFile::checked(records?);
             load_context.set_default_asset(LoadedAsset::new(strings_file));
             Ok(())
         })

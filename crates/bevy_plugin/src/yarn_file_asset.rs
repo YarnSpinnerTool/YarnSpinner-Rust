@@ -1,12 +1,11 @@
 use crate::prelude::*;
 use bevy::asset::LoadedAsset;
 use bevy::prelude::*;
+use bevy::reflect::TypeUuid;
 use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
 };
-use bevy::utils::HashMap;
-use bevy::reflect::TypeUuid;
 use yarn_slinger::prelude::YarnFile as InnerYarnFile;
 
 #[derive(Debug, Clone, Eq, PartialEq, Reflect, FromReflect, TypeUuid, Serialize, Deserialize)]

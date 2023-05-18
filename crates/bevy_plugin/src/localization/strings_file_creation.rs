@@ -17,11 +17,10 @@ pub(crate) fn strings_file_manipulation_plugin(app: &mut App) {
 struct StringsFiles(HashMap<Language, Handle<StringsFile>>);
 
 fn create_strings_files(
-    mut commands: Commands,
     localizations: Res<Localizations>,
     asset_server: Res<AssetServer>,
-    strings_file_assets: Res<Assets<StringsFile>>,
-    strings_files: Res<StringsFiles>,
+    mut strings_file_assets: ResMut<Assets<StringsFile>>,
+    mut strings_files: ResMut<StringsFiles>,
     yarn_files: Res<Assets<YarnFile>>,
 ) -> SystemResult {
     for localization in &localizations.translations {
@@ -35,8 +34,7 @@ fn create_strings_files(
         }
         let path = localization.strings_file.as_path();
         let handle = if asset_server.asset_io().is_file(path) {
-            asset_server.load(path);
-            todo!()
+            asset_server.load(path)
         } else if localizations.file_generation_mode == FileGenerationMode::Development {
             let mut yarn_files: Vec<(&LineId, &StringInfo, &str)> = yarn_files
                 .iter()
@@ -50,28 +48,42 @@ fn create_strings_files(
                 .collect();
             yarn_files.sort_by(
                 |(_, lhs_string_info, lhs_file_name), (_, rhs_string_info, rhs_file_name)| {
-                    lhs_file_name.cmp(lhs_file_name).then(
+                    lhs_file_name.cmp(rhs_file_name).then(
                         lhs_string_info
                             .line_number
                             .cmp(&rhs_string_info.line_number),
                     )
                 },
             );
-            let strings_file_records =
-                yarn_files
-                    .into_iter()
-                    .map(|(line_id, string_info, file_name)| StringsFileRecord {
-                        language: localization.language.clone(),
-                        id: line_id.clone(),
-                        text: string_info.text.clone(),
-                        file: file_name.to_string(),
-                        node: string_info.node_name.clone(),
-                        line_number: string_info.line_number,
-                        lock: todo!(),
-                        comment: todo!(),
-                    });
-            todo!()
+            let strings_file_records = yarn_files
+                .into_iter()
+                .map(|(line_id, string_info, file_name)| StringsFileRecord {
+                    language: localization.language.clone(),
+                    id: line_id.clone(),
+                    text: string_info.text.clone(),
+                    file: file_name.to_string(),
+                    node: string_info.node_name.clone(),
+                    line_number: string_info.line_number,
+                    lock: todo!(),
+                    comment: todo!(),
+                })
+                .collect();
+            let strings_file = StringsFile(strings_file_records);
+            info!(
+                "Generated strings file \"{}\" for language {}.",
+                path.display(),
+                localization.language
+            );
+            strings_file_assets.add(strings_file)
+        } else {
+            panic!(
+                "Can't load strings file \"{}\" because it does not exist on disk, but can't generate it either because the file generation mode is not set to \"Development\".",
+                path.display()
+            );
         };
+        strings_files
+            .0
+            .insert(localization.language.clone(), handle);
     }
     Ok(())
 }
