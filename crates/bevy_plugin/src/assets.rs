@@ -1,7 +1,6 @@
 use crate::prelude::*;
-use bevy::asset::{AssetPath, HandleId, LoadedAsset};
+use bevy::asset::LoadedAsset;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,

@@ -21,4 +21,3 @@ fn loads_yarn_assets() {
     assert_eq!(expected_source, yarn_file.source);
     assert_eq!("lines.yarn", yarn_file.file_name);
 }
-
