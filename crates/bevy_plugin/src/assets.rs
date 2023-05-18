@@ -20,7 +20,7 @@ impl AssetLoader for YarnFileAssetLoader {
     ) -> BoxedFuture<'a, Result<(), Error>> {
         Box::pin(async move {
             let mut yarn_file = read_yarn_file(bytes, load_context)?;
-            if self.config.generate_missing_line_ids_in_yarn_file {
+            if self.config.generate_missing_line_ids_in_yarn_file && can_access_fs() {
                 if let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? {
                     std::fs::write(load_context.path(), &source_with_added_ids)
                         .context("Failed to write Yarn file with new line IDs")?;
@@ -35,6 +35,10 @@ impl AssetLoader for YarnFileAssetLoader {
     fn extensions(&self) -> &[&str] {
         &["yarn"]
     }
+}
+
+const fn can_access_fs() -> bool {
+    cfg!(not(target_arch = "wasm32"))
 }
 
 fn read_yarn_file<'a>(
