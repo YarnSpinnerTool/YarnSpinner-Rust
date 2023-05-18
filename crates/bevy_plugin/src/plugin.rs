@@ -1,5 +1,5 @@
-use crate::assets;
 use crate::prelude::*;
+use crate::yarn_file_loader::yarn_slinger_asset_loader_plugin;
 use bevy::prelude::*;
 
 #[derive(Debug)]
@@ -67,8 +67,7 @@ impl YarnApp for App {
             .register_type::<yarn_slinger::runtime::DiagnosisSeverity>()
             .register_type::<yarn_slinger::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
-            .register_type::<MarkupValue>();
-        self
+            .register_type::<MarkupValue>()
     }
 
     fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
@@ -79,7 +78,7 @@ impl YarnApp for App {
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.add_plugin(assets::YarnSlingerAssetLoaderPlugin);
-        self
+        self.fn_plugin(yarn_slinger_asset_loader_plugin)
+            .fn_plugin(localization_plugin)
     }
 }

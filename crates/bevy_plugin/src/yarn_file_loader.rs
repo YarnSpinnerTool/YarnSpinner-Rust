@@ -6,14 +6,9 @@ use bevy::{
     utils::BoxedFuture,
 };
 
-#[derive(Debug, Default)]
-pub(crate) struct YarnSlingerAssetLoaderPlugin;
-
-impl Plugin for YarnSlingerAssetLoaderPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_asset::<YarnFile>()
-            .init_asset_loader::<YarnFileAssetLoader>();
-    }
+pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
+    app.add_asset::<YarnFile>()
+        .init_asset_loader::<YarnFileAssetLoader>();
 }
 
 #[derive(Debug, Default)]

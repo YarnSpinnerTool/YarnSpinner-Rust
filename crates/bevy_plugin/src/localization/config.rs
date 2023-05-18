@@ -1,22 +1,34 @@
+use crate::prelude::*;
 use bevy::prelude::*;
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[reflect(Debug, Resource, Default PartialEq)]
-#[cfg_attr(feature = "serde", reflect(Serialize, Deserialize))]
+pub(crate) fn localization_config_plugin(app: &mut App) {
+    app.register_type::<Localizations>()
+        .register_type::<Localization>()
+        .register_type::<FileGenerationMode>();
+}
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Default,
+    Hash,
+    Resource,
+    Reflect,
+    FromReflect,
+    Serialize,
+    Deserialize,
+)]
+#[reflect(Debug, Resource, Default, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
     pub base: Localization,
     pub others: Vec<Localization>,
     pub file_generation_mode: FileGenerationMode,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[reflect(Debug, Default, PartialEq)]
-#[cfg_attr(feature = "serde", reflect(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
+#[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub struct Localization {
     /// IETF BCP 47 code. The default is "en-US".
@@ -54,10 +66,10 @@ impl Localization {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[reflect(Debug, Default, PartialEq)]
-#[cfg_attr(feature = "serde", reflect(Serialize, Deserialize))]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
+)]
+#[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum FileGenerationMode {
     /// The recommended setting for a development environment:

@@ -3,6 +3,14 @@ use bevy::asset::FileAssetIo;
 use bevy::prelude::*;
 use std::path::{Path, PathBuf};
 
+pub(crate) fn line_id_generation_plugin(app: &mut App) {
+    app.add_system(
+        generate_missing_line_ids_in_yarn_file
+            .pipe(panic_on_err)
+            .run_if(is_in_development),
+    );
+}
+
 pub(crate) fn generate_missing_line_ids_in_yarn_file(
     mut events: EventReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,

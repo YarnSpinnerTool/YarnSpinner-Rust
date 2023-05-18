@@ -1,22 +1,13 @@
 pub use self::config::*;
-use self::line_id_generation::*;
+use crate::localization::line_id_generation::line_id_generation_plugin;
 use crate::prelude::*;
 use bevy::prelude::*;
 
 mod config;
 mod line_id_generation;
+mod strings_file;
 
-pub(crate) struct LocalizationPlugin;
-
-impl Plugin for LocalizationPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<Localizations>()
-            .register_type::<Localization>()
-            .register_type::<FileGenerationMode>()
-            .add_system(
-                generate_missing_line_ids_in_yarn_file
-                    .pipe(panic_on_err)
-                    .run_if(is_in_development),
-            );
-    }
+pub(crate) fn localization_plugin(app: &mut App) {
+    app.fn_plugin(localization_config_plugin)
+        .fn_plugin(line_id_generation_plugin);
 }
