@@ -28,12 +28,12 @@ fn loads_yarn_assets() {
 fn generates_localization_files() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let yarn_path = dir.path().join("lines.yarn");
-    fs::copy(project_root_path().join("lines.yarn"), &yarn_path)?;
+    fs::copy(project_root_path().join("assets/lines.yarn"), &yarn_path)?;
 
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: yarn_path.to_str().unwrap().to_string(),
+        asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
     .add_plugin(YarnSlingerPlugin::with_localizations(Some(Localizations {
@@ -41,9 +41,7 @@ fn generates_localization_files() -> anyhow::Result<()> {
         translations: vec!["de-CH".into()],
         file_generation_mode: FileGenerationMode::Development,
     })));
-
     let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
-
     let handle = asset_server.load("lines.yarn");
 
     app.update();

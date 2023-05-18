@@ -53,7 +53,8 @@ fn get_assets_dir_name(asset_server: &AssetServer) -> Result<impl AsRef<Path> + 
 
 /// Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Console/blob/main/src/YarnSpinner.Console/Commands/TagCommand.cs#L11>
 fn add_tags_to_lines(yarn_file: YarnFile) -> YarnCompilerResult<Option<String>> {
-    let existing_tags = yarn_file.string_table
+    let existing_tags = yarn_file
+        .string_table
         .into_iter()
         .filter_map(|(key, string_info)| (!string_info.is_implicit_tag).then(|| key.clone()))
         .collect();
