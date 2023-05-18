@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::asset::LoadedAsset;
+use bevy::asset::{FileAssetIo, LoadedAsset};
 use bevy::prelude::*;
 use bevy::{
     asset::{AssetLoader, LoadContext},
@@ -61,15 +61,15 @@ fn generate_missing_line_ids_in_yarn_file(
 
             // If this fails, the asset was created at runtime and doesn't exist on disk.
             if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
+                let assets_path = get_assets_dir_name(&asset_server)?;
                 let path_within_asset_dir: PathBuf =
-                    [get_assets_dir_name().as_ref(), asset_path.path()]
-                        .iter()
-                        .collect();
+                    [assets_path.as_ref(), asset_path.path()].iter().collect();
 
-                std::fs::write(&path_within_asset_dir, &source_with_added_ids).map_err(|e|
-                        Error::new(e).context(format!("Failed to overwrite Yarn file at {} with new line IDs.\n\
-                                Aborting because localization requires all lines to have IDs, but this file is missing some.", path_within_asset_dir.display()))
-                    )?;
+                std::fs::write(&path_within_asset_dir, &source_with_added_ids)
+                    .context(
+                        format!("Failed to overwrite Yarn file at {} with new line IDs. \
+                                 Aborting because localization requires all lines to have IDs, but this file is missing some.",
+                                path_within_asset_dir.display()))?;
             }
             file.source = source_with_added_ids;
         }
@@ -77,9 +77,13 @@ fn generate_missing_line_ids_in_yarn_file(
     Ok(())
 }
 
-fn get_assets_dir_name() -> impl AsRef<Path> {
-    // This could be customized, but AFAIK there's no way to get that info
-    AssetPlugin::default().asset_folder
+fn get_assets_dir_name(asset_server: &AssetServer) -> Result<impl AsRef<Path> + '_> {
+    let asset_io = asset_server.asset_io();
+    let file_asset_io = asset_io.downcast_ref::<FileAssetIo>().context(
+        "Failed to downcast asset server IO to `FileAssetIo`. \
+    The vanilla Bevy `FileAssetIo` is the only one supported by Yarn Slinger",
+    )?;
+    Ok(file_asset_io.root_path())
 }
 
 fn read_yarn_file<'a>(
