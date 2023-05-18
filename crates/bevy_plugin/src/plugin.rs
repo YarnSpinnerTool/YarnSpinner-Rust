@@ -17,16 +17,14 @@ impl YarnSlingerPlugin {
                            "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
             }
         }
-        Self {
-            localizations: localizations.into(),
-        }
+        Self { localizations }
     }
 }
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
         app.register_yarn_types()
-            .init_resources(&self)
+            .init_resources(self)
             .register_sub_plugins();
     }
 }
