@@ -19,16 +19,8 @@ impl Plugin for YarnSlingerAssetLoaderPlugin {
             .init_asset_loader::<YarnFileAssetLoader>()
             .add_system(
                 generate_missing_line_ids_in_yarn_file
-                    .pipe(yarn_plugin_panic)
-                    .run_if(|localizations: Option<Res<Localizations>>| {
-                        localizations
-                            .as_ref()
-                            .map(|localizations| {
-                                localizations.file_generation_mode
-                                    == FileGenerationMode::Development
-                            })
-                            .unwrap_or_default()
-                    }),
+                    .pipe(panic_on_err)
+                    .run_if(is_in_development),
             );
     }
 }
