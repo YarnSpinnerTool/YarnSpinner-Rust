@@ -1,12 +1,12 @@
 use crate::prelude::*;
 use bevy::asset::{AssetPath, HandleId, LoadedAsset};
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
 };
-use std::path::PathBuf;
-use std::sync::RwLock;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub(crate) struct YarnSlingerAssetLoaderPlugin;
@@ -29,9 +29,7 @@ impl Plugin for YarnSlingerAssetLoaderPlugin {
 }
 
 #[derive(Debug, Default)]
-struct YarnFileAssetLoader {
-    config: YarnSlingerLocalizationConfig,
-}
+struct YarnFileAssetLoader;
 
 impl AssetLoader for YarnFileAssetLoader {
     fn load<'a>(
@@ -59,16 +57,30 @@ fn generate_missing_line_ids_in_yarn_file(
     for event in events.iter() {
         if let AssetEvent::Created { handle } = event {
             let file = assets.get_mut(handle).unwrap();
-            if let Some(source_with_added_ids) = add_tags_to_lines(file.clone())? {
-                let asset_path = asset_server.get_handle_path(handle.clone()).unwrap();
-                std::fs::write(asset_path.path(), &source_with_added_ids).unwrap_or_else(|e| {
+            let Some(source_with_added_ids) = add_tags_to_lines(file.clone())? else {
+                // File already contains all line IDs.
+                return Ok(())
+            };
+
+            // If this fails, the asset was created at runtime and doesn't exist on disk.
+            if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
+                let path_within_asset_dir: PathBuf =
+                    [get_assets_dir_name().as_ref(), asset_path.path()]
+                        .iter()
+                        .collect();
+                std::fs::write(path_within_asset_dir, &source_with_added_ids).unwrap_or_else(|e| {
                     error!("Failed to write Yarn file with new line IDs: {e}");
                 });
-                file.source = source_with_added_ids;
             }
+            file.source = source_with_added_ids;
         }
     }
     Ok(())
+}
+
+fn get_assets_dir_name() -> impl AsRef<Path> {
+    // This could be customized, but AFAIK there's no way to get that info
+    AssetPlugin::default().asset_folder
 }
 
 const fn can_access_fs() -> bool {
