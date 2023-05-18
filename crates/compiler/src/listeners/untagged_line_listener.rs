@@ -18,14 +18,14 @@ use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 
 pub(crate) struct UntaggedLineListener<'input> {
-    existing_line_tags: Vec<String>,
+    existing_line_tags: Vec<LineId>,
     file: FileParseResult<'input>,
     pub(crate) rewritten_lines: Rc<RefCell<Vec<String>>>,
     pub(crate) rewrote_anything: Rc<AtomicBool>,
 }
 
 impl<'input> UntaggedLineListener<'input> {
-    pub fn new(existing_line_tags: Vec<String>, file: FileParseResult<'input>) -> Self {
+    pub fn new(existing_line_tags: Vec<LineId>, file: FileParseResult<'input>) -> Self {
         let original_source = file
             .tokens()
             .get_all_text()
@@ -41,11 +41,11 @@ impl<'input> UntaggedLineListener<'input> {
     }
 
     /// Generates a new unique line tag that is not present in `existing_line_tags`.
-    fn generate_string(&self) -> String {
+    fn generate_string(&self) -> LineId {
         let mut rng = SmallRng::from_entropy();
         loop {
             let line: usize = rng.gen();
-            let tag = format!("line:{}", line);
+            let tag = LineId(format!("line:{}", line));
             if !self.existing_line_tags.contains(&tag) {
                 return tag;
             }

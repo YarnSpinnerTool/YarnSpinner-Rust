@@ -30,7 +30,7 @@ impl Compiler {
     /// If all nodes already have line tags, returns `None`.
     pub fn add_tags_to_lines(
         contents: impl Into<String>,
-        existing_line_tags: Vec<String>,
+        existing_line_tags: Vec<LineId>,
     ) -> crate::Result<Option<String>> {
         let contents = contents.into();
         let chars: Vec<_> = contents.chars().map(|c| c as u32).collect();

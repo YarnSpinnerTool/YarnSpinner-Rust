@@ -110,7 +110,9 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
 
     // Act
 
-    let output = Compiler::add_tags_to_lines(original_text, Vec::new()).unwrap();
+    let output = Compiler::add_tags_to_lines(original_text, Vec::new())
+        .unwrap()
+        .unwrap();
 
     let file = File {
         file_name: "input".to_string(),
