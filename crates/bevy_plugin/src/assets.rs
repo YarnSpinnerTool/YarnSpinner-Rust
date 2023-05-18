@@ -1,10 +1,12 @@
 use crate::prelude::*;
-use bevy::asset::LoadedAsset;
+use bevy::asset::{AssetPath, HandleId, LoadedAsset};
 use bevy::prelude::*;
 use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
 };
+use std::path::PathBuf;
+use std::sync::RwLock;
 
 #[derive(Debug)]
 pub(crate) struct YarnSlingerAssetLoaderPlugin;
@@ -16,7 +18,13 @@ impl Plugin for YarnSlingerAssetLoaderPlugin {
             .init_resource::<YarnSlingerLocalizationConfig>()
             .init_asset_loader::<YarnFileAssetLoader>()
             .init_resource::<YarnSlingerLocalizationConfig>()
-            .add_system(generate_missing_line_ids_in_yarn_file.pipe(yarn_plugin_panic));
+            .add_system(
+                generate_missing_line_ids_in_yarn_file
+                    .pipe(yarn_plugin_panic)
+                    .run_if(|config: Res<YarnSlingerLocalizationConfig>| {
+                        config.generate_missing_line_ids_in_yarn_file && can_access_fs()
+                    }),
+            );
     }
 }
 
@@ -32,14 +40,7 @@ impl AssetLoader for YarnFileAssetLoader {
         load_context: &'a mut LoadContext,
     ) -> BoxedFuture<'a, SystemResult> {
         Box::pin(async move {
-            let mut yarn_file = read_yarn_file(bytes, load_context)?;
-            if self.config.generate_missing_line_ids_in_yarn_file && can_access_fs() {
-                if let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? {
-                    std::fs::write(load_context.path(), &source_with_added_ids)
-                        .context("Failed to write Yarn file with new line IDs")?;
-                    yarn_file.source = source_with_added_ids;
-                }
-            }
+            let yarn_file = read_yarn_file(bytes, load_context)?;
             load_context.set_default_asset(LoadedAsset::new(yarn_file));
             Ok(())
         })
