@@ -1,7 +1,6 @@
 use crate::prelude::*;
-use bevy::asset::FileAssetIo;
 use bevy::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
     app.add_system(
@@ -26,7 +25,7 @@ fn generate_missing_line_ids_in_yarn_file(
 
             // If this fails, the asset was created at runtime and doesn't exist on disk.
             if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
-                let assets_path = get_assets_dir_name(&asset_server)?;
+                let assets_path = get_assets_dir_path(&asset_server)?;
                 let path_within_asset_dir: PathBuf =
                     [assets_path.as_ref(), asset_path.path()].iter().collect();
 
@@ -40,15 +39,6 @@ fn generate_missing_line_ids_in_yarn_file(
         }
     }
     Ok(())
-}
-
-fn get_assets_dir_name(asset_server: &AssetServer) -> Result<impl AsRef<Path> + '_> {
-    let asset_io = asset_server.asset_io();
-    let file_asset_io = asset_io.downcast_ref::<FileAssetIo>().context(
-        "Failed to downcast asset server IO to `FileAssetIo`. \
-    The vanilla Bevy `FileAssetIo` is the only one supported by Yarn Slinger",
-    )?;
-    Ok(file_asset_io.root_path())
 }
 
 /// Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Console/blob/main/src/YarnSpinner.Console/Commands/TagCommand.cs#L11>

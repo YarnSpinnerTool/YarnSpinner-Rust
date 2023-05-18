@@ -23,7 +23,7 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 )]
 #[reflect(Debug, Resource, Default, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
-    pub base: Localization,
+    pub base_language: Localization,
     pub translations: Vec<Localization>,
     pub file_generation_mode: FileGenerationMode,
 }

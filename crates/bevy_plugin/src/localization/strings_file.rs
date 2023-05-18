@@ -91,7 +91,7 @@ impl Lock {
     pub(crate) fn compute_from(text: &str) -> Self {
         const MAX_CHARS: usize = 8;
         let hash = Sha256::digest(text);
-        let hex = format!("{hash:x?}");
+        let hex = format!("{hash:x}");
         let lock = hex.chars().take(MAX_CHARS).collect();
         Self(lock)
     }

@@ -3,6 +3,7 @@ use crate::localization::strings_file::{Lock, StringsFile, StringsFileRecord};
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use std::fs::File;
 
 pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     app.init_resource::<StringsFiles>().add_system(
@@ -55,7 +56,7 @@ fn create_strings_files(
                     )
                 },
             );
-            let strings_file_records = yarn_files
+            let strings_file_records: Vec<_> = yarn_files
                 .into_iter()
                 .map(|(line_id, string_info, file_name)| StringsFileRecord {
                     language: localization.language.clone(),
@@ -68,6 +69,14 @@ fn create_strings_files(
                     comment: read_comments(&string_info.metadata),
                 })
                 .collect();
+            let path = get_assets_dir_path(&asset_server)?;
+            let path = path.as_ref();
+            let file = File::create(path).unwrap();
+            let mut writer = csv::Writer::from_writer(file);
+            for record in strings_file_records.iter() {
+                writer.serialize(record)?;
+            }
+            writer.flush()?;
             let strings_file = StringsFile(strings_file_records);
             info!(
                 "Generated strings file \"{}\" for language {}.",

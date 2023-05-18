@@ -3,8 +3,7 @@ use bevy_yarn_slinger::prelude::*;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir;
-use yarn_slinger::compiler::CompilationType;
-use yarn_slinger::prelude::YarnCompiler;
+use yarn_slinger::prelude::{CompilationType, YarnCompiler};
 
 #[test]
 fn loads_yarn_assets() {
@@ -40,13 +39,14 @@ fn generates_localization_files() -> anyhow::Result<()> {
         ..default()
     }))
     .add_plugin(YarnSlingerPlugin::with_localizations(Some(Localizations {
-        base: "en-US".into(),
+        base_language: "en-US".into(),
         translations: vec!["de-CH".into()],
         file_generation_mode: FileGenerationMode::Development,
     })));
     let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
     let handle = asset_server.load("lines.yarn");
 
+    app.update();
     app.update();
     app.update();
 
@@ -64,7 +64,7 @@ fn generates_localization_files() -> anyhow::Result<()> {
         .with_compilation_type(CompilationType::StringsOnly)
         .compile()?
         .string_table;
-    println!("{:#?}", string_table_with_line_ids);
+
     assert!(string_table_with_line_ids
         .values()
         .all(|string_info| !string_info.is_implicit_tag));
@@ -72,6 +72,23 @@ fn generates_localization_files() -> anyhow::Result<()> {
         string_table_without_line_ids.len(),
         string_table_with_line_ids.len()
     );
+
+    assert!(!dir.path().join("en-US.strings.csv").exists());
+    let translation_strings_table_path = dir.path().join("de-CH.strings.csv");
+    assert!(translation_strings_table_path.exists());
+    let translation_strings_table = fs::read_to_string(&translation_strings_table_path)?;
+    let line_ids_in_strings_table: Vec<_> = translation_strings_table
+        .lines()
+        .map(|line| line.split(',').next().unwrap())
+        .collect();
+    assert_eq!(
+        string_table_with_line_ids.len(),
+        line_ids_in_strings_table.len()
+    );
+
+    assert!(line_ids_in_strings_table
+        .iter()
+        .all(|line_id| string_table_with_line_ids.contains_key(&LineId(line_id.to_string()))));
 
     Ok(())
 }
