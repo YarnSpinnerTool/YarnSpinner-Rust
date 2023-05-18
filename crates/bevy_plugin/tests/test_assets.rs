@@ -7,7 +7,9 @@ fn loads_yarn_assets() {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin);
+        .add_plugin(YarnSlingerPlugin::with_localizations(Some(
+            Localizations::default(),
+        )));
 
     let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
     let handle = asset_server.load("lines.yarn");

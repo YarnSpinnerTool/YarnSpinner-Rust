@@ -7,10 +7,11 @@ exclude = ["assets"]
 
 [features]
 default = []
-serde = ["dep:serde", "yarn_slinger/serde", "bevy/serialize"]
+serde = ["dep:serde", "yarn_slinger/serde", "bevy/serialize", "bitflags/serde"]
 
 [dependencies]
 anyhow = "1"
+bitflags = "2"
 yarn_slinger = { path = "../yarn_slinger", features = ["bevy"] }
 serde = { version = "1", features = ["derive"] , optional = true }
 

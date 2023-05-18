@@ -2,7 +2,26 @@ use crate::assets;
 use crate::prelude::*;
 use bevy::prelude::*;
 
-pub struct YarnSlingerPlugin;
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct YarnSlingerPlugin {
+    pub localizations: Option<Localizations>,
+}
+
+impl YarnSlingerPlugin {
+    pub fn with_localizations(localizations: impl Into<Option<Localizations>>) -> Self {
+        let localizations = localizations.into();
+        if let Some(localizations) = localizations.as_ref() {
+            if cfg!(target_arch = "wasm32") {
+                assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
+                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
+            }
+        }
+        Self {
+            localizations: localizations.into(),
+        }
+    }
+}
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
