@@ -1,10 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
 use crate::localization::strings_file::LanguagesToStringsFiles;
-use crate::localization::strings_file::{Lock, StringsFile, StringsFileRecord};
+use crate::localization::strings_file::StringsFile;
 use crate::prelude::*;
-use anyhow::{bail, Context};
+use anyhow::bail;
 use bevy::prelude::*;
-use std::fs::File;
 
 pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     app.init_resource::<LanguagesToStringsFiles>().add_systems(
@@ -66,15 +65,16 @@ fn create_strings_files(
                 StringsFile::from_yarn_files(localization.language.clone(), yarn_files);
             strings_file.write_asset(&asset_server, path)?;
             info!(
-                "Generated strings file \"{}\" for language {}.",
+                "Generated \"{}\" (lang: {}).",
                 path.display(),
                 localization.language
             );
             asset_server.load(path)
         } else {
-            return Err(Error::msg(format!(
-                "Can't load strings file \"{}\" because it does not exist on disk, but can't generate it either because the file generation mode is not set to \"Development\".",
-                path.display())));
+            bail!(
+                "Can't load strings file \"{}\" because it does not exist on disk, \
+                but can't generate it either because the file generation mode is not set to \"Development\".",
+                path.display());
         };
         languages_to_strings_files
             .0

@@ -46,9 +46,10 @@ fn generates_localization_files() -> anyhow::Result<()> {
     let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
     let handle = asset_server.load("lines.yarn");
 
-    app.update();
-    app.update();
-    app.update();
+    app.update(); // read yarn
+    app.update(); // write line IDs
+    app.update(); // write strings files
+    app.update(); // rewrite strings files?
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file_in_app = yarn_file_assets.get(&handle).unwrap();
@@ -82,12 +83,13 @@ fn generates_localization_files() -> anyhow::Result<()> {
         .skip(1)
         .map(|line| line.split(',').nth(1).unwrap())
         .collect();
+
+    println!("{:#?}", line_ids_in_strings_table);
     assert_eq!(
         string_table_with_line_ids.len(),
         line_ids_in_strings_table.len()
     );
 
-    println!("{:?}", line_ids_in_strings_table);
     assert!(line_ids_in_strings_table
         .iter()
         .all(|line_id| string_table_with_line_ids.contains_key(&LineId(line_id.to_string()))));

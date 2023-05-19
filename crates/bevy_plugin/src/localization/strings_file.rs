@@ -132,9 +132,15 @@ impl StringsFile {
         }
         Ok(Self(records))
     }
+
     pub(crate) fn language(&self) -> Option<&Language> {
         self.0.first().map(|record| &record.language)
     }
+
+    pub(crate) fn extend(&mut self, other: Self) {
+        self.0.extend(other.0);
+    }
+
     pub(crate) fn from_yarn_files<'a>(
         language: impl Into<Language>,
         files: impl Iterator<Item = &'a YarnFile>,
@@ -178,8 +184,9 @@ impl StringsFile {
         let assets_path = get_assets_dir_path(asset_server)?;
         let assets_path = assets_path.as_ref();
         let full_path = assets_path.join(path);
-        let file = File::create(&full_path)
-            .with_context(|| format!("Failed to create strings file \"{}\"", full_path.display(),))?;
+        let file = File::create(&full_path).with_context(|| {
+            format!("Failed to create strings file \"{}\"", full_path.display(),)
+        })?;
         let mut writer = csv::Writer::from_writer(file);
         for record in &self.0 {
             writer.serialize(record)?;
