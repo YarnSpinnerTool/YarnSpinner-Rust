@@ -29,6 +29,15 @@ pub struct Localizations {
     pub file_generation_mode: FileGenerationMode,
 }
 
+impl Localizations {
+    pub fn supports_translation(&self, language: impl Into<Language>) -> bool {
+        let language = language.into();
+        self.translations
+            .iter()
+            .any(|localization| localization.language == language)
+    }
+}
+
 #[derive(
     Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
 )]

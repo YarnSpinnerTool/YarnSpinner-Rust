@@ -23,6 +23,20 @@ pub(crate) fn strings_file_plugin(app: &mut App) {
 pub(crate) struct StringsFile(pub(crate) Vec<StringsFileRecord>);
 
 impl StringsFile {
+    pub(crate) fn new_with_single_language(records: Vec<StringsFileRecord>) -> Self {
+        if let Some(language) = records.first().map(|record| &record.language) {
+            for record in records.iter().skip(1) {
+                assert_eq!(
+                    record.language, *language,
+                    "Loaded strings file with mixed languages records must have the same language. Expected \"{}\", got \"{}\" in record: {:#?}",
+                    language,
+                    record.language,
+                    record
+                );
+            }
+        }
+        Self(records)
+    }
     pub(crate) fn language(&self) -> Option<&Language> {
         self.0.first().map(|record| &record.language)
     }
