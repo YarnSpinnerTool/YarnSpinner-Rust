@@ -177,6 +177,64 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[test]
+fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
+    let dir = tempdir()?;
+    let original_yarn_path = project_root_path().join("assets/lines_with_ids.yarn");
+    let yarn_path = dir.path().join("lines_with_ids.yarn");
+    fs::copy(original_yarn_path, &yarn_path)?;
+
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins.set(AssetPlugin {
+        asset_folder: dir.path().to_str().unwrap().to_string(),
+        ..default()
+    }))
+    .add_plugin(YarnSlingerPlugin::with_localizations(Localizations {
+        base_language: "en-US".into(),
+        translations: vec!["de-CH".into()],
+        file_generation_mode: FileGenerationMode::Development,
+    }));
+    let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
+    let handle: Handle<YarnFile> = asset_server.load("lines_with_ids.yarn");
+
+    app.update(); // read yarn
+    app.update(); // write line IDs and strings file
+    app.update(); // write updated strings file
+    app.update();
+
+    {
+        let mut yarn_files = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
+        let yarn_file = yarn_files.get_mut(&handle).unwrap();
+
+        let mut lines: Vec<_> = yarn_file.content().lines().collect();
+        *lines.get_mut(3).unwrap() = "Changed line #line:2";
+        lines.insert(4, "Inserted line #line:13");
+        *yarn_file.content_mut() = lines.join("\n");
+    }
+
+    app.update();
+    app.update();
+
+    let strings_file_source = fs::read_to_string(dir.path().join("de-CH.strings.csv"))?;
+    let strings_file_lines: Vec<_> = strings_file_source
+        .lines()
+        .skip(1)
+        .map(|line| line.split(',').collect::<Vec<_>>())
+        .collect();
+
+    println!("{strings_file_lines:#?}");
+    assert_eq!(strings_file_lines[1][1], "line:2");
+    assert_eq!(
+        strings_file_lines[1][2],
+        "(NEEDS UPDATE) Hag: Now your *third* wish. What will it be?"
+    );
+    assert_eq!(strings_file_lines[2][1], "line:13");
+    assert_eq!(strings_file_lines[2][2], "Inserted line");
+
+    Ok(())
+}
+
 pub fn project_root_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }

@@ -20,27 +20,24 @@ fn generate_missing_line_ids_in_yarn_file(
     asset_server: Res<AssetServer>,
 ) -> SystemResult {
     for event in events.iter() {
-        if let AssetEvent::Created { handle } = event {
+        if let AssetEvent::Created { handle } | AssetEvent::Modified { handle } = event {
             let yarn_file = assets.get_mut(handle).unwrap();
-            let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? else {
-                // File already contains all line IDs.
-                return Ok(())
-            };
+            if let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? {
+                // If this fails, the asset was created at runtime and doesn't exist on disk.
+                if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
+                    let assets_path = get_assets_dir_path(&asset_server)?;
+                    let path_within_asset_dir: PathBuf =
+                        [assets_path.as_ref(), asset_path.path()].iter().collect();
 
-            // If this fails, the asset was created at runtime and doesn't exist on disk.
-            if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
-                let assets_path = get_assets_dir_path(&asset_server)?;
-                let path_within_asset_dir: PathBuf =
-                    [assets_path.as_ref(), asset_path.path()].iter().collect();
-
-                std::fs::write(&path_within_asset_dir, &source_with_added_ids)
+                    std::fs::write(&path_within_asset_dir, &source_with_added_ids)
                     .context(
                         format!("Failed to overwrite Yarn file at {} with new line IDs. \
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
                                 path_within_asset_dir.display()))?;
+                }
+                yarn_file.file.source = source_with_added_ids;
             }
 
-            yarn_file.file.source = source_with_added_ids;
             let string_table = YarnCompiler::new()
                 .with_compilation_type(CompilationType::StringsOnly)
                 .add_file(yarn_file.file.clone())

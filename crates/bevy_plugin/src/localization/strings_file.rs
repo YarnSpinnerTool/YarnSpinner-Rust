@@ -42,8 +42,8 @@ fn read_comments(metadata: &[String]) -> String {
     // Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Importers/YarnProjectImporter.cs#L652>
     let cleaned_metadata: Vec<_> = metadata
         .iter()
+        .map(|metadata| metadata.trim().to_owned())
         .filter(|metadata| !metadata.starts_with("line:"))
-        .cloned()
         .collect();
     if cleaned_metadata.is_empty() {
         String::new()
@@ -168,10 +168,13 @@ impl StringsFile {
                 continue;
             }
             if let Some(other_record) = other.0.remove(id) {
-                if record.lock != other_record.lock {
-                    record.text = format!("(NEEDS UPDATE) {}", record.text);
-                    record.lock = other_record.lock;
-                }
+                let text = if record.lock != other_record.lock {
+                    format!("(NEEDS UPDATE) {}", &record.text)
+                } else {
+                    other_record.text.clone()
+                };
+                *record = other_record;
+                record.text = text;
             } else {
                 removed_lines.push(id.clone());
             }

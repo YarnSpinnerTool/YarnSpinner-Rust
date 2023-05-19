@@ -24,6 +24,10 @@ impl YarnFile {
     pub fn content(&self) -> &str {
         &self.file.source
     }
+
+    pub fn content_mut(&mut self) -> &mut String {
+        &mut self.file.source
+    }
 }
 
 pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
