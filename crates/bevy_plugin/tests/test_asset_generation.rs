@@ -80,7 +80,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines.yarn");
     let yarn_path = dir.path().join("lines.yarn");
-    fs::copy(&original_yarn_path, &yarn_path)?;
+    fs::copy(original_yarn_path, &yarn_path)?;
 
     let mut app = App::new();
 
@@ -130,7 +130,7 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines.yarn");
     let yarn_path = dir.path().join("lines.yarn");
-    fs::copy(&original_yarn_path, &yarn_path)?;
+    fs::copy(original_yarn_path, yarn_path)?;
 
     let mut app = App::new();
 
@@ -152,7 +152,6 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
 
     let mut localizations = app.world.get_resource_mut::<Localizations>().unwrap();
     localizations.translations = vec!["fr-FR".into()];
-    drop(localizations);
 
     app.update(); // write updated strings file
 
@@ -163,7 +162,7 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     let strings_file_line_languages: Vec<_> = strings_file_source
         .lines()
         .skip(1)
-        .map(|line| line.split(',').nth(0).unwrap())
+        .map(|line| line.split(',').next().unwrap())
         .collect();
 
     assert!(!strings_file_line_languages.is_empty());
