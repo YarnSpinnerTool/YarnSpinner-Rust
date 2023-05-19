@@ -5,6 +5,8 @@ use bevy::reflect::TypeUuid;
 use bevy::utils::HashMap;
 use seldom_fn_plugin::FnPluginExt;
 use sha2::{Digest, Sha256};
+use std::fs::File;
+use std::path::Path;
 
 mod asset;
 mod creation;
@@ -170,5 +172,19 @@ impl StringsFile {
             })
             .collect();
         Self(strings_file_records)
+    }
+
+    pub(crate) fn write_asset(&self, asset_server: &AssetServer, path: &Path) -> Result<()> {
+        let assets_path = get_assets_dir_path(asset_server)?;
+        let assets_path = assets_path.as_ref();
+        let full_path = assets_path.join(path);
+        let file = File::create(&full_path)
+            .with_context(|| format!("Failed to create strings file \"{}\"", full_path.display(),))?;
+        let mut writer = csv::Writer::from_writer(file);
+        for record in &self.0 {
+            writer.serialize(record)?;
+        }
+        writer.flush()?;
+        Ok(())
     }
 }

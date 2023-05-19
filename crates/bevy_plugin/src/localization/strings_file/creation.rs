@@ -64,21 +64,7 @@ fn create_strings_files(
             let yarn_files = yarn_files.iter().map(|(_, yarn_file)| yarn_file);
             let strings_file =
                 StringsFile::from_yarn_files(localization.language.clone(), yarn_files);
-            let assets_path = get_assets_dir_path(&asset_server)?;
-            let assets_path = assets_path.as_ref();
-            let path = assets_path.join(path);
-            let file = File::create(&path).with_context(|| {
-                format!(
-                    "Failed to create strings file \"{}\" for language {}.",
-                    path.display(),
-                    localization.language
-                )
-            })?;
-            let mut writer = csv::Writer::from_writer(file);
-            for record in strings_file.0 {
-                writer.serialize(record)?;
-            }
-            writer.flush()?;
+            strings_file.write_asset(&asset_server, path)?;
             info!(
                 "Generated strings file \"{}\" for language {}.",
                 path.display(),

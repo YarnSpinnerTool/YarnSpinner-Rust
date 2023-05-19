@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub(crate) fn localization_config_plugin(app: &mut App) {
     app.register_type::<Localizations>()
@@ -34,6 +34,13 @@ impl Localizations {
         self.translations
             .iter()
             .any(|localization| localization.language == language)
+    }
+
+    pub(crate) fn get_strings_file(&self, language: impl Into<Language>) -> Option<&Path> {
+        let language = language.into();
+        self.translations
+            .iter()
+            .find_map(|t| (t.language == language).then_some(t.strings_file.as_path()))
     }
 }
 
