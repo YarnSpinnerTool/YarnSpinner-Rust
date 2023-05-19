@@ -150,6 +150,7 @@ impl StringsFile {
                 yarn_file
                     .string_table
                     .iter()
+                    .filter(|(_, line_info)| !line_info.is_implicit_tag)
                     .map(|(id, line_info)| (id, line_info, yarn_file.file.file_name.as_str()))
                     .collect::<Vec<_>>()
             })

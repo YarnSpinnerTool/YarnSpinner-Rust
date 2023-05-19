@@ -35,7 +35,15 @@ fn generate_missing_line_ids_in_yarn_file(
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
                                 path_within_asset_dir.display()))?;
             }
+
             yarn_file.file.source = source_with_added_ids;
+            let string_table = YarnCompiler::new()
+                .with_compilation_type(CompilationType::StringsOnly)
+                .add_file(yarn_file.file.clone())
+                .compile()
+                .unwrap()
+                .string_table;
+            yarn_file.string_table = string_table;
         }
     }
     Ok(())
