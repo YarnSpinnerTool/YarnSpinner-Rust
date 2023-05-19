@@ -47,9 +47,8 @@ fn generates_localization_files() -> anyhow::Result<()> {
     let handle = asset_server.load("lines.yarn");
 
     app.update(); // read yarn
-    app.update(); // write line IDs
-    app.update(); // write strings files
-    app.update(); // rewrite strings files with new line IDs
+    app.update(); // write line IDs and strings file
+    app.update(); // write updated strings file
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file_in_app = yarn_file_assets.get(&handle).unwrap();
