@@ -218,7 +218,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         let mut lines: Vec<_> = yarn_file.content().lines().collect();
         *lines.get_mut(3).unwrap() = "Changed line #line:2";
         lines.insert(4, "Inserted line #line:13");
-        *yarn_file.content_mut() = lines.join("\n");
+        yarn_file.set_content(lines.join("\n"))?;
     }
 
     app.update();

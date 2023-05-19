@@ -26,8 +26,16 @@ impl YarnFile {
         &self.file.source
     }
 
-    pub fn content_mut(&mut self) -> &mut String {
-        &mut self.file.source
+    pub fn set_content(&mut self, content: String) -> Result<&mut Self> {
+        self.file.source = content;
+
+        let string_table = YarnCompiler::new()
+            .with_compilation_type(CompilationType::StringsOnly)
+            .add_file(self.file.clone())
+            .compile()?
+            .string_table;
+        self.string_table = string_table;
+        Ok(self)
     }
 }
 
@@ -80,8 +88,7 @@ fn read_yarn_file<'a>(
     let string_table = YarnCompiler::new()
         .with_compilation_type(CompilationType::StringsOnly)
         .add_file(file.clone())
-        .compile()
-        .unwrap()
+        .compile()?
         .string_table;
     Ok(YarnFile { file, string_table })
 }

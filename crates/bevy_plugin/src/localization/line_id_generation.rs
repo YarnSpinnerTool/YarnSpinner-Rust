@@ -50,8 +50,7 @@ fn generate_missing_line_ids_in_yarn_file(
         let string_table = YarnCompiler::new()
             .with_compilation_type(CompilationType::StringsOnly)
             .add_file(yarn_file.file.clone())
-            .compile()
-            .unwrap()
+            .compile()?
             .string_table;
         yarn_file.string_table = string_table;
     }
