@@ -23,21 +23,9 @@ pub(crate) fn strings_file_plugin(app: &mut App) {
 pub(crate) struct StringsFile(pub(crate) Vec<StringsFileRecord>);
 
 impl StringsFile {
-    pub(crate) fn checked(records: Vec<StringsFileRecord>) -> Self {
-        if !records.is_empty() {
-            let language = &records[0].language;
-            assert!(
-                records.iter().all(|record| &record.language == language),
-                "Failed to load strings file: some records have different languages."
-            );
-        }
-        Self(records)
-    }
-
     pub(crate) fn language(&self) -> Option<&Language> {
         self.0.first().map(|record| &record.language)
     }
-
     pub(crate) fn has_language(&self, language: &Language) -> bool {
         self.language() == Some(language)
     }

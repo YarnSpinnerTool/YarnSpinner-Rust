@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 use std::path::PathBuf;
 
 pub(crate) fn localization_config_plugin(app: &mut App) {
@@ -76,7 +77,7 @@ impl Localization {
 }
 
 #[derive(
-    Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
+    Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
 )]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]

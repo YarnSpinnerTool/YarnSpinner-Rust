@@ -38,11 +38,11 @@ fn generates_localization_files() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(YarnSlingerPlugin::with_localizations(Some(Localizations {
+    .add_plugin(YarnSlingerPlugin::with_localizations(Localizations {
         base_language: "en-US".into(),
         translations: vec!["de-CH".into()],
         file_generation_mode: FileGenerationMode::Development,
-    })));
+    }));
     let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
     let handle = asset_server.load("lines.yarn");
 
