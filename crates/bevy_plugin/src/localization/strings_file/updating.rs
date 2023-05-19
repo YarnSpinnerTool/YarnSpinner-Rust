@@ -45,7 +45,11 @@ fn update_strings_file_on_yarn_file_change(
             ) {
                 Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
-                    if localizations.file_generation_mode != FileGenerationMode::Development {
+                    if localizations.file_generation_mode == FileGenerationMode::Development {
+                        info!("Updating \"{}\" soon (lang: {language}) because \"{}\" was {reason} but does not have full line IDs yet.",
+                            strings_file_path.display(),
+                            yarn_file_path.display(),)
+                    } else {
                         warn!(
                             "Tried to update \"{}\" (lang: {language}) because \"{}\" was {reason}, but couldn't because: {e}",
                             strings_file_path.display(),
