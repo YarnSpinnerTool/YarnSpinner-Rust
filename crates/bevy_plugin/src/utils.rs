@@ -1,7 +1,7 @@
-use std::path::Path;
-use bevy::asset::FileAssetIo;
 use crate::prelude::*;
+use bevy::asset::FileAssetIo;
 use bevy::prelude::*;
+use std::path::Path;
 
 pub(crate) fn panic_on_err(In(result): In<SystemResult>) {
     if let Err(e) = result {

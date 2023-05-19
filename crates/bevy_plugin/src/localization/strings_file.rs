@@ -20,13 +20,11 @@ pub(crate) fn strings_file_plugin(app: &mut App) {
         .fn_plugin(updating::strings_file_updating_plugin);
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect, TypeUuid,
-)]
-#[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Reflect, Serialize, Deserialize, FromReflect, TypeUuid)]
+#[reflect(Debug, PartialEq, Serialize, Deserialize)]
 #[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
 #[non_exhaustive]
-pub(crate) struct StringsFile(pub(crate) Vec<StringsFileRecord>);
+pub(crate) struct StringsFile(pub(crate) HashMap<LineId, StringsFileRecord>);
 
 /// Generates a string with the line metadata. This string is intended
 /// to be used in the "comment" column of a strings table CSV. Because
@@ -130,11 +128,15 @@ impl StringsFile {
                 }
             }
         }
+        let records = records
+            .into_iter()
+            .map(|record| (record.id.clone(), record))
+            .collect::<HashMap<_, _>>();
         Ok(Self(records))
     }
 
     pub(crate) fn language(&self) -> Option<&Language> {
-        self.0.first().map(|record| &record.language)
+        self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
     pub(crate) fn extend(&mut self, other: Self) {
@@ -167,15 +169,20 @@ impl StringsFile {
         let language = language.into();
         let strings_file_records = files
             .into_iter()
-            .map(|(line_id, string_info, file_name)| StringsFileRecord {
-                language: language.clone(),
-                id: line_id.clone(),
-                text: string_info.text.clone(),
-                file: file_name.to_string(),
-                node: string_info.node_name.clone(),
-                line_number: string_info.line_number,
-                lock: Lock::compute_from(&string_info.text),
-                comment: read_comments(&string_info.metadata),
+            .map(|(line_id, string_info, file_name)| {
+                (
+                    line_id.clone(),
+                    StringsFileRecord {
+                        language: language.clone(),
+                        id: line_id.clone(),
+                        text: string_info.text.clone(),
+                        file: file_name.to_string(),
+                        node: string_info.node_name.clone(),
+                        line_number: string_info.line_number,
+                        lock: Lock::compute_from(&string_info.text),
+                        comment: read_comments(&string_info.metadata),
+                    },
+                )
             })
             .collect();
         Self(strings_file_records)
@@ -189,7 +196,7 @@ impl StringsFile {
             format!("Failed to create strings file \"{}\"", full_path.display(),)
         })?;
         let mut writer = csv::Writer::from_writer(file);
-        for record in &self.0 {
+        for (_id, record) in &self.0 {
             writer.serialize(record)?;
         }
         writer.flush()?;

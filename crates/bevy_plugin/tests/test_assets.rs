@@ -49,7 +49,7 @@ fn generates_localization_files() -> anyhow::Result<()> {
     app.update(); // read yarn
     app.update(); // write line IDs
     app.update(); // write strings files
-    app.update(); // rewrite strings files?
+    app.update(); // rewrite strings files with new line IDs
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file_in_app = yarn_file_assets.get(&handle).unwrap();
@@ -84,7 +84,6 @@ fn generates_localization_files() -> anyhow::Result<()> {
         .map(|line| line.split(',').nth(1).unwrap())
         .collect();
 
-    println!("{:#?}", line_ids_in_strings_table);
     assert_eq!(
         string_table_with_line_ids.len(),
         line_ids_in_strings_table.len()
