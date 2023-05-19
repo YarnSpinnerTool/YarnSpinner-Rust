@@ -97,3 +97,15 @@ impl Lock {
         Self(lock)
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
+#[reflect(Debug, Resource, Default, PartialEq)]
+struct LanguagesToStringsFiles(HashMap<Language, Handle<StringsFile>>);
+
+impl LanguagesToStringsFiles {
+    fn get_language(&self, handle: &Handle<StringsFile>) -> Option<&Language> {
+        self.0
+            .iter()
+            .find_map(|(lang, h)| (h == handle).then_some(lang))
+    }
+}

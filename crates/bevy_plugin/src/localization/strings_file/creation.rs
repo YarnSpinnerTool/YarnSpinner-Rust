@@ -1,4 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
+use crate::localization::strings_file::LanguagesToStringsFiles;
 use crate::localization::strings_file::{Lock, StringsFile, StringsFileRecord};
 use crate::prelude::*;
 use anyhow::{bail, Context};
@@ -18,39 +19,24 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     );
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
-#[reflect(Debug, Resource, Default, PartialEq)]
-struct LanguagesToStringsFiles(HashMap<Language, Handle<StringsFile>>);
-
-impl LanguagesToStringsFiles {
-    fn get_language(&self, handle: &Handle<StringsFile>) -> Option<&Language> {
-        self.0
-            .iter()
-            .find_map(|(lang, h)| (h == handle).then_some(lang))
-    }
-}
-
 fn ensure_right_language(
     mut events: EventReader<AssetEvent<StringsFile>>,
     languages_to_strings_files: Res<LanguagesToStringsFiles>,
     assets: Res<Assets<StringsFile>>,
 ) -> SystemResult {
     for event in events.iter() {
-        match event {
-            AssetEvent::Created { handle } | AssetEvent::Modified { handle } => {
-                let strings_file = assets.get(handle).unwrap();
-                if let Some(expected_language) = languages_to_strings_files.get_language(handle) {
-                    if let Some(language) = strings_file.language() {
-                        if language != expected_language {
-                            bail!(
+        if let AssetEvent::Created { handle } | AssetEvent::Modified { handle } = event {
+            let strings_file = assets.get(handle).unwrap();
+            if let Some(expected_language) = languages_to_strings_files.get_language(handle) {
+                if let Some(language) = strings_file.language() {
+                    if language != expected_language {
+                        bail!(
                                 "The language the strings registered for language \"{expected_language}\" \
                                 actually contains the language \"{language}\""
                             );
-                        }
                     }
                 }
             }
-            _ => {}
         }
     }
     Ok(())
