@@ -29,16 +29,34 @@ fn update_strings_file_on_yarn_file_change(
                 continue;
             };
             let yarn_files = yarn_files.iter().map(|(_, yarn_file)| yarn_file);
-            let current_strings_file = StringsFile::from_yarn_files(language.clone(), yarn_files);
-            strings_file.extend(current_strings_file);
-            let path = localizations.get_strings_file(language.clone()).unwrap();
-            strings_file.write_asset(&asset_server, path)?;
+            let strings_file_path = localizations.get_strings_file(language.clone()).unwrap();
+            let yarn_file_path = asset_server
+                .get_handle_path(handle)
+                .unwrap()
+                .path()
+                .to_path_buf();
 
-            let yarn_file_name = asset_server.get_handle_path(handle).unwrap();
+            let current_strings_file = match StringsFile::from_yarn_files(
+                language.clone(),
+                yarn_files,
+            ) {
+                Ok(current_strings_file) => current_strings_file,
+                Err(e) => {
+                    warn!(
+                    "Could not update \"{}\" (lang: {language}) with new content from \"{}\" because: {e}",
+                    strings_file_path.display(),
+                    yarn_file_path.display(),
+                );
+                    continue;
+                }
+            };
+            strings_file.extend(current_strings_file);
+            strings_file.write_asset(&asset_server, strings_file_path)?;
+
             info!(
                 "Updated \"{}\" (lang: {language}) because \"{}\" was {reason}.",
-                path.display(),
-                yarn_file_name.path().display(),
+                strings_file_path.display(),
+                yarn_file_path.display(),
             );
         }
     }

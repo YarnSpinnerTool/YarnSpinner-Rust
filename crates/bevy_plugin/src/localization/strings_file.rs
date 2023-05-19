@@ -20,8 +20,10 @@ pub(crate) fn strings_file_plugin(app: &mut App) {
         .fn_plugin(updating::strings_file_updating_plugin);
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Reflect, Serialize, Deserialize, FromReflect, TypeUuid)]
-#[reflect(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, Reflect, Default, Serialize, Deserialize, FromReflect, TypeUuid,
+)]
+#[reflect(Debug, PartialEq, Serialize, Default, Deserialize)]
 #[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
 #[non_exhaustive]
 pub(crate) struct StringsFile(pub(crate) HashMap<LineId, StringsFileRecord>);
@@ -146,46 +148,34 @@ impl StringsFile {
     pub(crate) fn from_yarn_files<'a>(
         language: impl Into<Language>,
         files: impl Iterator<Item = &'a YarnFile>,
-    ) -> Self {
-        let mut files: Vec<_> = files
-            .flat_map(|yarn_file| {
-                yarn_file
-                    .string_table
-                    .iter()
-                    .filter(|(_, line_info)| !line_info.is_implicit_tag)
-                    .map(|(id, line_info)| (id, line_info, yarn_file.file.file_name.as_str()))
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-        files.sort_by(
-            |(_, lhs_string_info, lhs_file_name), (_, rhs_string_info, rhs_file_name)| {
-                lhs_file_name.cmp(rhs_file_name).then(
-                    lhs_string_info
-                        .line_number
-                        .cmp(&rhs_string_info.line_number),
-                )
-            },
-        );
+    ) -> Result<Self> {
         let language = language.into();
-        let strings_file_records = files
-            .into_iter()
-            .map(|(line_id, string_info, file_name)| {
-                (
-                    line_id.clone(),
+        let mut records = HashMap::new();
+        for yarn_file in files {
+            for (id, string_info) in &yarn_file.string_table {
+                if string_info.is_implicit_tag {
+                    bail!(
+                        "Cannot build strings file from not fully tagged Yarn files (line {} in \"{}\" is not tagged).",
+                        string_info.line_number,
+                        yarn_file.file.file_name
+                    )
+                }
+                records.insert(
+                    id.clone(),
                     StringsFileRecord {
                         language: language.clone(),
-                        id: line_id.clone(),
+                        id: id.clone(),
                         text: string_info.text.clone(),
-                        file: file_name.to_string(),
+                        file: yarn_file.file.file_name.to_string(),
                         node: string_info.node_name.clone(),
                         line_number: string_info.line_number,
                         lock: Lock::compute_from(&string_info.text),
                         comment: read_comments(&string_info.metadata),
                     },
-                )
-            })
-            .collect();
-        Self(strings_file_records)
+                );
+            }
+        }
+        Ok(Self(records))
     }
 
     pub(crate) fn write_asset(&self, asset_server: &AssetServer, path: &Path) -> Result<()> {
@@ -196,7 +186,13 @@ impl StringsFile {
             format!("Failed to create strings file \"{}\"", full_path.display(),)
         })?;
         let mut writer = csv::Writer::from_writer(file);
-        for (_id, record) in &self.0 {
+        let mut records = self.0.iter().map(|(_, record)| record).collect::<Vec<_>>();
+        records.sort_by(|lhs, rhs| {
+            lhs.file
+                .cmp(&rhs.file)
+                .then(lhs.line_number.cmp(&rhs.line_number))
+        });
+        for record in records {
             writer.serialize(record)?;
         }
         writer.flush()?;
