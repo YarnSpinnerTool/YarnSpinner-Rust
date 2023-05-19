@@ -171,7 +171,8 @@ impl StringsFile {
                 let text = if record.lock != other_record.lock {
                     format!("(NEEDS UPDATE) {}", &record.text)
                 } else {
-                    other_record.text.clone()
+                    // not `other_record` because that one might not contain (NEEDS UPDATE)
+                    record.text.clone()
                 };
                 *record = other_record;
                 record.text = text;

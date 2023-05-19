@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use std::fs;
 use std::path::PathBuf;
+use std::thread::sleep;
+use std::time::Duration;
 use tempfile::tempdir;
 use yarn_slinger::prelude::{CompilationType, YarnCompiler};
 
@@ -15,6 +17,8 @@ fn loads_yarn_assets() {
     let asset_server = app.world.get_resource::<AssetServer>().unwrap();
     let handle = asset_server.load("lines.yarn");
 
+    app.update();
+    sleep(Duration::from_millis(100));
     app.update();
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
@@ -47,6 +51,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
     let handle = asset_server.load("lines.yarn");
 
     app.update(); // read yarn
+    sleep(Duration::from_millis(100));
     app.update(); // write line IDs
     app.update();
 
@@ -99,6 +104,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
     let _handle: Handle<YarnFile> = asset_server.load("lines.yarn");
 
     app.update(); // read yarn
+    sleep(Duration::from_millis(100));
     app.update(); // write line IDs and strings file
     app.update(); // write updated strings file
     app.update();
@@ -150,6 +156,7 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     let _handle: Handle<YarnFile> = asset_server.load("lines.yarn");
 
     app.update(); // read yarn
+    sleep(Duration::from_millis(100));
     app.update(); // write line IDs and strings file
     app.update(); // write updated strings file
 
@@ -199,6 +206,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     let handle: Handle<YarnFile> = asset_server.load("lines_with_ids.yarn");
 
     app.update(); // read yarn
+    sleep(Duration::from_millis(100));
     app.update(); // write line IDs and strings file
     app.update(); // write updated strings file
     app.update();

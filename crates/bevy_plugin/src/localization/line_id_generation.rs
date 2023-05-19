@@ -20,32 +20,40 @@ fn generate_missing_line_ids_in_yarn_file(
     asset_server: Res<AssetServer>,
 ) -> SystemResult {
     for event in events.iter() {
-        if let AssetEvent::Created { handle } | AssetEvent::Modified { handle } = event {
-            let yarn_file = assets.get_mut(handle).unwrap();
-            if let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? {
-                // If this fails, the asset was created at runtime and doesn't exist on disk.
-                if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
-                    let assets_path = get_assets_dir_path(&asset_server)?;
-                    let path_within_asset_dir: PathBuf =
-                        [assets_path.as_ref(), asset_path.path()].iter().collect();
+        let AssetEvent::Created { handle } = event else {
+            // Not covering `Modified` because
+            // (a) we modify the `YarnFile` again in here, which could potentially lead to a `Modified` event every tick
+            // (b) the API of `YarnFile` disallows mutation, so we can only modify it via file access, which already makes sure we have
+            // the right string table. Since the line IDs were generated on creation, there is actually nothing else we could update in here.
+            continue;
+        };
+        let yarn_file = assets.get(handle).unwrap().clone();
+        let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
+            continue;
+        };
 
-                    std::fs::write(&path_within_asset_dir, &source_with_added_ids)
+        if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
+            let assets_path = get_assets_dir_path(&asset_server)?;
+            let path_within_asset_dir: PathBuf =
+                [assets_path.as_ref(), asset_path.path()].iter().collect();
+
+            std::fs::write(&path_within_asset_dir, &source_with_added_ids)
                     .context(
                         format!("Failed to overwrite Yarn file at {} with new line IDs. \
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
                                 path_within_asset_dir.display()))?;
-                }
-                yarn_file.file.source = source_with_added_ids;
-            }
-
-            let string_table = YarnCompiler::new()
-                .with_compilation_type(CompilationType::StringsOnly)
-                .add_file(yarn_file.file.clone())
-                .compile()
-                .unwrap()
-                .string_table;
-            yarn_file.string_table = string_table;
         }
+
+        let yarn_file = assets.get_mut(handle).unwrap();
+        yarn_file.file.source = source_with_added_ids;
+
+        let string_table = YarnCompiler::new()
+            .with_compilation_type(CompilationType::StringsOnly)
+            .add_file(yarn_file.file.clone())
+            .compile()
+            .unwrap()
+            .string_table;
+        yarn_file.string_table = string_table;
     }
     Ok(())
 }

@@ -6,10 +6,11 @@ use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
 };
+use std::hash::Hash;
 use yarn_slinger::prelude::YarnFile as InnerYarnFile;
 
 #[derive(Debug, Clone, Eq, PartialEq, Reflect, FromReflect, TypeUuid, Serialize, Deserialize)]
-#[reflect(Debug, PartialEq, Serialize, Deserialize)]
+#[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 #[uuid = "32570e61-d69d-4f87-9552-9da2a62ecfd1"]
 pub struct YarnFile {
     pub(crate) file: InnerYarnFile,
@@ -27,6 +28,13 @@ impl YarnFile {
 
     pub fn content_mut(&mut self) -> &mut String {
         &mut self.file.source
+    }
+}
+
+impl Hash for YarnFile {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.file.file_name.hash(state);
+        self.file.source.hash(state);
     }
 }
 
