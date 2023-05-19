@@ -20,31 +20,29 @@ fn generate_missing_line_ids_in_yarn_file(
     asset_server: Res<AssetServer>,
 ) -> SystemResult {
     for event in events.iter() {
-        let AssetEvent::Created { handle } = event else {
-            // Not covering `Modified` because
-            // (a) we modify the `YarnFile` again in here, which could potentially lead to a `Modified` event every tick
-            // (b) the API of `YarnFile` disallows mutation, so we can only modify it via file access, which already makes sure we have
-            // the right string table. Since the line IDs were generated on creation, there is actually nothing else we could update in here.
+        let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
         };
         let yarn_file = assets.get(handle).unwrap().clone();
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
             continue;
         };
+        let yarn_file = assets.get_mut(handle).unwrap();
 
-        if let Some(asset_path) = asset_server.get_handle_path(handle.clone()) {
-            let assets_path = get_assets_dir_path(&asset_server)?;
-            let path_within_asset_dir: PathBuf =
-                [assets_path.as_ref(), asset_path.path()].iter().collect();
+        let asset_path = asset_server
+            .get_handle_path(handle.clone())
+            .with_context(|| format!("Failed to overwrite Yarn file \"{}\" with new IDs because it was not found on disk",
+                                     yarn_file.file_name()))?;
+        let assets_path = get_assets_dir_path(&asset_server)?;
+        let path_within_asset_dir: PathBuf =
+            [assets_path.as_ref(), asset_path.path()].iter().collect();
 
-            std::fs::write(&path_within_asset_dir, &source_with_added_ids)
+        std::fs::write(&path_within_asset_dir, &source_with_added_ids)
                     .context(
                         format!("Failed to overwrite Yarn file at {} with new line IDs. \
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
                                 path_within_asset_dir.display()))?;
-        }
 
-        let yarn_file = assets.get_mut(handle).unwrap();
         yarn_file.file.source = source_with_added_ids;
 
         let string_table = YarnCompiler::new()
