@@ -48,7 +48,7 @@ fn create_strings_files(
 ) -> SystemResult {
     languages_to_strings_files
         .0
-        .retain(|lang, _| localizations.supports_translation(lang.clone()));
+        .retain(|lang, _| localizations.supports_translation(lang));
     for localization in &localizations.translations {
         if languages_to_strings_files
             .0

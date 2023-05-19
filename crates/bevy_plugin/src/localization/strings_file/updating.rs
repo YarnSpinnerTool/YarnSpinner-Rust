@@ -32,7 +32,7 @@ fn update_strings_file_on_yarn_file_change(
                 continue;
             };
             let yarn_file = yarn_files.get(handle).unwrap();
-            let strings_file_path = localizations.strings_file_path(language.clone()).unwrap();
+            let strings_file_path = localizations.strings_file_path(language).unwrap();
             let yarn_file_path = asset_server
                 .get_handle_path(handle)
                 .unwrap()

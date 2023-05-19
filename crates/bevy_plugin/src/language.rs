@@ -30,3 +30,9 @@ impl From<&str> for Language {
         Self(language.to_owned())
     }
 }
+
+impl AsRef<str> for Language {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}

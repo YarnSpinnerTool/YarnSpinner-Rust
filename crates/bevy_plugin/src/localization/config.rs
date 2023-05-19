@@ -29,18 +29,18 @@ pub struct Localizations {
 }
 
 impl Localizations {
-    pub fn supports_translation(&self, language: impl Into<Language>) -> bool {
-        let language = language.into();
+    pub fn supports_translation(&self, language: impl AsRef<str>) -> bool {
+        let language = language.as_ref();
         self.translations
             .iter()
-            .any(|localization| localization.language == language)
+            .any(|localization| localization.language.as_ref() == language)
     }
 
-    pub(crate) fn strings_file_path(&self, language: impl Into<Language>) -> Option<&Path> {
-        let language = language.into();
+    pub(crate) fn strings_file_path(&self, language: impl AsRef<str>) -> Option<&Path> {
+        let language = language.as_ref();
         self.translations
             .iter()
-            .find_map(|t| (t.language == language).then_some(t.strings_file.as_path()))
+            .find_map(|t| (t.language.as_ref() == language).then_some(t.strings_file.as_path()))
     }
 }
 
