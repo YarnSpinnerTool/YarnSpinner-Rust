@@ -7,12 +7,14 @@ use sha2::{Digest, Sha256};
 
 mod asset;
 mod creation;
+mod updating;
 
 pub(crate) fn strings_file_plugin(app: &mut App) {
     app.register_type::<StringsFile>()
         .register_type::<StringsFileRecord>()
         .fn_plugin(asset::strings_file_asset_plugin)
-        .fn_plugin(creation::strings_file_creation_plugin);
+        .fn_plugin(creation::strings_file_creation_plugin)
+        .fn_plugin(updating::strings_file_updating_plugin);
 }
 
 #[derive(
