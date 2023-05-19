@@ -2,6 +2,7 @@ use crate::localization::line_id_generation::LineIdUpdateSystemSet;
 use crate::localization::strings_file::{LanguagesToStringsFiles, StringsFile};
 use crate::prelude::*;
 use bevy::prelude::*;
+use std::iter;
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_system(
@@ -30,19 +31,19 @@ fn update_strings_file_on_yarn_file_change(
             let Some(strings_file) = strings_files.get_mut(strings_file_handle) else {
                 continue;
             };
-            let yarn_files = yarn_files.iter().map(|(_, yarn_file)| yarn_file);
-            let strings_file_path = localizations.get_strings_file(language.clone()).unwrap();
+            let yarn_file = yarn_files.get(handle).unwrap();
+            let strings_file_path = localizations.strings_file_path(language.clone()).unwrap();
             let yarn_file_path = asset_server
                 .get_handle_path(handle)
                 .unwrap()
                 .path()
                 .to_path_buf();
 
-            let current_strings_file = match StringsFile::from_yarn_files(
+            let new_strings_file = match StringsFile::from_yarn_files(
                 language.clone(),
-                yarn_files,
+                iter::once(yarn_file),
             ) {
-                Ok(current_strings_file) => current_strings_file,
+                Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
                     if localizations.file_generation_mode != FileGenerationMode::Development {
                         warn!(
@@ -54,7 +55,7 @@ fn update_strings_file_on_yarn_file_change(
                     continue;
                 }
             };
-            strings_file.extend(current_strings_file);
+            strings_file.update_file(new_strings_file)?;
             strings_file.write_asset(&asset_server, strings_file_path)?;
 
             info!(

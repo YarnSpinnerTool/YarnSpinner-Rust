@@ -141,8 +141,46 @@ impl StringsFile {
         self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
-    pub(crate) fn extend(&mut self, other: Self) {
+    pub(crate) fn update_file(&mut self, mut other: Self) -> Result<()> {
+        let mut removed_lines = Vec::new();
+        let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {
+            return Ok(());
+        };
+        if let Some(language) = self.language() {
+            if language != other.language().unwrap() {
+                bail!("Cannot update contents of strings file with another strings file that contains a different language. \
+                Expected \"{:?}\", got \"{:?}\". This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new",
+                    self.language(), other.language())
+            }
+        }
+        if let Some(wrong_file) = other
+            .0
+            .values()
+            .skip(1)
+            .map(|rec| rec.file.as_str())
+            .find(|other_file| other_file != &file)
+        {
+            bail!("Cannot update contents of strings file with another strings file that contains lines for more than one file at a time. \
+            Found both  \"{file}\" and \"{wrong_file}\". This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new" )
+        }
+        for (id, record) in self.0.iter_mut() {
+            if record.file != file {
+                continue;
+            }
+            if let Some(other_record) = other.0.remove(id) {
+                if record.lock != other_record.lock {
+                    record.text = format!("(NEEDS UPDATE) {}", record.text);
+                    record.lock = other_record.lock;
+                }
+            } else {
+                removed_lines.push(id.clone());
+            }
+        }
+        for id in removed_lines {
+            self.0.remove(&id);
+        }
         self.0.extend(other.0);
+        Ok(())
     }
 
     pub(crate) fn from_yarn_files<'a>(

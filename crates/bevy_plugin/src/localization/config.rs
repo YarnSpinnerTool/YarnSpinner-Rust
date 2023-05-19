@@ -36,7 +36,7 @@ impl Localizations {
             .any(|localization| localization.language == language)
     }
 
-    pub(crate) fn get_strings_file(&self, language: impl Into<Language>) -> Option<&Path> {
+    pub(crate) fn strings_file_path(&self, language: impl Into<Language>) -> Option<&Path> {
         let language = language.into();
         self.translations
             .iter()

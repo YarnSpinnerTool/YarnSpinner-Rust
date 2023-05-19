@@ -12,8 +12,18 @@ use yarn_slinger::prelude::YarnFile as InnerYarnFile;
 #[reflect(Debug, PartialEq, Serialize, Deserialize)]
 #[uuid = "32570e61-d69d-4f87-9552-9da2a62ecfd1"]
 pub struct YarnFile {
-    pub file: InnerYarnFile,
-    pub string_table: std::collections::HashMap<LineId, StringInfo>,
+    pub(crate) file: InnerYarnFile,
+    pub(crate) string_table: std::collections::HashMap<LineId, StringInfo>,
+}
+
+impl YarnFile {
+    pub fn file_name(&self) -> &str {
+        &self.file.file_name
+    }
+
+    pub fn content(&self) -> &str {
+        &self.file.source
+    }
 }
 
 pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
