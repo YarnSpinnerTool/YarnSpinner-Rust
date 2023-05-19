@@ -61,18 +61,29 @@ fn create_strings_files(
             asset_server.load(path)
         } else if localizations.file_generation_mode == FileGenerationMode::Development {
             let yarn_files = yarn_files.iter().map(|(_, yarn_file)| yarn_file);
-            let (strings_file, reason) =
+            let (strings_file, error) =
                 StringsFile::from_yarn_files(localization.language.clone(), yarn_files)
-                    .map(|strings_file| (strings_file, String::new()))
-                    .unwrap_or_else(|e| {
-                        (StringsFile::default(), format!(" It is empty because: {e}"))
-                    });
+                    .map(|strings_file| (strings_file, None))
+                    .unwrap_or_else(|e| (StringsFile::default(), Some(e)));
+
             strings_file.write_asset(&asset_server, path)?;
-            info!(
-                "Generated \"{}\" (lang: {}).{reason}",
-                path.display(),
-                localization.language
-            );
+            match error {
+                Some(e)
+                    if localizations.file_generation_mode != FileGenerationMode::Development =>
+                {
+                    warn!(
+                        "Generated \"{}\" (lang: {}), but it is empty because: {e}",
+                        path.display(),
+                        localization.language
+                    )
+                }
+                _ => info!(
+                    "Generated \"{}\" (lang: {}).",
+                    path.display(),
+                    localization.language
+                ),
+            };
+
             asset_server.load(path)
         } else {
             bail!(

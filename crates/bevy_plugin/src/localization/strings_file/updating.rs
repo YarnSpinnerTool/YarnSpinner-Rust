@@ -1,3 +1,4 @@
+use crate::localization::line_id_generation::LineIdUpdateSystemSet;
 use crate::localization::strings_file::{LanguagesToStringsFiles, StringsFile};
 use crate::prelude::*;
 use bevy::prelude::*;
@@ -6,6 +7,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_system(
         update_strings_file_on_yarn_file_change
             .pipe(panic_on_err)
+            .before(LineIdUpdateSystemSet)
             .run_if(resource_exists::<Localizations>()),
     );
 }
@@ -42,11 +44,13 @@ fn update_strings_file_on_yarn_file_change(
             ) {
                 Ok(current_strings_file) => current_strings_file,
                 Err(e) => {
-                    warn!(
-                    "Could not update \"{}\" (lang: {language}) with new content from \"{}\" because: {e}",
-                    strings_file_path.display(),
-                    yarn_file_path.display(),
-                );
+                    if localizations.file_generation_mode != FileGenerationMode::Development {
+                        warn!(
+                            "Tried to update \"{}\" (lang: {language}) because \"{}\" was {reason}, but couldn't because: {e}",
+                            strings_file_path.display(),
+                            yarn_file_path.display(),
+                        );
+                    }
                     continue;
                 }
             };

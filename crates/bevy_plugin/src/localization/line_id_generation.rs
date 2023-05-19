@@ -2,10 +2,14 @@ use crate::prelude::*;
 use bevy::prelude::*;
 use std::path::PathBuf;
 
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
+pub(crate) struct LineIdUpdateSystemSet;
+
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
     app.add_system(
         generate_missing_line_ids_in_yarn_file
             .pipe(panic_on_err)
+            .in_set(LineIdUpdateSystemSet)
             .run_if(is_in_development),
     );
 }
