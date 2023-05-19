@@ -8,9 +8,12 @@ use std::fs::File;
 
 pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     app.init_resource::<LanguagesToStringsFiles>().add_systems(
-        (create_strings_files
-            .pipe(panic_on_err)
-            .run_if(resource_exists_and_changed::<Localizations>()),)
+        (
+            create_strings_files
+                .pipe(panic_on_err)
+                .run_if(resource_exists_and_changed::<Localizations>()),
+            ensure_right_language.pipe(panic_on_err),
+        )
             .chain(),
     );
 }
@@ -18,6 +21,40 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
 struct LanguagesToStringsFiles(HashMap<Language, Handle<StringsFile>>);
+
+impl LanguagesToStringsFiles {
+    fn get_language(&self, handle: &Handle<StringsFile>) -> Option<&Language> {
+        self.0
+            .iter()
+            .find_map(|(lang, h)| (h == handle).then_some(lang))
+    }
+}
+
+fn ensure_right_language(
+    mut events: EventReader<AssetEvent<StringsFile>>,
+    languages_to_strings_files: Res<LanguagesToStringsFiles>,
+    assets: Res<Assets<StringsFile>>,
+) -> SystemResult {
+    for event in events.iter() {
+        match event {
+            AssetEvent::Created { handle } | AssetEvent::Modified { handle } => {
+                let strings_file = assets.get(handle).unwrap();
+                if let Some(expected_language) = languages_to_strings_files.get_language(handle) {
+                    if let Some(language) = strings_file.language() {
+                        if language != expected_language {
+                            bail!(
+                                "The language the strings registered for language \"{expected_language}\" \
+                                actually contains the language \"{language}\""
+                            );
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(())
+}
 
 fn create_strings_files(
     localizations: Res<Localizations>,

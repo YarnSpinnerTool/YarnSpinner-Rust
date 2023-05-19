@@ -22,7 +22,7 @@ impl AssetLoader for StringsFileAssetLoader {
         Box::pin(async move {
             let mut reader = csv::Reader::from_reader(bytes);
             let records: csv::Result<Vec<_>> = reader.deserialize().collect();
-            let strings_file = StringsFile::new_with_single_language(records?);
+            let strings_file = StringsFile::new_with_single_language(records?)?;
             load_context.set_default_asset(LoadedAsset::new(strings_file));
             Ok(())
         })

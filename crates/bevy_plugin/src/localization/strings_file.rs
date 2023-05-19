@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use anyhow::bail;
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use seldom_fn_plugin::FnPluginExt;
@@ -23,25 +24,21 @@ pub(crate) fn strings_file_plugin(app: &mut App) {
 pub(crate) struct StringsFile(pub(crate) Vec<StringsFileRecord>);
 
 impl StringsFile {
-    pub(crate) fn new_with_single_language(records: Vec<StringsFileRecord>) -> Self {
+    pub(crate) fn new_with_single_language(records: Vec<StringsFileRecord>) -> Result<Self> {
         if let Some(language) = records.first().map(|record| &record.language) {
             for record in records.iter().skip(1) {
-                assert_eq!(
-                    record.language, *language,
-                    "Loaded strings file with mixed languages records must have the same language. Expected \"{}\", got \"{}\" in record: {:#?}",
+                if record.language != *language {
+                    bail!("Loaded strings file with mixed languages records must have the same language. Expected \"{}\", got \"{}\" in record: {:#?}",
                     language,
                     record.language,
-                    record
-                );
+                    record)
+                }
             }
         }
-        Self(records)
+        Ok(Self(records))
     }
     pub(crate) fn language(&self) -> Option<&Language> {
         self.0.first().map(|record| &record.language)
-    }
-    pub(crate) fn has_language(&self, language: &Language) -> bool {
-        self.language() == Some(language)
     }
 }
 

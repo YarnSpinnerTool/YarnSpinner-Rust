@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 use std::path::PathBuf;
 
 pub(crate) fn localization_config_plugin(app: &mut App) {
