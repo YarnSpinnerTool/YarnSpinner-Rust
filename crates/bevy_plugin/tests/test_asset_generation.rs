@@ -222,8 +222,9 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         yarn_file.set_content(lines.join("\n"))?;
     }
 
-    app.update();
-    app.update();
+    app.update(); // Spot change
+    app.update(); // Send changed event
+    app.update(); // Replace entries in strings file
 
     let strings_file_source = fs::read_to_string(dir.path().join("de-CH.strings.csv"))?;
     let strings_file_lines: Vec<_> = strings_file_source
