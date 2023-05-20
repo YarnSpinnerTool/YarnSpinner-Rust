@@ -72,7 +72,10 @@ impl YarnApp for App {
 
     fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
         if let Some(localizations) = plugin.localizations.clone() {
-            self.insert_resource(localizations);
+            self.insert_resource(CurrentLanguage(
+                localizations.base_language.language.clone(),
+            ))
+            .insert_resource(localizations);
         }
         self
     }

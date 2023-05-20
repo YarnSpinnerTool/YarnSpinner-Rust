@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
+use crate::localization::StringsFile;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
-use crate::localization::StringsFile;
 
 pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     app.add_systems(
@@ -17,25 +17,35 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
 }
 
 fn ensure_right_language(
-    mut events: EventReader<AssetEvent<StringsFile>>,
-    languages_to_strings_files: Res<LanguagesToStringsFiles>,
+    current_strings_file: Res<CurrentStringsFile>,
+    current_language: Res<CurrentLanguage>,
     assets: Res<Assets<StringsFile>>,
+    mut done: Local<bool>,
 ) -> SystemResult {
-    for event in events.iter() {
-        if let AssetEvent::Created { handle } | AssetEvent::Modified { handle } = event {
-            let strings_file = assets.get(handle).unwrap();
-            if let Some(expected_language) = languages_to_strings_files.get_language(handle) {
-                if let Some(language) = strings_file.language() {
-                    if language != expected_language {
-                        bail!(
-                                "The language the strings registered for language \"{expected_language}\" \
-                                actually contains the language \"{language}\""
-                            );
-                    }
-                }
-            }
+    if current_strings_file.is_changed() {
+        *done = false;
+    }
+    if current_strings_file.0.is_none() {
+        *done = true;
+    }
+    if *done {
+        return Ok(());
+    }
+
+    let handle = current_strings_file.0.as_ref().unwrap();
+    let Some(strings_file) = assets.get(handle) else {
+        return Ok(());
+    };
+    let expected_language = &current_language.0;
+    if let Some(language) = strings_file.language() {
+        if language != expected_language {
+            bail!(
+                "The language the strings registered for language \"{expected_language}\" \
+                            actually contains the language \"{language}\""
+            );
         }
     }
+    *done = true;
     Ok(())
 }
 
