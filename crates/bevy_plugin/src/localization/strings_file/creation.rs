@@ -8,12 +8,19 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     app.add_event::<CreateMissingStringsFilesEvent>()
         .add_systems(
             (
-                create_strings_files.pipe(panic_on_err).run_if(
-                    resource_exists::<Localizations>()
-                        .and_then(on_event::<CreateMissingStringsFilesEvent>())
-                        .or_else(resource_changed::<Localizations>()),
-                ),
-                ensure_right_language.pipe(panic_on_err),
+                create_strings_files
+                    .pipe(panic_on_err)
+                    .in_set(CreateMissingStringsFilesSystemSet)
+                    .run_if(
+                        in_development.and_then(
+                            resource_exists::<Localizations>()
+                                .and_then(on_event::<CreateMissingStringsFilesEvent>())
+                                .or_else(resource_exists_and_changed::<Localizations>()),
+                        ),
+                    ),
+                ensure_right_language
+                    .pipe(panic_on_err)
+                    .run_if(resource_exists::<CurrentLanguage>()),
             )
                 .chain(),
         );
@@ -22,6 +29,9 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect)]
 #[reflect(Debug, Hash, Default, PartialEq)]
 pub struct CreateMissingStringsFilesEvent;
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
+pub(crate) struct CreateMissingStringsFilesSystemSet;
 
 fn ensure_right_language(
     current_strings_file: Res<CurrentStringsFile>,
@@ -66,33 +76,16 @@ fn create_strings_files(
         if asset_server.asset_io().is_file(path) {
             return Ok(());
         }
-        if localizations.file_generation_mode != FileGenerationMode::Development {
-            bail!(
-                "Can't load strings file \"{}\" because it does not exist on disk, \
-                but can't generate it either because the file generation mode is not set to \"Development\".",
-                path.display());
-        };
         let yarn_files = yarn_files.iter().map(|(_, yarn_file)| yarn_file);
-        let (strings_file, error) =
-            StringsFile::from_yarn_files(localization.language.clone(), yarn_files)
-                .map(|strings_file| (strings_file, None))
-                .unwrap_or_else(|e| (StringsFile::default(), Some(e)));
+        let strings_file = StringsFile::from_yarn_files(localization.language.clone(), yarn_files)
+            .unwrap_or_default();
 
         strings_file.write_asset(&asset_server, path)?;
-        match error {
-            Some(e) if localizations.file_generation_mode != FileGenerationMode::Development => {
-                warn!(
-                    "Generated \"{}\" (lang: {}), but it is empty because: {e}",
-                    path.display(),
-                    localization.language
-                )
-            }
-            _ => info!(
-                "Generated \"{}\" (lang: {}).",
-                path.display(),
-                localization.language
-            ),
-        };
+        info!(
+            "Generated \"{}\" (lang: {}).",
+            path.display(),
+            localization.language
+        );
     }
     Ok(())
 }

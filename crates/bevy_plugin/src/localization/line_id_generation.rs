@@ -10,7 +10,7 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
         generate_missing_line_ids_in_yarn_file
             .pipe(panic_on_err)
             .in_set(LineIdUpdateSystemSet)
-            .run_if(is_in_development),
+            .run_if(in_development),
     );
 }
 
