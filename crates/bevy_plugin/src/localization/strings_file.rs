@@ -1,3 +1,4 @@
+pub use self::creation::CreateMissingStringsFilesEvent;
 pub(crate) use self::{asset::StringsFile, resource::CurrentStringsFile};
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;

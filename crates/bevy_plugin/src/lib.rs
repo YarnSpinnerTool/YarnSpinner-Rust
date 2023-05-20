@@ -14,3 +14,7 @@ pub mod prelude {
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
 }
+
+pub mod filesystem_events {
+    pub use crate::localization::CreateMissingStringsFilesEvent;
+}
