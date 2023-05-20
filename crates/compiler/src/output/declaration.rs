@@ -179,15 +179,12 @@ pub enum DeclarationSource {
     File(String),
 }
 
-impl From<String> for DeclarationSource {
-    fn from(file_name: String) -> Self {
-        Self::File(file_name)
-    }
-}
-
-impl From<&str> for DeclarationSource {
-    fn from(file_name: &str) -> Self {
-        file_name.to_owned().into()
+impl<T> From<T> for DeclarationSource
+where
+    T: Into<String>,
+{
+    fn from(file_name: T) -> Self {
+        Self::File(file_name.into())
     }
 }
 

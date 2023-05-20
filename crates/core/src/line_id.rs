@@ -12,15 +12,12 @@ use std::fmt::Display;
 )]
 pub struct LineId(pub String);
 
-impl From<String> for LineId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for LineId {
-    fn from(s: &str) -> Self {
-        Self(s.to_owned())
+impl<T> From<T> for LineId
+where
+    String: From<T>,
+{
+    fn from(s: T) -> Self {
+        Self(s.into())
     }
 }
 

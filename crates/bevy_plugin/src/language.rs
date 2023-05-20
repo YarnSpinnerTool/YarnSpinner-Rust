@@ -20,15 +20,12 @@ impl Default for Language {
     }
 }
 
-impl From<String> for Language {
-    fn from(language: String) -> Self {
-        Self(language)
-    }
-}
-
-impl From<&str> for Language {
-    fn from(language: &str) -> Self {
-        Self(language.to_owned())
+impl<T> From<T> for Language
+where
+    String: From<T>,
+{
+    fn from(language: T) -> Self {
+        Self(language.into())
     }
 }
 
