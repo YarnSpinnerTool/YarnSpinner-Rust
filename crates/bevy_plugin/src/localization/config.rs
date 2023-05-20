@@ -23,20 +23,12 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 )]
 #[reflect(Debug, Resource, Default, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
-    pub(crate) base_language: Localization,
-    pub(crate) translations: Vec<Localization>,
-    pub(crate) file_generation_mode: FileGenerationMode,
+    pub base_language: Localization,
+    pub translations: Vec<Localization>,
+    pub file_generation_mode: FileGenerationMode,
 }
 
 impl Localizations {
-    pub fn base_language(&self) -> &Localization {
-        &self.base_language
-    }
-    
-    pub fn translations(&self) -> &[Localization] {
-        &self.translations
-    }
-    
     pub fn supports_translation(&self, language: impl AsRef<str>) -> bool {
         let language = language.as_ref();
         self.translations
