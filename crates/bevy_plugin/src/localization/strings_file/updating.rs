@@ -1,5 +1,4 @@
 use crate::localization::line_id_generation::LineIdUpdateSystemSet;
-use crate::localization::strings_file::{LanguagesToStringsFiles, StringsFile};
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::iter;
@@ -8,7 +7,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_system(
         update_strings_file_on_yarn_file_change
             .pipe(panic_on_err)
-            .before(LineIdUpdateSystemSet)
+            .after(LineIdUpdateSystemSet)
             .run_if(resource_exists::<Localizations>()),
     );
 }

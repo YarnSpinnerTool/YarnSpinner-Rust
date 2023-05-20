@@ -1,8 +1,11 @@
 pub use self::config::*;
+pub(crate) use self::strings_file::*;
 use crate::prelude::*;
 use bevy::prelude::*;
+pub use language::*;
 
 mod config;
+mod language;
 mod line_id_generation;
 mod strings_file;
 
