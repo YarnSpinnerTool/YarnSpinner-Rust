@@ -8,6 +8,7 @@ pub struct YarnSlingerPlugin {
     pub localizations: Option<Localizations>,
     pub variable_storage: Box<dyn VariableStorage>,
     pub text_provider: Box<dyn TextProvider>,
+    pub asset_provider: Option<Box<dyn LineAssetProvider>>,
 }
 
 impl YarnSlingerPlugin {
@@ -25,6 +26,7 @@ impl YarnSlingerPlugin {
             localizations,
             variable_storage: default_variable_storage,
             text_provider: default_text_provider,
+            asset_provider: None,
         }
     }
 
@@ -35,6 +37,14 @@ impl YarnSlingerPlugin {
 
     pub fn with_text_provider(mut self, text_provider: Box<dyn TextProvider>) -> Self {
         self.text_provider = text_provider;
+        self
+    }
+
+    pub fn with_asset_provider(
+        mut self,
+        asset_provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
+    ) -> Self {
+        self.asset_provider = asset_provider.into();
         self
     }
 }
@@ -102,5 +112,6 @@ impl YarnApp for App {
         self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
             .fn_plugin(crate::dialogue::dialogue_plugin)
+            .fn_plugin(crate::line_provider::line_provider_plugin)
     }
 }

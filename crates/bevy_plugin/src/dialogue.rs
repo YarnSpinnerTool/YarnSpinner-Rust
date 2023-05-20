@@ -1,48 +1,44 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
 
-pub(crate) fn dialogue_plugin(app: &mut App) {}
+pub(crate) fn dialogue_plugin(_app: &mut App) {}
 
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     yarn_files: Vec<Handle<YarnFile>>,
-    compilation: Option<Compilation>,
-    variable_storage: Option<Box<dyn VariableStorage>>,
-    text_provider: Option<Box<dyn TextProvider>>,
+    dialogue: Option<Dialogue>,
+    variable_storage_override: Option<Box<dyn VariableStorage>>,
+    text_provider_override: Option<Box<dyn TextProvider>>,
+    asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
 }
 
 impl DialogueRunner {
     pub fn new(yarn_files: Vec<Handle<YarnFile>>) -> Self {
-        todo!()
+        Self {
+            yarn_files,
+            dialogue: None,
+            variable_storage_override: None,
+            text_provider_override: None,
+            asset_provider_override: None,
+        }
     }
 
-    pub fn override_global_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
-        todo!()
+    pub fn override_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
+        self.variable_storage_override = Some(storage);
+        self
     }
 
-    pub fn override_global_text_provider(mut self, provider: Box<dyn TextProvider>) -> Self {
-        todo!()
+    pub fn override_text_provider(mut self, provider: Box<dyn TextProvider>) -> Self {
+        self.text_provider_override = Some(provider);
+        self
     }
 
-    pub fn override_global_asset_provider(mut self, provider: Box<dyn AssetProvider>) -> Self {
-        todo!()
+    pub fn override_asset_provider(
+        mut self,
+        provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
+    ) -> Self {
+        self.asset_provider_override = Some(provider.into());
+        self
     }
-}
-
-pub trait AssetProvider: Debug + Send + Sync {
-    fn clone_shallow(&self) -> Box<dyn AssetProvider + Send + Sync>;
-    fn get_asset(&self, line: &YarnLine) -> Option<HandleUntyped>;
-}
-
-impl Clone for Box<dyn AssetProvider + Send + Sync> {
-    fn clone(&self) -> Self {
-        self.clone_shallow()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct AudioAssetProvider {
-    pub audio_language: Arc<RwLock<Language>>,
 }

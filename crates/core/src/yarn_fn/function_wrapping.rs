@@ -41,12 +41,12 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
     fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue;
-    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync>;
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
 }
 
-impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
+impl Clone for Box<dyn UntypedYarnFn> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
@@ -55,7 +55,7 @@ impl Clone for Box<dyn UntypedYarnFn + Send + Sync> {
 impl<Marker, F> UntypedYarnFn for YarnFnWrapper<Marker, F>
 where
     Marker: 'static,
-    F: YarnFn<Marker> + 'static + Clone + Send + Sync,
+    F: YarnFn<Marker> + 'static + Clone,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
     fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue {
@@ -63,7 +63,7 @@ where
         output.into_untyped_value()
     }
 
-    fn clone_box(&self) -> Box<dyn UntypedYarnFn + Send + Sync> {
+    fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
         Box::new(self.clone())
     }
 
@@ -132,7 +132,7 @@ where
     }
 }
 
-impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
+impl PartialEq for Box<dyn UntypedYarnFn> {
     fn eq(&self, other: &Self) -> bool {
         // Not guaranteed to be unique, but it's good enough for our purposes.
         let debug = format!("{:?}", self);
@@ -141,7 +141,7 @@ impl PartialEq for Box<dyn UntypedYarnFn + Send + Sync> {
     }
 }
 
-impl Eq for Box<dyn UntypedYarnFn + Send + Sync> {}
+impl Eq for Box<dyn UntypedYarnFn> {}
 
 /// A macro for using [`YarnFn`] as a return type or parameter type without needing
 /// to know the implementation details of the [`YarnFn`] trait.

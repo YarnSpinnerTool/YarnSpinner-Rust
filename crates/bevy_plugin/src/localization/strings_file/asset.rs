@@ -14,6 +14,7 @@ pub(crate) fn strings_file_asset_plugin(app: &mut App) {
     app.register_type::<StringsFile>()
         .register_type::<StringsFileRecord>()
         .add_asset::<StringsFile>()
+        .register_asset_reflect::<StringsFile>()
         .init_asset_loader::<StringsFileAssetLoader>();
 }
 

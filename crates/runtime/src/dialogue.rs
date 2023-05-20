@@ -36,8 +36,8 @@ pub enum DialogueError {
 impl Dialogue {
     #[must_use]
     pub fn new(
-        variable_storage: Box<dyn VariableStorage + Send + Sync>,
-        text_provider: Box<dyn TextProvider + Send + Sync>,
+        variable_storage: Box<dyn VariableStorage>,
+        text_provider: Box<dyn TextProvider>,
     ) -> Self {
         let library = Library::standard_library()
             .with_function("visited", visited(variable_storage.clone()))
@@ -56,9 +56,7 @@ impl Dialogue {
     }
 }
 
-fn visited(
-    storage: Box<dyn VariableStorage + Send + Sync>,
-) -> yarn_fn_type! { impl Fn(String) -> bool } {
+fn visited(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> bool } {
     move |node: String| -> bool {
         let name = Library::generate_unique_visited_variable_for_node(&node);
         if let Some(YarnValue::Number(count)) = storage.get(&name) {
@@ -69,9 +67,7 @@ fn visited(
     }
 }
 
-fn visited_count(
-    storage: Box<dyn VariableStorage + Send + Sync>,
-) -> yarn_fn_type! { impl Fn(String) -> f32 } {
+fn visited_count(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> f32 } {
     move |node: String| {
         let name = Library::generate_unique_visited_variable_for_node(&node);
         if let Some(YarnValue::Number(count)) = storage.get(&name) {

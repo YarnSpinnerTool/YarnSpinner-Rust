@@ -23,7 +23,7 @@ pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
     pub(crate) program: Option<Program>,
     #[cfg_attr(feature = "bevy", reflect(ignore))]
-    pub(crate) variable_storage: Box<dyn VariableStorage + Send + Sync>,
+    pub(crate) variable_storage: Box<dyn VariableStorage>,
     pub(crate) should_send_line_hints: bool,
     current_node_name: Option<String>,
     state: State,
@@ -32,7 +32,7 @@ pub(crate) struct VirtualMachine {
     batched_events: Vec<DialogueEvent>,
     line_parser: LineParser,
     #[cfg_attr(feature = "bevy", reflect(ignore))]
-    text_provider: Box<dyn TextProvider + Send + Sync>,
+    text_provider: Box<dyn TextProvider>,
     language_code: Option<Language>,
 }
 
@@ -47,9 +47,9 @@ impl Iterator for VirtualMachine {
 impl VirtualMachine {
     pub(crate) fn new(
         library: Library,
-        variable_storage: Box<dyn VariableStorage + Send + Sync>,
+        variable_storage: Box<dyn VariableStorage>,
         line_parser: LineParser,
-        text_provider: Box<dyn TextProvider + Send + Sync>,
+        text_provider: Box<dyn TextProvider>,
     ) -> Self {
         Self {
             library,
