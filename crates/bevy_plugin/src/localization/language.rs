@@ -8,6 +8,10 @@ use std::fmt::Display;
 #[reflect(Debug, PartialEq, Hash, Default, Serialize, Deserialize)]
 pub struct Language(pub String);
 
+#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
+#[reflect(Debug, Resource, Default, PartialEq)]
+pub(crate) struct CurrentLanguage(pub(crate) Language);
+
 impl Display for Language {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
