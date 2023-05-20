@@ -9,6 +9,7 @@ mod pluralization;
 mod text_provider;
 mod variable_storage;
 mod virtual_machine;
+mod language;
 
 pub use dialogue::Result;
 
@@ -23,6 +24,7 @@ pub mod prelude {
         markup::MarkupParseError,
         text_provider::*,
         variable_storage::*,
+        language::*,
     };
     pub(crate) use crate::{pluralization::*, virtual_machine::*};
     pub(crate) use yarn_slinger_core::prelude::*;

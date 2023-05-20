@@ -8,7 +8,9 @@ pub(crate) fn dialogue_plugin(app: &mut App) {}
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     yarn_files: Vec<Handle<YarnFile>>,
+    compilation: Option<Compilation>,
     variable_storage: Option<Box<dyn VariableStorage>>,
+    text_provider: Option<Box<dyn TextProvider>>,
 }
 
 impl DialogueRunner {

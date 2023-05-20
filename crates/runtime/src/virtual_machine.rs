@@ -33,7 +33,7 @@ pub(crate) struct VirtualMachine {
     line_parser: LineParser,
     #[cfg_attr(feature = "bevy", reflect(ignore))]
     text_provider: Box<dyn TextProvider + Send + Sync>,
-    language_code: Option<String>,
+    language_code: Option<Language>,
 }
 
 impl Iterator for VirtualMachine {
@@ -67,10 +67,13 @@ impl VirtualMachine {
         }
     }
 
-    pub(crate) fn set_language_code(&mut self, language_code: String) {
+    pub(crate) fn set_language_code(&mut self, language_code: Language) -> Result<()> {
         self.language_code.replace(language_code.clone());
         self.line_parser.set_language_code(language_code.clone());
-        self.text_provider.set_language_code(language_code);
+        self.text_provider
+            .set_language_code(language_code)
+            .map_err(Into::<DialogueError>::into)?;
+        Ok(())
     }
 
     pub(crate) fn reset_state(&mut self) {

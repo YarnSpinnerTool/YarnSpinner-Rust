@@ -15,7 +15,7 @@ use yarn_slinger_core::prelude::*;
 #[cfg_attr(feature = "bevy", reflect(Debug))]
 pub struct Dialogue {
     vm: VirtualMachine,
-    language_code: Option<String>,
+    language_code: Option<Language>,
 }
 
 pub type Result<T> = std::result::Result<T, DialogueError>;
@@ -27,8 +27,10 @@ pub enum DialogueError {
     #[error("Line ID {id} not found in line provider with language code {language_code:?}")]
     LineProviderError {
         id: LineId,
-        language_code: Option<String>,
+        language_code: Option<Language>,
     },
+    #[error(transparent)]
+    UnsupportedLanguageError(#[from] UnsupportedLanguageError),
 }
 
 impl Dialogue {
@@ -93,9 +95,9 @@ impl Iterator for Dialogue {
 // Builder API
 impl Dialogue {
     #[must_use]
-    pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
-        self.set_language_code(language_code);
-        self
+    pub fn with_language_code(mut self, language_code: impl Into<Language>) -> Result<Self> {
+        self.set_language_code(language_code)?;
+        Ok(self)
     }
 
     #[must_use]
@@ -140,15 +142,18 @@ impl Dialogue {
     ///
     /// Returns the last language code.
     #[must_use]
-    pub fn language_code(&self) -> Option<&str> {
-        self.language_code.as_deref()
+    pub fn language_code(&self) -> Option<&Language> {
+        self.language_code.as_ref()
     }
 
-    pub fn set_language_code(&mut self, language_code: impl Into<String>) -> Option<String> {
+    pub fn set_language_code(
+        &mut self,
+        language_code: impl Into<Language>,
+    ) -> Result<Option<Language>> {
         let language_code = language_code.into();
         let previous = self.language_code.replace(language_code.clone());
-        self.vm.set_language_code(language_code);
-        previous
+        self.vm.set_language_code(language_code)?;
+        Ok(previous)
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.

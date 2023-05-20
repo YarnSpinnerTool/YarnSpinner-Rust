@@ -1,11 +1,10 @@
 pub use self::config::*;
-pub(crate) use self::strings_file::*;
 pub use self::strings_file::{
     CreateMissingStringsFilesEvent, UpdateAllStringsFilesForYarnFileEvent,
 };
+pub(crate) use self::{language::*, strings_file::*};
 use crate::prelude::*;
 use bevy::prelude::*;
-pub use language::*;
 
 mod config;
 mod language;

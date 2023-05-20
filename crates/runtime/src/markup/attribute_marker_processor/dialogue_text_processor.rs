@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 #[derive(Default, Debug, Clone)]
 pub(crate) struct DialogueTextProcessor {
-    pub(crate) language_code: Option<String>,
+    pub(crate) language_code: Option<Language>,
 }
 
 impl DialogueTextProcessor {
@@ -75,7 +75,7 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
         replace_value_placeholders(&input, &value)
     }
 
-    fn set_language_code(&mut self, language_code: String) {
+    fn set_language_code(&mut self, language_code: Language) {
         self.language_code.replace(language_code);
     }
 

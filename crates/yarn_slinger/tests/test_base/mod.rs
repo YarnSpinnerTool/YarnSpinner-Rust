@@ -62,12 +62,14 @@ impl Default for TestBase {
             Box::new(variable_store.clone()),
             Box::new(string_table.clone()),
         )
-        .with_language_code("en")
-        .with_extended_library(Library::new().with_function("assert", |value: YarnValue| {
-            let is_truthy: bool = value.try_into().unwrap();
-            assert!(is_truthy);
-            true
-        }));
+        .with_extended_library(Library::new().with_function(
+            "assert",
+            |value: YarnValue| {
+                let is_truthy: bool = value.try_into().unwrap();
+                assert!(is_truthy);
+                true
+            },
+        ));
 
         Self {
             dialogue,
@@ -121,7 +123,7 @@ impl TestBase {
             .into_iter()
             .map(|(id, info)| (id, info.text))
             .collect();
-        self.string_table.set_string_table(string_table);
+        self.string_table.add_base_language(string_table);
         self
     }
 

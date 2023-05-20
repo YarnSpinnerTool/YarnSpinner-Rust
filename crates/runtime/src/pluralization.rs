@@ -14,8 +14,8 @@ pub(crate) struct Pluralization {
 }
 
 impl Pluralization {
-    pub(crate) fn new(locale: &str) -> Self {
-        let locale: Locale = locale.parse().unwrap();
+    pub(crate) fn new(locale: impl AsRef<str>) -> Self {
+        let locale: Locale = locale.as_ref().parse().unwrap();
         let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&locale);
         Self {
             cardinal_rules,
