@@ -72,7 +72,6 @@ impl StringsFile {
         self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
-    #[must_use]
     pub(crate) fn update_file(&mut self, mut other: Self) -> Result<bool> {
         let mut removed_lines = Vec::new();
         let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {

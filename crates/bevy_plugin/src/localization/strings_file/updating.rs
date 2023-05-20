@@ -12,12 +12,17 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_event::<UpdateAllStringsFilesForYarnFileEvent>()
         .add_systems(
             (
-                send_update_events_on_yarn_file_changes.run_if(in_development),
+                send_update_events_on_yarn_file_changes
+                    .run_if(in_development.and_then(resource_exists::<LoadedYarnFiles>())),
                 update_all_strings_files_for_yarn_file
                     .pipe(panic_on_err)
                     .after(LineIdUpdateSystemSet)
                     .after(CreateMissingStringsFilesSystemSet)
-                    .run_if(resource_exists::<Localizations>().and_then(in_development)),
+                    .run_if(
+                        resource_exists::<Localizations>()
+                            .and_then(in_development)
+                            .and_then(resource_exists::<LoadedYarnFiles>()),
+                    ),
             )
                 .chain(),
         );
@@ -29,13 +34,16 @@ pub struct UpdateAllStringsFilesForYarnFileEvent(pub Handle<YarnFile>);
 
 fn send_update_events_on_yarn_file_changes(
     mut events: EventReader<AssetEvent<YarnFile>>,
+    loaded_yarn_files: Res<LoadedYarnFiles>,
     mut update_writer: EventWriter<UpdateAllStringsFilesForYarnFileEvent>,
 ) {
     for event in events.iter() {
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
         };
-        update_writer.send(UpdateAllStringsFilesForYarnFileEvent(handle.clone()));
+        if loaded_yarn_files.0.contains(handle) {
+            update_writer.send(UpdateAllStringsFilesForYarnFileEvent(handle.clone()));
+        }
     }
 }
 
@@ -48,6 +56,7 @@ fn update_all_strings_files_for_yarn_file(
     localizations: Res<Localizations>,
     mut languages_to_update: Local<HashMap<Language, Handle<StringsFile>>>,
     current_strings_file: Res<CurrentStringsFile>,
+    loaded_yarn_files: Res<LoadedYarnFiles>,
 ) -> SystemResult {
     if !events.is_empty() {
         let supported_languages: HashSet<_> = localizations
@@ -80,6 +89,10 @@ fn update_all_strings_files_for_yarn_file(
         }
     }
     for handle in events.iter().map(|e| &e.0) {
+        if !loaded_yarn_files.0.contains(handle) {
+            bail!("Sent `UpdateAllStringsFilesForYarnFileEvent` for a Yarn file that was not passed to the `YarnPlugin`");
+        }
+
         for (language, strings_file_handle) in languages_to_update.drain() {
             let Some(strings_file) = strings_files.get_mut(&strings_file_handle) else {
                 continue;

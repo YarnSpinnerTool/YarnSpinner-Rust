@@ -12,11 +12,13 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
                     .pipe(panic_on_err)
                     .in_set(CreateMissingStringsFilesSystemSet)
                     .run_if(
-                        in_development.and_then(
-                            resource_exists::<Localizations>()
-                                .and_then(on_event::<CreateMissingStringsFilesEvent>())
-                                .or_else(resource_exists_and_changed::<Localizations>()),
-                        ),
+                        resource_exists::<LoadedYarnFiles>()
+                            .and_then(in_development)
+                            .and_then(
+                                resource_exists::<Localizations>()
+                                    .and_then(on_event::<CreateMissingStringsFilesEvent>())
+                                    .or_else(resource_exists_and_changed::<Localizations>()),
+                            ),
                     ),
                 ensure_right_language
                     .pipe(panic_on_err)
@@ -70,13 +72,17 @@ fn create_strings_files(
     localizations: Res<Localizations>,
     asset_server: Res<AssetServer>,
     yarn_files: Res<Assets<YarnFile>>,
+    yarn_handles: Res<LoadedYarnFiles>,
 ) -> SystemResult {
     for localization in &localizations.translations {
         let path = localization.strings_file.as_path();
         if asset_server.asset_io().is_file(path) {
             return Ok(());
         }
-        let yarn_files = yarn_files.iter().map(|(_, yarn_file)| yarn_file);
+        let yarn_files = yarn_handles
+            .0
+            .iter()
+            .map(|handle| yarn_files.get(handle).unwrap());
         let strings_file = StringsFile::from_yarn_files(localization.language.clone(), yarn_files)
             .unwrap_or_default();
 

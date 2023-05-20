@@ -4,13 +4,14 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 mod yarn_file_source;
+use crate::project::YarnFileSources;
 pub(crate) use yarn_file_source::*;
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct YarnSlingerPlugin {
     pub localizations: Option<Localizations>,
-    pub asset_provider: Option<Box<dyn LineAssetProvider>>,
+    pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
     pub yarn_files: HashSet<YarnFileSource>,
     pub advanced: AdvancedPluginConfig,
 }
@@ -28,7 +29,7 @@ impl YarnSlingerPlugin {
         Self {
             localizations,
             advanced: Default::default(),
-            asset_provider: None,
+            line_asset_provider: None,
             yarn_files: HashSet::default(),
         }
     }
@@ -43,7 +44,7 @@ impl YarnSlingerPlugin {
         mut self,
         asset_provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
     ) -> Self {
-        self.asset_provider = asset_provider.into();
+        self.line_asset_provider = asset_provider.into();
         self
     }
 
@@ -141,16 +142,15 @@ impl YarnApp for App {
             ))
             .insert_resource(localizations);
         }
-        if let Some(asset_provider) = &plugin.asset_provider {
-            self.insert_resource(asset_provider.clone_shallow());
+        if let Some(line_asset_provider) = &plugin.line_asset_provider {
+            self.insert_resource(GlobalLineAssetProvider(line_asset_provider.clone_shallow()));
         }
-        self.init_resource::<CompiledYarnFiles>()
-            .insert_resource(GlobalTextProvider(plugin.text_provider.clone_shallow()))
-            .insert_resource(GlobalVariableStorage(
-                plugin.variable_storage.clone_shallow(),
+        self.insert_resource(YarnFileSources(plugin.yarn_files.clone()))
+            .insert_resource(GlobalTextProvider(
+                plugin.advanced.text_provider.clone_shallow(),
             ))
-            .insert_resource(GlobalLineAssetProvider(
-                plugin.asset_provider.clone_shallow(),
+            .insert_resource(GlobalVariableStorage(
+                plugin.advanced.variable_storage.clone_shallow(),
             ))
     }
 

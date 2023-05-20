@@ -18,9 +18,9 @@ pub mod prelude {
         dialogue::DialogueRunner,
         line_provider::{AudioAssetProvider, LineAssetProvider},
         localization::{CurrentLanguage, FileGenerationMode, Localization, Localizations},
-        plugin::{YarnSlingerPlugin, YarnFileSource},
+        plugin::{YarnFileSource, YarnSlingerPlugin},
         project::{
-            CompiledYarnFiles, GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage,
+            GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, LoadedYarnFiles,
         },
         yarn_file_asset::YarnFile,
     };
