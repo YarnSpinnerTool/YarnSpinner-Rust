@@ -4,9 +4,8 @@ use std::fmt::Debug;
 
 pub(crate) fn dialogue_plugin(_app: &mut App) {}
 
-#[derive(Debug, Component)]
+#[derive(Debug, Default, Component)]
 pub struct DialogueRunner {
-    yarn_files: Vec<Handle<YarnFile>>,
     dialogue: Option<Dialogue>,
     variable_storage_override: Option<Box<dyn VariableStorage>>,
     text_provider_override: Option<Box<dyn TextProvider>>,
@@ -14,9 +13,8 @@ pub struct DialogueRunner {
 }
 
 impl DialogueRunner {
-    pub fn new(yarn_files: Vec<Handle<YarnFile>>) -> Self {
+    pub fn new() -> Self {
         Self {
-            yarn_files,
             dialogue: None,
             variable_storage_override: None,
             text_provider_override: None,

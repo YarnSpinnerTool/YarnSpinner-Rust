@@ -4,6 +4,7 @@ mod dialogue;
 mod line_provider;
 mod localization;
 mod plugin;
+mod project;
 mod utils;
 mod yarn_file_asset;
 
@@ -15,13 +16,16 @@ pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
         dialogue::DialogueRunner,
-        line_provider::{LineAssetProvider, AudioAssetProvider},
-        localization::{FileGenerationMode, Localization, Localizations},
-        plugin::YarnSlingerPlugin,
+        line_provider::{AudioAssetProvider, LineAssetProvider},
+        localization::{CurrentLanguage, FileGenerationMode, Localization, Localizations},
+        plugin::{YarnSlingerPlugin, YarnFileSource},
+        project::{
+            CompiledYarnFiles, GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage,
+        },
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{
-        localization::{CurrentLanguage, CurrentStringsFile, StringsFile},
+        localization::{CurrentStringsFile, StringsFile},
         utils::*,
     };
     pub(crate) use anyhow::{Context, Error, Result};

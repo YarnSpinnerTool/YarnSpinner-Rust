@@ -72,10 +72,11 @@ impl StringsFile {
         self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
-    pub(crate) fn update_file(&mut self, mut other: Self) -> Result<()> {
+    #[must_use]
+    pub(crate) fn update_file(&mut self, mut other: Self) -> Result<bool> {
         let mut removed_lines = Vec::new();
         let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {
-            return Ok(());
+            return Ok(false);
         };
         if let Some(language) = self.language() {
             if language != other.language().unwrap() {
@@ -94,6 +95,7 @@ impl StringsFile {
             bail!("Cannot update contents of strings file with another strings file that contains lines for more than one file at a time. \
             Found both  \"{file}\" and \"{wrong_file}\". This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new" )
         }
+        let mut changed = false;
         for (id, record) in self.0.iter_mut() {
             if record.file != file {
                 continue;
@@ -105,17 +107,21 @@ impl StringsFile {
                     // not `other_record` because that one might not contain (NEEDS UPDATE)
                     record.text.clone()
                 };
-                *record = other_record;
-                record.text = text;
+                if record != &other_record {
+                    changed = true;
+                    *record = other_record;
+                    record.text = text;
+                }
             } else {
                 removed_lines.push(id.clone());
+                changed = true;
             }
         }
         for id in removed_lines {
             self.0.remove(&id);
         }
         self.0.extend(other.0);
-        Ok(())
+        Ok(changed)
     }
 
     pub(crate) fn from_yarn_files<'a>(

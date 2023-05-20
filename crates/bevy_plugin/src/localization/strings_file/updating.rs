@@ -118,8 +118,9 @@ fn update_all_strings_files_for_yarn_file(
                     continue;
                 }
             };
-            strings_file.update_file(new_strings_file)?;
-            strings_file.write_asset(&asset_server, strings_file_path)?;
+            if strings_file.update_file(new_strings_file)? {
+                strings_file.write_asset(&asset_server, strings_file_path)?;
+            }
 
             info!(
                 "Updated \"{}\" (lang: {language}) because \"{}\" was changed or loaded.",
