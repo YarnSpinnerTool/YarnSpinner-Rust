@@ -42,7 +42,7 @@ fn read_comments(metadata: &[String]) -> String {
     // Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Importers/YarnProjectImporter.cs#L652>
     let cleaned_metadata: Vec<_> = metadata
         .iter()
-        .map(|metadata| metadata.trim().to_owned())
+        .map(|metadata| metadata.to_owned())
         .filter(|metadata| !metadata.starts_with("line:"))
         .collect();
     if cleaned_metadata.is_empty() {

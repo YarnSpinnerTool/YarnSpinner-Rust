@@ -171,6 +171,7 @@ pub(crate) fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> 
                 .as_ref()
                 .expect("No text in hashtag")
                 .get_text()
+                .trim()
                 .to_owned()
         })
         .collect()

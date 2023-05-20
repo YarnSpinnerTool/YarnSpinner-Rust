@@ -218,6 +218,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         let mut lines: Vec<_> = yarn_file.content().lines().collect();
         *lines.get_mut(3).unwrap() = "Changed line #line:2";
         lines.insert(4, "Inserted line #line:13");
+        lines.remove(6);
         yarn_file.set_content(lines.join("\n"))?;
     }
 
@@ -239,6 +240,13 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     );
     assert_eq!(strings_file_lines[2][1], "line:13");
     assert_eq!(strings_file_lines[2][2], "Inserted line");
+    assert_eq!(strings_file_lines[4][1], "line:5");
+    assert_eq!(
+        strings_file_lines[4][2],
+        "Man: How can it be a third wish if I haven't had a first and second wish?"
+    );
+
+    assert_eq!(strings_file_lines.len(), 12);
 
     Ok(())
 }

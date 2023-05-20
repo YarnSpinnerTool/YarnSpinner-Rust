@@ -18,6 +18,17 @@ pub struct YarnFile {
 }
 
 impl YarnFile {
+    pub fn new(filename: impl Into<String>, content: impl Into<String>) -> Self {
+        let filename = filename.into();
+        let content = content.into();
+        let file = InnerYarnFile {
+            file_name: filename,
+            source: content,
+        };
+        let string_table = compile_string_table(file.clone()).unwrap();
+        Self { file, string_table }
+    }
+
     pub fn file_name(&self) -> &str {
         &self.file.file_name
     }
@@ -28,15 +39,21 @@ impl YarnFile {
 
     pub fn set_content(&mut self, content: String) -> Result<&mut Self> {
         self.file.source = content;
-
-        let string_table = YarnCompiler::new()
-            .with_compilation_type(CompilationType::StringsOnly)
-            .add_file(self.file.clone())
-            .compile()?
-            .string_table;
+        let string_table = compile_string_table(self.file.clone())?;
         self.string_table = string_table;
         Ok(self)
     }
+}
+
+fn compile_string_table(
+    file: InnerYarnFile,
+) -> Result<std::collections::HashMap<LineId, StringInfo>> {
+    let string_table = YarnCompiler::new()
+        .with_compilation_type(CompilationType::StringsOnly)
+        .add_file(file)
+        .compile()?
+        .string_table;
+    Ok(string_table)
 }
 
 impl Hash for YarnFile {
