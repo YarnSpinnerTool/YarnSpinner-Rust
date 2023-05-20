@@ -189,7 +189,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines_with_ids.yarn");
     let yarn_path = dir.path().join("lines_with_ids.yarn");
-    fs::copy(original_yarn_path, &yarn_path)?;
+    fs::copy(original_yarn_path, yarn_path)?;
 
     let mut app = App::new();
 
