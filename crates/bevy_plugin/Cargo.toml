@@ -7,14 +7,24 @@ exclude = ["assets"]
 
 [features]
 default = []
-serde = ["yarn_slinger/serde", "bevy/serialize"]
 
 [dependencies]
 anyhow = "1"
-yarn_slinger = { path = "../yarn_slinger", features = ["bevy"] }
+csv = "1"
+seldom_fn_plugin = "0.3"
+serde = { version = "1", features = ["derive"] }
+yarn_slinger = { path = "../yarn_slinger", features = ["bevy", "serde"] }
+sha2 = "0.10"
 
 [dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["bevy_asset"]
+features = ["bevy_asset", "serialize"]
 
+[dev-dependencies]
+tempfile = "3"
+
+[dev-dependencies.bevy]
+version = "0.10"
+default-features = false
+features = ["bevy_asset", "serialize", "filesystem_watcher"]

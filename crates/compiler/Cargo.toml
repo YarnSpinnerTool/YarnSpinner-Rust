@@ -20,3 +20,4 @@ strum_macros = "0.24"
 annotate-snippets = { version = "0.9", features = ["color"] }
 serde = { version = "1", features = ["derive"] , optional = true }
 bevy = { version = "0.10", default-features = false, optional = true }
+rand = { version = "0.8", features = ["small_rng"] }

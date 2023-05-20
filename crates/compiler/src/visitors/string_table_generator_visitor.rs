@@ -112,7 +112,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             }
         };
 
-        let line_number = ctx.start().line;
+        let line_number = ctx.start().get_line_as_usize();
         let hashtag_texts = get_hashtag_texts(&hashtags);
 
         let composed_string = generate_formatted_text(&ctx.line_formatted_text().unwrap());
@@ -122,7 +122,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
             StringInfo {
                 text: composed_string,
                 node_name: self.current_node_name.clone(),
-                line_number: line_number as usize,
+                line_number,
                 file_name: self.file.name.clone(),
                 metadata: hashtag_texts,
                 ..Default::default()
@@ -163,7 +163,7 @@ fn generate_formatted_text(ctx: &Line_formatted_textContext) -> String {
     composed_string.trim().to_owned()
 }
 
-fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
+pub(crate) fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
     hashtags
         .iter()
         .map(|t| {
@@ -171,6 +171,7 @@ fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> {
                 .as_ref()
                 .expect("No text in hashtag")
                 .get_text()
+                .trim()
                 .to_owned()
         })
         .collect()

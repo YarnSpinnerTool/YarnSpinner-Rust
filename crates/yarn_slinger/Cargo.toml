@@ -24,3 +24,6 @@ yarn_slinger_core = { path = "../core" }
 yarn_slinger_compiler = { path = "../compiler" }
 yarn_slinger_runtime = { path = "../runtime" }
 log = { version = "0.4", features = ["std"] }
+
+[dev-dependencies]
+regex = "1"

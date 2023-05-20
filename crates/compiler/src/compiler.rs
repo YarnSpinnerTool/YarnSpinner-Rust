@@ -5,9 +5,11 @@ use crate::prelude::*;
 use std::path::Path;
 use yarn_slinger_core::prelude::*;
 
+mod add_tags_to_lines;
 pub(crate) mod antlr_rust_ext;
 pub(crate) mod run_compilation;
 pub(crate) mod utils;
+pub use add_tags_to_lines::*;
 
 pub type Result<T> = std::result::Result<T, CompilerError>;
 
@@ -72,7 +74,7 @@ impl Compiler {
         self
     }
 
-    pub fn compile_until(&mut self, compilation_type: CompilationType) -> &mut Self {
+    pub fn with_compilation_type(&mut self, compilation_type: CompilationType) -> &mut Self {
         self.compilation_type = compilation_type;
         self
     }
@@ -89,14 +91,13 @@ impl Compiler {
 
 /// Represents the contents of a file to compile.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect, TypeUuid))]
+#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(
     all(feature = "bevy", feature = "serde"),
     reflect(Serialize, Deserialize)
 )]
-#[cfg_attr(feature = "bevy", uuid = "32570e61-d69d-4f87-9552-9da2a62ecfd1")]
 pub struct File {
     /// The name of the file.
     ///

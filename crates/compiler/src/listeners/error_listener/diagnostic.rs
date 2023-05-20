@@ -155,7 +155,10 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
 
     let relative_start_line = range.start.line - diagnostic.start_line;
     let annotated_lines = range.end.line - range.start.line;
-    let line_lengths: Vec<_> = context.lines().map(|line| line.len() + 1).collect();
+    let line_lengths: Vec<_> = context
+        .lines()
+        .map(|line| line.chars().count() + 1)
+        .collect();
     let relative_start =
         line_lengths.iter().take(relative_start_line).sum::<usize>() + range.start.character;
     let relative_end: usize = line_lengths
@@ -165,8 +168,17 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
         + range.end.character
         // - 1 because the Diagnostic range is exclusive, but the annotation range is inclusive
         - 1;
-
-    (relative_start, relative_end)
+    let byte_start = context
+        .char_indices()
+        .map(|(i, _)| i)
+        .nth(relative_start)
+        .unwrap();
+    let byte_end = context
+        .char_indices()
+        .map(|(i, _)| i)
+        .nth(relative_end)
+        .unwrap();
+    (byte_start, byte_end)
 }
 
 pub trait DiagnosticVec {
