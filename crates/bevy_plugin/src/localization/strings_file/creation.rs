@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
+use crate::localization::StringsFile;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
-use crate::localization::StringsFile;
 
 pub(crate) fn strings_file_creation_plugin(app: &mut App) {
     app.add_systems(
