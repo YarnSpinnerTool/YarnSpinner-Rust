@@ -50,20 +50,16 @@ impl Localizations {
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub struct Localization {
-    /// The default is "en-US".
     pub language: Language,
     pub strings_file: PathBuf,
     pub assets_sub_folder: PathBuf,
 }
 
-impl From<String> for Localization {
-    fn from(language: String) -> Self {
-        Self::with_language(language)
-    }
-}
-
-impl From<&str> for Localization {
-    fn from(language: &str) -> Self {
+impl<T> From<T> for Localization
+where
+    Language: From<T>,
+{
+    fn from(language: T) -> Self {
         Self::with_language(language)
     }
 }

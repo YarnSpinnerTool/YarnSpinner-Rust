@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use std::fmt::Display;
 
 /// IETF BCP 47 code.
+/// The default is "en-US".
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect)]
 #[reflect(Debug, PartialEq, Hash, Default, Serialize, Deserialize)]
 pub struct Language(pub String);
