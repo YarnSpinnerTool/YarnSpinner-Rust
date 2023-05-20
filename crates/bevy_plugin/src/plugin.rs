@@ -1,11 +1,13 @@
+use crate::default_impl::{MemoryVariableStore, StringTableTextProvider};
 use crate::prelude::*;
-use crate::yarn_file_asset::yarn_slinger_asset_loader_plugin;
 use bevy::prelude::*;
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct YarnSlingerPlugin {
     pub localizations: Option<Localizations>,
+    pub variable_storage: Box<dyn VariableStorage>,
+    pub text_provider: Box<dyn TextProvider>,
 }
 
 impl YarnSlingerPlugin {
@@ -17,7 +19,23 @@ impl YarnSlingerPlugin {
                            "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
             }
         }
-        Self { localizations }
+        let default_variable_storage = Box::new(MemoryVariableStore::default());
+        let default_text_provider = Box::new(StringTableTextProvider::default());
+        Self {
+            localizations,
+            variable_storage: default_variable_storage,
+            text_provider: default_text_provider,
+        }
+    }
+
+    pub fn with_variable_storage(mut self, variable_storage: Box<dyn VariableStorage>) -> Self {
+        self.variable_storage = variable_storage;
+        self
+    }
+
+    pub fn with_text_provider(mut self, text_provider: Box<dyn TextProvider>) -> Self {
+        self.text_provider = text_provider;
+        self
     }
 }
 
@@ -78,7 +96,8 @@ impl YarnApp for App {
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.fn_plugin(yarn_slinger_asset_loader_plugin)
-            .fn_plugin(localization_plugin)
+        self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
+            .fn_plugin(crate::localization::localization_plugin)
+            .fn_plugin(crate::dialogue::dialogue_plugin)
     }
 }
