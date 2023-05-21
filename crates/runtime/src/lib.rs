@@ -3,13 +3,13 @@ mod command;
 mod dialogue;
 mod dialogue_option;
 mod events;
+mod language;
 mod line;
 pub mod markup;
 mod pluralization;
 mod text_provider;
 mod variable_storage;
 mod virtual_machine;
-mod language;
 
 pub use dialogue::Result;
 
@@ -20,11 +20,11 @@ pub mod prelude {
         dialogue::{Dialogue, DialogueError},
         dialogue_option::*,
         events::*,
+        language::*,
         line::*,
         markup::MarkupParseError,
         text_provider::*,
         variable_storage::*,
-        language::*,
     };
     pub(crate) use crate::{pluralization::*, virtual_machine::*};
     pub(crate) use yarn_slinger_core::prelude::*;

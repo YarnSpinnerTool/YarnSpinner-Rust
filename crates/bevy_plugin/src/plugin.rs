@@ -68,11 +68,12 @@ pub struct AdvancedPluginConfig {
     pub text_provider: Box<dyn TextProvider>,
 }
 
+#[allow(clippy::derivable_impls)] // False positive :/
 impl Default for AdvancedPluginConfig {
     fn default() -> Self {
         Self {
-            variable_storage: Box::new(MemoryVariableStore::default()),
-            text_provider: Box::new(StringTableTextProvider::default()),
+            variable_storage: Box::<MemoryVariableStore>::default(),
+            text_provider: Box::<StringTableTextProvider>::default(),
         }
     }
 }

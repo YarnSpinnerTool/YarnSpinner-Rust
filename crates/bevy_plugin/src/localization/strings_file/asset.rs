@@ -90,7 +90,7 @@ impl StringsFile {
             .values()
             .skip(1)
             .map(|rec| rec.file.as_str())
-            .all(|other_file| other_file == &file);
+            .all(|other_file| other_file == file);
 
         let mut changed = false;
         for (id, record) in self.0.iter_mut() {
