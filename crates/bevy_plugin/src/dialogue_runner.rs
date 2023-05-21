@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use std::fmt::Debug;
 
 pub(crate) fn dialogue_plugin(app: &mut App) {
-    app.add_system(set_dialogue_programs);
+    app.add_system(set_dialogue_programs.run_if(resource_exists::<YarnCompilation>()));
 }
 
 #[derive(Debug, Default, Component)]

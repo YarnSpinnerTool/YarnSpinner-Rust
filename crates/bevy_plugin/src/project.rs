@@ -1,3 +1,4 @@
+use crate::filesystem_events::UpdateAllStringsFilesForStringTableEvent;
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
@@ -5,7 +6,6 @@ use bevy::utils::HashSet;
 pub(crate) fn project_plugin(app: &mut App) {
     app.register_type::<YarnFilesInProject>()
         .register_type::<YarnFilesToLoad>()
-        .init_resource::<YarnCompilation>()
         .init_resource::<YarnFilesInProject>()
         .init_resource::<YarnFilesToLoad>()
         .add_systems(
@@ -92,9 +92,11 @@ fn add_yarn_files_to_load_queue(
 }
 
 fn compile_loaded_yarn_files(
+    mut commands: Commands,
     yarn_files_in_project: Res<YarnFilesInProject>,
-    mut yarn_compilation: ResMut<YarnCompilation>,
+    mut yarn_compilation: Option<ResMut<YarnCompilation>>,
     yarn_files: Res<Assets<YarnFile>>,
+    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
     mut dirty: Local<bool>,
 ) -> SystemResult {
     if yarn_files_in_project.is_changed() {
@@ -115,7 +117,16 @@ fn compile_loaded_yarn_files(
         .iter()
         .map(|handle| yarn_files.get(handle).unwrap().file.clone());
     let compilation = YarnCompiler::new().add_files(yarn_files).compile()?;
-    yarn_compilation.0 = compilation;
+
+    if let Some(yarn_compilation) = yarn_compilation.as_mut() {
+        yarn_compilation.0 = compilation;
+    } else {
+        update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+            compilation.string_table.clone(),
+        ));
+        commands.insert_resource(YarnCompilation(compilation));
+    }
+
     *dirty = false;
     Ok(())
 }

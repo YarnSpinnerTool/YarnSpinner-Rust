@@ -84,16 +84,14 @@ impl StringsFile {
                     self.language(), other.language())
             }
         }
-        if let Some(wrong_file) = other
+
+        let single_yarn_file = other
             .0
             .values()
             .skip(1)
             .map(|rec| rec.file.as_str())
-            .find(|other_file| other_file != &file)
-        {
-            bail!("Cannot update contents of strings file with another strings file that contains lines for more than one file at a time. \
-            Found both  \"{file}\" and \"{wrong_file}\". This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new" )
-        }
+            .all(|other_file| other_file == &file);
+
         let mut changed = false;
         for (id, record) in self.0.iter_mut() {
             if record.file != file {
@@ -111,7 +109,7 @@ impl StringsFile {
                     *record = other_record;
                     record.text = text;
                 }
-            } else {
+            } else if single_yarn_file {
                 removed_lines.push(id.clone());
                 changed = true;
             }

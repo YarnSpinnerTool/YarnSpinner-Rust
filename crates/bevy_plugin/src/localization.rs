@@ -1,7 +1,7 @@
 pub use self::config::*;
 pub(crate) use self::strings_file::*;
 pub use self::strings_file::{
-    CreateMissingStringsFilesEvent, UpdateAllStringsFilesForYarnFileEvent,
+    CreateMissingStringsFilesEvent, UpdateAllStringsFilesForStringTableEvent,
 };
 use crate::prelude::*;
 use bevy::prelude::*;

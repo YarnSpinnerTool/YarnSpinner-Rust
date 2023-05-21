@@ -35,6 +35,6 @@ pub mod prelude {
 
 pub mod filesystem_events {
     pub use crate::localization::{
-        CreateMissingStringsFilesEvent, UpdateAllStringsFilesForYarnFileEvent,
+        CreateMissingStringsFilesEvent, UpdateAllStringsFilesForStringTableEvent,
     };
 }

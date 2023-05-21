@@ -3,17 +3,16 @@ use crate::localization::line_id_generation::LineIdUpdateSystemSet;
 use crate::localization::strings_file::creation::CreateMissingStringsFilesSystemSet;
 use crate::prelude::*;
 use crate::project::YarnFilesInProject;
-use anyhow::bail;
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
-    app.add_event::<UpdateAllStringsFilesForYarnFileEvent>()
+    app.add_event::<UpdateAllStringsFilesForStringTableEvent>()
         .add_systems(
             (
                 send_update_events_on_yarn_file_changes.run_if(in_development),
-                update_all_strings_files_for_yarn_file
+                update_all_strings_files_for_string_table
                     .pipe(panic_on_err)
                     .after(LineIdUpdateSystemSet)
                     .after(CreateMissingStringsFilesSystemSet)
@@ -23,35 +22,39 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
         );
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect)]
-#[reflect(Debug, Hash, Default, PartialEq)]
-pub struct UpdateAllStringsFilesForYarnFileEvent(pub Handle<YarnFile>);
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
+#[reflect(Debug, Default, PartialEq)]
+pub struct UpdateAllStringsFilesForStringTableEvent(
+    pub std::collections::HashMap<LineId, StringInfo>,
+);
 
 fn send_update_events_on_yarn_file_changes(
     mut events: EventReader<AssetEvent<YarnFile>>,
     yarn_files_in_project: Res<YarnFilesInProject>,
-    mut update_writer: EventWriter<UpdateAllStringsFilesForYarnFileEvent>,
+    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    yarn_files: Res<Assets<YarnFile>>,
 ) {
     for event in events.iter() {
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
         };
         if yarn_files_in_project.0.contains(handle) {
-            update_writer.send(UpdateAllStringsFilesForYarnFileEvent(handle.clone()));
+            let yarn_file = yarn_files.get(handle).unwrap();
+            update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+                yarn_file.string_table.clone(),
+            ));
         }
     }
 }
 
-fn update_all_strings_files_for_yarn_file(
-    mut events: EventReader<UpdateAllStringsFilesForYarnFileEvent>,
+fn update_all_strings_files_for_string_table(
+    mut events: EventReader<UpdateAllStringsFilesForStringTableEvent>,
     mut missing_writer: EventWriter<CreateMissingStringsFilesEvent>,
-    yarn_files: Res<Assets<YarnFile>>,
     mut strings_files: ResMut<Assets<StringsFile>>,
     asset_server: Res<AssetServer>,
     localizations: Res<Localizations>,
     mut languages_to_update: Local<HashMap<Language, Handle<StringsFile>>>,
     current_strings_file: Res<CurrentStringsFile>,
-    yarn_files_in_project: Res<YarnFilesInProject>,
 ) -> SystemResult {
     if !events.is_empty() {
         let supported_languages: HashSet<_> = localizations
@@ -83,59 +86,51 @@ fn update_all_strings_files_for_yarn_file(
             }
         }
     }
-    for handle in events.iter().map(|e| &e.0) {
-        if !yarn_files_in_project.0.contains(handle) {
-            bail!("Sent `UpdateAllStringsFilesForYarnFileEvent` for a Yarn file that was not passed to the `YarnPlugin`");
-        }
+    let mut dirty_paths = HashSet::new();
 
+    for string_table in events.iter().map(|e| &e.0) {
+        let file_names: HashSet<_> = string_table
+            .values()
+            .map(|s| s.file_name.as_str())
+            .collect();
+        let file_names = file_names.into_iter().collect::<Vec<_>>().join(", ");
         for (language, strings_file_handle) in languages_to_update.drain() {
             let Some(strings_file) = strings_files.get_mut(&strings_file_handle) else {
                 continue;
             };
             let strings_file_path = localizations.strings_file_path(&language).unwrap();
-            let Some(yarn_file) = yarn_files.get(handle) else {
-                bail!(
-                    "Tried to update \"{}\" (lang: {language}) because a Yarn file was meant to be changed or loaded, but couldn't because it was actually not loaded.\
-                    If you sent out an `UpdateAllStringsFilesForYarnFile`, please make sure that the provided handle is done loading via `AssetServer::get_load_state`.\
-                    If you did not send out such an event: this is a bug, please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new",
-                    strings_file_path.display(),);
-            };
-            let yarn_file_path = asset_server
-                .get_handle_path(handle)
-                .unwrap()
-                .path()
-                .to_path_buf();
 
             let new_strings_file = match StringsFile::from_string_table(
                 language.clone(),
-                &yarn_file.string_table,
+                string_table,
             ) {
                 Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
                     if localizations.file_generation_mode == FileGenerationMode::Development {
-                        info!("Updating \"{}\" soon (lang: {language}) because \"{}\" was changed or loaded but does not have full line IDs yet.",
-                            strings_file_path.display(),
-                            yarn_file_path.display(),)
+                        info!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
+                            strings_file_path.display())
                     } else {
                         warn!(
-                            "Tried to update \"{}\" (lang: {language}) because \"{}\" was changed or loaded, but couldn't because: {e}",
+                            "Tried to update \"{}\" (lang: {language}) because the following yarn files were changed or loaded: {file_names}, but couldn't because: {e}",
                             strings_file_path.display(),
-                            yarn_file_path.display(),
                         );
                     }
                     continue;
                 }
             };
             if strings_file.update_file(new_strings_file)? {
-                strings_file.write_asset(&asset_server, strings_file_path)?;
+                dirty_paths.insert((strings_file_handle, strings_file_path));
             }
 
             info!(
-                "Updated \"{}\" (lang: {language}) because \"{}\" was changed or loaded.",
+                "Updated \"{}\" (lang: {language}) because the following yarn files were changed or loaded: {file_names}",
                 strings_file_path.display(),
-                yarn_file_path.display(),
             );
         }
+    }
+    for (handle, path) in &dirty_paths {
+        let strings_file = strings_files.get(handle).unwrap();
+        strings_file.write_asset(&asset_server, path)?;
     }
     Ok(())
 }

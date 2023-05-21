@@ -15,10 +15,11 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
                     .run_if(
                         in_development
                             .and_then(resource_exists::<Localizations>())
+                            .and_then(resource_exists::<YarnCompilation>())
                             .and_then(
-                                on_event::<CreateMissingStringsFilesEvent>()
+                                resource_changed::<YarnCompilation>()
                                     .or_else(resource_changed::<Localizations>())
-                                    .or_else(resource_changed::<YarnCompilation>()),
+                                    .or_else(on_event::<CreateMissingStringsFilesEvent>()),
                             ),
                     ),
                 ensure_right_language
