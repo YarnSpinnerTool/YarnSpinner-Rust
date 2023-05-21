@@ -94,7 +94,7 @@ impl StringsFile {
 
         let mut changed = false;
         for (id, record) in self.0.iter_mut() {
-            if record.file != file {
+            if single_yarn_file && record.file != file {
                 continue;
             }
             if let Some(other_record) = other.0.remove(id) {
@@ -117,7 +117,10 @@ impl StringsFile {
         for id in removed_lines {
             self.0.remove(&id);
         }
-        self.0.extend(other.0);
+        if !other.0.is_empty() {
+            changed = true;
+            self.0.extend(other.0);
+        }
         Ok(changed)
     }
 

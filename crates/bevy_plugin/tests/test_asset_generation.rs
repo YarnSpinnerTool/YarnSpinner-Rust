@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger::project::YarnFilesInProject;
+use bevy_yarn_slinger::project::{YarnCompilation, YarnFilesInProject};
 use std::fs;
 use std::path::PathBuf;
 use std::thread::sleep;
@@ -113,10 +113,12 @@ fn generates_strings_file() -> anyhow::Result<()> {
         }),
     );
 
-    app.update(); // read yarn
-    sleep(Duration::from_millis(100));
-    app.update(); // write line IDs and strings file
-    app.update(); // write updated strings file
+    while app.world.get_resource::<YarnCompilation>().is_none() {
+        app.update();
+    }
+    app.update();
+    app.update();
+    app.update();
     app.update();
 
     let string_table = YarnCompiler::new()
@@ -165,10 +167,12 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
         }),
     );
 
-    app.update(); // read yarn
-    sleep(Duration::from_millis(100));
-    app.update(); // write line IDs and strings file
-    app.update(); // write updated strings file
+    while app.world.get_resource::<YarnCompilation>().is_none() {
+        app.update();
+    }
+    app.update();
+    app.update();
+    app.update();
 
     let mut localizations = app.world.get_resource_mut::<Localizations>().unwrap();
     localizations.translations = vec!["fr-FR".into()];
