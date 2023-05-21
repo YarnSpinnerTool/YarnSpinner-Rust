@@ -2,7 +2,7 @@ use crate::filesystem_events::CreateMissingStringsFilesEvent;
 use crate::localization::line_id_generation::LineIdUpdateSystemSet;
 use crate::localization::strings_file::creation::CreateMissingStringsFilesSystemSet;
 use crate::prelude::*;
-use crate::project::YarnFilesInProject;
+use crate::project::{YarnCompilation, YarnFilesInProject};
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
@@ -12,6 +12,10 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
         .add_systems(
             (
                 send_update_events_on_yarn_file_changes.run_if(in_development),
+                send_update_events_on_localization_changes.run_if(
+                    resource_exists::<YarnCompilation>()
+                        .and_then(resource_exists_and_changed::<Localizations>()),
+                ),
                 update_all_strings_files_for_string_table
                     .pipe(panic_on_err)
                     .after(LineIdUpdateSystemSet)
@@ -45,6 +49,18 @@ fn send_update_events_on_yarn_file_changes(
             ));
         }
     }
+}
+
+fn send_update_events_on_localization_changes(
+    yarn_compilation: Res<YarnCompilation>,
+    mut creation_writer: EventWriter<CreateMissingStringsFilesEvent>,
+    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+) {
+    creation_writer.send(CreateMissingStringsFilesEvent);
+    let string_table = &yarn_compilation.0.string_table;
+    update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+        string_table.clone(),
+    ));
 }
 
 fn update_all_strings_files_for_string_table(

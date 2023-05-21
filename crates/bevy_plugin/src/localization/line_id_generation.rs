@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::project::RecompileLoadedYarnFilesEvent;
 use bevy::prelude::*;
 use std::path::PathBuf;
 
@@ -18,7 +19,9 @@ fn generate_missing_line_ids_in_yarn_file(
     mut events: EventReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
+    mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
 ) -> SystemResult {
+    let mut recompilation_needed = false;
     for event in events.iter() {
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
@@ -51,6 +54,10 @@ fn generate_missing_line_ids_in_yarn_file(
             .compile()?
             .string_table;
         yarn_file.string_table = string_table;
+        recompilation_needed = true;
+    }
+    if recompilation_needed {
+        recompile_events.send(RecompileLoadedYarnFilesEvent);
     }
     Ok(())
 }

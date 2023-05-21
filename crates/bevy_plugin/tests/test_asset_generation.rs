@@ -174,10 +174,14 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     app.update();
     app.update();
 
-    let mut localizations = app.world.get_resource_mut::<Localizations>().unwrap();
-    localizations.translations = vec!["fr-FR".into()];
+    {
+        let mut localizations = app.world.get_resource_mut::<Localizations>().unwrap();
+        localizations.translations = vec!["fr-FR".into()];
+    }
 
     app.update(); // write updated strings file
+    app.update();
+    app.update();
 
     assert!(!dir.path().join("en-US.strings.csv").exists());
     let strings_file_path = dir.path().join("fr-FR.strings.csv");
@@ -221,11 +225,9 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         ),
     );
 
-    app.update(); // read yarn
-    sleep(Duration::from_millis(100));
-    app.update(); // write line IDs and strings file
-    app.update(); // write updated strings file
-    app.update();
+    while app.world.get_resource::<YarnCompilation>().is_none() {
+        app.update();
+    }
 
     {
         let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
