@@ -4,7 +4,9 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 mod yarn_file_source;
-use crate::project::YarnFilesToLoad;
+use crate::project::{
+    GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, YarnFilesToLoad,
+};
 pub use yarn_file_source::YarnFileSource;
 
 #[derive(Debug)]
@@ -17,7 +19,20 @@ pub struct YarnSlingerPlugin {
 }
 
 impl YarnSlingerPlugin {
-    pub fn with_localizations(localizations: impl Into<Option<Localizations>>) -> Self {
+    pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
+        let yarn_files = yarn_files
+            .into_iter()
+            .map(|yarn_file| yarn_file.into())
+            .collect();
+        Self {
+            localizations: None,
+            advanced: Default::default(),
+            line_asset_provider: None,
+            yarn_files,
+        }
+    }
+
+    pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
         if let Some(localizations) = localizations.as_ref() {
             if cfg!(target_arch = "wasm32") {
@@ -25,18 +40,7 @@ impl YarnSlingerPlugin {
                            "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
             }
         }
-
-        Self {
-            localizations,
-            advanced: Default::default(),
-            line_asset_provider: None,
-            yarn_files: HashSet::default(),
-        }
-    }
-
-    pub fn with_yarn_files(mut self, yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
-        let yarn_files = yarn_files.into_iter().map(|yarn_file| yarn_file.into());
-        self.yarn_files.extend(yarn_files);
+        self.localizations = localizations;
         self
     }
 

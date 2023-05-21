@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
+use bevy_yarn_slinger::project::YarnFilesInProject;
 use std::fs;
 use std::path::PathBuf;
 use std::thread::sleep;
@@ -11,18 +12,22 @@ use yarn_slinger::prelude::{CompilationType, YarnCompiler};
 fn loads_yarn_assets() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_localizations(None));
-
-    let asset_server = app.world.get_resource::<AssetServer>().unwrap();
-    let handle = asset_server.load("lines.yarn");
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(None),
+    );
 
     app.update();
     sleep(Duration::from_millis(100));
     app.update();
 
+    let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
+    let yarn_files = yarn_files.get();
+    assert_eq!(1, yarn_files.len());
+
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
-    let yarn_file = yarn_file_assets.get(&handle).unwrap();
+    let yarn_file = yarn_file_assets
+        .get(yarn_files.iter().next().unwrap())
+        .unwrap();
 
     let expected_source = include_str!("../assets/lines.yarn");
     assert_eq!(expected_source, yarn_file.content());
@@ -42,21 +47,26 @@ fn generates_line_ids() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(YarnSlingerPlugin::with_localizations(Localizations {
-        base_language: "en-US".into(),
-        translations: vec!["de-CH".into()],
-        file_generation_mode: FileGenerationMode::Development,
-    }));
-    let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
-    let handle = asset_server.load("lines.yarn");
+    .add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
+            base_language: "en-US".into(),
+            translations: vec!["de-CH".into()],
+            file_generation_mode: FileGenerationMode::Development,
+        }),
+    );
 
     app.update(); // read yarn
     sleep(Duration::from_millis(100));
     app.update(); // write line IDs
     app.update();
 
+    let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
+    let yarn_files = yarn_files.get();
+
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
-    let yarn_file_in_app = yarn_file_assets.get(&handle).unwrap();
+    let yarn_file_in_app = yarn_file_assets
+        .get(yarn_files.iter().next().unwrap())
+        .unwrap();
     let yarn_file_on_disk = fs::read_to_string(&yarn_path)?;
 
     assert_eq!(yarn_file_in_app.content(), yarn_file_on_disk);
@@ -95,13 +105,13 @@ fn generates_strings_file() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(YarnSlingerPlugin::with_localizations(Localizations {
-        base_language: "en-US".into(),
-        translations: vec!["de-CH".into()],
-        file_generation_mode: FileGenerationMode::Development,
-    }));
-    let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
-    let _handle: Handle<YarnFile> = asset_server.load("lines.yarn");
+    .add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
+            base_language: "en-US".into(),
+            translations: vec!["de-CH".into()],
+            file_generation_mode: FileGenerationMode::Development,
+        }),
+    );
 
     app.update(); // read yarn
     sleep(Duration::from_millis(100));
@@ -147,13 +157,13 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(YarnSlingerPlugin::with_localizations(Localizations {
-        base_language: "en-US".into(),
-        translations: vec!["de-CH".into()],
-        file_generation_mode: FileGenerationMode::Development,
-    }));
-    let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
-    let _handle: Handle<YarnFile> = asset_server.load("lines.yarn");
+    .add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
+            base_language: "en-US".into(),
+            translations: vec!["de-CH".into()],
+            file_generation_mode: FileGenerationMode::Development,
+        }),
+    );
 
     app.update(); // read yarn
     sleep(Duration::from_millis(100));
@@ -197,13 +207,15 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(YarnSlingerPlugin::with_localizations(Localizations {
-        base_language: "en-US".into(),
-        translations: vec!["de-CH".into()],
-        file_generation_mode: FileGenerationMode::Development,
-    }));
-    let asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
-    let handle: Handle<YarnFile> = asset_server.load("lines_with_ids.yarn");
+    .add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Development,
+            },
+        ),
+    );
 
     app.update(); // read yarn
     sleep(Duration::from_millis(100));
@@ -212,8 +224,11 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     app.update();
 
     {
-        let mut yarn_files = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
-        let yarn_file = yarn_files.get_mut(&handle).unwrap();
+        let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
+        let handle = yarn_files.get().iter().next().unwrap().clone();
+
+        let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
+        let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
 
         let mut lines: Vec<_> = yarn_file.content().lines().collect();
         *lines.get_mut(3).unwrap() = "Changed line #line:2";

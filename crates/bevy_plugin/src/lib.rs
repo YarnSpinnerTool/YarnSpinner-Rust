@@ -4,7 +4,7 @@ mod dialogue_runner;
 mod line_provider;
 mod localization;
 mod plugin;
-mod project;
+pub mod project;
 mod utils;
 mod yarn_file_asset;
 
@@ -19,9 +19,6 @@ pub mod prelude {
         line_provider::{AudioAssetProvider, LineAssetProvider},
         localization::{CurrentLanguage, FileGenerationMode, Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin},
-        project::{
-            GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, YarnFilesInProject,
-        },
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{

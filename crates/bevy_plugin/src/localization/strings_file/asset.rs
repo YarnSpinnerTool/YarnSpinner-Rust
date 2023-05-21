@@ -123,36 +123,35 @@ impl StringsFile {
         Ok(changed)
     }
 
-    pub(crate) fn from_yarn_files<'a>(
+    pub(crate) fn from_string_table<'a>(
         language: impl Into<Language>,
-        files: impl Iterator<Item = &'a YarnFile>,
+        string_table: impl IntoIterator<Item = (&'a LineId, &'a StringInfo)>,
     ) -> Result<Self> {
         let language = language.into();
         let mut records = HashMap::new();
-        for yarn_file in files {
-            for (id, string_info) in &yarn_file.string_table {
-                if string_info.is_implicit_tag {
-                    bail!(
-                        "Cannot build strings file from not fully tagged Yarn files (line {} in \"{}\" is not tagged).",
-                        string_info.line_number,
-                        yarn_file.file.file_name
-                    )
-                }
-                records.insert(
-                    id.clone(),
-                    StringsFileRecord {
-                        language: language.clone(),
-                        id: id.clone(),
-                        text: string_info.text.clone(),
-                        file: yarn_file.file.file_name.to_string(),
-                        node: string_info.node_name.clone(),
-                        line_number: string_info.line_number,
-                        lock: Lock::compute_from(&string_info.text),
-                        comment: read_comments(&string_info.metadata),
-                    },
-                );
+        for (id, string_info) in string_table {
+            if string_info.is_implicit_tag {
+                bail!(
+                    "Cannot build strings file from not fully tagged Yarn files (line {} in \"{}\" is not tagged).",
+                    string_info.line_number,
+                    string_info.file_name
+                )
             }
+            records.insert(
+                id.clone(),
+                StringsFileRecord {
+                    language: language.clone(),
+                    id: id.clone(),
+                    text: string_info.text.clone(),
+                    file: string_info.file_name.to_string(),
+                    node: string_info.node_name.clone(),
+                    line_number: string_info.line_number,
+                    lock: Lock::compute_from(&string_info.text),
+                    comment: read_comments(&string_info.metadata),
+                },
+            );
         }
+
         Ok(Self(records))
     }
 
