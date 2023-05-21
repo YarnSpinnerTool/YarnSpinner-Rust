@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 mod yarn_file_source;
-use crate::project::YarnFileSources;
-pub(crate) use yarn_file_source::*;
+use crate::project::YarnFilesToLoad;
+pub use yarn_file_source::YarnFileSource;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -34,9 +34,9 @@ impl YarnSlingerPlugin {
         }
     }
 
-    pub fn with_yarn_files(mut self, yarn_files: &[impl Into<YarnFileSource>]) -> Self {
-        self.yarn_files
-            .extend(yarn_files.iter().map(|yarn_file| (*yarn_file).into()));
+    pub fn with_yarn_files(mut self, yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
+        let yarn_files = yarn_files.into_iter().map(|yarn_file| yarn_file.into());
+        self.yarn_files.extend(yarn_files);
         self
     }
 
@@ -145,7 +145,7 @@ impl YarnApp for App {
         if let Some(line_asset_provider) = &plugin.line_asset_provider {
             self.insert_resource(GlobalLineAssetProvider(line_asset_provider.clone_shallow()));
         }
-        self.insert_resource(YarnFileSources(plugin.yarn_files.clone()))
+        self.insert_resource(YarnFilesToLoad(plugin.yarn_files.clone()))
             .insert_resource(GlobalTextProvider(
                 plugin.advanced.text_provider.clone_shallow(),
             ))
@@ -157,7 +157,7 @@ impl YarnApp for App {
     fn register_sub_plugins(&mut self) -> &mut Self {
         self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
-            .fn_plugin(crate::dialogue::dialogue_plugin)
+            .fn_plugin(crate::dialogue_runner::dialogue_plugin)
             .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
     }

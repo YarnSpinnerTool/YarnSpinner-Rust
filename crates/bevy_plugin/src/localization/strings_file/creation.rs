@@ -12,7 +12,7 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
                     .pipe(panic_on_err)
                     .in_set(CreateMissingStringsFilesSystemSet)
                     .run_if(
-                        resource_exists::<LoadedYarnFiles>()
+                        resource_exists::<YarnFilesInProject>()
                             .and_then(in_development)
                             .and_then(
                                 resource_exists::<Localizations>()
@@ -72,7 +72,7 @@ fn create_strings_files(
     localizations: Res<Localizations>,
     asset_server: Res<AssetServer>,
     yarn_files: Res<Assets<YarnFile>>,
-    yarn_handles: Res<LoadedYarnFiles>,
+    yarn_handles: Res<YarnFilesInProject>,
 ) -> SystemResult {
     for localization in &localizations.translations {
         let path = localization.strings_file.as_path();

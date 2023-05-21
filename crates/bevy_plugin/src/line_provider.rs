@@ -31,7 +31,7 @@ impl LineAssetProvider for AudioAssetProvider {
         *self.audio_language.write().unwrap() = language;
     }
 
-    fn get_asset(&self, line: &YarnLine) -> Option<HandleUntyped> {
+    fn get_asset(&self, _line: &YarnLine) -> Option<HandleUntyped> {
         todo!();
     }
 }

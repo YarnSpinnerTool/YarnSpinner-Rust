@@ -90,7 +90,6 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
-    #[must_use]
     pub fn with_language_code(mut self, language_code: impl Into<Language>) -> Result<Self> {
         self.set_language_code(language_code)?;
         Ok(self)

@@ -6,10 +6,10 @@ pub(crate) fn dialogue_plugin(_app: &mut App) {}
 
 #[derive(Debug, Default, Component)]
 pub struct DialogueRunner {
-    dialogue: Option<Dialogue>,
-    variable_storage_override: Option<Box<dyn VariableStorage>>,
-    text_provider_override: Option<Box<dyn TextProvider>>,
-    asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
+    pub(crate) dialogue: Option<Dialogue>,
+    pub(crate) variable_storage_override: Option<Box<dyn VariableStorage>>,
+    pub(crate) text_provider_override: Option<Box<dyn TextProvider>>,
+    pub(crate) line_asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
 }
 
 impl DialogueRunner {
@@ -18,7 +18,7 @@ impl DialogueRunner {
             dialogue: None,
             variable_storage_override: None,
             text_provider_override: None,
-            asset_provider_override: None,
+            line_asset_provider_override: None,
         }
     }
 
@@ -36,7 +36,7 @@ impl DialogueRunner {
         mut self,
         provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
     ) -> Self {
-        self.asset_provider_override = Some(provider.into());
+        self.line_asset_provider_override = Some(provider.into());
         self
     }
 }

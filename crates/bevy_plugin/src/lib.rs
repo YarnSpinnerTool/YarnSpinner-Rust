@@ -1,6 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-mod dialogue;
+mod dialogue_runner;
 mod line_provider;
 mod localization;
 mod plugin;
@@ -15,12 +15,12 @@ pub mod default_impl {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        dialogue::DialogueRunner,
+        dialogue_runner::DialogueRunner,
         line_provider::{AudioAssetProvider, LineAssetProvider},
         localization::{CurrentLanguage, FileGenerationMode, Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin},
         project::{
-            GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, LoadedYarnFiles,
+            GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, YarnFilesInProject,
         },
         yarn_file_asset::YarnFile,
     };

@@ -13,7 +13,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
         .add_systems(
             (
                 send_update_events_on_yarn_file_changes
-                    .run_if(in_development.and_then(resource_exists::<LoadedYarnFiles>())),
+                    .run_if(in_development.and_then(resource_exists::<YarnFilesInProject>())),
                 update_all_strings_files_for_yarn_file
                     .pipe(panic_on_err)
                     .after(LineIdUpdateSystemSet)
@@ -21,7 +21,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
                     .run_if(
                         resource_exists::<Localizations>()
                             .and_then(in_development)
-                            .and_then(resource_exists::<LoadedYarnFiles>()),
+                            .and_then(resource_exists::<YarnFilesInProject>()),
                     ),
             )
                 .chain(),
@@ -34,7 +34,7 @@ pub struct UpdateAllStringsFilesForYarnFileEvent(pub Handle<YarnFile>);
 
 fn send_update_events_on_yarn_file_changes(
     mut events: EventReader<AssetEvent<YarnFile>>,
-    loaded_yarn_files: Res<LoadedYarnFiles>,
+    loaded_yarn_files: Res<YarnFilesInProject>,
     mut update_writer: EventWriter<UpdateAllStringsFilesForYarnFileEvent>,
 ) {
     for event in events.iter() {
@@ -56,7 +56,7 @@ fn update_all_strings_files_for_yarn_file(
     localizations: Res<Localizations>,
     mut languages_to_update: Local<HashMap<Language, Handle<StringsFile>>>,
     current_strings_file: Res<CurrentStringsFile>,
-    loaded_yarn_files: Res<LoadedYarnFiles>,
+    loaded_yarn_files: Res<YarnFilesInProject>,
 ) -> SystemResult {
     if !events.is_empty() {
         let supported_languages: HashSet<_> = localizations

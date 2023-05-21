@@ -70,7 +70,7 @@ pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct YarnFileAssetLoader;
+struct YarnFileAssetLoader;
 
 impl AssetLoader for YarnFileAssetLoader {
     fn load<'a>(
