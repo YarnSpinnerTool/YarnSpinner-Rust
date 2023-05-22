@@ -15,10 +15,9 @@ pub(crate) fn project_plugin(app: &mut App) {
                 add_yarn_files_to_load_queue
                     .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
                 compile_loaded_yarn_files.pipe(error),
-                recompile_loaded_yarn_files.pipe(error).run_if(
-                    resource_exists::<YarnCompilation>()
-                        .and_then(on_event::<RecompileLoadedYarnFilesEvent>()),
-                ),
+                recompile_loaded_yarn_files
+                    .pipe(error)
+                    .run_if(on_event::<RecompileLoadedYarnFilesEvent>()),
             )
                 .chain(),
         );
@@ -102,12 +101,17 @@ fn add_yarn_files_to_load_queue(
 pub struct RecompileLoadedYarnFilesEvent;
 
 fn recompile_loaded_yarn_files(
+    mut events: EventReader<RecompileLoadedYarnFilesEvent>,
     yarn_files_in_project: Res<YarnFilesInProject>,
     yarn_files: Res<Assets<YarnFile>>,
     localizations: Option<Res<Localizations>>,
-    mut yarn_compilation: ResMut<YarnCompilation>,
+    yarn_compilation: Option<ResMut<YarnCompilation>>,
 ) -> SystemResult {
-    let Some(compilation) = compile_yarn_files(&yarn_files_in_project, yarn_files, localizations)? else {
+    events.clear();
+    let Some(mut yarn_compilation) = yarn_compilation else {
+        return Ok(());
+    };
+    let Some(compilation) = compile_yarn_files(&yarn_files_in_project, &yarn_files, &localizations)? else {
         return Ok(());
     };
     yarn_compilation.0 = compilation;
@@ -145,16 +149,21 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
-    let Some(compilation) = compile_yarn_files(&yarn_files_in_project, yarn_files, localizations)? else {
+    let Some(compilation) = compile_yarn_files(&yarn_files_in_project, &yarn_files, &localizations)? else {
         return Ok(());
     };
 
     if let Some(yarn_compilation) = yarn_compilation.as_mut() {
         yarn_compilation.0 = compilation;
     } else {
-        update_writer.send(UpdateAllStringsFilesForStringTableEvent(
-            compilation.string_table.clone(),
-        ));
+        if localizations
+            .map(|l| l.file_generation_mode == FileGenerationMode::Development)
+            .unwrap_or_default()
+        {
+            update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+                compilation.string_table.clone(),
+            ));
+        }
         commands.insert_resource(YarnCompilation(compilation));
     }
 
@@ -174,8 +183,8 @@ fn compile_loaded_yarn_files(
 
 fn compile_yarn_files(
     yarn_files_in_project: &Res<YarnFilesInProject>,
-    yarn_files: Res<Assets<YarnFile>>,
-    localizations: Option<Res<Localizations>>,
+    yarn_files: &Res<Assets<YarnFile>>,
+    localizations: &Option<Res<Localizations>>,
 ) -> Result<Option<Compilation>> {
     let yarn_files = yarn_files_in_project
         .0

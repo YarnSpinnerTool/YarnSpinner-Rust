@@ -17,8 +17,8 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
                             .and_then(resource_exists::<Localizations>())
                             .and_then(resource_exists::<YarnCompilation>())
                             .and_then(
-                                resource_changed::<YarnCompilation>()
-                                    .or_else(resource_changed::<Localizations>())
+                                resource_changed::<Localizations>()
+                                    .or_else(resource_changed::<YarnCompilation>())
                                     .or_else(on_event::<CreateMissingStringsFilesEvent>()),
                             ),
                     ),
@@ -71,10 +71,12 @@ fn ensure_right_language(
 }
 
 fn create_strings_files(
+    mut events: EventReader<CreateMissingStringsFilesEvent>,
     localizations: Res<Localizations>,
     asset_server: Res<AssetServer>,
     compilation: Res<YarnCompilation>,
 ) -> SystemResult {
+    events.clear();
     for localization in &localizations.translations {
         let path = localization.strings_file.as_path();
         if asset_server.asset_io().is_file(path) {

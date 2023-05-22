@@ -98,17 +98,21 @@ impl StringsFile {
                 continue;
             }
             if let Some(other_record) = other.0.remove(id) {
-                let text = if record.lock != other_record.lock {
-                    format!("(NEEDS UPDATE) {}", &record.text)
+                if records_equal_except_for_text(record, &other_record) {
+                    continue;
+                }
+                let text = if record.lock != other_record.lock
+                    && !record.text.starts_with(UPDATE_PREFIX)
+                {
+                    format!("{UPDATE_PREFIX}{}", &record.text)
                 } else {
                     // not `other_record` because that one might not contain (NEEDS UPDATE)
                     record.text.clone()
                 };
-                if record != &other_record {
-                    changed = true;
-                    *record = other_record;
-                    record.text = text;
-                }
+
+                changed = true;
+                *record = other_record;
+                record.text = text;
             } else if single_yarn_file {
                 removed_lines.push(id.clone());
                 changed = true;
@@ -177,6 +181,17 @@ impl StringsFile {
         Ok(())
     }
 }
+
+fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecord) -> bool {
+    lhs.language == rhs.language
+        && lhs.id == rhs.id
+        && lhs.file == rhs.file
+        && lhs.node == rhs.node
+        && lhs.line_number == rhs.line_number
+        && lhs.lock == rhs.lock
+        && lhs.comment == rhs.comment
+}
+const UPDATE_PREFIX: &str = "(NEEDS UPDATE) ";
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
