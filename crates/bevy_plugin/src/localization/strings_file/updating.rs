@@ -63,7 +63,7 @@ fn update_all_strings_files_for_string_table(
     for localization in &localizations.translations {
         let language = &localization.language;
         let path = localization.strings_file.as_path();
-        let handle = if asset_server.asset_io().is_file(&path) {
+        let handle = if asset_server.asset_io().is_file(path) {
             asset_server.load(path)
         } else {
             missing_writer.send(CreateMissingStringsFilesEvent);
