@@ -7,7 +7,8 @@ pub(crate) fn line_provider_plugin(_app: &mut App) {}
 
 pub trait LineAssetProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn LineAssetProvider>;
-    fn set_language(&mut self, language: Language);
+    fn set_language(&mut self, language: Option<Language>);
+    fn language(&self) -> Option<Language>;
     fn get_asset(&self, line: &YarnLine) -> Option<HandleUntyped>;
 }
 
@@ -19,7 +20,7 @@ impl Clone for Box<dyn LineAssetProvider> {
 
 #[derive(Debug, Clone)]
 pub struct AudioAssetProvider {
-    pub audio_language: Arc<RwLock<Language>>,
+    pub audio_language: Arc<RwLock<Option<Language>>>,
 }
 
 impl LineAssetProvider for AudioAssetProvider {
@@ -27,8 +28,11 @@ impl LineAssetProvider for AudioAssetProvider {
         Box::new(self.clone())
     }
 
-    fn set_language(&mut self, language: Language) {
+    fn set_language(&mut self, language: Option<Language>) {
         *self.audio_language.write().unwrap() = language;
+    }
+    fn language(&self) -> Option<Language> {
+        self.audio_language.read().unwrap().clone()
     }
 
     fn get_asset(&self, _line: &YarnLine) -> Option<HandleUntyped> {

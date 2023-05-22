@@ -44,19 +44,22 @@ impl YarnProject {
         DialogueRunnerBuilder::with_yarn_project(self)
     }
 
-    pub fn set_text_language(&mut self, language: impl Into<Language>) -> Result<()> {
-        todo!()
+    pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        self.text_provider.set_language_code(language.into());
+        self
     }
 
-    pub fn set_line_asset_language(&mut self, language: impl Into<Language>) -> Result<()> {
-        todo!()
+    pub fn set_line_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        if let Some(line_asset_provider) = self.line_asset_provider.as_mut() {
+            line_asset_provider.set_language(language.into());
+        }
+        self
     }
 
-    pub fn set_global_language(&mut self, language: impl Into<Language>) -> Result<()> {
+    pub fn set_global_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
         let language = language.into();
-        self.set_text_language(language.clone())?;
-        self.set_line_asset_language(language)?;
-        Ok(())
+        self.set_text_language(language.clone())
+            .set_line_asset_language(language)
     }
 
     pub fn text_language(&self) -> Option<Language> {
@@ -64,7 +67,7 @@ impl YarnProject {
     }
 
     pub fn line_asset_language(&self) -> Option<Language> {
-        todo!()
+        self.line_asset_provider.as_ref().and_then(|p| p.language())
     }
 }
 

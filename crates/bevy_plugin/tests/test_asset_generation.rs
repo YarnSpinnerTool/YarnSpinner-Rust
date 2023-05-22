@@ -246,8 +246,11 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     app.update();
     app.update();
     app.update();
-    sleep(Duration::from_millis(100));
+    sleep(Duration::from_millis(50));
     app.update();
+    app.update();
+    app.update();
+    sleep(Duration::from_millis(50));
 
     let strings_file_source = fs::read_to_string(dir.path().join("de-CH.strings.csv"))?;
     let strings_file_lines: Vec<_> = strings_file_source

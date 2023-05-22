@@ -65,9 +65,7 @@ fn update_all_strings_files_for_string_table(
             .collect();
         let file_names = file_names.into_iter().collect::<Vec<_>>().join(", ");
         for (language, strings_file_handle) in languages_to_handles.clone() {
-            let Some(strings_file) = strings_files.get_mut(&strings_file_handle) else {
-                continue;
-            };
+            let strings_file = strings_files.get_mut(&strings_file_handle).unwrap();
             let strings_file_path = localizations.strings_file_path(&language).unwrap();
 
             let new_strings_file = match StringsFile::from_string_table(

@@ -9,14 +9,14 @@ pub(crate) struct LineIdUpdateSystemSet;
 
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
     app.add_system(
-        generate_missing_line_ids_in_yarn_file
+        handle_yarn_file_events
             .pipe(panic_on_err)
             .in_set(LineIdUpdateSystemSet)
             .run_if(in_development.and_then(on_event::<AssetEvent<YarnFile>>())),
     );
 }
 
-fn generate_missing_line_ids_in_yarn_file(
+fn handle_yarn_file_events(
     mut events: EventReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
@@ -39,11 +39,10 @@ fn generate_missing_line_ids_in_yarn_file(
             continue;
         }
         let yarn_file = assets.get(handle).unwrap().clone();
-        if project.is_some() {
-            update_writer.send(UpdateAllStringsFilesForStringTableEvent(
-                yarn_file.string_table.clone(),
-            ));
-        }
+
+        update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+            yarn_file.string_table.clone(),
+        ));
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
             continue;
