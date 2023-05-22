@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
-pub(crate) fn line_provider_plugin(_app: &mut App) {}
+pub(crate) fn line_asset_provider_plugin(_app: &mut App) {}
 
 pub trait LineAssetProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn LineAssetProvider>;
