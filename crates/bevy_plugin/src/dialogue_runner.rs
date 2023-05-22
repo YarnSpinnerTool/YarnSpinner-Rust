@@ -9,11 +9,9 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
     app.fn_plugin(runtime_interaction::runtime_interaction_plugin);
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Called a function on a dialogue that was not yet initialized.")]
+    #[error("Called a function that depends on a dialogue being initialized on a newly created one. Please wait one tick before calling this method so that the runtime has time to initialize itself.")]
     UninitializedDialogueError,
     #[error(transparent)]
     YarnRuntimeDialogueError(#[from] DialogueError),

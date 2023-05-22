@@ -6,6 +6,31 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_system(set_dialogue_programs.run_if(resource_exists::<YarnCompilation>()));
 }
 
+fn continue_runtime(mut dialogue_runners: Query<&mut DialogueRunner>) -> SystemResult {
+    for dialogue_runner in dialogue_runners.iter_mut() {
+        if !dialogue_runner.continue_ {
+            continue;
+        }
+        if let Some(dialogue) = &mut dialogue_runner.dialogue {
+            if let Some(events) = dialogue.continue_()? {
+                for event in events {
+                    match event {
+                        DialogueEvent::Line(line) => {}
+                        DialogueEvent::Options(options) => {}
+                        DialogueEvent::Command(command) => {}
+                        DialogueEvent::NodeComplete(node_name) => {}
+                        DialogueEvent::NodeStart(node_name) => {}
+                        DialogueEvent::LineHints(line_ids) => {}
+                        DialogueEvent::DialogueComplete => {}
+                    }
+                    todo!()
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 fn set_dialogue_programs(
     mut dialogue_runners: Query<&mut DialogueRunner>,
     global_variable_storage: Res<GlobalVariableStorage>,
