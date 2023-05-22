@@ -58,6 +58,14 @@ impl YarnProject {
         self.set_line_asset_language(language)?;
         Ok(())
     }
+
+    pub fn text_language(&self) -> Option<Language> {
+        self.text_provider.get_language_code()
+    }
+
+    pub fn line_asset_language(&self) -> Option<Language> {
+        todo!()
+    }
 }
 
 #[derive(Debug, Resource)]

@@ -83,13 +83,11 @@ impl VirtualMachine {
         self.variable_storage.as_mut()
     }
 
-    pub(crate) fn set_language_code(&mut self, language_code: Language) -> Result<()> {
-        self.language_code.replace(language_code.clone());
+    pub(crate) fn set_language_code(&mut self, language_code: impl Into<Option<Language>>) {
+        let language_code = language_code.into();
+        self.language_code = language_code.clone();
         self.line_parser.set_language_code(language_code.clone());
-        self.text_provider
-            .set_language_code(language_code)
-            .map_err(Into::<DialogueError>::into)?;
-        Ok(())
+        self.text_provider.set_language_code(language_code);
     }
 
     pub(crate) fn reset_state(&mut self) {

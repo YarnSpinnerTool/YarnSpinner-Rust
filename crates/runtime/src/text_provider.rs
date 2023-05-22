@@ -15,10 +15,7 @@ use yarn_slinger_core::prelude::*;
 pub trait TextProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn TextProvider>;
     fn get_text(&self, id: &LineId) -> Option<String>;
-    fn set_language_code(
-        &mut self,
-        language_code: Language,
-    ) -> Result<(), UnsupportedLanguageError>;
+    fn set_language_code(&mut self, language_code: Option<Language>);
     fn get_language_code(&self) -> Option<Language>;
 }
 
@@ -83,37 +80,22 @@ impl TextProvider for StringTableTextProvider {
     fn get_text(&self, id: &LineId) -> Option<String> {
         let language_code = self.language_code.read().unwrap();
         if let Some(language_code) = language_code.as_ref() {
-            if let Some(line) = self
-                .translation_table
-                .read()
-                .unwrap()
-                .get(language_code)
-                .and_then(|table| table.get(id))
+            if let Some(language_table) = self.translation_table.read().unwrap().get(language_code)
             {
-                Some(line.clone())
+                if let Some(line) = language_table.get(id) {
+                    return Some(line.clone());
+                } else {
+                    error!("No translation found for line {id} in language {language_code}, falling back to base language.");
+                }
             } else {
-                error!("No translation found for line {:?} in language {:?}, falling back to base language.", id, language_code);
-                self.base_language_table.read().unwrap().get(id).cloned()
+                error!("Didn't find language {language_code} in translations, falling back to base language.");
             }
-        } else {
-            self.base_language_table.read().unwrap().get(id).cloned()
         }
+        self.base_language_table.read().unwrap().get(id).cloned()
     }
 
-    fn set_language_code(
-        &mut self,
-        language_code: Language,
-    ) -> Result<(), UnsupportedLanguageError> {
-        if !self
-            .translation_table
-            .read()
-            .unwrap()
-            .contains_key(&language_code)
-        {
-            return Err(UnsupportedLanguageError { language_code });
-        }
-        self.language_code.write().unwrap().replace(language_code);
-        Ok(())
+    fn set_language_code(&mut self, language_code: Option<Language>) {
+        *self.language_code.write().unwrap() = language_code;
     }
 
     fn get_language_code(&self) -> Option<Language> {

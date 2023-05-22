@@ -98,9 +98,9 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
-    pub fn with_language_code(mut self, language_code: impl Into<Language>) -> Result<Self> {
-        self.set_language_code(language_code)?;
-        Ok(self)
+    pub fn with_language_code(mut self, language_code: impl Into<Option<Language>>) -> Self {
+        self.set_language_code(language_code);
+        self
     }
 
     #[must_use]
@@ -151,12 +151,11 @@ impl Dialogue {
 
     pub fn set_language_code(
         &mut self,
-        language_code: impl Into<Language>,
-    ) -> Result<Option<Language>> {
+        language_code: impl Into<Option<Language>>,
+    ) -> Option<Language> {
         let language_code = language_code.into();
-        let previous = self.language_code.replace(language_code.clone());
-        self.vm.set_language_code(language_code)?;
-        Ok(previous)
+        self.vm.set_language_code(language_code.clone());
+        std::mem::replace(&mut self.language_code, language_code)
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.

@@ -41,6 +41,7 @@ impl YarnSlingerPlugin {
             }
         }
         self.localizations = localizations;
+        self.update_language_code();
         self
     }
 
@@ -62,7 +63,16 @@ impl YarnSlingerPlugin {
         config: impl Fn(AdvancedPluginConfig) -> AdvancedPluginConfig,
     ) -> Self {
         self.advanced = config(self.advanced);
+        self.update_language_code();
         self
+    }
+
+    fn update_language_code(&mut self) {
+        let language = self
+            .localizations
+            .as_ref()
+            .map(|l| l.base_language.language.clone());
+        self.advanced.text_provider.set_language_code(language);
     }
 }
 

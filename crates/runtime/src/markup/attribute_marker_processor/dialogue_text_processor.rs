@@ -75,8 +75,8 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
         replace_value_placeholders(&input, &value)
     }
 
-    fn set_language_code(&mut self, language_code: Language) {
-        self.language_code.replace(language_code);
+    fn set_language_code(&mut self, language_code: Option<Language>) {
+        self.language_code = language_code;
     }
 
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor> {
