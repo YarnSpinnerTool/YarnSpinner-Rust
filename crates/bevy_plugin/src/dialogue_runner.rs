@@ -13,6 +13,7 @@ pub struct DialogueRunner {
     pub(crate) variable_storage_override: Option<Box<dyn VariableStorage>>,
     pub(crate) text_provider_override: Option<Box<dyn TextProvider>>,
     pub(crate) line_asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
+    pub(crate) library_buffer: Option<YarnFnLibrary>,
 }
 
 impl DialogueRunner {
@@ -22,6 +23,7 @@ impl DialogueRunner {
             variable_storage_override: None,
             text_provider_override: None,
             line_asset_provider_override: None,
+            library_buffer: None,
         }
     }
 
@@ -42,6 +44,24 @@ impl DialogueRunner {
         self.line_asset_provider_override = Some(provider.into());
         self
     }
+
+    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
+        self.extend_library(library);
+        self
+    }
+
+    pub fn extend_library(&mut self, library: YarnFnLibrary) -> &mut Self {
+        let own_library = self
+            .dialogue
+            .as_mut()
+            .map(|dialogue| dialogue.library_mut())
+            .unwrap_or_else(|| {
+                self.library_buffer
+                    .get_or_insert_with(YarnFnLibrary::standard_library)
+            });
+        own_library.extend(library);
+        self
+    }
 }
 
 fn set_dialogue_programs(
@@ -49,6 +69,7 @@ fn set_dialogue_programs(
     global_variable_storage: Res<GlobalVariableStorage>,
     global_text_provider: Res<GlobalTextProvider>,
     global_line_asset_provider: Option<Res<GlobalLineAssetProvider>>,
+    global_library: Res<GlobalYarnFnLibrary>,
     yarn_compilation: Res<YarnCompilation>,
 ) {
     let compilation_changed = yarn_compilation.is_changed();
@@ -56,6 +77,8 @@ fn set_dialogue_programs(
         .iter_mut()
         .filter(|runner| compilation_changed || runner.dialogue.is_none());
     for mut dialogue_runner in dialogue_runners {
+        let local_library = dialogue_runner.library_buffer.take();
+
         let dialogue = if let Some(dialogue) = &mut dialogue_runner.dialogue {
             dialogue
         } else {
@@ -79,5 +102,10 @@ fn set_dialogue_programs(
             dialogue_runner.dialogue.as_mut().unwrap()
         };
         dialogue.replace_program(yarn_compilation.0.program.clone().unwrap());
+
+        dialogue.library_mut().extend(global_library.0.clone());
+        if let Some(library) = local_library {
+            dialogue.library_mut().extend(library);
+        }
     }
 }

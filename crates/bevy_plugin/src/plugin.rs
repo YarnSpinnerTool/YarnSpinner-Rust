@@ -1,13 +1,14 @@
 use crate::default_impl::{MemoryVariableStore, StringTableTextProvider};
 use crate::prelude::*;
+use crate::project::{
+    GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, GlobalYarnFnLibrary,
+    YarnFilesToLoad,
+};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
-use crate::project::{
-    GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, YarnFilesToLoad,
-};
-pub use yarn_file_source::YarnFileSource;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -16,6 +17,7 @@ pub struct YarnSlingerPlugin {
     pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
     pub yarn_files: HashSet<YarnFileSource>,
     pub advanced: AdvancedPluginConfig,
+    pub library: YarnFnLibrary,
 }
 
 impl YarnSlingerPlugin {
@@ -28,6 +30,7 @@ impl YarnSlingerPlugin {
             localizations: None,
             advanced: Default::default(),
             line_asset_provider: None,
+            library: YarnFnLibrary::standard_library(),
             yarn_files,
         }
     }
@@ -49,6 +52,11 @@ impl YarnSlingerPlugin {
         asset_provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
     ) -> Self {
         self.line_asset_provider = asset_provider.into();
+        self
+    }
+
+    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
+        self.library.extend(library);
         self
     }
 
@@ -157,6 +165,7 @@ impl YarnApp for App {
             .insert_resource(GlobalVariableStorage(
                 plugin.advanced.variable_storage.clone_shallow(),
             ))
+            .insert_resource(GlobalYarnFnLibrary(plugin.library.clone()))
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {

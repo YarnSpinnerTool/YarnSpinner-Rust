@@ -27,7 +27,7 @@ pub mod prelude {
     };
     pub(crate) use anyhow::{Context, Error, Result};
     pub(crate) use yarn_slinger::prelude::*;
-    pub use yarn_slinger::prelude::{Language, LineId, TextProvider, VariableStorage};
+    pub use yarn_slinger::prelude::{Language, LineId, TextProvider, VariableStorage, YarnFn, YarnFnLibrary};
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};

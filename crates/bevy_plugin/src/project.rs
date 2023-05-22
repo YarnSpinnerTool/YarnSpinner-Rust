@@ -81,6 +81,14 @@ impl GlobalLineAssetProvider {
     }
 }
 
+#[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]
+pub struct GlobalYarnFnLibrary(pub(crate) YarnFnLibrary);
+impl GlobalYarnFnLibrary {
+    pub fn get(&self) -> &YarnFnLibrary {
+        &self.0
+    }
+}
+
 fn add_yarn_files_to_load_queue(
     mut yarn_files_to_load: ResMut<YarnFilesToLoad>,
     mut yarn_files_in_project: ResMut<YarnFilesInProject>,
