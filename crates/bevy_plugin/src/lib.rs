@@ -4,7 +4,7 @@ mod dialogue_runner;
 mod line_provider;
 mod localization;
 mod plugin;
-pub mod project;
+mod project;
 mod utils;
 mod yarn_file_asset;
 pub use anyhow::{Error, Result};
@@ -37,8 +37,11 @@ pub mod prelude {
     pub(crate) use serde::{Deserialize, Serialize};
 }
 
-pub mod filesystem_events {
+pub use yarn_slinger::prelude::YarnAnalysisContext;
+
+pub mod events {
     pub use crate::localization::{
         CreateMissingStringsFilesEvent, UpdateAllStringsFilesForStringTableEvent,
     };
+    pub use crate::project::RecompileLoadedYarnFilesEvent;
 }

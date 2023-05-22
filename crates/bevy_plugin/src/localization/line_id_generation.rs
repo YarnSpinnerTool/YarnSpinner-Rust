@@ -1,4 +1,4 @@
-use crate::filesystem_events::UpdateAllStringsFilesForStringTableEvent;
+use crate::events::UpdateAllStringsFilesForStringTableEvent;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;

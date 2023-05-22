@@ -39,6 +39,8 @@ pub enum DialogueError {
     #[error("`SetSelectedOption` was called, but Dialogue wasn't waiting for a selection. \
             This method should only be called after the Dialogue is waiting for the user to select an option.")]
     UnexpectedOptionSelectionError,
+    #[error("No node named \"{node_name}\" has been loaded.")]
+    InvalidNode { node_name: String },
 }
 
 impl Dialogue {
@@ -110,15 +112,15 @@ impl Dialogue {
     }
 
     #[must_use]
-    pub fn with_node_at(mut self, node_name: &str) -> Self {
-        self.set_node(node_name);
-        self
+    pub fn with_node_at(mut self, node_name: &str) -> Result<Self> {
+        self.set_node(node_name)?;
+        Ok(self)
     }
 
     #[must_use]
-    pub fn with_node_at_start(mut self) -> Self {
-        self.set_node_to_start();
-        self
+    pub fn with_node_at_start(mut self) -> Result<Self> {
+        self.set_node_to_start()?;
+        Ok(self)
     }
 
     /// Activates [`Dialogue::next`] being able to return [`DialogueEvent::LineHints`] events.
@@ -258,15 +260,15 @@ impl Dialogue {
     /// ## Panics
     ///
     /// Panics if no node named `node_name` has been loaded.
-    pub fn set_node(&mut self, node_name: &str) -> &mut Self {
-        self.vm.set_node(node_name);
-        self
+    pub fn set_node(&mut self, node_name: impl Into<String>) -> Result<&mut Self> {
+        self.vm.set_node(node_name)?;
+        Ok(self)
     }
 
     /// Calls [`Dialogue::set_node`] with the [`Dialogue::DEFAULT_START_NODE_NAME`].
-    pub fn set_node_to_start(&mut self) -> &mut Self {
-        self.set_node(Self::DEFAULT_START_NODE_NAME);
-        self
+    pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
+        self.set_node(Self::DEFAULT_START_NODE_NAME)?;
+        Ok(self)
     }
 
     /// Immediately stops the [`Dialogue`]

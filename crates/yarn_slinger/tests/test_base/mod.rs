@@ -124,14 +124,16 @@ impl TestBase {
             .map(|(id, info)| (id, info.text))
             .collect();
         self.string_table.add_translation("en-US", string_table);
-        self.dialogue.set_language_code("en-US").unwrap();
+        self.dialogue
+            .set_language_code(Language::from("en-US"))
+            .unwrap();
         self
     }
 
     /// Executes the named node, and checks any assertions made during
     /// execution. Fails the test if an assertion made in Yarn fails.
     pub fn run_standard_testcase(&mut self) -> &mut Self {
-        self.dialogue.set_node_to_start();
+        self.dialogue.set_node_to_start().unwrap();
 
         while let Some(events) = self.dialogue.next() {
             for event in events {

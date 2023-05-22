@@ -109,24 +109,27 @@ impl VirtualMachine {
         self.set_execution_state(ExecutionState::Stopped)
     }
 
-    pub(crate) fn set_node(&mut self, node_name: &str) {
+    pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
+        let node_name = node_name.into();
         info!("Running node \"{node_name}\"");
-        self.current_node = self
-            .get_node_from_name(node_name)
-            .cloned()
-            .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."))
-            .into();
+        let Some(current_node) = self.get_node_from_name(&node_name) else {
+            return Err(DialogueError::InvalidNode{
+                node_name
+            });
+        };
+        self.current_node = Some(current_node.clone());
 
         self.reset_state();
 
-        self.current_node_name = Some(node_name.to_owned());
+        self.current_node_name = Some(node_name.clone());
 
         self.batched_events
-            .push(DialogueEvent::NodeStart(node_name.to_owned()));
+            .push(DialogueEvent::NodeStart(node_name));
 
         if self.line_hints_enabled {
             self.send_line_hints();
         }
+        Ok(())
     }
 
     fn send_line_hints(&mut self) {
@@ -538,7 +541,7 @@ impl VirtualMachine {
                 let node_name: String = self.state.pop();
                 self.batched_events
                     .push(DialogueEvent::NodeComplete(node_name.clone()));
-                self.set_node(&node_name);
+                self.set_node(&node_name)?;
 
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
             }

@@ -11,6 +11,7 @@ use core::fmt::Display;
     all(feature = "bevy", feature = "serde"),
     reflect(Serialize, Deserialize)
 )]
+#[non_exhaustive]
 pub struct Language(pub String);
 
 impl Display for Language {

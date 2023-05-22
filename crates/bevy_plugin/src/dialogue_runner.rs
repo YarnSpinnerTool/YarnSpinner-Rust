@@ -17,13 +17,18 @@ pub struct DialogueRunner {
 
 impl DialogueRunner {
     pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
-        self.extend_library(library);
+        self.library_mut().extend(library);
         self
     }
 
-    pub fn extend_library(&mut self, library: YarnFnLibrary) -> &mut Self {
-        self.dialogue.library_mut().extend(library);
-        self
+    #[must_use]
+    pub fn library(&self) -> &YarnFnLibrary {
+        &self.dialogue.library()
+    }
+
+    #[must_use]
+    pub fn library_mut(&mut self) -> &mut YarnFnLibrary {
+        self.dialogue.library_mut()
     }
 
     pub fn continue_(&mut self) -> &mut Self {
@@ -31,11 +36,76 @@ impl DialogueRunner {
         self
     }
 
+    #[must_use]
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.dialogue.text_provider()
+    }
+
+    #[must_use]
+    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.dialogue.text_provider_mut()
+    }
+
+    #[must_use]
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.dialogue.variable_storage()
+    }
+
+    #[must_use]
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.dialogue.variable_storage_mut()
+    }
+
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
         Ok(self)
+    }
+
+    pub fn set_node(&mut self, name: impl Into<String>) -> Result<&mut Self> {
+        self.dialogue.set_node(name)?;
+        Ok(self)
+    }
+
+    pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
+        self.dialogue.set_node_to_start()?;
+        Ok(self)
+    }
+
+    #[must_use]
+    pub fn node_names(&self) -> Vec<String> {
+        self.dialogue.node_names().unwrap()
+    }
+
+    #[must_use]
+    pub fn get_line_id_for_node(&self, node_name: &str) -> Option<LineId> {
+        self.dialogue.get_line_id_for_node(node_name)
+    }
+
+    #[must_use]
+    pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
+        self.dialogue.get_tags_for_node(node_name)
+    }
+
+    #[must_use]
+    pub fn node_exists(&self, node_name: &str) -> bool {
+        self.dialogue.node_exists(node_name)
+    }
+
+    #[must_use]
+    pub fn current_node(&self) -> Option<String> {
+        self.dialogue.current_node()
+    }
+
+    #[must_use]
+    pub fn analyse(&self, context: &mut YarnAnalysisContext) -> &Self {
+        self.dialogue.analyse(context);
+        self
+    }
+
+    pub fn run_selected_options_as_lines(&mut self, enabled: bool) -> &mut Self {
+        todo!()
     }
 }
 
@@ -48,6 +118,7 @@ pub struct DialogueRunnerBuilder<'a> {
 }
 
 impl<'a> DialogueRunnerBuilder<'a> {
+    #[must_use]
     pub fn with_yarn_project(yarn_project: &'a YarnProject) -> Self {
         Self {
             variable_storage_override: None,
@@ -57,16 +128,19 @@ impl<'a> DialogueRunnerBuilder<'a> {
         }
     }
 
+    #[must_use]
     pub fn override_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
         self.variable_storage_override = Some(storage);
         self
     }
 
+    #[must_use]
     pub fn override_text_provider(mut self, provider: Box<dyn TextProvider>) -> Self {
         self.text_provider_override = Some(provider);
         self
     }
 
+    #[must_use]
     pub fn override_line_asset_provider(
         mut self,
         provider: Option<Box<dyn LineAssetProvider>>,
@@ -75,6 +149,7 @@ impl<'a> DialogueRunnerBuilder<'a> {
         self
     }
 
+    #[must_use]
     pub fn build(self) -> DialogueRunner {
         let variable_storage = self
             .variable_storage_override
@@ -90,6 +165,7 @@ impl<'a> DialogueRunnerBuilder<'a> {
         if let Some(language) = dialogue.text_provider().get_language_code() {
             dialogue.set_language_code(language).unwrap();
         }
+        let _result = dialogue.set_node_to_start();
 
         DialogueRunner {
             dialogue,

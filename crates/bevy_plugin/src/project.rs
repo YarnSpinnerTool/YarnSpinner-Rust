@@ -1,4 +1,4 @@
-use crate::filesystem_events::UpdateAllStringsFilesForStringTableEvent;
+use crate::events::UpdateAllStringsFilesForStringTableEvent;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
@@ -88,7 +88,7 @@ impl YarnProjectConfigToLoad {
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
-pub struct YarnFilesToLoad(pub HashSet<YarnFileSource>);
+pub(crate) struct YarnFilesToLoad(pub(crate) HashSet<YarnFileSource>);
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
