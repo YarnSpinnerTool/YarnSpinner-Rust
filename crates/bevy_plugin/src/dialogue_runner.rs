@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::fmt::Debug;
+use std::ops::DerefMut;
 
 mod runtime_interaction;
 
@@ -11,49 +12,15 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
-    pub line_asset_provider_override: Option<Box<dyn LineAssetProvider>>,
-    pub continue_: bool,
+    pub(crate) line_asset_provider_override: Option<Box<dyn LineAssetProvider>>,
+    pub(crate) continue_: bool,
+    pub(crate) run_selected_options_as_lines: bool,
 }
 
 impl DialogueRunner {
-    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
-        self.library_mut().extend(library);
-        self
-    }
-
-    #[must_use]
-    pub fn library(&self) -> &YarnFnLibrary {
-        &self.dialogue.library()
-    }
-
-    #[must_use]
-    pub fn library_mut(&mut self) -> &mut YarnFnLibrary {
-        self.dialogue.library_mut()
-    }
-
-    pub fn continue_(&mut self) -> &mut Self {
+    pub fn continue_in_next_update(&mut self) -> &mut Self {
         self.continue_ = true;
         self
-    }
-
-    #[must_use]
-    pub fn text_provider(&self) -> &dyn TextProvider {
-        self.dialogue.text_provider()
-    }
-
-    #[must_use]
-    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
-        self.dialogue.text_provider_mut()
-    }
-
-    #[must_use]
-    pub fn variable_storage(&self) -> &dyn VariableStorage {
-        self.dialogue.variable_storage()
-    }
-
-    #[must_use]
-    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
-        self.dialogue.variable_storage_mut()
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
@@ -71,6 +38,48 @@ impl DialogueRunner {
     pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
         self.dialogue.set_node_to_start()?;
         Ok(self)
+    }
+
+    #[must_use]
+    pub fn library(&self) -> &YarnFnLibrary {
+        &self.dialogue.library()
+    }
+
+    #[must_use]
+    pub fn library_mut(&mut self) -> &mut YarnFnLibrary {
+        self.dialogue.library_mut()
+    }
+
+    #[must_use]
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.dialogue.text_provider()
+    }
+
+    #[must_use]
+    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.dialogue.text_provider_mut()
+    }
+
+    #[must_use]
+    pub fn line_asset_provider(&self) -> Option<&dyn LineAssetProvider> {
+        self.line_asset_provider_override.as_deref()
+    }
+
+    #[must_use]
+    pub fn line_asset_provider_mut(
+        &mut self,
+    ) -> Option<&mut impl DerefMut<Target = dyn LineAssetProvider>> {
+        self.line_asset_provider_override.as_mut()
+    }
+
+    #[must_use]
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.dialogue.variable_storage()
+    }
+
+    #[must_use]
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.dialogue.variable_storage_mut()
     }
 
     #[must_use]
@@ -104,8 +113,14 @@ impl DialogueRunner {
         self
     }
 
-    pub fn run_selected_options_as_lines(&mut self, enabled: bool) -> &mut Self {
-        todo!()
+    #[must_use]
+    pub fn treats_selected_options_as_lines(&mut self) -> bool {
+        self.run_selected_options_as_lines
+    }
+
+    #[must_use]
+    pub fn treats_selected_options_as_lines_mut(&mut self) -> &mut bool {
+        &mut self.run_selected_options_as_lines
     }
 }
 
@@ -171,6 +186,7 @@ impl<'a> DialogueRunnerBuilder<'a> {
             dialogue,
             line_asset_provider_override: line_asset_provider,
             continue_: false,
+            run_selected_options_as_lines: false,
         }
     }
 }

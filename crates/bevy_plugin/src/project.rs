@@ -67,7 +67,9 @@ impl YarnProject {
     }
 
     pub fn line_asset_language(&self) -> Option<Language> {
-        self.line_asset_provider.as_ref().and_then(|p| p.language())
+        self.line_asset_provider
+            .as_ref()
+            .and_then(|p| p.get_language())
     }
 }
 
