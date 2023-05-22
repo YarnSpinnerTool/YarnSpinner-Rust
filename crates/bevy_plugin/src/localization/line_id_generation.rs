@@ -1,6 +1,6 @@
 use crate::filesystem_events::UpdateAllStringsFilesForStringTableEvent;
 use crate::prelude::*;
-use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesInProject};
+use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;
 use std::path::PathBuf;
 
@@ -21,7 +21,8 @@ fn generate_missing_line_ids_in_yarn_file(
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
     mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
-    yarn_files_in_project: Res<YarnFilesInProject>,
+    yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
+    project: Option<Res<YarnProject>>,
     mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
@@ -29,13 +30,20 @@ fn generate_missing_line_ids_in_yarn_file(
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
         };
-        if !yarn_files_in_project.0.contains(handle) {
+        if !yarn_files_being_loaded.0.contains(handle)
+            && !project
+                .as_ref()
+                .map(|p| p.yarn_files.contains(handle))
+                .unwrap_or_default()
+        {
             continue;
         }
         let yarn_file = assets.get(handle).unwrap().clone();
-        update_writer.send(UpdateAllStringsFilesForStringTableEvent(
-            yarn_file.string_table.clone(),
-        ));
+        if project.is_some() {
+            update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+                yarn_file.string_table.clone(),
+            ));
+        }
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
             continue;
@@ -67,7 +75,7 @@ fn generate_missing_line_ids_in_yarn_file(
         recompilation_needed = true;
     }
 
-    if recompilation_needed {
+    if recompilation_needed && project.is_some() {
         recompile_events.send(RecompileLoadedYarnFilesEvent);
     }
     Ok(())

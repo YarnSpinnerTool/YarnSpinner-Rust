@@ -169,7 +169,7 @@ fn test_line_hints() {
     let mut dialogue = TestBase::new()
         .with_compilation(result)
         .dialogue
-        .with_should_send_line_hints()
+        .with_line_hints_enabled()
         .with_node_at_start();
 
     let mut line_hints_were_sent = false;

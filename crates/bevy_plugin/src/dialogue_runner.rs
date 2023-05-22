@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::fmt::Debug;
-use thiserror::Error;
 
 mod runtime_interaction;
 
@@ -9,33 +8,52 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
     app.fn_plugin(runtime_interaction::runtime_interaction_plugin);
 }
 
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("Called a function that depends on a dialogue being initialized on a newly created one. Please wait one tick before calling this method so that the runtime has time to initialize itself.")]
-    UninitializedDialogueError,
-    #[error(transparent)]
-    YarnRuntimeDialogueError(#[from] DialogueError),
-}
-
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Component)]
 pub struct DialogueRunner {
-    pub(crate) dialogue: Option<Dialogue>,
-    pub(crate) variable_storage_override: Option<Box<dyn VariableStorage>>,
-    pub(crate) text_provider_override: Option<Box<dyn TextProvider>>,
-    pub(crate) line_asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
-    pub(crate) library_buffer: Option<YarnFnLibrary>,
-    pub(crate) continue_: bool,
+    pub(crate) dialogue: Dialogue,
+    pub line_asset_provider_override: Option<Box<dyn LineAssetProvider>>,
+    pub continue_: bool,
 }
 
 impl DialogueRunner {
-    pub fn new() -> Self {
+    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
+        self.extend_library(library);
+        self
+    }
+
+    pub fn extend_library(&mut self, library: YarnFnLibrary) -> &mut Self {
+        self.dialogue.library_mut().extend(library);
+        self
+    }
+
+    pub fn continue_(&mut self) -> &mut Self {
+        self.continue_ = true;
+        self
+    }
+
+    pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
+        self.dialogue
+            .set_selected_option(option)
+            .map_err(Error::from)?;
+        Ok(self)
+    }
+}
+
+#[derive(Debug)]
+pub struct DialogueRunnerBuilder<'a> {
+    pub(crate) variable_storage_override: Option<Box<dyn VariableStorage>>,
+    pub(crate) text_provider_override: Option<Box<dyn TextProvider>>,
+    pub(crate) line_asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
+    pub(crate) yarn_project: &'a YarnProject,
+}
+
+impl<'a> DialogueRunnerBuilder<'a> {
+    pub fn with_yarn_project(yarn_project: &'a YarnProject) -> Self {
         Self {
-            dialogue: None,
             variable_storage_override: None,
             text_provider_override: None,
             line_asset_provider_override: None,
-            library_buffer: None,
-            continue_: false,
+            yarn_project,
         }
     }
 
@@ -49,42 +67,34 @@ impl DialogueRunner {
         self
     }
 
-    pub fn override_asset_provider(
+    pub fn override_line_asset_provider(
         mut self,
-        provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
+        provider: Option<Box<dyn LineAssetProvider>>,
     ) -> Self {
-        self.line_asset_provider_override = Some(provider.into());
+        self.line_asset_provider_override = Some(provider);
         self
     }
 
-    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
-        self.extend_library(library);
-        self
-    }
-
-    pub fn extend_library(&mut self, library: YarnFnLibrary) -> &mut Self {
-        let own_library = self
-            .dialogue
-            .as_mut()
-            .map(|dialogue| dialogue.library_mut())
-            .unwrap_or_else(|| {
-                self.library_buffer
-                    .get_or_insert_with(YarnFnLibrary::standard_library)
-            });
-        own_library.extend(library);
-        self
-    }
-
-    pub fn continue_(&mut self) {
-        self.continue_ = true;
-    }
-
-    pub fn select_option(&mut self, option: OptionId) -> Result<()> {
-        if let Some(dialogue) = &mut self.dialogue {
-            dialogue.set_selected_option(option).map_err(Error::from)?;
-        } else {
-            return Err(Error::UninitializedDialogueError);
+    pub fn build(self) -> DialogueRunner {
+        let variable_storage = self
+            .variable_storage_override
+            .unwrap_or_else(|| self.yarn_project.variable_storage.clone());
+        let text_provider = self
+            .text_provider_override
+            .unwrap_or_else(|| self.yarn_project.text_provider.clone());
+        let line_asset_provider = self
+            .line_asset_provider_override
+            .unwrap_or_else(|| self.yarn_project.line_asset_provider.clone());
+        let mut dialogue =
+            Dialogue::new(variable_storage, text_provider).with_line_hints_enabled(true);
+        if let Some(language) = dialogue.text_provider().get_language_code() {
+            dialogue.set_language_code(language).unwrap();
         }
-        Ok(())
+
+        DialogueRunner {
+            dialogue,
+            line_asset_provider_override: line_asset_provider,
+            continue_: false,
+        }
     }
 }

@@ -125,8 +125,8 @@ impl Dialogue {
     /// Note that line hints for [`Dialogue::with_node_at_start`] and [`Dialogue::with_node_at`] will only be sent if this
     /// method was called beforehand.
     #[must_use]
-    pub fn with_should_send_line_hints(mut self) -> Self {
-        self.vm.should_send_line_hints = true;
+    pub fn with_line_hints_enabled(mut self, enabled: bool) -> Self {
+        self.vm.line_hints_enabled = enabled;
         self
     }
 }
@@ -177,15 +177,31 @@ impl Dialogue {
     /// Gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
     #[must_use]
-    pub fn should_send_line_hints(&self) -> bool {
-        self.vm.should_send_line_hints
+    pub fn line_hints_enabled(&self) -> bool {
+        self.vm.line_hints_enabled
     }
 
     /// Mutable gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
     #[must_use]
-    pub fn should_send_line_hints_mut(&mut self) -> &mut bool {
-        &mut self.vm.should_send_line_hints
+    pub fn line_hints_enabled_mut(&mut self) -> &mut bool {
+        &mut self.vm.line_hints_enabled
+    }
+
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.vm.text_provider()
+    }
+
+    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.vm.text_provider_mut()
+    }
+
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.vm.variable_storage()
+    }
+
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.vm.variable_storage_mut()
     }
 }
 
@@ -237,7 +253,7 @@ impl Dialogue {
     ///
     /// After this method is called, you call [`Dialogue::next`] to start executing it.
     ///
-    /// If [`Dialogue::should_send_line_hints`] has been set, the next [`Dialogue::next`] call will return a [`DialogueEvent::LineHints`],
+    /// If [`Dialogue::line_hints_enabled`] has been set, the next [`Dialogue::next`] call will return a [`DialogueEvent::LineHints`],
     /// as the Dialogue determines which lines may be delivered during the `node_name` node's execution.
     ///
     /// ## Panics

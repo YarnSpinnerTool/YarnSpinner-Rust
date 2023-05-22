@@ -1,7 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Utility/YarnProjectUtility.cs#L259>
 use crate::localization::StringsFile;
 use crate::prelude::*;
-use crate::project::YarnCompilation;
 use anyhow::bail;
 use bevy::prelude::*;
 
@@ -14,17 +13,15 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
                     .in_set(CreateMissingStringsFilesSystemSet)
                     .run_if(
                         in_development
-                            .and_then(resource_exists::<Localizations>())
-                            .and_then(resource_exists::<YarnCompilation>())
+                            .and_then(resource_exists::<YarnProject>())
                             .and_then(
-                                resource_changed::<Localizations>()
-                                    .or_else(resource_changed::<YarnCompilation>())
+                                resource_changed::<YarnProject>()
                                     .or_else(on_event::<CreateMissingStringsFilesEvent>()),
                             ),
                     ),
                 ensure_right_language
                     .pipe(panic_on_err)
-                    .run_if(resource_exists::<CurrentLanguage>()),
+                    .run_if(resource_exists::<YarnProject>()),
             )
                 .chain(),
         );
@@ -39,7 +36,7 @@ pub(crate) struct CreateMissingStringsFilesSystemSet;
 
 fn ensure_right_language(
     current_strings_file: Res<CurrentStringsFile>,
-    current_language: Res<CurrentLanguage>,
+    project: Res<YarnProject>,
     assets: Res<Assets<StringsFile>>,
     mut done: Local<bool>,
 ) -> SystemResult {
@@ -57,13 +54,14 @@ fn ensure_right_language(
     let Some(strings_file) = assets.get(handle) else {
         return Ok(());
     };
-    let expected_language = &current_language.0;
-    if let Some(language) = strings_file.language() {
-        if language != expected_language {
-            bail!(
-                "The language the strings registered for language \"{expected_language}\" \
+    if let Some(expected_language) = &project.text_provider.get_language_code() {
+        if let Some(language) = strings_file.language() {
+            if language != expected_language {
+                bail!(
+                    "The language the strings registered for language \"{expected_language}\" \
                             actually contains the language \"{language}\""
-            );
+                );
+            }
         }
     }
     *done = true;
@@ -72,19 +70,18 @@ fn ensure_right_language(
 
 fn create_strings_files(
     mut events: EventReader<CreateMissingStringsFilesEvent>,
-    localizations: Res<Localizations>,
     asset_server: Res<AssetServer>,
-    compilation: Res<YarnCompilation>,
+    project: Res<YarnProject>,
 ) -> SystemResult {
     events.clear();
-    for localization in &localizations.translations {
+    for localization in &project.localizations.as_ref().unwrap().translations {
         let path = localization.strings_file.as_path();
         if asset_server.asset_io().is_file(path) {
             return Ok(());
         }
         let strings_file = StringsFile::from_string_table(
             localization.language.clone(),
-            &compilation.0.string_table,
+            &project.compilation.string_table,
         )
         .unwrap_or_default();
 

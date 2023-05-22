@@ -7,6 +7,7 @@ mod plugin;
 pub mod project;
 mod utils;
 mod yarn_file_asset;
+pub use anyhow::{Error, Result};
 
 pub mod default_impl {
     pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
@@ -15,10 +16,11 @@ pub mod default_impl {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        dialogue_runner::DialogueRunner,
+        dialogue_runner::{DialogueRunner, DialogueRunnerBuilder},
         line_provider::{AudioAssetProvider, LineAssetProvider},
-        localization::{CurrentLanguage, FileGenerationMode, Localization, Localizations},
+        localization::{FileGenerationMode, Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin},
+        project::YarnProject,
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{
@@ -34,8 +36,6 @@ pub mod prelude {
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
 }
-
-pub use dialogue_runner::{Error, Result};
 
 pub mod filesystem_events {
     pub use crate::localization::{

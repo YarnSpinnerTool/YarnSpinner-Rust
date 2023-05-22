@@ -5,16 +5,17 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 pub(crate) fn project_plugin(app: &mut App) {
-    app.register_type::<YarnFilesInProject>()
-        .register_type::<YarnFilesToLoad>()
-        .init_resource::<YarnFilesInProject>()
+    app.register_type::<YarnFilesToLoad>()
         .init_resource::<YarnFilesToLoad>()
+        .init_resource::<YarnFilesBeingLoaded>()
         .add_event::<RecompileLoadedYarnFilesEvent>()
         .add_systems(
             (
                 add_yarn_files_to_load_queue
                     .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
-                compile_loaded_yarn_files.pipe(error),
+                compile_loaded_yarn_files
+                    .pipe(error)
+                    .run_if(resource_exists::<YarnFilesToLoad>()),
                 recompile_loaded_yarn_files
                     .pipe(error)
                     .run_if(on_event::<RecompileLoadedYarnFilesEvent>()),
@@ -23,75 +24,68 @@ pub(crate) fn project_plugin(app: &mut App) {
         );
 }
 
+#[derive(Debug, Resource)]
+pub struct YarnProject {
+    pub yarn_files: HashSet<Handle<YarnFile>>,
+    pub(crate) compilation: Compilation,
+    pub variable_storage: Box<dyn VariableStorage>,
+    pub text_provider: Box<dyn TextProvider>,
+    pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
+    pub library: YarnFnLibrary,
+    pub localizations: Option<Localizations>,
+}
+
+impl YarnProject {
+    pub fn create_dialogue_runner(&self) -> DialogueRunner {
+        DialogueRunnerBuilder::with_yarn_project(self).build()
+    }
+
+    pub fn build_dialogue_runner(&self) -> DialogueRunnerBuilder {
+        DialogueRunnerBuilder::with_yarn_project(self)
+    }
+
+    pub fn set_text_language(&mut self, language: impl Into<Language>) -> Result<()> {
+        todo!()
+    }
+
+    pub fn set_line_asset_language(&mut self, language: impl Into<Language>) -> Result<()> {
+        todo!()
+    }
+
+    pub fn set_global_language(&mut self, language: impl Into<Language>) -> Result<()> {
+        let language = language.into();
+        self.set_text_language(language.clone())?;
+        self.set_line_asset_language(language)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Resource)]
+pub(crate) struct YarnProjectConfigToLoad {
+    pub(crate) variable_storage: Option<Box<dyn VariableStorage>>,
+    pub(crate) text_provider: Option<Box<dyn TextProvider>>,
+    pub(crate) line_asset_provider: Option<Option<Box<dyn LineAssetProvider>>>,
+    pub(crate) library: Option<YarnFnLibrary>,
+    pub(crate) localizations: Option<Option<Localizations>>,
+}
+
+impl YarnProjectConfigToLoad {
+    pub(crate) fn localizations(&self) -> Option<&Localizations> {
+        self.localizations.as_ref().unwrap().as_ref()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
 pub struct YarnFilesToLoad(pub HashSet<YarnFileSource>);
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
-pub struct YarnFilesInProject(pub(crate) HashSet<Handle<YarnFile>>);
-impl YarnFilesInProject {
-    pub fn get(&self) -> &HashSet<Handle<YarnFile>> {
-        &self.0
-    }
-}
-
-impl AsRef<HashSet<Handle<YarnFile>>> for YarnFilesInProject {
-    fn as_ref(&self) -> &HashSet<Handle<YarnFile>> {
-        self.get()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Default, Resource, Reflect, FromReflect)]
-#[reflect(Debug, Resource, Default, PartialEq)]
-pub struct YarnCompilation(pub(crate) Compilation);
-impl YarnCompilation {
-    pub fn get(&self) -> &Compilation {
-        &self.0
-    }
-}
-
-impl AsRef<Compilation> for YarnCompilation {
-    fn as_ref(&self) -> &Compilation {
-        self.get()
-    }
-}
-
-#[derive(Debug, Resource)]
-pub struct GlobalVariableStorage(pub(crate) Box<dyn VariableStorage>);
-impl GlobalVariableStorage {
-    pub fn get(&self) -> &dyn VariableStorage {
-        self.0.as_ref()
-    }
-}
-
-#[derive(Debug, Resource)]
-pub struct GlobalTextProvider(pub(crate) Box<dyn TextProvider>);
-impl GlobalTextProvider {
-    pub fn get(&self) -> &dyn TextProvider {
-        self.0.as_ref()
-    }
-}
-
-#[derive(Debug, Resource)]
-pub struct GlobalLineAssetProvider(pub(crate) Box<dyn LineAssetProvider>);
-impl GlobalLineAssetProvider {
-    pub fn get(&self) -> &dyn LineAssetProvider {
-        self.0.as_ref()
-    }
-}
-
-#[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]
-pub struct GlobalYarnFnLibrary(pub(crate) YarnFnLibrary);
-impl GlobalYarnFnLibrary {
-    pub fn get(&self) -> &YarnFnLibrary {
-        &self.0
-    }
-}
+pub(crate) struct YarnFilesBeingLoaded(pub(crate) HashSet<Handle<YarnFile>>);
 
 fn add_yarn_files_to_load_queue(
     mut yarn_files_to_load: ResMut<YarnFilesToLoad>,
-    mut yarn_files_in_project: ResMut<YarnFilesInProject>,
+    mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
     asset_server: Res<AssetServer>,
 ) {
     if yarn_files_to_load.0.is_empty() {
@@ -101,7 +95,7 @@ fn add_yarn_files_to_load_queue(
         .0
         .drain()
         .map(|source| source.load(&asset_server));
-    yarn_files_in_project.0.extend(handles);
+    yarn_files_being_loaded.0.extend(handles);
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
@@ -110,46 +104,40 @@ pub struct RecompileLoadedYarnFilesEvent;
 
 fn recompile_loaded_yarn_files(
     mut events: EventReader<RecompileLoadedYarnFilesEvent>,
-    yarn_files_in_project: Res<YarnFilesInProject>,
     yarn_files: Res<Assets<YarnFile>>,
-    localizations: Option<Res<Localizations>>,
-    yarn_compilation: Option<ResMut<YarnCompilation>>,
+    yarn_project: Option<ResMut<YarnProject>>,
 ) -> SystemResult {
     events.clear();
-    let Some(mut yarn_compilation) = yarn_compilation else {
+    let Some(mut yarn_project) = yarn_project else {
         return Ok(());
     };
-    let Some(compilation) = compile_yarn_files(&yarn_files_in_project, &yarn_files, &localizations)? else {
+    let Some(compilation) = compile_yarn_files(&yarn_project.yarn_files, &yarn_files, yarn_project.localizations.as_ref())? else {
         return Ok(());
     };
-    yarn_compilation.0 = compilation;
-    let file_plural = if yarn_files_in_project.0.len() == 1 {
-        "file"
-    } else {
-        "files"
-    };
-    info!(
-        "Successfully recompiled {} yarn {file_plural}",
-        yarn_files_in_project.0.len()
-    );
+    yarn_project.compilation = compilation;
+    let file_count = yarn_project.yarn_files.len();
+    let file_plural = if file_count == 1 { "file" } else { "files" };
+    info!("Successfully recompiled {file_count} yarn {file_plural}");
     Ok(())
 }
 
 fn compile_loaded_yarn_files(
     mut commands: Commands,
-    yarn_files_in_project: Res<YarnFilesInProject>,
-    mut yarn_compilation: Option<ResMut<YarnCompilation>>,
+    mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
+    mut yarn_project: Option<ResMut<YarnProject>>,
     yarn_files: Res<Assets<YarnFile>>,
     mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
     mut dirty: Local<bool>,
-    localizations: Option<Res<Localizations>>,
+    mut yarn_project_config_to_load: ResMut<YarnProjectConfigToLoad>,
 ) -> SystemResult {
-    if yarn_files_in_project.is_changed() {
+    if yarn_files_being_loaded.is_changed() {
         *dirty = true;
     }
+    if yarn_files_being_loaded.0.is_empty() {
+        *dirty = false;
+    }
     if !*dirty
-        || yarn_files_in_project.0.is_empty()
-        || !yarn_files_in_project
+        || !yarn_files_being_loaded
             .0
             .iter()
             .all(|handle| yarn_files.contains(handle))
@@ -157,14 +145,17 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
-    let Some(compilation) = compile_yarn_files(&yarn_files_in_project, &yarn_files, &localizations)? else {
+    let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, yarn_project_config_to_load.localizations())? else {
         return Ok(());
     };
+    let file_count = yarn_files_being_loaded.0.len();
 
-    if let Some(yarn_compilation) = yarn_compilation.as_mut() {
-        yarn_compilation.0 = compilation;
+    if let Some(yarn_project) = yarn_project.as_mut() {
+        yarn_project.compilation = compilation;
+        yarn_files_being_loaded.0.clear();
     } else {
-        if localizations
+        if yarn_project_config_to_load
+            .localizations()
             .map(|l| l.file_generation_mode == FileGenerationMode::Development)
             .unwrap_or_default()
         {
@@ -172,30 +163,33 @@ fn compile_loaded_yarn_files(
                 compilation.string_table.clone(),
             ));
         }
-        commands.insert_resource(YarnCompilation(compilation));
+        commands.insert_resource(YarnProject {
+            yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
+            compilation,
+            variable_storage: yarn_project_config_to_load.variable_storage.take().unwrap(),
+            text_provider: yarn_project_config_to_load.text_provider.take().unwrap(),
+            line_asset_provider: yarn_project_config_to_load
+                .line_asset_provider
+                .take()
+                .unwrap(),
+            library: yarn_project_config_to_load.library.take().unwrap(),
+            localizations: yarn_project_config_to_load.localizations.take().unwrap(),
+        });
     }
 
-    let file_plural = if yarn_files_in_project.0.len() == 1 {
-        "file"
-    } else {
-        "files"
-    };
-    info!(
-        "Successfully compiled {} yarn {file_plural}",
-        yarn_files_in_project.0.len()
-    );
+    let file_plural = if file_count == 1 { "file" } else { "files" };
+    info!("Successfully compiled {file_count} yarn {file_plural}");
 
     *dirty = false;
     Ok(())
 }
 
 fn compile_yarn_files(
-    yarn_files_in_project: &Res<YarnFilesInProject>,
+    yarn_file_handles: &HashSet<Handle<YarnFile>>,
     yarn_files: &Res<Assets<YarnFile>>,
-    localizations: &Option<Res<Localizations>>,
+    localizations: Option<&Localizations>,
 ) -> Result<Option<Compilation>> {
-    let yarn_files = yarn_files_in_project
-        .0
+    let yarn_files = yarn_file_handles
         .iter()
         .map(|handle| yarn_files.get(handle).unwrap());
     if let Some(localizations) = localizations.as_ref() {

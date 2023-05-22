@@ -24,7 +24,7 @@ pub(crate) struct VirtualMachine {
     pub(crate) program: Option<Program>,
     #[cfg_attr(feature = "bevy", reflect(ignore))]
     pub(crate) variable_storage: Box<dyn VariableStorage>,
-    pub(crate) should_send_line_hints: bool,
+    pub(crate) line_hints_enabled: bool,
     current_node_name: Option<String>,
     state: State,
     execution_state: ExecutionState,
@@ -63,8 +63,24 @@ impl VirtualMachine {
             execution_state: Default::default(),
             current_node: Default::default(),
             batched_events: Default::default(),
-            should_send_line_hints: Default::default(),
+            line_hints_enabled: Default::default(),
         }
+    }
+
+    pub(crate) fn text_provider(&self) -> &dyn TextProvider {
+        self.text_provider.as_ref()
+    }
+
+    pub(crate) fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.text_provider.as_mut()
+    }
+
+    pub(crate) fn variable_storage(&self) -> &dyn VariableStorage {
+        self.variable_storage.as_ref()
+    }
+
+    pub(crate) fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.variable_storage.as_mut()
     }
 
     pub(crate) fn set_language_code(&mut self, language_code: Language) -> Result<()> {
@@ -110,7 +126,7 @@ impl VirtualMachine {
         self.batched_events
             .push(DialogueEvent::NodeStart(node_name.to_owned()));
 
-        if self.should_send_line_hints {
+        if self.line_hints_enabled {
             self.send_line_hints();
         }
     }

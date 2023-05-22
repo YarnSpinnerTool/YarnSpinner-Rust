@@ -2,29 +2,21 @@ use crate::filesystem_events::CreateMissingStringsFilesEvent;
 use crate::localization::line_id_generation::LineIdUpdateSystemSet;
 use crate::localization::strings_file::creation::CreateMissingStringsFilesSystemSet;
 use crate::prelude::*;
-use crate::project::YarnCompilation;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_event::<UpdateAllStringsFilesForStringTableEvent>()
         .add_systems(
-            (
-                send_update_events_on_localization_changes.run_if(
-                    resource_exists_and_changed::<Localizations>()
-                        .and_then(resource_exists::<YarnCompilation>())
-                        .and_then(in_development),
-                ),
-                update_all_strings_files_for_string_table
-                    .pipe(panic_on_err)
-                    .after(LineIdUpdateSystemSet)
-                    .after(CreateMissingStringsFilesSystemSet)
-                    .run_if(
-                        resource_exists::<Localizations>()
-                            .and_then(in_development)
-                            .and_then(on_event::<UpdateAllStringsFilesForStringTableEvent>()),
-                    ),
-            )
+            (update_all_strings_files_for_string_table
+                .pipe(panic_on_err)
+                .after(LineIdUpdateSystemSet)
+                .after(CreateMissingStringsFilesSystemSet)
+                .run_if(
+                    in_development
+                        .and_then(resource_exists::<YarnProject>())
+                        .and_then(on_event::<UpdateAllStringsFilesForStringTableEvent>()),
+                ),)
                 .chain(),
         );
 }
@@ -35,25 +27,14 @@ pub struct UpdateAllStringsFilesForStringTableEvent(
     pub std::collections::HashMap<LineId, StringInfo>,
 );
 
-fn send_update_events_on_localization_changes(
-    yarn_compilation: Res<YarnCompilation>,
-    mut creation_writer: EventWriter<CreateMissingStringsFilesEvent>,
-    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
-) {
-    creation_writer.send(CreateMissingStringsFilesEvent);
-    let string_table = &yarn_compilation.0.string_table;
-    update_writer.send(UpdateAllStringsFilesForStringTableEvent(
-        string_table.clone(),
-    ));
-}
-
 fn update_all_strings_files_for_string_table(
     mut events: EventReader<UpdateAllStringsFilesForStringTableEvent>,
     mut missing_writer: EventWriter<CreateMissingStringsFilesEvent>,
     mut strings_files: ResMut<Assets<StringsFile>>,
     asset_server: Res<AssetServer>,
-    localizations: Res<Localizations>,
+    project: Res<YarnProject>,
 ) -> SystemResult {
+    let localizations = project.localizations.as_ref().unwrap();
     if localizations.translations.is_empty() {
         events.clear();
         return Ok(());

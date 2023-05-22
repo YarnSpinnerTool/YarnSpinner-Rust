@@ -19,6 +19,7 @@ pub trait TextProvider: Debug + Send + Sync {
         &mut self,
         language_code: Language,
     ) -> Result<(), UnsupportedLanguageError>;
+    fn get_language_code(&self) -> Option<Language>;
 }
 
 impl Clone for Box<dyn TextProvider> {
@@ -113,5 +114,9 @@ impl TextProvider for StringTableTextProvider {
         }
         self.language_code.write().unwrap().replace(language_code);
         Ok(())
+    }
+
+    fn get_language_code(&self) -> Option<Language> {
+        self.language_code.read().unwrap().clone()
     }
 }
