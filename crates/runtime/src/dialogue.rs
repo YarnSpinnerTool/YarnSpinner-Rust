@@ -31,6 +31,14 @@ pub enum DialogueError {
     },
     #[error(transparent)]
     UnsupportedLanguageError(#[from] UnsupportedLanguageError),
+    #[error("{selected_option_id:?} is not a valid option ID (expected a number between 0 and {max_id}.")]
+    InvalidOptionIdError {
+        selected_option_id: OptionId,
+        max_id: usize,
+    },
+    #[error("`SetSelectedOption` was called, but Dialogue wasn't waiting for a selection. \
+            This method should only be called after the Dialogue is waiting for the user to select an option.")]
+    UnexpectedOptionSelectionError,
 }
 
 impl Dialogue {
@@ -356,9 +364,9 @@ impl Dialogue {
     ///
     /// ## See Also
     /// - [`Dialogue::continue_`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
-        self.vm.set_selected_option(selected_option_id);
-        self
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> Result<&mut Self> {
+        self.vm.set_selected_option(selected_option_id)?;
+        Ok(self)
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.

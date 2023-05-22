@@ -1,10 +1,22 @@
 use crate::prelude::*;
-use crate::project::*;
 use bevy::prelude::*;
 use std::fmt::Debug;
+use thiserror::Error;
+
+mod runtime_interaction;
 
 pub(crate) fn dialogue_plugin(app: &mut App) {
-    app.add_system(set_dialogue_programs.run_if(resource_exists::<YarnCompilation>()));
+    app.fn_plugin(runtime_interaction::runtime_interaction_plugin);
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("Called a function on a dialogue that was not yet initialized.")]
+    UninitializedDialogueError,
+    #[error(transparent)]
+    YarnRuntimeDialogueError(#[from] DialogueError),
 }
 
 #[derive(Debug, Default, Component)]
@@ -14,6 +26,7 @@ pub struct DialogueRunner {
     pub(crate) text_provider_override: Option<Box<dyn TextProvider>>,
     pub(crate) line_asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
     pub(crate) library_buffer: Option<YarnFnLibrary>,
+    pub(crate) continue_: bool,
 }
 
 impl DialogueRunner {
@@ -24,6 +37,7 @@ impl DialogueRunner {
             text_provider_override: None,
             line_asset_provider_override: None,
             library_buffer: None,
+            continue_: false,
         }
     }
 
@@ -62,50 +76,17 @@ impl DialogueRunner {
         own_library.extend(library);
         self
     }
-}
 
-fn set_dialogue_programs(
-    mut dialogue_runners: Query<&mut DialogueRunner>,
-    global_variable_storage: Res<GlobalVariableStorage>,
-    global_text_provider: Res<GlobalTextProvider>,
-    global_line_asset_provider: Option<Res<GlobalLineAssetProvider>>,
-    global_library: Res<GlobalYarnFnLibrary>,
-    yarn_compilation: Res<YarnCompilation>,
-) {
-    let compilation_changed = yarn_compilation.is_changed();
-    let dialogue_runners = dialogue_runners
-        .iter_mut()
-        .filter(|runner| compilation_changed || runner.dialogue.is_none());
-    for mut dialogue_runner in dialogue_runners {
-        let local_library = dialogue_runner.library_buffer.take();
+    pub fn continue_(&mut self) {
+        self.continue_ = true;
+    }
 
-        let dialogue = if let Some(dialogue) = &mut dialogue_runner.dialogue {
-            dialogue
+    pub fn select_option(&mut self, option: OptionId) -> Result<()> {
+        if let Some(dialogue) = &mut self.dialogue {
+            dialogue.set_selected_option(option).map_err(Error::from)?;
         } else {
-            let text_provider = dialogue_runner
-                .text_provider_override
-                .as_ref()
-                .map(|provider| provider.clone_shallow())
-                .unwrap_or_else(|| global_text_provider.0.clone_shallow());
-            let variable_storage = dialogue_runner
-                .variable_storage_override
-                .as_ref()
-                .map(|storage| storage.clone_shallow())
-                .unwrap_or_else(|| global_variable_storage.0.clone_shallow());
-            if dialogue_runner.line_asset_provider_override.is_none() {
-                let line_asset_provider = global_line_asset_provider
-                    .as_ref()
-                    .map(|provider| provider.0.clone_shallow());
-                dialogue_runner.line_asset_provider_override = Some(line_asset_provider);
-            }
-            dialogue_runner.dialogue = Some(Dialogue::new(variable_storage, text_provider));
-            dialogue_runner.dialogue.as_mut().unwrap()
-        };
-        dialogue.replace_program(yarn_compilation.0.program.clone().unwrap());
-
-        dialogue.library_mut().extend(global_library.0.clone());
-        if let Some(library) = local_library {
-            dialogue.library_mut().extend(library);
+            return Err(Error::UninitializedDialogueError);
         }
+        Ok(())
     }
 }

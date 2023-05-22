@@ -287,7 +287,8 @@ fn test_selecting_option_from_inside_option_callback() {
                     assert_eq!(ExpectedStepType::Select, expected_step);
                     test_base
                         .dialogue
-                        .set_selected_option(OptionId::construct_for_debugging(0));
+                        .set_selected_option(OptionId::construct_for_debugging(0))
+                        .unwrap();
                 }
                 DialogueEvent::DialogueComplete => {
                     let test_plan = test_base.test_plan.as_mut().unwrap();
