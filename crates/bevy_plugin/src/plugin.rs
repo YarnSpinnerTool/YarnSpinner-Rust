@@ -1,15 +1,38 @@
+use crate::default_impl::{MemoryVariableStore, StringTableTextProvider};
 use crate::prelude::*;
-use crate::yarn_file_asset::yarn_slinger_asset_loader_plugin;
 use bevy::prelude::*;
+use bevy::utils::HashSet;
+
+mod yarn_file_source;
+use crate::project::{
+    GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, YarnFilesToLoad,
+};
+pub use yarn_file_source::YarnFileSource;
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct YarnSlingerPlugin {
     pub localizations: Option<Localizations>,
+    pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
+    pub yarn_files: HashSet<YarnFileSource>,
+    pub advanced: AdvancedPluginConfig,
 }
 
 impl YarnSlingerPlugin {
-    pub fn with_localizations(localizations: impl Into<Option<Localizations>>) -> Self {
+    pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
+        let yarn_files = yarn_files
+            .into_iter()
+            .map(|yarn_file| yarn_file.into())
+            .collect();
+        Self {
+            localizations: None,
+            advanced: Default::default(),
+            line_asset_provider: None,
+            yarn_files,
+        }
+    }
+
+    pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
         if let Some(localizations) = localizations.as_ref() {
             if cfg!(target_arch = "wasm32") {
@@ -17,7 +40,53 @@ impl YarnSlingerPlugin {
                            "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
             }
         }
-        Self { localizations }
+        self.localizations = localizations;
+        self
+    }
+
+    pub fn with_asset_provider(
+        mut self,
+        asset_provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
+    ) -> Self {
+        self.line_asset_provider = asset_provider.into();
+        self
+    }
+
+    pub fn advanced(
+        mut self,
+        config: impl Fn(AdvancedPluginConfig) -> AdvancedPluginConfig,
+    ) -> Self {
+        self.advanced = config(self.advanced);
+        self
+    }
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct AdvancedPluginConfig {
+    pub variable_storage: Box<dyn VariableStorage>,
+    pub text_provider: Box<dyn TextProvider>,
+}
+
+#[allow(clippy::derivable_impls)] // False positive :/
+impl Default for AdvancedPluginConfig {
+    fn default() -> Self {
+        Self {
+            variable_storage: Box::<MemoryVariableStore>::default(),
+            text_provider: Box::<StringTableTextProvider>::default(),
+        }
+    }
+}
+
+impl AdvancedPluginConfig {
+    pub fn with_variable_storage(mut self, variable_storage: Box<dyn VariableStorage>) -> Self {
+        self.variable_storage = variable_storage;
+        self
+    }
+
+    pub fn with_text_provider(mut self, text_provider: Box<dyn TextProvider>) -> Self {
+        self.text_provider = text_provider;
+        self
     }
 }
 
@@ -61,6 +130,7 @@ impl YarnApp for App {
             .register_type::<Dialogue>()
             .register_type::<DialogueOption>()
             .register_type::<OptionId>()
+            .register_type::<Language>()
             .register_type::<DialogueEvent>()
             .register_type::<yarn_slinger::runtime::Line>()
             .register_type::<yarn_slinger::runtime::Diagnosis>()
@@ -72,13 +142,28 @@ impl YarnApp for App {
 
     fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
         if let Some(localizations) = plugin.localizations.clone() {
-            self.insert_resource(localizations);
+            self.insert_resource(CurrentLanguage(
+                localizations.base_language.language.clone(),
+            ))
+            .insert_resource(localizations);
         }
-        self
+        if let Some(line_asset_provider) = &plugin.line_asset_provider {
+            self.insert_resource(GlobalLineAssetProvider(line_asset_provider.clone_shallow()));
+        }
+        self.insert_resource(YarnFilesToLoad(plugin.yarn_files.clone()))
+            .insert_resource(GlobalTextProvider(
+                plugin.advanced.text_provider.clone_shallow(),
+            ))
+            .insert_resource(GlobalVariableStorage(
+                plugin.advanced.variable_storage.clone_shallow(),
+            ))
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.fn_plugin(yarn_slinger_asset_loader_plugin)
-            .fn_plugin(localization_plugin)
+        self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
+            .fn_plugin(crate::localization::localization_plugin)
+            .fn_plugin(crate::dialogue_runner::dialogue_plugin)
+            .fn_plugin(crate::line_provider::line_provider_plugin)
+            .fn_plugin(crate::project::project_plugin)
     }
 }

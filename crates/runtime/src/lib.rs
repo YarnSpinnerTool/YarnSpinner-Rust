@@ -3,6 +3,7 @@ mod command;
 mod dialogue;
 mod dialogue_option;
 mod events;
+mod language;
 mod line;
 pub mod markup;
 mod pluralization;
@@ -19,6 +20,7 @@ pub mod prelude {
         dialogue::{Dialogue, DialogueError},
         dialogue_option::*,
         events::*,
+        language::*,
         line::*,
         markup::MarkupParseError,
         text_provider::*,

@@ -11,8 +11,8 @@ pub mod prelude {
     pub use crate::runtime::{
         Command as YarnCommand, CompiledProgramAnalyser as YarnAnalyser,
         Context as YarnAnalysisContext, Dialogue, DialogueError, DialogueEvent, DialogueOption,
-        Line as YarnLine, MarkupAttribute, MarkupValue, OptionId, Result as YarnRuntimeResult,
-        TextProvider, VariableStorage,
+        Language, Line as YarnLine, MarkupAttribute, MarkupValue, OptionId,
+        Result as YarnRuntimeResult, TextProvider, UnsupportedLanguageError, VariableStorage,
     };
 }
 

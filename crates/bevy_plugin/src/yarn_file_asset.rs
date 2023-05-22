@@ -65,11 +65,12 @@ impl Hash for YarnFile {
 
 pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
     app.add_asset::<YarnFile>()
+        .register_asset_reflect::<YarnFile>()
         .init_asset_loader::<YarnFileAssetLoader>();
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct YarnFileAssetLoader;
+struct YarnFileAssetLoader;
 
 impl AssetLoader for YarnFileAssetLoader {
     fn load<'a>(

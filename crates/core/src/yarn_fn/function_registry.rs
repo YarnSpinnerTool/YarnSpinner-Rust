@@ -9,7 +9,7 @@ use std::ops::{Deref, DerefMut};
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct YarnFnRegistry(pub InnerRegistry);
 
-type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
+type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
 
 impl Extend<<InnerRegistry as IntoIterator>::Item> for YarnFnRegistry {
     fn extend<T: IntoIterator<Item = <InnerRegistry as IntoIterator>::Item>>(&mut self, iter: T) {
@@ -44,7 +44,7 @@ impl YarnFnRegistry {
         self
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn + Send + Sync))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
@@ -53,7 +53,7 @@ impl YarnFnRegistry {
     pub fn add_boxed(
         &mut self,
         name: impl Into<Cow<'static, str>>,
-        function: Box<dyn UntypedYarnFn + Send + Sync>,
+        function: Box<dyn UntypedYarnFn>,
     ) -> &mut Self {
         let name = name.into();
         self.insert(name, function);
@@ -64,13 +64,13 @@ impl YarnFnRegistry {
         self.get(name).is_some()
     }
 
-    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn + Send + Sync)> {
+    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
         self.0.get(name).map(|f| f.as_ref())
     }
 }
 
 impl Deref for YarnFnRegistry {
-    type Target = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn + Send + Sync>>;
+    type Target = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

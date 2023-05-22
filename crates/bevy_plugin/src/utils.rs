@@ -9,7 +9,7 @@ pub(crate) fn panic_on_err(In(result): In<SystemResult>) {
     }
 }
 
-pub(crate) fn is_in_development(localizations: Option<Res<Localizations>>) -> bool {
+pub(crate) fn in_development(localizations: Option<Res<Localizations>>) -> bool {
     localizations
         .as_ref()
         .map(|localizations| localizations.file_generation_mode == FileGenerationMode::Development)

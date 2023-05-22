@@ -13,13 +13,13 @@ use yarn_slinger_core::prelude::*;
 /// which is more domain specific than the semi-corresponding `Convertible`.
 /// We also cannot use generics in this trait because we need to be able to clone this box.
 pub trait VariableStorage: Debug + Send + Sync {
-    fn clone_shallow(&self) -> Box<dyn VariableStorage + Send + Sync>;
+    fn clone_shallow(&self) -> Box<dyn VariableStorage>;
     fn set(&mut self, name: String, value: YarnValue);
     fn get(&self, name: &str) -> Option<YarnValue>;
     fn clear(&mut self);
 }
 
-impl Clone for Box<dyn VariableStorage + Send + Sync> {
+impl Clone for Box<dyn VariableStorage> {
     fn clone(&self) -> Self {
         self.clone_shallow()
     }
@@ -37,7 +37,7 @@ impl MemoryVariableStore {
 }
 
 impl VariableStorage for MemoryVariableStore {
-    fn clone_shallow(&self) -> Box<dyn VariableStorage + Send + Sync> {
+    fn clone_shallow(&self) -> Box<dyn VariableStorage> {
         Box::new(self.clone())
     }
 

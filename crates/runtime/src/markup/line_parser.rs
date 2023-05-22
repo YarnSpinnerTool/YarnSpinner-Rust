@@ -208,7 +208,7 @@ impl LineParser {
         Ok(ParsedMarkup { text, attributes })
     }
 
-    pub(crate) fn set_language_code(&mut self, language_code: impl Into<String>) {
+    pub(crate) fn set_language_code(&mut self, language_code: impl Into<Language>) {
         let language_code = language_code.into();
         for processor in self.marker_processors.values_mut() {
             processor.set_language_code(language_code.clone());

@@ -1,4 +1,7 @@
-pub(crate) use self::{asset::StringsFile, resource::LanguagesToStringsFiles};
+pub(crate) use self::{asset::StringsFile, resource::CurrentStringsFile};
+pub use self::{
+    creation::CreateMissingStringsFilesEvent, updating::UpdateAllStringsFilesForStringTableEvent,
+};
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;
 

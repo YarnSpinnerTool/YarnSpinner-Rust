@@ -55,6 +55,11 @@ impl Compiler {
         self
     }
 
+    pub fn add_files(&mut self, files: impl IntoIterator<Item = File>) -> &mut Self {
+        self.files.extend(files);
+        self
+    }
+
     pub fn try_read_file(&mut self, file_path: impl AsRef<Path>) -> std::io::Result<&mut Self> {
         let file_name = file_path.as_ref().to_string_lossy().to_string();
         let file_content = std::fs::read_to_string(file_path)?;

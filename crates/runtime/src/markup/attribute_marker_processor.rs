@@ -2,6 +2,7 @@
 
 pub(crate) use self::{dialogue_text_processor::*, no_markup_text_processor::*};
 use crate::markup::MarkupAttributeMarker;
+use crate::prelude::Language;
 use core::fmt::Debug;
 
 mod dialogue_text_processor;
@@ -16,7 +17,7 @@ pub(crate) trait AttributeMarkerProcessor: Debug + Send + Sync {
     /// position to its corresponding closing marker is provided as a string
     /// property called `contents`.
     fn replacement_text_for_marker(&self, marker: &MarkupAttributeMarker) -> String;
-    fn set_language_code(&mut self, language_code: String);
+    fn set_language_code(&mut self, language_code: Language);
     fn clone_box(&self) -> Box<dyn AttributeMarkerProcessor>;
 }
 

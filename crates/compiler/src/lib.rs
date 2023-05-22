@@ -21,7 +21,7 @@ pub mod prelude {
     };
     pub use crate::{
         compiler::{CompilationType, Compiler, File},
-        listeners::{Diagnostic, DiagnosticSeverity},
+        listeners::{Diagnostic, DiagnosticSeverity, DiagnosticVec},
         output::*,
     };
     pub(crate) use yarn_slinger_core::prelude::*;

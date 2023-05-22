@@ -15,7 +15,7 @@ use yarn_slinger_core::prelude::*;
 #[cfg_attr(feature = "bevy", reflect(Debug))]
 pub struct Dialogue {
     vm: VirtualMachine,
-    language_code: Option<String>,
+    language_code: Option<Language>,
 }
 
 pub type Result<T> = std::result::Result<T, DialogueError>;
@@ -27,15 +27,17 @@ pub enum DialogueError {
     #[error("Line ID {id} not found in line provider with language code {language_code:?}")]
     LineProviderError {
         id: LineId,
-        language_code: Option<String>,
+        language_code: Option<Language>,
     },
+    #[error(transparent)]
+    UnsupportedLanguageError(#[from] UnsupportedLanguageError),
 }
 
 impl Dialogue {
     #[must_use]
     pub fn new(
-        variable_storage: Box<dyn VariableStorage + Send + Sync>,
-        text_provider: Box<dyn TextProvider + Send + Sync>,
+        variable_storage: Box<dyn VariableStorage>,
+        text_provider: Box<dyn TextProvider>,
     ) -> Self {
         let library = Library::standard_library()
             .with_function("visited", visited(variable_storage.clone()))
@@ -54,9 +56,7 @@ impl Dialogue {
     }
 }
 
-fn visited(
-    storage: Box<dyn VariableStorage + Send + Sync>,
-) -> yarn_fn_type! { impl Fn(String) -> bool } {
+fn visited(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> bool } {
     move |node: String| -> bool {
         let name = Library::generate_unique_visited_variable_for_node(&node);
         if let Some(YarnValue::Number(count)) = storage.get(&name) {
@@ -67,9 +67,7 @@ fn visited(
     }
 }
 
-fn visited_count(
-    storage: Box<dyn VariableStorage + Send + Sync>,
-) -> yarn_fn_type! { impl Fn(String) -> f32 } {
+fn visited_count(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> f32 } {
     move |node: String| {
         let name = Library::generate_unique_visited_variable_for_node(&node);
         if let Some(YarnValue::Number(count)) = storage.get(&name) {
@@ -92,10 +90,9 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
-    #[must_use]
-    pub fn with_language_code(mut self, language_code: impl Into<String>) -> Self {
-        self.set_language_code(language_code);
-        self
+    pub fn with_language_code(mut self, language_code: impl Into<Language>) -> Result<Self> {
+        self.set_language_code(language_code)?;
+        Ok(self)
     }
 
     #[must_use]
@@ -140,15 +137,18 @@ impl Dialogue {
     ///
     /// Returns the last language code.
     #[must_use]
-    pub fn language_code(&self) -> Option<&str> {
-        self.language_code.as_deref()
+    pub fn language_code(&self) -> Option<&Language> {
+        self.language_code.as_ref()
     }
 
-    pub fn set_language_code(&mut self, language_code: impl Into<String>) -> Option<String> {
+    pub fn set_language_code(
+        &mut self,
+        language_code: impl Into<Language>,
+    ) -> Result<Option<Language>> {
         let language_code = language_code.into();
         let previous = self.language_code.replace(language_code.clone());
-        self.vm.set_language_code(language_code);
-        previous
+        self.vm.set_language_code(language_code)?;
+        Ok(previous)
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.

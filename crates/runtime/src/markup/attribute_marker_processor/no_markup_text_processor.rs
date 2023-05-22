@@ -3,6 +3,7 @@
 use crate::markup::{
     AttributeMarkerProcessor, MarkupAttributeMarker, MarkupValue, REPLACEMENT_MARKER_CONTENTS,
 };
+use crate::prelude::Language;
 
 /// A markup text processor that implements the `[nomarkup]` attribute's behaviour.
 #[derive(Default, Debug, Clone)]
@@ -26,7 +27,7 @@ impl AttributeMarkerProcessor for NoMarkupTextProcessor {
         }
     }
 
-    fn set_language_code(&mut self, _language_code: String) {
+    fn set_language_code(&mut self, _language_code: Language) {
         // no-op
     }
 

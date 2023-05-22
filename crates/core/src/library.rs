@@ -36,11 +36,11 @@ impl Library {
         self.0.extend(other.0 .0);
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn + Send + Sync))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
         self.0.iter()
     }
 
-    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn + Send + Sync)> {
+    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
         self.0.get(name)
     }
 

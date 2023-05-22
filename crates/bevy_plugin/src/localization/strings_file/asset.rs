@@ -14,6 +14,7 @@ pub(crate) fn strings_file_asset_plugin(app: &mut App) {
     app.register_type::<StringsFile>()
         .register_type::<StringsFileRecord>()
         .add_asset::<StringsFile>()
+        .register_asset_reflect::<StringsFile>()
         .init_asset_loader::<StringsFileAssetLoader>();
 }
 
@@ -71,10 +72,10 @@ impl StringsFile {
         self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
-    pub(crate) fn update_file(&mut self, mut other: Self) -> Result<()> {
+    pub(crate) fn update_file(&mut self, mut other: Self) -> Result<bool> {
         let mut removed_lines = Vec::new();
         let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {
-            return Ok(());
+            return Ok(false);
         };
         if let Some(language) = self.language() {
             if language != other.language().unwrap() {
@@ -83,70 +84,79 @@ impl StringsFile {
                     self.language(), other.language())
             }
         }
-        if let Some(wrong_file) = other
+
+        let single_yarn_file = other
             .0
             .values()
             .skip(1)
             .map(|rec| rec.file.as_str())
-            .find(|other_file| other_file != &file)
-        {
-            bail!("Cannot update contents of strings file with another strings file that contains lines for more than one file at a time. \
-            Found both  \"{file}\" and \"{wrong_file}\". This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new" )
-        }
+            .all(|other_file| other_file == file);
+
+        let mut changed = false;
         for (id, record) in self.0.iter_mut() {
-            if record.file != file {
+            if single_yarn_file && record.file != file {
                 continue;
             }
             if let Some(other_record) = other.0.remove(id) {
-                let text = if record.lock != other_record.lock {
-                    format!("(NEEDS UPDATE) {}", &record.text)
+                if records_equal_except_for_text(record, &other_record) {
+                    continue;
+                }
+                let text = if record.lock != other_record.lock
+                    && !record.text.starts_with(UPDATE_PREFIX)
+                {
+                    format!("{UPDATE_PREFIX}{}", &record.text)
                 } else {
                     // not `other_record` because that one might not contain (NEEDS UPDATE)
                     record.text.clone()
                 };
+
+                changed = true;
                 *record = other_record;
                 record.text = text;
-            } else {
+            } else if single_yarn_file {
                 removed_lines.push(id.clone());
+                changed = true;
             }
         }
         for id in removed_lines {
             self.0.remove(&id);
         }
-        self.0.extend(other.0);
-        Ok(())
+        if !other.0.is_empty() {
+            changed = true;
+            self.0.extend(other.0);
+        }
+        Ok(changed)
     }
 
-    pub(crate) fn from_yarn_files<'a>(
+    pub(crate) fn from_string_table<'a>(
         language: impl Into<Language>,
-        files: impl Iterator<Item = &'a YarnFile>,
+        string_table: impl IntoIterator<Item = (&'a LineId, &'a StringInfo)>,
     ) -> Result<Self> {
         let language = language.into();
         let mut records = HashMap::new();
-        for yarn_file in files {
-            for (id, string_info) in &yarn_file.string_table {
-                if string_info.is_implicit_tag {
-                    bail!(
-                        "Cannot build strings file from not fully tagged Yarn files (line {} in \"{}\" is not tagged).",
-                        string_info.line_number,
-                        yarn_file.file.file_name
-                    )
-                }
-                records.insert(
-                    id.clone(),
-                    StringsFileRecord {
-                        language: language.clone(),
-                        id: id.clone(),
-                        text: string_info.text.clone(),
-                        file: yarn_file.file.file_name.to_string(),
-                        node: string_info.node_name.clone(),
-                        line_number: string_info.line_number,
-                        lock: Lock::compute_from(&string_info.text),
-                        comment: read_comments(&string_info.metadata),
-                    },
-                );
+        for (id, string_info) in string_table {
+            if string_info.is_implicit_tag {
+                bail!(
+                    "Cannot build strings file from not fully tagged Yarn files (line {} in \"{}\" is not tagged).",
+                    string_info.line_number,
+                    string_info.file_name
+                )
             }
+            records.insert(
+                id.clone(),
+                StringsFileRecord {
+                    language: language.clone(),
+                    id: id.clone(),
+                    text: string_info.text.clone(),
+                    file: string_info.file_name.to_string(),
+                    node: string_info.node_name.clone(),
+                    line_number: string_info.line_number,
+                    lock: Lock::compute_from(&string_info.text),
+                    comment: read_comments(&string_info.metadata),
+                },
+            );
         }
+
         Ok(Self(records))
     }
 
@@ -171,6 +181,17 @@ impl StringsFile {
         Ok(())
     }
 }
+
+fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecord) -> bool {
+    lhs.language == rhs.language
+        && lhs.id == rhs.id
+        && lhs.file == rhs.file
+        && lhs.node == rhs.node
+        && lhs.line_number == rhs.line_number
+        && lhs.lock == rhs.lock
+        && lhs.comment == rhs.comment
+}
+const UPDATE_PREFIX: &str = "(NEEDS UPDATE) ";
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
