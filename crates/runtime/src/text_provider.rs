@@ -48,23 +48,25 @@ impl StringTableTextProvider {
         Self::default()
     }
 
-    pub fn set_base_language(
-        &mut self,
-        string_table: HashMap<LineId, String>,
-    ) -> HashMap<LineId, String> {
+    pub fn extend_base_language(&mut self, string_table: HashMap<LineId, String>) {
         let mut base_language_table = self.base_language_table.write().unwrap();
-        std::mem::replace(&mut *base_language_table, string_table)
+        base_language_table.extend(string_table);
     }
 
-    pub fn set_translation(
+    pub fn extend_translation(
         &mut self,
         language: impl Into<Language>,
         string_table: HashMap<LineId, String>,
-    ) -> Option<(Language, HashMap<LineId, String>)> {
-        self.translation_table
-            .write()
-            .unwrap()
-            .replace((language.into(), string_table))
+    ) {
+        let language = language.into();
+        let mut translation_table = self.translation_table.write().unwrap();
+        if let Some((current_language, translation_table)) = translation_table.as_mut() {
+            if language == *current_language {
+                translation_table.extend(string_table);
+                return;
+            }
+        }
+        translation_table.replace((language, string_table));
     }
 }
 

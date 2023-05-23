@@ -1,4 +1,5 @@
 use crate::default_impl::StringTableTextProvider;
+use crate::events::UpdateAllStringsFilesForStringTableEvent;
 use crate::localization::strings_file::StringsFile;
 use crate::prelude::*;
 use anyhow::bail;
@@ -6,14 +7,31 @@ use bevy::prelude::*;
 
 pub(crate) fn current_strings_file_plugin(app: &mut App) {
     app.register_type::<CurrentStringsFile>()
+        .add_event::<UpdateTextProviderForStringTableEvent>()
         .init_resource::<CurrentStringsFile>()
-        .add_systems((
-            update_current_strings_file
-                .pipe(panic_on_err)
-                .run_if(resource_exists_and_changed::<YarnProject>()),
-            load_project_text_provider.run_if(resource_exists::<YarnProject>()),
-        ));
+        .add_systems(
+            (
+                update_current_strings_file
+                    .pipe(panic_on_err)
+                    .run_if(resource_exists_and_changed::<YarnProject>()),
+                update_base_language_string_provider.run_if(
+                    resource_exists::<YarnProject>()
+                        .and_then(on_event::<UpdateTextProviderForStringTableEvent>()),
+                ),
+                update_translation_string_provider_from_disk.run_if(
+                    resource_exists::<YarnProject>()
+                        .and_then(on_event::<AssetEvent<StringsFile>>()),
+                ),
+            )
+                .chain(),
+        );
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
+#[reflect(Debug, Default, PartialEq)]
+pub(crate) struct UpdateTextProviderForStringTableEvent(
+    pub std::collections::HashMap<LineId, String>,
+);
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
@@ -49,45 +67,44 @@ fn update_current_strings_file(
     Ok(())
 }
 
-fn load_project_text_provider(
-    strings_files: Res<Assets<StringsFile>>,
-    current_strings_file: Res<CurrentStringsFile>,
+fn update_base_language_string_provider(
+    mut events: EventReader<UpdateTextProviderForStringTableEvent>,
     mut project: ResMut<YarnProject>,
-    mut dirty: Local<bool>,
 ) {
-    if current_strings_file.is_changed() {
-        *dirty = true;
-    }
-    if !*dirty {
-        return;
-    }
-
-    let Some(handle) = current_strings_file.0.as_ref() else {
-        let text_table = project.compilation.string_table.to_text_table();
-
-        let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
-            *dirty = false;
-            return;
-        };
-        text_provider.set_base_language(text_table);
-        *dirty = false;
-        return;
-    };
-
-    let Some(strings_file) = strings_files.get(handle) else {
-        return;
-    };
     let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
-        *dirty = false;
+        events.clear();
         return;
     };
+    for event in events.iter() {
+        let string_table = &event.0;
+        text_provider.extend_base_language(string_table.clone());
+    }
+}
 
-    let Some(language) = text_provider.get_language_code() else {
-        *dirty = false;
+fn update_translation_string_provider_from_disk(
+    mut events: EventReader<AssetEvent<StringsFile>>,
+    current_strings_file: Res<CurrentStringsFile>,
+    strings_files: Res<Assets<StringsFile>>,
+    mut project: ResMut<YarnProject>,
+) {
+    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
+        events.clear();
         return;
     };
-    let string_table = strings_file.to_text_table();
-    text_provider.set_translation(language, string_table);
+    let Some(language) = project.text_provider.get_language_code() else {
+        events.clear();
+        return;
+    };
+    for event in events.iter() {
+        let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
+            continue;
+        };
+        if Some(handle) != current_strings_file.0.as_ref() {
+            continue;
+        }
+        let strings_file = strings_files.get(handle).unwrap();
+        text_provider.extend_translation(language.clone(), strings_file.to_text_table());
+    }
 }
 
 trait ToTextTable {
