@@ -164,6 +164,7 @@ fn compile_loaded_yarn_files(
     };
     let file_count = yarn_files_being_loaded.0.len();
 
+    update_text_writer.send((&compilation.string_table).into());
     if let Some(yarn_project) = yarn_project.as_mut() {
         yarn_project.compilation = compilation;
         yarn_files_being_loaded.0.clear();
@@ -176,7 +177,6 @@ fn compile_loaded_yarn_files(
             update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
                 compilation.string_table.clone(),
             ));
-            update_text_writer.send((&compilation.string_table).into())
         }
         commands.insert_resource(YarnProject {
             yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),

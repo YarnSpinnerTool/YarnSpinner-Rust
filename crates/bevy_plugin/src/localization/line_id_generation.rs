@@ -10,12 +10,40 @@ use std::path::PathBuf;
 pub(crate) struct LineIdUpdateSystemSet;
 
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
-    app.add_system(
+    app.add_systems((
         handle_yarn_file_events
             .pipe(panic_on_err)
             .in_set(LineIdUpdateSystemSet)
             .run_if(in_development.and_then(on_event::<AssetEvent<YarnFile>>())),
-    );
+        handle_yarn_file_events_outside_development
+            .in_set(LineIdUpdateSystemSet)
+            .run_if(not(in_development)),
+    ));
+}
+
+fn handle_yarn_file_events_outside_development(
+    mut events: EventReader<AssetEvent<YarnFile>>,
+    assets: Res<Assets<YarnFile>>,
+    yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
+    project: Option<Res<YarnProject>>,
+    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
+) {
+    for event in events.iter() {
+        let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
+                continue;
+            };
+        if !yarn_files_being_loaded.0.contains(handle)
+            && !project
+                .as_ref()
+                .map(|p| p.yarn_files.contains(handle))
+                .unwrap_or_default()
+        {
+            continue;
+        }
+        let yarn_file = assets.get(handle).unwrap().clone();
+
+        update_text_writer.send((&yarn_file.string_table).into());
+    }
 }
 
 fn handle_yarn_file_events(
