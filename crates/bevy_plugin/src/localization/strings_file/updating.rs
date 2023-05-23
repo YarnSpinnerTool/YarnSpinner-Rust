@@ -33,6 +33,7 @@ fn update_all_strings_files_for_string_table(
     mut strings_files: ResMut<Assets<StringsFile>>,
     asset_server: Res<AssetServer>,
     project: Res<YarnProject>,
+    mut languages_to_handles: Local<HashMap<Language, Handle<StringsFile>>>,
 ) -> SystemResult {
     let localizations = project.localizations.as_ref().unwrap();
     if localizations.translations.is_empty() {
@@ -40,7 +41,6 @@ fn update_all_strings_files_for_string_table(
         return Ok(());
     }
 
-    let mut languages_to_handles = HashMap::new();
     for localization in &localizations.translations {
         let language = &localization.language;
         let path = localization.strings_file.as_path();
@@ -50,10 +50,14 @@ fn update_all_strings_files_for_string_table(
             missing_writer.send(CreateMissingStringsFilesEvent);
             return Ok(());
         };
-        if !strings_files.contains(&handle) {
-            return Ok(());
-        }
         languages_to_handles.insert(language.clone(), handle);
+    }
+    if languages_to_handles.is_empty()
+        || languages_to_handles
+            .values()
+            .any(|h| !strings_files.contains(h))
+    {
+        return Ok(());
     }
 
     let mut dirty_paths = HashSet::new();
@@ -96,6 +100,7 @@ fn update_all_strings_files_for_string_table(
             }
         }
     }
+    languages_to_handles.clear();
     for (handle, path) in &dirty_paths {
         let strings_file = strings_files.get(handle).unwrap();
         strings_file.write_asset(&asset_server, path)?;
