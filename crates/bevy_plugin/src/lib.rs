@@ -40,8 +40,6 @@ pub mod prelude {
 pub use yarn_slinger::prelude::YarnAnalysisContext;
 
 pub mod events {
-    pub use crate::localization::{
-        CreateMissingStringsFilesEvent, UpdateAllStringsFilesForStringTableEvent,
-    };
+    pub use crate::localization::CreateMissingStringsFilesEvent;
     pub use crate::project::RecompileLoadedYarnFilesEvent;
 }

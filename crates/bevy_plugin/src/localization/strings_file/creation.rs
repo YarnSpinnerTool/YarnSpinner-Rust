@@ -72,7 +72,13 @@ fn create_strings_files(
     mut events: EventReader<CreateMissingStringsFilesEvent>,
     asset_server: Res<AssetServer>,
     project: Res<YarnProject>,
+    mut last_localizations: Local<Option<Localizations>>,
 ) -> SystemResult {
+    let current_localizations = project.localizations.as_ref();
+    if events.is_empty() && last_localizations.as_ref() == current_localizations {
+        return Ok(());
+    }
+    *last_localizations = current_localizations.cloned();
     events.clear();
     for localization in &project.localizations.as_ref().unwrap().translations {
         let path = localization.strings_file.as_path();

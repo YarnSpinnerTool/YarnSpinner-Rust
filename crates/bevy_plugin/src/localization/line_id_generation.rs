@@ -1,4 +1,6 @@
-use crate::events::UpdateAllStringsFilesForStringTableEvent;
+use crate::localization::{
+    UpdateAllStringsFilesForStringTableEvent, UpdateBaseLanguageTextProviderForStringTableEvent,
+};
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;
@@ -23,7 +25,8 @@ fn handle_yarn_file_events(
     mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Option<Res<YarnProject>>,
-    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
     for event in events.iter() {
@@ -40,9 +43,10 @@ fn handle_yarn_file_events(
         }
         let yarn_file = assets.get(handle).unwrap().clone();
 
-        update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+        update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
             yarn_file.string_table.clone(),
         ));
+        update_text_writer.send((&yarn_file.string_table).into());
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
             continue;

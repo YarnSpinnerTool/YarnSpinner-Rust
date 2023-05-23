@@ -1,4 +1,6 @@
-use crate::events::UpdateAllStringsFilesForStringTableEvent;
+use crate::localization::{
+    UpdateAllStringsFilesForStringTableEvent, UpdateBaseLanguageTextProviderForStringTableEvent,
+};
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
@@ -139,7 +141,8 @@ fn compile_loaded_yarn_files(
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
     mut yarn_project: Option<ResMut<YarnProject>>,
     yarn_files: Res<Assets<YarnFile>>,
-    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
     mut dirty: Local<bool>,
     mut yarn_project_config_to_load: ResMut<YarnProjectConfigToLoad>,
 ) -> SystemResult {
@@ -172,9 +175,10 @@ fn compile_loaded_yarn_files(
             .map(|l| l.file_generation_mode == FileGenerationMode::Development)
             .unwrap_or_default()
         {
-            update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+            update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
                 compilation.string_table.clone(),
             ));
+            update_text_writer.send((&compilation.string_table).into())
         }
         commands.insert_resource(YarnProject {
             yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
