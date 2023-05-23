@@ -56,7 +56,7 @@ pub(crate) struct CurrentStringsFile(pub(crate) Option<Handle<StringsFile>>);
 
 fn update_current_strings_file(
     mut current_strings_file: ResMut<CurrentStringsFile>,
-    project: Res<YarnProject>,
+    mut project: ResMut<YarnProject>,
     asset_server: Res<AssetServer>,
     mut last_language: Local<Option<Language>>,
 ) -> SystemResult {
@@ -69,6 +69,7 @@ fn update_current_strings_file(
     };
     if localizations.base_language.language == language {
         current_strings_file.0 = None;
+        project.set_text_language(None);
         return Ok(());
     }
     if last_language.as_ref() == Some(&language) {
@@ -78,8 +79,14 @@ fn update_current_strings_file(
     let Some(localization) = localizations.translations.iter().find(|t| t.language == language) else {
         bail!("Language was set to {language}, but no localization for that language was configured");
     };
-    let path = &localization.strings_file;
-    let handle = asset_server.load(path.as_path());
+    let path = localization.strings_file.as_path();
+    if !asset_server.asset_io().is_file(path) {
+        bail!(
+            "Language was set to {language}, but no strings file was found at {path}",
+            path = path.display()
+        );
+    }
+    let handle = asset_server.load(path);
     current_strings_file.0 = Some(handle);
     Ok(())
 }
@@ -99,7 +106,7 @@ fn update_base_language_string_provider(
                 .unwrap()
                 .unwrap()
         });
-    let Some(text_provider) = text_provider.downcast_to_string_table_text_provider() else {
+    let Some(text_provider) = text_provider.downcast_to_string_table_text_provider_mut() else {
         events.clear();
         return;
     };
@@ -115,14 +122,15 @@ fn update_translation_string_provider_from_disk(
     strings_files: Res<Assets<StringsFile>>,
     mut project: ResMut<YarnProject>,
 ) {
-    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
+    let Some(language) = project.text_provider.downcast_to_string_table_text_provider().and_then(|p| p.get_language()) else {
         events.clear();
         return;
     };
-    let Some(language) = text_provider.get_language_code() else {
-        events.clear();
-        return;
-    };
+
+    let text_provider = project
+        .text_provider
+        .downcast_to_string_table_text_provider_mut()
+        .unwrap();
     for event in events.iter() {
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
@@ -159,7 +167,7 @@ fn update_translation_string_provider_from_loaded_handle(
         return Ok(());
     };
 
-    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
+    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider_mut() else {
         *dirty = false;
         return Ok(());
     };
@@ -192,11 +200,20 @@ impl ToTextTable for StringsFile {
 }
 
 trait TextProviderExt {
-    fn downcast_to_string_table_text_provider(&mut self) -> Option<&mut StringTableTextProvider>;
+    fn downcast_to_string_table_text_provider(&self) -> Option<&StringTableTextProvider>;
+    fn downcast_to_string_table_text_provider_mut(
+        &mut self,
+    ) -> Option<&mut StringTableTextProvider>;
 }
 
 impl TextProviderExt for Box<dyn TextProvider> {
-    fn downcast_to_string_table_text_provider(&mut self) -> Option<&mut StringTableTextProvider> {
+    fn downcast_to_string_table_text_provider(&self) -> Option<&StringTableTextProvider> {
+        self.as_any().downcast_ref::<StringTableTextProvider>()
+    }
+
+    fn downcast_to_string_table_text_provider_mut(
+        &mut self,
+    ) -> Option<&mut StringTableTextProvider> {
         self.as_any_mut().downcast_mut::<StringTableTextProvider>()
     }
 }

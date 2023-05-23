@@ -177,7 +177,7 @@ impl<'a> DialogueRunnerBuilder<'a> {
             .unwrap_or_else(|| self.yarn_project.line_asset_provider.clone());
         let mut dialogue =
             Dialogue::new(variable_storage, text_provider).with_line_hints_enabled(true);
-        if let Some(language) = dialogue.text_provider().get_language_code() {
+        if let Some(language) = dialogue.text_provider().get_language() {
             dialogue.set_language_code(language).unwrap();
         }
         if dialogue.set_node_to_start().is_err() {

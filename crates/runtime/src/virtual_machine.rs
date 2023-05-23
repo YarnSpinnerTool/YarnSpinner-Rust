@@ -87,7 +87,7 @@ impl VirtualMachine {
         let language_code = language_code.into();
         self.language_code = language_code.clone();
         self.line_parser.set_language_code(language_code.clone());
-        self.text_provider.set_language_code(language_code);
+        self.text_provider.set_language(language_code);
     }
 
     pub(crate) fn reset_state(&mut self) {

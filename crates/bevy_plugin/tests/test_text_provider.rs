@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
-use std::thread::sleep;
-use std::time::Duration;
 
 #[test]
 fn loads_line_without_localization() {
@@ -12,11 +10,11 @@ fn loads_line_without_localization() {
             "lines_with_ids.yarn",
         ]));
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let text_provider = &project.text_provider;
     let line = text_provider
         .get_text(&LineId("line:9".to_owned()))
@@ -33,11 +31,11 @@ fn fails_to_get_invalid_line() {
             "lines_with_ids.yarn",
         ]));
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let text_provider = &project.text_provider;
     let result = text_provider.get_text(&LineId("line:99".to_owned()));
     assert!(result.is_none());
@@ -57,12 +55,12 @@ fn loads_line_from_base_language_without_explicit_language() {
         ),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
     app.update_until_translation_was_loaded();
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let text_provider = &project.text_provider;
     let line = text_provider
         .get_text(&LineId("line:9".to_owned()))
@@ -84,17 +82,17 @@ fn loads_line_from_base_language_with_explicit_language() {
         ),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
     {
-        let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
+        let mut project = app.world.resource_mut::<YarnProject>();
         project.set_text_language(Language::from("en-US"));
     }
     app.update_until_translation_was_loaded();
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let text_provider = &project.text_provider;
     let line = text_provider
         .get_text(&LineId("line:9".to_owned()))
@@ -103,7 +101,8 @@ fn loads_line_from_base_language_with_explicit_language() {
 }
 
 #[test]
-fn loads_line_from_fallback_on_missing_language() {
+#[should_panic]
+fn panics_when_loading_missing_language_in_production() {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
@@ -116,22 +115,15 @@ fn loads_line_from_fallback_on_missing_language() {
         ),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
     {
-        let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
+        let mut project = app.world.resource_mut::<YarnProject>();
         project.set_text_language(Language::from("fr-FR"));
     }
     app.update_until_translation_was_loaded();
-
-    let project = app.world.get_resource::<YarnProject>().unwrap();
-    let text_provider = &project.text_provider;
-    let line = text_provider
-        .get_text(&LineId("line:9".to_owned()))
-        .unwrap();
-    assert_eq!("Man: All right. I don't believe this; but there's no harm in wishing. I wish to know who I am.", line);
 }
 
 #[test]
@@ -142,23 +134,23 @@ fn loads_line_from_fallback_on_missing_line() {
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
-                translations: vec!["fr-FR".into()],
+                translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
         ),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
     {
-        let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
-        project.set_text_language(Language::from("fr-FR"));
+        let mut project = app.world.resource_mut::<YarnProject>();
+        project.set_text_language(Language::from("de-CH"));
     }
     app.update_until_translation_was_loaded();
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let text_provider = &project.text_provider;
     let line = text_provider
         .get_text(&LineId("line:10".to_owned()))
@@ -180,18 +172,18 @@ fn loads_line_from_translated_language() {
         ),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
     {
-        let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
+        let mut project = app.world.resource_mut::<YarnProject>();
         project.set_text_language(Language::from("de-CH"));
     }
 
     app.update_until_translation_was_loaded();
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let text_provider = &project.text_provider;
     let line = text_provider
         .get_text(&LineId("line:9".to_owned()))
@@ -209,12 +201,13 @@ impl AppExt for App {
             self.update();
         }
 
-        self.update();
-        self.update();
-        self.update();
-        sleep(Duration::from_millis(100));
-        self.update();
-        self.update();
-        self.update();
+        while !self
+            .world
+            .resource::<YarnProject>()
+            .text_provider
+            .has_loaded_translation_for_current_language()
+        {
+            self.update();
+        }
     }
 }

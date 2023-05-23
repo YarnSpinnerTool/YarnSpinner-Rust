@@ -52,7 +52,7 @@ impl YarnProject {
     }
 
     pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        self.text_provider.set_language_code(language.into());
+        self.text_provider.set_language(language.into());
         self
     }
 
@@ -70,7 +70,7 @@ impl YarnProject {
     }
 
     pub fn text_language(&self) -> Option<Language> {
-        self.text_provider.get_language_code()
+        self.text_provider.get_language()
     }
 
     pub fn line_asset_language(&self) -> Option<Language> {

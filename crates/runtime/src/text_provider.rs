@@ -19,8 +19,9 @@ pub trait TextProvider: Debug + Send + Sync {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
     fn get_text(&self, id: &LineId) -> Option<String>;
-    fn set_language_code(&mut self, language_code: Option<Language>);
-    fn get_language_code(&self) -> Option<Language>;
+    fn set_language(&mut self, language: Option<Language>);
+    fn get_language(&self) -> Option<Language>;
+    fn has_loaded_translation_for_current_language(&self) -> bool;
 }
 
 impl Clone for Box<dyn TextProvider> {
@@ -42,7 +43,7 @@ pub type StringTable = HashMap<LineId, String>;
 pub struct StringTableTextProvider {
     base_language_table: Arc<RwLock<StringTable>>,
     translation_table: Arc<RwLock<Option<(Language, StringTable)>>>,
-    language_code: Arc<RwLock<Option<Language>>>,
+    language: Arc<RwLock<Option<Language>>>,
 }
 
 impl StringTableTextProvider {
@@ -84,28 +85,38 @@ impl TextProvider for StringTableTextProvider {
     }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
-        let language_code = self.language_code.read().unwrap();
-        if let Some(language_code) = language_code.as_ref() {
+        let language = self.language.read().unwrap();
+        if let Some(language) = language.as_ref() {
             if let Some((registered_language, translation_table)) =
                 self.translation_table.read().unwrap().as_ref()
             {
-                if registered_language != language_code {
-                    error!("Didn't find language {language_code} in translations, falling back to base language.");
+                if registered_language != language {
+                    error!("Didn't find language {language} in translations, falling back to base language.");
                 } else if let Some(line) = translation_table.get(id) {
                     return Some(line.clone());
                 } else {
-                    error!("No translation found for line {id} in language {language_code}, falling back to base language.");
+                    error!("No translation found for line {id} in language {language}, falling back to base language.");
                 }
             }
         }
         self.base_language_table.read().unwrap().get(id).cloned()
     }
 
-    fn set_language_code(&mut self, language_code: Option<Language>) {
-        *self.language_code.write().unwrap() = language_code;
+    fn set_language(&mut self, language_code: Option<Language>) {
+        *self.language.write().unwrap() = language_code;
     }
 
-    fn get_language_code(&self) -> Option<Language> {
-        self.language_code.read().unwrap().clone()
+    fn get_language(&self) -> Option<Language> {
+        self.language.read().unwrap().clone()
+    }
+
+    fn has_loaded_translation_for_current_language(&self) -> bool {
+        let language = self.language.read().unwrap();
+        let Some(language) = language.as_ref() else {
+            return !self.base_language_table.read().unwrap().is_empty();
+        };
+        let translation_table = self.translation_table.read().unwrap();
+        let translation_language = translation_table.as_ref().map(|(language, _)| language);
+        translation_language == Some(language)
     }
 }

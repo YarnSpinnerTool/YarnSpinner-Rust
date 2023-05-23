@@ -54,7 +54,7 @@ fn ensure_right_language(
     let Some(strings_file) = assets.get(handle) else {
         return Ok(());
     };
-    if let Some(expected_language) = &project.text_provider.get_language_code() {
+    if let Some(expected_language) = &project.text_provider.get_language() {
         if let Some(language) = strings_file.language() {
             if language != expected_language {
                 bail!(

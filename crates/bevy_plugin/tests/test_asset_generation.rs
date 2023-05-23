@@ -13,11 +13,11 @@ fn loads_yarn_assets() {
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(None),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let yarn_files = &project.yarn_files;
     assert_eq!(1, yarn_files.len());
 
@@ -52,11 +52,11 @@ fn generates_line_ids() -> anyhow::Result<()> {
         }),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
-    let project = app.world.get_resource::<YarnProject>().unwrap();
+    let project = app.world.resource::<YarnProject>();
     let yarn_files = &project.yarn_files;
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
@@ -109,7 +109,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
         }),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
     app.update(); // Generate the strings file
@@ -160,13 +160,13 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
         }),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
     app.update(); // Generate the strings file
 
     {
-        let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
+        let mut project = app.world.resource_mut::<YarnProject>();
         let mut localizations = project.localizations.as_mut().unwrap();
         localizations.translations = vec!["fr-FR".into()];
     }
@@ -215,12 +215,12 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         ),
     );
 
-    while app.world.get_resource::<YarnProject>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
     {
-        let project = app.world.get_resource::<YarnProject>().unwrap();
+        let project = app.world.resource::<YarnProject>();
         let handle = project.yarn_files.iter().next().unwrap().clone();
 
         let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
@@ -235,8 +235,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     while !app
         .world
-        .get_resource::<Events<AssetEvent<YarnFile>>>()
-        .unwrap()
+        .resource::<Events<AssetEvent<YarnFile>>>()
         .is_empty()
     {
         app.update();

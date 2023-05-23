@@ -72,7 +72,7 @@ impl YarnSlingerPlugin {
             .localizations
             .as_ref()
             .map(|l| l.base_language.language.clone());
-        self.advanced.text_provider.set_language_code(language);
+        self.advanced.text_provider.set_language(language);
     }
 }
 
