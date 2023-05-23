@@ -73,6 +73,19 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
         InternalValue::from(false).into()
     }
 
+    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
+        let text = ctx.get_text();
+        let message = format!(
+            "Variable declarations must be constant values, but `{text}` is another variable",
+        );
+        self.diagnostics.push(
+            Diagnostic::from_message(message)
+                .with_file_name(&self.file.name)
+                .with_parser_context(ctx, self.file.tokens()),
+        );
+        ConstantValue::non_panicking_default()
+    }
+
     fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
         let text = ctx.STRING().unwrap().get_text();
         InternalValue::from(text.trim_matches('"')).into()
@@ -92,19 +105,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
         let text = ctx.get_text();
         let message =
             format!("Variable declarations must be constant values, but `{text}` is a function",);
-        self.diagnostics.push(
-            Diagnostic::from_message(message)
-                .with_file_name(&self.file.name)
-                .with_parser_context(ctx, self.file.tokens()),
-        );
-        ConstantValue::non_panicking_default()
-    }
-
-    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
-        let text = ctx.get_text();
-        let message = format!(
-            "Variable declarations must be constant values, but `{text}` is another variable",
-        );
         self.diagnostics.push(
             Diagnostic::from_message(message)
                 .with_file_name(&self.file.name)

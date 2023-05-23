@@ -1,7 +1,8 @@
-use crate::events::CreateMissingStringsFilesEvent;
-use crate::localization::line_id_generation::LineIdUpdateSystemSet;
-use crate::localization::strings_file::creation::CreateMissingStringsFilesSystemSet;
-use crate::prelude::*;
+use crate::{
+    localization::line_id_generation::LineIdUpdateSystemSet,
+    localization::strings_file::creation::CreateMissingStringsFilesSystemSet,
+    localization::CreateMissingStringsFilesEvent, prelude::*,
+};
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
