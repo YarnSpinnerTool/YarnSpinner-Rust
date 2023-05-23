@@ -124,9 +124,7 @@ impl TestBase {
             .map(|(id, info)| (id, info.text))
             .collect();
         self.string_table.extend_translation("en-US", string_table);
-        self.dialogue
-            .set_language_code(Language::from("en-US"))
-            .unwrap();
+        self.dialogue.set_language_code(Language::from("en-US"));
         self
     }
 
