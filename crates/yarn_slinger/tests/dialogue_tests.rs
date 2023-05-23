@@ -90,7 +90,6 @@ fn test_analysis_has_no_false_positives() {
 }
 
 #[test]
-#[should_panic(expected = "No node named \"THIS NODE DOES NOT EXIST\" has been loaded.")]
 fn test_missing_node() {
     let path = test_data_path().join("TestCases").join("Smileys.yarn");
 
@@ -99,7 +98,8 @@ fn test_missing_node() {
     let mut test_base = TestBase::new()
         .with_program(result.program.unwrap())
         .with_runtime_errors_do_not_cause_failure();
-    test_base.dialogue.set_node("THIS NODE DOES NOT EXIST");
+    let result = test_base.dialogue.set_node("THIS NODE DOES NOT EXIST");
+    assert!(result.is_err());
 }
 
 #[test]
@@ -119,7 +119,7 @@ fn test_getting_current_node_name() {
     // dialogue should not be running yet
     assert!(dialogue.current_node().is_none());
 
-    dialogue.set_node("Sally");
+    dialogue.set_node("Sally").unwrap();
     assert_eq!(dialogue.current_node(), Some("Sally".to_string()));
 
     dialogue.stop();
@@ -169,8 +169,9 @@ fn test_line_hints() {
     let mut dialogue = TestBase::new()
         .with_compilation(result)
         .dialogue
-        .with_should_send_line_hints()
-        .with_node_at_start();
+        .with_line_hints_enabled(true)
+        .with_node_at_start()
+        .unwrap();
 
     let mut line_hints_were_sent = false;
 
@@ -256,7 +257,7 @@ fn test_selecting_option_from_inside_option_callback() {
                 .expect_line("final line"),
         )
         .with_compilation(result);
-    test_base.dialogue.set_node_to_start();
+    test_base.dialogue.set_node_to_start().unwrap();
 
     while let Some(events) = test_base.dialogue.next() {
         for event in events {
@@ -287,7 +288,8 @@ fn test_selecting_option_from_inside_option_callback() {
                     assert_eq!(ExpectedStepType::Select, expected_step);
                     test_base
                         .dialogue
-                        .set_selected_option(OptionId::construct_for_debugging(0));
+                        .set_selected_option(OptionId::construct_for_debugging(0))
+                        .unwrap();
                 }
                 DialogueEvent::DialogueComplete => {
                     let test_plan = test_base.test_plan.as_mut().unwrap();

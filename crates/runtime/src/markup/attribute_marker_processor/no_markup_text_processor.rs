@@ -27,7 +27,7 @@ impl AttributeMarkerProcessor for NoMarkupTextProcessor {
         }
     }
 
-    fn set_language_code(&mut self, _language_code: Language) {
+    fn set_language_code(&mut self, _language_code: Option<Language>) {
         // no-op
     }
 

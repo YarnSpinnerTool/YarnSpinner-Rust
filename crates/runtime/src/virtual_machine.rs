@@ -24,7 +24,7 @@ pub(crate) struct VirtualMachine {
     pub(crate) program: Option<Program>,
     #[cfg_attr(feature = "bevy", reflect(ignore))]
     pub(crate) variable_storage: Box<dyn VariableStorage>,
-    pub(crate) should_send_line_hints: bool,
+    pub(crate) line_hints_enabled: bool,
     current_node_name: Option<String>,
     state: State,
     execution_state: ExecutionState,
@@ -63,17 +63,31 @@ impl VirtualMachine {
             execution_state: Default::default(),
             current_node: Default::default(),
             batched_events: Default::default(),
-            should_send_line_hints: Default::default(),
+            line_hints_enabled: Default::default(),
         }
     }
 
-    pub(crate) fn set_language_code(&mut self, language_code: Language) -> Result<()> {
-        self.language_code.replace(language_code.clone());
+    pub(crate) fn text_provider(&self) -> &dyn TextProvider {
+        self.text_provider.as_ref()
+    }
+
+    pub(crate) fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.text_provider.as_mut()
+    }
+
+    pub(crate) fn variable_storage(&self) -> &dyn VariableStorage {
+        self.variable_storage.as_ref()
+    }
+
+    pub(crate) fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.variable_storage.as_mut()
+    }
+
+    pub(crate) fn set_language_code(&mut self, language_code: impl Into<Option<Language>>) {
+        let language_code = language_code.into();
+        self.language_code = language_code.clone();
         self.line_parser.set_language_code(language_code.clone());
-        self.text_provider
-            .set_language_code(language_code)
-            .map_err(Into::<DialogueError>::into)?;
-        Ok(())
+        self.text_provider.set_language(language_code);
     }
 
     pub(crate) fn reset_state(&mut self) {
@@ -95,24 +109,27 @@ impl VirtualMachine {
         self.set_execution_state(ExecutionState::Stopped)
     }
 
-    pub(crate) fn set_node(&mut self, node_name: &str) {
+    pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
+        let node_name = node_name.into();
         info!("Running node \"{node_name}\"");
-        self.current_node = self
-            .get_node_from_name(node_name)
-            .cloned()
-            .unwrap_or_else(|| panic!("No node named \"{node_name}\" has been loaded."))
-            .into();
+        let Some(current_node) = self.get_node_from_name(&node_name) else {
+            return Err(DialogueError::InvalidNode{
+                node_name
+            });
+        };
+        self.current_node = Some(current_node.clone());
 
         self.reset_state();
 
-        self.current_node_name = Some(node_name.to_owned());
+        self.current_node_name = Some(node_name.clone());
 
         self.batched_events
-            .push(DialogueEvent::NodeStart(node_name.to_owned()));
+            .push(DialogueEvent::NodeStart(node_name));
 
-        if self.should_send_line_hints {
+        if self.line_hints_enabled {
             self.send_line_hints();
         }
+        Ok(())
     }
 
     fn send_line_hints(&mut self) {
@@ -232,18 +249,16 @@ impl VirtualMachine {
         self.program = None
     }
 
-    pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) {
-        assert_eq!(
-            ExecutionState::WaitingOnOptionSelection,
-            self.execution_state,
-            "SetSelectedOption was called, but Dialogue wasn't waiting for a selection. \
-            This method should only be called after the Dialogue is waiting for the user to select an option.");
-
-        assert!(
-            selected_option_id.0 < self.state.current_options.len(),
-            "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {}.",
-            self.state.current_options.len() - 1
-        );
+    pub(crate) fn set_selected_option(&mut self, selected_option_id: OptionId) -> Result<()> {
+        if self.execution_state != ExecutionState::WaitingOnOptionSelection {
+            return Err(DialogueError::UnexpectedOptionSelectionError);
+        }
+        if selected_option_id.0 >= self.state.current_options.len() {
+            return Err(DialogueError::InvalidOptionIdError {
+                selected_option_id,
+                max_id: self.state.current_options.len() - 1,
+            });
+        }
 
         // We now know what number option was selected; push the
         // corresponding node name to the stack.
@@ -258,6 +273,7 @@ impl VirtualMachine {
 
         // We're no longer in the WaitingForOptions state; we are now waiting for our game to let us continue
         self.set_execution_state(ExecutionState::WaitingForContinue);
+        Ok(())
     }
 
     pub(crate) fn is_active(&self) -> bool {
@@ -525,7 +541,7 @@ impl VirtualMachine {
                 let node_name: String = self.state.pop();
                 self.batched_events
                     .push(DialogueEvent::NodeComplete(node_name.clone()));
-                self.set_node(&node_name);
+                self.set_node(&node_name)?;
 
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
             }

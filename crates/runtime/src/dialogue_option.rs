@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 
 use crate::prelude::*;
+use std::fmt::Display;
 
 /// An option to be presented to the user.
 #[derive(Debug, Clone, PartialEq)]
@@ -47,6 +48,12 @@ pub struct DialogueOption {
     reflect(Serialize, Deserialize)
 )]
 pub struct OptionId(pub(crate) usize);
+
+impl Display for OptionId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl OptionId {
     /// Constructs a new `OptionId` from the given value.

@@ -81,6 +81,7 @@ fn test_end_of_notes_with_options_not_added() {
         .with_compilation(result)
         .dialogue
         .with_node_at_start()
+        .unwrap()
         .flatten()
         .any(|event| matches!(event, DialogueEvent::Options(_)));
     assert!(!has_options);

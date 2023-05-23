@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::project::YarnProjectConfigToLoad;
 use bevy::asset::FileAssetIo;
 use bevy::prelude::*;
 use std::path::Path;
@@ -9,11 +10,29 @@ pub(crate) fn panic_on_err(In(result): In<SystemResult>) {
     }
 }
 
-pub(crate) fn in_development(localizations: Option<Res<Localizations>>) -> bool {
-    localizations
-        .as_ref()
-        .map(|localizations| localizations.file_generation_mode == FileGenerationMode::Development)
-        .unwrap_or_default()
+pub(crate) fn in_development(
+    project: Option<Res<YarnProject>>,
+    project_to_load: Option<Res<YarnProjectConfigToLoad>>,
+) -> bool {
+    if let Some(project) = project {
+        if let Some(localizations) = project.localizations.as_ref() {
+            return localizations.file_generation_mode == FileGenerationMode::Development;
+        }
+    }
+    if let Some(project_to_load) = project_to_load {
+        if let Some(Some(ref localizations)) = project_to_load.localizations {
+            return localizations.file_generation_mode == FileGenerationMode::Development;
+        }
+    }
+    false
+}
+
+pub(crate) fn events_in_queue<T: Event>() -> impl FnMut(EventReader<T>) -> bool + Clone {
+    move |reader: EventReader<T>| !reader.is_empty()
+}
+
+pub(crate) fn events_in_world<T: Event>() -> impl FnMut(Res<Events<T>>) -> bool + Clone {
+    move |events: Res<Events<T>>| !events.is_empty()
 }
 
 pub(crate) fn get_assets_dir_path(asset_server: &AssetServer) -> Result<impl AsRef<Path> + '_> {

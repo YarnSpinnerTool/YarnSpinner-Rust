@@ -31,6 +31,16 @@ pub enum DialogueError {
     },
     #[error(transparent)]
     UnsupportedLanguageError(#[from] UnsupportedLanguageError),
+    #[error("{selected_option_id:?} is not a valid option ID (expected a number between 0 and {max_id}.")]
+    InvalidOptionIdError {
+        selected_option_id: OptionId,
+        max_id: usize,
+    },
+    #[error("`SetSelectedOption` was called, but Dialogue wasn't waiting for a selection. \
+            This method should only be called after the Dialogue is waiting for the user to select an option.")]
+    UnexpectedOptionSelectionError,
+    #[error("No node named \"{node_name}\" has been loaded.")]
+    InvalidNode { node_name: String },
 }
 
 impl Dialogue {
@@ -90,9 +100,9 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
-    pub fn with_language_code(mut self, language_code: impl Into<Language>) -> Result<Self> {
-        self.set_language_code(language_code)?;
-        Ok(self)
+    pub fn with_language_code(mut self, language_code: impl Into<Option<Language>>) -> Self {
+        self.set_language_code(language_code);
+        self
     }
 
     #[must_use]
@@ -101,24 +111,22 @@ impl Dialogue {
         self
     }
 
-    #[must_use]
-    pub fn with_node_at(mut self, node_name: &str) -> Self {
-        self.set_node(node_name);
-        self
+    pub fn with_node_at(mut self, node_name: &str) -> Result<Self> {
+        self.set_node(node_name)?;
+        Ok(self)
     }
 
-    #[must_use]
-    pub fn with_node_at_start(mut self) -> Self {
-        self.set_node_to_start();
-        self
+    pub fn with_node_at_start(mut self) -> Result<Self> {
+        self.set_node_to_start()?;
+        Ok(self)
     }
 
     /// Activates [`Dialogue::next`] being able to return [`DialogueEvent::LineHints`] events.
     /// Note that line hints for [`Dialogue::with_node_at_start`] and [`Dialogue::with_node_at`] will only be sent if this
     /// method was called beforehand.
     #[must_use]
-    pub fn with_should_send_line_hints(mut self) -> Self {
-        self.vm.should_send_line_hints = true;
+    pub fn with_line_hints_enabled(mut self, enabled: bool) -> Self {
+        self.vm.line_hints_enabled = enabled;
         self
     }
 }
@@ -143,12 +151,11 @@ impl Dialogue {
 
     pub fn set_language_code(
         &mut self,
-        language_code: impl Into<Language>,
-    ) -> Result<Option<Language>> {
+        language_code: impl Into<Option<Language>>,
+    ) -> Option<Language> {
         let language_code = language_code.into();
-        let previous = self.language_code.replace(language_code.clone());
-        self.vm.set_language_code(language_code)?;
-        Ok(previous)
+        self.vm.set_language_code(language_code.clone());
+        std::mem::replace(&mut self.language_code, language_code)
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.
@@ -169,15 +176,31 @@ impl Dialogue {
     /// Gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
     #[must_use]
-    pub fn should_send_line_hints(&self) -> bool {
-        self.vm.should_send_line_hints
+    pub fn line_hints_enabled(&self) -> bool {
+        self.vm.line_hints_enabled
     }
 
     /// Mutable gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
     #[must_use]
-    pub fn should_send_line_hints_mut(&mut self) -> &mut bool {
-        &mut self.vm.should_send_line_hints
+    pub fn line_hints_enabled_mut(&mut self) -> &mut bool {
+        &mut self.vm.line_hints_enabled
+    }
+
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.vm.text_provider()
+    }
+
+    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.vm.text_provider_mut()
+    }
+
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.vm.variable_storage()
+    }
+
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.vm.variable_storage_mut()
     }
 }
 
@@ -229,21 +252,21 @@ impl Dialogue {
     ///
     /// After this method is called, you call [`Dialogue::next`] to start executing it.
     ///
-    /// If [`Dialogue::should_send_line_hints`] has been set, the next [`Dialogue::next`] call will return a [`DialogueEvent::LineHints`],
+    /// If [`Dialogue::line_hints_enabled`] has been set, the next [`Dialogue::next`] call will return a [`DialogueEvent::LineHints`],
     /// as the Dialogue determines which lines may be delivered during the `node_name` node's execution.
     ///
     /// ## Panics
     ///
     /// Panics if no node named `node_name` has been loaded.
-    pub fn set_node(&mut self, node_name: &str) -> &mut Self {
-        self.vm.set_node(node_name);
-        self
+    pub fn set_node(&mut self, node_name: impl Into<String>) -> Result<&mut Self> {
+        self.vm.set_node(node_name)?;
+        Ok(self)
     }
 
     /// Calls [`Dialogue::set_node`] with the [`Dialogue::DEFAULT_START_NODE_NAME`].
-    pub fn set_node_to_start(&mut self) -> &mut Self {
-        self.set_node(Self::DEFAULT_START_NODE_NAME);
-        self
+    pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
+        self.set_node(Self::DEFAULT_START_NODE_NAME)?;
+        Ok(self)
     }
 
     /// Immediately stops the [`Dialogue`]
@@ -356,9 +379,9 @@ impl Dialogue {
     ///
     /// ## See Also
     /// - [`Dialogue::continue_`]
-    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> &mut Self {
-        self.vm.set_selected_option(selected_option_id);
-        self
+    pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> Result<&mut Self> {
+        self.vm.set_selected_option(selected_option_id)?;
+        Ok(self)
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.

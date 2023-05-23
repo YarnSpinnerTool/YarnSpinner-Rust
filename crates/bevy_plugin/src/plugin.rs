@@ -1,13 +1,11 @@
 use crate::default_impl::{MemoryVariableStore, StringTableTextProvider};
 use crate::prelude::*;
+use crate::project::{YarnFilesToLoad, YarnProjectConfigToLoad};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
-use crate::project::{
-    GlobalLineAssetProvider, GlobalTextProvider, GlobalVariableStorage, YarnFilesToLoad,
-};
-pub use yarn_file_source::YarnFileSource;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -16,6 +14,7 @@ pub struct YarnSlingerPlugin {
     pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
     pub yarn_files: HashSet<YarnFileSource>,
     pub advanced: AdvancedPluginConfig,
+    pub library: YarnFnLibrary,
 }
 
 impl YarnSlingerPlugin {
@@ -28,6 +27,7 @@ impl YarnSlingerPlugin {
             localizations: None,
             advanced: Default::default(),
             line_asset_provider: None,
+            library: YarnFnLibrary::standard_library(),
             yarn_files,
         }
     }
@@ -41,6 +41,7 @@ impl YarnSlingerPlugin {
             }
         }
         self.localizations = localizations;
+        self.update_language_code();
         self
     }
 
@@ -52,12 +53,26 @@ impl YarnSlingerPlugin {
         self
     }
 
+    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
+        self.library.extend(library);
+        self
+    }
+
     pub fn advanced(
         mut self,
         config: impl Fn(AdvancedPluginConfig) -> AdvancedPluginConfig,
     ) -> Self {
         self.advanced = config(self.advanced);
+        self.update_language_code();
         self
+    }
+
+    fn update_language_code(&mut self) {
+        let language = self
+            .localizations
+            .as_ref()
+            .map(|l| l.base_language.language.clone());
+        self.advanced.text_provider.set_language(language);
     }
 }
 
@@ -141,29 +156,21 @@ impl YarnApp for App {
     }
 
     fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
-        if let Some(localizations) = plugin.localizations.clone() {
-            self.insert_resource(CurrentLanguage(
-                localizations.base_language.language.clone(),
-            ))
-            .insert_resource(localizations);
-        }
-        if let Some(line_asset_provider) = &plugin.line_asset_provider {
-            self.insert_resource(GlobalLineAssetProvider(line_asset_provider.clone_shallow()));
-        }
-        self.insert_resource(YarnFilesToLoad(plugin.yarn_files.clone()))
-            .insert_resource(GlobalTextProvider(
-                plugin.advanced.text_provider.clone_shallow(),
-            ))
-            .insert_resource(GlobalVariableStorage(
-                plugin.advanced.variable_storage.clone_shallow(),
-            ))
+        self.insert_resource(YarnProjectConfigToLoad {
+            variable_storage: Some(plugin.advanced.variable_storage.clone_shallow()),
+            text_provider: Some(plugin.advanced.text_provider.clone_shallow()),
+            line_asset_provider: Some(plugin.line_asset_provider.clone()),
+            library: Some(plugin.library.clone()),
+            localizations: Some(plugin.localizations.clone()),
+        })
+        .insert_resource(YarnFilesToLoad(plugin.yarn_files.clone()))
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
         self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
-            .fn_plugin(crate::line_provider::line_provider_plugin)
+            .fn_plugin(crate::line_asset_provider::line_asset_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
     }
 }

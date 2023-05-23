@@ -9,19 +9,9 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 }
 
 #[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Default,
-    Hash,
-    Resource,
-    Reflect,
-    FromReflect,
-    Serialize,
-    Deserialize,
+    Debug, Clone, PartialEq, Eq, Default, Hash, Reflect, FromReflect, Serialize, Deserialize,
 )]
-#[reflect(Debug, Resource, Default, PartialEq, Hash, Serialize, Deserialize)]
+#[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
     pub base_language: Localization,
     pub translations: Vec<Localization>,

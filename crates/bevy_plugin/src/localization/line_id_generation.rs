@@ -1,6 +1,8 @@
-use crate::filesystem_events::UpdateAllStringsFilesForStringTableEvent;
+use crate::localization::{
+    UpdateAllStringsFilesForStringTableEvent, UpdateBaseLanguageTextProviderForStringTableEvent,
+};
 use crate::prelude::*;
-use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesInProject};
+use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;
 use std::path::PathBuf;
 
@@ -8,34 +10,72 @@ use std::path::PathBuf;
 pub(crate) struct LineIdUpdateSystemSet;
 
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
-    app.add_system(
-        generate_missing_line_ids_in_yarn_file
-            .pipe(panic_on_err)
-            .in_set(LineIdUpdateSystemSet)
-            .run_if(in_development.and_then(on_event::<AssetEvent<YarnFile>>())),
+    app.add_systems(
+        (
+            handle_yarn_file_events
+                .pipe(panic_on_err)
+                .run_if(in_development),
+            handle_yarn_file_events_outside_development.run_if(not(in_development)),
+        )
+            .chain()
+            .in_set(LineIdUpdateSystemSet),
     );
 }
 
-fn generate_missing_line_ids_in_yarn_file(
+fn handle_yarn_file_events_outside_development(
+    mut events: EventReader<AssetEvent<YarnFile>>,
+    assets: Res<Assets<YarnFile>>,
+    yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
+    project: Option<Res<YarnProject>>,
+    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
+) {
+    for event in events.iter() {
+        let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
+                continue;
+            };
+        if !yarn_files_being_loaded.0.contains(handle)
+            && !project
+                .as_ref()
+                .map(|p| p.yarn_files.contains(handle))
+                .unwrap_or_default()
+        {
+            continue;
+        }
+        let yarn_file = assets.get(handle).unwrap().clone();
+
+        update_text_writer.send((&yarn_file.string_table).into());
+    }
+}
+
+fn handle_yarn_file_events(
     mut events: EventReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
     mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
-    yarn_files_in_project: Res<YarnFilesInProject>,
-    mut update_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
+    project: Option<Res<YarnProject>>,
+    mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
     for event in events.iter() {
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
         };
-        if !yarn_files_in_project.0.contains(handle) {
+        if !yarn_files_being_loaded.0.contains(handle)
+            && !project
+                .as_ref()
+                .map(|p| p.yarn_files.contains(handle))
+                .unwrap_or_default()
+        {
             continue;
         }
         let yarn_file = assets.get(handle).unwrap().clone();
-        update_writer.send(UpdateAllStringsFilesForStringTableEvent(
+
+        update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
             yarn_file.string_table.clone(),
         ));
+        update_text_writer.send((&yarn_file.string_table).into());
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
             continue;
@@ -67,7 +107,7 @@ fn generate_missing_line_ids_in_yarn_file(
         recompilation_needed = true;
     }
 
-    if recompilation_needed {
+    if recompilation_needed && project.is_some() {
         recompile_events.send(RecompileLoadedYarnFilesEvent);
     }
     Ok(())

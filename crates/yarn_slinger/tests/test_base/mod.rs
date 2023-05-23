@@ -123,15 +123,15 @@ impl TestBase {
             .into_iter()
             .map(|(id, info)| (id, info.text))
             .collect();
-        self.string_table.add_translation("en-US", string_table);
-        self.dialogue.set_language_code("en-US").unwrap();
+        self.string_table.extend_translation("en-US", string_table);
+        self.dialogue.set_language_code(Language::from("en-US"));
         self
     }
 
     /// Executes the named node, and checks any assertions made during
     /// execution. Fails the test if an assertion made in Yarn fails.
     pub fn run_standard_testcase(&mut self) -> &mut Self {
-        self.dialogue.set_node_to_start();
+        self.dialogue.set_node_to_start().unwrap();
 
         while let Some(events) = self.dialogue.next() {
             for event in events {
@@ -187,11 +187,13 @@ impl TestBase {
                             let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
                             println!("[Selecting option {}]", selection);
                             self.dialogue
-                                .set_selected_option(OptionId::construct_for_debugging(selection));
+                                .set_selected_option(OptionId::construct_for_debugging(selection))
+                                .unwrap();
                         } else {
                             println!("[Selecting option 0 implicitly]");
                             self.dialogue
-                                .set_selected_option(OptionId::construct_for_debugging(0));
+                                .set_selected_option(OptionId::construct_for_debugging(0))
+                                .unwrap();
                         }
                     }
                     DialogueEvent::Command(command) => {

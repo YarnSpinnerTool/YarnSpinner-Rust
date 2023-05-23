@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 use crate::prelude::Language;
 use log::error;
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -14,11 +15,13 @@ use yarn_slinger_core::prelude::*;
 /// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn TextProvider>;
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+
     fn get_text(&self, id: &LineId) -> Option<String>;
-    fn set_language_code(
-        &mut self,
-        language_code: Language,
-    ) -> Result<(), UnsupportedLanguageError>;
+    fn set_language(&mut self, language: Option<Language>);
+    fn get_language(&self) -> Option<Language>;
+    fn has_loaded_translation_for_current_language(&self) -> bool;
 }
 
 impl Clone for Box<dyn TextProvider> {
@@ -33,12 +36,14 @@ pub struct UnsupportedLanguageError {
     language_code: Language,
 }
 
+pub type StringTable = HashMap<LineId, String>;
+
 /// A basic implementation of [`TextProvider`] that uses a [`HashMap`] to store the text.
 #[derive(Debug, Clone, Default)]
 pub struct StringTableTextProvider {
-    base_language_table: Arc<RwLock<HashMap<LineId, String>>>,
-    translation_table: Arc<RwLock<HashMap<Language, HashMap<LineId, String>>>>,
-    language_code: Arc<RwLock<Option<Language>>>,
+    base_language_table: Arc<RwLock<StringTable>>,
+    translation_table: Arc<RwLock<Option<(Language, StringTable)>>>,
+    language: Arc<RwLock<Option<Language>>>,
 }
 
 impl StringTableTextProvider {
@@ -46,31 +51,25 @@ impl StringTableTextProvider {
         Self::default()
     }
 
-    pub fn set_base_language(
-        &mut self,
-        string_table: HashMap<LineId, String>,
-    ) -> HashMap<LineId, String> {
+    pub fn extend_base_language(&mut self, string_table: HashMap<LineId, String>) {
         let mut base_language_table = self.base_language_table.write().unwrap();
-        std::mem::replace(&mut *base_language_table, string_table)
+        base_language_table.extend(string_table);
     }
 
-    pub fn add_translation(
+    pub fn extend_translation(
         &mut self,
         language: impl Into<Language>,
         string_table: HashMap<LineId, String>,
-    ) -> Option<HashMap<LineId, String>> {
-        self.translation_table
-            .write()
-            .unwrap()
-            .insert(language.into(), string_table)
-    }
-
-    pub fn remove_translations_outside_current_language(&mut self) {
-        let language_code = self.language_code.read().unwrap();
-        if let Some(language_code) = language_code.as_ref() {
-            let mut translation_table = self.translation_table.write().unwrap();
-            translation_table.retain(|key, _| key == language_code);
+    ) {
+        let language = language.into();
+        let mut translation_table = self.translation_table.write().unwrap();
+        if let Some((current_language, translation_table)) = translation_table.as_mut() {
+            if language == *current_language {
+                translation_table.extend(string_table);
+                return;
+            }
         }
+        translation_table.replace((language, string_table));
     }
 }
 
@@ -78,40 +77,46 @@ impl TextProvider for StringTableTextProvider {
     fn clone_shallow(&self) -> Box<dyn TextProvider> {
         Box::new(self.clone())
     }
-
-    fn get_text(&self, id: &LineId) -> Option<String> {
-        let language_code = self.language_code.read().unwrap();
-        if let Some(language_code) = language_code.as_ref() {
-            if let Some(line) = self
-                .translation_table
-                .read()
-                .unwrap()
-                .get(language_code)
-                .and_then(|table| table.get(id))
-            {
-                Some(line.clone())
-            } else {
-                error!("No translation found for line {:?} in language {:?}, falling back to base language.", id, language_code);
-                self.base_language_table.read().unwrap().get(id).cloned()
-            }
-        } else {
-            self.base_language_table.read().unwrap().get(id).cloned()
-        }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 
-    fn set_language_code(
-        &mut self,
-        language_code: Language,
-    ) -> Result<(), UnsupportedLanguageError> {
-        if !self
-            .translation_table
-            .read()
-            .unwrap()
-            .contains_key(&language_code)
-        {
-            return Err(UnsupportedLanguageError { language_code });
+    fn get_text(&self, id: &LineId) -> Option<String> {
+        let language = self.language.read().unwrap();
+        if let Some(language) = language.as_ref() {
+            if let Some((registered_language, translation_table)) =
+                self.translation_table.read().unwrap().as_ref()
+            {
+                if registered_language != language {
+                    error!("Didn't find language {language} in translations, falling back to base language.");
+                } else if let Some(line) = translation_table.get(id) {
+                    return Some(line.clone());
+                } else {
+                    error!("No translation found for line {id} in language {language}, falling back to base language.");
+                }
+            }
         }
-        self.language_code.write().unwrap().replace(language_code);
-        Ok(())
+        self.base_language_table.read().unwrap().get(id).cloned()
+    }
+
+    fn set_language(&mut self, language_code: Option<Language>) {
+        *self.language.write().unwrap() = language_code;
+    }
+
+    fn get_language(&self) -> Option<Language> {
+        self.language.read().unwrap().clone()
+    }
+
+    fn has_loaded_translation_for_current_language(&self) -> bool {
+        let language = self.language.read().unwrap();
+        let Some(language) = language.as_ref() else {
+            return !self.base_language_table.read().unwrap().is_empty();
+        };
+        let translation_table = self.translation_table.read().unwrap();
+        let translation_language = translation_table.as_ref().map(|(language, _)| language);
+        translation_language == Some(language)
     }
 }

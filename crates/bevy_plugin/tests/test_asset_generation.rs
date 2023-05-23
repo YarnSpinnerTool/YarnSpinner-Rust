@@ -1,10 +1,7 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger::project::{YarnCompilation, YarnFilesInProject};
 use std::fs;
 use std::path::PathBuf;
-use std::thread::sleep;
-use std::time::Duration;
 use tempfile::tempdir;
 use yarn_slinger::prelude::{CompilationType, YarnCompiler};
 
@@ -16,12 +13,12 @@ fn loads_yarn_assets() {
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(None),
     );
 
-    app.update();
-    sleep(Duration::from_millis(100));
-    app.update();
+    while !app.world.contains_resource::<YarnProject>() {
+        app.update();
+    }
 
-    let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
-    let yarn_files = yarn_files.get();
+    let project = app.world.resource::<YarnProject>();
+    let yarn_files = &project.yarn_files;
     assert_eq!(1, yarn_files.len());
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
@@ -55,13 +52,12 @@ fn generates_line_ids() -> anyhow::Result<()> {
         }),
     );
 
-    app.update(); // read yarn
-    sleep(Duration::from_millis(100));
-    app.update(); // write line IDs
-    app.update();
+    while !app.world.contains_resource::<YarnProject>() {
+        app.update();
+    }
 
-    let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
-    let yarn_files = yarn_files.get();
+    let project = app.world.resource::<YarnProject>();
+    let yarn_files = &project.yarn_files;
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file_in_app = yarn_file_assets
@@ -113,13 +109,10 @@ fn generates_strings_file() -> anyhow::Result<()> {
         }),
     );
 
-    while app.world.get_resource::<YarnCompilation>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
-    app.update();
-    app.update();
-    app.update();
-    app.update();
+    app.update(); // Generate the strings file
 
     let string_table = YarnCompiler::new()
         .read_file(&yarn_path)
@@ -167,21 +160,18 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
         }),
     );
 
-    while app.world.get_resource::<YarnCompilation>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
-    app.update();
-    app.update();
-    app.update();
+    app.update(); // Generate the strings file
 
     {
-        let mut localizations = app.world.get_resource_mut::<Localizations>().unwrap();
+        let mut project = app.world.resource_mut::<YarnProject>();
+        let mut localizations = project.localizations.as_mut().unwrap();
         localizations.translations = vec!["fr-FR".into()];
     }
 
     app.update(); // write updated strings file
-    app.update();
-    app.update();
 
     assert!(!dir.path().join("en-US.strings.csv").exists());
     let strings_file_path = dir.path().join("fr-FR.strings.csv");
@@ -225,13 +215,13 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         ),
     );
 
-    while app.world.get_resource::<YarnCompilation>().is_none() {
+    while !app.world.contains_resource::<YarnProject>() {
         app.update();
     }
 
     {
-        let yarn_files = app.world.get_resource::<YarnFilesInProject>().unwrap();
-        let handle = yarn_files.get().iter().next().unwrap().clone();
+        let project = app.world.resource::<YarnProject>();
+        let handle = project.yarn_files.iter().next().unwrap().clone();
 
         let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
         let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
@@ -243,11 +233,13 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         yarn_file.set_content(lines.join("\n"))?;
     }
 
-    app.update();
-    app.update();
-    app.update();
-    sleep(Duration::from_millis(100));
-    app.update();
+    while !app
+        .world
+        .resource::<Events<AssetEvent<YarnFile>>>()
+        .is_empty()
+    {
+        app.update();
+    }
 
     let strings_file_source = fs::read_to_string(dir.path().join("de-CH.strings.csv"))?;
     let strings_file_lines: Vec<_> = strings_file_source
@@ -273,6 +265,25 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     assert_eq!(strings_file_lines.len(), 12);
 
     Ok(())
+}
+
+#[test]
+fn does_not_panic_on_missing_language_when_not_selected() {
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["fr-FR".into()],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
+
+    while !app.world.contains_resource::<YarnProject>() {
+        app.update();
+    }
 }
 
 pub fn project_root_path() -> PathBuf {

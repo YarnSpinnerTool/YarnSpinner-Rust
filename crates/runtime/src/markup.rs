@@ -10,7 +10,7 @@ pub use self::{markup_parse_error::*, parsed_markup::*};
 mod tests {
     //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/MarkupTests.cs>
     use super::*;
-    use crate::prelude::Line;
+    use crate::prelude::{Language, Line};
 
     #[test]
     fn test_markup_parsing() {
@@ -342,7 +342,7 @@ mod tests {
             let line = format!("[plural value={value} one=\"a single cat\" other=\"% cats\"/]",);
 
             let mut line_parser = line_parser();
-            line_parser.set_language_code(locale);
+            line_parser.set_language_code(Language::from(locale));
             let markup = line_parser.parse_markup(&line).unwrap();
 
             assert_eq!(expected, markup.text);
