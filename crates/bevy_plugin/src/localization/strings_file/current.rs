@@ -138,15 +138,16 @@ fn update_translation_string_provider_from_loaded_handle(
         *dirty = false;
         return Ok(());
     };
-    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
-        *dirty = false;
-        return Ok(());
-    };
-    let Some(language) = text_provider.get_language_code() else {
+    let Some(language) = project.text_language() else {
         *dirty = false;
         return Ok(());
     };
     let Some(strings_file) = strings_files.get(handle) else {
+        return Ok(());
+    };
+
+    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
+        *dirty = false;
         return Ok(());
     };
 

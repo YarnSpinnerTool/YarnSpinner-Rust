@@ -16,7 +16,7 @@ pub(crate) fn project_plugin(app: &mut App) {
                 add_yarn_files_to_load_queue
                     .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
                 compile_loaded_yarn_files
-                    .pipe(error)
+                    .pipe(panic_on_err)
                     .run_if(resource_exists::<YarnFilesToLoad>()),
                 recompile_loaded_yarn_files
                     .pipe(error)
