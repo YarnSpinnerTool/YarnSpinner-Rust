@@ -123,7 +123,7 @@ impl TestBase {
             .into_iter()
             .map(|(id, info)| (id, info.text))
             .collect();
-        self.string_table.add_translation("en-US", string_table);
+        self.string_table.set_translation("en-US", string_table);
         self.dialogue
             .set_language_code(Language::from("en-US"))
             .unwrap();

@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 use crate::prelude::Language;
 use log::error;
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -14,6 +15,9 @@ use yarn_slinger_core::prelude::*;
 /// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn TextProvider>;
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+
     fn get_text(&self, id: &LineId) -> Option<String>;
     fn set_language_code(&mut self, language_code: Option<Language>);
     fn get_language_code(&self) -> Option<Language>;
@@ -35,7 +39,7 @@ pub struct UnsupportedLanguageError {
 #[derive(Debug, Clone, Default)]
 pub struct StringTableTextProvider {
     base_language_table: Arc<RwLock<HashMap<LineId, String>>>,
-    translation_table: Arc<RwLock<HashMap<Language, HashMap<LineId, String>>>>,
+    translation_table: Arc<RwLock<Option<(Language, HashMap<LineId, String>)>>>,
     language_code: Arc<RwLock<Option<Language>>>,
 }
 
@@ -52,23 +56,15 @@ impl StringTableTextProvider {
         std::mem::replace(&mut *base_language_table, string_table)
     }
 
-    pub fn add_translation(
+    pub fn set_translation(
         &mut self,
         language: impl Into<Language>,
         string_table: HashMap<LineId, String>,
-    ) -> Option<HashMap<LineId, String>> {
+    ) -> Option<(Language, HashMap<LineId, String>)> {
         self.translation_table
             .write()
             .unwrap()
-            .insert(language.into(), string_table)
-    }
-
-    pub fn remove_translations_outside_current_language(&mut self) {
-        let language_code = self.language_code.read().unwrap();
-        if let Some(language_code) = language_code.as_ref() {
-            let mut translation_table = self.translation_table.write().unwrap();
-            translation_table.retain(|key, _| key == language_code);
-        }
+            .replace((language.into(), string_table))
     }
 }
 
@@ -76,19 +72,26 @@ impl TextProvider for StringTableTextProvider {
     fn clone_shallow(&self) -> Box<dyn TextProvider> {
         Box::new(self.clone())
     }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
         let language_code = self.language_code.read().unwrap();
         if let Some(language_code) = language_code.as_ref() {
-            if let Some(language_table) = self.translation_table.read().unwrap().get(language_code)
+            if let Some((registered_language, translation_table)) =
+                self.translation_table.read().unwrap().as_ref()
             {
-                if let Some(line) = language_table.get(id) {
+                if registered_language != language_code {
+                    error!("Didn't find language {language_code} in translations, falling back to base language.");
+                } else if let Some(line) = translation_table.get(id) {
                     return Some(line.clone());
                 } else {
                     error!("No translation found for line {id} in language {language_code}, falling back to base language.");
                 }
-            } else {
-                error!("Didn't find language {language_code} in translations, falling back to base language.");
             }
         }
         self.base_language_table.read().unwrap().get(id).cloned()
