@@ -35,11 +35,13 @@ pub struct UnsupportedLanguageError {
     language_code: Language,
 }
 
+pub type StringTable = HashMap<LineId, String>;
+
 /// A basic implementation of [`TextProvider`] that uses a [`HashMap`] to store the text.
 #[derive(Debug, Clone, Default)]
 pub struct StringTableTextProvider {
-    base_language_table: Arc<RwLock<HashMap<LineId, String>>>,
-    translation_table: Arc<RwLock<Option<(Language, HashMap<LineId, String>)>>>,
+    base_language_table: Arc<RwLock<StringTable>>,
+    translation_table: Arc<RwLock<Option<(Language, StringTable)>>>,
     language_code: Arc<RwLock<Option<Language>>>,
 }
 

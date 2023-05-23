@@ -9,16 +9,7 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 }
 
 #[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Default,
-    Hash,
-    Reflect,
-    FromReflect,
-    Serialize,
-    Deserialize,
+    Debug, Clone, PartialEq, Eq, Default, Hash, Reflect, FromReflect, Serialize, Deserialize,
 )]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {

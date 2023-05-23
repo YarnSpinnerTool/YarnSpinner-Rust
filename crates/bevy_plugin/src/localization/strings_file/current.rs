@@ -41,7 +41,7 @@ impl From<&std::collections::HashMap<LineId, StringInfo>>
 {
     fn from(map: &std::collections::HashMap<LineId, StringInfo>) -> Self {
         Self(
-            map.into_iter()
+            map.iter()
                 .map(|(k, v)| (k.clone(), v.text.clone()))
                 .collect(),
         )
@@ -150,7 +150,7 @@ fn update_translation_string_provider_from_loaded_handle(
         return Ok(());
     };
 
-    text_provider.extend_translation(language.clone(), strings_file.to_text_table());
+    text_provider.extend_translation(language, strings_file.to_text_table());
 
     *dirty = false;
     Ok(())

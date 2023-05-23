@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 
-use std::fmt::Display;
 use crate::prelude::*;
+use std::fmt::Display;
 
 /// An option to be presented to the user.
 #[derive(Debug, Clone, PartialEq)]

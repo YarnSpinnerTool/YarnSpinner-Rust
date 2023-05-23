@@ -42,7 +42,7 @@ impl DialogueRunner {
 
     #[must_use]
     pub fn library(&self) -> &YarnFnLibrary {
-        &self.dialogue.library()
+        self.dialogue.library()
     }
 
     #[must_use]

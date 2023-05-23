@@ -111,13 +111,11 @@ impl Dialogue {
         self
     }
 
-    #[must_use]
     pub fn with_node_at(mut self, node_name: &str) -> Result<Self> {
         self.set_node(node_name)?;
         Ok(self)
     }
 
-    #[must_use]
     pub fn with_node_at_start(mut self) -> Result<Self> {
         self.set_node_to_start()?;
         Ok(self)
