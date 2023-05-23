@@ -180,7 +180,9 @@ impl<'a> DialogueRunnerBuilder<'a> {
         if let Some(language) = dialogue.text_provider().get_language_code() {
             dialogue.set_language_code(language).unwrap();
         }
-        let _result = dialogue.set_node_to_start();
+        if dialogue.set_node_to_start().is_err() {
+            info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
+        }
 
         DialogueRunner {
             dialogue,

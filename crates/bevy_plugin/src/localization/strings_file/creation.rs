@@ -74,9 +74,6 @@ fn create_strings_files(
     project: Res<YarnProject>,
     mut last_localizations: Local<Option<Localizations>>,
 ) -> SystemResult {
-    if events.is_empty() {
-        return Ok(());
-    }
     let current_localizations = project.localizations.as_ref();
     if events.is_empty() && last_localizations.as_ref() == current_localizations {
         return Ok(());

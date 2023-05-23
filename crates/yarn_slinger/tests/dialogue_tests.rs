@@ -257,7 +257,7 @@ fn test_selecting_option_from_inside_option_callback() {
                 .expect_line("final line"),
         )
         .with_compilation(result);
-    test_base.dialogue.set_node_to_start();
+    test_base.dialogue.set_node_to_start().unwrap();
 
     while let Some(events) = test_base.dialogue.next() {
         for event in events {
