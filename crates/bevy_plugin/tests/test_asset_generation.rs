@@ -233,25 +233,12 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         yarn_file.set_content(lines.join("\n"))?;
     }
 
-    loop {
-        let events = app
-            .world
-            .get_resource::<Events<AssetEvent<YarnFile>>>()
-            .unwrap();
-        if !events.is_empty() {
-            break;
-        }
-        app.update();
-    }
-
-    loop {
-        let events = app
-            .world
-            .get_resource::<Events<AssetEvent<YarnFile>>>()
-            .unwrap();
-        if events.is_empty() {
-            break;
-        }
+    while !app
+        .world
+        .get_resource::<Events<AssetEvent<YarnFile>>>()
+        .unwrap()
+        .is_empty()
+    {
         app.update();
     }
 
