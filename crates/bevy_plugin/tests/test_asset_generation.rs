@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_yarn_slinger::events::UpdateAllStringsFilesForStringTableEvent;
 use bevy_yarn_slinger::prelude::*;
 use std::fs;
 use std::path::PathBuf;
@@ -113,10 +112,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update();
-    app.update();
-    app.update();
-    app.update();
+    app.update(); // Generate the strings file
 
     let string_table = YarnCompiler::new()
         .read_file(&yarn_path)
@@ -167,9 +163,7 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update();
-    app.update();
-    app.update();
+    app.update(); // Generate the strings file
 
     {
         let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
@@ -178,8 +172,6 @@ fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
     }
 
     app.update(); // write updated strings file
-    app.update();
-    app.update();
 
     assert!(!dir.path().join("en-US.strings.csv").exists());
     let strings_file_path = dir.path().join("fr-FR.strings.csv");
@@ -244,7 +236,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     loop {
         let events = app
             .world
-            .get_resource::<Events<UpdateAllStringsFilesForStringTableEvent>>()
+            .get_resource::<Events<AssetEvent<YarnFile>>>()
             .unwrap();
         if !events.is_empty() {
             break;
@@ -255,7 +247,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     loop {
         let events = app
             .world
-            .get_resource::<Events<UpdateAllStringsFilesForStringTableEvent>>()
+            .get_resource::<Events<AssetEvent<YarnFile>>>()
             .unwrap();
         if events.is_empty() {
             break;
