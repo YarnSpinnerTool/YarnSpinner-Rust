@@ -15,7 +15,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
                 .run_if(
                     in_development
                         .and_then(resource_exists::<YarnProject>())
-                        .and_then(on_event::<UpdateAllStringsFilesForStringTableEvent>()),
+                        .and_then(events_in_queue::<UpdateAllStringsFilesForStringTableEvent>()),
                 ),)
                 .chain(),
         );
@@ -23,7 +23,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
 #[reflect(Debug, Default, PartialEq)]
-pub(crate) struct UpdateAllStringsFilesForStringTableEvent(
+pub struct UpdateAllStringsFilesForStringTableEvent(
     pub(crate) std::collections::HashMap<LineId, StringInfo>,
 );
 
@@ -52,16 +52,18 @@ fn update_all_strings_files_for_string_table(
         };
         languages_to_handles.insert(language.clone(), handle);
     }
-    if languages_to_handles.is_empty()
-        || languages_to_handles
-            .values()
-            .any(|h| !strings_files.contains(h))
+    if languages_to_handles.is_empty() {
+        events.clear();
+        return Ok(());
+    }
+    if languages_to_handles
+        .values()
+        .any(|h| !strings_files.contains(h))
     {
         return Ok(());
     }
 
     let mut dirty_paths = HashSet::new();
-
     for string_table in events.iter().map(|e| &e.0) {
         let file_names: HashSet<_> = string_table
             .values()

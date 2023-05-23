@@ -1,8 +1,9 @@
-pub use self::creation::CreateMissingStringsFilesEvent;
 pub(crate) use self::{
     asset::StringsFile,
     current::{CurrentStringsFile, UpdateBaseLanguageTextProviderForStringTableEvent},
-    updating::UpdateAllStringsFilesForStringTableEvent,
+};
+pub use self::{
+    creation::CreateMissingStringsFilesEvent, updating::UpdateAllStringsFilesForStringTableEvent,
 };
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;

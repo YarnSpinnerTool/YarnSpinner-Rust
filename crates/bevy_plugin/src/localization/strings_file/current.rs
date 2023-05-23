@@ -14,12 +14,13 @@ pub(crate) fn current_strings_file_plugin(app: &mut App) {
                     .pipe(panic_on_err)
                     .run_if(resource_exists_and_changed::<YarnProject>()),
                 update_base_language_string_provider.run_if(
-                    resource_exists::<YarnProject>()
-                        .and_then(on_event::<UpdateBaseLanguageTextProviderForStringTableEvent>()),
+                    resource_exists::<YarnProject>().and_then(events_in_queue::<
+                        UpdateBaseLanguageTextProviderForStringTableEvent,
+                    >()),
                 ),
                 update_translation_string_provider_from_disk.run_if(
                     resource_exists::<YarnProject>()
-                        .and_then(on_event::<AssetEvent<StringsFile>>()),
+                        .and_then(events_in_queue::<AssetEvent<StringsFile>>()),
                 ),
                 update_translation_string_provider_from_loaded_handle
                     .pipe(panic_on_err)

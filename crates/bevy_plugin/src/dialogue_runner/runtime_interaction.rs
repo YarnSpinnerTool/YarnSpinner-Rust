@@ -13,12 +13,12 @@ fn continue_runtime(mut dialogue_runners: Query<(Entity, &mut DialogueRunner)>) 
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
             for event in events {
                 match event {
-                    DialogueEvent::Line(line) => {}
-                    DialogueEvent::Options(options) => {}
-                    DialogueEvent::Command(command) => {}
-                    DialogueEvent::NodeComplete(node_name) => {}
-                    DialogueEvent::NodeStart(node_name) => {}
-                    DialogueEvent::LineHints(line_ids) => {}
+                    DialogueEvent::Line(_line) => {}
+                    DialogueEvent::Options(_options) => {}
+                    DialogueEvent::Command(_command) => {}
+                    DialogueEvent::NodeComplete(_node_name) => {}
+                    DialogueEvent::NodeStart(_node_name) => {}
+                    DialogueEvent::LineHints(_line_ids) => {}
                     DialogueEvent::DialogueComplete => {}
                 }
                 todo!()

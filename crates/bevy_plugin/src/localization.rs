@@ -1,6 +1,8 @@
 pub use self::config::*;
-pub use self::strings_file::CreateMissingStringsFilesEvent;
 pub(crate) use self::strings_file::*;
+pub use self::strings_file::{
+    CreateMissingStringsFilesEvent, UpdateAllStringsFilesForStringTableEvent,
+};
 use crate::prelude::*;
 use bevy::prelude::*;
 

@@ -16,7 +16,7 @@ pub(crate) fn strings_file_creation_plugin(app: &mut App) {
                             .and_then(resource_exists::<YarnProject>())
                             .and_then(
                                 resource_changed::<YarnProject>()
-                                    .or_else(on_event::<CreateMissingStringsFilesEvent>()),
+                                    .or_else(events_in_queue::<CreateMissingStringsFilesEvent>()),
                             ),
                     ),
                 ensure_right_language
@@ -74,6 +74,9 @@ fn create_strings_files(
     project: Res<YarnProject>,
     mut last_localizations: Local<Option<Localizations>>,
 ) -> SystemResult {
+    if events.is_empty() {
+        return Ok(());
+    }
     let current_localizations = project.localizations.as_ref();
     if events.is_empty() && last_localizations.as_ref() == current_localizations {
         return Ok(());

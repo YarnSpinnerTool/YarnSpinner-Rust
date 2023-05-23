@@ -118,11 +118,9 @@ fn add_yarn_files_to_load_queue(
 pub struct RecompileLoadedYarnFilesEvent;
 
 fn recompile_loaded_yarn_files(
-    mut events: EventReader<RecompileLoadedYarnFilesEvent>,
     yarn_files: Res<Assets<YarnFile>>,
     yarn_project: Option<ResMut<YarnProject>>,
 ) -> SystemResult {
-    events.clear();
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
     };

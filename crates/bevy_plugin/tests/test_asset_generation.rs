@@ -1,9 +1,8 @@
 use bevy::prelude::*;
+use bevy_yarn_slinger::events::UpdateAllStringsFilesForStringTableEvent;
 use bevy_yarn_slinger::prelude::*;
 use std::fs;
 use std::path::PathBuf;
-use std::thread::sleep;
-use std::time::Duration;
 use tempfile::tempdir;
 use yarn_slinger::prelude::{CompilationType, YarnCompiler};
 
@@ -15,9 +14,9 @@ fn loads_yarn_assets() {
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(None),
     );
 
-    app.update();
-    sleep(Duration::from_millis(100));
-    app.update();
+    while app.world.get_resource::<YarnProject>().is_none() {
+        app.update();
+    }
 
     let project = app.world.get_resource::<YarnProject>().unwrap();
     let yarn_files = &project.yarn_files;
@@ -54,10 +53,9 @@ fn generates_line_ids() -> anyhow::Result<()> {
         }),
     );
 
-    app.update(); // read yarn
-    sleep(Duration::from_millis(100));
-    app.update(); // write line IDs
-    app.update();
+    while app.world.get_resource::<YarnProject>().is_none() {
+        app.update();
+    }
 
     let project = app.world.get_resource::<YarnProject>().unwrap();
     let yarn_files = &project.yarn_files;
@@ -243,14 +241,27 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         yarn_file.set_content(lines.join("\n"))?;
     }
 
-    app.update();
-    app.update();
-    app.update();
-    sleep(Duration::from_millis(50));
-    app.update();
-    app.update();
-    app.update();
-    sleep(Duration::from_millis(50));
+    loop {
+        let events = app
+            .world
+            .get_resource::<Events<UpdateAllStringsFilesForStringTableEvent>>()
+            .unwrap();
+        if !events.is_empty() {
+            break;
+        }
+        app.update();
+    }
+
+    loop {
+        let events = app
+            .world
+            .get_resource::<Events<UpdateAllStringsFilesForStringTableEvent>>()
+            .unwrap();
+        if events.is_empty() {
+            break;
+        }
+        app.update();
+    }
 
     let strings_file_source = fs::read_to_string(dir.path().join("de-CH.strings.csv"))?;
     let strings_file_lines: Vec<_> = strings_file_source
