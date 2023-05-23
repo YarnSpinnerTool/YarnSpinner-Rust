@@ -102,14 +102,14 @@ fn loads_line_from_base_language_with_explicit_language() {
 
 #[test]
 #[should_panic]
-fn panics_when_loading_missing_language_in_production() {
+fn panics_when_loading_missing_language() {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
-                translations: vec!["fr-FR".into()],
+                translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
         ),

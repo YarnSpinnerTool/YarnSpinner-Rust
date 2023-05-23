@@ -267,6 +267,25 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[test]
+fn does_not_panic_on_missing_language_when_not_selected() {
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["fr-FR".into()],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
+
+    while !app.world.contains_resource::<YarnProject>() {
+        app.update();
+    }
+}
+
 pub fn project_root_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
