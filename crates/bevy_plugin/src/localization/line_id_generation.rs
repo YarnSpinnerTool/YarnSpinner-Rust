@@ -14,7 +14,7 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
         handle_yarn_file_events
             .pipe(panic_on_err)
             .in_set(LineIdUpdateSystemSet)
-            .run_if(in_development.and_then(on_event::<AssetEvent<YarnFile>>())),
+            .run_if(in_development),
         handle_yarn_file_events_outside_development
             .in_set(LineIdUpdateSystemSet)
             .run_if(not(in_development)),
