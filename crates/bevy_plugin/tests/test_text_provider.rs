@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
+use std::thread::sleep;
+use std::time::Duration;
 
 #[test]
 fn loads_line_without_localization() {
@@ -13,7 +15,6 @@ fn loads_line_without_localization() {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update(); // Fill text providers
 
     let project = app.world.get_resource::<YarnProject>().unwrap();
     let text_provider = &project.text_provider;
@@ -59,7 +60,7 @@ fn loads_line_from_base_language_without_explicit_language() {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update(); // Fill text providers
+    app.update_until_translation_was_loaded();
 
     let project = app.world.get_resource::<YarnProject>().unwrap();
     let text_provider = &project.text_provider;
@@ -86,7 +87,6 @@ fn loads_line_from_base_language_with_explicit_language() {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update(); // Fill text providers
 
     {
         let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
@@ -119,7 +119,6 @@ fn loads_line_from_fallback_on_missing_language() {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update(); // Fill text providers
 
     {
         let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
@@ -152,7 +151,6 @@ fn loads_line_from_fallback_on_missing_line() {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update(); // Fill text providers
 
     {
         let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
@@ -185,7 +183,6 @@ fn loads_line_from_translated_language() {
     while app.world.get_resource::<YarnProject>().is_none() {
         app.update();
     }
-    app.update(); // Fill text providers
 
     {
         let mut project = app.world.get_resource_mut::<YarnProject>().unwrap();
@@ -212,6 +209,10 @@ impl AppExt for App {
             self.update();
         }
 
+        self.update();
+        self.update();
+        self.update();
+        sleep(Duration::from_millis(100));
         self.update();
         self.update();
         self.update();

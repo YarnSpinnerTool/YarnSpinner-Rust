@@ -21,10 +21,15 @@ pub(crate) fn project_plugin(app: &mut App) {
                 recompile_loaded_yarn_files
                     .pipe(error)
                     .run_if(on_event::<RecompileLoadedYarnFilesEvent>()),
+                clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )
-                .chain(),
+                .chain()
+                .in_set(CompilationSystemSet),
         );
 }
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
+pub(crate) struct CompilationSystemSet;
 
 #[derive(Debug, Resource)]
 pub struct YarnProject {
@@ -142,7 +147,7 @@ fn compile_loaded_yarn_files(
     mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
     mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
     mut dirty: Local<bool>,
-    mut yarn_project_config_to_load: ResMut<YarnProjectConfigToLoad>,
+    yarn_project_config_to_load: Option<Res<YarnProjectConfigToLoad>>,
 ) -> SystemResult {
     if yarn_files_being_loaded.is_changed() {
         *dirty = true;
@@ -159,7 +164,16 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
-    let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, yarn_project_config_to_load.localizations())? else {
+    let localizations = yarn_project
+        .as_ref()
+        .map(|p| p.localizations.as_ref())
+        .unwrap_or_else(|| {
+            yarn_project_config_to_load
+                .as_ref()
+                .map(|c| c.localizations.as_ref().unwrap().as_ref())
+                .unwrap()
+        });
+    let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, localizations)? else {
         return Ok(());
     };
     let file_count = yarn_files_being_loaded.0.len();
@@ -169,6 +183,7 @@ fn compile_loaded_yarn_files(
         yarn_project.compilation = compilation;
         yarn_files_being_loaded.0.clear();
     } else {
+        let yarn_project_config_to_load = yarn_project_config_to_load.as_ref().unwrap();
         if yarn_project_config_to_load
             .localizations()
             .map(|l| l.file_generation_mode == FileGenerationMode::Development)
@@ -181,14 +196,17 @@ fn compile_loaded_yarn_files(
         commands.insert_resource(YarnProject {
             yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
             compilation,
-            variable_storage: yarn_project_config_to_load.variable_storage.take().unwrap(),
-            text_provider: yarn_project_config_to_load.text_provider.take().unwrap(),
+            variable_storage: yarn_project_config_to_load
+                .variable_storage
+                .clone()
+                .unwrap(),
+            text_provider: yarn_project_config_to_load.text_provider.clone().unwrap(),
             line_asset_provider: yarn_project_config_to_load
                 .line_asset_provider
-                .take()
+                .clone()
                 .unwrap(),
-            library: yarn_project_config_to_load.library.take().unwrap(),
-            localizations: yarn_project_config_to_load.localizations.take().unwrap(),
+            library: yarn_project_config_to_load.library.clone().unwrap(),
+            localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         });
     }
 
@@ -197,6 +215,11 @@ fn compile_loaded_yarn_files(
 
     *dirty = false;
     Ok(())
+}
+
+fn clear_temp_yarn_project(mut commands: Commands) {
+    // Done here instead of `compile_loaded_yarn_files` so that systems can access the global resources during the same frame
+    commands.remove_resource::<YarnProjectConfigToLoad>();
 }
 
 fn compile_yarn_files(

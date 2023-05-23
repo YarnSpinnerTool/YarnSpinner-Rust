@@ -10,15 +10,16 @@ use std::path::PathBuf;
 pub(crate) struct LineIdUpdateSystemSet;
 
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
-    app.add_systems((
-        handle_yarn_file_events
-            .pipe(panic_on_err)
-            .in_set(LineIdUpdateSystemSet)
-            .run_if(in_development),
-        handle_yarn_file_events_outside_development
-            .in_set(LineIdUpdateSystemSet)
-            .run_if(not(in_development)),
-    ));
+    app.add_systems(
+        (
+            handle_yarn_file_events
+                .pipe(panic_on_err)
+                .run_if(in_development),
+            handle_yarn_file_events_outside_development.run_if(not(in_development)),
+        )
+            .chain()
+            .in_set(LineIdUpdateSystemSet),
+    );
 }
 
 fn handle_yarn_file_events_outside_development(

@@ -1,6 +1,8 @@
 use crate::default_impl::StringTableTextProvider;
+use crate::localization::line_id_generation::LineIdUpdateSystemSet;
 use crate::localization::strings_file::StringsFile;
 use crate::prelude::*;
+use crate::project::{CompilationSystemSet, YarnProjectConfigToLoad};
 use anyhow::bail;
 use bevy::prelude::*;
 
@@ -13,11 +15,9 @@ pub(crate) fn current_strings_file_plugin(app: &mut App) {
                 update_current_strings_file
                     .pipe(panic_on_err)
                     .run_if(resource_exists_and_changed::<YarnProject>()),
-                update_base_language_string_provider.run_if(
-                    resource_exists::<YarnProject>().and_then(events_in_queue::<
-                        UpdateBaseLanguageTextProviderForStringTableEvent,
-                    >()),
-                ),
+                update_base_language_string_provider.run_if(events_in_world::<
+                    UpdateBaseLanguageTextProviderForStringTableEvent,
+                >()),
                 update_translation_string_provider_from_disk.run_if(
                     resource_exists::<YarnProject>()
                         .and_then(events_in_queue::<AssetEvent<StringsFile>>()),
@@ -26,7 +26,9 @@ pub(crate) fn current_strings_file_plugin(app: &mut App) {
                     .pipe(panic_on_err)
                     .run_if(resource_exists::<YarnProject>()),
             )
-                .chain(),
+                .chain()
+                .after(LineIdUpdateSystemSet)
+                .after(CompilationSystemSet),
         );
 }
 
@@ -83,16 +85,27 @@ fn update_current_strings_file(
 }
 
 fn update_base_language_string_provider(
-    mut events: EventReader<UpdateBaseLanguageTextProviderForStringTableEvent>,
-    mut project: ResMut<YarnProject>,
+    mut events: ResMut<Events<UpdateBaseLanguageTextProviderForStringTableEvent>>,
+    mut project: Option<ResMut<YarnProject>>,
+    mut project_to_load: Option<ResMut<YarnProjectConfigToLoad>>,
 ) {
-    let Some(text_provider) = project.text_provider.downcast_to_string_table_text_provider() else {
+    let text_provider = project
+        .as_mut()
+        .map(|p| &mut p.text_provider)
+        .unwrap_or_else(|| {
+            project_to_load
+                .as_mut()
+                .map(|p| p.text_provider.as_mut())
+                .unwrap()
+                .unwrap()
+        });
+    let Some(text_provider) = text_provider.downcast_to_string_table_text_provider() else {
         events.clear();
         return;
     };
-    for event in events.iter() {
-        let string_table = &event.0;
-        text_provider.extend_base_language(string_table.clone());
+    for event in events.drain() {
+        let string_table = event.0;
+        text_provider.extend_base_language(string_table);
     }
 }
 
