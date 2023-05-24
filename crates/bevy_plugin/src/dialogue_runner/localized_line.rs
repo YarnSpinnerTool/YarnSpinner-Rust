@@ -1,3 +1,4 @@
+use crate::line_asset_provider::LineAssets;
 use crate::prelude::*;
 use bevy::prelude::*;
 use yarn_slinger::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
@@ -12,7 +13,7 @@ pub struct LocalizedLine {
     pub text: String,
     /// The list of [`MarkupAttribute`] in this parse result.
     pub attributes: Vec<MarkupAttribute>,
-    pub asset: Option<HandleUntyped>,
+    pub assets: LineAssets,
 }
 impl LocalizedLine {
     // Documentation taken from `YarnLine`
@@ -38,7 +39,7 @@ impl LocalizedLine {
     /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
     /// #        source_position: 0,
     /// #    }],
-    /// #    asset: None,
+    /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Alice: Hello! How are you today?", line.text);
     /// assert_eq!(Some("Alice"), line.character_name());
@@ -52,7 +53,7 @@ impl LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
     /// #    attributes: vec![],
-    /// #    asset: None,
+    /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Great, thanks", line.text);
     /// assert!(line.character_name().is_none());
@@ -89,7 +90,7 @@ impl LocalizedLine {
     /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
     /// #        source_position: 0,
     /// #    }],
-    /// #    asset: None,
+    /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Alice: Hello! How are you today?", line.text);
     /// assert_eq!("Hello! How are you today?", &line.text_without_character_name());
@@ -103,7 +104,7 @@ impl LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
     /// #    attributes: vec![],
-    /// #    asset: None,
+    /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Great, thanks", line.text);
     /// assert_eq!("Great, thanks", &line.text_without_character_name());
@@ -152,7 +153,7 @@ impl LocalizedLine {
     pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Self {
         let yarn_line: YarnLine = self.clone().into();
         let deleted_range = yarn_line.delete_range(attribute_to_delete);
-        Self::from_yarn_line(deleted_range, self.asset.clone())
+        Self::from_yarn_line(deleted_range, self.assets.clone())
     }
 }
 
@@ -167,12 +168,12 @@ impl From<LocalizedLine> for YarnLine {
 }
 
 impl LocalizedLine {
-    pub(crate) fn from_yarn_line(line: YarnLine, asset: impl Into<Option<HandleUntyped>>) -> Self {
+    pub(crate) fn from_yarn_line(line: YarnLine, assets: LineAssets) -> Self {
         Self {
             id: line.id,
             text: line.text,
             attributes: line.attributes,
-            asset: asset.into(),
+            assets,
         }
     }
 }

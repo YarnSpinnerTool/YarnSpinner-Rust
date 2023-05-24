@@ -3,7 +3,9 @@ pub use self::events::{
     PresentLineEvent, PresentOptionsEvent,
 };
 pub use self::{dialogue_option::DialogueOption, localized_line::LocalizedLine};
+use crate::line_asset_provider::LineAssets;
 use crate::prelude::*;
+use crate::UnderlyingYarnLine;
 use bevy::prelude::*;
 use std::fmt::Debug;
 use std::ops::DerefMut;
@@ -134,6 +136,13 @@ impl DialogueRunner {
     #[must_use]
     pub fn treats_selected_options_as_lines_mut(&mut self) -> &mut bool {
         &mut self.run_selected_options_as_lines
+    }
+
+    pub(crate) fn get_assets(&self, line_id: &UnderlyingYarnLine) -> LineAssets {
+        self.line_asset_provider
+            .as_ref()
+            .map(|p| p.get_assets(line_id))
+            .unwrap_or_default()
     }
 }
 

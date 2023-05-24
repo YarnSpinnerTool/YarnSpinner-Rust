@@ -10,14 +10,14 @@ mod yarn_file_asset;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
-    pub use crate::line_asset_provider::AudioAssetProvider;
+    pub use crate::line_asset_provider::FileExtensionLineAssetProvider;
     pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
 }
 
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        default_impl::AudioAssetProvider,
+        default_impl::FileExtensionLineAssetProvider,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
             ExecuteCommandEvent, LineHintsEvent, LocalizedLine, NodeCompleteEvent, NodeStartEvent,

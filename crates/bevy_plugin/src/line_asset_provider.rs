@@ -1,7 +1,8 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
-use bevy::asset::LoadState;
+use bevy::asset::{Asset, HandleId, LoadState};
 use bevy::prelude::*;
+use bevy::reflect::TypeUuid;
 use bevy::utils::HashSet;
 use std::any::Any;
 use std::fmt::Debug;
@@ -20,7 +21,7 @@ pub trait LineAssetProvider: Debug + Send + Sync {
     fn get_language(&self) -> Option<Language>;
     fn lines_available(&self) -> bool;
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
-    fn get_asset(&self, line: &UnderlyingYarnLine) -> Option<HandleUntyped>;
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
 }
 
 impl Clone for Box<dyn LineAssetProvider> {
@@ -30,31 +31,83 @@ impl Clone for Box<dyn LineAssetProvider> {
 }
 
 #[derive(Clone, Default)]
-pub struct AudioAssetProvider {
+pub struct FileExtensionLineAssetProvider {
     language: Arc<RwLock<Option<Language>>>,
     localizations: Arc<RwLock<Option<Localizations>>>,
     asset_server: Arc<RwLock<Option<AssetServer>>>,
     handles: Arc<RwLock<HashSet<HandleUntyped>>>,
     line_ids: Arc<RwLock<HashSet<LineId>>>,
+    file_extensions: Arc<RwLock<Vec<String>>>,
 }
 
-impl AudioAssetProvider {
-    pub fn new() -> Self {
-        Self::default()
+impl FileExtensionLineAssetProvider {
+    pub fn with_file_extensions(file_extensions: Vec<impl AsRef<str>>) -> Self {
+        let file_extensions = file_extensions
+            .into_iter()
+            .map(|s| s.as_ref().trim_start_matches(".").to_owned())
+            .collect();
+        Self {
+            file_extensions: Arc::new(RwLock::new(file_extensions)),
+            ..default()
+        }
     }
 }
 
-impl Debug for AudioAssetProvider {
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct LineAssets(HashSet<HandleUntyped>);
+impl LineAssets {
+    pub fn new() -> Self {
+        Self(HashSet::new())
+    }
+
+    pub fn get_handle<T>(&self) -> Option<Handle<T>>
+    where
+        T: Asset,
+    {
+        self.0.iter().find_map(|handle| {
+            if let HandleId::Id(type_uuid, _) = handle.id() {
+                (T::TYPE_UUID == type_uuid).then(|| handle.clone().typed())
+            } else {
+                None
+            }
+        })
+    }
+}
+
+impl From<HashSet<HandleUntyped>> for LineAssets {
+    fn from(h: HashSet<HandleUntyped>) -> Self {
+        Self(h)
+    }
+}
+
+impl IntoIterator for LineAssets {
+    type Item = <HashSet<HandleUntyped> as IntoIterator>::Item;
+    type IntoIter = <HashSet<HandleUntyped> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl Extend<HandleUntyped> for LineAssets {
+    fn extend<T: IntoIterator<Item = HandleUntyped>>(&mut self, iter: T) {
+        self.0.extend(iter)
+    }
+}
+
+impl Debug for FileExtensionLineAssetProvider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AudioAssetProvider")
             .field("language", &self.language)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
+            .field("handles", &self.handles)
+            .field("line_ids", &self.line_ids)
             .finish()
     }
 }
 
-impl LineAssetProvider for AudioAssetProvider {
+impl LineAssetProvider for FileExtensionLineAssetProvider {
     fn clone_shallow(&self) -> Box<dyn LineAssetProvider> {
         Box::new(self.clone())
     }
@@ -111,40 +164,42 @@ impl LineAssetProvider for AudioAssetProvider {
         self.reload_assets();
     }
 
-    fn get_asset(&self, line: &UnderlyingYarnLine) -> Option<HandleUntyped> {
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
         let localizations = self.localizations.read().unwrap();
         let language = self.language.read().unwrap();
         if let Some(language) = language.as_ref() {
             if let Some(localizations) = localizations.as_ref() {
                 if let Some(localization) = localizations.translation(language) {
                     let dir = localization.assets_sub_folder.as_path();
-                    let file_name = format!("{}.ogg", line.id.0.trim_start_matches("line:"));
-                    let path = dir.join(file_name);
+                    let file_name_without_extension = line.id.0.trim_start_matches("line:");
                     let asset_server = self.asset_server.read().unwrap();
                     let Some(asset_server) = asset_server.as_ref() else {
-                        return None;
-                    };
+                            return default();
+                        };
+                    return self
+                        .file_extensions
+                        .read()
+                        .unwrap()
+                        .iter()
+                        .filter_map(|ext| {
+                            let file_name = format!("{}.{}", file_name_without_extension, ext);
+                            let path = dir.join(file_name);
 
-                    if asset_server.asset_io().is_file(&path) {
-                        let handle = asset_server.load_untyped(path);
-                        return Some(handle);
-                    } else {
-                        warn!(
-                            "Audio file \"{path}\" for line \"{line_id}\" does not exist",
-                            path = path.display(),
-                            line_id = line.id.0
-                        );
-                    }
+                            (asset_server.asset_io().is_file(&path))
+                                .then(|| asset_server.load_untyped(path))
+                        })
+                        .collect::<HashSet<_>>()
+                        .into();
                 } else {
                     error!("Tried to get audio asset for \"{language}\", which is a language that is not supported by localizations");
                 }
             }
         }
-        None
+        default()
     }
 }
 
-impl AudioAssetProvider {
+impl FileExtensionLineAssetProvider {
     fn reload_assets(&mut self) {
         let localizations = self.localizations.read().unwrap();
         let language = self.language.read().unwrap();

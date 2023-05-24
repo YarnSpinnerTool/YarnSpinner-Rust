@@ -42,19 +42,12 @@ fn continue_runtime(
             asset_provider.set_asset_server(asset_server.clone());
         }
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
-            let mut get_asset = |line: &UnderlyingYarnLine| {
-                dialogue_runner
-                    .line_asset_provider
-                    .as_mut()
-                    .and_then(|provider| provider.get_asset(line))
-            };
-
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {
-                        let asset = get_asset(&line);
+                        let assets = dialogue_runner.get_assets(&line);
                         present_line_events.send(PresentLineEvent {
-                            line: LocalizedLine::from_yarn_line(line, asset),
+                            line: LocalizedLine::from_yarn_line(line, assets),
                             source,
                         });
                     }
@@ -62,8 +55,8 @@ fn continue_runtime(
                         let options: Vec<DialogueOption> = options
                             .into_iter()
                             .map(|option| {
-                                let asset = get_asset(&option.line);
-                                DialogueOption::from_yarn_dialogue_option(option, asset)
+                                let assets = dialogue_runner.get_assets(&option.line);
+                                DialogueOption::from_yarn_dialogue_option(option, assets)
                             })
                             .collect();
                         last_options.insert(source, options.clone());
