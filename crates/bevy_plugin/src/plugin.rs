@@ -51,6 +51,7 @@ impl YarnSlingerPlugin {
     pub fn with_asset_provider(mut self, asset_provider: impl AssetProvider + 'static) -> Self {
         let asset_provider = Box::new(asset_provider);
         self.asset_provider = Some(asset_provider);
+        self.update_language_code();
         self
     }
 
@@ -60,6 +61,7 @@ impl YarnSlingerPlugin {
         asset_provider: impl Into<Option<Box<dyn AssetProvider>>>,
     ) -> Self {
         self.asset_provider = asset_provider.into();
+        self.update_language_code();
         self
     }
 
@@ -84,7 +86,10 @@ impl YarnSlingerPlugin {
             .localizations
             .as_ref()
             .map(|l| l.base_language.language.clone());
-        self.advanced.text_provider.set_language(language);
+        self.advanced.text_provider.set_language(language.clone());
+        if let Some(asset_provider) = self.asset_provider.as_mut() {
+            asset_provider.set_language(language);
+        }
     }
 }
 

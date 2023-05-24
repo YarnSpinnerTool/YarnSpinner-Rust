@@ -1,4 +1,4 @@
-use crate::asset_provider::Assets;
+use crate::asset_provider::LineAssets;
 use crate::prelude::*;
 use bevy::prelude::*;
 use yarn_slinger::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
@@ -13,7 +13,7 @@ pub struct LocalizedLine {
     pub text: String,
     /// The list of [`MarkupAttribute`] in this parse result.
     pub attributes: Vec<MarkupAttribute>,
-    pub assets: Assets,
+    pub assets: LineAssets,
 }
 impl LocalizedLine {
     // Documentation taken from `YarnLine`
@@ -168,7 +168,7 @@ impl From<LocalizedLine> for YarnLine {
 }
 
 impl LocalizedLine {
-    pub(crate) fn from_yarn_line(line: YarnLine, assets: Assets) -> Self {
+    pub(crate) fn from_yarn_line(line: YarnLine, assets: LineAssets) -> Self {
         Self {
             id: line.id,
             text: line.text,

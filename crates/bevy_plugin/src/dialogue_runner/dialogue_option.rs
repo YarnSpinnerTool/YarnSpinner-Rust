@@ -1,4 +1,4 @@
-use crate::asset_provider::Assets;
+use crate::asset_provider::LineAssets;
 use crate::prelude::*;
 use bevy::prelude::*;
 
@@ -33,7 +33,7 @@ pub struct DialogueOption {
 impl DialogueOption {
     pub(crate) fn from_yarn_dialogue_option(
         yarn_dialogue_option: yarn_slinger::prelude::DialogueOption,
-        assets: Assets,
+        assets: LineAssets,
     ) -> Self {
         Self {
             line: LocalizedLine::from_yarn_line(yarn_dialogue_option.line, assets),

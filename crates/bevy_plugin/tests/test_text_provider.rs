@@ -51,7 +51,6 @@ fn loads_line_from_base_language_without_explicit_language() {
         ),
     );
 
-    app.load_project();
     app.load_lines();
 
     let line = app

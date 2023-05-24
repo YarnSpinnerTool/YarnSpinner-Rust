@@ -10,6 +10,7 @@ pub trait AppExt {
     fn load_project(&mut self) -> &YarnProject;
     fn load_project_mut(&mut self) -> Mut<YarnProject>;
     fn load_lines(&mut self) -> &mut App;
+    fn load_assets(&mut self) -> &mut App;
 }
 
 impl AppExt for App {
@@ -29,11 +30,24 @@ impl AppExt for App {
     }
 
     fn load_lines(&mut self) -> &mut App {
+        self.load_project();
         while self.world.is_resource_changed::<YarnProject>() {
             self.update();
         }
 
         while !self.world.resource::<YarnProject>().lines_available() {
+            self.update();
+        }
+        self
+    }
+
+    fn load_assets(&mut self) -> &mut App {
+        self.load_project();
+        while self.world.is_resource_changed::<YarnProject>() {
+            self.update();
+        }
+
+        while !self.world.resource::<YarnProject>().assets_available() {
             self.update();
         }
         self

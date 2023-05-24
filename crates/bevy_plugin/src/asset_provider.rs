@@ -20,7 +20,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     fn get_language(&self) -> Option<Language>;
     fn assets_available(&self) -> bool;
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
-    fn get_assets(&self, line: &UnderlyingYarnLine) -> Assets;
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
 }
 
 impl Clone for Box<dyn AssetProvider> {
@@ -63,8 +63,8 @@ where
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct Assets(HashSet<HandleUntyped>);
-impl Assets {
+pub struct LineAssets(HashSet<HandleUntyped>);
+impl LineAssets {
     pub fn new() -> Self {
         Self(HashSet::new())
     }
@@ -81,15 +81,19 @@ impl Assets {
             }
         })
     }
+    
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
-impl From<HashSet<HandleUntyped>> for Assets {
+impl From<HashSet<HandleUntyped>> for LineAssets {
     fn from(h: HashSet<HandleUntyped>) -> Self {
         Self(h)
     }
 }
 
-impl IntoIterator for Assets {
+impl IntoIterator for LineAssets {
     type Item = <HashSet<HandleUntyped> as IntoIterator>::Item;
     type IntoIter = <HashSet<HandleUntyped> as IntoIterator>::IntoIter;
 
@@ -98,7 +102,7 @@ impl IntoIterator for Assets {
     }
 }
 
-impl Extend<HandleUntyped> for Assets {
+impl Extend<HandleUntyped> for LineAssets {
     fn extend<T: IntoIterator<Item = HandleUntyped>>(&mut self, iter: T) {
         self.0.extend(iter)
     }
@@ -173,7 +177,7 @@ impl AssetProvider for FileExtensionAssetProvider {
         self.reload_assets();
     }
 
-    fn get_assets(&self, line: &UnderlyingYarnLine) -> Assets {
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
         let localizations = self.localizations.read().unwrap();
         let language = self.language.read().unwrap();
         if let Some(language) = language.as_ref() {

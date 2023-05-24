@@ -27,4 +27,4 @@ tempfile = "3"
 [dev-dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["bevy_asset", "serialize", "filesystem_watcher"]
+features = ["bevy_asset", "serialize", "filesystem_watcher", "bevy_audio"]

@@ -18,7 +18,7 @@ pub mod default_impl {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        asset_provider::AssetProvider,
+        asset_provider::{AssetProvider, LineAssets},
         default_impl::FileExtensionAssetProvider,
         dialogue_configurator::DialogueDataProvider,
         dialogue_runner::{
