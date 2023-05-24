@@ -1,5 +1,8 @@
 use crate::prelude::*;
+use anyhow::bail;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
+use yarn_slinger::runtime::BorrowedLine;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_system(continue_runtime.pipe(panic_on_err));
@@ -15,19 +18,37 @@ fn continue_runtime(
     mut node_start_events: EventWriter<NodeStartEvent>,
     mut line_hints_events: EventWriter<LineHintsEvent>,
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
+    mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         if !dialogue_runner.continue_ {
             continue;
         }
+        let get_asset = |line: BorrowedLine| {
+            dialogue_runner
+                .line_asset_provider
+                .as_mut()
+                .and_then(|provider| provider.get_asset(line, &asset_server))
+        };
+        if dialogue_runner.run_selected_options_as_lines {
+            if let Some(option) = dialogue_runner.last_selected_option.take() {
+                if let Some(options) = last_options.get_mut(&source) {
+                    let Some(index) = options.iter().position(|o| o.id == option) else{
+                        bail!("Dialogue options does not contain selected option. Expected one of {:?}, but found {option}", last_options.keys());
+                    };
+                    let option = options.swap_remove(index);
+                    present_line_events.send(PresentLineEvent {
+                        line: option.line,
+                        source,
+                    });
+                }
+            }
+        }
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {
-                        let asset = dialogue_runner
-                            .line_asset_provider
-                            .as_mut()
-                            .and_then(|provider| provider.get_asset(&line, &asset_server));
+                        let asset = get_asset(line.borrow());
                         present_line_events.send(PresentLineEvent {
                             line: LocalizedLine::from_yarn_line(line, asset),
                             source,
@@ -37,9 +58,7 @@ fn continue_runtime(
                         let options = options
                             .into_iter()
                             .map(|option| {
-                                let asset = dialogue_runner.line_asset_provider.as_mut().and_then(
-                                    |provider| provider.get_asset(&option.line, &asset_server),
-                                );
+                                let asset = get_asset(option.line.borrow());
                                 DialogueOption::from_yarn_dialogue_option(option, asset)
                             })
                             .collect();

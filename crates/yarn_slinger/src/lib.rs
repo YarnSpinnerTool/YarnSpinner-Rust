@@ -9,10 +9,11 @@ pub mod prelude {
         Library as YarnFnLibrary, LineId, Program as YarnProgram, YarnFn, YarnValue,
     };
     pub use crate::runtime::{
-        Command as YarnCommand, CompiledProgramAnalyser as YarnAnalyser,
-        Context as YarnAnalysisContext, Dialogue, DialogueError, DialogueEvent, DialogueOption,
-        Language, Line as YarnLine, MarkupAttribute, MarkupValue, OptionId,
-        Result as YarnRuntimeResult, TextProvider, UnsupportedLanguageError, VariableStorage,
+        BorrowedLine as BorrowedYarnLine, Command as YarnCommand,
+        CompiledProgramAnalyser as YarnAnalyser, Context as YarnAnalysisContext, Dialogue,
+        DialogueError, DialogueEvent, DialogueOption, Language, Line as YarnLine, MarkupAttribute,
+        MarkupValue, OptionId, Result as YarnRuntimeResult, TextProvider, UnsupportedLanguageError,
+        VariableStorage,
     };
 }
 

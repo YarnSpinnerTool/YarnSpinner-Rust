@@ -21,7 +21,7 @@ pub trait TextProvider: Debug + Send + Sync {
     fn get_text(&self, id: &LineId) -> Option<String>;
     fn set_language(&mut self, language: Option<Language>);
     fn get_language(&self) -> Option<Language>;
-    fn has_loaded_translation_for_current_language(&self) -> bool;
+    fn lines_available(&self) -> bool;
 }
 
 impl Clone for Box<dyn TextProvider> {
@@ -110,7 +110,7 @@ impl TextProvider for StringTableTextProvider {
         self.language.read().unwrap().clone()
     }
 
-    fn has_loaded_translation_for_current_language(&self) -> bool {
+    fn lines_available(&self) -> bool {
         let language = self.language.read().unwrap();
         let Some(language) = language.as_ref() else {
             return !self.base_language_table.read().unwrap().is_empty();

@@ -2,7 +2,7 @@ pub use self::events::{
     DialogueCompleteEvent, ExecuteCommandEvent, LineHintsEvent, NodeCompleteEvent, NodeStartEvent,
     PresentLineEvent, PresentOptionsEvent,
 };
-pub use self::{localized_line::LocalizedLine, dialogue_option::DialogueOption};
+pub use self::{dialogue_option::DialogueOption, localized_line::LocalizedLine};
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::fmt::Debug;
@@ -26,6 +26,7 @@ pub struct DialogueRunner {
     pub(crate) line_asset_provider: Option<Box<dyn LineAssetProvider>>,
     pub(crate) continue_: bool,
     pub(crate) run_selected_options_as_lines: bool,
+    pub(crate) last_selected_option: Option<OptionId>,
 }
 
 impl DialogueRunner {
@@ -35,6 +36,7 @@ impl DialogueRunner {
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
+        self.last_selected_option.replace(option.clone());
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;

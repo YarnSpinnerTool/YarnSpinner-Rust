@@ -205,7 +205,7 @@ impl AppExt for App {
             .world
             .resource::<YarnProject>()
             .text_provider
-            .has_loaded_translation_for_current_language()
+            .lines_available()
         {
             self.update();
         }

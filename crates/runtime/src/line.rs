@@ -39,6 +39,18 @@ pub struct Line {
     pub attributes: Vec<MarkupAttribute>,
 }
 
+/// A borrowed version of [`Line`]. This is a convenience type since all methods on [`Line`] take `&self` and
+/// can thus work entirely with borrowed data.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BorrowedLine<'a> {
+    /// See [`Line::id`]
+    pub id: &'a LineId,
+    /// See [`Line::text`]
+    pub text: &'a str,
+    /// See [`Line::attributes`]
+    pub attributes: &'a [MarkupAttribute],
+}
+
 impl Line {
     /// Gets the first attribute with the specified name, if present.
     ///
@@ -46,7 +58,7 @@ impl Line {
     ///
     /// Originally named `TryGetAttributeWithName`
     pub fn attribute(&self, name: &str) -> Option<&MarkupAttribute> {
-        self.attributes.iter().find(|attr| attr.name == name)
+        self.borrow().attribute(name)
     }
 
     /// The name of the character, if present.
@@ -86,18 +98,7 @@ impl Line {
     /// assert_eq!("Great, thanks", line.text);
     /// assert!(line.character_name().is_none());
     pub fn character_name(&self) -> Option<&str> {
-        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
-            if let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY) {
-                let MarkupValue::String(name) = name else {
-                    panic!(
-                        "Attribute \"character\" has a \"name\" property, but it is not a string. \
-                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"
-                    );
-                };
-                return Some(name.as_str());
-            }
-        }
-        None
+        self.borrow().character_name()
     }
 
     /// The underlying text for this line, with any `character` attribute removed.
@@ -138,22 +139,12 @@ impl Line {
     /// assert_eq!("Great, thanks", line.text);
     /// assert_eq!("Great, thanks", &line.text_without_character_name());
     pub fn text_without_character_name(&self) -> String {
-        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
-            self.delete_range(attribute).text
-        } else {
-            self.text.to_owned()
-        }
+        self.borrow().text_without_character_name()
     }
 
     /// Returns the substring of [`Line::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
-        assert!(
-            self.text.len() <= attribute.position + attribute.length,
-            "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
-        Does this MarkupAttribute belong to this MarkupParseResult?",
-            self.text
-        );
-        &self.text[attribute.position..attribute.position + attribute.length]
+        self.borrow().text_for_attribute(attribute)
     }
 
     /// Deletes an attribute from this markup.
@@ -178,6 +169,70 @@ impl Line {
     /// ## Panics
     /// Panics if `attribute_to_delete` is not an attribute of this [`Line::attribute`].
     pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Self {
+        self.borrow().delete_range(attribute_to_delete)
+    }
+
+    /// Borrows all fields to create a [`BorrowedLine`], which can access all methods of [`Line`]
+    /// without taking ownership of the underlying data.
+    pub fn borrow(&self) -> BorrowedLine {
+        BorrowedLine {
+            id: &self.id,
+            text: &self.text,
+            attributes: &self.attributes,
+        }
+    }
+}
+
+impl<'a> From<&'a Line> for BorrowedLine<'a> {
+    fn from(line: &'a Line) -> Self {
+        line.borrow()
+    }
+}
+
+impl<'a> BorrowedLine<'a> {
+    /// See [`Line::attribute`].
+    pub fn attribute(&self, name: &str) -> Option<&MarkupAttribute> {
+        self.attributes.iter().find(|attr| attr.name == name)
+    }
+
+    /// See [`Line::character_name`].
+    pub fn character_name(&self) -> Option<&str> {
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
+            if let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY) {
+                let MarkupValue::String(name) = name else {
+                    panic!(
+                        "Attribute \"character\" has a \"name\" property, but it is not a string. \
+                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"
+                    );
+                };
+                return Some(name.as_str());
+            }
+        }
+        None
+    }
+
+    /// See [`Line::text_without_character_name`].
+    pub fn text_without_character_name(&self) -> String {
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
+            self.delete_range(attribute).text
+        } else {
+            self.text.to_owned()
+        }
+    }
+
+    /// See [`Line::text_for_attribute`].
+    pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
+        assert!(
+            self.text.len() <= attribute.position + attribute.length,
+            "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
+        Does this MarkupAttribute belong to this MarkupParseResult?",
+            self.text
+        );
+        &self.text[attribute.position..attribute.position + attribute.length]
+    }
+
+    /// See [`Line::delete_range`].
+    pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Line {
         if !self
             .attributes
             .iter()
@@ -196,16 +251,16 @@ impl Line {
                 .filter(|attr| *attr != attribute_to_delete)
                 .cloned()
                 .collect();
-            return Self {
+            return Line {
                 id: self.id.clone(),
-                text: self.text.clone(),
+                text: self.text.to_string(),
                 attributes,
             };
         }
         let deletion_start = attribute_to_delete.position;
         let deletion_end = attribute_to_delete.position + attribute_to_delete.length;
         let edited_substring = {
-            let mut text = self.text.clone();
+            let mut text = self.text.to_string();
             text.replace_range(deletion_start..deletion_end, "");
             text
         };
@@ -271,7 +326,7 @@ impl Line {
                 Some(attribute)
             })
             .collect();
-        Self {
+        Line {
             id: self.id.clone(),
             text: edited_substring,
             attributes,
