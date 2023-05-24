@@ -16,7 +16,11 @@ pub mod default_impl {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        dialogue_runner::{DialogueRunner, DialogueRunnerBuilder},
+        dialogue_runner::{
+            DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
+            ExecuteCommandEvent, LineHintsEvent, LocalizedLine, NodeCompleteEvent, NodeStartEvent,
+            PresentLineEvent, PresentOptionsEvent,
+        },
         line_asset_provider::{AudioAssetProvider, LineAssetProvider},
         localization::{FileGenerationMode, Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin},
@@ -30,7 +34,8 @@ pub mod prelude {
     pub(crate) use anyhow::{Context, Error, Result};
     pub(crate) use yarn_slinger::prelude::*;
     pub use yarn_slinger::prelude::{
-        Language, LineId, TextProvider, VariableStorage, YarnFn, YarnFnLibrary,
+        Language, LineId, MarkupAttribute, MarkupValue, OptionId, TextProvider, VariableStorage,
+        YarnCommand, YarnFn, YarnFnLibrary,
     };
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;

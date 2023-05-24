@@ -14,8 +14,6 @@ use std::fmt::Display;
 )]
 pub struct DialogueOption {
     /// The [`Line`] that should be presented to the user for this option.
-    ///
-    /// See the documentation for the [`Line`] struct for information on how to prepare a line before presenting it to the user.
     pub line: Line,
 
     /// The identifying number for this option.

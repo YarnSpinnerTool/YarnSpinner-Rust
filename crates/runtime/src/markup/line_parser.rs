@@ -727,14 +727,14 @@ pub(crate) fn normalize(string: &str) -> String {
 pub(crate) const REPLACEMENT_MARKER_CONTENTS: &str = "contents";
 
 /// The name of the implicitly-generated `character` attribute.
-pub(crate) const CHARACTER_ATTRIBUTE: &str = "character";
+pub const CHARACTER_ATTRIBUTE: &str = "character";
 
 /// The name of the 'name' property, on the implicitly-generated `character` attribute.
-pub(crate) const CHARACTER_ATTRIBUTE_NAME_PROPERTY: &str = "name";
+pub const CHARACTER_ATTRIBUTE_NAME_PROPERTY: &str = "name";
 
 /// The name of the property to use to signify that trailing whitespace should be trimmed
 /// if a tag had preceding whitespace or begins the line. This property must be a bool value.
-pub(crate) const TRIM_WHITESPACE_PROPERTY: &str = "trimwhitespace";
+pub const TRIM_WHITESPACE_PROPERTY: &str = "trimwhitespace";
 
 /// A regular expression that matches a colon followed by optional whitespace.
 static END_OF_CHARACTER_MARKER: Lazy<Regex> = Lazy::new(|| Regex::new(r":\s*").unwrap());

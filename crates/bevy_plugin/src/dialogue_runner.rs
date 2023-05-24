@@ -1,18 +1,29 @@
+pub use self::events::{
+    DialogueCompleteEvent, ExecuteCommandEvent, LineHintsEvent, NodeCompleteEvent, NodeStartEvent,
+    PresentLineEvent, PresentOptionsEvent,
+};
+pub use self::{localized_line::LocalizedLine, dialogue_option::DialogueOption};
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::fmt::Debug;
 use std::ops::DerefMut;
 
+mod dialogue_option;
+mod events;
+mod localized_line;
 mod runtime_interaction;
 
 pub(crate) fn dialogue_plugin(app: &mut App) {
-    app.fn_plugin(runtime_interaction::runtime_interaction_plugin);
+    app.fn_plugin(runtime_interaction::runtime_interaction_plugin)
+        .fn_plugin(localized_line::localized_line_plugin)
+        .fn_plugin(events::dialogue_runner_events_plugin)
+        .fn_plugin(dialogue_option::dialogue_option_plugin);
 }
 
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
-    pub(crate) line_asset_provider_override: Option<Box<dyn LineAssetProvider>>,
+    pub(crate) line_asset_provider: Option<Box<dyn LineAssetProvider>>,
     pub(crate) continue_: bool,
     pub(crate) run_selected_options_as_lines: bool,
 }
@@ -62,14 +73,14 @@ impl DialogueRunner {
 
     #[must_use]
     pub fn line_asset_provider(&self) -> Option<&dyn LineAssetProvider> {
-        self.line_asset_provider_override.as_deref()
+        self.line_asset_provider.as_deref()
     }
 
     #[must_use]
     pub fn line_asset_provider_mut(
         &mut self,
     ) -> Option<&mut impl DerefMut<Target = dyn LineAssetProvider>> {
-        self.line_asset_provider_override.as_mut()
+        self.line_asset_provider.as_mut()
     }
 
     #[must_use]
@@ -186,7 +197,7 @@ impl<'a> DialogueRunnerBuilder<'a> {
 
         DialogueRunner {
             dialogue,
-            line_asset_provider_override: line_asset_provider,
+            line_asset_provider,
             continue_: false,
             run_selected_options_as_lines: false,
         }
