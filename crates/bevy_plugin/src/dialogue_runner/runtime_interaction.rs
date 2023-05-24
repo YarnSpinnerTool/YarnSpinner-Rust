@@ -26,7 +26,7 @@ fn continue_runtime(
         }
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
-                if let Some(options) = last_options.get_mut(&source) {
+                if let Some(mut options) = last_options.remove(&source) {
                     let Some(index) = options.iter().position(|o| o.id == option) else{
                         bail!("Dialogue options does not contain selected option. Expected one of {:?}, but found {option}", last_options.keys());
                     };
@@ -56,13 +56,14 @@ fn continue_runtime(
                         });
                     }
                     DialogueEvent::Options(options) => {
-                        let options = options
+                        let options: Vec<DialogueOption> = options
                             .into_iter()
                             .map(|option| {
                                 let asset = get_asset(&option.line);
                                 DialogueOption::from_yarn_dialogue_option(option, asset)
                             })
                             .collect();
+                        last_options.insert(source, options.clone());
                         present_options_events.send(PresentOptionsEvent { options, source });
                     }
                     DialogueEvent::Command(command) => {
