@@ -143,7 +143,7 @@ impl YarnApp for App {
             .register_type::<yarn_slinger::core::Type>()
             .register_type::<yarn_slinger::runtime::Command>()
             .register_type::<Dialogue>()
-            .register_type::<DialogueOption>()
+            .register_type::<yarn_slinger::prelude::DialogueOption>()
             .register_type::<OptionId>()
             .register_type::<Language>()
             .register_type::<DialogueEvent>()

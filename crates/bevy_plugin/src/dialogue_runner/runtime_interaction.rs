@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
-    app.add_system(continue_runtime.pipe(panic_on_err))
+    app.add_system(continue_runtime.pipe(panic_on_err));
 }
 
 fn continue_runtime(
