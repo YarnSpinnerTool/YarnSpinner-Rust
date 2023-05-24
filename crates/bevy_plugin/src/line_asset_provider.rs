@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::yarn_slinger::BorrowedLine;
+use crate::UnderlyingYarnLine;
 use bevy::prelude::*;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -10,10 +10,10 @@ pub trait LineAssetProvider: Debug + Send + Sync {
     fn clone_shallow(&self) -> Box<dyn LineAssetProvider>;
     fn set_language(&mut self, language: Option<Language>);
     fn get_language(&self) -> Option<Language>;
-    fn get_asset<'a, 'b, 'c>(
-        &'a self,
-        line: BorrowedLine<'b>,
-        asset_server: &'c AssetServer,
+    fn get_asset(
+        &self,
+        line: &UnderlyingYarnLine,
+        asset_server: &AssetServer,
     ) -> Option<HandleUntyped>;
 }
 
@@ -38,10 +38,10 @@ impl LineAssetProvider for AudioAssetProvider {
     fn get_language(&self) -> Option<Language> {
         self.audio_language.read().unwrap().clone()
     }
-    fn get_asset<'a, 'b, 'c>(
-        &'a self,
-        _line: BorrowedLine<'b>,
-        _asset_server: &'c AssetServer,
+    fn get_asset(
+        &self,
+        _line: &UnderlyingYarnLine,
+        _asset_server: &AssetServer,
     ) -> Option<HandleUntyped> {
         todo!();
     }

@@ -202,6 +202,7 @@ impl<'a> DialogueRunnerBuilder<'a> {
             line_asset_provider,
             continue_: false,
             run_selected_options_as_lines: false,
+            last_selected_option: None,
         }
     }
 }

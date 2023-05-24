@@ -42,8 +42,4 @@ pub mod prelude {
     pub(crate) use serde::{Deserialize, Serialize};
 }
 
-pub mod yarn_slinger {
-    pub use yarn_slinger::prelude::BorrowedYarnLine;
-}
-
-pub use yarn_slinger::prelude::YarnAnalysisContext;
+pub use yarn_slinger::prelude::{YarnAnalysisContext, YarnLine as UnderlyingYarnLine};

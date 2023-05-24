@@ -1,8 +1,8 @@
 use crate::prelude::*;
+use crate::UnderlyingYarnLine;
 use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use yarn_slinger::runtime::BorrowedLine;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_system(continue_runtime.pipe(panic_on_err));
@@ -24,12 +24,6 @@ fn continue_runtime(
         if !dialogue_runner.continue_ {
             continue;
         }
-        let get_asset = |line: BorrowedLine| {
-            dialogue_runner
-                .line_asset_provider
-                .as_mut()
-                .and_then(|provider| provider.get_asset(line, &asset_server))
-        };
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
                 if let Some(options) = last_options.get_mut(&source) {
@@ -45,10 +39,17 @@ fn continue_runtime(
             }
         }
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
+            let mut get_asset = |line: &UnderlyingYarnLine| {
+                dialogue_runner
+                    .line_asset_provider
+                    .as_mut()
+                    .and_then(|provider| provider.get_asset(line, &asset_server))
+            };
+
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {
-                        let asset = get_asset(line.borrow());
+                        let asset = get_asset(&line);
                         present_line_events.send(PresentLineEvent {
                             line: LocalizedLine::from_yarn_line(line, asset),
                             source,
@@ -58,7 +59,7 @@ fn continue_runtime(
                         let options = options
                             .into_iter()
                             .map(|option| {
-                                let asset = get_asset(option.line.borrow());
+                                let asset = get_asset(&option.line);
                                 DialogueOption::from_yarn_dialogue_option(option, asset)
                             })
                             .collect();

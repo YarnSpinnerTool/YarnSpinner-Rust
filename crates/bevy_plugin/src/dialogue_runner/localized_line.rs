@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use yarn_slinger::runtime::{BorrowedLine, CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
+use yarn_slinger::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
 
 pub(crate) fn localized_line_plugin(_app: &mut App) {}
 
@@ -18,7 +18,7 @@ impl LocalizedLine {
     // Documentation taken from `YarnLine`
     /// Gets the first attribute with the specified name, if present.
     pub fn attribute(&self, name: &str) -> Option<&MarkupAttribute> {
-        self.borrow().attribute(name)
+        self.attributes.iter().find(|attr| attr.name == name)
     }
 
     // Documentation taken from `YarnLine`
@@ -57,7 +57,18 @@ impl LocalizedLine {
     /// assert_eq!("Great, thanks", line.text);
     /// assert!(line.character_name().is_none());
     pub fn character_name(&self) -> Option<&str> {
-        self.borrow().character_name()
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
+            if let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY) {
+                let MarkupValue::String(name) = name else {
+                    panic!(
+                        "Attribute \"character\" has a \"name\" property, but it is not a string. \
+                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"
+                    );
+                };
+                return Some(name.as_str());
+            }
+        }
+        None
     }
 
     // Documentation taken from `YarnLine`
@@ -97,13 +108,23 @@ impl LocalizedLine {
     /// assert_eq!("Great, thanks", line.text);
     /// assert_eq!("Great, thanks", &line.text_without_character_name());
     pub fn text_without_character_name(&self) -> String {
-        self.borrow().text_without_character_name()
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
+            self.delete_range(attribute).text
+        } else {
+            self.text.to_owned()
+        }
     }
 
     // Documentation taken from `YarnLine`
     /// Returns the substring of [`Line::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
-        self.borrow().text_for_attribute(attribute)
+        assert!(
+            self.text.len() <= attribute.position + attribute.length,
+            "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
+        Does this MarkupAttribute belong to this MarkupParseResult?",
+            self.text
+        );
+        &self.text[attribute.position..attribute.position + attribute.length]
     }
 
     // Documentation taken from `YarnLine`
@@ -129,16 +150,9 @@ impl LocalizedLine {
     /// ## Panics
     /// Panics if `attribute_to_delete` is not an attribute of this [`Line::attribute`].
     pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Self {
-        let line = self.borrow().delete_range(attribute_to_delete);
-        Self::from_yarn_line(line, self.asset.clone())
-    }
-
-    pub(crate) fn borrow(&self) -> BorrowedYarnLine {
-        BorrowedYarnLine {
-            id: &self.id,
-            text: &self.text,
-            attributes: &self.attributes,
-        }
+        let yarn_line: YarnLine = self.clone().into();
+        let deleted_range = yarn_line.delete_range(attribute_to_delete);
+        Self::from_yarn_line(deleted_range, self.asset.clone())
     }
 }
 
@@ -149,12 +163,6 @@ impl From<LocalizedLine> for YarnLine {
             text: line.text,
             attributes: line.attributes,
         }
-    }
-}
-
-impl<'a> From<&'a LocalizedLine> for BorrowedLine<'a> {
-    fn from(line: &'a LocalizedLine) -> Self {
-        line.borrow()
     }
 }
 
