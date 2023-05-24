@@ -2,7 +2,6 @@ use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::{Asset, HandleId, LoadState};
 use bevy::prelude::*;
-use bevy::reflect::TypeUuid;
 use bevy::utils::HashSet;
 use std::any::Any;
 use std::fmt::Debug;

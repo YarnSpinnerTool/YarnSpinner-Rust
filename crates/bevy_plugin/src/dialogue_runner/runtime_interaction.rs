@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::UnderlyingYarnLine;
 use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
