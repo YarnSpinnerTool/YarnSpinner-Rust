@@ -1,7 +1,8 @@
 #![allow(clippy::too_many_arguments)]
 
+mod asset_provider;
+mod dialogue_configurator;
 mod dialogue_runner;
-mod line_asset_provider;
 mod localization;
 mod plugin;
 mod project;
@@ -10,20 +11,21 @@ mod yarn_file_asset;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
-    pub use crate::line_asset_provider::FileExtensionLineAssetProvider;
+    pub use crate::asset_provider::FileExtensionAssetProvider;
     pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
 }
 
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        default_impl::FileExtensionLineAssetProvider,
+        asset_provider::AssetProvider,
+        default_impl::FileExtensionAssetProvider,
+        dialogue_configurator::DialogueConfigurator,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
             ExecuteCommandEvent, LineHintsEvent, LocalizedLine, NodeCompleteEvent, NodeStartEvent,
             PresentLineEvent, PresentOptionsEvent,
         },
-        line_asset_provider::LineAssetProvider,
         localization::{FileGenerationMode, Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin},
         project::YarnProject,
@@ -45,5 +47,5 @@ pub mod prelude {
 }
 
 pub use yarn_slinger::prelude::{
-    StringInfo, TextProvider, YarnAnalysisContext, YarnLine as UnderlyingYarnLine,
+    Compilation, StringInfo, TextProvider, YarnAnalysisContext, YarnLine as UnderlyingYarnLine,
 };

@@ -7,10 +7,10 @@ use std::any::Any;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
-pub(crate) fn line_asset_provider_plugin(_app: &mut App) {}
+pub(crate) fn asset_provider_plugin(_app: &mut App) {}
 
-pub trait LineAssetProvider: Debug + Send + Sync {
-    fn clone_shallow(&self) -> Box<dyn LineAssetProvider>;
+pub trait AssetProvider: Debug + Send + Sync {
+    fn clone_shallow(&self) -> Box<dyn AssetProvider>;
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
@@ -18,19 +18,19 @@ pub trait LineAssetProvider: Debug + Send + Sync {
     fn set_localizations(&mut self, localizations: Localizations);
     fn set_language(&mut self, language: Option<Language>);
     fn get_language(&self) -> Option<Language>;
-    fn lines_available(&self) -> bool;
+    fn assets_available(&self) -> bool;
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
-    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> Assets;
 }
 
-impl Clone for Box<dyn LineAssetProvider> {
+impl Clone for Box<dyn AssetProvider> {
     fn clone(&self) -> Self {
         self.clone_shallow()
     }
 }
 
 #[derive(Clone, Default)]
-pub struct FileExtensionLineAssetProvider {
+pub struct FileExtensionAssetProvider {
     language: Arc<RwLock<Option<Language>>>,
     localizations: Arc<RwLock<Option<Localizations>>>,
     asset_server: Arc<RwLock<Option<AssetServer>>>,
@@ -39,7 +39,7 @@ pub struct FileExtensionLineAssetProvider {
     file_extensions: Arc<RwLock<Vec<String>>>,
 }
 
-impl FileExtensionLineAssetProvider {
+impl FileExtensionAssetProvider {
     pub fn with_file_extensions(file_extensions: Vec<impl AsRef<str>>) -> Self {
         let file_extensions = file_extensions
             .into_iter()
@@ -53,8 +53,8 @@ impl FileExtensionLineAssetProvider {
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct LineAssets(HashSet<HandleUntyped>);
-impl LineAssets {
+pub struct Assets(HashSet<HandleUntyped>);
+impl Assets {
     pub fn new() -> Self {
         Self(HashSet::new())
     }
@@ -73,13 +73,13 @@ impl LineAssets {
     }
 }
 
-impl From<HashSet<HandleUntyped>> for LineAssets {
+impl From<HashSet<HandleUntyped>> for Assets {
     fn from(h: HashSet<HandleUntyped>) -> Self {
         Self(h)
     }
 }
 
-impl IntoIterator for LineAssets {
+impl IntoIterator for Assets {
     type Item = <HashSet<HandleUntyped> as IntoIterator>::Item;
     type IntoIter = <HashSet<HandleUntyped> as IntoIterator>::IntoIter;
 
@@ -88,13 +88,13 @@ impl IntoIterator for LineAssets {
     }
 }
 
-impl Extend<HandleUntyped> for LineAssets {
+impl Extend<HandleUntyped> for Assets {
     fn extend<T: IntoIterator<Item = HandleUntyped>>(&mut self, iter: T) {
         self.0.extend(iter)
     }
 }
 
-impl Debug for FileExtensionLineAssetProvider {
+impl Debug for FileExtensionAssetProvider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AudioAssetProvider")
             .field("language", &self.language)
@@ -106,8 +106,8 @@ impl Debug for FileExtensionLineAssetProvider {
     }
 }
 
-impl LineAssetProvider for FileExtensionLineAssetProvider {
-    fn clone_shallow(&self) -> Box<dyn LineAssetProvider> {
+impl AssetProvider for FileExtensionAssetProvider {
+    fn clone_shallow(&self) -> Box<dyn AssetProvider> {
         Box::new(self.clone())
     }
 
@@ -135,7 +135,7 @@ impl LineAssetProvider for FileExtensionLineAssetProvider {
         self.language.read().unwrap().clone()
     }
 
-    fn lines_available(&self) -> bool {
+    fn assets_available(&self) -> bool {
         if self.language.read().unwrap().is_none()
             || self.localizations.read().unwrap().is_none()
             || self.line_ids.read().unwrap().is_empty()
@@ -163,7 +163,7 @@ impl LineAssetProvider for FileExtensionLineAssetProvider {
         self.reload_assets();
     }
 
-    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> Assets {
         let localizations = self.localizations.read().unwrap();
         let language = self.language.read().unwrap();
         if let Some(language) = language.as_ref() {
@@ -198,7 +198,7 @@ impl LineAssetProvider for FileExtensionLineAssetProvider {
     }
 }
 
-impl FileExtensionLineAssetProvider {
+impl FileExtensionAssetProvider {
     fn reload_assets(&mut self) {
         let localizations = self.localizations.read().unwrap();
         let language = self.language.read().unwrap();

@@ -37,7 +37,7 @@ fn continue_runtime(
                 }
             }
         }
-        if let Some(asset_provider) = dialogue_runner.line_asset_provider.as_mut() {
+        if let Some(asset_provider) = dialogue_runner.asset_provider.as_mut() {
             asset_provider.set_asset_server(asset_server.clone());
         }
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
@@ -71,7 +71,7 @@ fn continue_runtime(
                         node_start_events.send(NodeStartEvent { node_name, source });
                     }
                     DialogueEvent::LineHints(line_ids) => {
-                        if let Some(asset_provider) = dialogue_runner.line_asset_provider.as_mut() {
+                        if let Some(asset_provider) = dialogue_runner.asset_provider.as_mut() {
                             asset_provider.accept_line_hints(&line_ids);
                         }
 

@@ -33,12 +33,12 @@ pub(crate) struct CompilationSystemSet;
 
 #[derive(Debug, Resource)]
 pub struct YarnProject {
-    pub yarn_files: HashSet<Handle<YarnFile>>,
+    pub(crate) yarn_files: HashSet<Handle<YarnFile>>,
     pub(crate) compilation: Compilation,
-    pub variable_storage: Box<dyn VariableStorage>,
-    pub text_provider: Box<dyn TextProvider>,
-    pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
-    pub library: YarnFnLibrary,
+    pub(crate) variable_storage: Box<dyn VariableStorage>,
+    pub(crate) text_provider: Box<dyn TextProvider>,
+    pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
+    pub(crate) library: YarnFnLibrary,
     pub localizations: Option<Localizations>,
 }
 
@@ -51,32 +51,49 @@ impl YarnProject {
         DialogueRunnerBuilder::with_yarn_project(self)
     }
 
-    pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        self.text_provider.set_language(language.into());
-        self
+    pub fn compilation(&self) -> &Compilation {
+        &self.compilation
     }
 
-    pub fn set_line_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        if let Some(line_asset_provider) = self.line_asset_provider.as_mut() {
-            line_asset_provider.set_language(language.into());
-        }
-        self
+    pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
+        self.yarn_files.iter()
+    }
+}
+
+impl DialogueConfigurator for YarnProject {
+    fn text_provider(&self) -> &dyn TextProvider {
+        self.text_provider.as_ref()
     }
 
-    pub fn set_global_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        let language = language.into();
-        self.set_text_language(language.clone())
-            .set_line_asset_language(language)
+    fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.text_provider.as_mut()
     }
 
-    pub fn text_language(&self) -> Option<Language> {
-        self.text_provider.get_language()
+    fn asset_provider(&self) -> Option<&dyn AssetProvider> {
+        self.asset_provider.as_deref()
     }
 
-    pub fn line_asset_language(&self) -> Option<Language> {
-        self.line_asset_provider
-            .as_ref()
-            .and_then(|p| p.get_language())
+    fn asset_provider_mut(&mut self) -> Option<&mut dyn AssetProvider> {
+        // Source: <https://stackoverflow.com/a/55866511/5903309>
+        self.asset_provider
+            .as_mut()
+            .map(|x| &mut **x as &mut dyn AssetProvider)
+    }
+
+    fn variable_storage(&self) -> &dyn VariableStorage {
+        self.variable_storage.as_ref()
+    }
+
+    fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.variable_storage.as_mut()
+    }
+
+    fn library(&self) -> &YarnFnLibrary {
+        &self.library
+    }
+
+    fn library_mut(&mut self) -> &mut YarnFnLibrary {
+        &mut self.library
     }
 }
 
@@ -84,7 +101,7 @@ impl YarnProject {
 pub(crate) struct YarnProjectConfigToLoad {
     pub(crate) variable_storage: Option<Box<dyn VariableStorage>>,
     pub(crate) text_provider: Option<Box<dyn TextProvider>>,
-    pub(crate) line_asset_provider: Option<Option<Box<dyn LineAssetProvider>>>,
+    pub(crate) asset_provider: Option<Option<Box<dyn AssetProvider>>>,
     pub(crate) library: Option<YarnFnLibrary>,
     pub(crate) localizations: Option<Option<Localizations>>,
 }
@@ -201,10 +218,7 @@ fn compile_loaded_yarn_files(
                 .clone()
                 .unwrap(),
             text_provider: yarn_project_config_to_load.text_provider.clone().unwrap(),
-            line_asset_provider: yarn_project_config_to_load
-                .line_asset_provider
-                .clone()
-                .unwrap(),
+            asset_provider: yarn_project_config_to_load.asset_provider.clone().unwrap(),
             library: yarn_project_config_to_load.library.clone().unwrap(),
             localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         });

@@ -11,7 +11,7 @@ mod yarn_file_source;
 #[non_exhaustive]
 pub struct YarnSlingerPlugin {
     pub localizations: Option<Localizations>,
-    pub line_asset_provider: Option<Box<dyn LineAssetProvider>>,
+    pub asset_provider: Option<Box<dyn AssetProvider>>,
     pub yarn_files: HashSet<YarnFileSource>,
     pub advanced: AdvancedPluginConfig,
     pub library: YarnFnLibrary,
@@ -26,7 +26,7 @@ impl YarnSlingerPlugin {
         Self {
             localizations: None,
             advanced: Default::default(),
-            line_asset_provider: None,
+            asset_provider: None,
             library: YarnFnLibrary::standard_library(),
             yarn_files,
         }
@@ -47,9 +47,9 @@ impl YarnSlingerPlugin {
 
     pub fn with_asset_provider(
         mut self,
-        asset_provider: impl Into<Option<Box<dyn LineAssetProvider>>>,
+        asset_provider: impl Into<Option<Box<dyn AssetProvider>>>,
     ) -> Self {
-        self.line_asset_provider = asset_provider.into();
+        self.asset_provider = asset_provider.into();
         self
     }
 
@@ -159,7 +159,7 @@ impl YarnApp for App {
         self.insert_resource(YarnProjectConfigToLoad {
             variable_storage: Some(plugin.advanced.variable_storage.clone_shallow()),
             text_provider: Some(plugin.advanced.text_provider.clone_shallow()),
-            line_asset_provider: Some(plugin.line_asset_provider.clone()),
+            asset_provider: Some(plugin.asset_provider.clone()),
             library: Some(plugin.library.clone()),
             localizations: Some(plugin.localizations.clone()),
         })
@@ -170,7 +170,7 @@ impl YarnApp for App {
         self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
-            .fn_plugin(crate::line_asset_provider::line_asset_provider_plugin)
+            .fn_plugin(crate::asset_provider::asset_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
     }
 }
