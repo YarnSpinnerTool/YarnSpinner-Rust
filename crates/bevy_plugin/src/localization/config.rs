@@ -20,10 +20,14 @@ pub struct Localizations {
 
 impl Localizations {
     pub fn supports_translation(&self, language: impl AsRef<str>) -> bool {
+        self.translation(language).is_some()
+    }
+    
+    pub fn translation(&self, language: impl AsRef<str>) -> Option<&Localization> {
         let language = language.as_ref();
         self.translations
             .iter()
-            .any(|localization| localization.language.as_ref() == language)
+            .find(|localization| localization.language.as_ref() == language)
     }
 
     pub(crate) fn strings_file_path(&self, language: impl AsRef<str>) -> Option<&Path> {

@@ -76,7 +76,7 @@ fn update_current_strings_file(
         return Ok(());
     }
     *last_language = Some(language.clone());
-    let Some(localization) = localizations.translations.iter().find(|t| t.language == language) else {
+    let Some(localization) = localizations.translation(&language) else {
         bail!("Language was set to {language}, but no localization for that language was configured");
     };
     let path = localization.strings_file.as_path();

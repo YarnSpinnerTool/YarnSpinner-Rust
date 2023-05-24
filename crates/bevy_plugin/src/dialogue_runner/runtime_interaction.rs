@@ -10,7 +10,6 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
 
 fn continue_runtime(
     mut dialogue_runners: Query<(Entity, &mut DialogueRunner)>,
-    asset_server: Res<AssetServer>,
     mut present_line_events: EventWriter<PresentLineEvent>,
     mut present_options_events: EventWriter<PresentOptionsEvent>,
     mut execute_command_events: EventWriter<ExecuteCommandEvent>,
@@ -43,7 +42,7 @@ fn continue_runtime(
                 dialogue_runner
                     .line_asset_provider
                     .as_mut()
-                    .and_then(|provider| provider.get_asset(line, &asset_server))
+                    .and_then(|provider| provider.get_asset(line))
             };
 
             for event in events {
