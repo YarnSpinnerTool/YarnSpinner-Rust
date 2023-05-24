@@ -18,6 +18,7 @@ pub struct YarnSlingerPlugin {
 }
 
 impl YarnSlingerPlugin {
+    #[must_use]
     pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
         let yarn_files = yarn_files
             .into_iter()
@@ -32,6 +33,7 @@ impl YarnSlingerPlugin {
         }
     }
 
+    #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
         if let Some(localizations) = localizations.as_ref() {
@@ -45,7 +47,15 @@ impl YarnSlingerPlugin {
         self
     }
 
-    pub fn with_asset_provider(
+    #[must_use]
+    pub fn with_asset_provider(mut self, asset_provider: impl AssetProvider + 'static) -> Self {
+        let asset_provider = Box::new(asset_provider);
+        self.asset_provider = Some(asset_provider);
+        self
+    }
+
+    #[must_use]
+    pub fn with_asset_provider_boxed(
         mut self,
         asset_provider: impl Into<Option<Box<dyn AssetProvider>>>,
     ) -> Self {
@@ -53,12 +63,14 @@ impl YarnSlingerPlugin {
         self
     }
 
+    #[must_use]
     pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
         self.library.extend(library);
         self
     }
 
-    pub fn advanced(
+    #[must_use]
+    pub fn with_advanced_config(
         mut self,
         config: impl Fn(AdvancedPluginConfig) -> AdvancedPluginConfig,
     ) -> Self {
@@ -73,6 +85,16 @@ impl YarnSlingerPlugin {
             .as_ref()
             .map(|l| l.base_language.language.clone());
         self.advanced.text_provider.set_language(language);
+    }
+}
+
+impl<T, U> From<T> for YarnSlingerPlugin
+where
+    T: IntoIterator<Item = U>,
+    U: Into<YarnFileSource>,
+{
+    fn from(yarn_files: T) -> Self {
+        Self::with_yarn_files(yarn_files.into_iter().collect())
     }
 }
 
@@ -94,12 +116,28 @@ impl Default for AdvancedPluginConfig {
 }
 
 impl AdvancedPluginConfig {
-    pub fn with_variable_storage(mut self, variable_storage: Box<dyn VariableStorage>) -> Self {
+    pub fn with_variable_storage(
+        mut self,
+        variable_storage: impl VariableStorage + 'static,
+    ) -> Self {
+        self.variable_storage = Box::new(variable_storage);
+        self
+    }
+
+    pub fn with_variable_storage_boxed(
+        mut self,
+        variable_storage: Box<dyn VariableStorage>,
+    ) -> Self {
         self.variable_storage = variable_storage;
         self
     }
 
-    pub fn with_text_provider(mut self, text_provider: Box<dyn TextProvider>) -> Self {
+    pub fn with_text_provider(mut self, text_provider: impl TextProvider + 'static) -> Self {
+        self.text_provider = Box::new(text_provider);
+        self
+    }
+
+    pub fn with_text_provider_boxed(mut self, text_provider: Box<dyn TextProvider>) -> Self {
         self.text_provider = text_provider;
         self
     }

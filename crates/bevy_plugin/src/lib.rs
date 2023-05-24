@@ -20,7 +20,7 @@ pub mod prelude {
     pub use crate::{
         asset_provider::AssetProvider,
         default_impl::FileExtensionAssetProvider,
-        dialogue_configurator::DialogueConfigurator,
+        dialogue_configurator::DialogueDataProvider,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
             ExecuteCommandEvent, LineHintsEvent, LocalizedLine, NodeCompleteEvent, NodeStartEvent,

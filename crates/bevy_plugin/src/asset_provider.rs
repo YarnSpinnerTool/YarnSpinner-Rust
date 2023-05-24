@@ -52,6 +52,16 @@ impl FileExtensionAssetProvider {
     }
 }
 
+impl<T, U> From<T> for FileExtensionAssetProvider
+where
+    T: IntoIterator<Item = U>,
+    U: AsRef<str>,
+{
+    fn from(file_extensions: T) -> Self {
+        Self::with_file_extensions(file_extensions.into_iter().collect())
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Assets(HashSet<HandleUntyped>);
 impl Assets {

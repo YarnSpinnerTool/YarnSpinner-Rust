@@ -60,7 +60,7 @@ impl YarnProject {
     }
 }
 
-impl DialogueConfigurator for YarnProject {
+impl DialogueDataProvider for YarnProject {
     fn text_provider(&self) -> &dyn TextProvider {
         self.text_provider.as_ref()
     }

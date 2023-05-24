@@ -103,7 +103,7 @@ impl DialogueRunner {
     }
 }
 
-impl DialogueConfigurator for DialogueRunner {
+impl DialogueDataProvider for DialogueRunner {
     fn text_provider(&self) -> &dyn TextProvider {
         self.dialogue.text_provider()
     }

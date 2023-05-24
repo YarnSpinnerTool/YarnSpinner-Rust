@@ -18,7 +18,7 @@ fn loads_yarn_assets() {
     }
 
     let project = app.world.resource::<YarnProject>();
-    let yarn_files = &project.yarn_files;
+    let yarn_files: Vec<_> = project.yarn_files().collect();
     assert_eq!(1, yarn_files.len());
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
@@ -57,12 +57,10 @@ fn generates_line_ids() -> anyhow::Result<()> {
     }
 
     let project = app.world.resource::<YarnProject>();
-    let yarn_files = &project.yarn_files;
+    let mut yarn_files = project.yarn_files();
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
-    let yarn_file_in_app = yarn_file_assets
-        .get(yarn_files.iter().next().unwrap())
-        .unwrap();
+    let yarn_file_in_app = yarn_file_assets.get(yarn_files.next().unwrap()).unwrap();
     let yarn_file_on_disk = fs::read_to_string(&yarn_path)?;
 
     assert_eq!(yarn_file_in_app.content(), yarn_file_on_disk);
@@ -221,7 +219,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     {
         let project = app.world.resource::<YarnProject>();
-        let handle = project.yarn_files.iter().next().unwrap().clone();
+        let handle = project.yarn_files().next().unwrap().clone();
 
         let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
         let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub trait DialogueConfigurator {
+pub trait DialogueDataProvider {
     fn set_text_language(&mut self, language: impl Into<Option<Language>>) {
         self.text_provider_mut().set_language(language.into());
     }
