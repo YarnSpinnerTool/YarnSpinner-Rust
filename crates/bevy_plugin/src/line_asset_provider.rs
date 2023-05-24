@@ -14,6 +14,7 @@ pub trait LineAssetProvider: Debug + Send + Sync {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
+    fn set_asset_server(&mut self, asset_server: AssetServer);
     fn set_localizations(&mut self, localizations: Localizations);
     fn set_language(&mut self, language: Option<Language>);
     fn get_language(&self) -> Option<Language>;
@@ -28,13 +29,19 @@ impl Clone for Box<dyn LineAssetProvider> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct AudioAssetProvider {
     language: Arc<RwLock<Option<Language>>>,
     localizations: Arc<RwLock<Option<Localizations>>>,
-    asset_server: Arc<RwLock<AssetServer>>,
+    asset_server: Arc<RwLock<Option<AssetServer>>>,
     handles: Arc<RwLock<HashSet<HandleUntyped>>>,
     line_ids: Arc<RwLock<HashSet<LineId>>>,
+}
+
+impl AudioAssetProvider {
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 impl Debug for AudioAssetProvider {
@@ -60,6 +67,10 @@ impl LineAssetProvider for AudioAssetProvider {
         self
     }
 
+    fn set_asset_server(&mut self, asset_server: AssetServer) {
+        self.asset_server.write().unwrap().replace(asset_server);
+    }
+
     fn set_localizations(&mut self, localizations: Localizations) {
         self.localizations.write().unwrap().replace(localizations);
     }
@@ -81,6 +92,9 @@ impl LineAssetProvider for AudioAssetProvider {
             return false;
         };
         let asset_server = self.asset_server.read().unwrap();
+        let Some(asset_server) = asset_server.as_ref() else {
+            return false;
+        };
         self.handles
             .read()
             .unwrap()
@@ -107,6 +121,9 @@ impl LineAssetProvider for AudioAssetProvider {
                     let file_name = format!("{}.ogg", line.id.0.trim_start_matches("line:"));
                     let path = dir.join(file_name);
                     let asset_server = self.asset_server.read().unwrap();
+                    let Some(asset_server) = asset_server.as_ref() else {
+                        return None;
+                    };
 
                     if asset_server.asset_io().is_file(&path) {
                         let handle = asset_server.load_untyped(path);
@@ -138,6 +155,9 @@ impl AudioAssetProvider {
                     let mut handles = self.handles.write().unwrap();
                     handles.clear();
                     let asset_server = self.asset_server.read().unwrap();
+                    let Some(asset_server) = asset_server.as_ref() else {
+                        return;
+                    };
                     for line_id in self.line_ids.read().unwrap().iter() {
                         let file_name = format!("{}.ogg", line_id.0.trim_start_matches("line:"));
                         let path = dir.join(file_name);
