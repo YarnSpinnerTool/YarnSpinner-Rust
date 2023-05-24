@@ -138,7 +138,7 @@ impl VirtualMachine {
         // the list
         // [sic] TODO: maybe this list could be reused to save on allocations?
 
-        let string_ids = self
+        let string_ids: Vec<_> = self
             .current_node
             .as_ref()
             .unwrap()
@@ -160,6 +160,7 @@ impl VirtualMachine {
                     })
             })
             .collect();
+        self.text_provider.accept_line_hints(&string_ids);
         self.batched_events
             .push(DialogueEvent::LineHints(string_ids));
     }

@@ -18,6 +18,7 @@ pub trait TextProvider: Debug + Send + Sync {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
+    fn accept_line_hints(&self, line_ids: &[LineId]);
     fn get_text(&self, id: &LineId) -> Option<String>;
     fn set_language(&mut self, language: Option<Language>);
     fn get_language(&self) -> Option<Language>;
@@ -82,6 +83,10 @@ impl TextProvider for StringTableTextProvider {
     }
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+
+    fn accept_line_hints(&self, _line_ids: &[LineId]) {
+        // no-op
     }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
