@@ -18,6 +18,7 @@ fn continue_runtime(
     mut line_hints_events: EventWriter<LineHintsEvent>,
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
+    asset_server: Res<AssetServer>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         if !dialogue_runner.continue_ {
@@ -36,6 +37,9 @@ fn continue_runtime(
                     });
                 }
             }
+        }
+        if let Some(asset_provider) = dialogue_runner.line_asset_provider.as_mut() {
+            asset_provider.set_asset_server(asset_server.clone());
         }
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
             let mut get_asset = |line: &UnderlyingYarnLine| {
@@ -75,6 +79,10 @@ fn continue_runtime(
                         node_start_events.send(NodeStartEvent { node_name, source });
                     }
                     DialogueEvent::LineHints(line_ids) => {
+                        if let Some(asset_provider) = dialogue_runner.line_asset_provider.as_mut() {
+                            asset_provider.accept_line_hints(&line_ids);
+                        }
+
                         line_hints_events.send(LineHintsEvent { line_ids, source });
                     }
                     DialogueEvent::DialogueComplete => {
