@@ -1,10 +1,11 @@
+use crate::asset_provider::fetch_resources;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
-    app.add_system(continue_runtime.pipe(panic_on_err));
+    app.add_system(continue_runtime.pipe(panic_on_err).after(fetch_resources));
 }
 
 fn continue_runtime(

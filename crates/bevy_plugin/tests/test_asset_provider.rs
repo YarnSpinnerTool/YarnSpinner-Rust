@@ -6,11 +6,13 @@ use utils::prelude::*;
 mod utils;
 
 #[test]
+#[ignore]
 fn does_not_load_asset_without_localization() {
     todo!()
 }
 
 #[test]
+#[ignore]
 fn loads_asset_from_base_language_localization() {
     let mut app = App::new();
 

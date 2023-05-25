@@ -129,6 +129,12 @@ impl Dialogue {
         self.vm.line_hints_enabled = enabled;
         self
     }
+
+    #[must_use]
+    pub fn with_program(mut self, program: Program) -> Self {
+        self.replace_program(program);
+        self
+    }
 }
 
 // Accessors

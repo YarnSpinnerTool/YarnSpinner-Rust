@@ -188,6 +188,7 @@ pub struct DialogueRunnerBuilder {
     pub(crate) text_provider: SharedTextProvider,
     pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
     pub(crate) library: YarnFnLibrary,
+    pub(crate) compilation: Compilation,
 }
 
 impl DialogueRunnerBuilder {
@@ -200,6 +201,7 @@ impl DialogueRunnerBuilder {
             )),
             asset_provider: None,
             library: YarnFnLibrary::new(),
+            compilation: yarn_project.compilation().clone(),
         }
     }
 
@@ -234,6 +236,7 @@ impl DialogueRunnerBuilder {
         let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
             .with_line_hints_enabled(true)
             .with_extended_library(self.library)
+            .with_program(self.compilation.program.unwrap())
             .with_language_code(language);
         if dialogue.set_node_to_start().is_err() {
             info!("Dialogue has no start node, so it will need an explicitly set node to be run.");

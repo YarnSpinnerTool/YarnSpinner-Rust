@@ -3,11 +3,14 @@ use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::asset::{Asset, HandleId, LoadState};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
-pub(crate) fn asset_provider_plugin(_app: &mut App) {}
+pub(crate) fn asset_provider_plugin(app: &mut App) {
+    app.add_system(fetch_resources);
+}
 
 pub trait AssetProvider: Debug + Send + Sync {
     fn get_language(&self) -> Option<Language>;
@@ -20,7 +23,8 @@ pub trait AssetProvider: Debug + Send + Sync {
 pub trait TextProvider: UnderlyingTextProvider {
     fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
     fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
-    fn fetch_assets(&mut self, world: &World);
+    fn accept_fetched_assets(&mut self, asset: Box<dyn Any>);
+    fn fetch_assets(&self) -> Box<dyn Fn(&World) -> Option<Box<dyn Any + 'static>> + '_>;
 }
 
 #[derive(Clone)]
@@ -97,9 +101,9 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
     }
 
     fn are_lines_available(&self) -> bool {
-        let is_base_language = || !self.language.is_none();
+        let is_base_language = self.language.is_none();
         let has_fetched_translation = || self.translation_string_table.is_some();
-        is_base_language() || has_fetched_translation()
+        is_base_language || has_fetched_translation()
     }
 }
 
@@ -130,45 +134,57 @@ impl TextProvider for StringsFileTextProvider {
         self.base_string_table.extend(string_table);
     }
 
-    fn fetch_assets(&mut self, world: &World) {
-        if let Some(handle) = self.strings_file_handle.as_ref() {
-            if self.asset_server.get_load_state(handle) == LoadState::Loaded {
-                let asset_events = world
-                    .get_resource::<Events<AssetEvent<StringsFile>>>()
-                    .unwrap();
-                let has_changed = || {
-                    asset_events
-                        .get_reader()
-                        .iter(&asset_events)
-                        .filter_map(|event| {
-                            if let AssetEvent::Modified { handle } = event {
-                                Some(handle)
-                            } else {
-                                None
-                            }
-                        })
-                        .any(|h| h == handle)
-                };
-                if self.translation_string_table.is_none() || has_changed() {
-                    let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
-                    let expected_language = self.language.as_ref().unwrap();
-                    if let Some(record) = strings_file.get_offending_language(expected_language) {
-                        let path = self.asset_server.get_handle_path(handle).unwrap();
-                        panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
-                               path = path.path().display(),
-                               id = record.id,
-                                actual_language = record.language,
-                        );
-                    }
-                    let string_table = strings_file
-                        .0
-                        .iter()
-                        .map(|(id, record)| (id.clone(), record.text.clone()))
-                        .collect();
-                    self.translation_string_table.replace(string_table);
-                }
-            }
+    fn accept_fetched_assets(&mut self, asset: Box<dyn Any>) {
+        let string_table: Box<HashMap<LineId, String>> = asset.downcast().unwrap();
+        self.translation_string_table.replace(*string_table);
+    }
+
+    fn fetch_assets(&self) -> Box<dyn Fn(&World) -> Option<Box<dyn Any + 'static>> + '_> {
+        let Some(handle) = self.strings_file_handle.as_ref() else {
+            return Box::new(|_| None);
+        };
+        if self.asset_server.get_load_state(handle) != LoadState::Loaded {
+            return Box::new(|_| None);
         }
+        let has_no_translation_yet = self.translation_string_table.is_none();
+        Box::new(move |world| {
+            let asset_events = world
+                .get_resource::<Events<AssetEvent<StringsFile>>>()
+                .unwrap();
+            let has_changed = || {
+                asset_events
+                    .get_reader()
+                    .iter(&asset_events)
+                    .filter_map(|event| {
+                        if let AssetEvent::Modified { handle } = event {
+                            Some(handle)
+                        } else {
+                            None
+                        }
+                    })
+                    .any(|h| h == handle)
+            };
+            if has_no_translation_yet || has_changed() {
+                let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
+                let expected_language = self.language.as_ref().unwrap();
+                if let Some(record) = strings_file.get_offending_language(expected_language) {
+                    let path = self.asset_server.get_handle_path(handle).unwrap();
+                    panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
+                           path = path.path().display(),
+                           id = record.id,
+                           actual_language = record.language,
+                    );
+                }
+                let string_table: HashMap<LineId, String> = strings_file
+                    .0
+                    .iter()
+                    .map(|(id, record)| (id.clone(), record.text.clone()))
+                    .collect();
+                Some(Box::new(string_table))
+            } else {
+                None
+            }
+        })
     }
 }
 
@@ -379,8 +395,13 @@ impl TextProvider for SharedTextProvider {
             .extend_base_string_table(string_table)
     }
 
-    fn fetch_assets(&mut self, world: &World) {
-        self.0.write().unwrap().fetch_assets(world)
+    fn accept_fetched_assets(&mut self, asset: Box<dyn Any>) {
+        self.0.write().unwrap().accept_fetched_assets(asset)
+    }
+
+    fn fetch_assets(&self) -> Box<dyn Fn(&World) -> Option<Box<dyn Any + 'static>> + '_> {
+        let clone = self.clone();
+        Box::new(move |world| clone.0.read().unwrap().fetch_assets()(world))
     }
 }
 
@@ -403,5 +424,26 @@ impl UnderlyingTextProvider for SharedTextProvider {
 
     fn are_lines_available(&self) -> bool {
         self.0.read().unwrap().are_lines_available()
+    }
+}
+
+pub(crate) fn fetch_resources(world: &mut World) {
+    let dialogue_runner_entities: Vec<_> = world
+        .iter_entities()
+        .map(|entity| entity.id())
+        .filter(|entity| world.get::<DialogueRunner>(*entity).is_some())
+        .collect();
+    for entity in dialogue_runner_entities {
+        let assets = {
+            let dialogue_runner = world.get::<DialogueRunner>(entity).unwrap();
+            let fetch_assets = dialogue_runner.text_provider().fetch_assets();
+            fetch_assets(world)
+        };
+        if let Some(assets) = assets {
+            let mut dialogue_runner = world.get_mut::<DialogueRunner>(entity).unwrap();
+            dialogue_runner
+                .text_provider_mut()
+                .accept_fetched_assets(assets)
+        }
     }
 }
