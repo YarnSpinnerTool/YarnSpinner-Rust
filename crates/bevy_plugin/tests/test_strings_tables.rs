@@ -127,57 +127,6 @@ fn generates_strings_file() -> anyhow::Result<()> {
 }
 
 #[test]
-fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
-    let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/lines.yarn");
-    let yarn_path = dir.path().join("lines.yarn");
-    fs::copy(original_yarn_path, yarn_path)?;
-
-    let mut app = App::new();
-
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }))
-    .add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
-            translations: vec!["de-CH".into()],
-            file_generation_mode: FileGenerationMode::Development,
-        }),
-    );
-
-    app.load_project();
-    app.update(); // Generate the strings file
-
-    {
-        let mut project = app.world.resource_mut::<YarnProject>();
-        let mut localizations = project.localizations.as_mut().unwrap();
-        localizations.translations = vec!["fr-FR".into()];
-    }
-
-    app.update(); // write updated strings file
-
-    assert!(!dir.path().join("en-US.strings.csv").exists());
-    let strings_file_path = dir.path().join("fr-FR.strings.csv");
-    assert!(strings_file_path.exists());
-    let strings_file_source = fs::read_to_string(&strings_file_path)?;
-    let strings_file_line_languages: Vec<_> = strings_file_source
-        .lines()
-        .skip(1)
-        .map(|line| line.split(',').next().unwrap())
-        .collect();
-
-    assert!(!strings_file_line_languages.is_empty());
-
-    assert!(strings_file_line_languages
-        .iter()
-        .all(|&language| language == "fr-FR"));
-
-    Ok(())
-}
-
-#[test]
 fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines_with_ids.yarn");

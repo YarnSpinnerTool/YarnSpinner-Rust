@@ -39,7 +39,7 @@ pub struct YarnProject {
     pub(crate) text_provider: Box<dyn TextProvider>,
     pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
     pub(crate) library: YarnFnLibrary,
-    pub localizations: Option<Localizations>,
+    pub(crate) localizations: Option<Localizations>,
 }
 
 impl YarnProject {
@@ -57,6 +57,10 @@ impl YarnProject {
 
     pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
         self.yarn_files.iter()
+    }
+
+    pub fn localizations(&self) -> Option<&Localizations> {
+        self.localizations.as_ref()
     }
 }
 

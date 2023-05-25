@@ -89,6 +89,9 @@ impl YarnSlingerPlugin {
         self.advanced.text_provider.set_language(language.clone());
         if let Some(asset_provider) = self.asset_provider.as_mut() {
             asset_provider.set_language(language);
+            if let Some(localizations) = self.localizations.as_ref() {
+                asset_provider.set_localizations(localizations.clone());
+            }
         }
     }
 }
