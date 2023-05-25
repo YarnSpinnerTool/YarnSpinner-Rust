@@ -1,8 +1,5 @@
-use crate::{
-    localization::line_id_generation::LineIdUpdateSystemSet,
-    localization::strings_file::creation::CreateMissingStringsFilesSystemSet,
-    localization::CreateMissingStringsFilesEvent, prelude::*,
-};
+use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
+use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
@@ -12,7 +9,6 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
             (update_all_strings_files_for_string_table
                 .pipe(panic_on_err)
                 .after(LineIdUpdateSystemSet)
-                .after(CreateMissingStringsFilesSystemSet)
                 .run_if(
                     in_development
                         .and_then(resource_exists::<YarnProject>())
@@ -30,7 +26,6 @@ pub(crate) struct UpdateAllStringsFilesForStringTableEvent(
 
 fn update_all_strings_files_for_string_table(
     mut events: EventReader<UpdateAllStringsFilesForStringTableEvent>,
-    mut missing_writer: EventWriter<CreateMissingStringsFilesEvent>,
     mut strings_files: ResMut<Assets<StringsFile>>,
     asset_server: Res<AssetServer>,
     project: Res<YarnProject>,
@@ -48,8 +43,7 @@ fn update_all_strings_files_for_string_table(
         let handle = if asset_server.asset_io().is_file(path) {
             asset_server.load(path)
         } else {
-            missing_writer.send(CreateMissingStringsFilesEvent);
-            return Ok(());
+            bail!("Strings file at {path} for language {language} does not exist. Have you deleted or moved it while the program was running?", path = path.display());
         };
         languages_to_handles.insert(language.clone(), handle);
     }

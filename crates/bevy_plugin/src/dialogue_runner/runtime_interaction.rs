@@ -17,7 +17,6 @@ fn continue_runtime(
     mut line_hints_events: EventWriter<LineHintsEvent>,
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
-    asset_server: Res<AssetServer>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         if !dialogue_runner.continue_ {
@@ -36,9 +35,6 @@ fn continue_runtime(
                     });
                 }
             }
-        }
-        if let Some(asset_provider) = dialogue_runner.asset_provider.as_mut() {
-            asset_provider.set_asset_server(asset_server.clone());
         }
         if let Some(events) = dialogue_runner.dialogue.continue_()? {
             for event in events {

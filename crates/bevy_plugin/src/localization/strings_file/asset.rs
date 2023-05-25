@@ -180,6 +180,15 @@ impl StringsFile {
         writer.flush()?;
         Ok(())
     }
+
+    pub(crate) fn get_offending_language(
+        &self,
+        expected_language: &Language,
+    ) -> Option<&StringsFileRecord> {
+        self.0
+            .values()
+            .find(|record| &record.language != expected_language)
+    }
 }
 
 fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecord) -> bool {

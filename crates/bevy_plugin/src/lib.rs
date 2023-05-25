@@ -1,7 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
 mod asset_provider;
-mod dialogue_configurator;
 mod dialogue_runner;
 mod localization;
 mod plugin;
@@ -18,9 +17,8 @@ pub mod default_impl {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
     pub use crate::{
-        asset_provider::{AssetProvider, LineAssets},
+        asset_provider::{AssetProvider, LineAssets, TextProvider},
         default_impl::FileExtensionAssetProvider,
-        dialogue_configurator::DialogueDataProvider,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
             ExecuteCommandEvent, LineHintsEvent, LocalizedLine, NodeCompleteEvent, NodeStartEvent,
@@ -31,10 +29,7 @@ pub mod prelude {
         project::YarnProject,
         yarn_file_asset::YarnFile,
     };
-    pub(crate) use crate::{
-        localization::{CurrentStringsFile, StringsFile},
-        utils::*,
-    };
+    pub(crate) use crate::{localization::StringsFile, utils::*};
     pub(crate) use anyhow::{Context, Error, Result};
     pub(crate) use yarn_slinger::prelude::*;
     pub use yarn_slinger::prelude::{
@@ -47,5 +42,6 @@ pub mod prelude {
 }
 
 pub use yarn_slinger::prelude::{
-    Compilation, StringInfo, TextProvider, YarnAnalysisContext, YarnLine as UnderlyingYarnLine,
+    Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
+    YarnLine as UnderlyingYarnLine,
 };

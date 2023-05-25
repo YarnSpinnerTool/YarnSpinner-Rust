@@ -1,3 +1,4 @@
+use std::iter;
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::path::{Path, PathBuf};
@@ -29,7 +30,15 @@ impl Localizations {
             .iter()
             .find(|localization| localization.language.as_ref() == language)
     }
-
+    
+    pub fn supported_languages(&self) -> impl Iterator<Item = &Language> {
+        iter::once(&self.base_language.language).chain(
+            self.translations
+                .iter()
+                .map(|localization| &localization.language),
+        )
+    }
+    
     pub(crate) fn strings_file_path(&self, language: impl AsRef<str>) -> Option<&Path> {
         let language = language.as_ref();
         self.translations

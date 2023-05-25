@@ -1,64 +1,174 @@
 use crate::prelude::*;
-use crate::UnderlyingYarnLine;
+use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::asset::{Asset, HandleId, LoadState};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
-use std::any::Any;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
 pub(crate) fn asset_provider_plugin(_app: &mut App) {}
 
 pub trait AssetProvider: Debug + Send + Sync {
-    fn clone_shallow(&self) -> Box<dyn AssetProvider>;
-    fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-
-    fn set_asset_server(&mut self, asset_server: AssetServer);
-    fn set_localizations(&mut self, localizations: Localizations);
-    fn set_language(&mut self, language: Option<Language>);
     fn get_language(&self) -> Option<Language>;
-    fn assets_available(&self) -> bool;
+    fn set_language(&mut self, language: Option<Language>);
+    fn are_assets_available(&self) -> bool;
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
     fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
 }
 
-impl Clone for Box<dyn AssetProvider> {
-    fn clone(&self) -> Self {
-        self.clone_shallow()
+pub trait TextProvider: UnderlyingTextProvider {
+    fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
+    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
+    fn fetch_assets(&mut self, world: &World);
+}
+
+#[derive(Clone)]
+pub struct StringsFileTextProvider {
+    asset_server: AssetServer,
+    localizations: Option<Localizations>,
+    language: Option<Language>,
+    base_string_table: HashMap<LineId, StringInfo>,
+    strings_file_handle: Option<Handle<StringsFile>>,
+    translation_string_table: Option<HashMap<LineId, String>>,
+}
+
+impl Debug for StringsFileTextProvider {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StringsTableTextProvider")
+            .field("asset_server", &())
+            .field("localizations", &self.localizations)
+            .finish()
     }
 }
 
-#[derive(Clone, Default)]
-pub struct FileExtensionAssetProvider {
-    language: Arc<RwLock<Option<Language>>>,
-    localizations: Arc<RwLock<Option<Localizations>>>,
-    asset_server: Arc<RwLock<Option<AssetServer>>>,
-    handles: Arc<RwLock<HashSet<HandleUntyped>>>,
-    line_ids: Arc<RwLock<HashSet<LineId>>>,
-    file_extensions: Arc<RwLock<Vec<String>>>,
-}
+impl UnderlyingTextProvider for StringsFileTextProvider {
+    fn accept_line_hints(&mut self, _line_ids: &[LineId]) {
+        // no-op
+    }
 
-impl FileExtensionAssetProvider {
-    pub fn with_file_extensions(file_extensions: Vec<impl AsRef<str>>) -> Self {
-        let file_extensions = file_extensions
-            .into_iter()
-            .map(|s| s.as_ref().trim_start_matches(".").to_owned())
-            .collect();
-        Self {
-            file_extensions: Arc::new(RwLock::new(file_extensions)),
-            ..default()
+    fn get_text(&self, id: &LineId) -> Option<String> {
+        self.translation_string_table
+            .as_ref()
+            .and_then(|table| table.get(id).cloned())
+            .or_else(|| {
+                if let Some(language) = self.language.as_ref() {
+                    if self.translation_string_table.is_some() {
+                        warn!("Did not find translation for line {id} in language {language} because it is untranslated, falling back to base language.");
+                    } else {
+                        warn!("Did not find translation for line {id} in language {language} because the strings file has not been loaded yet, falling back to base language.");
+                    }
+                }
+                self.base_string_table.get(id).map(|info| info.text.clone())
+            })
+    }
+
+    fn set_language(&mut self, language: Option<Language>) {
+        if language == self.language {
+            return;
+        }
+
+        self.set_language_invalidating_translation(language.clone());
+        let Some(language) = language else {
+            return;
+        };
+
+        let Some(localizations) = self.localizations.as_ref() else {
+            panic!("Set language to {language}, but no localizations have been registered as supported.");
+        };
+        if language == localizations.base_language.language {
+            return;
+        }
+        let Some(localization) = localizations.translation(&language) else {
+            let languages = localizations.supported_languages().map(|l| l.0.as_str()).collect::<Vec<_>>().join(", ");
+            panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
+        };
+        let path = localization.strings_file.as_path();
+        if self.asset_server.asset_io().is_file(path) {
+            self.strings_file_handle
+                .replace(self.asset_server.load(path));
+        } else {
+            panic!("Set language to {language}, but the expected strings file at {path} does not exist.", path = path.display());
         }
     }
+
+    fn get_language(&self) -> Option<Language> {
+        self.language.clone()
+    }
+
+    fn are_lines_available(&self) -> bool {
+        let is_base_language = || !self.language.is_none();
+        let has_fetched_translation = || self.translation_string_table.is_some();
+        is_base_language() || has_fetched_translation()
+    }
 }
 
-impl<T, U> From<T> for FileExtensionAssetProvider
-where
-    T: IntoIterator<Item = U>,
-    U: AsRef<str>,
-{
-    fn from(file_extensions: T) -> Self {
-        Self::with_file_extensions(file_extensions.into_iter().collect())
+impl StringsFileTextProvider {
+    pub fn from_yarn_project(yarn_project: &YarnProject) -> Self {
+        Self {
+            asset_server: yarn_project.asset_server.clone(),
+            localizations: yarn_project.localizations.clone(),
+            language: None,
+            base_string_table: yarn_project.compilation.string_table.clone(),
+            strings_file_handle: None,
+            translation_string_table: None,
+        }
+    }
+    fn set_language_invalidating_translation(&mut self, language: impl Into<Option<Language>>) {
+        self.language = language.into();
+        self.translation_string_table = None;
+        self.strings_file_handle = None;
+    }
+}
+
+impl TextProvider for StringsFileTextProvider {
+    fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+        self.base_string_table = string_table;
+    }
+
+    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+        self.base_string_table.extend(string_table);
+    }
+
+    fn fetch_assets(&mut self, world: &World) {
+        if let Some(handle) = self.strings_file_handle.as_ref() {
+            if self.asset_server.get_load_state(handle) == LoadState::Loaded {
+                let asset_events = world
+                    .get_resource::<Events<AssetEvent<StringsFile>>>()
+                    .unwrap();
+                let has_changed = || {
+                    asset_events
+                        .get_reader()
+                        .iter(&asset_events)
+                        .filter_map(|event| {
+                            if let AssetEvent::Modified { handle } = event {
+                                Some(handle)
+                            } else {
+                                None
+                            }
+                        })
+                        .any(|h| h == handle)
+                };
+                if self.translation_string_table.is_none() || has_changed() {
+                    let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
+                    let expected_language = self.language.as_ref().unwrap();
+                    if let Some(record) = strings_file.get_offending_language(expected_language) {
+                        let path = self.asset_server.get_handle_path(handle).unwrap();
+                        panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
+                               path = path.path().display(),
+                               id = record.id,
+                                actual_language = record.language,
+                        );
+                    }
+                    let string_table = strings_file
+                        .0
+                        .iter()
+                        .map(|(id, record)| (id.clone(), record.text.clone()))
+                        .collect();
+                    self.translation_string_table.replace(string_table);
+                }
+            }
+        }
     }
 }
 
@@ -81,7 +191,7 @@ impl LineAssets {
             }
         })
     }
-    
+
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -120,79 +230,83 @@ impl Debug for FileExtensionAssetProvider {
     }
 }
 
+#[derive(Clone, Default)]
+pub struct FileExtensionAssetProvider {
+    language: Option<Language>,
+    localizations: Option<Localizations>,
+    asset_server: Option<AssetServer>,
+    handles: HashSet<HandleUntyped>,
+    line_ids: HashSet<LineId>,
+    file_extensions: Vec<String>,
+}
+
+impl FileExtensionAssetProvider {
+    pub fn with_file_extensions(file_extensions: Vec<impl AsRef<str>>) -> Self {
+        let file_extensions = file_extensions
+            .into_iter()
+            .map(|s| s.as_ref().trim_start_matches(".").to_owned())
+            .collect();
+        Self {
+            file_extensions,
+            ..default()
+        }
+    }
+}
+
+impl<T, U> From<T> for FileExtensionAssetProvider
+where
+    T: IntoIterator<Item = U>,
+    U: AsRef<str>,
+{
+    fn from(file_extensions: T) -> Self {
+        Self::with_file_extensions(file_extensions.into_iter().collect())
+    }
+}
+
 impl AssetProvider for FileExtensionAssetProvider {
-    fn clone_shallow(&self) -> Box<dyn AssetProvider> {
-        Box::new(self.clone())
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn set_asset_server(&mut self, asset_server: AssetServer) {
-        self.asset_server.write().unwrap().replace(asset_server);
-    }
-
-    fn set_localizations(&mut self, localizations: Localizations) {
-        self.localizations.write().unwrap().replace(localizations);
+    fn get_language(&self) -> Option<Language> {
+        self.language.clone()
     }
 
     fn set_language(&mut self, language: Option<Language>) {
-        *self.language.write().unwrap() = language;
-        self.reload_assets();
-    }
-    fn get_language(&self) -> Option<Language> {
-        self.language.read().unwrap().clone()
+        self.language = language;
     }
 
-    fn assets_available(&self) -> bool {
-        if self.language.read().unwrap().is_none()
-            || self.localizations.read().unwrap().is_none()
-            || self.line_ids.read().unwrap().is_empty()
-            || self.handles.read().unwrap().is_empty()
+    fn are_assets_available(&self) -> bool {
+        if self.language.is_none()
+            || self.localizations.is_none()
+            || self.line_ids.is_empty()
+            || self.handles.is_empty()
         {
             return false;
         };
-        let asset_server = self.asset_server.read().unwrap();
-        let Some(asset_server) = asset_server.as_ref() else {
+        let Some(asset_server) = self.asset_server.as_ref() else {
             return false;
         };
         self.handles
-            .read()
-            .unwrap()
             .iter()
             .all(|handle| asset_server.get_load_state(handle) == LoadState::Loading)
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {
         {
-            let mut current_line_ids = self.line_ids.write().unwrap();
-            current_line_ids.clear();
-            current_line_ids.extend(line_ids.iter().cloned());
+            self.line_ids.clear();
+            self.line_ids.extend(line_ids.iter().cloned());
         }
         self.reload_assets();
     }
 
     fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
-        let localizations = self.localizations.read().unwrap();
-        let language = self.language.read().unwrap();
-        if let Some(language) = language.as_ref() {
-            if let Some(localizations) = localizations.as_ref() {
+        if let Some(language) = self.language.as_ref() {
+            if let Some(localizations) = self.localizations.as_ref() {
                 if let Some(localization) = localizations.translation(language) {
                     let dir = localization.assets_sub_folder.as_path();
                     let file_name_without_extension = line.id.0.trim_start_matches("line:");
-                    let asset_server = self.asset_server.read().unwrap();
-                    let Some(asset_server) = asset_server.as_ref() else {
+                    let Some(asset_server) = self.asset_server.as_ref() else {
                             return default();
                         };
                     return self
                         .file_extensions
-                        .read()
-                        .unwrap()
                         .iter()
                         .filter_map(|ext| {
                             let file_name = format!("{}.{}", file_name_without_extension, ext);
@@ -214,24 +328,20 @@ impl AssetProvider for FileExtensionAssetProvider {
 
 impl FileExtensionAssetProvider {
     fn reload_assets(&mut self) {
-        let localizations = self.localizations.read().unwrap();
-        let language = self.language.read().unwrap();
-        if let Some(language) = language.as_ref() {
-            if let Some(localizations) = localizations.as_ref() {
+        if let Some(language) = self.language.as_ref() {
+            if let Some(localizations) = self.localizations.as_ref() {
                 if let Some(localization) = localizations.translation(language) {
                     let dir = localization.assets_sub_folder.as_path();
-                    let mut handles = self.handles.write().unwrap();
-                    handles.clear();
-                    let asset_server = self.asset_server.read().unwrap();
-                    let Some(asset_server) = asset_server.as_ref() else {
+                    self.handles.clear();
+                    let Some(asset_server) = self.asset_server.as_ref() else {
                         return;
                     };
-                    for line_id in self.line_ids.read().unwrap().iter() {
+                    for line_id in self.line_ids.iter() {
                         let file_name = format!("{}.ogg", line_id.0.trim_start_matches("line:"));
                         let path = dir.join(file_name);
                         if asset_server.asset_io().is_file(&path) {
                             let handle = asset_server.load_untyped(path);
-                            handles.insert(handle);
+                            self.handles.insert(handle);
                         } else {
                             warn!(
                                 "Audio file \"{path}\" for line \"{line_id}\" does not exist",
@@ -245,5 +355,53 @@ impl FileExtensionAssetProvider {
                 }
             }
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SharedTextProvider(Arc<RwLock<dyn TextProvider>>);
+
+impl SharedTextProvider {
+    pub fn new(text_provider: impl TextProvider + 'static) -> Self {
+        Self(Arc::new(RwLock::new(text_provider)))
+    }
+}
+
+impl TextProvider for SharedTextProvider {
+    fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+        self.0.write().unwrap().set_base_string_table(string_table)
+    }
+
+    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+        self.0
+            .write()
+            .unwrap()
+            .extend_base_string_table(string_table)
+    }
+
+    fn fetch_assets(&mut self, world: &World) {
+        self.0.write().unwrap().fetch_assets(world)
+    }
+}
+
+impl UnderlyingTextProvider for SharedTextProvider {
+    fn accept_line_hints(&mut self, line_ids: &[LineId]) {
+        self.0.write().unwrap().accept_line_hints(line_ids)
+    }
+
+    fn get_text(&self, id: &LineId) -> Option<String> {
+        self.0.read().unwrap().get_text(id)
+    }
+
+    fn set_language(&mut self, language: Option<Language>) {
+        self.0.write().unwrap().set_language(language)
+    }
+
+    fn get_language(&self) -> Option<Language> {
+        self.0.read().unwrap().get_language()
+    }
+
+    fn are_lines_available(&self) -> bool {
+        self.0.read().unwrap().are_lines_available()
     }
 }

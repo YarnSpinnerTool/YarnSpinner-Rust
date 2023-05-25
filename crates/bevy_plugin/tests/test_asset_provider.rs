@@ -15,23 +15,24 @@ fn loads_asset_from_base_language_localization() {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"])
-            .with_localizations(Localizations {
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
                 base_language: "en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
-            })
-            .with_asset_provider(FileExtensionAssetProvider::from(&["ogg"])),
+            },
+        ),
     );
 
-    let assets = app
-        .load_assets()
-        .world
-        .resource::<YarnProject>()
-        .asset_provider()
-        .as_ref()
-        .unwrap()
-        .get_assets_for_id("line:9");
+    let project = app.load_project();
+    let dialogue_runner = project
+        .build_dialogue_runner()
+        .with_asset_provider(FileExtensionAssetProvider::from(&["ogg"]))
+        .build();
+    app.world.spawn(dialogue_runner);
+    app.load_assets();
+
+    let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();

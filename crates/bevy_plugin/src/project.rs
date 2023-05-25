@@ -1,10 +1,9 @@
-use crate::localization::{
-    UpdateAllStringsFilesForStringTableEvent, UpdateBaseLanguageTextProviderForStringTableEvent,
-};
+use crate::localization::UpdateAllStringsFilesForStringTableEvent;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use std::fmt::Debug;
 
 pub(crate) fn project_plugin(app: &mut App) {
     app.register_type::<YarnFilesToLoad>()
@@ -31,82 +30,49 @@ pub(crate) fn project_plugin(app: &mut App) {
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
 pub(crate) struct CompilationSystemSet;
 
-#[derive(Debug, Resource)]
+#[derive(Resource)]
 pub struct YarnProject {
     pub(crate) yarn_files: HashSet<Handle<YarnFile>>,
     pub(crate) compilation: Compilation,
-    pub(crate) variable_storage: Box<dyn VariableStorage>,
-    pub(crate) text_provider: Box<dyn TextProvider>,
-    pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
-    pub(crate) library: YarnFnLibrary,
     pub(crate) localizations: Option<Localizations>,
+    pub(crate) asset_server: AssetServer,
+}
+
+impl Debug for YarnProject {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("YarnProject")
+            .field("yarn_files", &self.yarn_files)
+            .field("compilation", &self.compilation)
+            .field("localizations", &self.localizations)
+            .field("asset_server", &())
+            .finish()
+    }
 }
 
 impl YarnProject {
-    pub fn create_dialogue_runner(&self) -> DialogueRunner {
-        DialogueRunnerBuilder::with_yarn_project(self).build()
-    }
-
-    pub fn build_dialogue_runner(&self) -> DialogueRunnerBuilder {
-        DialogueRunnerBuilder::with_yarn_project(self)
+    pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
+        self.yarn_files.iter()
     }
 
     pub fn compilation(&self) -> &Compilation {
         &self.compilation
     }
 
-    pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
-        self.yarn_files.iter()
-    }
-
     pub fn localizations(&self) -> Option<&Localizations> {
         self.localizations.as_ref()
     }
-}
 
-impl DialogueDataProvider for YarnProject {
-    fn text_provider(&self) -> &dyn TextProvider {
-        self.text_provider.as_ref()
+    pub fn default_dialogue_runner(&self) -> DialogueRunner {
+        DialogueRunnerBuilder::from_yarn_project(self).build()
     }
 
-    fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
-        self.text_provider.as_mut()
-    }
-
-    fn asset_provider(&self) -> Option<&dyn AssetProvider> {
-        self.asset_provider.as_deref()
-    }
-
-    fn asset_provider_mut(&mut self) -> Option<&mut dyn AssetProvider> {
-        // Source: <https://stackoverflow.com/a/55866511/5903309>
-        self.asset_provider
-            .as_mut()
-            .map(|x| &mut **x as &mut dyn AssetProvider)
-    }
-
-    fn variable_storage(&self) -> &dyn VariableStorage {
-        self.variable_storage.as_ref()
-    }
-
-    fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
-        self.variable_storage.as_mut()
-    }
-
-    fn library(&self) -> &YarnFnLibrary {
-        &self.library
-    }
-
-    fn library_mut(&mut self) -> &mut YarnFnLibrary {
-        &mut self.library
+    pub fn build_dialogue_runner(&self) -> DialogueRunnerBuilder {
+        DialogueRunnerBuilder::from_yarn_project(self)
     }
 }
 
 #[derive(Debug, Resource)]
 pub(crate) struct YarnProjectConfigToLoad {
-    pub(crate) variable_storage: Option<Box<dyn VariableStorage>>,
-    pub(crate) text_provider: Option<Box<dyn TextProvider>>,
-    pub(crate) asset_provider: Option<Option<Box<dyn AssetProvider>>>,
-    pub(crate) library: Option<YarnFnLibrary>,
     pub(crate) localizations: Option<Option<Localizations>>,
 }
 
@@ -146,6 +112,7 @@ pub struct RecompileLoadedYarnFilesEvent;
 fn recompile_loaded_yarn_files(
     yarn_files: Res<Assets<YarnFile>>,
     yarn_project: Option<ResMut<YarnProject>>,
+    mut dialogue_runners: Query<&mut DialogueRunner>,
 ) -> SystemResult {
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
@@ -154,6 +121,11 @@ fn recompile_loaded_yarn_files(
         return Ok(());
     };
     yarn_project.compilation = compilation;
+    for mut dialogue_runner in dialogue_runners.iter_mut() {
+        dialogue_runner
+            .text_provider_mut()
+            .set_base_string_table(yarn_project.compilation.string_table.clone());
+    }
     let file_count = yarn_project.yarn_files.len();
     let file_plural = if file_count == 1 { "file" } else { "files" };
     info!("Successfully recompiled {file_count} yarn {file_plural}");
@@ -163,12 +135,11 @@ fn recompile_loaded_yarn_files(
 fn compile_loaded_yarn_files(
     mut commands: Commands,
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
-    mut yarn_project: Option<ResMut<YarnProject>>,
     yarn_files: Res<Assets<YarnFile>>,
     mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
-    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
     mut dirty: Local<bool>,
     yarn_project_config_to_load: Option<Res<YarnProjectConfigToLoad>>,
+    asset_server: Res<AssetServer>,
 ) -> SystemResult {
     if yarn_files_being_loaded.is_changed() {
         *dirty = true;
@@ -185,48 +156,52 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
-    let localizations = yarn_project
+    let localizations = yarn_project_config_to_load
         .as_ref()
-        .map(|p| p.localizations.as_ref())
-        .unwrap_or_else(|| {
-            yarn_project_config_to_load
-                .as_ref()
-                .map(|c| c.localizations.as_ref().unwrap().as_ref())
-                .unwrap()
-        });
+        .map(|c| c.localizations.as_ref().unwrap().as_ref())
+        .unwrap();
     let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, localizations)? else {
         return Ok(());
     };
     let file_count = yarn_files_being_loaded.0.len();
 
-    update_text_writer.send((&compilation.string_table).into());
-    if let Some(yarn_project) = yarn_project.as_mut() {
-        yarn_project.compilation = compilation;
-        yarn_files_being_loaded.0.clear();
-    } else {
-        let yarn_project_config_to_load = yarn_project_config_to_load.as_ref().unwrap();
-        if yarn_project_config_to_load
-            .localizations()
-            .map(|l| l.file_generation_mode == FileGenerationMode::Development)
-            .unwrap_or_default()
-        {
-            update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
-                compilation.string_table.clone(),
-            ));
+    let yarn_project_config_to_load = yarn_project_config_to_load.as_ref().unwrap();
+    if yarn_project_config_to_load
+        .localizations()
+        .map(|l| l.file_generation_mode == FileGenerationMode::Development)
+        .unwrap_or_default()
+    {
+        update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
+            compilation.string_table.clone(),
+        ));
+        if let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap() {
+            for localization in &localizations.translations {
+                let path = localization.strings_file.as_path();
+                if asset_server.asset_io().is_file(path) {
+                    return Ok(());
+                }
+                let strings_file = StringsFile::from_string_table(
+                    localization.language.clone(),
+                    &compilation.string_table,
+                )
+                .unwrap_or_default();
+
+                strings_file.write_asset(&asset_server, path)?;
+                info!(
+                    "Generated \"{}\" (lang: {}).",
+                    path.display(),
+                    localization.language
+                );
+            }
         }
-        commands.insert_resource(YarnProject {
-            yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
-            compilation,
-            variable_storage: yarn_project_config_to_load
-                .variable_storage
-                .clone()
-                .unwrap(),
-            text_provider: yarn_project_config_to_load.text_provider.clone().unwrap(),
-            asset_provider: yarn_project_config_to_load.asset_provider.clone().unwrap(),
-            library: yarn_project_config_to_load.library.clone().unwrap(),
-            localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
-        });
     }
+
+    commands.insert_resource(YarnProject {
+        yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
+        compilation,
+        localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
+        asset_server: asset_server.clone(),
+    });
 
     let file_plural = if file_count == 1 { "file" } else { "files" };
     info!("Successfully compiled {file_count} yarn {file_plural}");

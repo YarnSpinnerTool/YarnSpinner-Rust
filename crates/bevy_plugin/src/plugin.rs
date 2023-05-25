@@ -1,4 +1,3 @@
-use crate::default_impl::{MemoryVariableStore, StringTableTextProvider};
 use crate::prelude::*;
 use crate::project::{YarnFilesToLoad, YarnProjectConfigToLoad};
 use bevy::prelude::*;
@@ -11,10 +10,7 @@ mod yarn_file_source;
 #[non_exhaustive]
 pub struct YarnSlingerPlugin {
     pub localizations: Option<Localizations>,
-    pub asset_provider: Option<Box<dyn AssetProvider>>,
     pub yarn_files: HashSet<YarnFileSource>,
-    pub advanced: AdvancedPluginConfig,
-    pub library: YarnFnLibrary,
 }
 
 impl YarnSlingerPlugin {
@@ -26,9 +22,6 @@ impl YarnSlingerPlugin {
             .collect();
         Self {
             localizations: None,
-            advanced: Default::default(),
-            asset_provider: None,
-            library: YarnFnLibrary::standard_library(),
             yarn_files,
         }
     }
@@ -43,56 +36,7 @@ impl YarnSlingerPlugin {
             }
         }
         self.localizations = localizations;
-        self.update_language_code();
         self
-    }
-
-    #[must_use]
-    pub fn with_asset_provider(mut self, asset_provider: impl AssetProvider + 'static) -> Self {
-        let asset_provider = Box::new(asset_provider);
-        self.asset_provider = Some(asset_provider);
-        self.update_language_code();
-        self
-    }
-
-    #[must_use]
-    pub fn with_asset_provider_boxed(
-        mut self,
-        asset_provider: impl Into<Option<Box<dyn AssetProvider>>>,
-    ) -> Self {
-        self.asset_provider = asset_provider.into();
-        self.update_language_code();
-        self
-    }
-
-    #[must_use]
-    pub fn with_library(mut self, library: YarnFnLibrary) -> Self {
-        self.library.extend(library);
-        self
-    }
-
-    #[must_use]
-    pub fn with_advanced_config(
-        mut self,
-        config: impl Fn(AdvancedPluginConfig) -> AdvancedPluginConfig,
-    ) -> Self {
-        self.advanced = config(self.advanced);
-        self.update_language_code();
-        self
-    }
-
-    fn update_language_code(&mut self) {
-        let language = self
-            .localizations
-            .as_ref()
-            .map(|l| l.base_language.language.clone());
-        self.advanced.text_provider.set_language(language.clone());
-        if let Some(asset_provider) = self.asset_provider.as_mut() {
-            asset_provider.set_language(language);
-            if let Some(localizations) = self.localizations.as_ref() {
-                asset_provider.set_localizations(localizations.clone());
-            }
-        }
     }
 }
 
@@ -103,51 +47,6 @@ where
 {
     fn from(yarn_files: T) -> Self {
         Self::with_yarn_files(yarn_files.into_iter().collect())
-    }
-}
-
-#[derive(Debug)]
-#[non_exhaustive]
-pub struct AdvancedPluginConfig {
-    pub variable_storage: Box<dyn VariableStorage>,
-    pub text_provider: Box<dyn TextProvider>,
-}
-
-#[allow(clippy::derivable_impls)] // False positive :/
-impl Default for AdvancedPluginConfig {
-    fn default() -> Self {
-        Self {
-            variable_storage: Box::<MemoryVariableStore>::default(),
-            text_provider: Box::<StringTableTextProvider>::default(),
-        }
-    }
-}
-
-impl AdvancedPluginConfig {
-    pub fn with_variable_storage(
-        mut self,
-        variable_storage: impl VariableStorage + 'static,
-    ) -> Self {
-        self.variable_storage = Box::new(variable_storage);
-        self
-    }
-
-    pub fn with_variable_storage_boxed(
-        mut self,
-        variable_storage: Box<dyn VariableStorage>,
-    ) -> Self {
-        self.variable_storage = variable_storage;
-        self
-    }
-
-    pub fn with_text_provider(mut self, text_provider: impl TextProvider + 'static) -> Self {
-        self.text_provider = Box::new(text_provider);
-        self
-    }
-
-    pub fn with_text_provider_boxed(mut self, text_provider: Box<dyn TextProvider>) -> Self {
-        self.text_provider = text_provider;
-        self
     }
 }
 
@@ -203,10 +102,6 @@ impl YarnApp for App {
 
     fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
         self.insert_resource(YarnProjectConfigToLoad {
-            variable_storage: Some(plugin.advanced.variable_storage.clone_shallow()),
-            text_provider: Some(plugin.advanced.text_provider.clone_shallow()),
-            asset_provider: Some(plugin.asset_provider.clone()),
-            library: Some(plugin.library.clone()),
             localizations: Some(plugin.localizations.clone()),
         })
         .insert_resource(YarnFilesToLoad(plugin.yarn_files.clone()))

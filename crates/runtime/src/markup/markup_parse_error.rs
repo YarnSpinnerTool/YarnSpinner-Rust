@@ -1,4 +1,5 @@
 use crate::markup::TRIM_WHITESPACE_PROPERTY;
+#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use thiserror::Error;
 
