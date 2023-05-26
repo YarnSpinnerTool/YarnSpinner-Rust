@@ -123,7 +123,7 @@ impl AssetProvider for FileExtensionAssetProvider {
                                 let path = dir.join(file_name);
 
                                 if asset_server.asset_io().is_file(&path) {
-                                    Some((type_id.clone(), asset_server.load_untyped(path)))
+                                    Some((*type_id, asset_server.load_untyped(path)))
                                 } else {
                                     None
                                 }
