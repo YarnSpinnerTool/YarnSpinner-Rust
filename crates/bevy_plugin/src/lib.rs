@@ -1,5 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
+mod commands;
 mod dialogue_runner;
 mod line_provider;
 mod localization;

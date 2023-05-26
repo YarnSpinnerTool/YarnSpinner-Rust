@@ -60,5 +60,6 @@ impl YarnApp for App {
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
             .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
+            .fn_plugin(crate::commands::commands_plugin)
     }
 }
