@@ -24,7 +24,7 @@ pub type Result<T> = std::result::Result<T, DialogueError>;
 pub enum DialogueError {
     #[error(transparent)]
     MarkupParseError(#[from] MarkupParseError),
-    #[error("Line ID {id} not found in line provider with language code {language_code:?}")]
+    #[error("Line ID \"{id}\" not found in line provider with language code {language_code:?}")]
     LineProviderError {
         id: LineId,
         language_code: Option<Language>,
@@ -127,6 +127,12 @@ impl Dialogue {
     #[must_use]
     pub fn with_line_hints_enabled(mut self, enabled: bool) -> Self {
         self.vm.line_hints_enabled = enabled;
+        self
+    }
+
+    #[must_use]
+    pub fn with_program(mut self, program: Program) -> Self {
+        self.replace_program(program);
         self
     }
 }

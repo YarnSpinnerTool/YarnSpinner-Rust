@@ -1,5 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringInfo.cs>
 
+#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 
 /// Information about a string. Stored inside a string table, which is

@@ -1,3 +1,4 @@
+#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use core::fmt::Display;
 
@@ -12,7 +13,12 @@ use core::fmt::Display;
     reflect(Serialize, Deserialize)
 )]
 #[non_exhaustive]
-pub struct Language(pub String);
+pub struct Language(String);
+impl Language {
+    pub fn new(language: impl Into<String>) -> Self {
+        Self(language.into())
+    }
+}
 
 impl Display for Language {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

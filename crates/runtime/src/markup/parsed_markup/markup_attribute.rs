@@ -2,6 +2,7 @@
 //! which was split into multiple files.
 
 use crate::markup::{MarkupAttributeMarker, MarkupValue};
+#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use core::fmt::Display;
 use std::collections::HashMap;

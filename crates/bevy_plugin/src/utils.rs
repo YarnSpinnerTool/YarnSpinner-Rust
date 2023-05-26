@@ -31,10 +31,6 @@ pub(crate) fn events_in_queue<T: Event>() -> impl FnMut(EventReader<T>) -> bool 
     move |reader: EventReader<T>| !reader.is_empty()
 }
 
-pub(crate) fn events_in_world<T: Event>() -> impl FnMut(Res<Events<T>>) -> bool + Clone {
-    move |events: Res<Events<T>>| !events.is_empty()
-}
-
 pub(crate) fn get_assets_dir_path(asset_server: &AssetServer) -> Result<impl AsRef<Path> + '_> {
     let asset_io = asset_server.asset_io();
     let file_asset_io = asset_io.downcast_ref::<FileAssetIo>().context(

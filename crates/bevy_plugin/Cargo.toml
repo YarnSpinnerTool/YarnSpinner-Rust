@@ -6,7 +6,8 @@ license = "MIT OR Apache-2.0"
 exclude = ["assets"]
 
 [features]
-default = []
+default = ["audio_assets"]
+audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 
 [dependencies]
 anyhow = "1"
@@ -27,4 +28,4 @@ tempfile = "3"
 [dev-dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["bevy_asset", "serialize", "filesystem_watcher"]
+features = ["serialize", "filesystem_watcher"]

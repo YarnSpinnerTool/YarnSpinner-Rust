@@ -44,7 +44,7 @@ pub fn init_logger(runtime_errors_cause_failure: Arc<AtomicBool>) -> Result<(), 
 pub struct TestBase {
     pub dialogue: Dialogue,
     pub test_plan: Option<TestPlan>,
-    pub string_table: StringTableTextProvider,
+    pub string_table: SharedTextProvider,
     pub variable_store: MemoryVariableStore,
     runtime_errors_cause_failure: Arc<AtomicBool>,
 }
@@ -56,7 +56,7 @@ impl Default for TestBase {
             // We've set the logger twice, that's alright for the tests.
         }
         let variable_store = MemoryVariableStore::new();
-        let string_table = StringTableTextProvider::new();
+        let string_table = SharedTextProvider::new(StringTableTextProvider::new());
 
         let dialogue = Dialogue::new(
             Box::new(variable_store.clone()),
@@ -119,11 +119,14 @@ impl TestBase {
     }
 
     pub fn with_string_table(mut self, string_table: HashMap<LineId, StringInfo>) -> Self {
-        let string_table = string_table
+        let string_table: HashMap<_, _> = string_table
             .into_iter()
             .map(|(id, info)| (id, info.text))
             .collect();
-        self.string_table.extend_translation("en-US", string_table);
+        let mut string_table_provider = StringTableTextProvider::new();
+        string_table_provider.extend_base_language(string_table.clone());
+        string_table_provider.extend_translation("en-US", string_table);
+        self.string_table.replace(string_table_provider);
         self.dialogue.set_language_code(Language::from("en-US"));
         self
     }

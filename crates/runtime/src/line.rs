@@ -196,16 +196,16 @@ impl Line {
                 .filter(|attr| *attr != attribute_to_delete)
                 .cloned()
                 .collect();
-            return Self {
+            return Line {
                 id: self.id.clone(),
-                text: self.text.clone(),
+                text: self.text.to_string(),
                 attributes,
             };
         }
         let deletion_start = attribute_to_delete.position;
         let deletion_end = attribute_to_delete.position + attribute_to_delete.length;
         let edited_substring = {
-            let mut text = self.text.clone();
+            let mut text = self.text.to_string();
             text.replace_range(deletion_start..deletion_end, "");
             text
         };
@@ -271,7 +271,7 @@ impl Line {
                 Some(attribute)
             })
             .collect();
-        Self {
+        Line {
             id: self.id.clone(),
             text: edited_substring,
             attributes,

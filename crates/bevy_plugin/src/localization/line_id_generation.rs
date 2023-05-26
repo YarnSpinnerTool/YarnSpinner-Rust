@@ -1,6 +1,4 @@
-use crate::localization::{
-    UpdateAllStringsFilesForStringTableEvent, UpdateBaseLanguageTextProviderForStringTableEvent,
-};
+use crate::localization::UpdateAllStringsFilesForStringTableEvent;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;
@@ -27,7 +25,7 @@ fn handle_yarn_file_events_outside_development(
     assets: Res<Assets<YarnFile>>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Option<Res<YarnProject>>,
-    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
+    mut dialogue_runners: Query<&mut DialogueRunner>,
 ) {
     for event in events.iter() {
         let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
@@ -43,7 +41,11 @@ fn handle_yarn_file_events_outside_development(
         }
         let yarn_file = assets.get(handle).unwrap().clone();
 
-        update_text_writer.send((&yarn_file.string_table).into());
+        for mut dialogue_runner in dialogue_runners.iter_mut() {
+            dialogue_runner
+                .text_provider_mut()
+                .extend_base_string_table(yarn_file.string_table.clone());
+        }
     }
 }
 
@@ -55,7 +57,7 @@ fn handle_yarn_file_events(
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Option<Res<YarnProject>>,
     mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
-    mut update_text_writer: EventWriter<UpdateBaseLanguageTextProviderForStringTableEvent>,
+    mut dialogue_runners: Query<&mut DialogueRunner>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
     for event in events.iter() {
@@ -75,9 +77,11 @@ fn handle_yarn_file_events(
         update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
             yarn_file.string_table.clone(),
         ));
-        update_text_writer.send((&yarn_file.string_table).into());
 
-        let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
+        let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? else {
+            for mut dialogue_runner in dialogue_runners.iter_mut() {
+                dialogue_runner.text_provider_mut().extend_base_string_table(yarn_file.string_table.clone());
+            }
             continue;
         };
         let yarn_file = assets.get_mut(handle).unwrap();

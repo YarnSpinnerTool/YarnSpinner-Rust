@@ -1,20 +1,36 @@
+pub use self::events::{
+    DialogueCompleteEvent, ExecuteCommandEvent, LineHintsEvent, NodeCompleteEvent, NodeStartEvent,
+    PresentLineEvent, PresentOptionsEvent,
+};
+pub use self::{dialogue_option::DialogueOption, localized_line::LocalizedLine};
+use crate::default_impl::MemoryVariableStore;
+use crate::line_provider::{LineAssets, SharedTextProvider, StringsFileTextProvider};
 use crate::prelude::*;
+use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
-use std::fmt::Debug;
-use std::ops::DerefMut;
+use std::fmt;
+use std::fmt::{Debug, Formatter};
 
+mod dialogue_option;
+mod events;
+mod localized_line;
 mod runtime_interaction;
 
 pub(crate) fn dialogue_plugin(app: &mut App) {
-    app.fn_plugin(runtime_interaction::runtime_interaction_plugin);
+    app.fn_plugin(runtime_interaction::runtime_interaction_plugin)
+        .fn_plugin(localized_line::localized_line_plugin)
+        .fn_plugin(events::dialogue_runner_events_plugin)
+        .fn_plugin(dialogue_option::dialogue_option_plugin);
 }
 
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
-    pub(crate) line_asset_provider_override: Option<Box<dyn LineAssetProvider>>,
+    pub(crate) text_provider: Box<dyn TextProvider>,
+    pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
     pub(crate) continue_: bool,
     pub(crate) run_selected_options_as_lines: bool,
+    pub(crate) last_selected_option: Option<OptionId>,
 }
 
 impl DialogueRunner {
@@ -24,6 +40,7 @@ impl DialogueRunner {
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
+        self.last_selected_option.replace(option);
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
@@ -38,48 +55,6 @@ impl DialogueRunner {
     pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
         self.dialogue.set_node_to_start()?;
         Ok(self)
-    }
-
-    #[must_use]
-    pub fn library(&self) -> &YarnFnLibrary {
-        self.dialogue.library()
-    }
-
-    #[must_use]
-    pub fn library_mut(&mut self) -> &mut YarnFnLibrary {
-        self.dialogue.library_mut()
-    }
-
-    #[must_use]
-    pub fn text_provider(&self) -> &dyn TextProvider {
-        self.dialogue.text_provider()
-    }
-
-    #[must_use]
-    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
-        self.dialogue.text_provider_mut()
-    }
-
-    #[must_use]
-    pub fn line_asset_provider(&self) -> Option<&dyn LineAssetProvider> {
-        self.line_asset_provider_override.as_deref()
-    }
-
-    #[must_use]
-    pub fn line_asset_provider_mut(
-        &mut self,
-    ) -> Option<&mut impl DerefMut<Target = dyn LineAssetProvider>> {
-        self.line_asset_provider_override.as_mut()
-    }
-
-    #[must_use]
-    pub fn variable_storage(&self) -> &dyn VariableStorage {
-        self.dialogue.variable_storage()
-    }
-
-    #[must_use]
-    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
-        self.dialogue.variable_storage_mut()
     }
 
     #[must_use]
@@ -122,73 +97,221 @@ impl DialogueRunner {
     pub fn treats_selected_options_as_lines_mut(&mut self) -> &mut bool {
         &mut self.run_selected_options_as_lines
     }
-}
 
-#[derive(Debug)]
-pub struct DialogueRunnerBuilder<'a> {
-    pub(crate) variable_storage_override: Option<Box<dyn VariableStorage>>,
-    pub(crate) text_provider_override: Option<Box<dyn TextProvider>>,
-    pub(crate) line_asset_provider_override: Option<Option<Box<dyn LineAssetProvider>>>,
-    pub(crate) yarn_project: &'a YarnProject,
-}
-
-impl<'a> DialogueRunnerBuilder<'a> {
     #[must_use]
-    pub fn with_yarn_project(yarn_project: &'a YarnProject) -> Self {
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.text_provider.as_ref()
+    }
+
+    #[must_use]
+    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.text_provider.as_mut()
+    }
+
+    #[must_use]
+    pub fn asset_provider(&self) -> Option<&dyn AssetProvider> {
+        self.asset_provider.as_deref()
+    }
+
+    #[must_use]
+    pub fn asset_provider_mut(&mut self) -> Option<&mut dyn AssetProvider> {
+        // Source: <https://stackoverflow.com/a/55866511/5903309>
+        self.asset_provider
+            .as_mut()
+            .map(|x| &mut **x as &mut dyn AssetProvider)
+    }
+
+    #[must_use]
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.dialogue.variable_storage()
+    }
+
+    #[must_use]
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.dialogue.variable_storage_mut()
+    }
+
+    #[must_use]
+    pub fn library(&self) -> &YarnFnLibrary {
+        self.dialogue.library()
+    }
+
+    #[must_use]
+    pub fn library_mut(&mut self) -> &mut YarnFnLibrary {
+        self.dialogue.library_mut()
+    }
+
+    #[must_use]
+    pub fn are_line_texts_available(&self) -> bool {
+        self.text_provider.are_lines_available()
+    }
+
+    #[must_use]
+    pub fn are_line_assets_available(&self) -> bool {
+        self.asset_provider
+            .as_ref()
+            .map(|provider| provider.are_assets_available())
+            .unwrap_or_default()
+    }
+
+    #[must_use]
+    pub fn are_lines_available(&self) -> bool {
+        self.are_line_texts_available() && self.are_line_assets_available()
+    }
+
+    pub fn set_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        let language = language.into();
+        self.set_text_language(language.clone());
+        self.set_asset_language(language);
+        self
+    }
+
+    pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        self.text_provider.set_language(language.into());
+        self
+    }
+
+    pub fn set_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        if let Some(provider) = self.asset_provider.as_mut() {
+            provider.set_language(language.into());
+        }
+        self
+    }
+
+    pub(crate) fn get_assets(&self, line_id: &UnderlyingYarnLine) -> LineAssets {
+        self.asset_provider
+            .as_ref()
+            .map(|p| p.get_assets(line_id))
+            .unwrap_or_default()
+    }
+}
+
+pub struct DialogueRunnerBuilder {
+    pub(crate) variable_storage: Box<dyn VariableStorage>,
+    pub(crate) text_provider: SharedTextProvider,
+    pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
+    pub(crate) library: YarnFnLibrary,
+    pub(crate) compilation: Compilation,
+    pub(crate) text_language: Option<Language>,
+    pub(crate) asset_language: Option<Language>,
+    pub(crate) localizations: Option<Localizations>,
+    pub(crate) asset_server: AssetServer,
+}
+
+impl Debug for DialogueRunnerBuilder {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DialogueRunnerBuilder")
+            .field("variable_storage", &self.variable_storage)
+            .field("text_provider", &self.text_provider)
+            .field("asset_provider", &self.asset_provider)
+            .field("library", &self.library)
+            .field("compilation", &self.compilation)
+            .field("text_language", &self.text_language)
+            .field("asset_language", &self.asset_language)
+            .field("localizations", &self.localizations)
+            .field("asset_server", &())
+            .finish()
+    }
+}
+
+impl DialogueRunnerBuilder {
+    #[must_use]
+    pub fn from_yarn_project(yarn_project: &YarnProject) -> Self {
         Self {
-            variable_storage_override: None,
-            text_provider_override: None,
-            line_asset_provider_override: None,
-            yarn_project,
+            variable_storage: Box::new(MemoryVariableStore::new()),
+            text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
+                yarn_project,
+            )),
+            asset_provider: None,
+            library: YarnFnLibrary::new(),
+            compilation: yarn_project.compilation().clone(),
+            text_language: None,
+            asset_language: None,
+            localizations: yarn_project.localizations().cloned(),
+            asset_server: yarn_project.asset_server.clone(),
         }
     }
 
     #[must_use]
-    pub fn override_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
-        self.variable_storage_override = Some(storage);
+    pub fn with_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
+        self.variable_storage = storage;
         self
     }
 
     #[must_use]
-    pub fn override_text_provider(mut self, provider: Box<dyn TextProvider>) -> Self {
-        self.text_provider_override = Some(provider);
-        self
-    }
-
-    #[must_use]
-    pub fn override_line_asset_provider(
-        mut self,
-        provider: Option<Box<dyn LineAssetProvider>>,
-    ) -> Self {
-        self.line_asset_provider_override = Some(provider);
-        self
-    }
-
-    #[must_use]
-    pub fn build(self) -> DialogueRunner {
-        let variable_storage = self
-            .variable_storage_override
-            .unwrap_or_else(|| self.yarn_project.variable_storage.clone());
-        let text_provider = self
-            .text_provider_override
-            .unwrap_or_else(|| self.yarn_project.text_provider.clone());
-        let line_asset_provider = self
-            .line_asset_provider_override
-            .unwrap_or_else(|| self.yarn_project.line_asset_provider.clone());
-        let mut dialogue =
-            Dialogue::new(variable_storage, text_provider).with_line_hints_enabled(true);
-        if let Some(language) = dialogue.text_provider().get_language() {
-            dialogue.set_language_code(language).unwrap();
+    pub fn with_text_provider(mut self, provider: impl TextProvider + 'static) -> Self {
+        self.text_provider.replace(provider);
+        if let Some(language) = self.text_language.take() {
+            self.text_provider.set_language(Some(language));
         }
+        self
+    }
+
+    #[must_use]
+    pub fn with_asset_provider(mut self, provider: impl AssetProvider + 'static) -> Self {
+        self.asset_provider.replace(Box::new(provider));
+        if let Some(language) = self.asset_language.take() {
+            self.asset_provider
+                .as_mut()
+                .unwrap()
+                .set_language(Some(language));
+        }
+        self
+    }
+
+    #[must_use]
+    pub fn with_language(self, language: impl Into<Option<Language>>) -> Self {
+        let language = language.into();
+        self.with_text_language(language.clone())
+            .with_asset_language(language)
+    }
+
+    #[must_use]
+    pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
+        self.text_provider.set_language(language.into());
+        self
+    }
+
+    #[must_use]
+    pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
+        if let Some(provider) = self.asset_provider.as_mut() {
+            provider.set_language(language.into());
+        }
+        self
+    }
+
+    #[must_use]
+    pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
+        self.library.extend(library);
+        self
+    }
+
+    #[must_use]
+    pub fn build(mut self) -> DialogueRunner {
+        let text_provider = Box::new(self.text_provider);
+        let language = text_provider.get_language();
+        let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
+            .with_line_hints_enabled(true)
+            .with_extended_library(self.library)
+            .with_program(self.compilation.program.unwrap())
+            .with_language_code(language);
         if dialogue.set_node_to_start().is_err() {
             info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
+        }
+        if let Some(asset_provider) = self.asset_provider.as_mut() {
+            if let Some(localizations) = self.localizations {
+                asset_provider.set_localizations(localizations);
+            }
+            asset_provider.set_asset_server(self.asset_server);
         }
 
         DialogueRunner {
             dialogue,
-            line_asset_provider_override: line_asset_provider,
+            text_provider,
+            asset_provider: self.asset_provider,
             continue_: false,
             run_selected_options_as_lines: false,
+            last_selected_option: None,
         }
     }
 }

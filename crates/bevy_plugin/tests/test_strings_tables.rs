@@ -3,28 +3,27 @@ use bevy_yarn_slinger::prelude::*;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir;
+use utils::prelude::*;
 use yarn_slinger::prelude::{CompilationType, YarnCompiler};
+
+mod utils;
 
 #[test]
 fn loads_yarn_assets() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(None),
-    );
+    app.add_plugins(DefaultPlugins)
+        .add_plugin(YarnSlingerPlugin)
+        .world
+        .send_event(
+            LoadYarnProjectEvent::with_yarn_files(vec!["lines.yarn"]).with_localizations(None),
+        );
 
-    while !app.world.contains_resource::<YarnProject>() {
-        app.update();
-    }
-
-    let project = app.world.resource::<YarnProject>();
-    let yarn_files = &project.yarn_files;
+    let yarn_files: Vec<_> = app.load_project().yarn_files().cloned().collect();
     assert_eq!(1, yarn_files.len());
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
-    let yarn_file = yarn_file_assets
-        .get(yarn_files.iter().next().unwrap())
-        .unwrap();
+    let yarn_file = yarn_file_assets.get(&yarn_files[0]).unwrap();
 
     let expected_source = include_str!("../assets/lines.yarn");
     assert_eq!(expected_source, yarn_file.content());
@@ -44,25 +43,22 @@ fn generates_line_ids() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
-            translations: vec!["de-CH".into()],
-            file_generation_mode: FileGenerationMode::Development,
-        }),
+    .add_plugin(YarnSlingerPlugin)
+    .world
+    .send_event(
+        LoadYarnProjectEvent::with_yarn_files(vec!["lines.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Development,
+            },
+        ),
     );
 
-    while !app.world.contains_resource::<YarnProject>() {
-        app.update();
-    }
-
-    let project = app.world.resource::<YarnProject>();
-    let yarn_files = &project.yarn_files;
+    let yarn_file = app.load_project().yarn_files().next().unwrap().clone();
 
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
-    let yarn_file_in_app = yarn_file_assets
-        .get(yarn_files.iter().next().unwrap())
-        .unwrap();
+    let yarn_file_in_app = yarn_file_assets.get(&yarn_file).unwrap();
     let yarn_file_on_disk = fs::read_to_string(&yarn_path)?;
 
     assert_eq!(yarn_file_in_app.content(), yarn_file_on_disk);
@@ -101,17 +97,19 @@ fn generates_strings_file() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
-            translations: vec!["de-CH".into()],
-            file_generation_mode: FileGenerationMode::Development,
-        }),
+    .add_plugin(YarnSlingerPlugin)
+    .world
+    .send_event(
+        LoadYarnProjectEvent::with_yarn_files(vec!["lines.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Development,
+            },
+        ),
     );
 
-    while !app.world.contains_resource::<YarnProject>() {
-        app.update();
-    }
+    app.load_project();
     app.update(); // Generate the strings file
 
     let string_table = YarnCompiler::new()
@@ -140,59 +138,6 @@ fn generates_strings_file() -> anyhow::Result<()> {
 }
 
 #[test]
-fn regenerates_strings_files_on_changed_localization() -> anyhow::Result<()> {
-    let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/lines.yarn");
-    let yarn_path = dir.path().join("lines.yarn");
-    fs::copy(original_yarn_path, yarn_path)?;
-
-    let mut app = App::new();
-
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }))
-    .add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
-            translations: vec!["de-CH".into()],
-            file_generation_mode: FileGenerationMode::Development,
-        }),
-    );
-
-    while !app.world.contains_resource::<YarnProject>() {
-        app.update();
-    }
-    app.update(); // Generate the strings file
-
-    {
-        let mut project = app.world.resource_mut::<YarnProject>();
-        let mut localizations = project.localizations.as_mut().unwrap();
-        localizations.translations = vec!["fr-FR".into()];
-    }
-
-    app.update(); // write updated strings file
-
-    assert!(!dir.path().join("en-US.strings.csv").exists());
-    let strings_file_path = dir.path().join("fr-FR.strings.csv");
-    assert!(strings_file_path.exists());
-    let strings_file_source = fs::read_to_string(&strings_file_path)?;
-    let strings_file_line_languages: Vec<_> = strings_file_source
-        .lines()
-        .skip(1)
-        .map(|line| line.split(',').next().unwrap())
-        .collect();
-
-    assert!(!strings_file_line_languages.is_empty());
-
-    assert!(strings_file_line_languages
-        .iter()
-        .all(|&language| language == "fr-FR"));
-
-    Ok(())
-}
-
-#[test]
 fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines_with_ids.yarn");
@@ -205,8 +150,10 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         asset_folder: dir.path().to_str().unwrap().to_string(),
         ..default()
     }))
-    .add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+    .add_plugin(YarnSlingerPlugin)
+    .world
+    .send_event(
+        LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -215,13 +162,11 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         ),
     );
 
-    while !app.world.contains_resource::<YarnProject>() {
-        app.update();
-    }
+    app.load_project();
 
     {
         let project = app.world.resource::<YarnProject>();
-        let handle = project.yarn_files.iter().next().unwrap().clone();
+        let handle = project.yarn_files().next().unwrap().clone();
 
         let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
         let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
@@ -271,19 +216,20 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 fn does_not_panic_on_missing_language_when_not_selected() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_language: "en-US".into(),
-                translations: vec!["fr-FR".into()],
-                file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
-    );
+    app.add_plugins(DefaultPlugins)
+        .add_plugin(YarnSlingerPlugin)
+        .world
+        .send_event(
+            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+                Localizations {
+                    base_language: "en-US".into(),
+                    translations: vec!["fr-FR".into()],
+                    file_generation_mode: FileGenerationMode::Production,
+                },
+            ),
+        );
 
-    while !app.world.contains_resource::<YarnProject>() {
-        app.update();
-    }
+    app.load_project();
 }
 
 pub fn project_root_path() -> PathBuf {

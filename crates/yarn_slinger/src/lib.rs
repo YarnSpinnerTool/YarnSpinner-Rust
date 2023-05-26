@@ -12,7 +12,8 @@ pub mod prelude {
         Command as YarnCommand, CompiledProgramAnalyser as YarnAnalyser,
         Context as YarnAnalysisContext, Dialogue, DialogueError, DialogueEvent, DialogueOption,
         Language, Line as YarnLine, MarkupAttribute, MarkupValue, OptionId,
-        Result as YarnRuntimeResult, TextProvider, UnsupportedLanguageError, VariableStorage,
+        Result as YarnRuntimeResult, StringTable, TextProvider, UnsupportedLanguageError,
+        VariableStorage,
     };
 }
 
@@ -28,7 +29,10 @@ pub mod compiler {
 }
 
 pub mod runtime {
-    pub use yarn_slinger_runtime::markup::{MarkupAttribute, MarkupParseError, MarkupValue};
+    pub use yarn_slinger_runtime::markup::{
+        MarkupAttribute, MarkupParseError, MarkupValue, CHARACTER_ATTRIBUTE,
+        CHARACTER_ATTRIBUTE_NAME_PROPERTY, TRIM_WHITESPACE_PROPERTY,
+    };
     pub use yarn_slinger_runtime::prelude::*;
     pub use yarn_slinger_runtime::Result;
 }

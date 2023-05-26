@@ -111,6 +111,235 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         );
     }
 
+    /// (expression)
+    fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
+        self.visit(ctx.expression().unwrap().as_ref())
+    }
+
+    /// * / %
+    fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// < <= > >=
+    fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// -expression
+    fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![ctx.expression().unwrap() as Rc<ActualParserContext<'input>>];
+        self.generate_code_for_operation(
+            Operator::UnarySubtract,
+            operator_token.deref(),
+            &r#type,
+            &expressions,
+        )
+    }
+
+    /// and && or || xor ^
+    fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// + -
+    fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    /// [sic] (not NOT !)expression
+    fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![ctx.expression().unwrap() as Rc<ActualParserContext<'input>>];
+        self.generate_code_for_operation(
+            Operator::Not,
+            operator_token.deref(),
+            &r#type,
+            &expressions,
+        )
+    }
+
+    /// Variable
+    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
+        self.visit(ctx.value().unwrap().as_ref())
+    }
+
+    /// == !=
+    fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
+        let operator_token = ctx.op.as_ref().unwrap();
+        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
+        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
+        let expressions = vec![
+            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
+            ctx.expression(1).unwrap(),
+        ];
+        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
+    }
+
+    fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
+        let number: f32 = ctx.NUMBER().unwrap().get_text().parse().unwrap();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushFloat)
+                .with_token(ctx.start().deref())
+                .with_operand(number),
+        )
+    }
+
+    fn visit_valueTrue(&mut self, ctx: &ValueTrueContext<'input>) -> Self::Return {
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushBool)
+                .with_token(ctx.start().deref())
+                .with_operand(true),
+        )
+    }
+
+    fn visit_valueFalse(&mut self, ctx: &ValueFalseContext<'input>) -> Self::Return {
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushBool)
+                .with_token(ctx.start().deref())
+                .with_operand(false),
+        )
+    }
+
+    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
+        self.visit(ctx.variable().unwrap().as_ref())
+    }
+
+    fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
+        // [sic] stripping the " off the front and back actually is this what we want?
+        let string_value = ctx
+            .STRING()
+            .unwrap()
+            .get_text()
+            .trim_matches('"')
+            .to_owned();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushString)
+                .with_token(ctx.start().deref())
+                .with_operand(string_value),
+        )
+    }
+
+    /// null value
+    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
+        self.compiler_listener
+            .emit(Emit::from_op_code(OpCode::PushNull).with_token(ctx.start().deref()))
+    }
+
+    /// all we need do is visit the function itself, it will handle everything
+    fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
+        self.visit(ctx.function_call().unwrap().as_ref())
+    }
+
+    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
+        let variable_name = ctx.VAR_ID().unwrap().get_text();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushVariable)
+                .with_token(ctx.start().deref())
+                .with_operand(variable_name),
+        )
+    }
+
+    /// handles emitting the correct instructions for the function
+    fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) -> Self::Return {
+        // generate the instructions for all of the parameters
+        let expressions = ctx.expression_all();
+        for parameter in &expressions {
+            self.visit(parameter.as_ref());
+        }
+
+        let token = ctx.start();
+        // push the number of parameters onto the stack
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::PushFloat)
+                .with_token(token.deref())
+                .with_operand(expressions.len()),
+        );
+
+        // then call the function itself
+        let function_name = ctx.FUNC_ID().unwrap().get_text();
+        self.compiler_listener.emit(
+            Emit::from_op_code(OpCode::CallFunc)
+                .with_token(token.deref())
+                .with_operand(function_name),
+        );
+    }
+
+    /// if statement ifclause (elseifclause)* (elseclause)? <<endif>>
+    fn visit_if_statement(&mut self, ctx: &If_statementContext<'input>) -> Self::Return {
+        // Implementation note: Idk what this is supposed to do. Looks like a noop.
+        // context.AddErrorNode(null);
+
+        // label to give us a jump point for when the if finishes
+        let end_of_if_statement_label = self.compiler_listener.register_label("endif");
+
+        // handle the if
+        let if_clause = ctx.if_clause().unwrap();
+        self.generate_code_for_clause(
+            end_of_if_statement_label.clone(),
+            if_clause.as_ref(),
+            &if_clause.statement_all(),
+            if_clause.expression().unwrap(),
+        );
+
+        // all elseifs
+        for else_if_clause in &ctx.else_if_clause_all() {
+            self.generate_code_for_clause(
+                end_of_if_statement_label.clone(),
+                else_if_clause.as_ref(),
+                &else_if_clause.statement_all(),
+                else_if_clause.expression().unwrap(),
+            );
+        }
+
+        // the else, if there is one
+        if let Some(else_clause) = ctx.else_clause() {
+            self.generate_code_for_clause(
+                end_of_if_statement_label.clone(),
+                else_clause.as_ref(),
+                &else_clause.statement_all(),
+                None,
+            );
+        }
+
+        let current_node = self.compiler_listener.current_node.as_mut().unwrap();
+        current_node.labels.insert(
+            end_of_if_statement_label,
+            current_node.instructions.len() as i32,
+        );
+    }
+
     /// A set command: explicitly setting a value to an expression <<set $foo to 1>>
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
         // Ensure that the correct result is on the stack by evaluating the
@@ -221,75 +450,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         }
     }
 
-    /// handles emitting the correct instructions for the function
-    fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) -> Self::Return {
-        // generate the instructions for all of the parameters
-        let expressions = ctx.expression_all();
-        for parameter in &expressions {
-            self.visit(parameter.as_ref());
-        }
-
-        let token = ctx.start();
-        // push the number of parameters onto the stack
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushFloat)
-                .with_token(token.deref())
-                .with_operand(expressions.len()),
-        );
-
-        // then call the function itself
-        let function_name = ctx.FUNC_ID().unwrap().get_text();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::CallFunc)
-                .with_token(token.deref())
-                .with_operand(function_name),
-        );
-    }
-
-    /// if statement ifclause (elseifclause)* (elseclause)? <<endif>>
-    fn visit_if_statement(&mut self, ctx: &If_statementContext<'input>) -> Self::Return {
-        // Implementation note: Idk what this is supposed to do. Looks like a noop.
-        // context.AddErrorNode(null);
-
-        // label to give us a jump point for when the if finishes
-        let end_of_if_statement_label = self.compiler_listener.register_label("endif");
-
-        // handle the if
-        let if_clause = ctx.if_clause().unwrap();
-        self.generate_code_for_clause(
-            end_of_if_statement_label.clone(),
-            if_clause.as_ref(),
-            &if_clause.statement_all(),
-            if_clause.expression().unwrap(),
-        );
-
-        // all elseifs
-        for else_if_clause in &ctx.else_if_clause_all() {
-            self.generate_code_for_clause(
-                end_of_if_statement_label.clone(),
-                else_if_clause.as_ref(),
-                &else_if_clause.statement_all(),
-                else_if_clause.expression().unwrap(),
-            );
-        }
-
-        // the else, if there is one
-        if let Some(else_clause) = ctx.else_clause() {
-            self.generate_code_for_clause(
-                end_of_if_statement_label.clone(),
-                else_clause.as_ref(),
-                &else_clause.statement_all(),
-                None,
-            );
-        }
-
-        let current_node = self.compiler_listener.current_node.as_mut().unwrap();
-        current_node.labels.insert(
-            end_of_if_statement_label,
-            current_node.instructions.len() as i32,
-        );
-    }
-
     /// for the shortcut options (-> line of text <<if expression>> indent statements dedent)+
     fn visit_shortcut_option_statement(
         &mut self,
@@ -398,166 +558,6 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             .insert(end_of_group_label, current_node.instructions.len() as i32);
         self.compiler_listener
             .emit(Emit::from_op_code(OpCode::Pop).with_token(token.deref()));
-    }
-
-    /// (expression)
-    fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
-        self.visit(ctx.expression().unwrap().as_ref())
-    }
-
-    /// -expression
-    fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![ctx.expression().unwrap() as Rc<ActualParserContext<'input>>];
-        self.generate_code_for_operation(
-            Operator::UnarySubtract,
-            operator_token.deref(),
-            &r#type,
-            &expressions,
-        )
-    }
-
-    /// [sic] (not NOT !)expression
-    fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![ctx.expression().unwrap() as Rc<ActualParserContext<'input>>];
-        self.generate_code_for_operation(
-            Operator::Not,
-            operator_token.deref(),
-            &r#type,
-            &expressions,
-        )
-    }
-
-    /// Variable
-    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
-        self.visit(ctx.value().unwrap().as_ref())
-    }
-
-    /// * / %
-    fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![
-            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
-            ctx.expression(1).unwrap(),
-        ];
-        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
-    }
-
-    /// + -
-    fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![
-            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
-            ctx.expression(1).unwrap(),
-        ];
-        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
-    }
-
-    /// < <= > >=
-    fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![
-            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
-            ctx.expression(1).unwrap(),
-        ];
-        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
-    }
-
-    /// == !=
-    fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![
-            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
-            ctx.expression(1).unwrap(),
-        ];
-        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
-    }
-
-    /// and && or || xor ^
-    fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
-        let operator_token = ctx.op.as_ref().unwrap();
-        let operator = Self::token_to_operator(operator_token.get_token_type()).unwrap();
-        let r#type = self.compiler_listener.types.get(ctx).unwrap().clone();
-        let expressions = vec![
-            ctx.expression(0).unwrap() as Rc<ActualParserContext<'input>>,
-            ctx.expression(1).unwrap(),
-        ];
-        self.generate_code_for_operation(operator, operator_token.deref(), &r#type, &expressions)
-    }
-
-    fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
-        self.visit(ctx.variable().unwrap().as_ref())
-    }
-
-    fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
-        let number: f32 = ctx.NUMBER().unwrap().get_text().parse().unwrap();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushFloat)
-                .with_token(ctx.start().deref())
-                .with_operand(number),
-        )
-    }
-
-    fn visit_valueTrue(&mut self, ctx: &ValueTrueContext<'input>) -> Self::Return {
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushBool)
-                .with_token(ctx.start().deref())
-                .with_operand(true),
-        )
-    }
-
-    fn visit_valueFalse(&mut self, ctx: &ValueFalseContext<'input>) -> Self::Return {
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushBool)
-                .with_token(ctx.start().deref())
-                .with_operand(false),
-        )
-    }
-
-    fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
-        let variable_name = ctx.VAR_ID().unwrap().get_text();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushVariable)
-                .with_token(ctx.start().deref())
-                .with_operand(variable_name),
-        )
-    }
-
-    fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
-        // [sic] stripping the " off the front and back actually is this what we want?
-        let string_value = ctx
-            .STRING()
-            .unwrap()
-            .get_text()
-            .trim_matches('"')
-            .to_owned();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushString)
-                .with_token(ctx.start().deref())
-                .with_operand(string_value),
-        )
-    }
-
-    /// all we need do is visit the function itself, it will handle everything
-    fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
-        self.visit(ctx.function_call().unwrap().as_ref())
-    }
-
-    /// null value
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::PushNull).with_token(ctx.start().deref()))
     }
 
     fn visit_declare_statement(&mut self, _ctx: &Declare_statementContext<'input>) -> Self::Return {
