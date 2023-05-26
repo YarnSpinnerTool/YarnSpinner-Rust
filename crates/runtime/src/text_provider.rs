@@ -102,17 +102,12 @@ impl TextProvider for StringTableTextProvider {
     }
 }
 
-
 #[derive(Debug, Clone)]
-pub struct SharedTextProvider(Arc<RwLock<dyn TextProvider>>);
+pub struct SharedTextProvider(pub Arc<RwLock<dyn TextProvider>>);
 
 impl SharedTextProvider {
     pub fn new(text_provider: impl TextProvider + 'static) -> Self {
         Self(Arc::new(RwLock::new(text_provider)))
-    }
-
-    pub fn clone_shallow(&self) -> Self {
-        self.clone()
     }
 }
 

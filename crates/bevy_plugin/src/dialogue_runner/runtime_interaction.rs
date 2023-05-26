@@ -1,11 +1,15 @@
-use crate::asset_provider::fetch_resources;
+use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
-    app.add_system(continue_runtime.pipe(panic_on_err).after(fetch_resources));
+    app.add_system(
+        continue_runtime
+            .pipe(panic_on_err)
+            .after(LineProviderSystemSet),
+    );
 }
 
 fn continue_runtime(

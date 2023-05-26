@@ -111,7 +111,7 @@ impl YarnApp for App {
         self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
-            .fn_plugin(crate::asset_provider::asset_provider_plugin)
+            .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
     }
 }

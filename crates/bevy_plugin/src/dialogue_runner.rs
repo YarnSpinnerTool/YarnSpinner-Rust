@@ -3,8 +3,8 @@ pub use self::events::{
     PresentLineEvent, PresentOptionsEvent,
 };
 pub use self::{dialogue_option::DialogueOption, localized_line::LocalizedLine};
-use crate::asset_provider::{LineAssets, SharedTextProvider, StringsFileTextProvider};
 use crate::default_impl::MemoryVariableStore;
+use crate::line_provider::{LineAssets, SharedTextProvider, StringsFileTextProvider};
 use crate::prelude::*;
 use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
@@ -39,7 +39,7 @@ impl DialogueRunner {
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
-        self.last_selected_option.replace(option.clone());
+        self.last_selected_option.replace(option);
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
@@ -168,9 +168,9 @@ impl DialogueRunner {
     }
 
     pub fn set_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        self.asset_provider
-            .as_mut()
-            .map(|p| p.set_language(language.into()));
+        if let Some(provider) = self.asset_provider.as_mut() {
+            provider.set_language(language.into());
+        }
         self
     }
 

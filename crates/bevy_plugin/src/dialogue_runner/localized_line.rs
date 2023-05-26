@@ -1,4 +1,4 @@
-use crate::asset_provider::LineAssets;
+use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use bevy::prelude::*;
 use yarn_slinger::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
