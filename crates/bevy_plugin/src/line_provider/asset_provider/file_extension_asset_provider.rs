@@ -103,7 +103,7 @@ impl AssetProvider for FileExtensionAssetProvider {
                         .collect::<HashSet<_>>()
                         .into();
                 } else {
-                    error!("Tried to get audio asset for \"{language}\", which is a language that is not supported by localizations");
+                    error!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
                 }
             }
         }
@@ -129,14 +129,14 @@ impl FileExtensionAssetProvider {
                             self.handles.insert(handle);
                         } else {
                             debug!(
-                                "Audio file \"{path}\" for line \"{line_id}\" does not exist",
+                                "Asset file \"{path}\" for line \"{line_id}\" does not exist",
                                 path = path.display(),
                                 line_id = line_id.0
                             );
                         }
                     }
                 } else {
-                    error!("Tried to get audio asset for \"{language}\", which is a language that is not supported by localizations");
+                    error!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
                 }
             }
         }
