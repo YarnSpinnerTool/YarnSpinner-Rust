@@ -1,8 +1,10 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::LoadState;
+#[cfg(feature = "audio_assets")]
+use bevy::audio::AudioSource;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::{HashMap, HashSet, Uuid};
 use std::fmt::Debug;
 
 pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
@@ -14,29 +16,51 @@ pub struct FileExtensionAssetProvider {
     asset_server: Option<AssetServer>,
     handles: HashSet<HandleUntyped>,
     line_ids: HashSet<LineId>,
-    file_extensions: Vec<String>,
+    file_extensions: HashMap<Uuid, Vec<String>>,
+}
+
+#[macro_export]
+macro_rules! file_extensions {
+    ($($type:ty: $ext:expr),* $(,)?) => {
+        {
+            bevy::utils::HashMap::from([
+                $(
+                    (<$type as bevy::reflect::TypeUuid>::TYPE_UUID, $ext),
+                )*
+            ])
+        }
+    };
 }
 
 impl FileExtensionAssetProvider {
-    pub fn with_file_extensions(file_extensions: Vec<impl AsRef<str>>) -> Self {
+    pub fn with_file_extensions<T, U>(file_extensions: HashMap<Uuid, T>) -> Self
+    where
+        T: IntoIterator<Item = U>,
+        U: AsRef<str>,
+    {
         let file_extensions = file_extensions
             .into_iter()
-            .map(|s| s.as_ref().trim_start_matches('.').to_owned())
+            .map(|(type_id, extensions)| {
+                (
+                    type_id,
+                    extensions
+                        .into_iter()
+                        .map(|s| s.as_ref().trim_start_matches('.').to_owned())
+                        .collect::<Vec<_>>(),
+                )
+            })
             .collect();
         Self {
             file_extensions,
             ..default()
         }
     }
-}
 
-impl<T, U> From<T> for FileExtensionAssetProvider
-where
-    T: IntoIterator<Item = U>,
-    U: AsRef<str>,
-{
-    fn from(file_extensions: T) -> Self {
-        Self::with_file_extensions(file_extensions.into_iter().collect())
+    #[cfg(feature = "audio_assets")]
+    pub fn for_audio_files() -> Self {
+        Self::with_file_extensions(file_extensions! {
+            AudioSource: ["mp3", "ogg", "wav"],
+        })
     }
 }
 
@@ -90,18 +114,23 @@ impl AssetProvider for FileExtensionAssetProvider {
                     let Some(asset_server) = self.asset_server.as_ref() else {
                             return default();
                         };
-                    return self
+                    let assets = self
                         .file_extensions
                         .iter()
-                        .filter_map(|ext| {
-                            let file_name = format!("{}.{}", file_name_without_extension, ext);
-                            let path = dir.join(file_name);
+                        .filter_map(|(type_id, exts)| {
+                            exts.iter().find_map(|ext| {
+                                let file_name = format!("{}.{}", file_name_without_extension, ext);
+                                let path = dir.join(file_name);
 
-                            (asset_server.asset_io().is_file(&path))
-                                .then(|| asset_server.load_untyped(path))
+                                if asset_server.asset_io().is_file(&path) {
+                                    Some((type_id.clone(), asset_server.load_untyped(path)))
+                                } else {
+                                    None
+                                }
+                            })
                         })
-                        .collect::<HashSet<_>>()
-                        .into();
+                        .collect::<HashSet<_>>();
+                    return LineAssets::with_assets(assets);
                 } else {
                     error!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
                 }

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
+use std::path::PathBuf;
 use utils::prelude::*;
 
 mod utils;
@@ -18,7 +19,7 @@ fn does_not_load_asset_without_localizations() {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::from(&["ogg"]))
+        .with_asset_provider(FileExtensionAssetProvider::for_audio_files())
         .build();
     dialogue_runner.continue_in_next_update();
     app.world.spawn(dialogue_runner);
@@ -51,7 +52,7 @@ fn does_not_load_asset_without_language() {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::from(&["ogg"]))
+        .with_asset_provider(FileExtensionAssetProvider::for_audio_files())
         .build();
     dialogue_runner.continue_in_next_update();
     app.world.spawn(dialogue_runner);
@@ -83,7 +84,7 @@ fn does_not_load_invalid_asset() {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::from(&["ogg"]))
+        .with_asset_provider(FileExtensionAssetProvider::for_audio_files())
         .with_asset_language(Language::new("en-US"))
         .build();
     dialogue_runner.continue_in_next_update();
@@ -111,7 +112,7 @@ fn loads_asset_from_base_language_localization() {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::from(&["ogg"]))
+        .with_asset_provider(FileExtensionAssetProvider::for_audio_files())
         .with_asset_language(Language::new("en-US"))
         .build();
     dialogue_runner.continue_in_next_update();
@@ -123,7 +124,8 @@ fn loads_asset_from_base_language_localization() {
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
     let path = asset_server.get_handle_path(asset).unwrap();
-    assert_eq!("9.ogg", path.path().to_str().unwrap())
+    let expected = PathBuf::from("en-US").join("9.ogg");
+    assert_eq!(expected.to_str().unwrap(), path.path().to_str().unwrap())
 }
 
 trait AssetProviderExt {

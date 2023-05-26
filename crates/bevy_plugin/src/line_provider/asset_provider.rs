@@ -1,8 +1,8 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
-use bevy::asset::{Asset, HandleId};
+use bevy::asset::Asset;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::{HashMap, Uuid};
 pub use file_extension_asset_provider::FileExtensionAssetProvider;
 use std::fmt::Debug;
 
@@ -23,22 +23,22 @@ pub trait AssetProvider: Debug + Send + Sync {
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct LineAssets(HashSet<HandleUntyped>);
+pub struct LineAssets(HashMap<Uuid, HandleUntyped>);
 impl LineAssets {
     pub fn new() -> Self {
-        Self(HashSet::new())
+        Self(HashMap::new())
+    }
+
+    pub fn with_assets(handles: impl IntoIterator<Item = (Uuid, HandleUntyped)>) -> Self {
+        Self(handles.into_iter().collect())
     }
 
     pub fn get_handle<T>(&self) -> Option<Handle<T>>
     where
         T: Asset,
     {
-        self.0.iter().find_map(|handle| {
-            if let HandleId::Id(type_uuid, _) = handle.id() {
-                (T::TYPE_UUID == type_uuid).then(|| handle.clone().typed())
-            } else {
-                None
-            }
+        self.0.iter().find_map(|(type_id, handle)| {
+            (T::TYPE_UUID == *type_id).then(|| handle.clone().typed())
         })
     }
 
@@ -51,23 +51,23 @@ impl LineAssets {
     }
 }
 
-impl From<HashSet<HandleUntyped>> for LineAssets {
-    fn from(h: HashSet<HandleUntyped>) -> Self {
+impl From<HashMap<Uuid, HandleUntyped>> for LineAssets {
+    fn from(h: HashMap<Uuid, HandleUntyped>) -> Self {
         Self(h)
     }
 }
 
 impl IntoIterator for LineAssets {
-    type Item = <HashSet<HandleUntyped> as IntoIterator>::Item;
-    type IntoIter = <HashSet<HandleUntyped> as IntoIterator>::IntoIter;
+    type Item = <HashMap<Uuid, HandleUntyped> as IntoIterator>::Item;
+    type IntoIter = <HashMap<Uuid, HandleUntyped> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl Extend<HandleUntyped> for LineAssets {
-    fn extend<T: IntoIterator<Item = HandleUntyped>>(&mut self, iter: T) {
+impl Extend<(Uuid, HandleUntyped)> for LineAssets {
+    fn extend<T: IntoIterator<Item = (Uuid, HandleUntyped)>>(&mut self, iter: T) {
         self.0.extend(iter)
     }
 }
