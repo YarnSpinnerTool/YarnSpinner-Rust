@@ -40,7 +40,7 @@ impl Iterator for VirtualMachine {
     type Item = Vec<DialogueEvent>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.continue_().unwrap()
+        self.continue_().unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}"))
     }
 }
 

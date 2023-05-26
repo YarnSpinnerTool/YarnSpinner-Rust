@@ -103,11 +103,15 @@ impl TextProvider for StringTableTextProvider {
 }
 
 #[derive(Debug, Clone)]
-pub struct SharedTextProvider(pub Arc<RwLock<dyn TextProvider>>);
+pub struct SharedTextProvider(pub Arc<RwLock<Box<dyn TextProvider>>>);
 
 impl SharedTextProvider {
     pub fn new(text_provider: impl TextProvider + 'static) -> Self {
-        Self(Arc::new(RwLock::new(text_provider)))
+        Self(Arc::new(RwLock::new(Box::new(text_provider))))
+    }
+
+    pub fn replace(&mut self, text_provider: impl TextProvider + 'static) {
+        *self.0.write().unwrap() = Box::new(text_provider);
     }
 }
 

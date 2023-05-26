@@ -126,7 +126,7 @@ impl TestBase {
         let mut string_table_provider = StringTableTextProvider::new();
         string_table_provider.extend_base_language(string_table.clone());
         string_table_provider.extend_translation("en-US", string_table);
-        self.string_table = SharedTextProvider::new(string_table_provider);
+        self.string_table.replace(string_table_provider);
         self.dialogue.set_language_code(Language::from("en-US"));
         self
     }

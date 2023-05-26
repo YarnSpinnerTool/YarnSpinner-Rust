@@ -123,7 +123,7 @@ fn test_getting_current_node_name() {
     assert_eq!(dialogue.current_node(), Some("Sally".to_string()));
 
     dialogue.stop();
-    // Current node should now be null
+    // Current node should now be none
     assert!(dialogue.current_node().is_none());
 }
 
