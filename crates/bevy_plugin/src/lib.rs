@@ -26,7 +26,7 @@ pub mod prelude {
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{FileGenerationMode, Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin},
-        project::YarnProject,
+        project::{LoadYarnProjectEvent, YarnProject},
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};

@@ -1,66 +1,20 @@
 use crate::prelude::*;
-use crate::project::{YarnFilesToLoad, YarnProjectConfigToLoad};
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
 #[derive(Debug)]
-#[non_exhaustive]
-pub struct YarnSlingerPlugin {
-    pub localizations: Option<Localizations>,
-    pub yarn_files: HashSet<YarnFileSource>,
-}
-
-impl YarnSlingerPlugin {
-    #[must_use]
-    pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
-        let yarn_files = yarn_files
-            .into_iter()
-            .map(|yarn_file| yarn_file.into())
-            .collect();
-        Self {
-            localizations: None,
-            yarn_files,
-        }
-    }
-
-    #[must_use]
-    pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
-        let localizations = localizations.into();
-        if let Some(localizations) = localizations.as_ref() {
-            if cfg!(target_arch = "wasm32") {
-                assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
-                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
-            }
-        }
-        self.localizations = localizations;
-        self
-    }
-}
-
-impl<T, U> From<T> for YarnSlingerPlugin
-where
-    T: IntoIterator<Item = U>,
-    U: Into<YarnFileSource>,
-{
-    fn from(yarn_files: T) -> Self {
-        Self::with_yarn_files(yarn_files.into_iter().collect())
-    }
-}
+pub struct YarnSlingerPlugin;
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_yarn_types()
-            .init_resources(self)
-            .register_sub_plugins();
+        app.register_yarn_types().register_sub_plugins();
     }
 }
 
 trait YarnApp {
     fn register_yarn_types(&mut self) -> &mut Self;
-    fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self;
     fn register_sub_plugins(&mut self) -> &mut Self;
 }
 impl YarnApp for App {
@@ -98,13 +52,6 @@ impl YarnApp for App {
             .register_type::<yarn_slinger::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
             .register_type::<MarkupValue>()
-    }
-
-    fn init_resources(&mut self, plugin: &YarnSlingerPlugin) -> &mut Self {
-        self.insert_resource(YarnProjectConfigToLoad {
-            localizations: Some(plugin.localizations.clone()),
-        })
-        .insert_resource(YarnFilesToLoad(plugin.yarn_files.clone()))
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
