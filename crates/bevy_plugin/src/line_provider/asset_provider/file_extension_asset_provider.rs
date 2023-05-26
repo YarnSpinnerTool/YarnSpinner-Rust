@@ -70,7 +70,7 @@ impl AssetProvider for FileExtensionAssetProvider {
         };
         self.handles
             .iter()
-            .all(|handle| asset_server.get_load_state(handle) == LoadState::Loading)
+            .all(|handle| asset_server.get_load_state(handle) == LoadState::Loaded)
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {
