@@ -26,6 +26,8 @@ jobs:
           components: clippy
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
       - name: Run cargo clippy for serde
@@ -64,6 +66,8 @@ jobs:
           toolchain: stable
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo doc
         run: cargo doc --no-deps --workspace --all-features
 
@@ -78,5 +82,7 @@ jobs:
           toolchain: stable
       - name: Cache Cargo build files
         uses: Leafwing-Studios/cargo-cache@v1.0.0
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo test
         run: cargo test --workspace --all-features
