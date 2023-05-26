@@ -2,7 +2,7 @@ use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 use bevy::prelude::*;
-pub use shared_text_provider::SharedTextProvider;
+pub(crate) use shared_text_provider::SharedTextProvider;
 use std::any::Any;
 use std::collections::HashMap;
 pub use strings_file_text_provider::StringsFileTextProvider;

@@ -1,6 +1,6 @@
-use std::iter;
 use crate::prelude::*;
 use bevy::prelude::*;
+use std::iter;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn localization_config_plugin(app: &mut App) {
@@ -20,17 +20,28 @@ pub struct Localizations {
 }
 
 impl Localizations {
-    pub fn supports_translation(&self, language: impl AsRef<str>) -> bool {
-        self.translation(language).is_some()
+    pub fn supports_language(&self, language: impl AsRef<str>) -> bool {
+        self.supported_languages()
+            .any(|supported_language| supported_language.as_ref() == language.as_ref())
     }
-    
-    pub fn translation(&self, language: impl AsRef<str>) -> Option<&Localization> {
+
+    pub(crate) fn translation(&self, language: impl AsRef<str>) -> Option<&Localization> {
         let language = language.as_ref();
         self.translations
             .iter()
             .find(|localization| localization.language.as_ref() == language)
     }
-    
+
+    pub(crate) fn supported_localization(
+        &self,
+        language: impl AsRef<str>,
+    ) -> Option<&Localization> {
+        let language = language.as_ref();
+        iter::once(&self.base_language)
+            .chain(self.translations.iter())
+            .find(|localization| localization.language.as_ref() == language)
+    }
+
     pub fn supported_languages(&self) -> impl Iterator<Item = &Language> {
         iter::once(&self.base_language.language).chain(
             self.translations
@@ -38,7 +49,7 @@ impl Localizations {
                 .map(|localization| &localization.language),
         )
     }
-    
+
     pub(crate) fn strings_file_path(&self, language: impl AsRef<str>) -> Option<&Path> {
         let language = language.as_ref();
         self.translations

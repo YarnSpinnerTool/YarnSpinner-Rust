@@ -70,7 +70,7 @@ impl AppExt for App {
 
     fn load_assets(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_line_texts_available() {
+        while !self.dialogue_runner().are_line_assets_available() {
             self.update();
         }
         self

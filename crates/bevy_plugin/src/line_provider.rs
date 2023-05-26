@@ -1,7 +1,8 @@
 use crate::prelude::*;
 pub use asset_provider::{AssetProvider, FileExtensionAssetProvider, LineAssets};
 use bevy::prelude::*;
-pub use text_provider::{GenericAsset, SharedTextProvider, StringsFileTextProvider, TextProvider};
+pub(crate) use text_provider::SharedTextProvider;
+pub use text_provider::{GenericAsset, StringsFileTextProvider, TextProvider};
 
 mod asset_provider;
 mod text_provider;

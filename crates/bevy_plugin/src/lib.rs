@@ -10,9 +10,7 @@ mod yarn_file_asset;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
-    pub use crate::line_provider::{
-        FileExtensionAssetProvider, SharedTextProvider, StringsFileTextProvider,
-    };
+    pub use crate::line_provider::{FileExtensionAssetProvider, StringsFileTextProvider};
     pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
 }
 

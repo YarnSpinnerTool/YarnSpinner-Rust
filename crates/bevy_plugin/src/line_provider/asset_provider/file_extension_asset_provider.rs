@@ -49,6 +49,14 @@ impl AssetProvider for FileExtensionAssetProvider {
         self.language = language;
     }
 
+    fn set_localizations(&mut self, localizations: Localizations) {
+        self.localizations.replace(localizations);
+    }
+
+    fn set_asset_server(&mut self, asset_server: AssetServer) {
+        self.asset_server.replace(asset_server);
+    }
+
     fn are_assets_available(&self) -> bool {
         if self.language.is_none()
             || self.localizations.is_none()
@@ -76,7 +84,7 @@ impl AssetProvider for FileExtensionAssetProvider {
     fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
         if let Some(language) = self.language.as_ref() {
             if let Some(localizations) = self.localizations.as_ref() {
-                if let Some(localization) = localizations.translation(language) {
+                if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
                     let file_name_without_extension = line.id.0.trim_start_matches("line:");
                     let Some(asset_server) = self.asset_server.as_ref() else {
@@ -107,7 +115,7 @@ impl FileExtensionAssetProvider {
     fn reload_assets(&mut self) {
         if let Some(language) = self.language.as_ref() {
             if let Some(localizations) = self.localizations.as_ref() {
-                if let Some(localization) = localizations.translation(language) {
+                if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
                     self.handles.clear();
                     let Some(asset_server) = self.asset_server.as_ref() else {
@@ -120,7 +128,7 @@ impl FileExtensionAssetProvider {
                             let handle = asset_server.load_untyped(path);
                             self.handles.insert(handle);
                         } else {
-                            warn!(
+                            debug!(
                                 "Audio file \"{path}\" for line \"{line_id}\" does not exist",
                                 path = path.display(),
                                 line_id = line_id.0
