@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::{GenericAsset, UnderlyingTextProvider};
+use crate::UnderlyingTextProvider;
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use std::any::Any;
@@ -116,56 +116,54 @@ impl TextProvider for StringsFileTextProvider {
         self.base_string_table.extend(string_table);
     }
 
-    fn accept_fetched_assets(&mut self, asset: Box<dyn Any>) {
+    fn take_fetched_assets(&mut self, asset: Box<dyn Any>) {
         let string_table: Box<HashMap<LineId, String>> = asset.downcast().unwrap();
         self.translation_string_table.replace(*string_table);
     }
 
-    fn fetch_assets(&self) -> Box<dyn Fn(&World) -> GenericAsset + '_> {
+    fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
         let Some(handle) = self.strings_file_handle.as_ref() else {
-            return Box::new(|_| None);
+            return None;
         };
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
-            return Box::new(|_| None);
+            return None;
         }
+        let asset_events = world
+            .get_resource::<Events<AssetEvent<StringsFile>>>()
+            .unwrap();
+        let strings_file_has_changed = || {
+            asset_events
+                .get_reader()
+                .iter(asset_events)
+                .filter_map(|event| {
+                    if let AssetEvent::Modified { handle } = event {
+                        Some(handle)
+                    } else {
+                        None
+                    }
+                })
+                .any(|h| h == handle)
+        };
         let has_no_translation_yet = self.translation_string_table.is_none();
-        Box::new(move |world| {
-            let asset_events = world
-                .get_resource::<Events<AssetEvent<StringsFile>>>()
-                .unwrap();
-            let has_changed = || {
-                asset_events
-                    .get_reader()
-                    .iter(asset_events)
-                    .filter_map(|event| {
-                        if let AssetEvent::Modified { handle } = event {
-                            Some(handle)
-                        } else {
-                            None
-                        }
-                    })
-                    .any(|h| h == handle)
-            };
-            if has_no_translation_yet || has_changed() {
-                let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
-                let expected_language = self.language.as_ref().unwrap();
-                if let Some(record) = strings_file.get_offending_language(expected_language) {
-                    let path = self.asset_server.get_handle_path(handle).unwrap();
-                    panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
+        if has_no_translation_yet || strings_file_has_changed() {
+            let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
+            let expected_language = self.language.as_ref().unwrap();
+            if let Some(record) = strings_file.get_offending_language(expected_language) {
+                let path = self.asset_server.get_handle_path(handle).unwrap();
+                panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
                            path = path.path().display(),
                            id = record.id,
                            actual_language = record.language,
                     );
-                }
-                let string_table: HashMap<LineId, String> = strings_file
-                    .0
-                    .iter()
-                    .map(|(id, record)| (id.clone(), record.text.clone()))
-                    .collect();
-                Some(Box::new(string_table))
-            } else {
-                None
             }
-        })
+            let string_table: HashMap<LineId, String> = strings_file
+                .0
+                .iter()
+                .map(|(id, record)| (id.clone(), record.text.clone()))
+                .collect();
+            Some(Box::new(string_table))
+        } else {
+            None
+        }
     }
 }

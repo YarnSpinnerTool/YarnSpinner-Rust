@@ -16,13 +16,11 @@ pub(crate) fn text_provider_plugin(app: &mut App) {
         .add_system(fetch_resources.in_set(LineProviderSystemSet));
 }
 
-pub type GenericAsset = Option<Box<dyn Any + 'static>>;
-
 pub trait TextProvider: UnderlyingTextProvider {
     fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
     fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
-    fn accept_fetched_assets(&mut self, asset: Box<dyn Any>);
-    fn fetch_assets(&self) -> Box<dyn Fn(&World) -> GenericAsset + '_>;
+    fn take_fetched_assets(&mut self, asset: Box<dyn Any>);
+    fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>>;
 }
 
 pub(crate) fn fetch_resources(world: &mut World) {
@@ -34,14 +32,13 @@ pub(crate) fn fetch_resources(world: &mut World) {
     for entity in dialogue_runner_entities {
         let assets = {
             let dialogue_runner = world.get::<DialogueRunner>(entity).unwrap();
-            let fetch_assets = dialogue_runner.text_provider().fetch_assets();
-            fetch_assets(world)
+            dialogue_runner.text_provider().fetch_assets(world)
         };
         if let Some(assets) = assets {
             let mut dialogue_runner = world.get_mut::<DialogueRunner>(entity).unwrap();
             dialogue_runner
                 .text_provider_mut()
-                .accept_fetched_assets(assets)
+                .take_fetched_assets(assets)
         }
     }
 }

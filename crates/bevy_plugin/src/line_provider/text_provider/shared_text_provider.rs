@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::{GenericAsset, UnderlyingTextProvider};
+use crate::UnderlyingTextProvider;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;
@@ -32,13 +32,12 @@ impl TextProvider for SharedTextProvider {
             .extend_base_string_table(string_table)
     }
 
-    fn accept_fetched_assets(&mut self, asset: Box<dyn Any>) {
-        self.0.write().unwrap().accept_fetched_assets(asset)
+    fn take_fetched_assets(&mut self, asset: Box<dyn Any>) {
+        self.0.write().unwrap().take_fetched_assets(asset)
     }
 
-    fn fetch_assets(&self) -> Box<dyn Fn(&World) -> GenericAsset + '_> {
-        let clone = self.clone();
-        Box::new(move |world| clone.0.read().unwrap().fetch_assets()(world))
+    fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
+        self.0.read().unwrap().fetch_assets(world)
     }
 }
 

@@ -41,8 +41,6 @@ pub mod prelude {
     pub(crate) use serde::{Deserialize, Serialize};
 }
 
-pub use crate::line_provider::GenericAsset;
-
 pub use yarn_slinger::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnLine as UnderlyingYarnLine,
