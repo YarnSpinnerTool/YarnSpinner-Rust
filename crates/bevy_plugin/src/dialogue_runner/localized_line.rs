@@ -117,7 +117,7 @@ impl LocalizedLine {
     }
 
     // Documentation taken from `YarnLine`
-    /// Returns the substring of [`Line::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
+    /// Returns the substring of [`YarnLine::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
         assert!(
             self.text.len() <= attribute.position + attribute.length,
@@ -149,7 +149,7 @@ impl LocalizedLine {
     /// This method does not modify the current object. A new  [`LocalizedLine`] is returned.
     ///
     /// ## Panics
-    /// Panics if `attribute_to_delete` is not an attribute of this [`Line::attribute`].
+    /// Panics if `attribute_to_delete` is not an attribute of this [`YarnLine::attribute`].
     pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Self {
         let yarn_line: YarnLine = self.clone().into();
         let deleted_range = yarn_line.delete_range(attribute_to_delete);
