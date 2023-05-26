@@ -33,14 +33,18 @@ macro_rules! file_extensions {
 }
 
 impl FileExtensionAssetProvider {
-    pub fn with_file_extensions<T, U>(file_extensions: HashMap<Uuid, T>) -> Self
+    pub fn new() -> Self {
+        default()
+    }
+
+    pub fn with_file_extensions<T, U, V>(mut self, file_extensions: T) -> Self
     where
-        T: IntoIterator<Item = U>,
-        U: AsRef<str>,
+        T: IntoIterator<Item = (Uuid, U)>,
+        U: IntoIterator<Item = V>,
+        V: AsRef<str>,
     {
-        let file_extensions = file_extensions
-            .into_iter()
-            .map(|(type_id, extensions)| {
+        self.file_extensions
+            .extend(file_extensions.into_iter().map(|(type_id, extensions)| {
                 (
                     type_id,
                     extensions
@@ -48,17 +52,13 @@ impl FileExtensionAssetProvider {
                         .map(|s| s.as_ref().trim_start_matches('.').to_owned())
                         .collect::<Vec<_>>(),
                 )
-            })
-            .collect();
-        Self {
-            file_extensions,
-            ..default()
-        }
+            }));
+        self
     }
 
     #[cfg(feature = "audio_assets")]
-    pub fn for_audio_files() -> Self {
-        Self::with_file_extensions(file_extensions! {
+    pub fn with_audio(self) -> Self {
+        self.with_file_extensions(file_extensions! {
             AudioSource: ["mp3", "ogg", "wav"],
         })
     }
@@ -132,7 +132,7 @@ impl AssetProvider for FileExtensionAssetProvider {
                         .collect::<HashSet<_>>();
                     return LineAssets::with_assets(assets);
                 } else {
-                    error!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
+                    panic!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
                 }
             }
         }
@@ -165,7 +165,7 @@ impl FileExtensionAssetProvider {
                         }
                     }
                 } else {
-                    error!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
+                    panic!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
                 }
             }
         }
