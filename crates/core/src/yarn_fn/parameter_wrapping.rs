@@ -79,7 +79,7 @@ where
     type Item<'new> = ResRef<'new, T>;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        let value = iter.next().unwrap();
+        let value = iter.next().expect("Passed too few arguments to YarnFn");
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -113,7 +113,7 @@ where
     type Item<'new> = ResRefBorrow<'new, T, U>;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        let value = iter.next().unwrap();
+        let value = iter.next().expect("Passed too few arguments to YarnFn");
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -140,7 +140,7 @@ where
     type Item<'new> = ResOwned<T>;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        let value = iter.next().unwrap();
+        let value = iter.next().expect("Passed too few arguments to YarnFn");
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();

@@ -161,7 +161,7 @@ macro_rules! impl_yarn_fn_tuple {
         #[allow(non_snake_case)]
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
-            for <'a>F:
+            for<'a> F:
                 Send + Sync + Clone +
                 Fn($($param,)*) -> O +
                 Fn($(<$param as YarnFnParam>::Item<'a>,)*) -> O,
@@ -190,7 +190,7 @@ macro_rules! impl_yarn_fn_tuple {
                     let input = (
                         $($param::retrieve(&mut iter),)*
                     );
-                    assert!(iter.next().is_none(), "Wrong number of arguments");
+                    assert!(iter.next().is_none(), "Passed too many arguments to YarnFn");
 
                     let ($($param,)*) = input;
                     self($($param,)*)
@@ -317,5 +317,23 @@ mod tests {
         accept_yarn_fn(f);
     }
 
+    #[test]
+    fn unpacks_tuples_in_right_order() {
+        #[allow(clippy::too_many_arguments)]
+        fn f(a: usize, (b, c): (usize, usize), d: usize, (e, f, g): (usize, usize, usize)) -> bool {
+            a == 1 && b == 2 && c == 3 && d == 4 && e == 5 && f == 6 && g == 7
+        }
+        let input: Vec<_> = (1..=7).map(|i| Some(YarnValue::from(i))).collect();
+        let result = apply_yarn_fn(f, input);
+        assert!(result);
+    }
+
     fn accept_yarn_fn<Marker>(_: impl YarnFn<Marker>) {}
+
+    fn apply_yarn_fn<T, Marker>(f: T, input: Vec<Option<YarnValue>>) -> T::Out
+    where
+        T: YarnFn<Marker>,
+    {
+        f.call(input)
+    }
 }
