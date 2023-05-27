@@ -8,6 +8,7 @@ use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::slice::IterMut;
+use yarn_slinger_macros::all_tuples;
 
 #[derive(Debug)]
 pub struct YarnValueWrapper {
@@ -44,6 +45,23 @@ pub trait YarnFnParam {
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
 }
 
+macro_rules! impl_yarn_fn_param_tuple {
+    ($($param: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<$($param,)*> YarnFnParam for ($($param,)*)
+        where $($param: YarnFnParam,)* {
+            type Item<'new> = ($($param::Item<'new>,)*);
+
+            #[allow(unused_variables)] // for n = 0 tuples
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+               ($($param::retrieve(iter),)*)
+            }
+        }
+    };
+}
+
+all_tuples!(impl_yarn_fn_param_tuple, 0, 16, P);
+
 struct ResRef<'a, T>
 where
     T: TryFrom<YarnValue> + 'static,
@@ -61,7 +79,7 @@ where
     type Item<'new> = ResRef<'new, T>;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        let mut value = iter.next().unwrap();
+        let value = iter.next().unwrap();
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -94,8 +112,8 @@ where
 {
     type Item<'new> = ResRefBorrow<'new, T, U>;
 
-    fn retrieve<'a>(mut iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        let mut value = iter.next().unwrap();
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let value = iter.next().unwrap();
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -122,7 +140,7 @@ where
     type Item<'new> = ResOwned<T>;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        let mut value = iter.next().unwrap();
+        let value = iter.next().unwrap();
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();

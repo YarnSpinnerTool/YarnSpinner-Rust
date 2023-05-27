@@ -182,12 +182,16 @@ macro_rules! impl_yarn_fn_tuple {
                     // Now $param holds an owned YarnValue!
 
                     let mut params: Vec<YarnValueWrapper> = vec![$(YarnValueWrapper::from($param),)*];
+
+                    #[allow(unused_variables, unused_mut)] // for n = 0 tuples
                     let mut iter = params.iter_mut();
 
-                    // the first $param is the type implementing YarnFnParam, the second is a variable name
+                    // $param is the type implementing YarnFnParam
                     let input = (
                         $($param::retrieve(&mut iter),)*
                     );
+                    assert!(iter.next().is_none(), "Wrong number of arguments");
+
                     let ($($param,)*) = input;
                     self($($param,)*)
                 }
@@ -286,6 +290,24 @@ mod tests {
             _: &str,
             _: &YarnValue,
             _: &bool,
+            _: isize,
+            _: String,
+            _: &u32,
+        ) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_tuples() {
+        #[allow(clippy::too_many_arguments)]
+        fn f(
+            _: (String, usize),
+            _: usize,
+            _: (&str, (&str, &String)),
+            _: &YarnValue,
+            _: (&bool, bool, bool, (&str, String)),
             _: isize,
             _: String,
             _: &u32,
