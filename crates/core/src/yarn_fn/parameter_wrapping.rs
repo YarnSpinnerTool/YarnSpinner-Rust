@@ -10,6 +10,8 @@ use std::marker::PhantomData;
 use std::slice::IterMut;
 use yarn_slinger_macros::all_tuples;
 
+/// Helper class for implementing something like [`YarnFn`] yourself.
+/// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
 #[derive(Debug)]
 pub struct YarnValueWrapper {
     raw: Option<YarnValue>,
@@ -39,6 +41,8 @@ impl YarnValueWrapper {
     }
 }
 
+/// Helper trait for implementing something like [`YarnFn`] yourself.
+/// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
 pub trait YarnFnParam {
     type Item<'new>;
 

@@ -20,7 +20,7 @@ pub mod prelude {
 pub mod core {
     pub use yarn_slinger_core::prelude::{
         Header, Instruction, InvalidOpCodeError, Library, LineId, Node, Position, Program, Type,
-        YarnFn, YarnValue, YarnValueCastError,
+        YarnFn, YarnFnParam, YarnValue, YarnValueCastError, YarnValueWrapper, YarnValueWrapperIter,
     };
 }
 pub mod compiler {

@@ -1,60 +1,68 @@
-use crate::prelude::*;
-use bevy::ecs::system::SystemParam;
+use crate::prelude::YarnValue;
+use bevy::ecs::system::{SystemParam, SystemState};
 use bevy::prelude::*;
-use bevy::utils::all_tuples;
+use std::marker::PhantomData;
+use yarn_slinger::core::{YarnFnParam, YarnValueWrapper};
 
 pub(crate) fn commands_plugin(_app: &mut App) {}
 
-pub trait YarnCommand<Marker>: Send + Sync + 'static {
-    type In: YarnCommandIn;
-    type Param: SystemParam;
-
-    fn run(&mut self, input: Self::In, param_value: <Self::Param as SystemParam>::Item<'_, '_>);
+pub trait YarnCommand<Marker>:
+    Send + Sync + 'static + SystemParamFunction<Marker, Out = ()>
+{
+    type ConstrainedIn: YarnFnParam;
+    fn run(
+        &mut self,
+        input: Self::ConstrainedIn,
+        param_value: <Self::Param as SystemParam>::Item<'_, '_>,
+    );
 }
 
-pub trait YarnCommandIn {
-    type Item: YarnCommandIn;
-    fn from_params(name: &str, params: &mut Vec<YarnValue>) -> Self::Item
-    where
-        Self: Sized;
-}
+impl<T, U, Marker> YarnCommand<Marker> for T
+where
+    T: SystemParamFunction<Marker, In = U, Out = ()>,
+    U: YarnFnParam,
+{
+    type ConstrainedIn = U;
 
-/// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
-macro_rules! impl_command_tuple {
-    ($($param: ident),*) => {
-        #[allow(non_snake_case)]
-        #[allow(unused_variables)]
-        impl<$($param,)*> YarnCommandIn for ($($param,)*)
-        where
-            $($param: YarnCommandIn,)*
-        {
-            type Item = ($($param::Item,)*);
-
-
-            #[allow(non_snake_case)]
-            fn from_params(name: &str, params: &mut Vec<YarnValue>) -> Self::Item
-            where
-                Self: Sized,
-            {
-                ($($param::from_params(name, params),)*)
-            }
-        }
-    };
-}
-
-all_tuples!(impl_command_tuple, 0, 16, P);
-
-impl YarnCommandIn for usize {
-    type Item = usize;
-
-    fn from_params(name: &str, params: &mut Vec<YarnValue>) -> Self::Item
-    where
-        Self: Sized,
-    {
-        params
-            .pop()
-            .unwrap_or_else(|| panic!("Yarn command {name} was called with too few params"))
-            .try_into()
-            .unwrap_or_else(|e| panic!("Passed an invalid param to Yarn command {name}: {e}"))
+    fn run(
+        &mut self,
+        input: Self::ConstrainedIn,
+        param_value: <Self::Param as SystemParam>::Item<'_, '_>,
+    ) {
+        self.run(input, param_value);
     }
+}
+
+pub trait UntypedYarnCommand: Send + Sync + 'static {
+    fn call(&mut self, input: Vec<YarnValue>, world: &mut World);
+}
+
+impl<T, Marker> UntypedYarnCommand for YarnCommandWrapper<Marker, T>
+where
+    Marker: 'static,
+    T: YarnCommand<Marker>,
+{
+    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) {
+        let mut system_state: SystemState<T::Param> = SystemState::new(world);
+        let param = system_state.get_mut(world);
+        let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
+        let mut iter = input.iter_mut();
+        let input = T::ConstrainedIn::retrieve(&mut iter);
+        assert!(
+            iter.next().is_none(),
+            "Passed too many arguments to Command"
+        );
+        YarnCommand::run(&mut self.function, input, param);
+        system_state.apply(world);
+    }
+}
+
+pub(crate) struct YarnCommandWrapper<Marker, F>
+where
+    F: YarnCommand<Marker>,
+{
+    function: F,
+
+    // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
+    _marker: PhantomData<fn() -> Marker>,
 }
