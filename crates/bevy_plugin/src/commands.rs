@@ -12,7 +12,7 @@ pub trait YarnCommand<Marker>:
     type ConstrainedIn: YarnFnParam;
     fn run(
         &mut self,
-        input: Self::ConstrainedIn,
+        input: <Self::ConstrainedIn as YarnFnParam>::Item<'_>,
         param_value: <Self::Param as SystemParam>::Item<'_, '_>,
     );
 }
@@ -20,13 +20,13 @@ pub trait YarnCommand<Marker>:
 impl<T, U, Marker> YarnCommand<Marker> for T
 where
     T: SystemParamFunction<Marker, In = U, Out = ()>,
-    U: YarnFnParam,
+    U: for<'a> YarnFnParam<Item<'a> = U>,
 {
     type ConstrainedIn = U;
 
     fn run(
         &mut self,
-        input: Self::ConstrainedIn,
+        input: <Self::ConstrainedIn as YarnFnParam>::Item<'_>,
         param_value: <Self::Param as SystemParam>::Item<'_, '_>,
     ) {
         self.run(input, param_value);
@@ -65,4 +65,41 @@ where
 
     // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
     _marker: PhantomData<fn() -> Marker>,
+}
+
+impl<Marker, F> From<F> for YarnCommandWrapper<Marker, F>
+where
+    F: YarnCommand<Marker>,
+{
+    fn from(function: F) -> Self {
+        Self {
+            function,
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_empty_function() {
+        fn f() {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_function_with_simple_in_param() {
+        fn f(_: In<usize>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_function_with_tuple_in_param() {
+        fn f(_: In<(usize, isize, (String, &str))>) {}
+        accepts_yarn_command(f);
+    }
+
+    fn accepts_yarn_command<Marker>(_: impl YarnCommand<Marker>) {}
 }

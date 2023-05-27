@@ -318,6 +318,14 @@ mod tests {
         assert!(result);
     }
 
+    #[test]
+    fn accepts_function_with_single_tuple_param() {
+        fn f(_: (usize, isize, (String, &str))) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
     fn accept_yarn_fn<Marker>(_: impl YarnFn<Marker>) {}
 
     fn apply_yarn_fn<T, Marker>(f: T, input: Vec<YarnValue>) -> T::Out
