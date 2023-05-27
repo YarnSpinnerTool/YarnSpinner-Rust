@@ -7,12 +7,15 @@ use std::any::Any;
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::slice::IterMut;
 
 #[derive(Debug)]
-pub(crate) struct YarnValueWrapper {
+pub struct YarnValueWrapper {
     raw: Option<YarnValue>,
     converted: Option<Box<dyn Any>>,
 }
+
+pub type YarnValueWrapperIter<'a> = IterMut<'a, YarnValueWrapper>;
 
 impl From<YarnValue> for YarnValueWrapper {
     fn from(value: YarnValue) -> Self {
@@ -35,10 +38,10 @@ impl YarnValueWrapper {
     }
 }
 
-pub(crate) trait YarnFnParam {
+pub trait YarnFnParam {
     type Item<'new>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_>;
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
 }
 
 struct ResRef<'a, T>
@@ -57,7 +60,8 @@ where
 {
     type Item<'new> = ResRef<'new, T>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let mut value = iter.next().unwrap();
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -90,7 +94,8 @@ where
 {
     type Item<'new> = ResRefBorrow<'new, T, U>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+    fn retrieve<'a>(mut iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let mut value = iter.next().unwrap();
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -116,7 +121,8 @@ where
 {
     type Item<'new> = ResOwned<T>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let mut value = iter.next().unwrap();
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();
@@ -139,16 +145,16 @@ macro_rules! impl_yarn_fn_param_inner {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResRef::<$referenced>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResRef::<$referenced>::retrieve(iter).value
             }
         }
 
         impl YarnFnParam for $referenced {
             type Item<'new> = $referenced;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResOwned::<$referenced>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResOwned::<$referenced>::retrieve(iter).value
             }
         }
     };
@@ -156,24 +162,24 @@ macro_rules! impl_yarn_fn_param_inner {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResRefBorrow::<$owned, $referenced>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResRefBorrow::<$owned, $referenced>::retrieve(iter).value
             }
         }
 
         impl YarnFnParam for &$owned {
             type Item<'new> = &'new $owned;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResRef::<$owned>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResRef::<$owned>::retrieve(iter).value
             }
         }
 
         impl YarnFnParam for $owned {
             type Item<'new> = $owned;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResOwned::<$owned>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResOwned::<$owned>::retrieve(iter).value
             }
         }
     };

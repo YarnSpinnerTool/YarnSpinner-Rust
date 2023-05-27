@@ -181,13 +181,12 @@ macro_rules! impl_yarn_fn_tuple {
                     );
                     // Now $param holds an owned YarnValue!
 
-                    let ($(mut $param,)*) = (
-                        $(YarnValueWrapper::from($param),)*
-                    );
+                    let mut params: Vec<YarnValueWrapper> = vec![$(YarnValueWrapper::from($param),)*];
+                    let mut iter = params.iter_mut();
 
                     // the first $param is the type implementing YarnFnParam, the second is a variable name
                     let input = (
-                        $($param::retrieve(&mut $param),)*
+                        $($param::retrieve(&mut iter),)*
                     );
                     let ($($param,)*) = input;
                     self($($param,)*)

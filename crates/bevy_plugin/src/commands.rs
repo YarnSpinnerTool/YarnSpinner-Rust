@@ -1,8 +1,7 @@
 use crate::prelude::*;
-use bevy::ecs::system::{SystemParam, SystemState};
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy::utils::{all_tuples, HashMap};
-use std::fmt::Debug;
+use bevy::utils::all_tuples;
 
 pub(crate) fn commands_plugin(_app: &mut App) {}
 
@@ -24,7 +23,7 @@ pub trait YarnCommandIn {
 macro_rules! impl_command_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        #[allow(unused_variables)]`
+        #[allow(unused_variables)]
         impl<$($param,)*> YarnCommandIn for ($($param,)*)
         where
             $($param: YarnCommandIn,)*
