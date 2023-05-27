@@ -207,8 +207,8 @@ mod tests {
 
     fn to_function_params(
         params: impl IntoIterator<Item = impl Into<YarnValue>>,
-    ) -> Vec<Option<YarnValue>> {
-        params.into_iter().map(Into::into).map(Some).collect()
+    ) -> Vec<YarnValue> {
+        params.into_iter().map(Into::into).collect()
     }
 
     #[test]
