@@ -44,10 +44,12 @@ impl YarnValueWrapper {
 /// Helper trait for implementing something like [`YarnFn`] yourself.
 /// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
 pub trait YarnFnParam {
-    type Item<'new>;
+    type Item<'new>: YarnFnParam;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
 }
+
+pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
 
 macro_rules! impl_yarn_fn_param_tuple {
     ($($param: ident),*) => {

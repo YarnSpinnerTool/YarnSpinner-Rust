@@ -1,37 +1,54 @@
 use crate::prelude::YarnValue;
-use bevy::ecs::system::{SystemParam, SystemState};
+use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
 use bevy::prelude::*;
+use bevy::utils::all_tuples;
 use std::marker::PhantomData;
 use yarn_slinger::core::{YarnFnParam, YarnValueWrapper};
 
 pub(crate) fn commands_plugin(_app: &mut App) {}
 
-pub trait YarnCommand<Marker>:
-    Send + Sync + 'static + SystemParamFunction<Marker, Out = ()>
-{
-    type ConstrainedIn: YarnFnParam;
-    fn run(
-        &mut self,
-        input: <Self::ConstrainedIn as YarnFnParam>::Item<'_>,
-        param_value: <Self::Param as SystemParam>::Item<'_, '_>,
-    );
+pub trait YarnCommand<Marker>: Send + Sync + 'static {
+    type In: YarnFnParam;
+    type Param: SystemParam;
+
+    fn run(&mut self, input: YarnFnParamItem<Self::In>, param_value: SystemParamItem<Self::Param>);
+}
+pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
+
+macro_rules! impl_command_function {
+    ($($param: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*)> for Func
+        where
+            Input: YarnFnParam,
+        for <'a> &'a mut Func:
+                FnMut(In<Input>, $($param), *) +
+                FnMut(In<Input>, $(SystemParamItem<$param>),*) +
+                FnMut(In<YarnFnParamItem<Input>>, $($param), *) +
+                FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*)
+        {
+            type In = Input;
+            type Param = ($($param,)*);
+            #[inline]
+            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) {
+                #[allow(clippy::too_many_arguments)]
+                fn call_inner<Input: YarnFnParam, $($param,)*>(
+                    mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*),
+                    input: In<YarnFnParamItem<Input>>,
+                    $($param: $param,)*
+                ){
+                    f(input, $($param,)*)
+                }
+                let ($($param,)*) = param_value;
+                call_inner(self, In(input), $($param),*)
+            }
+        }
+    };
 }
 
-impl<T, U, Marker> YarnCommand<Marker> for T
-where
-    T: SystemParamFunction<Marker, In = U, Out = ()>,
-    U: for<'a> YarnFnParam<Item<'a> = U>,
-{
-    type ConstrainedIn = U;
-
-    fn run(
-        &mut self,
-        input: <Self::ConstrainedIn as YarnFnParam>::Item<'_>,
-        param_value: <Self::Param as SystemParam>::Item<'_, '_>,
-    ) {
-        self.run(input, param_value);
-    }
-}
+// Note that we rely on the highest impl to be <= the highest order of the tuple impls
+// of `SystemParam` created.
+all_tuples!(impl_command_function, 0, 1, F);
 
 pub trait UntypedYarnCommand: Send + Sync + 'static {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World);
@@ -47,7 +64,7 @@ where
         let param = system_state.get_mut(world);
         let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
         let mut iter = input.iter_mut();
-        let input = T::ConstrainedIn::retrieve(&mut iter);
+        let input = T::In::retrieve(&mut iter);
         assert!(
             iter.next().is_none(),
             "Passed too many arguments to Command"
