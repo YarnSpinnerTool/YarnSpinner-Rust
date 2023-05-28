@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
-use std::path::PathBuf;
 use utils::prelude::*;
 
 mod utils;
@@ -135,8 +134,9 @@ fn loads_asset_from_base_language_localization() {
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
     let path = asset_server.get_handle_path(asset).unwrap();
-    let expected = PathBuf::from("en-US").join("9.ogg");
-    assert_eq!(expected.to_str().unwrap(), path.path().to_str().unwrap())
+
+    // Note that this does not contains backslashes on Windows
+    assert_eq!("en-US/9.ogg", path.path().to_str().unwrap())
 }
 
 #[test]
@@ -171,8 +171,9 @@ fn loads_asset_from_translated_localization() {
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
     let path = asset_server.get_handle_path(asset).unwrap();
-    let expected = PathBuf::from("de-CH").join("10.ogg");
-    assert_eq!(expected.to_str().unwrap(), path.path().to_str().unwrap())
+
+    // Note that this does not contains backslashes on Windows
+    assert_eq!("de-CH/10.ogg", path.path().to_str().unwrap())
 }
 
 #[test]

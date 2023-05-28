@@ -203,7 +203,7 @@ pub(crate) fn get_declarations_from_library(library: &Library) -> Vec<Declaratio
         .flat_map(|r#type| {
             r#type
                 .methods()
-                .keys()
+                .names()
                 .map(|name| r#type.get_canonical_name_for_method(name))
                 .collect::<Vec<_>>()
         })

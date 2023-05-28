@@ -1,13 +1,12 @@
 use crate::prelude::*;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
 
 /// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct YarnFnRegistry(pub InnerRegistry);
+pub struct YarnFnRegistry(pub(crate) InnerRegistry);
 
 type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
 
@@ -40,7 +39,7 @@ impl YarnFnRegistry {
     {
         let name = name.into();
         let wrapped = YarnFnWrapper::from(function);
-        self.insert(name, Box::new(wrapped));
+        self.0.insert(name, Box::new(wrapped));
         self
     }
 
@@ -56,7 +55,7 @@ impl YarnFnRegistry {
         function: Box<dyn UntypedYarnFn>,
     ) -> &mut Self {
         let name = name.into();
-        self.insert(name, function);
+        self.0.insert(name, function);
         self
     }
 
@@ -67,23 +66,26 @@ impl YarnFnRegistry {
     pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
         self.0.get(name).map(|f| f.as_ref())
     }
-}
 
-impl Deref for YarnFnRegistry {
-    type Target = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    pub fn names(&self) -> impl Iterator<Item = &str> {
+        self.0.keys().map(|key| key.as_ref())
     }
-}
 
-impl DerefMut for YarnFnRegistry {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+    pub fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
+        self.0.values().map(|value| value.as_ref())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }
 
 /// Create a [`YarnFnRegistry`] from a list of named functions.
+#[macro_export]
 macro_rules! yarn_fn_registry {
     ($($name:expr => $function:expr,)*) => {
         {
@@ -95,7 +97,7 @@ macro_rules! yarn_fn_registry {
         }
     };
 }
-pub(crate) use yarn_fn_registry;
+pub use yarn_fn_registry;
 
 #[cfg(test)]
 mod tests {
