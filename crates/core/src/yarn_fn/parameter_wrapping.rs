@@ -58,7 +58,7 @@ macro_rules! impl_yarn_fn_param_tuple {
         where $($param: YarnFnParam,)* {
             type Item<'new> = ($($param::Item<'new>,)*);
 
-            #[allow(unused_variables)] // for n = 0 tuples
+            #[allow(unused_variables, clippy::unused_unit)] // for n = 0 tuples
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                ($($param::retrieve(iter),)*)
             }
