@@ -106,7 +106,7 @@ pub mod tests {
     }
 
     #[test]
-    fn accepts_empty_tuple() {
+    fn accepts_empty_tuple_in_param() {
         fn f(_: In<()>) {}
         accepts_yarn_command(f);
     }
@@ -120,6 +120,30 @@ pub mod tests {
     #[test]
     fn accepts_function_with_tuple_in_param() {
         fn f(_: In<(usize, isize, (String, &str))>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_only_query() {
+        fn f(_: Query<Entity>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_empty_tuple_in_param_and_query() {
+        fn f(_: In<()>, _: Query<Entity>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_function_with_simple_in_param_and_query() {
+        fn f(_: In<usize>, _: Query<Entity>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_function_with_tuple_in_param_and_query() {
+        fn f(_: In<(usize, isize, (String, &str))>, _: Query<Entity>) {}
         accepts_yarn_command(f);
     }
 
