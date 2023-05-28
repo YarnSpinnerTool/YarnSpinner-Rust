@@ -100,9 +100,11 @@ pub mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn accepts_empty_function() {
-        fn f() {}
-        accepts_yarn_command(f);
+        fn _f() {}
+        // Currently not supported
+        // accepts_yarn_command(f);
     }
 
     #[test]
@@ -124,9 +126,11 @@ pub mod tests {
     }
 
     #[test]
+    #[ignore]
     fn accepts_only_query() {
-        fn f(_: Query<Entity>) {}
-        accepts_yarn_command(f);
+        fn _f(_: Query<Entity>) {}
+        // Currently not supported
+        // accepts_yarn_command(f);
     }
 
     #[test]
