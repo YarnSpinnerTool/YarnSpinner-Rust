@@ -3,7 +3,7 @@ use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
 use bevy::prelude::*;
 use bevy::utils::all_tuples;
 use std::marker::PhantomData;
-use yarn_slinger::core::{YarnFnParam, YarnValueWrapper};
+use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn commands_plugin(_app: &mut App) {}
 
@@ -13,7 +13,6 @@ pub trait YarnCommand<Marker>: Send + Sync + 'static {
 
     fn run(&mut self, input: YarnFnParamItem<Self::In>, param_value: SystemParamItem<Self::Param>);
 }
-pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
 
 macro_rules! impl_command_function {
     ($($param: ident),*) => {
@@ -103,6 +102,12 @@ pub mod tests {
     #[test]
     fn accepts_empty_function() {
         fn f() {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_empty_tuple() {
+        fn f(_: In<()>) {}
         accepts_yarn_command(f);
     }
 
