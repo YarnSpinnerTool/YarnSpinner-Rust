@@ -1,6 +1,7 @@
 use crate::prelude::YarnValue;
 use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
 use bevy::prelude::*;
+use bevy::tasks::Task;
 use bevy::utils::all_tuples;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
@@ -12,7 +13,11 @@ pub trait YarnCommand<Marker>: Send + Sync + 'static {
     type In: YarnFnParam;
     type Param: SystemParam;
 
-    fn run(&mut self, input: YarnFnParamItem<Self::In>, param_value: SystemParamItem<Self::Param>);
+    fn run(
+        &mut self,
+        input: YarnFnParamItem<Self::In>,
+        param_value: SystemParamItem<Self::Param>,
+    ) -> Option<Task<()>>;
 }
 
 macro_rules! impl_command_function {
@@ -30,7 +35,7 @@ macro_rules! impl_command_function {
             type In = Input;
             type Param = ($($param,)*);
             #[inline]
-            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) {
+            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) -> Option<Task<()>> {
                 #[allow(clippy::too_many_arguments)]
                 fn call_inner<Input: YarnFnParam, $($param,)*>(
                     mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*),
@@ -40,7 +45,36 @@ macro_rules! impl_command_function {
                     f(input, $($param,)*)
                 }
                 let ($($param,)*) = param_value;
-                call_inner(self, In(input), $($param),*)
+                call_inner(self, In(input), $($param),*);
+                None
+            }
+        }
+
+        #[allow(non_snake_case)]
+        impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*) -> Task<()>> for Func
+        where
+            Input: YarnFnParam,
+        for <'a> &'a mut Func:
+                FnMut(In<Input>, $($param), *) -> Task<()> +
+                FnMut(In<Input>, $(SystemParamItem<$param>),*) -> Task<()> +
+                FnMut(In<YarnFnParamItem<Input>>, $($param), *) -> Task<()> +
+                FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Task<()>
+        {
+            type In = Input;
+            type Param = ($($param,)*);
+            #[inline]
+            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) -> Option<Task<()>> {
+                #[allow(clippy::too_many_arguments)]
+                fn call_inner<Input: YarnFnParam, $($param,)*>(
+                    mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*) -> Task<()>,
+                    input: In<YarnFnParamItem<Input>>,
+                    $($param: $param,)*
+                ) -> Task<()>{
+                    f(input, $($param,)*)
+                }
+                let ($($param,)*) = param_value;
+                let task = call_inner(self, In(input), $($param),*);
+                Some(task)
             }
         }
     };
@@ -51,7 +85,7 @@ macro_rules! impl_command_function {
 all_tuples!(impl_command_function, 0, 16, F);
 
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
-    fn call(&mut self, input: Vec<YarnValue>, world: &mut World);
+    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Option<Task<()>>;
 }
 
 impl<T, Marker> UntypedYarnCommand for YarnCommandWrapper<Marker, T>
@@ -59,7 +93,7 @@ where
     Marker: 'static,
     T: YarnCommand<Marker>,
 {
-    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) {
+    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Option<Task<()>> {
         let mut system_state: SystemState<T::Param> = SystemState::new(world);
         let param = system_state.get_mut(world);
         let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
@@ -69,8 +103,9 @@ where
             iter.next().is_none(),
             "Passed too many arguments to Command"
         );
-        YarnCommand::run(&mut self.function, input, param);
+        let task = YarnCommand::run(&mut self.function, input, param);
         system_state.apply(world);
+        task
     }
 }
 
@@ -132,6 +167,7 @@ impl Eq for Box<dyn UntypedYarnCommand> {}
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use bevy::tasks::AsyncComputeTaskPool;
 
     #[test]
     #[ignore]
@@ -182,6 +218,17 @@ pub mod tests {
     #[test]
     fn accepts_function_with_tuple_in_param_and_query() {
         fn f(_: In<(usize, isize, (String, &str))>, _: Query<Entity>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_returning_task() {
+        fn f(_: In<()>) -> Task<()> {
+            let thread_pool = AsyncComputeTaskPool::get();
+            thread_pool.spawn(async move {
+                println!("Hello from task");
+            })
+        }
         accepts_yarn_command(f);
     }
 

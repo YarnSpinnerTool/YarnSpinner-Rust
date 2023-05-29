@@ -27,11 +27,26 @@ fn continue_runtime(
         if !dialogue_runner.continue_ {
             continue;
         }
+        dialogue_runner
+            .command_tasks
+            .retain(|task| !task.is_finished());
+        if !dialogue_runner.command_tasks.is_empty() {
+            continue;
+        }
+
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
                 if let Some(mut options) = last_options.remove(&source) {
                     let Some(index) = options.iter().position(|o| o.id == option) else{
-                        bail!("Dialogue options does not contain selected option. Expected one of {:?}, but found {option}", last_options.keys());
+                        let expected_options = last_options
+                            .values()
+                            .flat_map(|options|
+                                options
+                                    .iter()
+                                    .map(|option| option.id.to_string()))
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
                     };
                     let option = options.swap_remove(index);
                     present_line_events.send(PresentLineEvent {

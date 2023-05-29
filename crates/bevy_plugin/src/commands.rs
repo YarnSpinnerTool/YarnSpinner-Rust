@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-pub use command_registry::YarnCommands;
+pub use command_registry::YarnCommandRegistrations;
 pub use command_wrapping::{UntypedYarnCommand, YarnCommand};
 use seldom_fn_plugin::FnPluginExt;
 

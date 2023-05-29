@@ -19,7 +19,7 @@ pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
 
     pub use crate::{
-        commands::{YarnCommand, YarnCommands},
+        commands::{YarnCommand, YarnCommandRegistrations},
         default_impl::FileExtensionAssetProvider,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,

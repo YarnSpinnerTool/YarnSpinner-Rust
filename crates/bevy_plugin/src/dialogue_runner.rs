@@ -8,6 +8,8 @@ use crate::line_provider::{LineAssets, SharedTextProvider, StringsFileTextProvid
 use crate::prelude::*;
 use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
+use bevy::tasks::Task;
+use bevy::utils::HashMap;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 
@@ -26,11 +28,20 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
-    pub(crate) text_provider: Box<dyn TextProvider>,
-    pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
+    pub text_provider: Box<dyn TextProvider>,
+    pub asset_provider: Option<Box<dyn AssetProvider>>,
     pub(crate) continue_: bool,
-    pub(crate) run_selected_options_as_lines: bool,
+    pub run_selected_options_as_lines: bool,
     pub(crate) last_selected_option: Option<OptionId>,
+    pub(crate) commands: YarnCommandRegistrations,
+    pub(crate) command_tasks: Vec<Task<()>>,
+    pub start_automatically_on_node: Option<StartNode>,
+}
+
+#[derive(Debug)]
+pub enum StartNode {
+    DefaultStartNode,
+    Node(String),
 }
 
 impl DialogueRunner {
@@ -312,6 +323,9 @@ impl DialogueRunnerBuilder {
             continue_: false,
             run_selected_options_as_lines: false,
             last_selected_option: None,
+            commands: Default::default(),
+            command_tasks: Vec::new(),
+            start_automatically_on_node: None,
         }
     }
 }
