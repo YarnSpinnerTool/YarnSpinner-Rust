@@ -129,12 +129,10 @@ impl TextProvider for StringsFileTextProvider {
             return None;
         }
         let asset_events = world
-            .get_resource::<Events<AssetEvent<StringsFile>>>()
-            .unwrap();
+            .resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
             asset_events
-                .get_reader()
-                .iter(asset_events)
+                .iter_current_update_events()
                 .filter_map(|event| {
                     if let AssetEvent::Modified { handle } = event {
                         Some(handle)

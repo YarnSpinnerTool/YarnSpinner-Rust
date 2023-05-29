@@ -9,6 +9,7 @@ use crate::prelude::*;
 use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
 use bevy::tasks::Task;
+pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 

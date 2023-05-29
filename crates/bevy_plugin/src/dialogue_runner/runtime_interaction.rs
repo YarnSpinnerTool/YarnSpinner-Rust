@@ -8,9 +8,13 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_system(
         continue_runtime
             .pipe(panic_on_err)
-            .after(LineProviderSystemSet),
+            .after(LineProviderSystemSet)
+            .in_set(DialogueExecutionSystemSet),
     );
 }
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
+pub(crate) struct DialogueExecutionSystemSet;
 
 fn continue_runtime(
     mut dialogue_runners: Query<(Entity, &mut DialogueRunner)>,

@@ -1,9 +1,10 @@
 use crate::commands::UntypedYarnCommand;
+use crate::dialogue_runner::DialogueExecutionSystemSet;
 use crate::prelude::*;
 use bevy::prelude::*;
 
 pub(crate) fn command_execution_plugin(app: &mut App) {
-    app.add_system(execute_commands);
+    app.add_system(execute_commands.after(DialogueExecutionSystemSet));
 }
 
 fn execute_commands(world: &mut World) {
@@ -23,8 +24,7 @@ fn execute_commands(world: &mut World) {
 
 fn clone_events(world: &mut World) -> Vec<ExecuteCommandEvent> {
     let events = world.resource::<Events<ExecuteCommandEvent>>();
-    let mut reader = events.get_reader();
-    reader.iter(&events).cloned().collect()
+    events.iter_current_update_events().cloned().collect()
 }
 
 fn clone_command(
@@ -49,68 +49,4 @@ fn get_dialogue_runner_mut(world: &mut World, entity: Entity) -> Mut<DialogueRun
     let mut dialogue_runners = world.query::<&mut DialogueRunner>();
     let dialogue_runner = dialogue_runners.get_mut(world, entity).unwrap();
     dialogue_runner
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn stuff() {
-        let mut app = App::new();
-        struct FooEvent;
-        app.add_event::<FooEvent>().add_systems(
-            (
-                |mut events: EventWriter<FooEvent>, mut sent: Local<bool>| {
-                    if *sent {
-                        return;
-                    }
-                    events.send(FooEvent);
-                    *sent = true;
-                },
-                |world: &mut World| {
-                    let events = world.resource::<Events<FooEvent>>();
-                    for _ in events.get_reader().iter(&events) {
-                        println!("From World standard")
-                    }
-                },
-                |world: &mut World| {
-                    let events = world.resource::<Events<FooEvent>>();
-                    for _ in events.get_reader_current().iter(&events) {
-                        println!("From World current")
-                    }
-                },
-                |world: &mut World| {
-                    let events = world.resource::<Events<FooEvent>>();
-                    for _ in events.iter_current_update_events() {
-                        println!("From World iter")
-                    }
-                },
-                |events: Res<Events<FooEvent>>| {
-                    for _ in events.get_reader().iter(&events) {
-                        println!("From Events<> standard")
-                    }
-                },
-                |events: Res<Events<FooEvent>>| {
-                    for _ in events.get_reader().iter(&events) {
-                        println!("From Events<> current")
-                    }
-                },
-                |events: Res<Events<FooEvent>>| {
-                    for _ in events.iter_current_update_events() {
-                        println!("From Events<> iter")
-                    }
-                },
-                |mut events: EventReader<FooEvent>| {
-                    for _ in events.iter() {
-                        println!("From EventReader<>")
-                    }
-                },
-            )
-                .chain(),
-        );
-        app.update();
-        app.update();
-        app.update();
-    }
 }
