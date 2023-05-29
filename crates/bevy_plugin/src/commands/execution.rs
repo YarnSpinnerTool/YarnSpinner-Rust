@@ -50,3 +50,67 @@ fn get_dialogue_runner_mut(world: &mut World, entity: Entity) -> Mut<DialogueRun
     let dialogue_runner = dialogue_runners.get_mut(world, entity).unwrap();
     dialogue_runner
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stuff() {
+        let mut app = App::new();
+        struct FooEvent;
+        app.add_event::<FooEvent>().add_systems(
+            (
+                |mut events: EventWriter<FooEvent>, mut sent: Local<bool>| {
+                    if *sent {
+                        return;
+                    }
+                    events.send(FooEvent);
+                    *sent = true;
+                },
+                |world: &mut World| {
+                    let events = world.resource::<Events<FooEvent>>();
+                    for _ in events.get_reader().iter(&events) {
+                        println!("From World standard")
+                    }
+                },
+                |world: &mut World| {
+                    let events = world.resource::<Events<FooEvent>>();
+                    for _ in events.get_reader_current().iter(&events) {
+                        println!("From World current")
+                    }
+                },
+                |world: &mut World| {
+                    let events = world.resource::<Events<FooEvent>>();
+                    for _ in events.iter_current_update_events() {
+                        println!("From World iter")
+                    }
+                },
+                |events: Res<Events<FooEvent>>| {
+                    for _ in events.get_reader().iter(&events) {
+                        println!("From Events<> standard")
+                    }
+                },
+                |events: Res<Events<FooEvent>>| {
+                    for _ in events.get_reader().iter(&events) {
+                        println!("From Events<> current")
+                    }
+                },
+                |events: Res<Events<FooEvent>>| {
+                    for _ in events.iter_current_update_events() {
+                        println!("From Events<> iter")
+                    }
+                },
+                |mut events: EventReader<FooEvent>| {
+                    for _ in events.iter() {
+                        println!("From EventReader<>")
+                    }
+                },
+            )
+                .chain(),
+        );
+        app.update();
+        app.update();
+        app.update();
+    }
+}
