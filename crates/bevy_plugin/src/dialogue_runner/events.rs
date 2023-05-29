@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::UnderlyingYarnCommand;
 use bevy::prelude::*;
 
 pub(crate) fn dialogue_runner_events_plugin(app: &mut App) {
@@ -25,7 +26,7 @@ pub struct PresentOptionsEvent {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExecuteCommandEvent {
-    pub command: YarnCommand,
+    pub command: UnderlyingYarnCommand,
     pub source: Entity,
 }
 

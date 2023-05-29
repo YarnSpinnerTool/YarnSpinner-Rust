@@ -8,7 +8,7 @@ use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 
-pub trait YarnCommandFn<Marker>: Send + Sync + 'static {
+pub trait YarnCommand<Marker>: Send + Sync + 'static {
     type In: YarnFnParam;
     type Param: SystemParam;
 
@@ -18,7 +18,7 @@ pub trait YarnCommandFn<Marker>: Send + Sync + 'static {
 macro_rules! impl_command_function {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommandFn<fn(In<Input>, $($param,)*)> for Func
+        impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*)> for Func
         where
             Input: YarnFnParam,
         for <'a> &'a mut Func:
@@ -50,14 +50,14 @@ macro_rules! impl_command_function {
 // of `SystemParam` created.
 all_tuples!(impl_command_function, 0, 16, F);
 
-pub trait UntypedYarnCommandFn: Debug + Send + Sync + 'static {
+pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World);
 }
 
-impl<T, Marker> UntypedYarnCommandFn for YarnCommandFnWrapper<Marker, T>
+impl<T, Marker> UntypedYarnCommand for YarnCommandWrapper<Marker, T>
 where
     Marker: 'static,
-    T: YarnCommandFn<Marker>,
+    T: YarnCommand<Marker>,
 {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) {
         let mut system_state: SystemState<T::Param> = SystemState::new(world);
@@ -69,14 +69,14 @@ where
             iter.next().is_none(),
             "Passed too many arguments to Command"
         );
-        YarnCommandFn::run(&mut self.function, input, param);
+        YarnCommand::run(&mut self.function, input, param);
         system_state.apply(world);
     }
 }
 
-pub(crate) struct YarnCommandFnWrapper<Marker, F>
+pub(crate) struct YarnCommandWrapper<Marker, F>
 where
-    F: YarnCommandFn<Marker>,
+    F: YarnCommand<Marker>,
 {
     function: F,
 
@@ -84,9 +84,9 @@ where
     _marker: PhantomData<fn() -> Marker>,
 }
 
-impl<Marker, F> From<F> for YarnCommandFnWrapper<Marker, F>
+impl<Marker, F> From<F> for YarnCommandWrapper<Marker, F>
 where
-    F: YarnCommandFn<Marker>,
+    F: YarnCommand<Marker>,
 {
     fn from(function: F) -> Self {
         Self {
@@ -96,9 +96,9 @@ where
     }
 }
 
-impl<Marker, F> Debug for YarnCommandFnWrapper<Marker, F>
+impl<Marker, F> Debug for YarnCommandWrapper<Marker, F>
 where
-    F: YarnCommandFn<Marker>,
+    F: YarnCommand<Marker>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let signature = std::any::type_name::<Marker>();
@@ -108,9 +108,9 @@ where
     }
 }
 
-impl<Marker, F> Display for YarnCommandFnWrapper<Marker, F>
+impl<Marker, F> Display for YarnCommandWrapper<Marker, F>
 where
-    F: YarnCommandFn<Marker>,
+    F: YarnCommand<Marker>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let signature = std::any::type_name::<Marker>();
@@ -118,7 +118,7 @@ where
     }
 }
 
-impl PartialEq for Box<dyn UntypedYarnCommandFn> {
+impl PartialEq for Box<dyn UntypedYarnCommand> {
     fn eq(&self, other: &Self) -> bool {
         // Not guaranteed to be unique, but it's good enough for our purposes.
         let debug = format!("{:?}", self);
@@ -127,7 +127,7 @@ impl PartialEq for Box<dyn UntypedYarnCommandFn> {
     }
 }
 
-impl Eq for Box<dyn UntypedYarnCommandFn> {}
+impl Eq for Box<dyn UntypedYarnCommand> {}
 
 #[cfg(test)]
 pub mod tests {
@@ -185,5 +185,5 @@ pub mod tests {
         accepts_yarn_command(f);
     }
 
-    fn accepts_yarn_command<Marker>(_: impl YarnCommandFn<Marker>) {}
+    fn accepts_yarn_command<Marker>(_: impl YarnCommand<Marker>) {}
 }

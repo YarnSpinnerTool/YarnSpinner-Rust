@@ -19,7 +19,7 @@ pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
 
     pub use crate::{
-        commands::{YarnCommandFn, YarnCommands},
+        commands::{YarnCommand, YarnCommands},
         default_impl::FileExtensionAssetProvider,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
@@ -38,7 +38,7 @@ pub mod prelude {
     pub(crate) use yarn_slinger::prelude::*;
     pub use yarn_slinger::prelude::{
         yarn_fn_registry, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
-        VariableStorage, YarnCommand, YarnFn, YarnFnLibrary,
+        VariableStorage, YarnFn, YarnFnLibrary,
     };
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
@@ -47,7 +47,7 @@ pub mod prelude {
 
 pub use yarn_slinger::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
-    YarnLine as UnderlyingYarnLine,
+    YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,
 };
 
 pub use yarn_slinger::core::yarn_fn_type;

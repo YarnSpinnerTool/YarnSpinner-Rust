@@ -1,5 +1,5 @@
-use crate::commands::command_wrapping::YarnCommandFnWrapper;
-use crate::commands::UntypedYarnCommandFn;
+use crate::commands::command_wrapping::YarnCommandWrapper;
+use crate::commands::UntypedYarnCommand;
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::borrow::Cow;
@@ -10,7 +10,7 @@ pub(crate) fn command_registry_plugin(_app: &mut App) {}
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct YarnCommands(pub(crate) InnerRegistry);
 
-type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnCommandFn>>;
+type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnCommand>>;
 
 impl Extend<<InnerRegistry as IntoIterator>::Item> for YarnCommands {
     fn extend<T: IntoIterator<Item = <InnerRegistry as IntoIterator>::Item>>(&mut self, iter: T) {
@@ -36,15 +36,15 @@ impl YarnCommands {
     ) -> &mut Self
     where
         Marker: 'static,
-        F: YarnCommandFn<Marker> + 'static + Clone,
+        F: YarnCommand<Marker> + 'static + Clone,
     {
         let name = name.into();
-        let wrapped = YarnCommandFnWrapper::from(command);
+        let wrapped = YarnCommandWrapper::from(command);
         self.0.insert(name, Box::new(wrapped));
         self
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnCommandFn))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnCommand))> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
@@ -53,7 +53,7 @@ impl YarnCommands {
     pub fn add_boxed(
         &mut self,
         name: impl Into<Cow<'static, str>>,
-        command: Box<dyn UntypedYarnCommandFn>,
+        command: Box<dyn UntypedYarnCommand>,
     ) -> &mut Self {
         let name = name.into();
         self.0.insert(name, command);
@@ -64,11 +64,11 @@ impl YarnCommands {
         self.get(name).is_some()
     }
 
-    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnCommandFn)> {
+    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnCommand)> {
         self.0.get(name).map(|f| f.as_ref())
     }
 
-    pub fn get_mut(&mut self, name: &str) -> Option<&mut (dyn UntypedYarnCommandFn)> {
+    pub fn get_mut(&mut self, name: &str) -> Option<&mut (dyn UntypedYarnCommand)> {
         self.0.get_mut(name).map(|f| f.as_mut())
     }
 
@@ -76,7 +76,7 @@ impl YarnCommands {
         self.0.keys().map(|key| key.as_ref())
     }
 
-    pub fn commands(&self) -> impl Iterator<Item = &(dyn UntypedYarnCommandFn)> {
+    pub fn commands(&self) -> impl Iterator<Item = &(dyn UntypedYarnCommand)> {
         self.0.values().map(|value| value.as_ref())
     }
 
