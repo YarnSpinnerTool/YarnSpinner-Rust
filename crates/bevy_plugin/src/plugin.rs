@@ -26,6 +26,21 @@ impl YarnSlingerPlugin {
     }
 
     #[must_use]
+    pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
+        self.project = self.project.add_yarn_file(yarn_file);
+        self
+    }
+
+    #[must_use]
+    pub fn add_yarn_files(
+        mut self,
+        yarn_files: impl IntoIterator<Item = impl Into<YarnFileSource>>,
+    ) -> Self {
+        self.project = self.project.add_yarn_files(yarn_files);
+        self
+    }
+
+    #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
         if let Some(localizations) = localizations.as_ref() {

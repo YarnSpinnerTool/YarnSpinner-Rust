@@ -78,6 +78,22 @@ impl LoadYarnProjectEvent {
     }
 
     #[must_use]
+    pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
+        self.yarn_files.insert(yarn_file.into());
+        self
+    }
+
+    #[must_use]
+    pub fn add_yarn_files(
+        mut self,
+        yarn_files: impl IntoIterator<Item = impl Into<YarnFileSource>>,
+    ) -> Self {
+        self.yarn_files
+            .extend(yarn_files.into_iter().map(|yarn_file| yarn_file.into()));
+        self
+    }
+
+    #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
         if let Some(localizations) = localizations.as_ref() {
