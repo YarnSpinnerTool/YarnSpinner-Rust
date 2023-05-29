@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn executes_task() {
-        AsyncComputeTaskPool::init(|| TaskPool::new());
+        AsyncComputeTaskPool::init(TaskPool::new);
 
         let mut methods = YarnCommandRegistrations::default();
         methods.register_command("test", |_: In<()>| -> Task<()> {
