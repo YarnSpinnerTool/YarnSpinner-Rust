@@ -62,7 +62,7 @@ impl AppExt for App {
 
     fn load_texts(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_line_texts_available() {
+        while !self.dialogue_runner().are_texts_available() {
             self.update();
         }
         self
@@ -70,7 +70,7 @@ impl AppExt for App {
 
     fn load_assets(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_line_assets_available() {
+        while !self.dialogue_runner().are_assets_available() {
             self.update();
         }
         self
@@ -106,6 +106,9 @@ impl DialogueRunnerExt for DialogueRunner {
             text: String::new(),
             attributes: vec![],
         };
-        self.asset_provider().unwrap().get_assets(&line_id)
+        self.data_providers()
+            .asset_providers()
+            .map(|p| p.get_assets(&line_id))
+            .collect()
     }
 }

@@ -88,7 +88,9 @@ fn continue_runtime(
                         node_start_events.send(NodeStartEvent { node_name, source });
                     }
                     DialogueEvent::LineHints(line_ids) => {
-                        if let Some(asset_provider) = dialogue_runner.asset_provider.as_mut() {
+                        for asset_provider in
+                            dialogue_runner.data_providers_mut().asset_providers_mut()
+                        {
                             asset_provider.accept_line_hints(&line_ids);
                         }
 

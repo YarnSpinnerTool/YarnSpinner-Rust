@@ -32,11 +32,15 @@ pub(crate) fn fetch_resources(world: &mut World) {
     for entity in dialogue_runner_entities {
         let assets = {
             let dialogue_runner = world.get::<DialogueRunner>(entity).unwrap();
-            dialogue_runner.text_provider().fetch_assets(world)
+            dialogue_runner
+                .data_providers()
+                .text_provider()
+                .fetch_assets(world)
         };
         if let Some(assets) = assets {
             let mut dialogue_runner = world.get_mut::<DialogueRunner>(entity).unwrap();
             dialogue_runner
+                .data_providers_mut()
                 .text_provider_mut()
                 .take_fetched_assets(assets)
         }

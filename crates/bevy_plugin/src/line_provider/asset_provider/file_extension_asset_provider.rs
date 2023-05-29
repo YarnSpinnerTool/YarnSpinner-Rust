@@ -5,6 +5,7 @@ use bevy::asset::LoadState;
 use bevy::audio::AudioSource;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet, Uuid};
+use std::any::Any;
 use std::fmt::Debug;
 
 pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
@@ -65,6 +66,14 @@ impl FileExtensionAssetProvider {
 }
 
 impl AssetProvider for FileExtensionAssetProvider {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
     fn get_language(&self) -> Option<Language> {
         self.language.clone()
     }

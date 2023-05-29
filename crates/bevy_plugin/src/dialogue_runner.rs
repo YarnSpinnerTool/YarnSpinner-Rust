@@ -9,8 +9,9 @@ use crate::prelude::*;
 use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
 use bevy::tasks::Task;
-use bitflags::{bitflags, Flags};
+use bevy::utils::HashMap;
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
+use std::any::{Any, TypeId};
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 
@@ -30,7 +31,7 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
     text_provider: Box<dyn TextProvider>,
-    asset_provider: Option<Box<dyn AssetProvider>>,
+    asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     continue_: bool,
     pub(crate) last_selected_option: Option<OptionId>,
     pub(crate) commands: YarnCommandRegistrations,
@@ -45,6 +46,8 @@ pub enum StartNode {
 }
 
 impl DialogueRunner {
+    pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
+
     pub fn continue_in_next_update(&mut self) -> &mut Self {
         self.continue_ = true;
         self
@@ -125,53 +128,53 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub fn are_line_texts_available(&self) -> bool {
+    pub fn are_texts_available(&self) -> bool {
         self.text_provider.are_lines_available()
     }
 
     #[must_use]
-    pub fn are_line_assets_available(&self) -> bool {
-        self.asset_provider
-            .as_ref()
-            .map(|provider| provider.are_assets_available())
-            .unwrap_or_default()
+    pub fn are_assets_available(&self) -> bool {
+        self.asset_providers
+            .values()
+            .all(|provider| provider.are_assets_available())
     }
 
     #[must_use]
     pub fn are_lines_available(&self) -> bool {
-        self.are_line_texts_available() && self.are_line_assets_available()
+        self.are_texts_available() && self.are_assets_available()
     }
 
-    pub fn set_language(
-        &mut self,
-        language: impl Into<Option<Language>>,
-        setting: LanguageSetting,
-    ) -> &mut Self {
+    pub fn set_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
         let language = language.into();
-        if setting.contains(LanguageSetting::TEXT) {
-            self.text_provider.set_language(language.into());
-        }
-        if setting.contains(LanguageSetting::ASSETS) {
-            if let Some(provider) = self.asset_provider.as_mut() {
-                provider.set_language(language.into());
-            }
+        self.set_text_language(language.clone())
+            .set_asset_language(language)
+    }
+
+    pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        let language = language.into();
+        self.text_provider.set_language(language.into());
+        self
+    }
+
+    pub fn set_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+        let language = language.into();
+        for asset_provider in self.asset_providers.values_mut() {
+            asset_provider.set_language(language.clone());
         }
         self
     }
 
+    #[must_use]
     pub fn text_language(&self) -> Option<Language> {
-        self.text_provider.language()
+        self.text_provider.get_language()
     }
 
-    pub fn asset_language(&self) -> Option<Language> {
-        self.asset_provider.as_ref().and_then(|p| p.language())
-    }
-
+    #[must_use]
     pub(crate) fn get_assets(&self, line_id: &UnderlyingYarnLine) -> LineAssets {
-        self.asset_provider
-            .as_ref()
+        self.asset_providers
+            .values()
             .map(|p| p.get_assets(line_id))
-            .unwrap_or_default()
+            .collect()
     }
 
     pub(crate) fn add_command_task(&mut self, task: Task<()>) -> &mut Self {
@@ -186,15 +189,6 @@ impl DialogueRunner {
     }
 }
 
-bitflags! {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-    struct LanguageSetting: u32 {
-        const TEXT = 1 << 0;
-        const ASSETS = 1 << 1;
-        const ALL = Self::TEXT.bits() | Self::ASSETS.bits();
-    }
-}
-
 pub struct DialogueRunnerDataProviders<'a>(&'a DialogueRunner);
 
 pub struct DialogueRunnerDataProvidersMut<'a>(&'a mut DialogueRunner);
@@ -206,8 +200,19 @@ impl DialogueRunnerDataProviders<'_> {
     }
 
     #[must_use]
-    pub fn asset_provider(&self) -> Option<&dyn AssetProvider> {
-        self.0.asset_provider.as_deref()
+    pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
+        self.0
+            .asset_providers
+            .values()
+            .map(|provider| provider.as_ref())
+    }
+
+    #[must_use]
+    pub fn asset_provider<T: 'static>(&self) -> Option<&T> {
+        self.0
+            .asset_providers
+            .get(&TypeId::of::<T>())
+            .and_then(|provider| provider.as_any().downcast_ref())
     }
 
     #[must_use]
@@ -223,8 +228,11 @@ impl DialogueRunnerDataProvidersMut<'_> {
     }
 
     #[must_use]
-    pub fn asset_provider(&self) -> Option<&dyn AssetProvider> {
-        self.0.asset_provider.as_deref()
+    pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
+        self.0
+            .asset_providers
+            .values()
+            .map(|provider| provider.as_ref())
     }
 
     #[must_use]
@@ -238,12 +246,28 @@ impl DialogueRunnerDataProvidersMut<'_> {
     }
 
     #[must_use]
-    pub fn asset_provider_mut(&mut self) -> Option<&mut dyn AssetProvider> {
-        // Source: <https://stackoverflow.com/a/55866511/5903309>
+    pub fn asset_providers_mut(&mut self) -> impl Iterator<Item = &mut dyn AssetProvider> {
         self.0
-            .asset_provider
-            .as_mut()
+            .asset_providers
+            .values_mut()
+            // Source: <https://stackoverflow.com/a/55866511/5903309>
             .map(|x| &mut **x as &mut dyn AssetProvider)
+    }
+
+    #[must_use]
+    pub fn asset_provider<T: 'static>(&self) -> Option<&T> {
+        self.0
+            .asset_providers
+            .get(&TypeId::of::<T>())
+            .and_then(|provider| provider.as_any().downcast_ref())
+    }
+
+    #[must_use]
+    pub fn asset_provider_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.0
+            .asset_providers
+            .get_mut(&TypeId::of::<T>())
+            .and_then(|provider| provider.as_any_mut().downcast_mut())
     }
 
     #[must_use]
@@ -261,7 +285,7 @@ pub struct DialogueRunnerConfig {
 pub struct DialogueRunnerBuilder {
     pub(crate) variable_storage: Box<dyn VariableStorage>,
     pub(crate) text_provider: SharedTextProvider,
-    pub(crate) asset_provider: Option<Box<dyn AssetProvider>>,
+    pub(crate) asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     pub(crate) library: YarnFnLibrary,
     pub(crate) compilation: Compilation,
     pub(crate) text_language: Option<Language>,
@@ -275,7 +299,7 @@ impl Debug for DialogueRunnerBuilder {
         f.debug_struct("DialogueRunnerBuilder")
             .field("variable_storage", &self.variable_storage)
             .field("text_provider", &self.text_provider)
-            .field("asset_provider", &self.asset_provider)
+            .field("asset_providers", &self.asset_providers)
             .field("library", &self.library)
             .field("compilation", &self.compilation)
             .field("text_language", &self.text_language)
@@ -294,7 +318,7 @@ impl DialogueRunnerBuilder {
             text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
                 yarn_project,
             )),
-            asset_provider: None,
+            asset_providers: HashMap::new(),
             library: YarnFnLibrary::new(),
             compilation: yarn_project.compilation().clone(),
             text_language: None,
@@ -320,31 +344,27 @@ impl DialogueRunnerBuilder {
     }
 
     #[must_use]
-    pub fn with_asset_provider(mut self, provider: impl AssetProvider + 'static) -> Self {
-        self.asset_provider.replace(Box::new(provider));
-        if let Some(language) = self.asset_language.take() {
-            self.asset_provider
-                .as_mut()
-                .unwrap()
-                .set_language(Some(language));
+    pub fn add_asset_provider(mut self, mut provider: impl AssetProvider + 'static) -> Self {
+        if let Some(language) = self.asset_language.as_ref() {
+            provider.set_language(Some(language.clone()));
         }
+        self.asset_providers
+            .insert(provider.type_id(), Box::new(provider));
         self
     }
 
     #[must_use]
-    pub fn with_language(
-        mut self,
-        language: impl Into<Option<Language>>,
-        setting: LanguageSetting,
-    ) -> Self {
+    pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
-        if setting.contains(LanguageSetting::TEXT) {
-            self.text_provider.set_language(language.into());
-        }
-        if setting.contains(LanguageSetting::ASSET) {
-            if let Some(provider) = self.asset_provider.as_mut() {
-                provider.set_language(language.into());
-            }
+        self.text_provider.set_language(language.into());
+        self
+    }
+
+    #[must_use]
+    pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
+        let language = language.into();
+        for asset_provider in self.asset_providers.values_mut() {
+            asset_provider.set_language(language.clone());
         }
         self
     }
@@ -367,17 +387,17 @@ impl DialogueRunnerBuilder {
         if dialogue.set_node_to_start().is_err() {
             info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
         }
-        if let Some(asset_provider) = self.asset_provider.as_mut() {
-            if let Some(localizations) = self.localizations {
-                asset_provider.set_localizations(localizations);
+        for asset_provider in self.asset_providers.values_mut() {
+            if let Some(ref localizations) = self.localizations {
+                asset_provider.set_localizations(localizations.clone());
             }
-            asset_provider.set_asset_server(self.asset_server);
+            asset_provider.set_asset_server(self.asset_server.clone());
         }
 
         DialogueRunner {
             dialogue,
             text_provider,
-            asset_provider: self.asset_provider,
+            asset_providers: self.asset_providers,
             continue_: false,
             last_selected_option: None,
             commands: Default::default(),

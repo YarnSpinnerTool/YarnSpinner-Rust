@@ -43,6 +43,7 @@ fn handle_yarn_file_events_outside_development(
 
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             dialogue_runner
+                .data_providers_mut()
                 .text_provider_mut()
                 .extend_base_string_table(yarn_file.string_table.clone());
         }
@@ -80,7 +81,7 @@ fn handle_yarn_file_events(
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? else {
             for mut dialogue_runner in dialogue_runners.iter_mut() {
-                dialogue_runner.text_provider_mut().extend_base_string_table(yarn_file.string_table.clone());
+                dialogue_runner.data_providers_mut().text_provider_mut().extend_base_string_table(yarn_file.string_table.clone());
             }
             continue;
         };
