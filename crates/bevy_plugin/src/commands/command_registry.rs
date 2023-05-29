@@ -2,8 +2,11 @@ use crate::commands::command_wrapping::YarnCommandWrapper;
 use crate::commands::UntypedYarnCommand;
 use crate::prelude::*;
 use bevy::prelude::*;
+use bevy::tasks::AsyncComputeTaskPool;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::thread::sleep;
+use std::time::Duration;
 
 pub(crate) fn command_registry_plugin(_app: &mut App) {}
 
@@ -86,6 +89,22 @@ impl YarnCommandRegistrations {
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+
+    pub fn default_commands() -> Self {
+        let mut commands = Self::default();
+        commands
+            .register_command("wait", |In(duration): In<f32>| {
+                let thread_pool = AsyncComputeTaskPool::get();
+                thread_pool.spawn(async move {
+                    let duration = Duration::from_secs_f32(duration);
+                    sleep(duration);
+                })
+            })
+            .register_command("stop", |_: In<()>| {
+                unreachable!("The stop command is a compiler builtin and is thus not callable")
+            });
+        commands
     }
 }
 

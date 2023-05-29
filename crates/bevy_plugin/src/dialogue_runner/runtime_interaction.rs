@@ -31,14 +31,11 @@ fn continue_runtime(
         if !dialogue_runner.continue_ {
             continue;
         }
-        dialogue_runner
-            .command_tasks
-            .retain(|task| !task.is_finished());
-        if !dialogue_runner.command_tasks.is_empty() {
+        if !dialogue_runner.poll_tasks_and_check_if_done() {
             continue;
         }
 
-        if dialogue_runner.run_selected_options_as_lines {
+        if dialogue_runner.config().run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
                 if let Some(mut options) = last_options.remove(&source) {
                     let Some(index) = options.iter().position(|o| o.id == option) else{

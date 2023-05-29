@@ -9,6 +9,7 @@ use crate::prelude::*;
 use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
 use bevy::tasks::Task;
+use bitflags::{bitflags, Flags};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
@@ -28,14 +29,13 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
-    pub text_provider: Box<dyn TextProvider>,
-    pub asset_provider: Option<Box<dyn AssetProvider>>,
-    pub(crate) continue_: bool,
-    pub run_selected_options_as_lines: bool,
+    text_provider: Box<dyn TextProvider>,
+    asset_provider: Option<Box<dyn AssetProvider>>,
+    continue_: bool,
     pub(crate) last_selected_option: Option<OptionId>,
     pub(crate) commands: YarnCommandRegistrations,
-    pub(crate) command_tasks: Vec<Task<()>>,
-    pub start_automatically_on_node: Option<StartNode>,
+    command_tasks: Vec<Task<()>>,
+    config: DialogueRunnerConfig,
 }
 
 #[derive(Debug)]
@@ -48,6 +48,11 @@ impl DialogueRunner {
     pub fn continue_in_next_update(&mut self) -> &mut Self {
         self.continue_ = true;
         self
+    }
+
+    #[must_use]
+    pub fn will_continue_in_next_update(&self) -> bool {
+        self.continue_
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
@@ -100,56 +105,23 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub fn treats_selected_options_as_lines(&mut self) -> bool {
-        self.run_selected_options_as_lines
+    pub fn config(&self) -> &DialogueRunnerConfig {
+        &self.config
     }
 
     #[must_use]
-    pub fn treats_selected_options_as_lines_mut(&mut self) -> &mut bool {
-        &mut self.run_selected_options_as_lines
+    pub fn config_mut(&mut self) -> &mut DialogueRunnerConfig {
+        &mut self.config
     }
 
     #[must_use]
-    pub fn text_provider(&self) -> &dyn TextProvider {
-        self.text_provider.as_ref()
+    pub fn data_providers(&self) -> DialogueRunnerDataProviders {
+        DialogueRunnerDataProviders(self)
     }
 
     #[must_use]
-    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
-        self.text_provider.as_mut()
-    }
-
-    #[must_use]
-    pub fn asset_provider(&self) -> Option<&dyn AssetProvider> {
-        self.asset_provider.as_deref()
-    }
-
-    #[must_use]
-    pub fn asset_provider_mut(&mut self) -> Option<&mut dyn AssetProvider> {
-        // Source: <https://stackoverflow.com/a/55866511/5903309>
-        self.asset_provider
-            .as_mut()
-            .map(|x| &mut **x as &mut dyn AssetProvider)
-    }
-
-    #[must_use]
-    pub fn variable_storage(&self) -> &dyn VariableStorage {
-        self.dialogue.variable_storage()
-    }
-
-    #[must_use]
-    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
-        self.dialogue.variable_storage_mut()
-    }
-
-    #[must_use]
-    pub fn library(&self) -> &YarnFnLibrary {
-        self.dialogue.library()
-    }
-
-    #[must_use]
-    pub fn library_mut(&mut self) -> &mut YarnFnLibrary {
-        self.dialogue.library_mut()
+    pub fn data_providers_mut(&mut self) -> DialogueRunnerDataProvidersMut {
+        DialogueRunnerDataProvidersMut(self)
     }
 
     #[must_use]
@@ -170,23 +142,29 @@ impl DialogueRunner {
         self.are_line_texts_available() && self.are_line_assets_available()
     }
 
-    pub fn set_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+    pub fn set_language(
+        &mut self,
+        language: impl Into<Option<Language>>,
+        setting: LanguageSetting,
+    ) -> &mut Self {
         let language = language.into();
-        self.set_text_language(language.clone());
-        self.set_asset_language(language);
-        self
-    }
-
-    pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        self.text_provider.set_language(language.into());
-        self
-    }
-
-    pub fn set_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        if let Some(provider) = self.asset_provider.as_mut() {
-            provider.set_language(language.into());
+        if setting.contains(LanguageSetting::TEXT) {
+            self.text_provider.set_language(language.into());
+        }
+        if setting.contains(LanguageSetting::ASSETS) {
+            if let Some(provider) = self.asset_provider.as_mut() {
+                provider.set_language(language.into());
+            }
         }
         self
+    }
+
+    pub fn text_language(&self) -> Option<Language> {
+        self.text_provider.language()
+    }
+
+    pub fn asset_language(&self) -> Option<Language> {
+        self.asset_provider.as_ref().and_then(|p| p.language())
     }
 
     pub(crate) fn get_assets(&self, line_id: &UnderlyingYarnLine) -> LineAssets {
@@ -195,6 +173,89 @@ impl DialogueRunner {
             .map(|p| p.get_assets(line_id))
             .unwrap_or_default()
     }
+
+    pub(crate) fn add_command_task(&mut self, task: Task<()>) -> &mut Self {
+        self.command_tasks.push(task);
+        self
+    }
+
+    #[must_use]
+    pub(crate) fn poll_tasks_and_check_if_done(&mut self) -> bool {
+        self.command_tasks.retain(|task| !task.is_finished());
+        self.command_tasks.is_empty()
+    }
+}
+
+bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    struct LanguageSetting: u32 {
+        const TEXT = 1 << 0;
+        const ASSETS = 1 << 1;
+        const ALL = Self::TEXT.bits() | Self::ASSETS.bits();
+    }
+}
+
+pub struct DialogueRunnerDataProviders<'a>(&'a DialogueRunner);
+
+pub struct DialogueRunnerDataProvidersMut<'a>(&'a mut DialogueRunner);
+
+impl DialogueRunnerDataProviders<'_> {
+    #[must_use]
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.0.text_provider.as_ref()
+    }
+
+    #[must_use]
+    pub fn asset_provider(&self) -> Option<&dyn AssetProvider> {
+        self.0.asset_provider.as_deref()
+    }
+
+    #[must_use]
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.0.dialogue.variable_storage()
+    }
+}
+
+impl DialogueRunnerDataProvidersMut<'_> {
+    #[must_use]
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.0.text_provider.as_ref()
+    }
+
+    #[must_use]
+    pub fn asset_provider(&self) -> Option<&dyn AssetProvider> {
+        self.0.asset_provider.as_deref()
+    }
+
+    #[must_use]
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.0.dialogue.variable_storage()
+    }
+
+    #[must_use]
+    pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
+        self.0.text_provider.as_mut()
+    }
+
+    #[must_use]
+    pub fn asset_provider_mut(&mut self) -> Option<&mut dyn AssetProvider> {
+        // Source: <https://stackoverflow.com/a/55866511/5903309>
+        self.0
+            .asset_provider
+            .as_mut()
+            .map(|x| &mut **x as &mut dyn AssetProvider)
+    }
+
+    #[must_use]
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.0.dialogue.variable_storage_mut()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct DialogueRunnerConfig {
+    pub run_selected_options_as_lines: bool,
+    pub start_automatically_on_node: Option<StartNode>,
 }
 
 pub struct DialogueRunnerBuilder {
@@ -271,22 +332,19 @@ impl DialogueRunnerBuilder {
     }
 
     #[must_use]
-    pub fn with_language(self, language: impl Into<Option<Language>>) -> Self {
+    pub fn with_language(
+        mut self,
+        language: impl Into<Option<Language>>,
+        setting: LanguageSetting,
+    ) -> Self {
         let language = language.into();
-        self.with_text_language(language.clone())
-            .with_asset_language(language)
-    }
-
-    #[must_use]
-    pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
-        self.text_provider.set_language(language.into());
-        self
-    }
-
-    #[must_use]
-    pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
-        if let Some(provider) = self.asset_provider.as_mut() {
-            provider.set_language(language.into());
+        if setting.contains(LanguageSetting::TEXT) {
+            self.text_provider.set_language(language.into());
+        }
+        if setting.contains(LanguageSetting::ASSET) {
+            if let Some(provider) = self.asset_provider.as_mut() {
+                provider.set_language(language.into());
+            }
         }
         self
     }
@@ -321,11 +379,10 @@ impl DialogueRunnerBuilder {
             text_provider,
             asset_provider: self.asset_provider,
             continue_: false,
-            run_selected_options_as_lines: false,
             last_selected_option: None,
             commands: Default::default(),
             command_tasks: Vec::new(),
-            start_automatically_on_node: None,
+            config: Default::default(),
         }
     }
 }

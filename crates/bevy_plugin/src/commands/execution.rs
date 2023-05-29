@@ -16,8 +16,7 @@ fn execute_commands(world: &mut World) {
         let params = event.command.parameters;
         let task = command.call(params, world);
         if let Some(task) = task {
-            let mut dialogue_runner = get_dialogue_runner_mut(world, event.source);
-            dialogue_runner.command_tasks.push(task);
+            get_dialogue_runner_mut(world, event.source).add_command_task(task);
         }
     }
 }
