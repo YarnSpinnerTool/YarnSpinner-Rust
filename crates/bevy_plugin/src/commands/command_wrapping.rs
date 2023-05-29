@@ -9,7 +9,7 @@ use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 
-pub trait YarnCommand<Marker>: Send + Sync + 'static {
+pub trait YarnCommand<Marker>: Send + Sync + 'static + Clone {
     type In: YarnFnParam;
     type Param: SystemParam;
 
@@ -26,11 +26,12 @@ macro_rules! impl_command_function {
         impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*)> for Func
         where
             Input: YarnFnParam,
+            Func: Clone,
         for <'a> &'a mut Func:
-                FnMut(In<Input>, $($param), *) +
-                FnMut(In<Input>, $(SystemParamItem<$param>),*) +
-                FnMut(In<YarnFnParamItem<Input>>, $($param), *) +
-                FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*)
+            FnMut(In<Input>, $($param), *) +
+            FnMut(In<Input>, $(SystemParamItem<$param>),*) +
+            FnMut(In<YarnFnParamItem<Input>>, $($param), *) +
+            FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*)
         {
             type In = Input;
             type Param = ($($param,)*);
@@ -54,11 +55,12 @@ macro_rules! impl_command_function {
         impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*) -> Task<()>> for Func
         where
             Input: YarnFnParam,
+            Func: Clone,
         for <'a> &'a mut Func:
-                FnMut(In<Input>, $($param), *) -> Task<()> +
-                FnMut(In<Input>, $(SystemParamItem<$param>),*) -> Task<()> +
-                FnMut(In<YarnFnParamItem<Input>>, $($param), *) -> Task<()> +
-                FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Task<()>
+            FnMut(In<Input>, $($param), *) -> Task<()> +
+            FnMut(In<Input>, $(SystemParamItem<$param>),*) -> Task<()> +
+            FnMut(In<YarnFnParamItem<Input>>, $($param), *) -> Task<()> +
+            FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Task<()>
         {
             type In = Input;
             type Param = ($($param,)*);
@@ -86,6 +88,13 @@ all_tuples!(impl_command_function, 0, 16, F);
 
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Option<Task<()>>;
+    fn clone_box(&self) -> Box<dyn UntypedYarnCommand>;
+}
+
+impl Clone for Box<dyn UntypedYarnCommand> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
 
 impl<T, Marker> UntypedYarnCommand for YarnCommandWrapper<Marker, T>
@@ -107,6 +116,10 @@ where
         system_state.apply(world);
         task
     }
+
+    fn clone_box(&self) -> Box<dyn UntypedYarnCommand> {
+        Box::new(self.clone())
+    }
 }
 
 pub(crate) struct YarnCommandWrapper<Marker, F>
@@ -117,6 +130,18 @@ where
 
     // NOTE: PhantomData<fn()-> T> gives this safe Send/Sync impls
     _marker: PhantomData<fn() -> Marker>,
+}
+
+impl<Marker, F> Clone for YarnCommandWrapper<Marker, F>
+where
+    F: YarnCommand<Marker>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            function: self.function.clone(),
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<Marker, F> From<F> for YarnCommandWrapper<Marker, F>

@@ -9,7 +9,6 @@ use crate::prelude::*;
 use crate::{UnderlyingTextProvider, UnderlyingYarnLine};
 use bevy::prelude::*;
 use bevy::tasks::Task;
-use bevy::utils::HashMap;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 
