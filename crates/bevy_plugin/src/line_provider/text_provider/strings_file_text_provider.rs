@@ -128,8 +128,7 @@ impl TextProvider for StringsFileTextProvider {
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
             return None;
         }
-        let asset_events = world
-            .resource::<Events<AssetEvent<StringsFile>>>();
+        let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
             asset_events
                 .iter_current_update_events()

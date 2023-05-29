@@ -69,6 +69,7 @@ fn load_project(
 fn add_yarn_files_to_load_queue(
     mut yarn_files_to_load: ResMut<YarnFilesToLoad>,
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
+    mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
 ) {
     if yarn_files_to_load.0.is_empty() {
@@ -77,7 +78,7 @@ fn add_yarn_files_to_load_queue(
     let handles = yarn_files_to_load
         .0
         .drain()
-        .map(|source| source.load(&asset_server));
+        .map(|source| source.load(&asset_server, &mut assets));
     yarn_files_being_loaded.0.extend(handles);
 }
 
