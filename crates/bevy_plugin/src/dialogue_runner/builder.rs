@@ -183,52 +183,69 @@ fn create_extended_standard_library() -> YarnFnLibrary {
             }
             SmallRng::from_entropy().gen_range(min..max)
         })
-        .with_function("dice", |sides: usize| {
+        .with_function("dice", |sides: u32| {
             if sides == 0 {
-                return 0;
+                return 1;
             }
             SmallRng::from_entropy().gen_range(1..=sides)
         })
-        .with_function("round", |num: f32| {
-            todo!();
-            true
+        .with_function("round", |num: f32| num.round() as i32)
+        .with_function("round_places", |num: f32, places: u32| {
+            num.round_places(places)
         })
-        .with_function("round_places", |num: f32, places: usize| {
-            todo!();
-            true
-        })
-        .with_function("floor", |num: f32| {
-            todo!();
-            true
-        })
-        .with_function("ceil", |num: f32| {
-            todo!();
-            true
-        })
+        .with_function("floor", |num: f32| num.floor() as i32)
+        .with_function("ceil", |num: f32| num.ceil() as i32)
         .with_function("inc", |num: f32| {
-            todo!();
-            true
+            if let Some(num) = num.as_int() {
+                num + 1
+            } else {
+                num.ceil() as i32
+            }
         })
         .with_function("dec", |num: f32| {
-            todo!();
-            true
+            if let Some(num) = num.as_int() {
+                num - 1
+            } else {
+                num.floor() as i32
+            }
         })
-        .with_function("decimal", |num: f32| {
-            todo!();
-            true
-        })
-        .with_function("int", |num: f32| {
-            todo!();
-            true
-        })
+        .with_function("decimal", |num: f32| num.fract())
+        .with_function("int", |num: f32| num.trunc() as i32)
 }
 
 trait FloatExt: Copy {
     fn as_int(self) -> Option<i32>;
+    fn round_places(self, places: u32) -> Self;
 }
 
 impl FloatExt for f32 {
     fn as_int(self) -> Option<i32> {
-        (self.fract() < f32::EPSILON).then(|| self as i32)
+        (self.fract() <= f32::EPSILON).then(|| self as i32)
+    }
+
+    fn round_places(self, places: u32) -> Self {
+        let factor = 10_u32.pow(places) as f32;
+        (self * factor).round() / factor
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rounds_places() {
+        for (num, places, expected) in [
+            (1.0, 0, 1.0),
+            (1.2, 1, 1.2),
+            (0.4, 0, 0.0),
+            (43.132, 0, 43.0),
+            (1.1, 2, 1.1),
+            (123.123, 3, 123.123),
+            (-10.3, 1, -10.3),
+            (-11.99, 1, -12.0),
+        ] {
+            assert_eq!(expected, num.round_places(places));
+        }
     }
 }
