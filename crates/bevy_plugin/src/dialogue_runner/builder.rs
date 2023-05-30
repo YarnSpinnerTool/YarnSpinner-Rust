@@ -4,10 +4,10 @@ use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::any::{Any, TypeId};
 use std::fmt;
 use std::fmt::{Debug, Formatter};
-use yarn_slinger::core::Library;
 
 pub(crate) fn dialogue_runner_builder_plugin(_app: &mut App) {}
 
@@ -172,19 +172,22 @@ impl DialogueRunnerBuilder {
     }
 }
 
-fn get_extended_standard_library() -> YarnFnLibrary {
+fn create_extended_standard_library() -> YarnFnLibrary {
     YarnFnLibrary::standard_library()
-        .with_function("random", || {
-            todo!();
-            true
-        })
-        .with_function("random_range", |min_inclusive: f32, max_inclusive: f32| {
-            todo!();
-            true
+        .with_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
+        .with_function("random_range", |min: f32, max: f32| {
+            if let Some(min) = min.as_int() {
+                if let Some(max_inclusive) = max.as_int() {
+                    return SmallRng::from_entropy().gen_range(min..=max_inclusive) as f32;
+                }
+            }
+            SmallRng::from_entropy().gen_range(min..max)
         })
         .with_function("dice", |sides: usize| {
-            todo!();
-            true
+            if sides == 0 {
+                return 0;
+            }
+            SmallRng::from_entropy().gen_range(1..=sides)
         })
         .with_function("round", |num: f32| {
             todo!();
@@ -218,4 +221,14 @@ fn get_extended_standard_library() -> YarnFnLibrary {
             todo!();
             true
         })
+}
+
+trait FloatExt: Copy {
+    fn as_int(self) -> Option<i32>;
+}
+
+impl FloatExt for f32 {
+    fn as_int(self) -> Option<i32> {
+        (self.fract() < f32::EPSILON).then(|| self as i32)
+    }
 }
