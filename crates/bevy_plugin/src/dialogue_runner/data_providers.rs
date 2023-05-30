@@ -14,7 +14,6 @@ impl DialogueRunnerDataProviders<'_> {
         self.0.text_provider.as_ref()
     }
 
-    #[must_use]
     pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
         self.0
             .asset_providers
@@ -58,7 +57,6 @@ impl DialogueRunnerDataProvidersMut<'_> {
         self.0.text_provider.as_ref()
     }
 
-    #[must_use]
     pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
         self.0
             .asset_providers
@@ -76,7 +74,6 @@ impl DialogueRunnerDataProvidersMut<'_> {
         self.0.text_provider.as_mut()
     }
 
-    #[must_use]
     pub fn asset_providers_mut(&mut self) -> impl Iterator<Item = &mut dyn AssetProvider> {
         self.0
             .asset_providers

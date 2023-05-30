@@ -1,5 +1,4 @@
 use crate::default_impl::{MemoryVariableStore, StringsFileTextProvider};
-use crate::dialogue_runner::StartNode;
 use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
@@ -22,7 +21,13 @@ pub struct DialogueRunnerBuilder {
     localizations: Option<Localizations>,
     asset_server: AssetServer,
     run_selected_options_as_lines: bool,
-    start_automatically_on_node: Option<StartNode>,
+    start_node: Option<StartNode>,
+}
+
+#[derive(Debug, Clone)]
+pub enum StartNode {
+    DefaultStartNode,
+    Node(String),
 }
 
 impl Debug for DialogueRunnerBuilder {
@@ -57,7 +62,7 @@ impl DialogueRunnerBuilder {
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
             run_selected_options_as_lines: false,
-            start_automatically_on_node: Some(StartNode::DefaultStartNode),
+            start_node: Some(StartNode::DefaultStartNode),
         }
     }
 
@@ -89,7 +94,7 @@ impl DialogueRunnerBuilder {
     #[must_use]
     pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
-        self.text_provider.set_language(language.into());
+        self.text_provider.set_language(language);
         self
     }
 
@@ -109,11 +114,8 @@ impl DialogueRunnerBuilder {
     }
 
     #[must_use]
-    pub fn with_start_automatically_on_node(
-        mut self,
-        start_automatically_on_node: impl Into<Option<StartNode>>,
-    ) -> Self {
-        self.start_automatically_on_node = start_automatically_on_node.into();
+    pub fn with_start_node(mut self, start_node: impl Into<Option<StartNode>>) -> Self {
+        self.start_node = start_node.into();
         self
     }
 
@@ -123,7 +125,6 @@ impl DialogueRunnerBuilder {
         self
     }
 
-    #[must_use]
     pub fn build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
         let language = text_provider.get_language();
@@ -147,7 +148,6 @@ impl DialogueRunnerBuilder {
             text_provider,
             asset_providers: self.asset_providers,
             run_selected_options_as_lines: self.run_selected_options_as_lines,
-            start_automatically_on_node: self.start_automatically_on_node,
             is_running: default(),
             commands: default(),
             command_tasks: default(),
@@ -156,13 +156,13 @@ impl DialogueRunnerBuilder {
             just_started: default(),
         };
 
-        if let Some(start_node) = &dialogue_runner.start_automatically_on_node {
+        if let Some(start_node) = self.start_node {
             match start_node {
                 StartNode::DefaultStartNode => {
-                    dialogue_runner.start(Dialogue::DEFAULT_START_NODE_NAME)?;
+                    dialogue_runner.dialogue.set_node_to_start()?;
                 }
                 StartNode::Node(node) => {
-                    dialogue_runner.start(node)?;
+                    dialogue_runner.dialogue.set_node(node)?;
                 }
             }
         }

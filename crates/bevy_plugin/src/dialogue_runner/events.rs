@@ -9,7 +9,8 @@ pub(crate) fn dialogue_runner_events_plugin(app: &mut App) {
         .add_event::<NodeCompleteEvent>()
         .add_event::<NodeStartEvent>()
         .add_event::<LineHintsEvent>()
-        .add_event::<DialogueCompleteEvent>();
+        .add_event::<DialogueCompleteEvent>()
+        .add_event::<DialogueStartEvent>();
 }
 
 #[derive(Debug, Clone, PartialEq)]

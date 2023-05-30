@@ -23,8 +23,8 @@ pub mod prelude {
         default_impl::FileExtensionAssetProvider,
         dialogue_runner::{
             DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
-            ExecuteCommandEvent, LineHintsEvent, LocalizedLine, NodeCompleteEvent, NodeStartEvent,
-            PresentLineEvent, PresentOptionsEvent,
+            DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent, LocalizedLine,
+            NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent, StartNode,
         },
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{FileGenerationMode, Localization, Localizations},
@@ -44,6 +44,9 @@ pub mod prelude {
     pub(crate) use serde::{Deserialize, Serialize};
 }
 
+pub use crate::dialogue_runner::{
+    DialogueRunnerDataProviders, DialogueRunnerDataProvidersMut, InnerDialogue, InnerDialogueMut,
+};
 pub use yarn_slinger::core::yarn_fn_type;
 pub use yarn_slinger::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,

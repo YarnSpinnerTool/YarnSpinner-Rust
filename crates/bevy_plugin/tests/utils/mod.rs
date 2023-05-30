@@ -43,7 +43,7 @@ impl AppExt for App {
             self.try_dialogue_runner().unwrap()
         } else {
             let project = self.load_project();
-            let dialogue_runner = project.default_dialogue_runner();
+            let dialogue_runner = project.default_dialogue_runner().unwrap();
             let entity = self.world.spawn(dialogue_runner).id();
             self.world.get::<DialogueRunner>(entity).unwrap()
         }
@@ -54,7 +54,7 @@ impl AppExt for App {
             self.try_dialogue_runner_mut().unwrap()
         } else {
             let project = self.load_project();
-            let dialogue_runner = project.default_dialogue_runner();
+            let dialogue_runner = project.default_dialogue_runner().unwrap();
             let entity = self.world.spawn(dialogue_runner).id();
             self.world.get_mut::<DialogueRunner>(entity).unwrap()
         }
@@ -62,7 +62,11 @@ impl AppExt for App {
 
     fn load_texts(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_texts_available() {
+        while !self
+            .dialogue_runner()
+            .data_providers()
+            .are_texts_available()
+        {
             self.update();
         }
         self
@@ -70,7 +74,11 @@ impl AppExt for App {
 
     fn load_assets(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_assets_available() {
+        while !self
+            .dialogue_runner()
+            .data_providers()
+            .are_assets_available()
+        {
             self.update();
         }
         self

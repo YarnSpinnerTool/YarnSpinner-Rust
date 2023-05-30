@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger::prelude::*;
@@ -7,7 +8,7 @@ use utils::prelude::*;
 mod utils;
 
 #[test]
-fn does_not_load_asset_without_localizations() {
+fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins)
@@ -19,23 +20,27 @@ fn does_not_load_asset_without_localizations() {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
 
     app.load_project();
     let start = Instant::now();
-    while !app.dialogue_runner().are_assets_available() {
+    while !app
+        .dialogue_runner()
+        .data_providers()
+        .are_assets_available()
+    {
         if start.elapsed().as_secs() > 2 {
-            return;
+            return Ok(());
         }
         app.update();
     }
-    panic!("Did not expect to load assets without localizations");
+    bail!("Did not expect to load assets without localizations");
 }
 
 #[test]
-fn does_not_load_asset_without_language() {
+fn does_not_load_asset_without_language() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
@@ -52,22 +57,22 @@ fn does_not_load_asset_without_language() {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
 
     let start = Instant::now();
-    while !app.dialogue_runner().are_assets_available() {
+    while app.dialogue_runner().will_continue_in_next_update {
         if start.elapsed().as_secs() > 2 {
-            return;
+            return Ok(());
         }
         app.update();
     }
-    panic!("Did not expect to load assets without language");
+    bail!("Did not expect to load assets without language");
 }
 
 #[test]
-fn does_not_load_invalid_asset_id() {
+fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
@@ -85,17 +90,18 @@ fn does_not_load_invalid_asset_id() {
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("en-US"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:99");
     assert!(assets.is_empty());
+    Ok(())
 }
 
 #[test]
-fn loads_asset_from_base_language_localization() {
+fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
@@ -113,8 +119,8 @@ fn loads_asset_from_base_language_localization() {
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("en-US"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
@@ -125,11 +131,13 @@ fn loads_asset_from_base_language_localization() {
     let path = asset_server.get_handle_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
-    assert_eq!("en-US/9.ogg", path.path().to_str().unwrap())
+    assert_eq!("en-US/9.ogg", path.path().to_str().unwrap());
+
+    Ok(())
 }
 
 #[test]
-fn loads_asset_from_translated_localization() {
+fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
@@ -147,8 +155,8 @@ fn loads_asset_from_translated_localization() {
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("de-CH"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
@@ -159,7 +167,8 @@ fn loads_asset_from_translated_localization() {
     let path = asset_server.get_handle_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
-    assert_eq!("de-CH/10.ogg", path.path().to_str().unwrap())
+    assert_eq!("de-CH/10.ogg", path.path().to_str().unwrap());
+    Ok(())
 }
 
 #[test]
@@ -182,14 +191,19 @@ fn panics_on_invalid_language() {
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("fr-FR"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()
+        .unwrap();
+    dialogue_runner
+        .start()
+        .unwrap()
+        .continue_in_next_update()
+        .unwrap();
     app.world.spawn(dialogue_runner);
     app.load_assets();
 }
 
 #[test]
-fn does_not_load_asset_with_invalid_type() {
+fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins).add_plugin(
@@ -207,15 +221,17 @@ fn does_not_load_asset_with_invalid_type() {
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("en-US"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
     let asset: Option<Handle<YarnFile>> = assets.get_handle();
-    assert!(asset.is_none())
+    assert!(asset.is_none());
+    Ok(())
 }
 
 trait AssetProviderExt {

@@ -1,9 +1,9 @@
 pub use self::events::{
-    DialogueCompleteEvent, ExecuteCommandEvent, LineHintsEvent, NodeCompleteEvent, NodeStartEvent,
-    PresentLineEvent, PresentOptionsEvent,
+    DialogueCompleteEvent, DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent,
+    NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent,
 };
 pub use self::{
-    builder::DialogueRunnerBuilder,
+    builder::{DialogueRunnerBuilder, StartNode},
     data_providers::{DialogueRunnerDataProviders, DialogueRunnerDataProvidersMut},
     dialogue_option::DialogueOption,
     inner::{InnerDialogue, InnerDialogueMut},
@@ -47,22 +47,18 @@ pub struct DialogueRunner {
     command_tasks: Vec<Task<()>>,
     pub(crate) is_running: bool,
     pub run_selected_options_as_lines: bool,
-    pub start_automatically_on_node: Option<StartNode>,
     pub(crate) just_started: bool,
-}
-
-#[derive(Debug)]
-pub enum StartNode {
-    DefaultStartNode,
-    Node(String),
 }
 
 impl DialogueRunner {
     pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
 
-    pub fn continue_in_next_update(&mut self) -> &mut Self {
+    pub fn continue_in_next_update(&mut self) -> Result<&mut Self> {
+        if !self.is_running {
+            panic!("Can't continue dialogue that isn't running")
+        }
         self.will_continue_in_next_update = true;
-        self
+        Ok(self)
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
@@ -70,7 +66,7 @@ impl DialogueRunner {
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
-        self.continue_in_next_update();
+        self.continue_in_next_update()?;
         Ok(self)
     }
 
@@ -90,7 +86,17 @@ impl DialogueRunner {
         self
     }
 
-    pub fn start(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
+    pub fn start(&mut self) -> Result<&mut Self> {
+        if self.is_running {
+            bail!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
+        }
+        self.is_running = true;
+        self.just_started = true;
+        self.continue_in_next_update()?;
+        Ok(self)
+    }
+
+    pub fn start_at_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
         let node_name = node_name.as_ref();
         if self.is_running {
             bail!("Can't start dialogue from node {node_name}: the dialogue is currently in the middle of running. Stop the dialogue first.");
@@ -99,8 +105,8 @@ impl DialogueRunner {
         self.just_started = true;
         self.dialogue
             .set_node(node_name)
-            .context("Can't start dialogue from node {node_name}:")?;
-        self.continue_in_next_update();
+            .with_context(|| format!("Can't start dialogue from node {node_name}:"))?;
+        self.continue_in_next_update()?;
         Ok(self)
     }
 
@@ -137,7 +143,7 @@ impl DialogueRunner {
 
     pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
         let language = language.into();
-        self.text_provider.set_language(language.into());
+        self.text_provider.set_language(language);
         self
     }
 

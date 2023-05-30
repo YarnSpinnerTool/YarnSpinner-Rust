@@ -48,7 +48,7 @@ impl YarnProject {
         self.localizations.as_ref()
     }
 
-    pub fn default_dialogue_runner(&self) -> DialogueRunner {
+    pub fn default_dialogue_runner(&self) -> Result<DialogueRunner> {
         DialogueRunnerBuilder::from_yarn_project(self).build()
     }
 

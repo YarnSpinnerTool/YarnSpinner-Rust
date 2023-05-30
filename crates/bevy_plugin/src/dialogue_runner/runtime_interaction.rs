@@ -36,12 +36,14 @@ fn continue_runtime(
         }
 
         if !(dialogue_runner.will_continue_in_next_update
-            && dialogue_runner.poll_tasks_and_check_if_done()
-            && dialogue_runner.data_providers().are_lines_available())
+            && dialogue_runner.poll_tasks_and_check_if_done())
         {
             continue;
         }
         dialogue_runner.will_continue_in_next_update = false;
+        if !dialogue_runner.is_running {
+            continue;
+        }
 
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
@@ -88,7 +90,7 @@ fn continue_runtime(
                     }
                     DialogueEvent::Command(command) => {
                         execute_command_events.send(ExecuteCommandEvent { command, source });
-                        dialogue_runner.continue_in_next_update();
+                        dialogue_runner.continue_in_next_update().unwrap();
                     }
                     DialogueEvent::NodeComplete(node_name) => {
                         node_complete_events.send(NodeCompleteEvent { node_name, source });

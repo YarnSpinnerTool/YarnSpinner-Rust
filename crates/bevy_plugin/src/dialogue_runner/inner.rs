@@ -7,7 +7,6 @@ pub struct InnerDialogue<'a>(pub(crate) &'a Dialogue);
 pub struct InnerDialogueMut<'a>(pub(crate) &'a mut Dialogue);
 
 impl<'a> InnerDialogue<'a> {
-    #[must_use]
     pub fn node_names(&self) -> impl Iterator<Item = &str> {
         self.0.node_names().unwrap()
     }
@@ -16,6 +15,7 @@ impl<'a> InnerDialogue<'a> {
     pub fn get_line_id_for_node(&self, node_name: &str) -> Option<LineId> {
         self.0.get_line_id_for_node(node_name)
     }
+
     #[must_use]
     pub fn analyse(&self, context: &mut YarnAnalysisContext) -> &Self {
         self.0.analyse(context);
@@ -24,7 +24,6 @@ impl<'a> InnerDialogue<'a> {
 }
 
 impl<'a> InnerDialogueMut<'a> {
-    #[must_use]
     pub fn node_names(&self) -> impl Iterator<Item = &str> {
         self.0.node_names().unwrap()
     }
