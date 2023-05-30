@@ -41,6 +41,8 @@ pub enum DialogueError {
     UnexpectedOptionSelectionError,
     #[error("No node named \"{node_name}\" has been loaded.")]
     InvalidNode { node_name: String },
+    #[error(transparent)]
+    VariableStorageError(#[from] VariableStorageError),
 }
 
 impl Dialogue {
@@ -69,7 +71,7 @@ impl Dialogue {
 fn visited(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> bool } {
     move |node: String| -> bool {
         let name = Library::generate_unique_visited_variable_for_node(&node);
-        if let Some(YarnValue::Number(count)) = storage.get(&name) {
+        if let Ok(YarnValue::Number(count)) = storage.get(&name) {
             count > 0.0
         } else {
             false
@@ -80,7 +82,7 @@ fn visited(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String)
 fn visited_count(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> f32 } {
     move |node: String| {
         let name = Library::generate_unique_visited_variable_for_node(&node);
-        if let Some(YarnValue::Number(count)) = storage.get(&name) {
+        if let Ok(YarnValue::Number(count)) = storage.get(&name) {
             count
         } else {
             0.0

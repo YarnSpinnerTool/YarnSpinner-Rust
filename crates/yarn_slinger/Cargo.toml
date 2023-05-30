@@ -27,3 +27,4 @@ log = { version = "0.4", features = ["std"] }
 
 [dev-dependencies]
 regex = "1"
+anyhow = "1"

@@ -378,7 +378,7 @@ fn test_failing_function_signatures() {
 }
 
 #[test]
-fn test_initial_values() {
+fn test_initial_values() -> anyhow::Result<()> {
     let source = "
             <<declare $int = 42>>
             <<declare $str = \"Hello\">>
@@ -415,15 +415,15 @@ fn test_initial_values() {
         )
         .declare_variable(Declaration::new("$external_int", Type::Boolean).with_default_value(true))
         .declare_variable(Declaration::new("$external_bool", Type::Number).with_default_value(42))
-        .compile()
-        .unwrap();
+        .compile()?;
 
     let mut variable_storage = test_base.variable_store.clone_shallow();
-    variable_storage.set("$external_str".to_string(), "Hello".into());
-    variable_storage.set("$external_int".to_string(), 42.into());
-    variable_storage.set("$external_bool".to_string(), true.into());
+    variable_storage.set("$external_str".to_string(), "Hello".into())?;
+    variable_storage.set("$external_int".to_string(), 42.into())?;
+    variable_storage.set("$external_bool".to_string(), true.into())?;
 
     test_base.with_compilation(result).run_standard_testcase();
+    Ok(())
 }
 
 #[test]
