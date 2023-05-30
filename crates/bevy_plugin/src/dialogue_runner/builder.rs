@@ -142,32 +142,31 @@ impl DialogueRunnerBuilder {
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
-        let will_auto_start = if let Some(start_node) = &self.start_automatically_on_node {
-            match start_node {
-                StartNode::DefaultStartNode => {
-                    dialogue.set_node_to_start()?;
-                }
-                StartNode::Node(node_name) => {
-                    dialogue.set_node(node_name)?;
-                }
-            }
-            true
-        } else {
-            false
-        };
-
-        Ok(DialogueRunner {
+        let mut dialogue_runner = DialogueRunner {
             dialogue,
             text_provider,
             asset_providers: self.asset_providers,
-            will_continue_in_next_update: will_auto_start,
-            last_selected_option: None,
-            commands: Default::default(),
-            command_tasks: Vec::new(),
-            is_running: false,
             run_selected_options_as_lines: self.run_selected_options_as_lines,
             start_automatically_on_node: self.start_automatically_on_node,
-            just_started: false,
-        })
+            is_running: default(),
+            commands: default(),
+            command_tasks: default(),
+            will_continue_in_next_update: default(),
+            last_selected_option: default(),
+            just_started: default(),
+        };
+
+        if let Some(start_node) = &dialogue_runner.start_automatically_on_node {
+            match start_node {
+                StartNode::DefaultStartNode => {
+                    dialogue_runner.start(Dialogue::DEFAULT_START_NODE_NAME)?;
+                }
+                StartNode::Node(node) => {
+                    dialogue_runner.start(node)?;
+                }
+            }
+        }
+
+        Ok(dialogue_runner)
     }
 }

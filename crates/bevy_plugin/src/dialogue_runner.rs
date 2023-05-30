@@ -96,6 +96,7 @@ impl DialogueRunner {
             bail!("Can't start dialogue from node {node_name}: the dialogue is currently in the middle of running. Stop the dialogue first.");
         }
         self.is_running = true;
+        self.just_started = true;
         self.dialogue
             .set_node(node_name)
             .context("Can't start dialogue from node {node_name}:")?;
