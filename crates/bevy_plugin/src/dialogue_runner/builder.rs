@@ -220,7 +220,7 @@ trait FloatExt: Copy {
 
 impl FloatExt for f32 {
     fn as_int(self) -> Option<i32> {
-        (self.fract() <= f32::EPSILON).then(|| self as i32)
+        (self.fract() <= f32::EPSILON).then_some(self as i32)
     }
 
     fn round_places(self, places: u32) -> Self {
