@@ -48,6 +48,7 @@ pub struct DialogueRunner {
     pub(crate) is_running: bool,
     pub run_selected_options_as_lines: bool,
     pub(crate) just_started: bool,
+    pub(crate) popped_line_hints: Option<Vec<LineId>>,
 }
 
 impl DialogueRunner {

@@ -165,6 +165,17 @@ impl VirtualMachine {
             .push(DialogueEvent::LineHints(string_ids));
     }
 
+    pub(crate) fn pop_line_hints(&mut self) -> Option<Vec<LineId>> {
+        match self.batched_events.pop() {
+            Some(DialogueEvent::LineHints(string_ids)) => Some(string_ids),
+            Some(event) => {
+                self.batched_events.push(event);
+                None
+            }
+            None => None,
+        }
+    }
+
     fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
         let program = self.program.as_ref().unwrap_or_else(|| {
             panic!("Cannot load node \"{node_name}\": No program has been loaded.")

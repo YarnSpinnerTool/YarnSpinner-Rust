@@ -133,9 +133,6 @@ impl DialogueRunnerBuilder {
             .with_extended_library(self.library)
             .with_program(self.compilation.program.unwrap())
             .with_language_code(language);
-        if dialogue.set_node_to_start().is_err() {
-            info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
-        }
         for asset_provider in self.asset_providers.values_mut() {
             if let Some(ref localizations) = self.localizations {
                 asset_provider.set_localizations(localizations.clone());
@@ -143,9 +140,25 @@ impl DialogueRunnerBuilder {
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
-        let mut dialogue_runner = DialogueRunner {
+        if let Some(start_node) = self.start_node {
+            match start_node {
+                StartNode::DefaultStartNode => {
+                    dialogue.set_node_to_start()?;
+                }
+                StartNode::Node(node) => {
+                    dialogue.set_node(node)?;
+                }
+            }
+        } else {
+            info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
+        };
+
+        let popped_line_hints = dialogue.pop_line_hints();
+
+        Ok(DialogueRunner {
             dialogue,
             text_provider,
+            popped_line_hints,
             asset_providers: self.asset_providers,
             run_selected_options_as_lines: self.run_selected_options_as_lines,
             is_running: default(),
@@ -154,19 +167,6 @@ impl DialogueRunnerBuilder {
             will_continue_in_next_update: default(),
             last_selected_option: default(),
             just_started: default(),
-        };
-
-        if let Some(start_node) = self.start_node {
-            match start_node {
-                StartNode::DefaultStartNode => {
-                    dialogue_runner.dialogue.set_node_to_start()?;
-                }
-                StartNode::Node(node) => {
-                    dialogue_runner.dialogue.set_node(node)?;
-                }
-            }
-        }
-
-        Ok(dialogue_runner)
+        })
     }
 }
