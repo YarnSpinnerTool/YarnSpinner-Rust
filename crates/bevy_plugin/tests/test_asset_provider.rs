@@ -1,132 +1,126 @@
+use anyhow::{bail, Result};
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
-use std::path::PathBuf;
 use utils::prelude::*;
 
 mod utils;
 
 #[test]
-fn does_not_load_asset_without_localizations() {
+fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(LoadYarnProjectEvent::with_yarn_files(vec![
+        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
             "lines_with_ids.yarn",
         ]));
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
 
     app.load_project();
     let start = Instant::now();
-    while !app.dialogue_runner().are_line_assets_available() {
+    while !app
+        .dialogue_runner()
+        .data_providers()
+        .are_assets_available()
+    {
         if start.elapsed().as_secs() > 2 {
-            return;
+            return Ok(());
         }
         app.update();
     }
-    panic!("Did not expect to load assets without localizations");
+    bail!("Did not expect to load assets without localizations");
 }
 
 #[test]
-fn does_not_load_asset_without_language() {
+fn does_not_load_asset_without_language() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(
-            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-                Localizations {
-                    base_language: "en-US".into(),
-                    translations: vec![],
-                    file_generation_mode: FileGenerationMode::Production,
-                },
-            ),
-        );
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec![],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
 
     let start = Instant::now();
-    while !app.dialogue_runner().are_line_assets_available() {
+    while app.dialogue_runner().will_continue_in_next_update {
         if start.elapsed().as_secs() > 2 {
-            return;
+            return Ok(());
         }
         app.update();
     }
-    panic!("Did not expect to load assets without language");
+    bail!("Did not expect to load assets without language");
 }
 
 #[test]
-fn does_not_load_invalid_asset_id() {
+fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(
-            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-                Localizations {
-                    base_language: "en-US".into(),
-                    translations: vec![],
-                    file_generation_mode: FileGenerationMode::Production,
-                },
-            ),
-        );
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec![],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("en-US"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:99");
     assert!(assets.is_empty());
+    Ok(())
 }
 
 #[test]
-fn loads_asset_from_base_language_localization() {
+fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(
-            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-                Localizations {
-                    base_language: "en-US".into(),
-                    translations: vec![],
-                    file_generation_mode: FileGenerationMode::Production,
-                },
-            ),
-        );
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec![],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("en-US"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
@@ -135,34 +129,34 @@ fn loads_asset_from_base_language_localization() {
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
     let path = asset_server.get_handle_path(asset).unwrap();
-    let expected = PathBuf::from("en-US").join("9.ogg");
-    assert_eq!(expected.to_str().unwrap(), path.path().to_str().unwrap())
+
+    // Note that this does not contains backslashes on Windows
+    assert_eq!("en-US/9.ogg", path.path().to_str().unwrap());
+
+    Ok(())
 }
 
 #[test]
-fn loads_asset_from_translated_localization() {
+fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(
-            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-                Localizations {
-                    base_language: "en-US".into(),
-                    translations: vec!["de-CH".into()],
-                    file_generation_mode: FileGenerationMode::Production,
-                },
-            ),
-        );
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("de-CH"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
@@ -171,8 +165,10 @@ fn loads_asset_from_translated_localization() {
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
     let path = asset_server.get_handle_path(asset).unwrap();
-    let expected = PathBuf::from("de-CH").join("10.ogg");
-    assert_eq!(expected.to_str().unwrap(), path.path().to_str().unwrap())
+
+    // Note that this does not contains backslashes on Windows
+    assert_eq!("de-CH/10.ogg", path.path().to_str().unwrap());
+    Ok(())
 }
 
 #[test]
@@ -180,61 +176,62 @@ fn loads_asset_from_translated_localization() {
 fn panics_on_invalid_language() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(
-            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-                Localizations {
-                    base_language: "en-US".into(),
-                    translations: vec!["de-CH".into()],
-                    file_generation_mode: FileGenerationMode::Production,
-                },
-            ),
-        );
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("fr-FR"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()
+        .unwrap();
+    dialogue_runner
+        .start()
+        .unwrap()
+        .continue_in_next_update()
+        .unwrap();
     app.world.spawn(dialogue_runner);
     app.load_assets();
 }
 
 #[test]
-fn does_not_load_asset_with_invalid_type() {
+fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin)
-        .world
-        .send_event(
-            LoadYarnProjectEvent::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-                Localizations {
-                    base_language: "en-US".into(),
-                    translations: vec![],
-                    file_generation_mode: FileGenerationMode::Production,
-                },
-            ),
-        );
+    app.add_plugins(DefaultPlugins).add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec![],
+                file_generation_mode: FileGenerationMode::Production,
+            },
+        ),
+    );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .with_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
         .with_asset_language(Language::new("en-US"))
-        .build();
-    dialogue_runner.continue_in_next_update();
+        .build()?;
+
+    dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
     app.load_assets();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
     let asset: Option<Handle<YarnFile>> = assets.get_handle();
-    assert!(asset.is_none())
+    assert!(asset.is_none());
+    Ok(())
 }
 
 trait AssetProviderExt {

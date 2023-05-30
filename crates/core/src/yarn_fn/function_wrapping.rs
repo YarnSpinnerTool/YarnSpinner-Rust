@@ -30,7 +30,7 @@ use yarn_slinger_macros::all_tuples;
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     type Out: IntoYarnValueFromNonYarnValue + 'static;
     /// The `Option`s are guaranteed to be `Some` and are just typed like this to be able to `std::mem::take` them.
-    fn call(&self, input: Vec<Option<YarnValue>>) -> Self::Out;
+    fn call(&self, input: Vec<YarnValue>) -> Self::Out;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
@@ -40,7 +40,7 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
-    fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue;
+    fn call(&self, input: Vec<YarnValue>) -> YarnValue;
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     fn parameter_types(&self) -> Vec<TypeId>;
     fn return_type(&self) -> TypeId;
@@ -58,7 +58,7 @@ where
     F: YarnFn<Marker> + 'static + Clone,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<Option<YarnValue>>) -> YarnValue {
+    fn call(&self, input: Vec<YarnValue>) -> YarnValue {
         let output = self.function.call(input);
         output.into_untyped_value()
     }
@@ -93,7 +93,7 @@ where
     fn clone(&self) -> Self {
         Self {
             function: self.function.clone(),
-            _marker: self._marker,
+            _marker: PhantomData,
         }
     }
 }
@@ -161,7 +161,7 @@ macro_rules! impl_yarn_fn_tuple {
         #[allow(non_snake_case)]
         impl<F, O, $($param,)*> YarnFn<fn($($param,)*) -> O> for F
             where
-            for <'a>F:
+            for<'a> F:
                 Send + Sync + Clone +
                 Fn($($param,)*) -> O +
                 Fn($(<$param as YarnFnParam>::Item<'a>,)*) -> O,
@@ -170,25 +170,18 @@ macro_rules! impl_yarn_fn_tuple {
             {
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, mut input: Vec<Option<YarnValue>>) -> Self::Out {
-                    // Tuple deconstruct to &mut Option<YarnValue>
-                    let [$($param,)*] = &mut input[..] else {
-                        panic!("Wrong number of arguments")
-                    };
-                    // `take` the YarnValue out of the Option, leaving None in its place
-                    let ($($param,)*) = (
-                        $(std::mem::take($param).unwrap(),)*
-                    );
-                    // Now $param holds an owned YarnValue!
+                fn call(&self, input: Vec<YarnValue>) -> Self::Out {
+                    let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
-                    let ($(mut $param,)*) = (
-                        $(YarnValueWrapper::from($param),)*
-                    );
+                    #[allow(unused_variables, unused_mut)] // for n = 0 tuples
+                    let mut iter = params.iter_mut();
 
-                    // the first $param is the type implementing YarnFnParam, the second is a variable name
+                    // $param is the type implementing YarnFnParam
                     let input = (
-                        $($param::retrieve(&mut $param),)*
+                        $($param::retrieve(&mut iter),)*
                     );
+                    assert!(iter.next().is_none(), "Passed too many arguments to YarnFn");
+
                     let ($($param,)*) = input;
                     self($($param,)*)
                 }
@@ -296,5 +289,49 @@ mod tests {
         accept_yarn_fn(f);
     }
 
+    #[test]
+    fn accepts_tuples() {
+        #[allow(clippy::too_many_arguments)]
+        fn f(
+            _: (String, usize),
+            _: usize,
+            _: (&str, (&str, &String)),
+            _: &YarnValue,
+            _: (&bool, bool, bool, (&str, String)),
+            _: isize,
+            _: String,
+            _: &u32,
+        ) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn unpacks_tuples_in_right_order() {
+        #[allow(clippy::too_many_arguments)]
+        fn f(a: usize, (b, c): (usize, usize), d: usize, (e, f, g): (usize, usize, usize)) -> bool {
+            a == 1 && b == 2 && c == 3 && d == 4 && e == 5 && f == 6 && g == 7
+        }
+        let input: Vec<_> = (1..=7).map(YarnValue::from).collect();
+        let result = apply_yarn_fn(f, input);
+        assert!(result);
+    }
+
+    #[test]
+    fn accepts_function_with_single_tuple_param() {
+        fn f(_: (usize, isize, (String, &str))) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
     fn accept_yarn_fn<Marker>(_: impl YarnFn<Marker>) {}
+
+    fn apply_yarn_fn<T, Marker>(f: T, input: Vec<YarnValue>) -> T::Out
+    where
+        T: YarnFn<Marker>,
+    {
+        f.call(input)
+    }
 }

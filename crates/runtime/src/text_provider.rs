@@ -33,7 +33,8 @@ pub type StringTable = HashMap<LineId, String>;
 pub struct StringTableTextProvider {
     base_language_table: StringTable,
     translation_table: Option<(Language, StringTable)>,
-    language: Option<Language>,
+    /// Set to `None` to select base language.
+    translation_language: Option<Language>,
 }
 
 impl StringTableTextProvider {
@@ -67,7 +68,7 @@ impl TextProvider for StringTableTextProvider {
     }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
-        if let Some(language) = self.language.as_ref() {
+        if let Some(language) = self.translation_language.as_ref() {
             if let Some((registered_language, translation_table)) = self.translation_table.as_ref()
             {
                 if registered_language != language {
@@ -83,15 +84,15 @@ impl TextProvider for StringTableTextProvider {
     }
 
     fn set_language(&mut self, language_code: Option<Language>) {
-        self.language = language_code;
+        self.translation_language = language_code;
     }
 
     fn get_language(&self) -> Option<Language> {
-        self.language.clone()
+        self.translation_language.clone()
     }
 
     fn are_lines_available(&self) -> bool {
-        let Some(language) = self.language.as_ref() else {
+        let Some(language) = self.translation_language.as_ref() else {
             return !self.base_language_table.is_empty();
         };
         let translation_language = self

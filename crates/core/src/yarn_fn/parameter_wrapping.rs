@@ -7,12 +7,18 @@ use std::any::Any;
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::slice::IterMut;
+use yarn_slinger_macros::all_tuples;
 
+/// Helper class for implementing something like [`YarnFn`] yourself.
+/// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
 #[derive(Debug)]
-pub(crate) struct YarnValueWrapper {
+pub struct YarnValueWrapper {
     raw: Option<YarnValue>,
     converted: Option<Box<dyn Any>>,
 }
+
+pub type YarnValueWrapperIter<'a> = IterMut<'a, YarnValueWrapper>;
 
 impl From<YarnValue> for YarnValueWrapper {
     fn from(value: YarnValue) -> Self {
@@ -35,11 +41,32 @@ impl YarnValueWrapper {
     }
 }
 
-pub(crate) trait YarnFnParam {
-    type Item<'new>;
+/// Helper trait for implementing something like [`YarnFn`] yourself.
+/// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
+pub trait YarnFnParam {
+    type Item<'new>: YarnFnParam;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_>;
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
 }
+
+pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
+
+macro_rules! impl_yarn_fn_param_tuple {
+    ($($param: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<$($param,)*> YarnFnParam for ($($param,)*)
+        where $($param: YarnFnParam,)* {
+            type Item<'new> = ($($param::Item<'new>,)*);
+
+            #[allow(unused_variables, clippy::unused_unit)] // for n = 0 tuples
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+               ($($param::retrieve(iter),)*)
+            }
+        }
+    };
+}
+
+all_tuples!(impl_yarn_fn_param_tuple, 0, 16, P);
 
 struct ResRef<'a, T>
 where
@@ -57,7 +84,8 @@ where
 {
     type Item<'new> = ResRef<'new, T>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let value = iter.next().expect("Passed too few arguments to YarnFn");
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -90,7 +118,8 @@ where
 {
     type Item<'new> = ResRefBorrow<'new, T, U>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let value = iter.next().expect("Passed too few arguments to YarnFn");
         value.convert::<T>();
         let converted = value.converted.as_ref().unwrap();
         let value = converted.downcast_ref::<T>().unwrap();
@@ -116,7 +145,8 @@ where
 {
     type Item<'new> = ResOwned<T>;
 
-    fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        let value = iter.next().expect("Passed too few arguments to YarnFn");
         value.convert::<T>();
         let converted = value.converted.take().unwrap();
         let value = *converted.downcast::<T>().unwrap();
@@ -139,16 +169,16 @@ macro_rules! impl_yarn_fn_param_inner {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResRef::<$referenced>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResRef::<$referenced>::retrieve(iter).value
             }
         }
 
         impl YarnFnParam for $referenced {
             type Item<'new> = $referenced;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResOwned::<$referenced>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResOwned::<$referenced>::retrieve(iter).value
             }
         }
     };
@@ -156,24 +186,24 @@ macro_rules! impl_yarn_fn_param_inner {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResRefBorrow::<$owned, $referenced>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResRefBorrow::<$owned, $referenced>::retrieve(iter).value
             }
         }
 
         impl YarnFnParam for &$owned {
             type Item<'new> = &'new $owned;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResRef::<$owned>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResRef::<$owned>::retrieve(iter).value
             }
         }
 
         impl YarnFnParam for $owned {
             type Item<'new> = $owned;
 
-            fn retrieve(value: &mut YarnValueWrapper) -> Self::Item<'_> {
-                ResOwned::<$owned>::retrieve(value).value
+            fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+                ResOwned::<$owned>::retrieve(iter).value
             }
         }
     };

@@ -1,13 +1,80 @@
 use crate::prelude::*;
+use crate::project::LoadYarnProjectEvent;
 use bevy::prelude::*;
 pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
-#[derive(Debug)]
-pub struct YarnSlingerPlugin;
+#[derive(Debug, Default)]
+pub struct YarnSlingerPlugin {
+    project: LoadYarnProjectEvent,
+}
+
+impl YarnSlingerPlugin {
+    #[must_use]
+    pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
+        let yarn_files = yarn_files
+            .into_iter()
+            .map(|yarn_file| yarn_file.into())
+            .collect();
+        Self {
+            project: LoadYarnProjectEvent {
+                localizations: None,
+                yarn_files,
+            },
+        }
+    }
+
+    #[must_use]
+    pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
+        self.project = self.project.add_yarn_file(yarn_file);
+        self
+    }
+
+    #[must_use]
+    pub fn add_yarn_files(
+        mut self,
+        yarn_files: impl IntoIterator<Item = impl Into<YarnFileSource>>,
+    ) -> Self {
+        self.project = self.project.add_yarn_files(yarn_files);
+        self
+    }
+
+    #[must_use]
+    pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
+        let localizations = localizations.into();
+        if let Some(localizations) = localizations.as_ref() {
+            if cfg!(target_arch = "wasm32") {
+                assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
+                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
+            }
+        }
+        self.project.localizations = localizations;
+        self
+    }
+}
 
 impl Plugin for YarnSlingerPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_yarn_types()
+            .register_sub_plugins()
+            .world
+            .send_event(self.project.clone());
+    }
+}
+
+#[derive(Debug, Default)]
+#[non_exhaustive]
+pub struct DeferredYarnSlingerPlugin;
+
+impl DeferredYarnSlingerPlugin {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Plugin for DeferredYarnSlingerPlugin {
     fn build(&self, app: &mut App) {
         app.register_yarn_types().register_sub_plugins();
     }
@@ -60,5 +127,6 @@ impl YarnApp for App {
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
             .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
+            .fn_plugin(crate::commands::commands_plugin)
     }
 }

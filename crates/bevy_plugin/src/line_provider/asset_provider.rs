@@ -4,6 +4,7 @@ use bevy::asset::Asset;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, Uuid};
 pub use file_extension_asset_provider::FileExtensionAssetProvider;
+use std::any::Any;
 use std::fmt::Debug;
 
 mod file_extension_asset_provider;
@@ -13,6 +14,9 @@ pub(crate) fn asset_provider_plugin(app: &mut App) {
 }
 
 pub trait AssetProvider: Debug + Send + Sync {
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+
     fn get_language(&self) -> Option<Language>;
     fn set_language(&mut self, language: Option<Language>);
     fn set_localizations(&mut self, localizations: Localizations);
@@ -66,8 +70,33 @@ impl IntoIterator for LineAssets {
     }
 }
 
+impl Extend<LineAssets> for LineAssets {
+    fn extend<T: IntoIterator<Item = LineAssets>>(&mut self, iter: T) {
+        self.0.extend(
+            iter.into_iter()
+                .flat_map(|line_assets| line_assets.0.into_iter()),
+        )
+    }
+}
+
 impl Extend<(Uuid, HandleUntyped)> for LineAssets {
     fn extend<T: IntoIterator<Item = (Uuid, HandleUntyped)>>(&mut self, iter: T) {
         self.0.extend(iter)
+    }
+}
+
+impl FromIterator<(Uuid, HandleUntyped)> for LineAssets {
+    fn from_iter<T: IntoIterator<Item = (Uuid, HandleUntyped)>>(iter: T) -> Self {
+        Self(HashMap::from_iter(iter))
+    }
+}
+
+impl FromIterator<LineAssets> for LineAssets {
+    fn from_iter<T: IntoIterator<Item = LineAssets>>(iter: T) -> Self {
+        Self(
+            iter.into_iter()
+                .flat_map(|line_assets| line_assets.0.into_iter())
+                .collect(),
+        )
     }
 }

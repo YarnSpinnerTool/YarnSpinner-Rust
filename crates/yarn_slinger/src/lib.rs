@@ -6,7 +6,8 @@ pub mod prelude {
         LineInfo, Result as YarnCompilerResult, StringInfo,
     };
     pub use crate::core::{
-        Library as YarnFnLibrary, LineId, Program as YarnProgram, YarnFn, YarnValue,
+        yarn_fn_registry, IntoYarnValueFromNonYarnValue, Library as YarnFnLibrary, LineId,
+        Program as YarnProgram, YarnFn, YarnValue,
     };
     pub use crate::runtime::{
         Command as YarnCommand, CompiledProgramAnalyser as YarnAnalyser,
@@ -19,8 +20,10 @@ pub mod prelude {
 
 pub mod core {
     pub use yarn_slinger_core::prelude::{
-        Header, Instruction, InvalidOpCodeError, Library, LineId, Node, Position, Program, Type,
-        YarnFn, YarnValue, YarnValueCastError,
+        yarn_fn_registry, yarn_fn_type, Header, Instruction, IntoYarnValueFromNonYarnValue,
+        InvalidOpCodeError, Library, LineId, Node, Position, Program, Type, UntypedYarnFn, YarnFn,
+        YarnFnParam, YarnFnParamItem, YarnValue, YarnValueCastError, YarnValueWrapper,
+        YarnValueWrapperIter,
     };
 }
 pub mod compiler {

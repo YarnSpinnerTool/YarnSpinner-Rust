@@ -48,7 +48,7 @@ impl YarnProject {
         self.localizations.as_ref()
     }
 
-    pub fn default_dialogue_runner(&self) -> DialogueRunner {
+    pub fn default_dialogue_runner(&self) -> Result<DialogueRunner> {
         DialogueRunnerBuilder::from_yarn_project(self).build()
     }
 
@@ -75,6 +75,22 @@ impl LoadYarnProjectEvent {
             localizations: None,
             yarn_files,
         }
+    }
+
+    #[must_use]
+    pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
+        self.yarn_files.insert(yarn_file.into());
+        self
+    }
+
+    #[must_use]
+    pub fn add_yarn_files(
+        mut self,
+        yarn_files: impl IntoIterator<Item = impl Into<YarnFileSource>>,
+    ) -> Self {
+        self.yarn_files
+            .extend(yarn_files.into_iter().map(|yarn_file| yarn_file.into()));
+        self
     }
 
     #[must_use]

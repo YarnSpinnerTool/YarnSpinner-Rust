@@ -1,3 +1,4 @@
+use crate::dialogue_runner::events::DialogueStartEvent;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
@@ -5,12 +6,20 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
-    app.add_system(
-        continue_runtime
-            .pipe(panic_on_err)
-            .after(LineProviderSystemSet),
+    app.add_systems(
+        (
+            continue_runtime
+                .pipe(panic_on_err)
+                .after(LineProviderSystemSet),
+            accept_line_hints,
+        )
+            .chain()
+            .in_set(DialogueExecutionSystemSet),
     );
 }
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
+pub(crate) struct DialogueExecutionSystemSet;
 
 fn continue_runtime(
     mut dialogue_runners: Query<(Entity, &mut DialogueRunner)>,
@@ -21,17 +30,44 @@ fn continue_runtime(
     mut node_start_events: EventWriter<NodeStartEvent>,
     mut line_hints_events: EventWriter<LineHintsEvent>,
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
+    mut dialogue_start_events: EventWriter<DialogueStartEvent>,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
-        if !dialogue_runner.continue_ {
+        if dialogue_runner.just_started {
+            dialogue_start_events.send(DialogueStartEvent { source });
+            dialogue_runner.just_started = false;
+        }
+        if !dialogue_runner.is_running {
+            dialogue_runner.will_continue_in_next_update = false;
             continue;
         }
+
+        if let Some(line_ids) = std::mem::take(&mut dialogue_runner.popped_line_hints) {
+            line_hints_events.send(LineHintsEvent { line_ids, source });
+        }
+
+        if !(dialogue_runner.will_continue_in_next_update
+            && dialogue_runner.poll_tasks_and_check_if_done()
+            && dialogue_runner.data_providers().are_lines_available())
+        {
+            continue;
+        }
+        dialogue_runner.will_continue_in_next_update = false;
+
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
                 if let Some(mut options) = last_options.remove(&source) {
                     let Some(index) = options.iter().position(|o| o.id == option) else{
-                        bail!("Dialogue options does not contain selected option. Expected one of {:?}, but found {option}", last_options.keys());
+                        let expected_options = last_options
+                            .values()
+                            .flat_map(|options|
+                                options
+                                    .iter()
+                                    .map(|option| option.id.to_string()))
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
                     };
                     let option = options.swap_remove(index);
                     present_line_events.send(PresentLineEvent {
@@ -64,6 +100,7 @@ fn continue_runtime(
                     }
                     DialogueEvent::Command(command) => {
                         execute_command_events.send(ExecuteCommandEvent { command, source });
+                        dialogue_runner.continue_in_next_update().unwrap();
                     }
                     DialogueEvent::NodeComplete(node_name) => {
                         node_complete_events.send(NodeCompleteEvent { node_name, source });
@@ -72,13 +109,10 @@ fn continue_runtime(
                         node_start_events.send(NodeStartEvent { node_name, source });
                     }
                     DialogueEvent::LineHints(line_ids) => {
-                        if let Some(asset_provider) = dialogue_runner.asset_provider.as_mut() {
-                            asset_provider.accept_line_hints(&line_ids);
-                        }
-
                         line_hints_events.send(LineHintsEvent { line_ids, source });
                     }
                     DialogueEvent::DialogueComplete => {
+                        dialogue_runner.is_running = false;
                         dialogue_complete_events.send(DialogueCompleteEvent { source });
                     }
                 }
@@ -86,4 +120,16 @@ fn continue_runtime(
         }
     }
     Ok(())
+}
+
+fn accept_line_hints(
+    mut events: EventReader<LineHintsEvent>,
+    mut dialogue_runners: Query<&mut DialogueRunner>,
+) {
+    for event in events.iter() {
+        let mut dialogue_runner = dialogue_runners.get_mut(event.source).unwrap();
+        for asset_provider in dialogue_runner.data_providers_mut().asset_providers_mut() {
+            asset_provider.accept_line_hints(&event.line_ids);
+        }
+    }
 }

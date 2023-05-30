@@ -16,6 +16,7 @@ seldom_fn_plugin = "0.3"
 serde = { version = "1", features = ["derive"] }
 yarn_slinger = { path = "../yarn_slinger", features = ["bevy", "serde"] }
 sha2 = "0.10"
+rand = { version = "0.8", features = ["small_rng"] }
 
 [dependencies.bevy]
 version = "0.10"

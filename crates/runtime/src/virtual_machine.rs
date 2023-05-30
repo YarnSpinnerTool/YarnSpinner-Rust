@@ -165,6 +165,17 @@ impl VirtualMachine {
             .push(DialogueEvent::LineHints(string_ids));
     }
 
+    pub(crate) fn pop_line_hints(&mut self) -> Option<Vec<LineId>> {
+        match self.batched_events.pop() {
+            Some(DialogueEvent::LineHints(string_ids)) => Some(string_ids),
+            Some(event) => {
+                self.batched_events.push(event);
+                None
+            }
+            None => None,
+        }
+    }
+
     fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
         let program = self.program.as_ref().unwrap_or_else(|| {
             panic!("Cannot load node \"{node_name}\": No program has been loaded.")
@@ -454,7 +465,6 @@ impl VirtualMachine {
                     let mut parameters: Vec<_> = (0..actual_parameter_count)
                         .rev()
                         .map(|_| self.state.pop_value().raw_value)
-                        .map(Some)
                         .collect();
                     parameters.reverse();
                     parameters
@@ -500,22 +510,26 @@ impl VirtualMachine {
                 let loaded_value = self
                     .variable_storage
                     .get(&variable_name)
-                    .unwrap_or_else(|| {
-                        // We don't have a value for this. The initial
-                        // value may be found in the program. (If it's
-                        // not, then the variable's value is undefined,
-                        // which isn't allowed.)
+                    .or_else(|e| {
+                        if let VariableStorageError::VariableNotFound { .. } = e {
+                            // We don't have a value for this. The initial
+                            // value may be found in the program. (If it's
+                            // not, then the variable's value is undefined,
+                            // which isn't allowed.)
 
-                        self
-                            .program
-                            .as_ref()
-                            .unwrap()
-                            .initial_values
-                            .get(&variable_name)
-                            .unwrap_or_else(|| panic!("The loaded program does not contain an initial value for the variable {variable_name}"))
-                            .clone()
-                            .into()
-                    });
+                            Ok(self
+                                .program
+                                .as_ref()
+                                .unwrap()
+                                .initial_values
+                                .get(&variable_name)
+                                .unwrap_or_else(|| panic!("The loaded program does not contain an initial value for the variable {variable_name}"))
+                                .clone()
+                                .into())
+                        } else {
+                            Err(e)
+                        }
+                    })?;
                 self.state.push(loaded_value);
                 self.state.program_counter += 1;
             }
@@ -523,7 +537,7 @@ impl VirtualMachine {
                 // Store the top value on the stack in a variable.
                 let top_value = self.state.peek_value().clone();
                 let variable_name: String = instruction.read_operand(0);
-                self.variable_storage.set(variable_name, top_value.into());
+                self.variable_storage.set(variable_name, top_value.into())?;
                 self.state.program_counter += 1;
             }
             OpCode::Stop => {
