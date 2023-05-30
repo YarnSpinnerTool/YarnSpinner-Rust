@@ -36,18 +36,19 @@ pub mod prelude {
     pub(crate) use anyhow::{Context, Error, Result};
     pub(crate) use yarn_slinger::prelude::*;
     pub use yarn_slinger::prelude::{
-        Language, LineId, MarkupAttribute, MarkupValue, OptionId, VariableStorage, YarnFn,
-        YarnFnLibrary,
+        IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
+        VariableStorage, YarnFn, YarnFnLibrary,
     };
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
 }
 
+pub use crate::commands::UntypedYarnCommand;
 pub use crate::dialogue_runner::{
     DialogueRunnerDataProviders, DialogueRunnerDataProvidersMut, InnerDialogue, InnerDialogueMut,
 };
-pub use yarn_slinger::core::yarn_fn_type;
+pub use yarn_slinger::core::{yarn_fn_type, UntypedYarnFn};
 pub use yarn_slinger::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,

@@ -7,6 +7,7 @@ use bevy::utils::HashMap;
 use std::any::{Any, TypeId};
 use std::fmt;
 use std::fmt::{Debug, Formatter};
+use yarn_slinger::core::Library;
 
 pub(crate) fn dialogue_runner_builder_plugin(_app: &mut App) {}
 
@@ -55,7 +56,7 @@ impl DialogueRunnerBuilder {
                 yarn_project,
             )),
             asset_providers: HashMap::new(),
-            library: YarnFnLibrary::new(),
+            library: create_extended_standard_library(),
             compilation: yarn_project.compilation().clone(),
             text_language: None,
             asset_language: None,
@@ -120,7 +121,7 @@ impl DialogueRunnerBuilder {
     }
 
     #[must_use]
-    pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
+    pub fn register_function(mut self, library: YarnFnLibrary) -> Self {
         self.library.extend(library);
         self
     }
@@ -161,12 +162,60 @@ impl DialogueRunnerBuilder {
             popped_line_hints,
             asset_providers: self.asset_providers,
             run_selected_options_as_lines: self.run_selected_options_as_lines,
+            commands: YarnCommandRegistrations::default_commands(),
             is_running: default(),
-            commands: default(),
             command_tasks: default(),
             will_continue_in_next_update: default(),
             last_selected_option: default(),
             just_started: default(),
         })
     }
+}
+
+fn get_extended_standard_library() -> YarnFnLibrary {
+    YarnFnLibrary::standard_library()
+        .with_function("random", || {
+            todo!();
+            true
+        })
+        .with_function("random_range", |min_inclusive: f32, max_inclusive: f32| {
+            todo!();
+            true
+        })
+        .with_function("dice", |sides: usize| {
+            todo!();
+            true
+        })
+        .with_function("round", |num: f32| {
+            todo!();
+            true
+        })
+        .with_function("round_places", |num: f32, places: usize| {
+            todo!();
+            true
+        })
+        .with_function("floor", |num: f32| {
+            todo!();
+            true
+        })
+        .with_function("ceil", |num: f32| {
+            todo!();
+            true
+        })
+        .with_function("inc", |num: f32| {
+            todo!();
+            true
+        })
+        .with_function("dec", |num: f32| {
+            todo!();
+            true
+        })
+        .with_function("decimal", |num: f32| {
+            todo!();
+            true
+        })
+        .with_function("int", |num: f32| {
+            todo!();
+            true
+        })
 }

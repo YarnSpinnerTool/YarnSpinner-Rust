@@ -17,6 +17,7 @@ use bevy::{prelude::*, tasks::Task, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;
+use yarn_slinger::core::Library;
 
 mod builder;
 mod data_providers;
@@ -154,6 +155,26 @@ impl DialogueRunner {
             asset_provider.set_language(language.clone());
         }
         self
+    }
+
+    #[must_use]
+    pub fn library(&self) -> &Library {
+        self.dialogue.library()
+    }
+
+    #[must_use]
+    pub fn library_mut(&mut self) -> &mut Library {
+        self.dialogue.library_mut()
+    }
+
+    #[must_use]
+    pub fn command_registry(&self) -> &YarnCommandRegistrations {
+        &self.commands
+    }
+
+    #[must_use]
+    pub fn command_registry_mut(&mut self) -> &mut YarnCommandRegistrations {
+        &mut self.commands
     }
 
     #[must_use]
