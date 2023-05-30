@@ -100,7 +100,7 @@ fn continue_runtime(
                     }
                     DialogueEvent::Command(command) => {
                         execute_command_events.send(ExecuteCommandEvent { command, source });
-                        dialogue_runner.continue_in_next_update().unwrap();
+                        dialogue_runner.continue_in_next_update();
                     }
                     DialogueEvent::NodeComplete(node_name) => {
                         node_complete_events.send(NodeCompleteEvent { node_name, source });

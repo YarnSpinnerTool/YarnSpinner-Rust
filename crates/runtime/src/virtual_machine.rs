@@ -192,13 +192,17 @@ impl VirtualMachine {
     ///
     /// ## Implementation note
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
+    ///
     pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
-        if let Some(events) = self.pop_batched_events() {
-            return Ok(Some(events));
-        }
         self.assert_can_continue();
-
-        self.set_execution_state(ExecutionState::Running);
+        if self
+            .batched_events
+            .contains(&DialogueEvent::DialogueComplete)
+        {
+            self.execution_state = ExecutionState::Stopped;
+        } else {
+            self.set_execution_state(ExecutionState::Running);
+        };
 
         while self.execution_state == ExecutionState::Running
             && self.state.program_counter < self.current_node.as_ref().unwrap().instructions.len()
@@ -219,7 +223,7 @@ impl VirtualMachine {
             self.batched_events.push(DialogueEvent::DialogueComplete);
             info!("Run complete.");
         }
-        Ok(self.pop_batched_events())
+        Ok(self.take_batched_events())
     }
 
     pub(crate) fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
@@ -227,7 +231,7 @@ impl VirtualMachine {
     }
 
     #[must_use]
-    fn pop_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
+    fn take_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
         if self
             .batched_events
             .contains(&DialogueEvent::DialogueComplete)

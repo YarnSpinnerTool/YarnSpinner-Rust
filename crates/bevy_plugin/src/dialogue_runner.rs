@@ -55,20 +55,28 @@ pub struct DialogueRunner {
 impl DialogueRunner {
     pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
 
-    pub fn continue_in_next_update(&mut self) -> Result<&mut Self> {
+    pub fn continue_in_next_update(&mut self) -> &mut Self {
+        self.try_continue_in_next_update()
+            .unwrap_or_else(|e| panic!("{e}"))
+    }
+
+    pub fn try_continue_in_next_update(&mut self) -> Result<&mut Self> {
         if !self.is_running {
-            panic!("Can't continue dialogue that isn't running")
+            bail!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
         }
         self.will_continue_in_next_update = true;
         Ok(self)
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
+        if !self.is_running {
+            bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
+        }
         self.last_selected_option.replace(option);
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
-        self.continue_in_next_update()?;
+        self.continue_in_next_update();
         Ok(self)
     }
 
@@ -94,7 +102,7 @@ impl DialogueRunner {
         }
         self.is_running = true;
         self.just_started = true;
-        self.continue_in_next_update()?;
+        self.continue_in_next_update();
         Ok(self)
     }
 
@@ -108,7 +116,7 @@ impl DialogueRunner {
         self.dialogue
             .set_node(node_name)
             .with_context(|| format!("Can't start dialogue from node {node_name}:"))?;
-        self.continue_in_next_update()?;
+        self.continue_in_next_update();
         Ok(self)
     }
 

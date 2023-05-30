@@ -3,8 +3,11 @@ use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
 
+mod assertations;
+
 pub mod prelude {
     pub use super::*;
+    pub use assertations::*;
 }
 
 pub trait AppExt {
@@ -38,28 +41,6 @@ impl AppExt for App {
         self.world.resource_mut::<YarnProject>()
     }
 
-    fn dialogue_runner(&mut self) -> &DialogueRunner {
-        if self.try_dialogue_runner().is_some() {
-            self.try_dialogue_runner().unwrap()
-        } else {
-            let project = self.load_project();
-            let dialogue_runner = project.default_dialogue_runner().unwrap();
-            let entity = self.world.spawn(dialogue_runner).id();
-            self.world.get::<DialogueRunner>(entity).unwrap()
-        }
-    }
-
-    fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner> {
-        if self.try_dialogue_runner().is_some() {
-            self.try_dialogue_runner_mut().unwrap()
-        } else {
-            let project = self.load_project();
-            let dialogue_runner = project.default_dialogue_runner().unwrap();
-            let entity = self.world.spawn(dialogue_runner).id();
-            self.world.get_mut::<DialogueRunner>(entity).unwrap()
-        }
-    }
-
     fn load_texts(&mut self) -> &mut App {
         self.load_project();
         while !self
@@ -82,6 +63,28 @@ impl AppExt for App {
             self.update();
         }
         self
+    }
+
+    fn dialogue_runner(&mut self) -> &DialogueRunner {
+        if self.try_dialogue_runner().is_some() {
+            self.try_dialogue_runner().unwrap()
+        } else {
+            let project = self.load_project();
+            let dialogue_runner = project.default_dialogue_runner().unwrap();
+            let entity = self.world.spawn(dialogue_runner).id();
+            self.world.get::<DialogueRunner>(entity).unwrap()
+        }
+    }
+
+    fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner> {
+        if self.try_dialogue_runner().is_some() {
+            self.try_dialogue_runner_mut().unwrap()
+        } else {
+            let project = self.load_project();
+            let dialogue_runner = project.default_dialogue_runner().unwrap();
+            let entity = self.world.spawn(dialogue_runner).id();
+            self.world.get_mut::<DialogueRunner>(entity).unwrap()
+        }
     }
 
     fn try_dialogue_runner(&self) -> Option<&DialogueRunner> {

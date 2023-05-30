@@ -193,11 +193,7 @@ fn panics_on_invalid_language() {
         .with_asset_language(Language::new("fr-FR"))
         .build()
         .unwrap();
-    dialogue_runner
-        .start()
-        .unwrap()
-        .continue_in_next_update()
-        .unwrap();
+    dialogue_runner.start().unwrap().continue_in_next_update();
     app.world.spawn(dialogue_runner);
     app.load_assets();
 }
