@@ -290,11 +290,11 @@ impl Dialogue {
 
     /// Gets the names of the nodes in the currently loaded Program, if there is one.
     #[must_use]
-    pub fn node_names(&self) -> Option<Vec<String>> {
+    pub fn node_names(&self) -> Option<impl Iterator<Item = &str>> {
         self.vm
             .program
             .as_ref()
-            .map(|program| program.nodes.keys().cloned().collect())
+            .map(|program| program.nodes.keys().map(|s| s.as_str()))
     }
 
     /// Returns the line ID that contains the original, uncompiled source

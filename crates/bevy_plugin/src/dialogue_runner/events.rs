@@ -49,6 +49,11 @@ pub struct LineHintsEvent {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DialogueStartEvent {
+    pub source: Entity,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DialogueCompleteEvent {
     pub source: Entity,
 }

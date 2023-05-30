@@ -21,7 +21,7 @@ fn test_loading_nodes() {
     // high-level test: load the file, verify it has the nodes we want,
     // and run one
 
-    assert_eq!(3, dialogue.node_names().unwrap().len());
+    assert_eq!(3, dialogue.node_names().unwrap().count());
     assert!(dialogue.node_exists("TestNode"));
     assert!(dialogue.node_exists("AnotherTestNode"));
     assert!(dialogue.node_exists("ThirdNode"));
