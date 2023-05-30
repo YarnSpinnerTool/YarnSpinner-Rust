@@ -31,6 +31,32 @@ fn start_implies_continue() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn presents_all_lines() -> Result<()> {
+    let mut app = App::new();
+    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    for i in 1..=12 {
+        println!("Line {i}");
+        app.dialogue_runner_mut().continue_in_next_update();
+        app.update();
+        assert_events!(app contains PresentLineEvent);
+    }
+    assert_events!(app contains [
+        NodeCompleteEvent (n = 0),
+        DialogueCompleteEvent (n = 0),
+    ]);
+    println!("End of lines");
+    app.dialogue_runner_mut().continue_in_next_update();
+    app.update();
+    assert_events!(app contains [
+        NodeCompleteEvent,
+        DialogueCompleteEvent,
+        PresentLineEvent (n = 0),
+    ]);
+    assert!(!app.dialogue_runner().is_running());
+    Ok(())
+}
+
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {
     app.add_plugins(DefaultPlugins)
         .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]))
