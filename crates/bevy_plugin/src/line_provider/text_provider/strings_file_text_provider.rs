@@ -154,8 +154,8 @@ impl TextProvider for StringsFileTextProvider {
                     );
             }
             let string_table: HashMap<LineId, String> = strings_file
-                .get_texts()
-                .map(|(id, record)| (id.clone(), record.clone()))
+                .iter()
+                .map(|(id, record)| (id.clone(), record.text.clone()))
                 .collect();
             Some(Box::new(string_table))
         } else {

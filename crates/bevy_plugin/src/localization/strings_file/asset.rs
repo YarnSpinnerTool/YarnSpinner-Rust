@@ -190,8 +190,12 @@ impl StringsFile {
             .find(|record| &record.language != expected_language)
     }
 
-    pub(crate) fn get_texts(&self) -> impl Iterator<Item = (&LineId, &String)> {
-        self.0.iter().map(|(id, record)| (id, &record.text))
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&LineId, &StringsFileRecord)> {
+        self.0.iter()
+    }
+
+    pub(crate) fn records(&self) -> impl Iterator<Item = &StringsFileRecord> {
+        self.0.values()
     }
 }
 
