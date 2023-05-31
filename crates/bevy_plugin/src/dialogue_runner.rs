@@ -255,7 +255,6 @@ impl DialogueRunner {
             .map(|p| p.as_ref())
     }
 
-    #[must_use]
     pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
         self.asset_providers.values().map(|p| p.as_ref())
     }

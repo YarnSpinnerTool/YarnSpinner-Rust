@@ -9,13 +9,19 @@ pub(crate) fn audio_asset_provider_plugin(_app: &mut App) {}
 #[derive(Debug, Clone)]
 pub struct AudioAssetProvider(FileExtensionAssetProvider);
 
-impl AudioAssetProvider {
-    pub fn new() -> Self {
+impl Default for AudioAssetProvider {
+    fn default() -> Self {
         Self(
             FileExtensionAssetProvider::new().with_file_extensions(file_extensions! {
                 AudioSource: ["mp3", "ogg", "wav"],
             }),
         )
+    }
+}
+
+impl AudioAssetProvider {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
