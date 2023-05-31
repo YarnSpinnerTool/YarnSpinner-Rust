@@ -23,7 +23,7 @@ fn start_implies_continue() -> Result<()> {
         DialogueStartEvent,
         NodeStartEvent,
         LineHintsEvent,
-        PresentLineEvent with |event| event.line.text == FIRST_LINE,
+        PresentLineEvent with |event| event.line.text == english_lines()[0],
     ]);
 
     Ok(())
@@ -70,7 +70,7 @@ fn serves_assets_after_loading() -> Result<()> {
         DialogueStartEvent (n = 0),
         LineHintsEvent (n = 0),
         NodeStartEvent,
-        PresentLineEvent with |event| event.line.text == FIRST_LINE,
+        PresentLineEvent with |event| event.line.text == english_lines()[0],
         PresentLineEvent with |event| event.line.assets.is_empty(),
     ]);
 
@@ -80,8 +80,66 @@ fn serves_assets_after_loading() -> Result<()> {
     }
     app.continue_dialogue_and_update();
     assert_events!(app contains PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_some());
+    Ok(())
+}
+
+#[test]
+fn serves_translations() -> Result<()> {
+    let mut app = App::new();
+    setup_dialogue_runner_with_localizations(&mut app).start()?;
+    app.load_lines();
+
+    for _ in 1..=9 {
+        app.continue_dialogue_and_update();
+    }
+    app.dialogue_runner_mut()
+        .set_asset_language(Language::from("de-CH"))
+        .continue_in_next_update();
+    app.load_lines();
+    assert_events!(app contains [
+        PresentLineEvent with |event| event.line.text == english_lines()[9],
+        PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_some(),
+    ]);
+
+    app.dialogue_runner_mut()
+        .set_text_language(Language::from("de-CH"))
+        .continue_in_next_update();
+    app.load_lines();
+    assert_events!(app contains [
+        PresentLineEvent with |event| event.line.text == german_lines()[10],
+        PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_none(),
+    ]);
+    app.dialogue_runner_mut()
+        .set_language(Language::from("en-US"))
+        .continue_in_next_update();
+    app.load_lines();
+    assert_events!(app contains [
+        PresentLineEvent with |event| event.line.text == english_lines()[11],
+        PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_none(),
+    ]);
 
     Ok(())
+}
+
+#[test]
+fn default_language_is_none_without_localizations() {
+    let mut app = App::new();
+    let dialogue_runner = setup_dialogue_runner_without_localizations(&mut app);
+    assert_eq!(None, dialogue_runner.text_language());
+}
+
+#[test]
+fn default_language_is_base_language() {
+    let mut app = App::new();
+    let dialogue_runner = setup_dialogue_runner_with_localizations(&mut app);
+    assert_eq!(
+        Some(Language::from("en-US")),
+        dialogue_runner.text_language()
+    );
+    assert_eq!(
+        Some(Language::from("en-US")),
+        dialogue_runner.asset_language()
+    );
 }
 
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {
@@ -113,6 +171,21 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
         .single_mut(&mut app.world)
 }
 
-const FIRST_LINE: & str =
-    "An elderly man was sitting alone on a dark path. He wasn't certain of which direction to go, and he'd forgotten both where he was travelling to and who he was. \
-            He'd sat down for a moment to rest his weary legs, and suddenly looked up to see an elderly woman before him. She grinned toothlessly and with a cackle, spoke:";
+fn english_lines() -> Vec<String> {
+    let mut lines: Vec<_> = include_str!("../assets/lines.yarn")
+        .lines()
+        .skip(2)
+        .filter(|l| !l.is_empty())
+        .map(|line| line.trim().to_owned())
+        .collect();
+    lines.pop();
+    lines
+}
+fn german_lines() -> Vec<String> {
+    let file = include_str!("../assets/de-CH.strings.csv");
+    let mut reader = csv::Reader::from_reader(file.as_bytes());
+    reader
+        .records()
+        .map(|r| r.unwrap().get(2).unwrap().to_string())
+        .collect()
+}
