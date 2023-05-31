@@ -39,6 +39,8 @@ pub enum DialogueError {
     #[error("`SetSelectedOption` was called, but Dialogue wasn't waiting for a selection. \
             This method should only be called after the Dialogue is waiting for the user to select an option.")]
     UnexpectedOptionSelectionError,
+    #[error("Cannot continue running dialogue. No node has been selected.")]
+    NoNodeSelectedOnContinue,
     #[error("No node named \"{node_name}\" has been loaded.")]
     InvalidNode { node_name: String },
     #[error(transparent)]

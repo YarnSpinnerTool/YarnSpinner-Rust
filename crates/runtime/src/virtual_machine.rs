@@ -40,7 +40,10 @@ impl Iterator for VirtualMachine {
     type Item = Vec<DialogueEvent>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.continue_().unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}"))
+        self.assert_can_continue().is_ok().then(||
+            self.continue_()
+            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
+            .flatten()
     }
 }
 
@@ -194,7 +197,7 @@ impl VirtualMachine {
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
     ///
     pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
-        self.assert_can_continue();
+        self.assert_can_continue()?;
         if self.has_completion_batched() {
             self.execution_state = ExecutionState::Stopped;
         } else {
@@ -218,8 +221,8 @@ impl VirtualMachine {
 
             self.batched_events
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
+            self.set_execution_state(ExecutionState::Stopped);
             self.batched_events.push(DialogueEvent::DialogueComplete);
-            self.state = State::default();
             info!("Run complete.");
         }
         Ok(self.take_batched_events())
@@ -245,23 +248,22 @@ impl VirtualMachine {
             // which we don't want to do here since we need the current node name later
             self.execution_state = ExecutionState::Stopped;
             self.state = State::default();
+            self.reset_state();
         }
         (!self.batched_events.is_empty()).then(|| std::mem::take(&mut self.batched_events))
     }
 
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.
-    fn assert_can_continue(&self) {
-        assert!(
-            self.current_node.is_some(),
-            "Cannot continue running dialogue. No node has been selected."
-        );
-        assert_ne!(
-            ExecutionState::WaitingOnOptionSelection,
-            self.execution_state,
-            "Cannot continue running dialogue. Still waiting on option selection."
-        );
-        // ## Implementation note:
-        // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
+    fn assert_can_continue(&self) -> crate::Result<()> {
+        if self.current_node.is_none() || self.current_node_name.is_none() {
+            Err(DialogueError::NoNodeSelectedOnContinue)
+        } else if self.execution_state == ExecutionState::WaitingOnOptionSelection {
+            Err(DialogueError::UnexpectedOptionSelectionError)
+        } else {
+            // ## Implementation note:
+            // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
+            Ok(())
+        }
     }
 
     pub(crate) fn unload_programs(&mut self) {
@@ -409,7 +411,7 @@ impl VirtualMachine {
                 // If we have no options to show, immediately stop.
                 if self.state.current_options.is_empty() {
                     self.batched_events.push(DialogueEvent::DialogueComplete);
-                    self.state = State::default();
+                    self.set_execution_state(ExecutionState::Stopped);
                     self.state.program_counter += 1;
                     return Ok(());
                 }
@@ -554,7 +556,7 @@ impl VirtualMachine {
                 self.batched_events
                     .push(DialogueEvent::NodeComplete(current_node_name));
                 self.batched_events.push(DialogueEvent::DialogueComplete);
-                self.state = State::default();
+                self.set_execution_state(ExecutionState::Stopped);
 
                 self.state.program_counter += 1;
             }
@@ -608,8 +610,7 @@ impl VirtualMachine {
             .copied()
             .unwrap_or_else(|| {
                 panic!(
-                    "Unknown label {} in node {}",
-                    label_name,
+                    "Unknown label {label_name} in node {}",
                     self.current_node_name.as_ref().unwrap()
                 )
             })
