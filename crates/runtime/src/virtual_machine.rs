@@ -198,16 +198,9 @@ impl VirtualMachine {
     ///
     pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
         self.assert_can_continue()?;
-        if self.has_completion_batched() {
-            self.execution_state = ExecutionState::Stopped;
-        } else {
-            self.set_execution_state(ExecutionState::Running);
-        };
+        self.set_execution_state(ExecutionState::Running);
 
-        while self.execution_state == ExecutionState::Running
-            && !self.has_completion_batched()
-            && self.state.program_counter < self.current_node.as_ref().unwrap().instructions.len()
-        {
+        while self.execution_state == ExecutionState::Running {
             let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
             self.run_instruction(current_instruction)?;
@@ -233,23 +226,7 @@ impl VirtualMachine {
     }
 
     #[must_use]
-    fn has_completion_batched(&self) -> bool {
-        self.batched_events
-            .contains(&DialogueEvent::DialogueComplete)
-    }
-
-    #[must_use]
     fn take_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
-        if self.has_completion_batched() {
-            // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
-            // So, since we work through all events after they would have already been handled in the original, we only set the execution state here.
-
-            // This does not call `set_execution_state` because that would reset the state when encountering `ExecutionState::Stopped`,
-            // which we don't want to do here since we need the current node name later
-            self.execution_state = ExecutionState::Stopped;
-            self.state = State::default();
-            self.reset_state();
-        }
         (!self.batched_events.is_empty()).then(|| std::mem::take(&mut self.batched_events))
     }
 
