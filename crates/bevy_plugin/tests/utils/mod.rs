@@ -1,7 +1,9 @@
 #![allow(dead_code)]
+
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
+use std::path::PathBuf;
 
 mod assertations;
 
@@ -100,6 +102,10 @@ impl AppExt for App {
             .iter_mut(&mut self.world)
             .next()
     }
+}
+
+pub fn project_root_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
 pub trait DialogueRunnerExt {

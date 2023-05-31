@@ -1,6 +1,8 @@
 use anyhow::Result;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
+use std::fs;
+use tempfile::tempdir;
 use utils::prelude::*;
 
 mod utils;
@@ -139,10 +141,44 @@ fn can_select_unavailable_choice() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn generates_files_in_dev_mode() -> Result<()> {
+    let dir = tempdir()?;
+    let original_yarn_path = project_root_path().join("assets/options.yarn");
+    let yarn_path = dir.path().join("options.yarn");
+    fs::copy(&original_yarn_path, &yarn_path)?;
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins.set(AssetPlugin {
+        asset_folder: dir.path().to_str().unwrap().to_string(),
+        ..default()
+    }));
+
+    setup_dialogue_runner_in_dev_mode(&mut app).start()?;
+    app.update();
+    assert_events!(app contains [
+        PresentLineEvent with |event| event.line.text == lines()[0],
+    ]);
+
+    Ok(())
+}
+
 fn setup_dialogue_runner(app: &mut App) -> Mut<DialogueRunner> {
     app.add_plugins(DefaultPlugins)
         .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]))
         .dialogue_runner_mut()
+}
+
+fn setup_dialogue_runner_in_dev_mode(app: &mut App) -> Mut<DialogueRunner> {
+    app.add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Development,
+            },
+        ),
+    )
+    .dialogue_runner_mut()
 }
 
 fn lines() -> Vec<String> {
