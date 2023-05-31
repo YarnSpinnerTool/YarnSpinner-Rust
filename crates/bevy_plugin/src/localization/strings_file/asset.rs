@@ -47,7 +47,7 @@ impl AssetLoader for StringsFileAssetLoader {
 #[reflect(Debug, PartialEq, Serialize, Default, Deserialize)]
 #[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
 #[non_exhaustive]
-pub(crate) struct StringsFile(pub(crate) HashMap<LineId, StringsFileRecord>);
+pub(crate) struct StringsFile(HashMap<LineId, StringsFileRecord>);
 
 impl StringsFile {
     pub(crate) fn new_with_single_language(records: Vec<StringsFileRecord>) -> Result<Self> {
@@ -188,6 +188,10 @@ impl StringsFile {
         self.0
             .values()
             .find(|record| &record.language != expected_language)
+    }
+
+    pub(crate) fn get_texts(&self) -> impl Iterator<Item = (&LineId, &String)> {
+        self.0.iter().map(|(id, record)| (id, &record.text))
     }
 }
 
