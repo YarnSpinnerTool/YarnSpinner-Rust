@@ -18,6 +18,8 @@ pub trait AppExt {
     fn load_lines(&mut self) -> &mut App;
 
     fn continue_dialogue_and_update(&mut self) -> &mut App;
+    fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
+
     #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
@@ -52,8 +54,14 @@ impl AppExt for App {
     }
 
     fn continue_dialogue_and_update(&mut self) -> &mut App {
-        self.dialogue_runner_mut().continue_in_next_update();
-        self.update();
+        self.continue_dialogue_and_update_n_times(1)
+    }
+
+    fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App {
+        for _ in 0..n {
+            self.dialogue_runner_mut().continue_in_next_update();
+            self.update();
+        }
         self
     }
 

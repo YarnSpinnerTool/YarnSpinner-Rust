@@ -286,10 +286,7 @@ fn test_selecting_option_from_inside_option_callback() {
 
                     let expected_step = test_plan.next_expected_step;
                     assert_eq!(ExpectedStepType::Select, expected_step);
-                    test_base
-                        .dialogue
-                        .set_selected_option(OptionId::construct_for_debugging(0))
-                        .unwrap();
+                    test_base.dialogue.set_selected_option(OptionId(0)).unwrap();
                 }
                 DialogueEvent::DialogueComplete => {
                     let test_plan = test_base.test_plan.as_mut().unwrap();

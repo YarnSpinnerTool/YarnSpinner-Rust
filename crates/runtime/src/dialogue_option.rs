@@ -45,20 +45,10 @@ pub struct DialogueOption {
     all(feature = "bevy", feature = "serde"),
     reflect(Serialize, Deserialize)
 )]
-pub struct OptionId(pub(crate) usize);
+pub struct OptionId(pub usize);
 
 impl Display for OptionId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-impl OptionId {
-    /// Constructs a new `OptionId` from the given value.
-    /// A user is supposed to use the `OptionId`s constructed by the [`Dialogue`] and not create their own.
-    ///
-    /// So, only use this method for debugging purposes.
-    pub fn construct_for_debugging(value: usize) -> Self {
-        Self(value)
     }
 }
