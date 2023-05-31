@@ -4,7 +4,6 @@ pub use self::events::{
 };
 pub use self::{
     builder::{DialogueRunnerBuilder, StartNode},
-    data_providers::{DialogueRunnerDataProviders, DialogueRunnerDataProvidersMut},
     dialogue_option::DialogueOption,
     inner::{InnerDialogue, InnerDialogueMut},
     localized_line::LocalizedLine,
@@ -13,6 +12,7 @@ use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use anyhow::bail;
+use bevy::utils::HashSet;
 use bevy::{prelude::*, tasks::Task, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
@@ -20,7 +20,6 @@ use std::fmt::Debug;
 use yarn_slinger::core::Library;
 
 mod builder;
-mod data_providers;
 mod dialogue_option;
 mod events;
 mod inner;
@@ -33,14 +32,13 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
         .fn_plugin(events::dialogue_runner_events_plugin)
         .fn_plugin(dialogue_option::dialogue_option_plugin)
         .fn_plugin(builder::dialogue_runner_builder_plugin)
-        .fn_plugin(data_providers::dialogue_runner_data_providers_plugin)
         .fn_plugin(inner::inner_dialogue_runner_plugin);
 }
 
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
-    text_provider: Box<dyn TextProvider>,
+    pub(crate) text_provider: Box<dyn TextProvider>,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     pub will_continue_in_next_update: bool,
     pub(crate) last_selected_option: Option<OptionId>,
@@ -136,13 +134,30 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub fn data_providers(&self) -> DialogueRunnerDataProviders {
-        DialogueRunnerDataProviders(self)
+    pub fn variable_storage(&self) -> &dyn VariableStorage {
+        self.dialogue.variable_storage()
     }
 
     #[must_use]
-    pub fn data_providers_mut(&mut self) -> DialogueRunnerDataProvidersMut {
-        DialogueRunnerDataProvidersMut(self)
+    pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
+        self.dialogue.variable_storage_mut()
+    }
+
+    #[must_use]
+    pub fn are_lines_available(&self) -> bool {
+        self.are_texts_available() && self.are_assets_available()
+    }
+
+    #[must_use]
+    fn are_texts_available(&self) -> bool {
+        self.text_provider.are_lines_available()
+    }
+
+    #[must_use]
+    fn are_assets_available(&self) -> bool {
+        self.asset_providers
+            .values()
+            .all(|provider| provider.are_assets_available())
     }
 
     pub fn set_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
@@ -187,7 +202,21 @@ impl DialogueRunner {
 
     #[must_use]
     pub fn text_language(&self) -> Option<Language> {
-        self.text_provider.get_language()
+        self.dialogue.language_code().cloned()
+    }
+
+    #[must_use]
+    pub fn asset_language(&self) -> Option<Language> {
+        let languages: HashSet<_> = self
+            .asset_providers
+            .values()
+            .map(|provider| provider.get_language())
+            .collect();
+        assert!(
+            languages.len() <= 1,
+            "Asset providers have different languages"
+        );
+        languages.into_iter().next().flatten()
     }
 
     #[must_use]
@@ -198,6 +227,23 @@ impl DialogueRunner {
     #[must_use]
     pub fn inner_mut(&mut self) -> InnerDialogueMut {
         InnerDialogueMut(&mut self.dialogue)
+    }
+
+    #[must_use]
+    pub fn text_provider(&self) -> &dyn TextProvider {
+        self.text_provider.as_ref()
+    }
+
+    #[must_use]
+    pub fn asset_provider<T: 'static>(&self) -> Option<&dyn AssetProvider> {
+        self.asset_providers
+            .get(&TypeId::of::<T>())
+            .map(|p| p.as_ref())
+    }
+
+    #[must_use]
+    pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
+        self.asset_providers.values().map(|p| p.as_ref())
     }
 
     #[must_use]

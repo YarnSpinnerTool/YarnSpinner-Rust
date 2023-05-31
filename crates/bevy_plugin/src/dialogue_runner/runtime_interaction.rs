@@ -45,7 +45,7 @@ fn continue_runtime(
 
         if !(dialogue_runner.will_continue_in_next_update
             && dialogue_runner.poll_tasks_and_check_if_done()
-            && dialogue_runner.data_providers().are_lines_available())
+            && dialogue_runner.are_lines_available())
         {
             continue;
         }
@@ -123,7 +123,7 @@ fn accept_line_hints(
 ) {
     for event in events.iter() {
         let mut dialogue_runner = dialogue_runners.get_mut(event.source).unwrap();
-        for asset_provider in dialogue_runner.data_providers_mut().asset_providers_mut() {
+        for asset_provider in dialogue_runner.asset_providers.values_mut() {
             asset_provider.accept_line_hints(&event.line_ids);
         }
     }

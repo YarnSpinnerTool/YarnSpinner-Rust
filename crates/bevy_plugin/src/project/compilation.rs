@@ -100,8 +100,7 @@ fn recompile_loaded_yarn_files(
     yarn_project.compilation = compilation;
     for mut dialogue_runner in dialogue_runners.iter_mut() {
         dialogue_runner
-            .data_providers_mut()
-            .text_provider_mut()
+            .text_provider
             .set_base_string_table(yarn_project.compilation.string_table.clone());
     }
     let file_count = yarn_project.yarn_files.len();

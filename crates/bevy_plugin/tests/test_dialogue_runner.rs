@@ -102,7 +102,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
         )
         .load_project()
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(AudioAssetProvider::new())
         .build()
         .unwrap();
     app.world.spawn(dialogue_runner);
@@ -122,11 +122,7 @@ trait AppExt2 {
 impl AppExt2 for App {
     fn wait_until_ready(&mut self) -> &mut App {
         let start = Instant::now();
-        while !self
-            .dialogue_runner()
-            .data_providers()
-            .are_lines_available()
-        {
+        while !self.dialogue_runner().are_lines_available() {
             if start.elapsed().as_secs() > 2 {
                 panic!("Timeout while waiting for lines to be available");
             }

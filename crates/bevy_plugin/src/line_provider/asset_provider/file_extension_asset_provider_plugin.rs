@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::LoadState;
-#[cfg(feature = "audio_assets")]
-use bevy::audio::AudioSource;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet, Uuid};
 use std::any::Any;
@@ -32,6 +30,7 @@ macro_rules! file_extensions {
         }
     };
 }
+pub use file_extensions;
 
 impl FileExtensionAssetProvider {
     pub fn new() -> Self {
@@ -55,13 +54,6 @@ impl FileExtensionAssetProvider {
                 )
             }));
         self
-    }
-
-    #[cfg(feature = "audio_assets")]
-    pub fn with_audio(self) -> Self {
-        self.with_file_extensions(file_extensions! {
-            AudioSource: ["mp3", "ogg", "wav"],
-        })
     }
 }
 

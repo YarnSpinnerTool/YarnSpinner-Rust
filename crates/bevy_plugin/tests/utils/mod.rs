@@ -14,8 +14,8 @@ pub trait AppExt {
     fn load_project(&mut self) -> &YarnProject;
     #[must_use]
     fn load_project_mut(&mut self) -> Mut<YarnProject>;
-    fn load_texts(&mut self) -> &mut App;
-    fn load_assets(&mut self) -> &mut App;
+
+    fn load_lines(&mut self) -> &mut App;
     #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
@@ -41,25 +41,9 @@ impl AppExt for App {
         self.world.resource_mut::<YarnProject>()
     }
 
-    fn load_texts(&mut self) -> &mut App {
+    fn load_lines(&mut self) -> &mut App {
         self.load_project();
-        while !self
-            .dialogue_runner()
-            .data_providers()
-            .are_texts_available()
-        {
-            self.update();
-        }
-        self
-    }
-
-    fn load_assets(&mut self) -> &mut App {
-        self.load_project();
-        while !self
-            .dialogue_runner()
-            .data_providers()
-            .are_assets_available()
-        {
+        while !self.dialogue_runner().are_lines_available() {
             self.update();
         }
         self
@@ -117,8 +101,7 @@ impl DialogueRunnerExt for DialogueRunner {
             text: String::new(),
             attributes: vec![],
         };
-        self.data_providers()
-            .asset_providers()
+        self.asset_providers()
             .map(|p| p.get_assets(&line_id))
             .collect()
     }

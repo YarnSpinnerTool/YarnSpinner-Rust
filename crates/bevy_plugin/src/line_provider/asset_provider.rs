@@ -1,16 +1,23 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
+#[cfg(feature = "audio_assets")]
+pub use audio_asset_provider_plugin::AudioAssetProvider;
 use bevy::asset::Asset;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, Uuid};
-pub use file_extension_asset_provider::FileExtensionAssetProvider;
+pub use file_extension_asset_provider_plugin::{file_extensions, FileExtensionAssetProvider};
 use std::any::Any;
 use std::fmt::Debug;
 
-mod file_extension_asset_provider;
+#[cfg(feature = "audio_assets")]
+mod audio_asset_provider_plugin;
+mod file_extension_asset_provider_plugin;
 
 pub(crate) fn asset_provider_plugin(app: &mut App) {
-    app.fn_plugin(file_extension_asset_provider::file_extension_asset_provider_plugin);
+    app.fn_plugin(file_extension_asset_provider_plugin::file_extension_asset_provider_plugin);
+
+    #[cfg(feature = "audio_assets")]
+    app.fn_plugin(audio_asset_provider_plugin::audio_asset_provider_plugin);
 }
 
 pub trait AssetProvider: Debug + Send + Sync {
