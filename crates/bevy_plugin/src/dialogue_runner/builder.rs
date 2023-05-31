@@ -176,6 +176,7 @@ impl DialogueRunnerBuilder {
             will_continue_in_next_update: default(),
             last_selected_option: default(),
             just_started: default(),
+            localizations: self.localizations,
         })
     }
 }

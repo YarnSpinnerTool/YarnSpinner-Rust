@@ -72,6 +72,7 @@ impl AssetProvider for FileExtensionAssetProvider {
 
     fn set_language(&mut self, language: Option<Language>) {
         self.language = language;
+        self.reload_assets();
     }
 
     fn set_localizations(&mut self, localizations: Localizations) {
@@ -113,8 +114,8 @@ impl AssetProvider for FileExtensionAssetProvider {
                     let dir = localization.assets_sub_folder.as_path();
                     let file_name_without_extension = line.id.0.trim_start_matches("line:");
                     let Some(asset_server) = self.asset_server.as_ref() else {
-                            return default();
-                        };
+                        return default();
+                    };
                     let assets = self
                         .file_extensions
                         .iter()

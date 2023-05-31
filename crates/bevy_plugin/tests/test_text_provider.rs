@@ -75,8 +75,7 @@ fn loads_line_from_base_language_with_explicit_language() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("en-US"));
+    app.dialogue_runner_mut().set_text_language("en-US");
 
     app.load_lines();
 
@@ -103,8 +102,7 @@ fn panics_when_loading_missing_language() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("fr-FR"));
+    app.dialogue_runner_mut().set_text_language("fr-FR");
 
     app.load_lines();
 }
@@ -123,8 +121,7 @@ fn loads_line_from_fallback_on_missing_line() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("de-CH"));
+    app.dialogue_runner_mut().set_text_language("de-CH");
 
     app.load_lines();
 
@@ -150,8 +147,7 @@ fn loads_line_from_translated_language() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("de-CH"));
+    app.dialogue_runner_mut().set_text_language("de-CH");
 
     app.load_lines();
 

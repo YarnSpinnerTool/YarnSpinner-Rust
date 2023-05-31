@@ -89,32 +89,32 @@ fn serves_translations() -> Result<()> {
     setup_dialogue_runner_with_localizations(&mut app).start()?;
     app.load_lines();
 
-    for _ in 1..=9 {
+    for _ in 1..=6 {
         app.continue_dialogue_and_update();
     }
     app.dialogue_runner_mut()
-        .set_asset_language(Language::from("de-CH"))
+        .set_asset_language("de-CH")
         .continue_in_next_update();
     app.load_lines();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == english_lines()[9],
+        PresentLineEvent with |event| event.line.text == english_lines()[7],
         PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_some(),
     ]);
 
     app.dialogue_runner_mut()
-        .set_text_language(Language::from("de-CH"))
+        .set_text_language("de-CH")
         .continue_in_next_update();
     app.load_lines();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == german_lines()[10],
+        PresentLineEvent with |event| event.line.text == german_lines()[8],
         PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_none(),
     ]);
     app.dialogue_runner_mut()
-        .set_language(Language::from("en-US"))
+        .set_language("en-US")
         .continue_in_next_update();
     app.load_lines();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == english_lines()[11],
+        PresentLineEvent with |event| event.line.text == english_lines()[9], // There's no German line 10, so this falls back to English anyway
         PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_none(),
     ]);
 

@@ -44,6 +44,7 @@ pub struct DialogueRunner {
     pub(crate) last_selected_option: Option<OptionId>,
     pub(crate) commands: YarnCommandRegistrations,
     command_tasks: Vec<Task<()>>,
+    localizations: Option<Localizations>,
     pub(crate) is_running: bool,
     pub run_selected_options_as_lines: bool,
     pub(crate) just_started: bool,
@@ -160,24 +161,34 @@ impl DialogueRunner {
             .all(|provider| provider.are_assets_available())
     }
 
-    pub fn set_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+    pub fn set_language(&mut self, language: impl Into<Language>) -> &mut Self {
         let language = language.into();
         self.set_text_language(language.clone())
             .set_asset_language(language)
     }
 
-    pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
+    pub fn set_text_language(&mut self, language: impl Into<Language>) -> &mut Self {
+        self.assert_localizations_available();
         let language = language.into();
         self.dialogue.set_language_code(language);
         self
     }
 
-    pub fn set_asset_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
-        let language = language.into();
+    pub fn set_asset_language(&mut self, language: impl Into<Language>) -> &mut Self {
+        self.assert_localizations_available();
+        let language = Some(language.into());
         for asset_provider in self.asset_providers.values_mut() {
             asset_provider.set_language(language.clone());
         }
         self
+    }
+
+    fn assert_localizations_available(&self) {
+        assert!(
+            self.localizations.is_some(),
+            "Tried to set language, but no localizations are available. \
+        Did you forget to call `YarnSlingerApp::with_localizations(..)` on the plugin setup?"
+        );
     }
 
     #[must_use]
