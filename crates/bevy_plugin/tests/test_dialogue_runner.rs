@@ -114,7 +114,7 @@ fn serves_translations() -> Result<()> {
         .continue_in_next_update();
     app.load_lines();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == english_lines()[9], // There's no German line 10, so this falls back to English anyway
+        PresentLineEvent with |event| event.line.text == english_lines()[9], // There's no German line 10 (1-indexed), so this falls back to English anyway
         PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_none(),
     ]);
 
@@ -126,6 +126,22 @@ fn default_language_is_none_without_localizations() {
     let mut app = App::new();
     let dialogue_runner = setup_dialogue_runner_without_localizations(&mut app);
     assert_eq!(None, dialogue_runner.text_language());
+}
+
+#[test]
+#[should_panic]
+fn panics_on_invalid_language() {
+    let mut app = App::new();
+    let mut dialogue_runner = setup_dialogue_runner_with_localizations(&mut app);
+    dialogue_runner.set_language("fr-FR");
+}
+
+#[test]
+#[should_panic]
+fn panics_on_setting_language_without_localizations() {
+    let mut app = App::new();
+    let mut dialogue_runner = setup_dialogue_runner_without_localizations(&mut app);
+    dialogue_runner.set_language("en-US");
 }
 
 #[test]

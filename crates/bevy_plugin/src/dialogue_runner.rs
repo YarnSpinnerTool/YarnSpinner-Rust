@@ -168,26 +168,29 @@ impl DialogueRunner {
     }
 
     pub fn set_text_language(&mut self, language: impl Into<Language>) -> &mut Self {
-        self.assert_localizations_available();
         let language = language.into();
+        self.assert_localizations_available_for_language(&language);
         self.dialogue.set_language_code(language);
         self
     }
 
     pub fn set_asset_language(&mut self, language: impl Into<Language>) -> &mut Self {
-        self.assert_localizations_available();
-        let language = Some(language.into());
+        let language = language.into();
+        self.assert_localizations_available_for_language(&language);
         for asset_provider in self.asset_providers.values_mut() {
-            asset_provider.set_language(language.clone());
+            asset_provider.set_language(language.clone().into());
         }
         self
     }
 
-    fn assert_localizations_available(&self) {
-        assert!(
-            self.localizations.is_some(),
+    fn assert_localizations_available_for_language(&self, language: &Language) {
+        let localizations = self.localizations.as_ref().expect(
             "Tried to set language, but no localizations are available. \
-        Did you forget to call `YarnSlingerApp::with_localizations(..)` on the plugin setup?"
+            Did you forget to call `YarnSlingerApp::with_localizations(..)` on the plugin setup?",
+        );
+        assert!(
+            localizations.supports_language(language),
+            "Tried to set language to {language}, but no localizations are available for that language."
         );
     }
 
