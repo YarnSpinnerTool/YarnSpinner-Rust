@@ -1,0 +1,59 @@
+title: Start
+position: -45,-407
+---
+Ancient Reptilian Brain: There is nothing. Only warm, primordial blackness. Your conscience ferments in it -- no larger than a single grain of malt. You don't have to do anything anymore.
+Ancient Reptilian Brain: Ever.
+Ancient Reptilian Brain: Never ever.
+<<set $never to false>>
+<<jump Hub0>>
+
+===
+title: Hub0
+position: -43,-216
+---
+-> You: Never ever ever? <<if $never == false>>
+    Ancient Reptilian Brain: Never ever ever ever, baby!
+    <<set $never to true>>
+    <<jump Hub0>>
+-> You: (Simply keep on non-existing.)
+    Ancient Reptilian Brain: An inordinate amount of time passes. It is utterly void of struggle. No ex-wives are contained within it.
+
+<<set $great to false>>
+<<jump Hub1>>
+===
+title: Hub1
+position: -41,-19
+---
+-> You: This is great! <<if $great == false>>
+    Ancient Reptilian Brain: Yes. It. Is.
+    <<set $great to true>>
+    <<jump Hub1>>
+-> You: Gimme some more.
+    Ancient Reptilian Brain: You got it, sweet brother! Nothing upon nothing, upon nothing!
+    -> You: I like nothing
+        <<jump Nothing>>
+    -> You: How about you cough up some more of that sweet oblivion?
+        <<jump Oblivion>>
+-> You: What was that about the *ex-* something?
+    Limbic System: An awareness creeps up on you. A mass lies hidden in your dead angle, soaking in some lurid, acidic sauce. It's bloated and shameful, a ball of meat surrounding you... This is a terrible line of questioning, and it will only lead to more awareness of the meat-thing.
+    -> You: (Plunge back into the fathomless deep.)
+        Ancient Reptilian Brain: There. No ball of meat, no light in the formless nothing. Just nightswimming!
+            -> You: I like nothing 
+                <<jump Nothing>>
+            -> You: How about you cough up some more of that sweet oblivion?
+                <<jump Oblivion>>
+    -> You: No, I wanted to know about the ex-something.
+        Ancient Reptilian Brain: Ex-love, ex-tenderness. It is foolish of you to resurface to the loss. Not after all the damage you suffered to get here, some of it irreversible... Stay, sail with me through the Abyssopelagic Zone!
+===
+title: Nothing
+position: 180,320
+---
+Ancient Reptilian Brain: I know you do, baby... I know...
+You: How about you cough up some more of that sweet oblivion?
+<<jump Oblivion>>
+===
+title: Oblivion
+position: -56,421
+---
+Ancient Reptilian Brain: Coming right up, sir. Smooth passage...
+===
