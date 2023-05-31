@@ -7,13 +7,9 @@ use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(
-        (
-            continue_runtime
-                .pipe(panic_on_err)
-                .after(LineProviderSystemSet),
-            accept_line_hints,
-        )
+        (continue_runtime.pipe(panic_on_err), accept_line_hints)
             .chain()
+            .before(LineProviderSystemSet)
             .in_set(DialogueExecutionSystemSet),
     );
 }

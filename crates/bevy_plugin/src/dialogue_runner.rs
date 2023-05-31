@@ -153,7 +153,7 @@ impl DialogueRunner {
 
     pub fn set_text_language(&mut self, language: impl Into<Option<Language>>) -> &mut Self {
         let language = language.into();
-        self.text_provider.set_language(language);
+        self.dialogue.set_language_code(language);
         self
     }
 

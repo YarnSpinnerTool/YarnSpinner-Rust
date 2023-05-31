@@ -2,7 +2,7 @@
 macro_rules! assert_events {
     ($app:ident contains [$($event:ident $((n = $num:expr))? $(with $pred:expr)?) ,* $(,)?]) => {
         $(
-            assert_events!($app contains $event $((n = $num))? $(with $pred)?);
+            { assert_events!($app contains $event $((n = $num))? $(with $pred)?); }
         )*
     };
     ($app:ident contains $event:ident $(with $pred:expr)?) => {

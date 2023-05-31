@@ -40,38 +40,6 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 }
 
 #[test]
-fn does_not_load_asset_without_language() -> Result<()> {
-    let mut app = App::new();
-
-    app.add_plugins(DefaultPlugins).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_language: "en-US".into(),
-                translations: vec![],
-                file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
-    );
-
-    let project = app.load_project();
-    let mut dialogue_runner = project
-        .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .build()?;
-    dialogue_runner.start()?;
-    app.world.spawn(dialogue_runner);
-
-    let start = Instant::now();
-    while app.dialogue_runner().will_continue_in_next_update {
-        if start.elapsed().as_secs() > 2 {
-            return Ok(());
-        }
-        app.update();
-    }
-    bail!("Did not expect to load assets without language");
-}
-
-#[test]
 fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
@@ -118,7 +86,6 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .with_asset_language(Language::new("en-US"))
         .build()?;
     dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
