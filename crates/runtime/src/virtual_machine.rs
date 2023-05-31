@@ -43,7 +43,6 @@ impl Iterator for VirtualMachine {
         self.assert_can_continue().is_ok().then(||
             self.continue_()
             .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
-            .flatten()
     }
 }
 
@@ -196,7 +195,7 @@ impl VirtualMachine {
     /// ## Implementation note
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
     ///
-    pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
+    pub(crate) fn continue_(&mut self) -> crate::Result<Vec<DialogueEvent>> {
         self.assert_can_continue()?;
         self.set_execution_state(ExecutionState::Running);
 
@@ -218,16 +217,11 @@ impl VirtualMachine {
             self.batched_events.push(DialogueEvent::DialogueComplete);
             info!("Run complete.");
         }
-        Ok(self.take_batched_events())
+        Ok(std::mem::take(&mut self.batched_events))
     }
 
     pub(crate) fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
         self.line_parser.parse_markup(line)
-    }
-
-    #[must_use]
-    fn take_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
-        (!self.batched_events.is_empty()).then(|| std::mem::take(&mut self.batched_events))
     }
 
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.

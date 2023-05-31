@@ -237,7 +237,7 @@ impl Dialogue {
     /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
     /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
     /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
-    pub fn continue_(&mut self) -> Result<Option<Vec<DialogueEvent>>> {
+    pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_()
     }
 

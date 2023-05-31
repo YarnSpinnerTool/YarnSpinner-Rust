@@ -77,44 +77,43 @@ fn continue_runtime(
                 }
             }
         }
-        if let Some(events) = dialogue_runner.dialogue.continue_()? {
-            for event in events {
-                match event {
-                    DialogueEvent::Line(line) => {
-                        let assets = dialogue_runner.get_assets(&line);
-                        present_line_events.send(PresentLineEvent {
-                            line: LocalizedLine::from_yarn_line(line, assets),
-                            source,
-                        });
-                    }
-                    DialogueEvent::Options(options) => {
-                        let options: Vec<DialogueOption> = options
-                            .into_iter()
-                            .map(|option| {
-                                let assets = dialogue_runner.get_assets(&option.line);
-                                DialogueOption::from_yarn_dialogue_option(option, assets)
-                            })
-                            .collect();
-                        last_options.insert(source, options.clone());
-                        present_options_events.send(PresentOptionsEvent { options, source });
-                    }
-                    DialogueEvent::Command(command) => {
-                        execute_command_events.send(ExecuteCommandEvent { command, source });
-                        dialogue_runner.continue_in_next_update();
-                    }
-                    DialogueEvent::NodeComplete(node_name) => {
-                        node_complete_events.send(NodeCompleteEvent { node_name, source });
-                    }
-                    DialogueEvent::NodeStart(node_name) => {
-                        node_start_events.send(NodeStartEvent { node_name, source });
-                    }
-                    DialogueEvent::LineHints(line_ids) => {
-                        line_hints_events.send(LineHintsEvent { line_ids, source });
-                    }
-                    DialogueEvent::DialogueComplete => {
-                        dialogue_runner.is_running = false;
-                        dialogue_complete_events.send(DialogueCompleteEvent { source });
-                    }
+
+        for event in dialogue_runner.dialogue.continue_()? {
+            match event {
+                DialogueEvent::Line(line) => {
+                    let assets = dialogue_runner.get_assets(&line);
+                    present_line_events.send(PresentLineEvent {
+                        line: LocalizedLine::from_yarn_line(line, assets),
+                        source,
+                    });
+                }
+                DialogueEvent::Options(options) => {
+                    let options: Vec<DialogueOption> = options
+                        .into_iter()
+                        .map(|option| {
+                            let assets = dialogue_runner.get_assets(&option.line);
+                            DialogueOption::from_yarn_dialogue_option(option, assets)
+                        })
+                        .collect();
+                    last_options.insert(source, options.clone());
+                    present_options_events.send(PresentOptionsEvent { options, source });
+                }
+                DialogueEvent::Command(command) => {
+                    execute_command_events.send(ExecuteCommandEvent { command, source });
+                    dialogue_runner.continue_in_next_update();
+                }
+                DialogueEvent::NodeComplete(node_name) => {
+                    node_complete_events.send(NodeCompleteEvent { node_name, source });
+                }
+                DialogueEvent::NodeStart(node_name) => {
+                    node_start_events.send(NodeStartEvent { node_name, source });
+                }
+                DialogueEvent::LineHints(line_ids) => {
+                    line_hints_events.send(LineHintsEvent { line_ids, source });
+                }
+                DialogueEvent::DialogueComplete => {
+                    dialogue_runner.is_running = false;
+                    dialogue_complete_events.send(DialogueCompleteEvent { source });
                 }
             }
         }
