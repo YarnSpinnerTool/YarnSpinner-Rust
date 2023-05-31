@@ -87,13 +87,10 @@ impl AppExt for App {
     }
 
     fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>> {
-        let entity = self
-            .world
-            .iter_entities()
-            .map(|e| e.id())
-            .find(|e| self.world.get::<DialogueRunner>(*e).is_some())
-            .unwrap();
-        self.world.get_mut::<DialogueRunner>(entity)
+        self.world
+            .query::<&mut DialogueRunner>()
+            .iter_mut(&mut self.world)
+            .next()
     }
 }
 
