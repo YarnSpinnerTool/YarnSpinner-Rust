@@ -16,6 +16,8 @@ pub trait AppExt {
     fn load_project_mut(&mut self) -> Mut<YarnProject>;
 
     fn load_lines(&mut self) -> &mut App;
+
+    fn continue_dialogue_and_update(&mut self) -> &mut App;
     #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
@@ -46,6 +48,12 @@ impl AppExt for App {
         while !self.dialogue_runner().are_lines_available() {
             self.update();
         }
+        self
+    }
+
+    fn continue_dialogue_and_update(&mut self) -> &mut App {
+        self.dialogue_runner_mut().continue_in_next_update();
+        self.update();
         self
     }
 
