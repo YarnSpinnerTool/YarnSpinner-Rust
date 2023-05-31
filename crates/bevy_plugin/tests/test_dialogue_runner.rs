@@ -24,6 +24,7 @@ fn start_implies_continue() -> Result<()> {
     app.update();
     assert_events!(app contains [
         DialogueStartEvent,
+        NodeStartEvent,
         LineHintsEvent,
         PresentLineEvent with |event| event.line.text == FIRST_LINE,
     ]);
