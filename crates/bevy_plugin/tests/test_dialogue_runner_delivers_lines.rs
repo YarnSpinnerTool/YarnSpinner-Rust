@@ -8,9 +8,9 @@ mod utils;
 #[test]
 fn errs_on_continue_without_start() -> Result<()> {
     let mut app = App::new();
-    let mut dialogue_runner = setup_dialogue_runner_without_localizations(&mut app);
-    let result = dialogue_runner.try_continue_in_next_update();
-    assert!(result.is_err());
+    setup_dialogue_runner_without_localizations(&mut app)
+        .try_continue_in_next_update()
+        .unwrap_err();
     Ok(())
 }
 
@@ -60,9 +60,9 @@ fn errs_on_continue_after_all_lines() -> Result<()> {
     while app.dialogue_runner().is_running() {
         app.continue_dialogue_and_update();
     }
-    let mut dialogue_runner = app.dialogue_runner_mut();
-    let result = dialogue_runner.try_continue_in_next_update();
-    assert!(result.is_err());
+    app.dialogue_runner_mut()
+        .try_continue_in_next_update()
+        .unwrap_err();
     Ok(())
 }
 

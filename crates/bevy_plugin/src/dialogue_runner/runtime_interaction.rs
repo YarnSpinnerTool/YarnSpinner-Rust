@@ -53,8 +53,11 @@ fn continue_runtime(
 
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
-                if let Some(mut options) = last_options.remove(&source) {
-                    let Some(index) = options.iter().position(|o| o.id == option) else{
+                let options = last_options
+                    .remove(&source)
+                    .expect("Failed to get last presented options when trying to run selected option as line. \
+                                  This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+                let Some(option) = options.into_iter().find(|o| o.id == option) else{
                         let expected_options = last_options
                             .values()
                             .flat_map(|options|
@@ -65,12 +68,11 @@ fn continue_runtime(
                             .join(", ");
                         bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
                     };
-                    let option = options.swap_remove(index);
-                    present_line_events.send(PresentLineEvent {
-                        line: option.line,
-                        source,
-                    });
-                }
+                present_line_events.send(PresentLineEvent {
+                    line: option.line,
+                    source,
+                });
+                continue;
             }
         }
 
