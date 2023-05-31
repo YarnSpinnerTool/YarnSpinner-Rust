@@ -8,7 +8,7 @@ mod utils;
 #[test]
 fn errs_on_selection_without_start() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app)
+    setup_dialogue_runner(&mut app)
         .select_option(OptionId(0))
         .unwrap_err();
 
@@ -18,7 +18,7 @@ fn errs_on_selection_without_start() -> Result<()> {
 #[test]
 fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start()?;
     app.continue_dialogue_and_update_n_times(4);
     assert_events!(app contains [
         PresentLineEvent (n = 0),
@@ -32,7 +32,7 @@ fn delivers_option_set() -> Result<()> {
 #[test]
 fn errs_on_unexpected_selection_timing() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start()?;
     app.continue_dialogue_and_update_n_times(3);
     app.dialogue_runner_mut()
         .select_option(OptionId(0))
@@ -43,7 +43,7 @@ fn errs_on_unexpected_selection_timing() -> Result<()> {
 #[test]
 fn errs_on_unexpected_selection_value() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start()?;
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut()
         .select_option(OptionId(2))
@@ -55,12 +55,12 @@ fn errs_on_unexpected_selection_value() -> Result<()> {
 #[test]
 fn option_selection_implies_continue() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start()?;
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == english_lines()[6],
+        PresentLineEvent with |event| event.line.text == lines()[6],
         PresentOptionsEvent (n = 0),
     ]);
 
@@ -71,7 +71,7 @@ fn option_selection_implies_continue() -> Result<()> {
 fn can_show_option_selection_as_line() -> Result<()> {
     let mut app = App::new();
     {
-        let mut dialogue_runner = setup_dialogue_runner_without_localizations(&mut app);
+        let mut dialogue_runner = setup_dialogue_runner(&mut app);
         dialogue_runner.start()?;
         dialogue_runner.run_selected_options_as_lines = true;
     }
@@ -89,7 +89,7 @@ fn can_show_option_selection_as_line() -> Result<()> {
     ]);
     app.continue_dialogue_and_update();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == english_lines()[6],
+        PresentLineEvent with |event| event.line.text == lines()[6],
         PresentOptionsEvent (n = 0),
     ]);
 
@@ -97,9 +97,29 @@ fn can_show_option_selection_as_line() -> Result<()> {
 }
 
 #[test]
-fn respects_conditional_availability() -> Result<()> {
+fn can_jump_around_nodes() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start()?;
+    app.continue_dialogue_and_update_n_times(4);
+    app.dialogue_runner_mut().select_option(OptionId(1))?;
+    app.update();
+    assert_events!(app contains [
+        PresentLineEvent with |event| event.line.text == lines()[10],
+        PresentOptionsEvent (n = 0),
+    ]);
+    app.continue_dialogue_and_update();
+    assert_events!(app contains [
+        PresentLineEvent (n = 0),
+        PresentOptionsEvent with |event| event.options.len() == 3,
+    ]);
+
+    Ok(())
+}
+
+#[test]
+fn can_select_unavailable_choice() -> Result<()> {
+    let mut app = App::new();
+    setup_dialogue_runner(&mut app).start()?;
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.continue_dialogue_and_update_n_times(2);
@@ -107,18 +127,25 @@ fn respects_conditional_availability() -> Result<()> {
         PresentLineEvent (n = 0),
         PresentOptionsEvent with |event| event.options.len() == 2,
         PresentOptionsEvent with |event| event.options.iter().filter(|o| o.is_available).count() == 1,
+        PresentOptionsEvent with |event| event.options.iter().filter(|o| !o.is_available).all(|o| o.id == OptionId(0)),
+    ]);
+    app.dialogue_runner_mut().select_option(OptionId(0))?;
+    app.update();
+    assert_events!(app contains [
+        PresentLineEvent with |event| event.line.text == lines()[6],
+        PresentOptionsEvent (n = 0),
     ]);
 
     Ok(())
 }
 
-fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {
+fn setup_dialogue_runner(app: &mut App) -> Mut<DialogueRunner> {
     app.add_plugins(DefaultPlugins)
         .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]))
         .dialogue_runner_mut()
 }
 
-fn english_lines() -> Vec<String> {
+fn lines() -> Vec<String> {
     let mut lines: Vec<_> = include_str!("../assets/options.yarn")
         .lines()
         .filter(|l| !l.starts_with("title:"))
