@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::LoadState;
-#[cfg(feature = "audio_assets")]
-use bevy::audio::AudioSource;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet, Uuid};
 use std::any::Any;
@@ -32,6 +30,7 @@ macro_rules! file_extensions {
         }
     };
 }
+pub use file_extensions;
 
 impl FileExtensionAssetProvider {
     pub fn new() -> Self {
@@ -56,13 +55,6 @@ impl FileExtensionAssetProvider {
             }));
         self
     }
-
-    #[cfg(feature = "audio_assets")]
-    pub fn with_audio(self) -> Self {
-        self.with_file_extensions(file_extensions! {
-            AudioSource: ["mp3", "ogg", "wav"],
-        })
-    }
 }
 
 impl AssetProvider for FileExtensionAssetProvider {
@@ -80,6 +72,7 @@ impl AssetProvider for FileExtensionAssetProvider {
 
     fn set_language(&mut self, language: Option<Language>) {
         self.language = language;
+        self.reload_assets();
     }
 
     fn set_localizations(&mut self, localizations: Localizations) {
@@ -121,8 +114,8 @@ impl AssetProvider for FileExtensionAssetProvider {
                     let dir = localization.assets_sub_folder.as_path();
                     let file_name_without_extension = line.id.0.trim_start_matches("line:");
                     let Some(asset_server) = self.asset_server.as_ref() else {
-                            return default();
-                        };
+                        return default();
+                    };
                     let assets = self
                         .file_extensions
                         .iter()

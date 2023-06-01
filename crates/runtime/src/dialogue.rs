@@ -39,6 +39,8 @@ pub enum DialogueError {
     #[error("`SetSelectedOption` was called, but Dialogue wasn't waiting for a selection. \
             This method should only be called after the Dialogue is waiting for the user to select an option.")]
     UnexpectedOptionSelectionError,
+    #[error("Cannot continue running dialogue. No node has been selected.")]
+    NoNodeSelectedOnContinue,
     #[error("No node named \"{node_name}\" has been loaded.")]
     InvalidNode { node_name: String },
     #[error(transparent)]
@@ -235,7 +237,7 @@ impl Dialogue {
     /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
     /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
     /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
-    pub fn continue_(&mut self) -> Result<Option<Vec<DialogueEvent>>> {
+    pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_()
     }
 

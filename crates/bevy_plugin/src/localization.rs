@@ -1,5 +1,8 @@
 pub use self::config::*;
-pub(crate) use self::{strings_file::UpdateAllStringsFilesForStringTableEvent, strings_file::*};
+pub(crate) use self::{
+    line_id_generation::LineIdUpdateSystemSet,
+    strings_file::UpdateAllStringsFilesForStringTableEvent, strings_file::*,
+};
 use crate::prelude::*;
 use bevy::prelude::*;
 

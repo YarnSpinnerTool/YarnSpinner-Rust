@@ -1,18 +1,27 @@
 #![allow(dead_code)]
+
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
+use std::path::PathBuf;
+
+mod assertations;
 
 pub mod prelude {
     pub use super::*;
+    pub use assertations::*;
 }
 
 pub trait AppExt {
     fn load_project(&mut self) -> &YarnProject;
     #[must_use]
     fn load_project_mut(&mut self) -> Mut<YarnProject>;
-    fn load_texts(&mut self) -> &mut App;
-    fn load_assets(&mut self) -> &mut App;
+
+    fn load_lines(&mut self) -> &mut App;
+
+    fn continue_dialogue_and_update(&mut self) -> &mut App;
+    fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
+
     #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
@@ -38,6 +47,26 @@ impl AppExt for App {
         self.world.resource_mut::<YarnProject>()
     }
 
+    fn load_lines(&mut self) -> &mut App {
+        self.load_project();
+        while !self.dialogue_runner().are_lines_available() {
+            self.update();
+        }
+        self
+    }
+
+    fn continue_dialogue_and_update(&mut self) -> &mut App {
+        self.continue_dialogue_and_update_n_times(1)
+    }
+
+    fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App {
+        for _ in 0..n {
+            self.dialogue_runner_mut().continue_in_next_update();
+            self.update();
+        }
+        self
+    }
+
     fn dialogue_runner(&mut self) -> &DialogueRunner {
         if self.try_dialogue_runner().is_some() {
             self.try_dialogue_runner().unwrap()
@@ -60,30 +89,6 @@ impl AppExt for App {
         }
     }
 
-    fn load_texts(&mut self) -> &mut App {
-        self.load_project();
-        while !self
-            .dialogue_runner()
-            .data_providers()
-            .are_texts_available()
-        {
-            self.update();
-        }
-        self
-    }
-
-    fn load_assets(&mut self) -> &mut App {
-        self.load_project();
-        while !self
-            .dialogue_runner()
-            .data_providers()
-            .are_assets_available()
-        {
-            self.update();
-        }
-        self
-    }
-
     fn try_dialogue_runner(&self) -> Option<&DialogueRunner> {
         self.world
             .iter_entities()
@@ -92,14 +97,15 @@ impl AppExt for App {
     }
 
     fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>> {
-        let entity = self
-            .world
-            .iter_entities()
-            .map(|e| e.id())
-            .find(|e| self.world.get::<DialogueRunner>(*e).is_some())
-            .unwrap();
-        self.world.get_mut::<DialogueRunner>(entity)
+        self.world
+            .query::<&mut DialogueRunner>()
+            .iter_mut(&mut self.world)
+            .next()
     }
+}
+
+pub fn project_root_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
 pub trait DialogueRunnerExt {
@@ -114,8 +120,7 @@ impl DialogueRunnerExt for DialogueRunner {
             text: String::new(),
             attributes: vec![],
         };
-        self.data_providers()
-            .asset_providers()
+        self.asset_providers()
             .map(|p| p.get_assets(&line_id))
             .collect()
     }

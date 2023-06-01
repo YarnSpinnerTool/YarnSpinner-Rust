@@ -15,7 +15,6 @@ fn loads_line_without_localization() {
 
     let line = app
         .dialogue_runner()
-        .data_providers()
         .text_provider()
         .get_text(&LineId("line:9".to_owned()))
         .unwrap();
@@ -33,7 +32,6 @@ fn fails_to_get_invalid_line() {
 
     let result = app
         .dialogue_runner()
-        .data_providers()
         .text_provider()
         .get_text(&LineId("line:99".to_owned()));
     assert!(result.is_none());
@@ -53,11 +51,10 @@ fn loads_line_from_base_language_without_explicit_language() {
         ),
     );
 
-    app.load_texts();
+    app.load_lines();
 
     let line = app
         .dialogue_runner()
-        .data_providers()
         .text_provider()
         .get_text(&LineId("line:9".to_owned()))
         .unwrap();
@@ -78,14 +75,12 @@ fn loads_line_from_base_language_with_explicit_language() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("en-US"));
+    app.dialogue_runner_mut().set_text_language("en-US");
 
-    app.load_texts();
+    app.load_lines();
 
     let line = app
         .dialogue_runner()
-        .data_providers()
         .text_provider()
         .get_text(&LineId("line:9".to_owned()))
         .unwrap();
@@ -107,10 +102,9 @@ fn panics_when_loading_missing_language() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("fr-FR"));
+    app.dialogue_runner_mut().set_text_language("fr-FR");
 
-    app.load_texts();
+    app.load_lines();
 }
 
 #[test]
@@ -127,14 +121,12 @@ fn loads_line_from_fallback_on_missing_line() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("de-CH"));
+    app.dialogue_runner_mut().set_text_language("de-CH");
 
-    app.load_texts();
+    app.load_lines();
 
     let line = app
         .dialogue_runner()
-        .data_providers()
         .text_provider()
         .get_text(&LineId("line:10".to_owned()))
         .unwrap();
@@ -155,14 +147,12 @@ fn loads_line_from_translated_language() {
         ),
     );
 
-    app.dialogue_runner_mut()
-        .set_text_language(Language::from("de-CH"));
+    app.dialogue_runner_mut().set_text_language("de-CH");
 
-    app.load_texts();
+    app.load_lines();
 
     let line = app
         .dialogue_runner()
-        .data_providers()
         .text_provider()
         .get_text(&LineId("line:9".to_owned()))
         .unwrap();

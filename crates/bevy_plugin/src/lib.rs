@@ -11,13 +11,19 @@ mod yarn_file_asset;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
-    pub use crate::line_provider::{FileExtensionAssetProvider, StringsFileTextProvider};
+    #[cfg(feature = "audio_assets")]
+    pub use crate::line_provider::AudioAssetProvider;
+    pub use crate::line_provider::{
+        file_extensions, FileExtensionAssetProvider, StringsFileTextProvider,
+    };
     pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
 }
 
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
 
+    #[cfg(feature = "audio_assets")]
+    pub use crate::default_impl::AudioAssetProvider;
     pub use crate::{
         commands::{YarnCommand, YarnCommandRegistrations},
         default_impl::FileExtensionAssetProvider,
@@ -45,9 +51,7 @@ pub mod prelude {
 }
 
 pub use crate::commands::UntypedYarnCommand;
-pub use crate::dialogue_runner::{
-    DialogueRunnerDataProviders, DialogueRunnerDataProvidersMut, InnerDialogue, InnerDialogueMut,
-};
+pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
 pub use yarn_slinger::core::{yarn_fn_type, UntypedYarnFn};
 pub use yarn_slinger::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,

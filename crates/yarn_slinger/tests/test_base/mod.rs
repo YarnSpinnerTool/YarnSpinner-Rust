@@ -190,13 +190,11 @@ impl TestBase {
                             let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
                             println!("[Selecting option {}]", selection);
                             self.dialogue
-                                .set_selected_option(OptionId::construct_for_debugging(selection))
+                                .set_selected_option(OptionId(selection))
                                 .unwrap();
                         } else {
                             println!("[Selecting option 0 implicitly]");
-                            self.dialogue
-                                .set_selected_option(OptionId::construct_for_debugging(0))
-                                .unwrap();
+                            self.dialogue.set_selected_option(OptionId(0)).unwrap();
                         }
                     }
                     DialogueEvent::Command(command) => {

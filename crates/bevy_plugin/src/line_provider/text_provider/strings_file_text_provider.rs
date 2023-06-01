@@ -154,7 +154,6 @@ impl TextProvider for StringsFileTextProvider {
                     );
             }
             let string_table: HashMap<LineId, String> = strings_file
-                .0
                 .iter()
                 .map(|(id, record)| (id.clone(), record.text.clone()))
                 .collect();

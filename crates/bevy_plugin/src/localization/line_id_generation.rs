@@ -43,8 +43,7 @@ fn handle_yarn_file_events_outside_development(
 
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             dialogue_runner
-                .data_providers_mut()
-                .text_provider_mut()
+                .text_provider
                 .extend_base_string_table(yarn_file.string_table.clone());
         }
     }
@@ -81,7 +80,7 @@ fn handle_yarn_file_events(
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file.clone())? else {
             for mut dialogue_runner in dialogue_runners.iter_mut() {
-                dialogue_runner.data_providers_mut().text_provider_mut().extend_base_string_table(yarn_file.string_table.clone());
+                dialogue_runner.text_provider.extend_base_string_table(yarn_file.string_table.clone());
             }
             continue;
         };
@@ -109,6 +108,10 @@ fn handle_yarn_file_events(
             .compile()?
             .string_table;
         yarn_file.string_table = string_table;
+        info!(
+            "Automatically generated line IDs for Yarn file at {}",
+            path_within_asset_dir.display()
+        );
         recompilation_needed = true;
     }
 

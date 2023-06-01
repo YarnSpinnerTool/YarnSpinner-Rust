@@ -1,7 +1,7 @@
+use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use std::fs;
-use std::path::PathBuf;
 use tempfile::tempdir;
 use utils::prelude::*;
 use yarn_slinger::prelude::{CompilationType, YarnCompiler};
@@ -127,6 +127,74 @@ fn generates_strings_file() -> anyhow::Result<()> {
 }
 
 #[test]
+fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
+    let dir = tempdir()?;
+    let original_yarn_path = project_root_path().join("assets/options.yarn");
+    let yarn_path = dir.path().join("options.yarn");
+    fs::copy(original_yarn_path, &yarn_path)?;
+
+    let original_strings_path = project_root_path().join("assets/de-CH.strings.csv");
+    let strings_file_path = dir.path().join("de-CH.strings.csv");
+    fs::copy(&original_strings_path, &strings_file_path)?;
+    let original_strings_file_source = fs::read_to_string(&strings_file_path)?;
+    let original_strings_file_line_ids: Vec<_> = original_strings_file_source
+        .lines()
+        .skip(1)
+        .map(|line| line.split(',').nth(1).unwrap())
+        .collect();
+
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins.set(AssetPlugin {
+        asset_folder: dir.path().to_str().unwrap().to_string(),
+        ..default()
+    }))
+    .add_plugin(
+        YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]).with_localizations(
+            Localizations {
+                base_language: "en-US".into(),
+                translations: vec!["de-CH".into()],
+                file_generation_mode: FileGenerationMode::Development,
+            },
+        ),
+    );
+
+    app.load_project();
+    let handle = app
+        .world
+        .resource::<AssetServer>()
+        .load_untyped("de-CH.strings.csv");
+    while app.world.resource::<AssetServer>().get_load_state(&handle) != LoadState::Loaded {
+        app.update();
+    }
+
+    let string_table = YarnCompiler::new()
+        .read_file(&yarn_path)
+        .with_compilation_type(CompilationType::StringsOnly)
+        .compile()?
+        .string_table;
+
+    assert!(!dir.path().join("en-US.strings.csv").exists());
+    let strings_file_source = fs::read_to_string(&strings_file_path)?;
+    let strings_file_line_ids: Vec<_> = strings_file_source
+        .lines()
+        .skip(1)
+        .map(|line| line.split(',').nth(1).unwrap())
+        .collect();
+
+    assert_eq!(
+        string_table.len() + original_strings_file_line_ids.len(),
+        strings_file_line_ids.len()
+    );
+
+    assert!(string_table
+        .keys()
+        .all(|line_id| strings_file_line_ids.contains(&line_id.0.as_str())));
+
+    Ok(())
+}
+
+#[test]
 fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines_with_ids.yarn");
@@ -214,8 +282,4 @@ fn does_not_panic_on_missing_language_when_not_selected() {
     );
 
     app.load_project();
-}
-
-pub fn project_root_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }

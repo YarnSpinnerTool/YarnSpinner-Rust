@@ -44,7 +44,7 @@ impl<'input> UntaggedLineListener<'input> {
     fn generate_string(&self) -> LineId {
         let mut rng = SmallRng::from_entropy();
         loop {
-            let line: usize = rng.gen();
+            let line: usize = rng.gen_range(0..0x1000000);
             let tag = LineId(format!("line:{}", line));
             if !self.existing_line_tags.contains(&tag) {
                 return tag;

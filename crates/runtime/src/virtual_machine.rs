@@ -40,7 +40,9 @@ impl Iterator for VirtualMachine {
     type Item = Vec<DialogueEvent>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.continue_().unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}"))
+        self.assert_can_continue().is_ok().then(||
+            self.continue_()
+            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
     }
 }
 
@@ -192,17 +194,12 @@ impl VirtualMachine {
     ///
     /// ## Implementation note
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
-    pub(crate) fn continue_(&mut self) -> crate::Result<Option<Vec<DialogueEvent>>> {
-        if let Some(events) = self.pop_batched_events() {
-            return Ok(Some(events));
-        }
-        self.assert_can_continue();
-
+    ///
+    pub(crate) fn continue_(&mut self) -> crate::Result<Vec<DialogueEvent>> {
+        self.assert_can_continue()?;
         self.set_execution_state(ExecutionState::Running);
 
-        while self.execution_state == ExecutionState::Running
-            && self.state.program_counter < self.current_node.as_ref().unwrap().instructions.len()
-        {
+        while self.execution_state == ExecutionState::Running {
             let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
             self.run_instruction(current_instruction)?;
@@ -216,45 +213,28 @@ impl VirtualMachine {
 
             self.batched_events
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
+            self.set_execution_state(ExecutionState::Stopped);
             self.batched_events.push(DialogueEvent::DialogueComplete);
             info!("Run complete.");
         }
-        Ok(self.pop_batched_events())
+        Ok(std::mem::take(&mut self.batched_events))
     }
 
     pub(crate) fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {
         self.line_parser.parse_markup(line)
     }
 
-    #[must_use]
-    fn pop_batched_events(&mut self) -> Option<Vec<DialogueEvent>> {
-        if self
-            .batched_events
-            .contains(&DialogueEvent::DialogueComplete)
-        {
-            // Implementation note: Setting the execution state and calling the DialogueCompleteHandler came hand in hand in the original
-            // So, since we work through all events after they would have already been handled in the original, we only set the execution state here.
-
-            // This does not call `set_execution_state` because that would reset the state when encountering `ExecutionState::Stopped`,
-            // which we don't want to do here since we need the current node name later
-            self.execution_state = ExecutionState::Stopped;
-        }
-        (!self.batched_events.is_empty()).then(|| std::mem::take(&mut self.batched_events))
-    }
-
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.
-    fn assert_can_continue(&self) {
-        assert!(
-            self.current_node.is_some(),
-            "Cannot continue running dialogue. No node has been selected."
-        );
-        assert_ne!(
-            ExecutionState::WaitingOnOptionSelection,
-            self.execution_state,
-            "Cannot continue running dialogue. Still waiting on option selection."
-        );
-        // ## Implementation note:
-        // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
+    fn assert_can_continue(&self) -> crate::Result<()> {
+        if self.current_node.is_none() || self.current_node_name.is_none() {
+            Err(DialogueError::NoNodeSelectedOnContinue)
+        } else if self.execution_state == ExecutionState::WaitingOnOptionSelection {
+            Err(DialogueError::UnexpectedOptionSelectionError)
+        } else {
+            // ## Implementation note:
+            // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
+            Ok(())
+        }
     }
 
     pub(crate) fn unload_programs(&mut self) {
@@ -402,6 +382,7 @@ impl VirtualMachine {
                 // If we have no options to show, immediately stop.
                 if self.state.current_options.is_empty() {
                     self.batched_events.push(DialogueEvent::DialogueComplete);
+                    self.set_execution_state(ExecutionState::Stopped);
                     self.state.program_counter += 1;
                     return Ok(());
                 }
@@ -546,6 +527,8 @@ impl VirtualMachine {
                 self.batched_events
                     .push(DialogueEvent::NodeComplete(current_node_name));
                 self.batched_events.push(DialogueEvent::DialogueComplete);
+                self.set_execution_state(ExecutionState::Stopped);
+
                 self.state.program_counter += 1;
             }
             OpCode::RunNode => {
@@ -598,8 +581,7 @@ impl VirtualMachine {
             .copied()
             .unwrap_or_else(|| {
                 panic!(
-                    "Unknown label {} in node {}",
-                    label_name,
+                    "Unknown label {label_name} in node {}",
                     self.current_node_name.as_ref().unwrap()
                 )
             })

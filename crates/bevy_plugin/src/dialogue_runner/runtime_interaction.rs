@@ -7,13 +7,9 @@ use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(
-        (
-            continue_runtime
-                .pipe(panic_on_err)
-                .after(LineProviderSystemSet),
-            accept_line_hints,
-        )
+        (continue_runtime.pipe(panic_on_err), accept_line_hints)
             .chain()
+            .after(LineProviderSystemSet)
             .in_set(DialogueExecutionSystemSet),
     );
 }
@@ -49,7 +45,7 @@ fn continue_runtime(
 
         if !(dialogue_runner.will_continue_in_next_update
             && dialogue_runner.poll_tasks_and_check_if_done()
-            && dialogue_runner.data_providers().are_lines_available())
+            && dialogue_runner.are_lines_available())
         {
             continue;
         }
@@ -57,8 +53,11 @@ fn continue_runtime(
 
         if dialogue_runner.run_selected_options_as_lines {
             if let Some(option) = dialogue_runner.last_selected_option.take() {
-                if let Some(mut options) = last_options.remove(&source) {
-                    let Some(index) = options.iter().position(|o| o.id == option) else{
+                let options = last_options
+                    .remove(&source)
+                    .expect("Failed to get last presented options when trying to run selected option as line. \
+                                  This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+                let Some(option) = options.into_iter().find(|o| o.id == option) else{
                         let expected_options = last_options
                             .values()
                             .flat_map(|options|
@@ -69,52 +68,50 @@ fn continue_runtime(
                             .join(", ");
                         bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
                     };
-                    let option = options.swap_remove(index);
+                present_line_events.send(PresentLineEvent {
+                    line: option.line,
+                    source,
+                });
+                continue;
+            }
+        }
+
+        for event in dialogue_runner.dialogue.continue_()? {
+            match event {
+                DialogueEvent::Line(line) => {
+                    let assets = dialogue_runner.get_assets(&line);
                     present_line_events.send(PresentLineEvent {
-                        line: option.line,
+                        line: LocalizedLine::from_yarn_line(line, assets),
                         source,
                     });
                 }
-            }
-        }
-        if let Some(events) = dialogue_runner.dialogue.continue_()? {
-            for event in events {
-                match event {
-                    DialogueEvent::Line(line) => {
-                        let assets = dialogue_runner.get_assets(&line);
-                        present_line_events.send(PresentLineEvent {
-                            line: LocalizedLine::from_yarn_line(line, assets),
-                            source,
-                        });
-                    }
-                    DialogueEvent::Options(options) => {
-                        let options: Vec<DialogueOption> = options
-                            .into_iter()
-                            .map(|option| {
-                                let assets = dialogue_runner.get_assets(&option.line);
-                                DialogueOption::from_yarn_dialogue_option(option, assets)
-                            })
-                            .collect();
-                        last_options.insert(source, options.clone());
-                        present_options_events.send(PresentOptionsEvent { options, source });
-                    }
-                    DialogueEvent::Command(command) => {
-                        execute_command_events.send(ExecuteCommandEvent { command, source });
-                        dialogue_runner.continue_in_next_update().unwrap();
-                    }
-                    DialogueEvent::NodeComplete(node_name) => {
-                        node_complete_events.send(NodeCompleteEvent { node_name, source });
-                    }
-                    DialogueEvent::NodeStart(node_name) => {
-                        node_start_events.send(NodeStartEvent { node_name, source });
-                    }
-                    DialogueEvent::LineHints(line_ids) => {
-                        line_hints_events.send(LineHintsEvent { line_ids, source });
-                    }
-                    DialogueEvent::DialogueComplete => {
-                        dialogue_runner.is_running = false;
-                        dialogue_complete_events.send(DialogueCompleteEvent { source });
-                    }
+                DialogueEvent::Options(options) => {
+                    let options: Vec<DialogueOption> = options
+                        .into_iter()
+                        .map(|option| {
+                            let assets = dialogue_runner.get_assets(&option.line);
+                            DialogueOption::from_yarn_dialogue_option(option, assets)
+                        })
+                        .collect();
+                    last_options.insert(source, options.clone());
+                    present_options_events.send(PresentOptionsEvent { options, source });
+                }
+                DialogueEvent::Command(command) => {
+                    execute_command_events.send(ExecuteCommandEvent { command, source });
+                    dialogue_runner.continue_in_next_update();
+                }
+                DialogueEvent::NodeComplete(node_name) => {
+                    node_complete_events.send(NodeCompleteEvent { node_name, source });
+                }
+                DialogueEvent::NodeStart(node_name) => {
+                    node_start_events.send(NodeStartEvent { node_name, source });
+                }
+                DialogueEvent::LineHints(line_ids) => {
+                    line_hints_events.send(LineHintsEvent { line_ids, source });
+                }
+                DialogueEvent::DialogueComplete => {
+                    dialogue_runner.is_running = false;
+                    dialogue_complete_events.send(DialogueCompleteEvent { source });
                 }
             }
         }
@@ -128,7 +125,7 @@ fn accept_line_hints(
 ) {
     for event in events.iter() {
         let mut dialogue_runner = dialogue_runners.get_mut(event.source).unwrap();
-        for asset_provider in dialogue_runner.data_providers_mut().asset_providers_mut() {
+        for asset_provider in dialogue_runner.asset_providers.values_mut() {
             asset_provider.accept_line_hints(&event.line_ids);
         }
     }

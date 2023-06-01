@@ -1,4 +1,4 @@
-use crate::localization::UpdateAllStringsFilesForStringTableEvent;
+use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent};
 use anyhow::bail;
@@ -25,6 +25,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )
                 .chain()
+                .after(LineIdUpdateSystemSet)
                 .in_set(CompilationSystemSet),
         );
 }
@@ -100,8 +101,7 @@ fn recompile_loaded_yarn_files(
     yarn_project.compilation = compilation;
     for mut dialogue_runner in dialogue_runners.iter_mut() {
         dialogue_runner
-            .data_providers_mut()
-            .text_provider_mut()
+            .text_provider
             .set_base_string_table(yarn_project.compilation.string_table.clone());
     }
     let file_count = yarn_project.yarn_files.len();
@@ -125,12 +125,14 @@ fn compile_loaded_yarn_files(
     if yarn_files_being_loaded.0.is_empty() {
         *dirty = false;
     }
-    if !*dirty
-        || !yarn_files_being_loaded
+
+    let all_files_finished_loading = || {
+        yarn_files_being_loaded
             .0
             .iter()
             .all(|handle| yarn_files.contains(handle))
-    {
+    };
+    if !(*dirty && all_files_finished_loading()) {
         return Ok(());
     }
 
@@ -156,7 +158,7 @@ fn compile_loaded_yarn_files(
             for localization in &localizations.translations {
                 let path = localization.strings_file.as_path();
                 if asset_server.asset_io().is_file(path) {
-                    return Ok(());
+                    continue;
                 }
                 let strings_file = StringsFile::from_string_table(
                     localization.language.clone(),

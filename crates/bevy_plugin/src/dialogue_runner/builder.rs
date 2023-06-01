@@ -1,7 +1,6 @@
 use crate::default_impl::{MemoryVariableStore, StringsFileTextProvider};
 use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
-use crate::UnderlyingTextProvider;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
@@ -16,9 +15,10 @@ pub struct DialogueRunnerBuilder {
     text_provider: SharedTextProvider,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     library: YarnFnLibrary,
+    commands: YarnCommandRegistrations,
     compilation: Compilation,
-    text_language: Option<Language>,
-    asset_language: Option<Language>,
+    text_language: Option<Option<Language>>,
+    asset_language: Option<Option<Language>>,
     localizations: Option<Localizations>,
     asset_server: AssetServer,
     run_selected_options_as_lines: bool,
@@ -38,11 +38,17 @@ impl Debug for DialogueRunnerBuilder {
             .field("text_provider", &self.text_provider)
             .field("asset_providers", &self.asset_providers)
             .field("library", &self.library)
+            .field("commands", &self.commands)
             .field("compilation", &self.compilation)
             .field("text_language", &self.text_language)
             .field("asset_language", &self.asset_language)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
+            .field(
+                "run_selected_options_as_lines",
+                &self.run_selected_options_as_lines,
+            )
+            .field("start_node", &self.start_node)
             .finish()
     }
 }
@@ -57,6 +63,7 @@ impl DialogueRunnerBuilder {
             )),
             asset_providers: HashMap::new(),
             library: create_extended_standard_library(),
+            commands: YarnCommandRegistrations::default_commands(),
             compilation: yarn_project.compilation().clone(),
             text_language: None,
             asset_language: None,
@@ -76,17 +83,11 @@ impl DialogueRunnerBuilder {
     #[must_use]
     pub fn with_text_provider(mut self, provider: impl TextProvider + 'static) -> Self {
         self.text_provider.replace(provider);
-        if let Some(language) = self.text_language.take() {
-            self.text_provider.set_language(Some(language));
-        }
         self
     }
 
     #[must_use]
-    pub fn add_asset_provider(mut self, mut provider: impl AssetProvider + 'static) -> Self {
-        if let Some(language) = self.asset_language.as_ref() {
-            provider.set_language(Some(language.clone()));
-        }
+    pub fn add_asset_provider(mut self, provider: impl AssetProvider + 'static) -> Self {
         self.asset_providers
             .insert(provider.type_id(), Box::new(provider));
         self
@@ -95,16 +96,14 @@ impl DialogueRunnerBuilder {
     #[must_use]
     pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
-        self.text_provider.set_language(language);
+        self.text_language.replace(language);
         self
     }
 
     #[must_use]
     pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
-        for asset_provider in self.asset_providers.values_mut() {
-            asset_provider.set_language(language.clone());
-        }
+        self.asset_language.replace(language);
         self
     }
 
@@ -121,23 +120,46 @@ impl DialogueRunnerBuilder {
     }
 
     #[must_use]
-    pub fn register_function(mut self, library: YarnFnLibrary) -> Self {
+    pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
         self.library.extend(library);
+        self
+    }
+
+    #[must_use]
+    pub fn extend_command_registrations(mut self, commands: YarnCommandRegistrations) -> Self {
+        self.commands.extend(commands);
         self
     }
 
     pub fn build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
-        let language = text_provider.get_language();
+
+        let base_language = self
+            .localizations
+            .as_ref()
+            .map(|l| &l.base_language.language);
+
+        let text_language = self
+            .text_language
+            .take()
+            .unwrap_or_else(|| base_language.cloned());
+
         let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
             .with_line_hints_enabled(true)
             .with_extended_library(self.library)
             .with_program(self.compilation.program.unwrap())
-            .with_language_code(language);
+            .with_language_code(text_language);
+
         for asset_provider in self.asset_providers.values_mut() {
             if let Some(ref localizations) = self.localizations {
                 asset_provider.set_localizations(localizations.clone());
             }
+            let asset_language = self
+                .asset_language
+                .take()
+                .unwrap_or_else(|| base_language.cloned());
+
+            asset_provider.set_language(asset_language);
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
@@ -162,12 +184,13 @@ impl DialogueRunnerBuilder {
             popped_line_hints,
             asset_providers: self.asset_providers,
             run_selected_options_as_lines: self.run_selected_options_as_lines,
-            commands: YarnCommandRegistrations::default_commands(),
+            commands: self.commands,
             is_running: default(),
             command_tasks: default(),
             will_continue_in_next_update: default(),
             last_selected_option: default(),
             just_started: default(),
+            localizations: self.localizations,
         })
     }
 }

@@ -19,56 +19,20 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(AudioAssetProvider::new())
         .build()?;
     dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
 
     app.load_project();
     let start = Instant::now();
-    while !app
-        .dialogue_runner()
-        .data_providers()
-        .are_assets_available()
-    {
+    while !app.dialogue_runner().are_lines_available() {
         if start.elapsed().as_secs() > 2 {
             return Ok(());
         }
         app.update();
     }
     bail!("Did not expect to load assets without localizations");
-}
-
-#[test]
-fn does_not_load_asset_without_language() -> Result<()> {
-    let mut app = App::new();
-
-    app.add_plugins(DefaultPlugins).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_language: "en-US".into(),
-                translations: vec![],
-                file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
-    );
-
-    let project = app.load_project();
-    let mut dialogue_runner = project
-        .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .build()?;
-    dialogue_runner.start()?;
-    app.world.spawn(dialogue_runner);
-
-    let start = Instant::now();
-    while app.dialogue_runner().will_continue_in_next_update {
-        if start.elapsed().as_secs() > 2 {
-            return Ok(());
-        }
-        app.update();
-    }
-    bail!("Did not expect to load assets without language");
 }
 
 #[test]
@@ -88,12 +52,12 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("en-US"))
         .build()?;
     dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
-    app.load_assets();
+    app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:99");
     assert!(assets.is_empty());
@@ -117,12 +81,11 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
-        .with_asset_language(Language::new("en-US"))
+        .add_asset_provider(AudioAssetProvider::new())
         .build()?;
     dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
-    app.load_assets();
+    app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
@@ -153,12 +116,12 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("de-CH"))
         .build()?;
     dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
-    app.load_assets();
+    app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:10");
     assert_eq!(1, assets.len());
@@ -189,17 +152,13 @@ fn panics_on_invalid_language() {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("fr-FR"))
         .build()
         .unwrap();
-    dialogue_runner
-        .start()
-        .unwrap()
-        .continue_in_next_update()
-        .unwrap();
+    dialogue_runner.start().unwrap().continue_in_next_update();
     app.world.spawn(dialogue_runner);
-    app.load_assets();
+    app.load_lines();
 }
 
 #[test]
@@ -219,13 +178,13 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
-        .add_asset_provider(FileExtensionAssetProvider::new().with_audio())
+        .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("en-US"))
         .build()?;
 
     dialogue_runner.start()?;
     app.world.spawn(dialogue_runner);
-    app.load_assets();
+    app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
