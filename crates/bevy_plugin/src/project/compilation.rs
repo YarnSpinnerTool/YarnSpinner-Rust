@@ -136,8 +136,6 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
-    drop(all_files_finished_loading);
-
     let localizations = yarn_project_config_to_load
         .as_ref()
         .map(|c| c.localizations.as_ref().unwrap().as_ref())

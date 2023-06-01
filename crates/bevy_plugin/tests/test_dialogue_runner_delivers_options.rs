@@ -146,7 +146,7 @@ fn generates_files_in_dev_mode() -> Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/options.yarn");
     let yarn_path = dir.path().join("options.yarn");
-    fs::copy(&original_yarn_path, &yarn_path)?;
+    fs::copy(original_yarn_path, yarn_path)?;
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(AssetPlugin {
         asset_folder: dir.path().to_str().unwrap().to_string(),
