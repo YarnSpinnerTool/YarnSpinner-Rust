@@ -1,4 +1,4 @@
-use crate::localization::UpdateAllStringsFilesForStringTableEvent;
+use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent};
 use anyhow::bail;
@@ -25,6 +25,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )
                 .chain()
+                .after(LineIdUpdateSystemSet)
                 .in_set(CompilationSystemSet),
         );
 }
@@ -124,14 +125,18 @@ fn compile_loaded_yarn_files(
     if yarn_files_being_loaded.0.is_empty() {
         *dirty = false;
     }
-    if !*dirty
-        || !yarn_files_being_loaded
+
+    let all_files_finished_loading = || {
+        yarn_files_being_loaded
             .0
             .iter()
             .all(|handle| yarn_files.contains(handle))
-    {
+    };
+    if !(*dirty && all_files_finished_loading()) {
         return Ok(());
     }
+
+    drop(all_files_finished_loading);
 
     let localizations = yarn_project_config_to_load
         .as_ref()
@@ -155,7 +160,7 @@ fn compile_loaded_yarn_files(
             for localization in &localizations.translations {
                 let path = localization.strings_file.as_path();
                 if asset_server.asset_io().is_file(path) {
-                    return Ok(());
+                    continue;
                 }
                 let strings_file = StringsFile::from_string_table(
                     localization.language.clone(),

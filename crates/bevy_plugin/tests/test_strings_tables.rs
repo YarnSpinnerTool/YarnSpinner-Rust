@@ -132,9 +132,15 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, &yarn_path)?;
 
-    let original_yarn_path = project_root_path().join("assets/de-CH.strings.csv");
-    let yarn_path = dir.path().join("de-CH.strings.csv");
-    fs::copy(&original_yarn_path, &yarn_path)?;
+    let original_strings_path = project_root_path().join("assets/de-CH.strings.csv");
+    let strings_file_path = dir.path().join("de-CH.strings.csv");
+    fs::copy(&original_strings_path, &strings_file_path)?;
+    let original_strings_file_source = fs::read_to_string(&strings_file_path)?;
+    let original_strings_file_line_ids: Vec<_> = original_strings_file_source
+        .lines()
+        .skip(1)
+        .map(|line| line.split(',').nth(1).unwrap())
+        .collect();
 
     let mut app = App::new();
 
@@ -162,8 +168,6 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
         .string_table;
 
     assert!(!dir.path().join("en-US.strings.csv").exists());
-    let strings_file_path = dir.path().join("de-CH.strings.csv");
-    assert!(strings_file_path.exists());
     let strings_file_source = fs::read_to_string(&strings_file_path)?;
     let strings_file_line_ids: Vec<_> = strings_file_source
         .lines()
@@ -171,7 +175,10 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
         .map(|line| line.split(',').nth(1).unwrap())
         .collect();
 
-    assert_eq!(string_table.len(), strings_file_line_ids.len());
+    assert_eq!(
+        string_table.len() + original_strings_file_line_ids.len(),
+        strings_file_line_ids.len()
+    );
 
     assert!(strings_file_line_ids
         .iter()

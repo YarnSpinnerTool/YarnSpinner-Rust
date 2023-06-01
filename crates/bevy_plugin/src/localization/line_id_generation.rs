@@ -108,6 +108,10 @@ fn handle_yarn_file_events(
             .compile()?
             .string_table;
         yarn_file.string_table = string_table;
+        info!(
+            "Automatically generated line IDs for Yarn file at {}",
+            path_within_asset_dir.display()
+        );
         recompilation_needed = true;
     }
 
