@@ -29,4 +29,4 @@ tempfile = "3"
 [dev-dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["serialize", "filesystem_watcher"]
+features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_text", "bevy_ui", "bevy_winit", "filesystem_watcher", "png", "vorbis", "x11"]
