@@ -101,13 +101,19 @@ impl StringsFile {
                 if records_equal_except_for_text(record, &other_record) {
                     continue;
                 }
+                let text_is_copied_from_base_language =
+                    Lock::compute_from(&record.text) == record.lock;
                 let text = if record.lock != other_record.lock
                     && !record.text.starts_with(UPDATE_PREFIX)
+                    && !text_is_copied_from_base_language
                 {
                     format!("{UPDATE_PREFIX}{}", &record.text)
-                } else {
+                } else if !text_is_copied_from_base_language {
                     // not `other_record` because that one might not contain (NEEDS UPDATE)
                     record.text.clone()
+                } else {
+                    // This record's text was not translated, so we can safely overwrite it with the new text
+                    other_record.text.clone()
                 };
 
                 changed = true;
