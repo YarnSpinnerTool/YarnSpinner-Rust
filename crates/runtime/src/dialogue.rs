@@ -296,10 +296,9 @@ impl Dialogue {
 
     /// Immediately stops the [`Dialogue`]
     ///
-    /// No [`DialogueEvent::DialogueComplete`] will be emitted if the dialogue is ended this way.
-    pub fn stop(&mut self) -> &mut Self {
-        self.vm.stop();
-        self
+    /// Returns unfinished [`DialogueEvent`]s that should be handled by the caller. The last is guaranteed to be [`DialogueEvent::DialogueComplete`].
+    pub fn stop(&mut self) -> Vec<DialogueEvent> {
+        self.vm.stop()
     }
 
     /// Unloads all nodes from the Dialogue.

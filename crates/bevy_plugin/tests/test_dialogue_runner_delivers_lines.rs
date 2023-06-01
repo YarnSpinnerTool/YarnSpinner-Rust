@@ -28,6 +28,83 @@ fn start_implies_continue() -> Result<()> {
 }
 
 #[test]
+fn stop_without_start_is_allowed() -> Result<()> {
+    let mut app = App::new();
+    setup_dialogue_runner_without_localizations(&mut app).stop();
+
+    Ok(())
+}
+
+#[test]
+fn stop_sends_events() -> Result<()> {
+    let mut app = App::new();
+    setup_dialogue_runner_without_localizations(&mut app).start();
+    app.update();
+
+    app.dialogue_runner_mut().stop();
+    app.update();
+    assert_events!(app contains [
+        DialogueCompleteEvent,
+        NodeCompleteEvent (n = 0),
+        PresentLineEvent (n = 0)
+    ]);
+    app.update();
+    assert_events!(app contains [
+        DialogueCompleteEvent(n = 0),
+        NodeCompleteEvent (n = 0),
+        PresentLineEvent (n = 0),
+        LineHintsEvent (n = 0),
+        DialogueStartEvent (n = 0),
+    ]);
+
+    Ok(())
+}
+
+#[test]
+fn stop_resets_dialogue() -> Result<()> {
+    let mut app = App::new();
+    setup_dialogue_runner_without_localizations(&mut app).start();
+
+    app.update();
+    assert_events!(app contains [
+        DialogueStartEvent,
+        LineHintsEvent,
+        NodeStartEvent,
+        PresentLineEvent with |event| event.line.text == english_lines()[0]
+    ]);
+
+    app.dialogue_runner_mut().stop().start();
+    app.update();
+    assert_events!(app contains [
+        DialogueCompleteEvent,
+        LineHintsEvent (n = 0),
+        DialogueStartEvent (n = 0),
+        NodeCompleteEvent (n = 0),
+        PresentLineEvent (n = 0)
+    ]);
+    app.update();
+    assert_events!(app contains [
+        DialogueStartEvent,
+        LineHintsEvent,
+        NodeStartEvent,
+        PresentLineEvent with |event| event.line.text == english_lines()[0],
+        DialogueCompleteEvent (n = 0),
+    ]);
+
+    Ok(())
+}
+
+#[test]
+#[should_panic]
+fn panics_on_continue_after_stop() {
+    let mut app = App::new();
+    setup_dialogue_runner_without_localizations(&mut app)
+        .start()
+        .stop()
+        .continue_in_next_update();
+}
+
+#[test]
 fn presents_all_lines() -> Result<()> {
     let mut app = App::new();
     setup_dialogue_runner_without_localizations(&mut app).start();

@@ -163,7 +163,7 @@ impl DialogueRunnerBuilder {
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
-        if let Some(start_node) = self.start_node {
+        if let Some(start_node) = self.start_node.clone() {
             match start_node {
                 StartNode::DefaultStartNode => {
                     dialogue.set_node_to_start()?;
@@ -190,7 +190,9 @@ impl DialogueRunnerBuilder {
             will_continue_in_next_update: default(),
             last_selected_option: default(),
             just_started: default(),
+            unsent_events: default(),
             localizations: self.localizations,
+            start_node: self.start_node,
         })
     }
 }
