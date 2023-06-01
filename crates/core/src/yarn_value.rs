@@ -142,6 +142,12 @@ impl From<YarnValue> for String {
     }
 }
 
+impl From<&YarnValue> for String {
+    fn from(value: &YarnValue) -> Self {
+        Self::from(value.clone())
+    }
+}
+
 impl From<String> for YarnValue {
     fn from(value: String) -> Self {
         Self::String(value)

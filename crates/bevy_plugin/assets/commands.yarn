@@ -1,9 +1,10 @@
 title: Start
 ---
 Setting variable
-<<set $data to "foo">>>>
+<<set $data to "foo">>
 Calling command
-<<set_data $data>>
+<<set_data {$data}>>
 Calling function
 Data three times is {triplicate_data($data)}
+<<unregistered method>>
 ===

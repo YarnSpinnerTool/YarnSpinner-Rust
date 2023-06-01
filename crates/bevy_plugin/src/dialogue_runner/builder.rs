@@ -15,6 +15,7 @@ pub struct DialogueRunnerBuilder {
     text_provider: SharedTextProvider,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     library: YarnFnLibrary,
+    commands: YarnCommandRegistrations,
     compilation: Compilation,
     text_language: Option<Option<Language>>,
     asset_language: Option<Option<Language>>,
@@ -37,11 +38,17 @@ impl Debug for DialogueRunnerBuilder {
             .field("text_provider", &self.text_provider)
             .field("asset_providers", &self.asset_providers)
             .field("library", &self.library)
+            .field("commands", &self.commands)
             .field("compilation", &self.compilation)
             .field("text_language", &self.text_language)
             .field("asset_language", &self.asset_language)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
+            .field(
+                "run_selected_options_as_lines",
+                &self.run_selected_options_as_lines,
+            )
+            .field("start_node", &self.start_node)
             .finish()
     }
 }
@@ -56,6 +63,7 @@ impl DialogueRunnerBuilder {
             )),
             asset_providers: HashMap::new(),
             library: create_extended_standard_library(),
+            commands: YarnCommandRegistrations::default_commands(),
             compilation: yarn_project.compilation().clone(),
             text_language: None,
             asset_language: None,
@@ -112,8 +120,14 @@ impl DialogueRunnerBuilder {
     }
 
     #[must_use]
-    pub fn register_function(mut self, library: YarnFnLibrary) -> Self {
+    pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
         self.library.extend(library);
+        self
+    }
+
+    #[must_use]
+    pub fn extend_command_registrations(mut self, commands: YarnCommandRegistrations) -> Self {
+        self.commands.extend(commands);
         self
     }
 
@@ -170,7 +184,7 @@ impl DialogueRunnerBuilder {
             popped_line_hints,
             asset_providers: self.asset_providers,
             run_selected_options_as_lines: self.run_selected_options_as_lines,
-            commands: YarnCommandRegistrations::default_commands(),
+            commands: self.commands,
             is_running: default(),
             command_tasks: default(),
             will_continue_in_next_update: default(),

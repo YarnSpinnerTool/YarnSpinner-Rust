@@ -205,12 +205,12 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub fn command_registry(&self) -> &YarnCommandRegistrations {
+    pub fn command_registrations(&self) -> &YarnCommandRegistrations {
         &self.commands
     }
 
     #[must_use]
-    pub fn command_registry_mut(&mut self) -> &mut YarnCommandRegistrations {
+    pub fn command_registrations_mut(&mut self) -> &mut YarnCommandRegistrations {
         &mut self.commands
     }
 
