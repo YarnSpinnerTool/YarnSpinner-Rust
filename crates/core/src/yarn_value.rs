@@ -68,10 +68,18 @@ macro_rules! impl_floating_point {
                 type Error = YarnValueCastError;
 
                 fn try_from(value: YarnValue) -> Result<Self, Self::Error> {
+                    Self::try_from(&value)
+                }
+            }
+
+            impl TryFrom<&YarnValue> for $from_type {
+                type Error = YarnValueCastError;
+
+                fn try_from(value: &YarnValue) -> Result<Self, Self::Error> {
                     match value {
-                        YarnValue::Number(value) => Ok(value as $from_type),
+                        YarnValue::Number(value) => Ok(*value as $from_type),
                         YarnValue::String(value) => value.parse().map_err(Into::into),
-                        YarnValue::Boolean(value) => Ok(if value { 1.0 as $from_type } else { 0.0 }),
+                        YarnValue::Boolean(value) => Ok(if *value { 1.0 as $from_type } else { 0.0 }),
                     }
                 }
             }
@@ -101,10 +109,17 @@ macro_rules! impl_whole_number {
                 type Error = YarnValueCastError;
 
                 fn try_from(value: YarnValue) -> Result<Self, Self::Error> {
-                    f32::try_from(value).map(|value| value as $from_type)
+                    Self::try_from(&value)
                 }
             }
 
+            impl TryFrom<&YarnValue> for $from_type {
+                type Error = YarnValueCastError;
+
+                fn try_from(value: &YarnValue) -> Result<Self, Self::Error> {
+                    f32::try_from(value).map(|value| value as $from_type)
+                }
+            }
 
             impl IntoYarnValueFromNonYarnValue for $from_type {
                 fn into_untyped_value(self) -> YarnValue {
@@ -149,10 +164,18 @@ impl TryFrom<YarnValue> for bool {
     type Error = YarnValueCastError;
 
     fn try_from(value: YarnValue) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
+    }
+}
+
+impl TryFrom<&YarnValue> for bool {
+    type Error = YarnValueCastError;
+
+    fn try_from(value: &YarnValue) -> Result<Self, Self::Error> {
         match value {
-            YarnValue::Number(value) => Ok(value != 0.0),
+            YarnValue::Number(value) => Ok(*value != 0.0),
             YarnValue::String(value) => value.parse().map_err(Into::into),
-            YarnValue::Boolean(value) => Ok(value),
+            YarnValue::Boolean(value) => Ok(*value),
         }
     }
 }
