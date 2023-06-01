@@ -200,7 +200,7 @@ fn serves_translations() -> Result<()> {
         .continue_in_next_update();
     app.load_lines();
     assert_events!(app contains [
-        PresentLineEvent with |event| event.line.text == english_lines()[9], // There's no German line 10 (1-indexed), so this falls back to English anyway
+        PresentLineEvent with |event| event.line.text == english_lines()[9],
         PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_none(),
     ]);
 
@@ -245,14 +245,13 @@ fn default_language_is_base_language() {
 }
 
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {
-    app.add_plugins(DefaultPlugins)
+    setup_default_plugins(app)
         .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]))
         .dialogue_runner_mut()
 }
 
 fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner> {
-    let dialogue_runner = app
-        .add_plugins(DefaultPlugins)
+    let dialogue_runner = setup_default_plugins(app)
         .add_plugin(
             YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
                 Localizations {
@@ -274,7 +273,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
 }
 
 fn english_lines() -> Vec<String> {
-    let mut lines: Vec<_> = include_str!("../assets/lines.yarn")
+    let mut lines: Vec<_> = include_str!("../assets/tests/lines.yarn")
         .lines()
         .skip(2)
         .filter(|l| !l.is_empty())
@@ -284,7 +283,7 @@ fn english_lines() -> Vec<String> {
     lines
 }
 fn german_lines() -> Vec<String> {
-    let file = include_str!("../assets/de-CH.strings.csv");
+    let file = include_str!("../assets/tests/de-CH.strings.csv");
     let mut reader = csv::Reader::from_reader(file.as_bytes());
     reader
         .records()

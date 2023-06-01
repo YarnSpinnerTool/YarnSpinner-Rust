@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
@@ -102,6 +103,21 @@ impl AppExt for App {
             .iter_mut(&mut self.world)
             .next()
     }
+}
+
+pub fn setup_default_plugins(app: &mut App) -> &mut App {
+    app.add_plugins(
+        DefaultPlugins
+            .set(AssetPlugin {
+                asset_folder: project_root_path()
+                    .join("assets")
+                    .join("tests")
+                    .to_string_lossy()
+                    .to_string(),
+                ..default()
+            })
+            .disable::<LogPlugin>(),
+    )
 }
 
 pub fn project_root_path() -> PathBuf {

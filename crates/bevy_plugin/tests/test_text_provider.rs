@@ -8,10 +8,9 @@ mod utils;
 fn loads_line_without_localization() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "lines_with_ids.yarn",
-        ]));
+    setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
+        "lines_with_ids.yarn",
+    ]));
 
     let line = app
         .dialogue_runner()
@@ -25,10 +24,9 @@ fn loads_line_without_localization() {
 fn fails_to_get_invalid_line() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "lines_with_ids.yarn",
-        ]));
+    setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
+        "lines_with_ids.yarn",
+    ]));
 
     let result = app
         .dialogue_runner()
@@ -41,7 +39,7 @@ fn fails_to_get_invalid_line() {
 fn loads_line_from_base_language_without_explicit_language() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
@@ -65,7 +63,7 @@ fn loads_line_from_base_language_without_explicit_language() {
 fn loads_line_from_base_language_with_explicit_language() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
@@ -92,7 +90,7 @@ fn loads_line_from_base_language_with_explicit_language() {
 fn panics_when_loading_missing_language() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
@@ -111,7 +109,7 @@ fn panics_when_loading_missing_language() {
 fn loads_line_from_fallback_on_missing_line() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
@@ -137,7 +135,7 @@ fn loads_line_from_fallback_on_missing_line() {
 fn loads_line_from_translated_language() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),

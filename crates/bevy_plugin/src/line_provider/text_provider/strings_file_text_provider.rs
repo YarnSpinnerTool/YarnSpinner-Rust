@@ -122,9 +122,10 @@ impl TextProvider for StringsFileTextProvider {
     }
 
     fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
-        let Some(handle) = self.strings_file_handle.as_ref() else {
+        if self.language.is_none() {
             return None;
-        };
+        }
+        let handle = self.strings_file_handle.as_ref()?;
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
             return None;
         }
