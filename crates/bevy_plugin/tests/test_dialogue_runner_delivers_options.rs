@@ -148,10 +148,7 @@ fn generates_files_in_dev_mode() -> Result<()> {
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, yarn_path)?;
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }));
+    setup_default_plugins_for_path(&mut app, dir.path());
 
     setup_dialogue_runner_in_dev_mode(&mut app).start();
     app.update();

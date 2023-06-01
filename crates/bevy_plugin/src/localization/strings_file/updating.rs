@@ -30,6 +30,7 @@ fn update_all_strings_files_for_string_table(
     asset_server: Res<AssetServer>,
     project: Res<YarnProject>,
     mut languages_to_handles: Local<HashMap<Language, Handle<StringsFile>>>,
+    mut expected_file_names: Local<HashSet<String>>,
 ) -> SystemResult {
     let localizations = project.localizations.as_ref().unwrap();
     if localizations.translations.is_empty() {
@@ -57,6 +58,15 @@ fn update_all_strings_files_for_string_table(
     {
         return Ok(());
     }
+    if expected_file_names.is_empty() {
+        expected_file_names.extend(
+            project
+                .compilation
+                .string_table
+                .values()
+                .map(|string_info| string_info.file_name.clone()),
+        );
+    }
 
     let mut dirty_paths = HashSet::new();
     for string_table in events.iter().map(|e| &e.0) {
@@ -67,6 +77,13 @@ fn update_all_strings_files_for_string_table(
         let file_names = file_names.into_iter().collect::<Vec<_>>().join(", ");
         for (language, strings_file_handle) in languages_to_handles.clone() {
             let strings_file = strings_files.get_mut(&strings_file_handle).unwrap();
+            lint_strings_file(
+                strings_file,
+                &expected_file_names,
+                &asset_server,
+                &strings_file_handle,
+            );
+
             let strings_file_path = localizations.strings_file_path(&language).unwrap();
 
             let new_strings_file = match StringsFile::from_string_table(
@@ -103,4 +120,30 @@ fn update_all_strings_files_for_string_table(
         strings_file.write_asset(&asset_server, path)?;
     }
     Ok(())
+}
+
+fn lint_strings_file(
+    strings_file: &StringsFile,
+    expected_file_names: &HashSet<String>,
+    asset_server: &AssetServer,
+    handle: &Handle<StringsFile>,
+) {
+    let actual_file_names: HashSet<_> =
+        strings_file.records().map(|rec| rec.file.clone()).collect();
+    let superfluous_file_names = actual_file_names
+        .difference(expected_file_names)
+        .map(|name| name.to_owned())
+        .collect::<Vec<_>>()
+        .join(", ");
+    if !superfluous_file_names.is_empty() {
+        let source = asset_server
+            .get_handle_path(handle)
+            .map(|asset_path| format!("at {}", asset_path.path().display()))
+            .unwrap_or_else(|| "created at runtime".to_owned());
+        warn!(
+            "Strings file {source} contains the following strings for yarn files were not found in the project: {superfluous_file_names}. \
+            Either you forgot to add these files to the project or the strings belonged to files that were deleted. \
+            You may want to delete these entries from the strings file manually. Yarn Slinger will not do this for you because it may lead to loss of work.",
+        );
+    }
 }

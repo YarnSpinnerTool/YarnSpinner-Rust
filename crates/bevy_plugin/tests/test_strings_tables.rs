@@ -36,11 +36,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }))
-    .add_plugin(
+    setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
             base_language: "en-US".into(),
             translations: vec!["de-CH".into()],
@@ -86,11 +82,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }))
-    .add_plugin(
+    setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
             base_language: "en-US".into(),
             translations: vec!["de-CH".into()],
@@ -145,11 +137,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }))
-    .add_plugin(
+    setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
@@ -203,11 +191,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        asset_folder: dir.path().to_str().unwrap().to_string(),
-        ..default()
-    }))
-    .add_plugin(
+    setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
                 base_language: "en-US".into(),
