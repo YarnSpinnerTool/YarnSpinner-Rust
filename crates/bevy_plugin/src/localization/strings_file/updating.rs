@@ -79,7 +79,7 @@ fn update_all_strings_files_for_string_table(
                         info!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
                             strings_file_path.display())
                     } else {
-                        warn!(
+                        error!(
                             "Tried to update \"{}\" (lang: {language}) because the following yarn files were changed or loaded: {file_names}, but couldn't because: {e}",
                             strings_file_path.display(),
                         );

@@ -17,6 +17,7 @@ fn check_validity_of_referenced_files(
     strings_files: Res<Assets<StringsFile>>,
     project: Res<YarnProject>,
     asset_server: Res<AssetServer>,
+    mut warned_sources: Local<HashSet<Handle<StringsFile>>>,
 ) {
     let expected_file_names: HashSet<_> = project
         .compilation
@@ -25,7 +26,7 @@ fn check_validity_of_referenced_files(
         .map(|string_info| string_info.file_name.as_str())
         .collect();
     for event in events.iter() {
-        let AssetEvent::Created { handle } = event else {
+        let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
             continue;
         };
         let source = asset_server
@@ -42,6 +43,10 @@ fn check_validity_of_referenced_files(
             .map(|name| name.to_owned())
             .collect::<Vec<_>>()
             .join(", ");
+        if superfluous_file_names.is_empty() || warned_sources.contains(handle) {
+            continue;
+        }
+        warned_sources.insert(handle.clone_weak());
         warn!(
             "Strings file {source} contains the following strings for yarn files were not found in the project: {}. \
             Either you forgot to add these files to the project or the strings belonged to files that were deleted. \

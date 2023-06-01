@@ -1,3 +1,4 @@
+use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use std::fs;
@@ -159,7 +160,13 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     );
 
     app.load_project();
-    app.update(); // Generate the strings file
+    let handle = app
+        .world
+        .resource::<AssetServer>()
+        .load_untyped("de-CH.strings.csv");
+    while app.world.resource::<AssetServer>().get_load_state(&handle) != LoadState::Loaded {
+        app.update();
+    }
 
     let string_table = YarnCompiler::new()
         .read_file(&yarn_path)
@@ -180,9 +187,9 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
         strings_file_line_ids.len()
     );
 
-    assert!(strings_file_line_ids
-        .iter()
-        .all(|line_id| string_table.contains_key(&LineId(line_id.to_string()))));
+    assert!(string_table
+        .keys()
+        .all(|line_id| strings_file_line_ids.contains(&line_id.0.as_str())));
 
     Ok(())
 }
