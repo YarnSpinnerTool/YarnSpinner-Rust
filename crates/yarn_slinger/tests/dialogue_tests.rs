@@ -122,7 +122,12 @@ fn test_getting_current_node_name() {
     dialogue.set_node("Sally").unwrap();
     assert_eq!(dialogue.current_node(), Some("Sally".to_string()));
 
-    dialogue.stop();
+    let stop_events = dialogue.stop();
+    assert_eq!(
+        Some(DialogueEvent::DialogueComplete),
+        stop_events.into_iter().last()
+    );
+
     // Current node should now be none
     assert!(dialogue.current_node().is_none());
 }

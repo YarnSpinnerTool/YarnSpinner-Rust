@@ -20,7 +20,7 @@ fn errs_on_selection_without_start() -> Result<()> {
 #[test]
 fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start();
     app.continue_dialogue_and_update_n_times(4);
     assert_events!(app contains [
         PresentLineEvent (n = 0),
@@ -34,7 +34,7 @@ fn delivers_option_set() -> Result<()> {
 #[test]
 fn errs_on_unexpected_selection_timing() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start();
     app.continue_dialogue_and_update_n_times(3);
     app.dialogue_runner_mut()
         .select_option(OptionId(0))
@@ -45,7 +45,7 @@ fn errs_on_unexpected_selection_timing() -> Result<()> {
 #[test]
 fn errs_on_unexpected_selection_value() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut()
         .select_option(OptionId(2))
@@ -57,7 +57,7 @@ fn errs_on_unexpected_selection_value() -> Result<()> {
 #[test]
 fn option_selection_implies_continue() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
@@ -74,7 +74,7 @@ fn can_show_option_selection_as_line() -> Result<()> {
     let mut app = App::new();
     {
         let mut dialogue_runner = setup_dialogue_runner(&mut app);
-        dialogue_runner.start()?;
+        dialogue_runner.start();
         dialogue_runner.run_selected_options_as_lines = true;
     }
     app.continue_dialogue_and_update_n_times(4);
@@ -101,7 +101,7 @@ fn can_show_option_selection_as_line() -> Result<()> {
 #[test]
 fn can_jump_around_nodes() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(1))?;
     app.update();
@@ -121,7 +121,7 @@ fn can_jump_around_nodes() -> Result<()> {
 #[test]
 fn can_select_unavailable_choice() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start()?;
+    setup_dialogue_runner(&mut app).start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.continue_dialogue_and_update_n_times(2);
@@ -153,7 +153,7 @@ fn generates_files_in_dev_mode() -> Result<()> {
         ..default()
     }));
 
-    setup_dialogue_runner_in_dev_mode(&mut app).start()?;
+    setup_dialogue_runner_in_dev_mode(&mut app).start();
     app.update();
     assert_events!(app contains [
         PresentLineEvent with |event| event.line.text == lines()[0],

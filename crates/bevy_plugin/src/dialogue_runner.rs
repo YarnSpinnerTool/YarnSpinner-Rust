@@ -49,22 +49,19 @@ pub struct DialogueRunner {
     pub run_selected_options_as_lines: bool,
     pub(crate) just_started: bool,
     pub(crate) popped_line_hints: Option<Vec<LineId>>,
+    pub(crate) unsent_events: Vec<DialogueEvent>,
+    start_node: Option<StartNode>,
 }
 
 impl DialogueRunner {
     pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
 
     pub fn continue_in_next_update(&mut self) -> &mut Self {
-        self.try_continue_in_next_update()
-            .unwrap_or_else(|e| panic!("{e}"))
-    }
-
-    pub fn try_continue_in_next_update(&mut self) -> Result<&mut Self> {
         if !self.is_running {
-            bail!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
+            panic!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
         }
         self.will_continue_in_next_update = true;
-        Ok(self)
+        self
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
@@ -85,24 +82,38 @@ impl DialogueRunner {
 
     pub fn stop(&mut self) -> &mut Self {
         self.is_running = false;
-        self.dialogue.stop();
+        self.last_selected_option = None;
+        self.popped_line_hints = None;
+        self.will_continue_in_next_update = false;
+        self.just_started = false;
+        let stop_events = self.dialogue.stop();
+        self.unsent_events.extend(stop_events);
         self
     }
 
-    pub fn clear(&mut self) -> &mut Self {
-        self.is_running = false;
-        self.dialogue.unload_all();
-        self
-    }
-
-    pub fn start(&mut self) -> Result<&mut Self> {
+    pub fn start(&mut self) -> &mut Self {
         if self.is_running {
-            bail!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
+            panic!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
         }
         self.is_running = true;
         self.just_started = true;
+        if self.dialogue.current_node().is_none() {
+            match self.start_node.clone() {
+                Some(StartNode::DefaultStartNode) => {
+                    self.dialogue.set_node_to_start().unwrap(); // Would have panicked in `DialogueRunnerBuilder::build()` already if this was invalid
+                }
+                Some(StartNode::Node(node_name)) => {
+                    self.dialogue.set_node(node_name).unwrap(); // Would have panicked in `DialogueRunnerBuilder::build()` already if this was invalid
+                }
+                None => {
+                    panic!("Can't start dialogue: `DialogueRunnerBuilder::with_start_node(None)` was called when building the dialogue runner, \
+                    but then tried to start the dialogue without specifying a node to start at. Please call `DialogueRunner::start_at_node(..)` instead.\
+                    Alternatively, you can call `DialogueRunnerBuilder::with_start_node(..)` with a node name or leave it at its default value of `DialogueRunner::DEFAULT_START_NODE_NAME`.");
+                }
+            }
+        }
         self.continue_in_next_update();
-        Ok(self)
+        self
     }
 
     pub fn start_at_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {

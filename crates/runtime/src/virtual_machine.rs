@@ -107,8 +107,10 @@ impl VirtualMachine {
 
     /// # Implementation Notes
     /// The original does not reset the state upon calling this. I suspect that's a bug.
-    pub(crate) fn stop(&mut self) -> &mut Self {
-        self.set_execution_state(ExecutionState::Stopped)
+    pub(crate) fn stop(&mut self) -> Vec<DialogueEvent> {
+        self.set_execution_state(ExecutionState::Stopped);
+        self.batched_events.push(DialogueEvent::DialogueComplete);
+        std::mem::take(&mut self.batched_events)
     }
 
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {

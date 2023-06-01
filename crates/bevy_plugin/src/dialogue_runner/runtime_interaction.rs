@@ -30,34 +30,36 @@ fn continue_runtime(
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
-        if dialogue_runner.just_started {
-            dialogue_start_events.send(DialogueStartEvent { source });
-            dialogue_runner.just_started = false;
-        }
-        if !dialogue_runner.is_running {
+        let is_sending_missed_events = !dialogue_runner.unsent_events.is_empty();
+        if !is_sending_missed_events {
+            if dialogue_runner.just_started {
+                dialogue_start_events.send(DialogueStartEvent { source });
+                dialogue_runner.just_started = false;
+            }
+            if !dialogue_runner.is_running {
+                dialogue_runner.will_continue_in_next_update = false;
+                continue;
+            }
+
+            if let Some(line_ids) = std::mem::take(&mut dialogue_runner.popped_line_hints) {
+                line_hints_events.send(LineHintsEvent { line_ids, source });
+            }
+
+            if !(dialogue_runner.will_continue_in_next_update
+                && dialogue_runner.poll_tasks_and_check_if_done()
+                && dialogue_runner.are_lines_available())
+            {
+                continue;
+            }
             dialogue_runner.will_continue_in_next_update = false;
-            continue;
-        }
 
-        if let Some(line_ids) = std::mem::take(&mut dialogue_runner.popped_line_hints) {
-            line_hints_events.send(LineHintsEvent { line_ids, source });
-        }
-
-        if !(dialogue_runner.will_continue_in_next_update
-            && dialogue_runner.poll_tasks_and_check_if_done()
-            && dialogue_runner.are_lines_available())
-        {
-            continue;
-        }
-        dialogue_runner.will_continue_in_next_update = false;
-
-        if dialogue_runner.run_selected_options_as_lines {
-            if let Some(option) = dialogue_runner.last_selected_option.take() {
-                let options = last_options
-                    .remove(&source)
-                    .expect("Failed to get last presented options when trying to run selected option as line. \
+            if dialogue_runner.run_selected_options_as_lines {
+                if let Some(option) = dialogue_runner.last_selected_option.take() {
+                    let options = last_options
+                        .remove(&source)
+                        .expect("Failed to get last presented options when trying to run selected option as line. \
                                   This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
-                let Some(option) = options.into_iter().find(|o| o.id == option) else{
+                    let Some(option) = options.into_iter().find(|o| o.id == option) else {
                         let expected_options = last_options
                             .values()
                             .flat_map(|options|
@@ -68,15 +70,21 @@ fn continue_runtime(
                             .join(", ");
                         bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
                     };
-                present_line_events.send(PresentLineEvent {
-                    line: option.line,
-                    source,
-                });
-                continue;
+                    present_line_events.send(PresentLineEvent {
+                        line: option.line,
+                        source,
+                    });
+                    continue;
+                }
             }
         }
+        let events = if is_sending_missed_events {
+            std::mem::take(&mut dialogue_runner.unsent_events)
+        } else {
+            dialogue_runner.dialogue.continue_()?
+        };
 
-        for event in dialogue_runner.dialogue.continue_()? {
+        for event in events {
             match event {
                 DialogueEvent::Line(line) => {
                     let assets = dialogue_runner.get_assets(&line);
@@ -110,7 +118,9 @@ fn continue_runtime(
                     line_hints_events.send(LineHintsEvent { line_ids, source });
                 }
                 DialogueEvent::DialogueComplete => {
-                    dialogue_runner.is_running = false;
+                    if !is_sending_missed_events {
+                        dialogue_runner.is_running = false;
+                    }
                     dialogue_complete_events.send(DialogueCompleteEvent { source });
                 }
             }
