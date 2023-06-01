@@ -55,16 +55,11 @@ impl DialogueRunner {
     pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
 
     pub fn continue_in_next_update(&mut self) -> &mut Self {
-        self.try_continue_in_next_update()
-            .unwrap_or_else(|e| panic!("{e}"))
-    }
-
-    pub fn try_continue_in_next_update(&mut self) -> Result<&mut Self> {
         if !self.is_running {
-            bail!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
+            panic!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
         }
         self.will_continue_in_next_update = true;
-        Ok(self)
+        self
     }
 
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
@@ -95,14 +90,14 @@ impl DialogueRunner {
         self
     }
 
-    pub fn start(&mut self) -> Result<&mut Self> {
+    pub fn start(&mut self) -> &mut Self {
         if self.is_running {
-            bail!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
+            panic!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
         }
         self.is_running = true;
         self.just_started = true;
         self.continue_in_next_update();
-        Ok(self)
+        self
     }
 
     pub fn start_at_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {

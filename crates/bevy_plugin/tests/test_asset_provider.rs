@@ -21,7 +21,7 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
         .build()?;
-    dialogue_runner.start()?;
+    dialogue_runner.start();
     app.world.spawn(dialogue_runner);
 
     app.load_project();
@@ -55,7 +55,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
         .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("en-US"))
         .build()?;
-    dialogue_runner.start()?;
+    dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
@@ -83,7 +83,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
         .build()?;
-    dialogue_runner.start()?;
+    dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
@@ -119,7 +119,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
         .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("de-CH"))
         .build()?;
-    dialogue_runner.start()?;
+    dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
@@ -156,7 +156,7 @@ fn panics_on_invalid_language() {
         .with_asset_language(Language::new("fr-FR"))
         .build()
         .unwrap();
-    dialogue_runner.start().unwrap().continue_in_next_update();
+    dialogue_runner.start().continue_in_next_update();
     app.world.spawn(dialogue_runner);
     app.load_lines();
 }
@@ -182,7 +182,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
         .with_asset_language(Language::new("en-US"))
         .build()?;
 
-    dialogue_runner.start()?;
+    dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
 

@@ -6,18 +6,16 @@ use utils::prelude::*;
 mod utils;
 
 #[test]
-fn errs_on_continue_without_start() -> Result<()> {
+#[should_panic]
+fn panics_on_continue_without_start() {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app)
-        .try_continue_in_next_update()
-        .unwrap_err();
-    Ok(())
+    setup_dialogue_runner_without_localizations(&mut app).continue_in_next_update();
 }
 
 #[test]
 fn start_implies_continue() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner_without_localizations(&mut app).start();
     app.update();
     assert_events!(app contains [
         DialogueStartEvent,
@@ -32,7 +30,7 @@ fn start_implies_continue() -> Result<()> {
 #[test]
 fn presents_all_lines() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner_without_localizations(&mut app).start();
     for i in 1..=12 {
         println!("Line {i}");
         app.continue_dialogue_and_update();
@@ -54,22 +52,20 @@ fn presents_all_lines() -> Result<()> {
 }
 
 #[test]
-fn errs_on_continue_after_all_lines() -> Result<()> {
+#[should_panic]
+fn panics_on_continue_after_all_lines() {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start()?;
+    setup_dialogue_runner_without_localizations(&mut app).start();
     while app.dialogue_runner().is_running() {
         app.continue_dialogue_and_update();
     }
-    app.dialogue_runner_mut()
-        .try_continue_in_next_update()
-        .unwrap_err();
-    Ok(())
+    app.dialogue_runner_mut().continue_in_next_update();
 }
 
 #[test]
 fn serves_assets_after_loading() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_with_localizations(&mut app).start()?;
+    setup_dialogue_runner_with_localizations(&mut app).start();
     app.update();
     assert_events!(app contains [
         DialogueStartEvent,
@@ -99,7 +95,7 @@ fn serves_assets_after_loading() -> Result<()> {
 #[test]
 fn serves_translations() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_with_localizations(&mut app).start()?;
+    setup_dialogue_runner_with_localizations(&mut app).start();
     app.load_lines();
 
     for _ in 1..=6 {
