@@ -18,10 +18,10 @@ mod font_handle {
     use bevy::reflect::TypeUuid;
 
     pub(crate) const MEDIUM: HandleUntyped =
-        HandleUntyped::weak_from_u64(Shader::TYPE_UUID, 2263821398159872327);
+        HandleUntyped::weak_from_u64(Font::TYPE_UUID, 2263821398159872327);
 
     pub(crate) const BOLD: HandleUntyped =
-        HandleUntyped::weak_from_u64(Shader::TYPE_UUID, 2165468797133218757);
+        HandleUntyped::weak_from_u64(Font::TYPE_UUID, 2165468797133218757);
 }
 
 impl Plugin for ExampleYarnSlingerUiPlugin {
