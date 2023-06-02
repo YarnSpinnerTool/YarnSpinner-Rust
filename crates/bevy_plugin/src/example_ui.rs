@@ -1,5 +1,3 @@
-use bevy::a11y::accesskit::{NodeBuilder, Role};
-use bevy::a11y::AccessibilityNode;
 use bevy::asset::load_internal_binary_asset;
 use bevy::prelude::*;
 

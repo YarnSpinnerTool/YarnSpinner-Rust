@@ -31,9 +31,9 @@ jobs:
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples
       - name: Run cargo clippy for serde
-        run: cargo clippy --workspace --features serde
+        run: cargo clippy --workspace --tests --features serde
       - name: Run cargo clippy for bevy
-        run: cargo clippy --workspace --features bevy
+        run: cargo clippy --workspace --tests --features bevy
 
   format:
     runs-on: ubuntu-latest

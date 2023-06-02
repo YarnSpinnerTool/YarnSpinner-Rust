@@ -122,9 +122,7 @@ impl TextProvider for StringsFileTextProvider {
     }
 
     fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
-        if self.language.is_none() {
-            return None;
-        }
+        self.language.as_ref()?;
         let handle = self.strings_file_handle.as_ref()?;
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
             return None;
@@ -133,14 +131,12 @@ impl TextProvider for StringsFileTextProvider {
         let strings_file_has_changed = || {
             asset_events
                 .iter_current_update_events()
-                .filter_map(|event| {
-                    if let AssetEvent::Modified { handle } = event {
-                        Some(handle)
-                    } else {
-                        None
-                    }
+                .any(|event| match event {
+                    AssetEvent::Modified {
+                        handle: modified_handle,
+                    } => modified_handle == handle,
+                    _ => false,
                 })
-                .any(|h| h == handle)
         };
         let has_no_translation_yet = self.translation_string_table.is_none();
         if has_no_translation_yet || strings_file_has_changed() {

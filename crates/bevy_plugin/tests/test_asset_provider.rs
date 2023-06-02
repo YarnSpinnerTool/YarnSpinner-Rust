@@ -1,3 +1,4 @@
+#![cfg(feature = "audio_assets")]
 use anyhow::{bail, Result};
 use bevy::prelude::*;
 use bevy::utils::Instant;

@@ -31,7 +31,7 @@ fn waits_on_command() -> Result<()> {
             ExecuteCommandEvent (n = 0),
         ]);
     }
-    sleep(std::time::Duration::from_millis(50));
+    sleep(std::time::Duration::from_millis(150));
     app.continue_dialogue_and_update();
     assert_events!(app contains [
         PresentLineEvent with |event| event.line.text == "Ended wait",

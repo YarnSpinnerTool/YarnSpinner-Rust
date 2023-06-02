@@ -203,6 +203,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     app.load_project();
 
+    let strings_file_path = dir.path().join("de-CH.strings.csv");
     {
         let project = app.world.resource::<YarnProject>();
         let handle = project.yarn_files().next().unwrap().clone();
@@ -210,8 +211,13 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
         let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
 
+        let strings_file_source =
+            fs::read_to_string(&strings_file_path)?.replace("*third*", "*dritter*");
+        fs::write(&strings_file_path, strings_file_source)?;
+
         let mut lines: Vec<_> = yarn_file.content().lines().collect();
-        *lines.get_mut(3).unwrap() = "Changed line #line:2";
+        *lines.get_mut(2).unwrap() = "Changed line without translation #line:1";
+        *lines.get_mut(3).unwrap() = "Changed line with prior translation#line:2";
         lines.insert(4, "Inserted line #line:13");
         lines.remove(6);
         yarn_file.set_content(lines.join("\n"))?;
@@ -225,7 +231,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         app.update();
     }
 
-    let strings_file_source = fs::read_to_string(dir.path().join("de-CH.strings.csv"))?;
+    let strings_file_source = fs::read_to_string(strings_file_path)?;
     let strings_file_lines: Vec<_> = strings_file_source
         .lines()
         .skip(1)
@@ -233,10 +239,12 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
         .collect();
 
     println!("{strings_file_lines:#?}");
+    assert_eq!(strings_file_lines[0][1], "line:1");
+    assert_eq!(strings_file_lines[0][2], "Changed line without translation");
     assert_eq!(strings_file_lines[1][1], "line:2");
     assert_eq!(
         strings_file_lines[1][2],
-        "(NEEDS UPDATE) Hag: Now your *third* wish. What will it be?"
+        "(NEEDS UPDATE) Hag: Now your *dritter* wish. What will it be?"
     );
     assert_eq!(strings_file_lines[2][1], "line:13");
     assert_eq!(strings_file_lines[2][2], "Inserted line");
