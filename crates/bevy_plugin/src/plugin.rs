@@ -5,7 +5,7 @@ pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct YarnSlingerPlugin {
     project: LoadYarnProjectEvent,
 }

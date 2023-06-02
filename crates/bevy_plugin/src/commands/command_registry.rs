@@ -39,6 +39,10 @@ impl IntoIterator for YarnCommandRegistrations {
 }
 
 impl YarnCommandRegistrations {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    
     /// Adds a new method to the registry. See [`YarnFn`]'s documentation for what kinds of methods are allowed.
     pub fn register_command<Marker, F>(
         &mut self,
@@ -99,7 +103,7 @@ impl YarnCommandRegistrations {
         self.0.is_empty()
     }
 
-    pub fn default_commands() -> Self {
+    pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
         commands
             .register_command("wait", |In(duration): In<f32>| {

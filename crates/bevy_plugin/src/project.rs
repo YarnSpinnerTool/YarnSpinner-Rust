@@ -57,8 +57,8 @@ impl YarnProject {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
-#[reflect(Debug, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
+#[reflect(Debug, PartialEq)]
 pub struct LoadYarnProjectEvent {
     pub localizations: Option<Localizations>,
     pub yarn_files: HashSet<YarnFileSource>,

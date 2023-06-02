@@ -63,7 +63,7 @@ impl DialogueRunnerBuilder {
             )),
             asset_providers: HashMap::new(),
             library: create_extended_standard_library(),
-            commands: YarnCommandRegistrations::default_commands(),
+            commands: YarnCommandRegistrations::builtin_commands(),
             compilation: yarn_project.compilation().clone(),
             text_language: None,
             asset_language: None,

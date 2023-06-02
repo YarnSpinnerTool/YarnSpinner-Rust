@@ -26,6 +26,10 @@ impl IntoIterator for YarnFnRegistry {
 }
 
 impl YarnFnRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
     pub fn register_function<Marker, F>(
         &mut self,

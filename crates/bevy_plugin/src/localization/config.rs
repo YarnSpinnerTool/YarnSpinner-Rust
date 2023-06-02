@@ -9,10 +9,8 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
         .register_type::<FileGenerationMode>();
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Default, Hash, Reflect, FromReflect, Serialize, Deserialize,
-)]
-#[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
+#[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
     pub base_language: Localization,
     pub translations: Vec<Localization>,
@@ -58,11 +56,8 @@ impl Localizations {
     }
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
-)]
-#[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
-#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
+#[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localization {
     pub language: Language,
     pub strings_file: PathBuf,
@@ -101,9 +96,7 @@ impl Localization {
     }
 }
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Reflect, FromReflect, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum FileGenerationMode {
@@ -115,10 +108,22 @@ pub enum FileGenerationMode {
     ///
     /// It is recommended to combine this setting with Bevy's [hot reload functionality](https://bevy-cheatbook.github.io/assets/hot-reload.html).
     /// Note that because of the extensive use of the filesystem, this setting is not available on Wasm.
-    #[default]
     Development,
     /// The recommended setting for shipping the game:
     /// - Does not change any Yarn or strings files on disk.
     /// - Falls back to the base language when a line is missing in a strings file.
     Production,
+}
+
+impl Default for FileGenerationMode {
+    fn default() -> Self {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        {
+            Self::Development
+        }
+        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+        {
+            Self::Production
+        }
+    }
 }
