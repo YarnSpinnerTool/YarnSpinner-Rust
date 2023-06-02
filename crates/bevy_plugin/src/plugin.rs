@@ -26,6 +26,11 @@ impl YarnSlingerPlugin {
     }
 
     #[must_use]
+    pub fn deferred() -> DeferredYarnSlingerPlugin {
+        DeferredYarnSlingerPlugin::new()
+    }
+
+    #[must_use]
     pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.project = self.project.add_yarn_file(yarn_file);
         self
