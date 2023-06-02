@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::project::LoadYarnProjectEvent;
+use crate::project::{assert_valid_cfg, LoadYarnProjectEvent};
 use bevy::prelude::*;
 pub use yarn_file_source::YarnFileSource;
 
@@ -43,12 +43,7 @@ impl YarnSlingerPlugin {
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
-        if let Some(localizations) = localizations.as_ref() {
-            if cfg!(any(target_arch = "wasm32", target_os = "android")) {
-                assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
-                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target because it does not provide a access to the filesystem.");
-            }
-        }
+        assert_valid_cfg(localizations.as_ref());
         self.project.localizations = localizations;
         self
     }
