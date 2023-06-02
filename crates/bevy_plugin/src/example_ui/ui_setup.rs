@@ -1,3 +1,4 @@
+use crate::example_ui::assets::font_handle;
 use bevy::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
@@ -12,33 +13,48 @@ fn setup(mut commands: Commands) {
                 size: Size::width(Val::Percent(100.0)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::FlexEnd,
-                margin: UiRect::bottom(Val::Px(10.0)),
+                margin: UiRect::bottom(Val::Px(30.0)),
                 ..default()
             },
             ..default()
         })
         .with_children(|parent| {
+            const WIDTH: f32 = 800.0 * 0.7;
+            const TEXT_BORDER: f32 = 10.0;
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::width(Val::Percent(70.0)),
-                        min_size: Size::height(Val::Px(100.0)),
-                        border: UiRect::all(Val::Px(20.0)),
+                        size: Size::width(Val::Px(WIDTH)),
+                        min_size: Size::height(Val::Px(180.0)),
                         flex_direction: FlexDirection::ColumnReverse,
+                        justify_content: JustifyContent::FlexEnd,
+                        align_items: AlignItems::FlexStart,
                         ..default()
                     },
-                    background_color: Color::rgb(0.4, 0.4, 1.0).into(),
+                    background_color: Color::WHITE.into(),
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    // text
+                    parent.spawn((
+                        TextBundle::from_section(
+                            "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor.Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor.",
+                            TextStyle {
+                                font: font_handle::MEDIUM.typed(),
+                                font_size: 20.0,
+                                color: Color::BLACK,
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(TEXT_BORDER)),
+                            max_size: Size {
+                                width: Val::Px(WIDTH - 2.0 * TEXT_BORDER),
+                                height: Val::Undefined,
+                            },
                             ..default()
-                        },
-                        background_color: Color::rgb(0.8, 0.8, 1.0).into(),
-                        ..default()
-                    });
+                        }),
+                        Label,
+                    ));
                 });
         });
 }
