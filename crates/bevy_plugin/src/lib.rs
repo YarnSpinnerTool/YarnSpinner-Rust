@@ -8,6 +8,8 @@ mod plugin;
 mod project;
 mod utils;
 mod yarn_file_asset;
+#[cfg(feature = "example_ui")]
+mod example_ui;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
@@ -48,6 +50,8 @@ pub mod prelude {
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
+    #[cfg(feature = "example_ui")]
+    pub use crate::example_ui::ExampleYarnSlingerUiPlugin;
 }
 
 pub use crate::commands::UntypedYarnCommand;

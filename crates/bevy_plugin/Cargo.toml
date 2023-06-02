@@ -6,8 +6,9 @@ license = "MIT OR Apache-2.0"
 exclude = ["assets", "wasm"]
 
 [features]
-default = ["audio_assets"]
+default = []
 audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
+example_ui = ["bevy/bevy_ui", "bevy/bevy_text"]
 
 [dependencies]
 anyhow = "1"
@@ -29,4 +30,4 @@ tempfile = "3"
 [dev-dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_text", "bevy_ui", "bevy_winit", "filesystem_watcher", "png", "vorbis", "x11"]
+features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "vorbis", "x11"]
