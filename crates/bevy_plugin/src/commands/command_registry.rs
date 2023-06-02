@@ -2,9 +2,17 @@ use crate::commands::command_wrapping::YarnCommandWrapper;
 use crate::commands::UntypedYarnCommand;
 use crate::prelude::*;
 use bevy::prelude::*;
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
 use bevy::tasks::AsyncComputeTaskPool;
+#[cfg(any(target_arch = "wasm32", target_os = "android"))]
+use bevy::tasks::TaskPool;
 use std::borrow::Cow;
 use std::collections::HashMap;
+#[cfg(any(target_arch = "wasm32", target_os = "android"))]
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -95,11 +103,30 @@ impl YarnCommandRegistrations {
         let mut commands = Self::default();
         commands
             .register_command("wait", |In(duration): In<f32>| {
-                let thread_pool = AsyncComputeTaskPool::get();
-                thread_pool.spawn(async move {
-                    let duration = Duration::from_secs_f32(duration);
-                    sleep(duration);
-                })
+                #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
+                {
+                    let thread_pool = AsyncComputeTaskPool::get();
+                    thread_pool.spawn(async move {
+                        let duration = Duration::from_secs_f32(duration);
+                        sleep(duration);
+                    })
+                }
+                #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+                {
+                    let thread_pool = TaskPool::new();
+                    let finished = Arc::new(AtomicBool::new(false));
+                    {
+                        let finished = finished.clone();
+                        thread_pool
+                            .spawn(async move {
+                                let duration = Duration::from_secs_f32(duration);
+                                sleep(duration);
+                                finished.store(true, Ordering::Relaxed);
+                            })
+                            .detach();
+                    }
+                    finished
+                }
             })
             .register_command("stop", |_: In<()>| {
                 unreachable!("The stop command is a compiler builtin and is thus not callable")

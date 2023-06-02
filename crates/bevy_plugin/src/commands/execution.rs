@@ -14,9 +14,9 @@ fn execute_commands(world: &mut World) {
             continue;
         };
         let params = event.command.parameters;
-        let task = command.call(params, world);
-        if let Some(task) = task {
-            get_dialogue_runner_mut(world, event.source).add_command_task(task);
+        let task_finished_indicator = command.call(params, world);
+        if !task_finished_indicator.is_finished() {
+            get_dialogue_runner_mut(world, event.source).add_command_task(task_finished_indicator);
         }
     }
 }

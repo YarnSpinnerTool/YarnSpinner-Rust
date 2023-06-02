@@ -44,6 +44,7 @@ pub(crate) fn get_assets_dir_path(asset_server: &AssetServer) -> Result<impl AsR
     }
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     {
+        let _asset_server = asset_server;
         Ok(Path::new("./assets"))
     }
 }

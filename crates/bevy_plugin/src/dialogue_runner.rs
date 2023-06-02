@@ -8,12 +8,13 @@ pub use self::{
     inner::{InnerDialogue, InnerDialogueMut},
     localized_line::LocalizedLine,
 };
+use crate::commands::TaskFinishedIndicator;
 use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use anyhow::bail;
 use bevy::utils::HashSet;
-use bevy::{prelude::*, tasks::Task, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;
@@ -43,7 +44,7 @@ pub struct DialogueRunner {
     pub will_continue_in_next_update: bool,
     pub(crate) last_selected_option: Option<OptionId>,
     pub(crate) commands: YarnCommandRegistrations,
-    command_tasks: Vec<Task<()>>,
+    command_tasks: Vec<Box<dyn TaskFinishedIndicator>>,
     localizations: Option<Localizations>,
     pub(crate) is_running: bool,
     pub run_selected_options_as_lines: bool,
@@ -278,7 +279,7 @@ impl DialogueRunner {
             .collect()
     }
 
-    pub(crate) fn add_command_task(&mut self, task: Task<()>) -> &mut Self {
+    pub(crate) fn add_command_task(&mut self, task: Box<dyn TaskFinishedIndicator>) -> &mut Self {
         self.command_tasks.push(task);
         self
     }
