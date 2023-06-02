@@ -23,9 +23,9 @@ fn setup(mut commands: Commands) {
                 .spawn(NodeBundle {
                     style: Style {
                         size: Size::width(Val::Px(DIALOG_WIDTH)),
-                        min_size: Size::height(Val::Px(180.0)),
+                        min_size: Size::height(Val::Px(150.0)),
                         flex_direction: FlexDirection::Column,
-                        justify_content: JustifyContent::SpaceBetween,
+                        justify_content: JustifyContent::SpaceAround,
                         align_items: AlignItems::FlexStart,
                         padding: UiRect::all(Val::Px(TEXT_BORDER)),
                         ..default()
@@ -48,6 +48,7 @@ fn setup(mut commands: Commands) {
                     parent
                         .spawn(NodeBundle {
                             style: Style {
+                                // display: Display::None,
                                 flex_direction: FlexDirection::Column,
                                 justify_content: JustifyContent::FlexEnd,
                                 align_items: AlignItems::FlexStart,
