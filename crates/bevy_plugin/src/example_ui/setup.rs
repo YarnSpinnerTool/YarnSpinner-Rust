@@ -1,14 +1,24 @@
 use crate::example_ui::assets::font_handle;
+use crate::prelude::{DialogueOption, LocalizedLine};
 use bevy::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
     app.add_system(setup.on_startup());
 }
 
+#[derive(Debug, Default, Component)]
+pub(crate) struct RootNode;
+
+#[derive(Debug, Default, Component)]
+pub(crate) struct DialogueNode;
+
+#[derive(Debug, Default, Component)]
+pub(crate) struct OptionsNode;
+
 fn setup(mut commands: Commands) {
     // root node
     commands
-        .spawn(NodeBundle {
+        .spawn((NodeBundle {
             style: Style {
                 size: Size::width(Val::Percent(100.0)),
                 justify_content: JustifyContent::Center,
@@ -17,7 +27,7 @@ fn setup(mut commands: Commands) {
                 ..default()
             },
             ..default()
-        })
+        }, RootNode))
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {
@@ -41,12 +51,13 @@ fn setup(mut commands: Commands) {
                                 sed diam nonumy eirmod tempor.Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor.".to_string(), style: text_style::standard() },
                         ])
                         .with_style(style::standard()),
+                        DialogueNode,
                         Label,
                     ));
                 }).with_children(|parent| {
                     // Options
                     parent
-                        .spawn(NodeBundle {
+                        .spawn((NodeBundle {
                             style: Style {
                                 // display: Display::None,
                                 flex_direction: FlexDirection::Column,
@@ -57,7 +68,7 @@ fn setup(mut commands: Commands) {
                             },
                             background_color: Color::WHITE.into(),
                             ..default()
-                        }).with_children(|parent| {
+                        }, OptionsNode)).with_children(|parent| {
                             parent.spawn((
                                 TextBundle::from_sections([
                                         TextSection { value: "1: ".to_string(), style: text_style::option_id() }, TextSection { value: "Do stuffs".to_string(), style: text_style::option_text() },
@@ -74,6 +85,45 @@ fn setup(mut commands: Commands) {
                         });
             });
         });
+}
+
+pub(crate) fn create_dialog_text(line: &LocalizedLine) -> TextBundle {
+    let sections = if let Some(name) = line.character_name() {
+        vec![
+            TextSection {
+                value: format!("{name}: "),
+                style: text_style::name(),
+            },
+            TextSection {
+                value: line.text_without_character_name(),
+                style: text_style::standard(),
+            },
+        ]
+    } else {
+        vec![TextSection {
+            value: line.text.clone(),
+            style: text_style::standard(),
+        }]
+    };
+    TextBundle::from_sections(sections).with_style(style::standard())
+}
+
+pub(crate) fn create_options(
+    options: impl IntoIterator<Item = &DialogueOption>,
+) -> impl Iterator<Item = TextBundle> {
+    options.into_iter().enumerate().map(|(i, option)| {
+        let sections = [
+            TextSection {
+                value: format!("{}: ", i + 1),
+                style: text_style::option_id(),
+            },
+            TextSection {
+                value: option.text.clone(),
+                style: text_style::option_text(),
+            },
+        ];
+        TextBundle::from_sections(sections).with_style(style::options())
+    })
 }
 
 const DIALOG_WIDTH: f32 = 800.0 * 0.7;

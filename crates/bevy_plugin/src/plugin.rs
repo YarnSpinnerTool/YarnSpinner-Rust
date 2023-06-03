@@ -10,6 +10,9 @@ pub struct YarnSlingerPlugin {
     project: LoadYarnProjectEvent,
 }
 
+#[derive(Debug, Default, SystemSet, Eq, PartialEq, Hash)]
+pub struct YarnSlingerSystemSet;
+
 impl YarnSlingerPlugin {
     #[must_use]
     pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {

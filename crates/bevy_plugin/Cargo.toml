@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 exclude = ["assets", "wasm"]
 
 [features]
-default = ["example_ui"]
+default = []
 audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 example_ui = ["bevy/bevy_ui", "bevy/bevy_text"]
 

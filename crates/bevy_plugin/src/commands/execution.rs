@@ -4,7 +4,11 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 pub(crate) fn command_execution_plugin(app: &mut App) {
-    app.add_system(execute_commands.after(DialogueExecutionSystemSet));
+    app.add_system(
+        execute_commands
+            .after(DialogueExecutionSystemSet)
+            .in_set(YarnSlingerSystemSet),
+    );
 }
 
 fn execute_commands(world: &mut World) {

@@ -12,11 +12,13 @@ impl ExampleYarnSlingerUiPlugin {
 }
 
 mod assets;
-mod ui_setup;
+mod setup;
+mod updating;
 
 impl Plugin for ExampleYarnSlingerUiPlugin {
     fn build(&self, app: &mut App) {
         app.fn_plugin(assets::ui_assets_plugin)
-            .fn_plugin(ui_setup::ui_setup_plugin);
+            .fn_plugin(setup::ui_setup_plugin)
+            .fn_plugin(updating::ui_updating_plugin);
     }
 }

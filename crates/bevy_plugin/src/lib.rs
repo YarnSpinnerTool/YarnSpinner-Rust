@@ -36,7 +36,7 @@ pub mod prelude {
         },
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{FileGenerationMode, Localization, Localizations},
-        plugin::{YarnFileSource, YarnSlingerPlugin},
+        plugin::{YarnFileSource, YarnSlingerPlugin, YarnSlingerSystemSet},
         project::YarnProject,
         yarn_file_asset::YarnFile,
     };

@@ -16,7 +16,8 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
             handle_yarn_file_events_outside_development.run_if(not(in_development)),
         )
             .chain()
-            .in_set(LineIdUpdateSystemSet),
+            .in_set(LineIdUpdateSystemSet)
+            .in_set(YarnSlingerSystemSet),
     );
 }
 

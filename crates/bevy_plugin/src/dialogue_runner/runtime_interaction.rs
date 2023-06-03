@@ -10,7 +10,8 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
         (continue_runtime.pipe(panic_on_err), accept_line_hints)
             .chain()
             .after(LineProviderSystemSet)
-            .in_set(DialogueExecutionSystemSet),
+            .in_set(DialogueExecutionSystemSet)
+            .in_set(YarnSlingerSystemSet),
     );
 }
 

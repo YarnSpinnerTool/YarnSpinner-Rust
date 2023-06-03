@@ -26,7 +26,8 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
             )
                 .chain()
                 .after(LineIdUpdateSystemSet)
-                .in_set(CompilationSystemSet),
+                .in_set(CompilationSystemSet)
+                .in_set(YarnSlingerSystemSet),
         );
 }
 
