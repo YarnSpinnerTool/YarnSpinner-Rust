@@ -31,12 +31,13 @@ pub struct DialogueOption {
 }
 
 impl DialogueOption {
-    pub(crate) fn from_yarn_dialogue_option(
+    pub(crate) fn from_yarn_dialogue_option<'a>(
         yarn_dialogue_option: yarn_slinger::prelude::DialogueOption,
         assets: LineAssets,
+        metadata: Vec<String>,
     ) -> Self {
         Self {
-            line: LocalizedLine::from_yarn_line(yarn_dialogue_option.line, assets),
+            line: LocalizedLine::from_yarn_line(yarn_dialogue_option.line, assets, metadata),
             id: yarn_dialogue_option.id,
             destination_node: yarn_dialogue_option.destination_node,
             is_available: yarn_dialogue_option.is_available,

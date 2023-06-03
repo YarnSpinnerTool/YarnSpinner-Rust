@@ -42,7 +42,7 @@ fn loads_line_from_base_language_without_explicit_language() {
     setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -66,7 +66,7 @@ fn loads_line_from_base_language_with_explicit_language() {
     setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -93,7 +93,7 @@ fn panics_when_loading_missing_language() {
     setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -112,7 +112,7 @@ fn loads_line_from_fallback_on_missing_line() {
     setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -138,7 +138,7 @@ fn loads_line_from_translated_language() {
     setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },

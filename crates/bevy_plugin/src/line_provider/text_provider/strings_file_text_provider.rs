@@ -61,7 +61,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         let Some(localizations) = self.localizations.as_ref() else {
             panic!("Set language to {language}, but no localizations have been registered as supported.");
         };
-        if language == localizations.base_language.language {
+        if language == localizations.base_localization.language {
             self.set_language_invalidating_translation(None);
             return;
         }

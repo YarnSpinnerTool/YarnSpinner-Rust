@@ -66,7 +66,7 @@ impl Line {
     /// #        length: 7,
     /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
     /// #        source_position: 0,
-    /// #    }]
+    /// #    }],
     /// # };
     /// assert_eq!("Alice: Hello! How are you today?", line.text);
     /// assert_eq!(Some("Alice"), line.character_name());
@@ -81,7 +81,7 @@ impl Line {
     /// # let line = Line {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
-    /// #    attributes: vec![]
+    /// #    attributes: vec![],
     /// # };
     /// assert_eq!("Great, thanks", line.text);
     /// assert!(line.character_name().is_none());
@@ -118,7 +118,7 @@ impl Line {
     /// #        length: 7,
     /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
     /// #        source_position: 0,
-    /// #    }]
+    /// #    }],
     /// # };
     /// assert_eq!("Alice: Hello! How are you today?", line.text);
     /// assert_eq!("Hello! How are you today?", &line.text_without_character_name());
@@ -133,7 +133,7 @@ impl Line {
     /// # let line = Line {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
-    /// #    attributes: vec![]
+    /// #    attributes: vec![],
     /// # };
     /// assert_eq!("Great, thanks", line.text);
     /// assert_eq!("Great, thanks", &line.text_without_character_name());

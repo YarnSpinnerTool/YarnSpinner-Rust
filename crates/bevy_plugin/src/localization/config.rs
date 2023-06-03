@@ -12,7 +12,7 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
-    pub base_language: Localization,
+    pub base_localization: Localization,
     pub translations: Vec<Localization>,
     pub file_generation_mode: FileGenerationMode,
 }
@@ -35,13 +35,13 @@ impl Localizations {
         language: impl AsRef<str>,
     ) -> Option<&Localization> {
         let language = language.as_ref();
-        iter::once(&self.base_language)
+        iter::once(&self.base_localization)
             .chain(self.translations.iter())
             .find(|localization| localization.language.as_ref() == language)
     }
 
     pub fn supported_languages(&self) -> impl Iterator<Item = &Language> {
-        iter::once(&self.base_language.language).chain(
+        iter::once(&self.base_localization.language).chain(
             self.translations
                 .iter()
                 .map(|localization| &localization.language),

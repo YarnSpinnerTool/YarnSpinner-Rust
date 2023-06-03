@@ -28,7 +28,7 @@ fn main() {
     )
     .add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
+            base_localization: "en-US".into(),
             translations: vec!["de-CH".into()],
             #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
             file_generation_mode: FileGenerationMode::Development,

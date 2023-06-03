@@ -38,7 +38,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
 
     setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
+            base_localization: "en-US".into(),
             translations: vec!["de-CH".into()],
             file_generation_mode: FileGenerationMode::Development,
         }),
@@ -84,7 +84,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
 
     setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines.yarn"]).with_localizations(Localizations {
-            base_language: "en-US".into(),
+            base_localization: "en-US".into(),
             translations: vec!["de-CH".into()],
             file_generation_mode: FileGenerationMode::Development,
         }),
@@ -140,7 +140,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Development,
             },
@@ -194,7 +194,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     setup_default_plugins_for_path(&mut app, dir.path()).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Development,
             },
@@ -266,7 +266,7 @@ fn does_not_panic_on_missing_language_when_not_selected() {
     setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["fr-FR".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },

@@ -13,6 +13,7 @@ pub struct LocalizedLine {
     pub text: String,
     /// The list of [`MarkupAttribute`] in this parse result.
     pub attributes: Vec<MarkupAttribute>,
+    pub metadata: Vec<String>,
     pub assets: LineAssets,
 }
 impl LocalizedLine {
@@ -39,6 +40,7 @@ impl LocalizedLine {
     /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
     /// #        source_position: 0,
     /// #    }],
+    /// #    metadata: vec![],
     /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Alice: Hello! How are you today?", line.text);
@@ -53,6 +55,7 @@ impl LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
     /// #    attributes: vec![],
+    /// #    metadata: vec![],
     /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Great, thanks", line.text);
@@ -90,6 +93,7 @@ impl LocalizedLine {
     /// #        properties: HashMap::from([("name".to_owned(), "Alice".into())]),
     /// #        source_position: 0,
     /// #    }],
+    /// #    metadata: vec![],
     /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Alice: Hello! How are you today?", line.text);
@@ -104,6 +108,7 @@ impl LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
     /// #    attributes: vec![],
+    /// #    metadata: vec![],
     /// #    assets: Default::default(),
     /// # };
     /// assert_eq!("Great, thanks", line.text);
@@ -153,7 +158,7 @@ impl LocalizedLine {
     pub fn delete_range(&self, attribute_to_delete: &MarkupAttribute) -> Self {
         let yarn_line: YarnLine = self.clone().into();
         let deleted_range = yarn_line.delete_range(attribute_to_delete);
-        Self::from_yarn_line(deleted_range, self.assets.clone())
+        Self::from_yarn_line(deleted_range, self.assets.clone(), self.metadata.clone())
     }
 }
 
@@ -168,11 +173,16 @@ impl From<LocalizedLine> for YarnLine {
 }
 
 impl LocalizedLine {
-    pub(crate) fn from_yarn_line(line: YarnLine, assets: LineAssets) -> Self {
+    pub(crate) fn from_yarn_line<'a>(
+        line: YarnLine,
+        assets: LineAssets,
+        metadata: Vec<String>,
+    ) -> Self {
         Self {
             id: line.id,
             text: line.text,
             attributes: line.attributes,
+            metadata,
             assets,
         }
     }

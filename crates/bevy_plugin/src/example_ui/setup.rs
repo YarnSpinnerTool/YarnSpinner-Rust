@@ -7,7 +7,7 @@ pub(crate) fn ui_setup_plugin(app: &mut App) {
 }
 
 #[derive(Debug, Default, Component)]
-pub(crate) struct RootNode;
+pub(crate) struct UiRootNode;
 
 #[derive(Debug, Default, Component)]
 pub(crate) struct DialogueNode;
@@ -27,7 +27,7 @@ fn setup(mut commands: Commands) {
                 ..default()
             },
             ..default()
-        }, RootNode))
+        }, UiRootNode))
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {

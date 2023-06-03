@@ -272,10 +272,10 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub(crate) fn get_assets(&self, line_id: &UnderlyingYarnLine) -> LineAssets {
+    pub(crate) fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
         self.asset_providers
             .values()
-            .map(|p| p.get_assets(line_id))
+            .map(|p| p.get_assets(line))
             .collect()
     }
 

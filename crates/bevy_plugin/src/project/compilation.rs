@@ -177,11 +177,17 @@ fn compile_loaded_yarn_files(
         }
     }
 
+    let metadata = compilation
+        .string_table
+        .iter()
+        .map(|(line_id, string_info)| (line_id.clone(), string_info.metadata.clone()))
+        .collect();
     commands.insert_resource(YarnProject {
         yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
         compilation,
         localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         asset_server: asset_server.clone(),
+        metadata,
     });
 
     let file_plural = if file_count == 1 { "file" } else { "files" };

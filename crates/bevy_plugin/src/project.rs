@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::{HashMap, HashSet};
 pub(crate) use compilation::{
     RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
 };
@@ -22,6 +22,7 @@ pub struct YarnProject {
     pub(crate) compilation: Compilation,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: AssetServer,
+    pub(crate) metadata: HashMap<LineId, Vec<String>>,
 }
 
 impl Debug for YarnProject {
@@ -31,6 +32,7 @@ impl Debug for YarnProject {
             .field("compilation", &self.compilation)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
+            .field("metadata", &self.metadata)
             .finish()
     }
 }
@@ -54,6 +56,28 @@ impl YarnProject {
 
     pub fn build_dialogue_runner(&self) -> DialogueRunnerBuilder {
         DialogueRunnerBuilder::from_yarn_project(self)
+    }
+
+    pub fn line_metadata(&self, line_id: &LineId) -> Option<Vec<String>> {
+        self.metadata.get(&line_id).map(|v| v.clone())
+    }
+
+    pub fn headers_for_node(&self, node_name: &str) -> Option<HashMap<&str, Vec<&str>>> {
+        self.compilation
+            .program
+            .as_ref()
+            .unwrap()
+            .nodes
+            .get(node_name)?
+            .headers
+            .iter()
+            .fold(HashMap::new(), |mut map, header| {
+                map.entry(header.key.as_str())
+                    .or_insert_with(Vec::new)
+                    .push(header.value.as_str());
+                map
+            })
+            .into()
     }
 }
 

@@ -258,7 +258,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
         .add_plugin(
             YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
                 Localizations {
-                    base_language: "en-US".into(),
+                    base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],
                     file_generation_mode: FileGenerationMode::Production,
                 },

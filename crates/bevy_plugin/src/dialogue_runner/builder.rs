@@ -137,7 +137,7 @@ impl DialogueRunnerBuilder {
         let base_language = self
             .localizations
             .as_ref()
-            .map(|l| &l.base_language.language);
+            .map(|l| &l.base_localization.language);
 
         let text_language = self
             .text_language

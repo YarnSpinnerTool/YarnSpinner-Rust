@@ -10,7 +10,7 @@ pub struct YarnSlingerPlugin {
     project: LoadYarnProjectEvent,
 }
 
-#[derive(Debug, Default, SystemSet, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
 pub struct YarnSlingerSystemSet;
 
 impl YarnSlingerPlugin {
