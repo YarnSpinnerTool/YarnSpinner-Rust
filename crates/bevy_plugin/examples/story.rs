@@ -30,17 +30,24 @@ fn main() {
         YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]).with_localizations(Localizations {
             base_localization: "en-US".into(),
             translations: vec!["de-CH".into()],
-            #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-            file_generation_mode: FileGenerationMode::Development,
-            #[cfg(any(target_arch = "wasm32", target_os = "android"))]
-            file_generation_mode: FileGenerationMode::Production,
+            file_generation_mode: FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS,
         }),
     )
     .add_plugin(ExampleYarnSlingerUiPlugin::new())
-    .add_system(setup.on_startup())
+    .add_systems((
+        setup.on_startup(),
+        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+    ))
     .run();
 }
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
+}
+
+fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
+    let mut dialogue_runner = project.default_dialogue_runner().unwrap();
+    // Immediately start showing the dialogue
+    dialogue_runner.start();
+    commands.spawn(dialogue_runner);
 }

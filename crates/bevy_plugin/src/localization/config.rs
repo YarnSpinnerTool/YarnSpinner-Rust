@@ -115,8 +115,8 @@ pub enum FileGenerationMode {
     Production,
 }
 
-impl Default for FileGenerationMode {
-    fn default() -> Self {
+impl FileGenerationMode {
+    pub const DEVELOPMENT_ON_SUPPORTED_PLATFORMS: Self = {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
         {
             Self::Development
@@ -125,5 +125,11 @@ impl Default for FileGenerationMode {
         {
             Self::Production
         }
+    };
+}
+
+impl Default for FileGenerationMode {
+    fn default() -> Self {
+        Self::DEVELOPMENT_ON_SUPPORTED_PLATFORMS
     }
 }

@@ -1,5 +1,5 @@
 use crate::example_ui::assets::font_handle;
-use crate::prelude::{DialogueOption, LocalizedLine};
+use crate::prelude::DialogueOption;
 use bevy::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
@@ -28,6 +28,7 @@ fn setup(mut commands: Commands) {
             },
             ..default()
         }, UiRootNode))
+        .insert(Visibility::Hidden)
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {
@@ -46,11 +47,7 @@ fn setup(mut commands: Commands) {
                 .with_children(|parent| {
                     // Dialog itself
                     parent.spawn((
-                        TextBundle::from_sections([
-                                TextSection { value: "Sara: ".to_string(), style: text_style::name() }, TextSection { value: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \
-                                sed diam nonumy eirmod tempor.Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor.".to_string(), style: text_style::standard() },
-                        ])
-                        .with_style(style::standard()),
+                        TextBundle::from_section(String::new(), text_style::standard()).with_style(style::standard()),
                         DialogueNode,
                         Label,
                     ));
@@ -87,30 +84,39 @@ fn setup(mut commands: Commands) {
         });
 }
 
-pub(crate) fn create_dialog_text(line: &LocalizedLine) -> TextBundle {
-    let sections = if let Some(name) = line.character_name() {
-        vec![
-            TextSection {
-                value: format!("{name}: "),
-                style: text_style::name(),
-            },
-            TextSection {
-                value: line.text_without_character_name(),
-                style: text_style::standard(),
-            },
-        ]
-    } else {
-        vec![TextSection {
-            value: line.text.clone(),
+pub(crate) fn create_dialog_text<'a>(
+    name: impl Into<Option<&'a str>>,
+    text: impl Into<String>,
+    invisible: impl Into<String>,
+) -> Text {
+    let mut sections = Vec::new();
+    if let Some(name) = name.into() {
+        sections.push(TextSection {
+            value: format!("{name}: "),
+            style: text_style::name(),
+        });
+    }
+    sections.extend([
+        TextSection {
+            value: text.into(),
             style: text_style::standard(),
-        }]
-    };
-    TextBundle::from_sections(sections).with_style(style::standard())
+        },
+        TextSection {
+            value: invisible.into(),
+            style: TextStyle {
+                color: Color::NONE,
+                ..text_style::standard()
+            },
+        },
+    ]);
+    Text::from_sections(sections)
 }
 
-pub(crate) fn create_options(
-    options: impl IntoIterator<Item = &DialogueOption>,
-) -> impl Iterator<Item = TextBundle> {
+pub(crate) fn create_options<'a, O>(options: O) -> impl Iterator<Item = TextBundle> + 'a
+where
+    O: IntoIterator<Item = &'a DialogueOption>,
+    <O as IntoIterator>::IntoIter: 'a,
+{
     options.into_iter().enumerate().map(|(i, option)| {
         let sections = [
             TextSection {
@@ -118,7 +124,7 @@ pub(crate) fn create_options(
                 style: text_style::option_id(),
             },
             TextSection {
-                value: option.text.clone(),
+                value: option.line.text.clone(),
                 style: text_style::option_text(),
             },
         ];

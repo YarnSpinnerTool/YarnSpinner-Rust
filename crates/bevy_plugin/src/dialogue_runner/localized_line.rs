@@ -160,6 +160,10 @@ impl LocalizedLine {
         let deleted_range = yarn_line.delete_range(attribute_to_delete);
         Self::from_yarn_line(deleted_range, self.assets.clone(), self.metadata.clone())
     }
+
+    pub fn is_last_line_before_options(&self) -> bool {
+        self.metadata.iter().any(|m| m == "lastline")
+    }
 }
 
 impl From<LocalizedLine> for YarnLine {

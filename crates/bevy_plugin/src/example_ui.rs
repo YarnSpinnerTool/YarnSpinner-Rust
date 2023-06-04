@@ -12,6 +12,7 @@ impl ExampleYarnSlingerUiPlugin {
 }
 
 mod assets;
+mod option_selection;
 mod setup;
 mod typewriter;
 mod updating;
@@ -21,6 +22,7 @@ impl Plugin for ExampleYarnSlingerUiPlugin {
         app.fn_plugin(assets::ui_assets_plugin)
             .fn_plugin(setup::ui_setup_plugin)
             .fn_plugin(updating::ui_updating_plugin)
-            .fn_plugin(typewriter::typewriter_plugin);
+            .fn_plugin(typewriter::typewriter_plugin)
+            .fn_plugin(option_selection::option_selection_plugin);
     }
 }

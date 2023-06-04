@@ -115,7 +115,7 @@ impl VirtualMachine {
 
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
         let node_name = node_name.into();
-        info!("Running node \"{node_name}\"");
+        debug!("Loading node \"{node_name}\"");
         let Some(current_node) = self.get_node_from_name(&node_name) else {
             return Err(DialogueError::InvalidNode{
                 node_name
@@ -217,7 +217,7 @@ impl VirtualMachine {
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
             self.set_execution_state(ExecutionState::Stopped);
             self.batched_events.push(DialogueEvent::DialogueComplete);
-            info!("Run complete.");
+            debug!("Run complete.");
         }
         Ok(std::mem::take(&mut self.batched_events))
     }
