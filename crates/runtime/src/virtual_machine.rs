@@ -231,7 +231,7 @@ impl VirtualMachine {
         if self.current_node.is_none() || self.current_node_name.is_none() {
             Err(DialogueError::NoNodeSelectedOnContinue)
         } else if self.execution_state == ExecutionState::WaitingOnOptionSelection {
-            Err(DialogueError::UnexpectedOptionSelectionError)
+            Err(DialogueError::ContinueOnOptionSelectionError)
         } else {
             // ## Implementation note:
             // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.

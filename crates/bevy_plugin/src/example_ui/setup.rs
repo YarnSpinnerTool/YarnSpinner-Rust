@@ -1,5 +1,6 @@
 use crate::example_ui::assets::font_handle;
-use crate::prelude::DialogueOption;
+use crate::prelude::{DialogueOption, OptionId};
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
@@ -15,19 +16,25 @@ pub(crate) struct DialogueNode;
 #[derive(Debug, Default, Component)]
 pub(crate) struct OptionsNode;
 
+#[derive(Debug, Component)]
+pub(crate) struct OptionButton(pub OptionId);
+
 fn setup(mut commands: Commands) {
     // root node
     commands
-        .spawn((NodeBundle {
-            style: Style {
-                size: Size::width(Val::Percent(100.0)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::FlexEnd,
-                margin: UiRect::bottom(Val::Px(30.0)),
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    size: Size::width(Val::Percent(100.0)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexEnd,
+                    margin: UiRect::bottom(Val::Px(30.0)),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        }, UiRootNode))
+            UiRootNode,
+        ))
         .insert(Visibility::Hidden)
         .with_children(|parent| {
             parent
@@ -47,40 +54,32 @@ fn setup(mut commands: Commands) {
                 .with_children(|parent| {
                     // Dialog itself
                     parent.spawn((
-                        TextBundle::from_section(String::new(), text_style::standard()).with_style(style::standard()),
+                        TextBundle::from_section(String::new(), text_style::standard())
+                            .with_style(style::standard()),
                         DialogueNode,
                         Label,
                     ));
-                }).with_children(|parent| {
+                })
+                .with_children(|parent| {
                     // Options
                     parent
-                        .spawn((NodeBundle {
-                            style: Style {
-                                // display: Display::None,
-                                flex_direction: FlexDirection::Column,
-                                justify_content: JustifyContent::FlexEnd,
-                                align_items: AlignItems::FlexStart,
-                                margin: UiRect::top(Val::Px(10.0)),
+                        .spawn((
+                            NodeBundle {
+                                style: Style {
+                                    display: Display::None,
+                                    flex_direction: FlexDirection::Column,
+                                    justify_content: JustifyContent::FlexEnd,
+                                    align_items: AlignItems::FlexStart,
+                                    margin: UiRect::top(Val::Px(10.0)),
+                                    ..default()
+                                },
+                                background_color: Color::WHITE.into(),
                                 ..default()
                             },
-                            background_color: Color::WHITE.into(),
-                            ..default()
-                        }, OptionsNode)).with_children(|parent| {
-                            parent.spawn((
-                                TextBundle::from_sections([
-                                        TextSection { value: "1: ".to_string(), style: text_style::option_id() }, TextSection { value: "Do stuffs".to_string(), style: text_style::option_text() },
-                                ]).with_style(style::options()),
-                                Label,
-                            ));
-                            parent.spawn((
-                                TextBundle::from_sections([
-                                        TextSection { value: "2: ".to_string(), style: text_style::option_id() }, TextSection { value: "Do MORE Stuffs! Lorem ipsum dolor sit amet, consetetur sadipscing elitr!!".to_string(),
-                                        style: text_style::option_text() },
-                                ]).with_style(style::options()),
-                                Label,
-                            ));
-                        });
-            });
+                            OptionsNode,
+                        ))
+                        .insert(Visibility::Hidden);
+                });
         });
 }
 
@@ -112,24 +111,43 @@ pub(crate) fn create_dialog_text<'a>(
     Text::from_sections(sections)
 }
 
-pub(crate) fn create_options<'a, O>(options: O) -> impl Iterator<Item = TextBundle> + 'a
+pub(crate) fn spawn_options<'a, T>(entity_commands: &mut EntityCommands, options: T)
 where
-    O: IntoIterator<Item = &'a DialogueOption>,
-    <O as IntoIterator>::IntoIter: 'a,
+    T: IntoIterator<Item = &'a DialogueOption>,
+    <T as IntoIterator>::IntoIter: 'a,
 {
-    options.into_iter().enumerate().map(|(i, option)| {
-        let sections = [
-            TextSection {
-                value: format!("{}: ", i + 1),
-                style: text_style::option_id(),
-            },
-            TextSection {
-                value: option.line.text.clone(),
-                style: text_style::option_text(),
-            },
-        ];
-        TextBundle::from_sections(sections).with_style(style::options())
-    })
+    entity_commands.with_children(|parent| {
+        for (i, option) in options.into_iter().enumerate() {
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: Style {
+                            justify_content: JustifyContent::FlexStart,
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    OptionButton(option.id),
+                ))
+                .with_children(|parent| {
+                    let sections = [
+                        TextSection {
+                            value: format!("{}: ", i + 1),
+                            style: text_style::option_id(),
+                        },
+                        TextSection {
+                            value: option.line.text.clone(),
+                            style: text_style::option_text(),
+                        },
+                    ];
+
+                    parent.spawn((
+                        TextBundle::from_sections(sections).with_style(style::options()),
+                        Label,
+                    ));
+                });
+        }
+    });
 }
 
 const DIALOG_WIDTH: f32 = 800.0 * 0.7;

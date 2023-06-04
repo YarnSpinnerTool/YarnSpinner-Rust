@@ -1,3 +1,4 @@
+use crate::example_ui::option_selection::OptionSelection;
 use crate::example_ui::setup::{create_dialog_text, DialogueNode};
 use crate::prelude::LocalizedLine;
 use bevy::prelude::*;
@@ -81,8 +82,16 @@ impl Typewriter {
     }
 }
 
-fn write_text(mut text: Query<&mut Text, With<DialogueNode>>, mut typewriter: ResMut<Typewriter>) {
+fn write_text(
+    mut text: Query<&mut Text, With<DialogueNode>>,
+    mut typewriter: ResMut<Typewriter>,
+    option_selection: Option<Res<OptionSelection>>,
+) {
     let mut text = text.single_mut();
+    if typewriter.last_before_options && option_selection.is_none() {
+        *text = default();
+        return;
+    }
     typewriter.update_current_text();
 
     let name = typewriter.character_name.as_deref();

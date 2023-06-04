@@ -1,5 +1,7 @@
 title: Start
 position: -157,-193
 ---
-Bartender: Yeah, they're sitting right over there. #line:15002546
+Bartender: Yeah, they're sitting right over there. #line:1
+Ferris: Oh, hi there! #line:2
+-> Good to see you! #line:3
 ===
