@@ -26,7 +26,7 @@ pub(crate) struct UpdateAllStringsFilesForStringTableEvent(
 );
 
 fn update_all_strings_files_for_string_table(
-    mut events: EventReader<UpdateAllStringsFilesForStringTableEvent>,
+    mut events: ResMut<Events<UpdateAllStringsFilesForStringTableEvent>>,
     mut strings_files: ResMut<Assets<StringsFile>>,
     asset_server: Res<AssetServer>,
     project: Res<YarnProject>,
@@ -70,7 +70,7 @@ fn update_all_strings_files_for_string_table(
     }
 
     let mut dirty_paths = HashSet::new();
-    for string_table in events.iter().map(|e| &e.0) {
+    for string_table in events.drain().map(|e| e.0) {
         let file_names: HashSet<_> = string_table
             .values()
             .map(|s| s.file_name.as_str())
@@ -89,12 +89,12 @@ fn update_all_strings_files_for_string_table(
 
             let new_strings_file = match StringsFile::from_string_table(
                 language.clone(),
-                string_table,
+                string_table.clone(),
             ) {
                 Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
                     if localizations.file_generation_mode == FileGenerationMode::Development {
-                        info!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
+                        debug!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
                             strings_file_path.display())
                     } else {
                         error!(

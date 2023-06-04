@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::project::{assert_valid_cfg, LoadYarnProjectEvent};
+use crate::project::{assert_valid_cfg, LoadYarnProjectEvent, WatchingForChanges};
 use bevy::prelude::*;
 pub use yarn_file_source::YarnFileSource;
 
@@ -59,8 +59,7 @@ impl YarnSlingerPlugin {
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_yarn_types()
-            .register_sub_plugins()
+        app.add_plugin(Self::deferred())
             .world
             .send_event(self.project.clone());
     }
@@ -79,13 +78,17 @@ impl DeferredYarnSlingerPlugin {
 
 impl Plugin for DeferredYarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_yarn_types().register_sub_plugins();
+        let watching = app.is_watching_for_changes();
+        app.register_yarn_types()
+            .register_sub_plugins()
+            .insert_resource(WatchingForChanges(watching));
     }
 }
 
 trait YarnApp {
     fn register_yarn_types(&mut self) -> &mut Self;
     fn register_sub_plugins(&mut self) -> &mut Self;
+    fn is_watching_for_changes(&self) -> bool;
 }
 impl YarnApp for App {
     fn register_yarn_types(&mut self) -> &mut Self {
@@ -131,5 +134,12 @@ impl YarnApp for App {
             .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
             .fn_plugin(crate::commands::commands_plugin)
+    }
+
+    fn is_watching_for_changes(&self) -> bool {
+        let asset_plugins: Vec<&AssetPlugin> = self.get_added_plugins();
+        let asset_plugin: &AssetPlugin = asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the AssetPlugin. \
+        Please add the YarnSlingerPlugin after the AssetPlugin, which is commonly located in the DefaultPlugins");
+        asset_plugin.watch_for_changes
     }
 }

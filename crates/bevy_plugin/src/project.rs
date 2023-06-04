@@ -23,6 +23,7 @@ pub struct YarnProject {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: AssetServer,
     pub(crate) metadata: HashMap<LineId, Vec<String>>,
+    pub(crate) watching_for_changes: bool,
 }
 
 impl Debug for YarnProject {
@@ -33,6 +34,7 @@ impl Debug for YarnProject {
             .field("localizations", &self.localizations)
             .field("asset_server", &())
             .field("metadata", &self.metadata)
+            .field("watching_for_changes", &self.watching_for_changes)
             .finish()
     }
 }
@@ -144,3 +146,6 @@ where
         Self::with_yarn_files(yarn_files.into_iter().collect())
     }
 }
+
+#[derive(Debug, Clone, Resource, Default)]
+pub(crate) struct WatchingForChanges(pub(crate) bool);

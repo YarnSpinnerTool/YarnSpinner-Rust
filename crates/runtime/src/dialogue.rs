@@ -413,6 +413,10 @@ impl Dialogue {
     pub fn is_active(&self) -> bool {
         self.vm.is_active()
     }
+
+    pub fn is_waiting_for_option_selection(&self) -> bool {
+        self.vm.is_waiting_for_option_selection()
+    }
 }
 
 #[cfg(test)]

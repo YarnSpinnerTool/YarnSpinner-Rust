@@ -274,6 +274,10 @@ impl VirtualMachine {
         self.execution_state != ExecutionState::Stopped
     }
 
+    pub(crate) fn is_waiting_for_option_selection(&self) -> bool {
+        self.execution_state == ExecutionState::WaitingOnOptionSelection
+    }
+
     pub(crate) fn current_node(&self) -> Option<String> {
         self.current_node_name.clone()
     }

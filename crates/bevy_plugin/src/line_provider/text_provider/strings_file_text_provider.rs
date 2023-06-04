@@ -23,6 +23,10 @@ impl Debug for StringsFileTextProvider {
         f.debug_struct("StringsTableTextProvider")
             .field("asset_server", &())
             .field("localizations", &self.localizations)
+            .field("language", &self.language)
+            .field("base_string_table", &self.base_string_table)
+            .field("strings_file_handle", &self.strings_file_handle)
+            .field("translation_string_table", &self.translation_string_table)
             .finish()
     }
 }

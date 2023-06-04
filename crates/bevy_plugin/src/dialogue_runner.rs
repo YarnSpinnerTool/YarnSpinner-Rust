@@ -77,8 +77,14 @@ impl DialogueRunner {
         Ok(self)
     }
 
+    #[must_use]
     pub fn is_running(&self) -> bool {
         self.is_running
+    }
+
+    #[must_use]
+    pub fn is_waiting_for_option_selection(&self) -> bool {
+        self.dialogue.is_waiting_for_option_selection()
     }
 
     pub fn stop(&mut self) -> &mut Self {
