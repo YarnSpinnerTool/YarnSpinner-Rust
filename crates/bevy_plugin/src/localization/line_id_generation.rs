@@ -26,30 +26,18 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
 
 fn handle_yarn_file_events_outside_development(
     mut events: EventReader<AssetEvent<YarnFile>>,
-    assets: Res<Assets<YarnFile>>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
-    project: Option<Res<YarnProject>>,
-    mut dialogue_runners: Query<&mut DialogueRunner>,
+    project: Res<YarnProject>,
+    mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
 ) {
     for event in events.iter() {
         let AssetEvent::Modified { handle } = event else {
                 continue;
             };
-        if !yarn_files_being_loaded.0.contains(handle)
-            && !project
-                .as_ref()
-                .map(|p| p.yarn_files.contains(handle))
-                .unwrap_or_default()
-        {
+        if !(yarn_files_being_loaded.0.contains(handle) || project.yarn_files.contains(handle)) {
             continue;
         }
-        let yarn_file = assets.get(handle).unwrap().clone();
-
-        for mut dialogue_runner in dialogue_runners.iter_mut() {
-            dialogue_runner
-                .text_provider
-                .extend_base_string_table(yarn_file.string_table.clone());
-        }
+        recompile_events.send(RecompileLoadedYarnFilesEvent);
     }
 }
 

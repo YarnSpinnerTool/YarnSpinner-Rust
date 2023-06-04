@@ -135,7 +135,7 @@ fn recompile_loaded_yarn_files(
         }
     }
     events.clear();
-    info!("Successfully recompiled yarn project");
+    info!("Successfully recompiled yarn project because of changes in Yarn files.");
     Ok(())
 }
 
