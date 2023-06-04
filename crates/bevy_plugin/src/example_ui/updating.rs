@@ -61,12 +61,17 @@ fn present_options(mut commands: Commands, mut events: EventReader<PresentOption
 
 fn continue_dialogue(
     keys: Res<Input<KeyCode>>,
+    mouse_buttons: Res<Input<MouseButton>>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
-    type_written_text: Res<Typewriter>,
+    mut typewriter: ResMut<Typewriter>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
 ) {
-    if keys.just_pressed(KeyCode::Space) && type_written_text.is_finished() {
-        if let Some(name) = type_written_text.character_name.as_ref() {
+    if keys.just_pressed(KeyCode::Space) || mouse_buttons.just_pressed(MouseButton::Left) {
+        if !typewriter.is_finished() {
+            typewriter.fast_forward();
+            return;
+        }
+        if let Some(name) = typewriter.character_name.as_ref() {
             speaker_change_events.send(SpeakerChangeEvent {
                 character_name: name.clone(),
                 speaking: false,
