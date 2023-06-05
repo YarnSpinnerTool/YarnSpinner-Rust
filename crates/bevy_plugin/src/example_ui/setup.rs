@@ -151,7 +151,7 @@ where
 }
 
 const DIALOG_WIDTH: f32 = 800.0 * 0.7;
-const TEXT_BORDER: f32 = 10.0;
+const TEXT_BORDER: f32 = 30.0;
 
 mod style {
     use super::*;

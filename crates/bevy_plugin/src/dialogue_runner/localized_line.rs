@@ -177,7 +177,7 @@ impl From<LocalizedLine> for YarnLine {
 }
 
 impl LocalizedLine {
-    pub(crate) fn from_yarn_line<'a>(
+    pub(crate) fn from_yarn_line(
         line: YarnLine,
         assets: LineAssets,
         metadata: Vec<String>,

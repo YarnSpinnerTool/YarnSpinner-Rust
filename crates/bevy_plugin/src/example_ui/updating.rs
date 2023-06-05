@@ -67,11 +67,9 @@ fn continue_dialogue(
 ) {
     let explicit_continue =
         keys.just_pressed(KeyCode::Space) || mouse_buttons.just_pressed(MouseButton::Left);
-    if explicit_continue {
-        if !typewriter.is_finished() {
-            typewriter.fast_forward();
-            return;
-        }
+    if explicit_continue && !typewriter.is_finished() {
+        typewriter.fast_forward();
+        return;
     }
     if (explicit_continue || typewriter.last_before_options) && option_selection.is_none() {
         for mut dialogue_runner in dialogue_runners.iter_mut() {

@@ -60,8 +60,8 @@ impl YarnProject {
         DialogueRunnerBuilder::from_yarn_project(self)
     }
 
-    pub fn line_metadata(&self, line_id: &LineId) -> Option<Vec<String>> {
-        self.metadata.get(&line_id).map(|v| v.clone())
+    pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
+        self.metadata.get(line_id).map(|v| v.as_slice())
     }
 
     pub fn headers_for_node(&self, node_name: &str) -> Option<HashMap<&str, Vec<&str>>> {

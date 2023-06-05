@@ -134,7 +134,7 @@ impl StringsFile {
         Ok(changed)
     }
 
-    pub(crate) fn from_string_table<'a>(
+    pub(crate) fn from_string_table(
         language: impl Into<Language>,
         string_table: impl IntoIterator<Item = (LineId, StringInfo)>,
     ) -> Result<Self> {

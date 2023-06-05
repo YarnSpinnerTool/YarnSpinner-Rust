@@ -95,7 +95,7 @@ fn continue_runtime(
             match event {
                 DialogueEvent::Line(line) => {
                     let assets = dialogue_runner.get_assets(&line);
-                    let metadata = project.line_metadata(&line.id).unwrap_or_default();
+                    let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
                     present_line_events.send(PresentLineEvent {
                         line: LocalizedLine::from_yarn_line(line, assets, metadata),
                         source,
@@ -106,8 +106,10 @@ fn continue_runtime(
                         .into_iter()
                         .map(|option| {
                             let assets = dialogue_runner.get_assets(&option.line);
-                            let metadata =
-                                project.line_metadata(&option.line.id).unwrap_or_default();
+                            let metadata = project
+                                .line_metadata(&option.line.id)
+                                .unwrap_or_default()
+                                .to_vec();
                             DialogueOption::from_yarn_dialogue_option(option, assets, metadata)
                         })
                         .collect();

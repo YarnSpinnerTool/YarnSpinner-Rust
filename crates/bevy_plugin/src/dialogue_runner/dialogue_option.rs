@@ -31,7 +31,7 @@ pub struct DialogueOption {
 }
 
 impl DialogueOption {
-    pub(crate) fn from_yarn_dialogue_option<'a>(
+    pub(crate) fn from_yarn_dialogue_option(
         yarn_dialogue_option: yarn_slinger::prelude::DialogueOption,
         assets: LineAssets,
         metadata: Vec<String>,
