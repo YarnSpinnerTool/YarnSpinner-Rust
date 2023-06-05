@@ -49,7 +49,7 @@ impl YarnFileSource {
     pub fn load(
         &self,
         asset_server: &AssetServer,
-        assets: &mut Assets<YarnFile>,
+        assets: &mut ResMut<Assets<YarnFile>>,
     ) -> Handle<YarnFile> {
         match self {
             Self::Handle(handle) => handle.clone(),

@@ -5,81 +5,84 @@ use bevy::tasks::Task;
 use bevy::utils::all_tuples;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 
 pub trait YarnCommand<Marker>: Send + Sync + 'static + Clone {
     type In: YarnFnParam;
+    type Out: TaskFinishedIndicator;
     type Param: SystemParam;
 
     fn run(
         &mut self,
         input: YarnFnParamItem<Self::In>,
         param_value: SystemParamItem<Self::Param>,
-    ) -> Option<Task<()>>;
+    ) -> Self::Out;
 }
 
 macro_rules! impl_command_function {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
-        impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*)> for Func
+        impl<Input, Func: Send + Sync + 'static, Output, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*) -> Output> for Func
         where
             Input: YarnFnParam,
+            Output: TaskFinishedIndicator,
             Func: Clone,
         for <'a> &'a mut Func:
-            FnMut(In<Input>, $($param), *) +
-            FnMut(In<Input>, $(SystemParamItem<$param>),*) +
-            FnMut(In<YarnFnParamItem<Input>>, $($param), *) +
-            FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*)
+            FnMut(In<Input>, $($param), *) -> Output +
+            FnMut(In<Input>, $(SystemParamItem<$param>),*) -> Output +
+            FnMut(In<YarnFnParamItem<Input>>, $($param), *) -> Output +
+            FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Output
         {
             type In = Input;
+            type Out = Output;
             type Param = ($($param,)*);
             #[inline]
-            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) -> Option<Task<()>> {
+            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) -> Self::Out {
                 #[allow(clippy::too_many_arguments)]
-                fn call_inner<Input: YarnFnParam, $($param,)*>(
-                    mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*),
+                fn call_inner<Input: YarnFnParam, Output: TaskFinishedIndicator, $($param,)*>(
+                    mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*) -> Output,
                     input: In<YarnFnParamItem<Input>>,
                     $($param: $param,)*
-                ){
+                ) -> Output {
                     f(input, $($param,)*)
                 }
                 let ($($param,)*) = param_value;
-                call_inner(self, In(input), $($param),*);
-                None
-            }
-        }
-
-        #[allow(non_snake_case)]
-        impl<Input, Func: Send + Sync + 'static, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*) -> Task<()>> for Func
-        where
-            Input: YarnFnParam,
-            Func: Clone,
-        for <'a> &'a mut Func:
-            FnMut(In<Input>, $($param), *) -> Task<()> +
-            FnMut(In<Input>, $(SystemParamItem<$param>),*) -> Task<()> +
-            FnMut(In<YarnFnParamItem<Input>>, $($param), *) -> Task<()> +
-            FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Task<()>
-        {
-            type In = Input;
-            type Param = ($($param,)*);
-            #[inline]
-            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) -> Option<Task<()>> {
-                #[allow(clippy::too_many_arguments)]
-                fn call_inner<Input: YarnFnParam, $($param,)*>(
-                    mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*) -> Task<()>,
-                    input: In<YarnFnParamItem<Input>>,
-                    $($param: $param,)*
-                ) -> Task<()>{
-                    f(input, $($param,)*)
-                }
-                let ($($param,)*) = param_value;
-                let task = call_inner(self, In(input), $($param),*);
-                Some(task)
+                call_inner(self, In(input), $($param),*)
             }
         }
     };
+}
+
+pub trait TaskFinishedIndicator: Debug + Send + Sync + 'static {
+    fn is_finished(&self) -> bool;
+}
+
+impl TaskFinishedIndicator for AtomicBool {
+    fn is_finished(&self) -> bool {
+        self.load(Ordering::Relaxed)
+    }
+}
+
+impl<T: TaskFinishedIndicator> TaskFinishedIndicator for Arc<T> {
+    fn is_finished(&self) -> bool {
+        T::is_finished(self.as_ref())
+    }
+}
+
+impl TaskFinishedIndicator for Task<()> {
+    fn is_finished(&self) -> bool {
+        self.is_finished()
+    }
+}
+
+impl TaskFinishedIndicator for () {
+    fn is_finished(&self) -> bool {
+        true
+    }
 }
 
 // Note that we rely on the highest impl to be <= the highest order of the tuple impls
@@ -87,7 +90,7 @@ macro_rules! impl_command_function {
 all_tuples!(impl_command_function, 0, 16, F);
 
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
-    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Option<Task<()>>;
+    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator>;
     fn clone_box(&self) -> Box<dyn UntypedYarnCommand>;
 }
 
@@ -102,7 +105,7 @@ where
     Marker: 'static,
     T: YarnCommand<Marker>,
 {
-    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Option<Task<()>> {
+    fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator> {
         let mut system_state: SystemState<T::Param> = SystemState::new(world);
         let param = system_state.get_mut(world);
         let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
@@ -114,7 +117,7 @@ where
         );
         let task = YarnCommand::run(&mut self.function, input, param);
         system_state.apply(world);
-        task
+        Box::new(task)
     }
 
     fn clone_box(&self) -> Box<dyn UntypedYarnCommand> {

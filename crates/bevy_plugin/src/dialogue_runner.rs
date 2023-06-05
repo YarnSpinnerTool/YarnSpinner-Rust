@@ -8,12 +8,13 @@ pub use self::{
     inner::{InnerDialogue, InnerDialogueMut},
     localized_line::LocalizedLine,
 };
+use crate::commands::TaskFinishedIndicator;
 use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use anyhow::bail;
 use bevy::utils::HashSet;
-use bevy::{prelude::*, tasks::Task, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;
@@ -43,7 +44,7 @@ pub struct DialogueRunner {
     pub will_continue_in_next_update: bool,
     pub(crate) last_selected_option: Option<OptionId>,
     pub(crate) commands: YarnCommandRegistrations,
-    command_tasks: Vec<Task<()>>,
+    command_tasks: Vec<Box<dyn TaskFinishedIndicator>>,
     localizations: Option<Localizations>,
     pub(crate) is_running: bool,
     pub run_selected_options_as_lines: bool,
@@ -68,16 +69,22 @@ impl DialogueRunner {
         if !self.is_running {
             bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
         }
-        self.last_selected_option.replace(option);
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
+        self.last_selected_option.replace(option);
         self.continue_in_next_update();
         Ok(self)
     }
 
+    #[must_use]
     pub fn is_running(&self) -> bool {
         self.is_running
+    }
+
+    #[must_use]
+    pub fn is_waiting_for_option_selection(&self) -> bool {
+        self.dialogue.is_waiting_for_option_selection()
     }
 
     pub fn stop(&mut self) -> &mut Self {
@@ -271,14 +278,14 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub(crate) fn get_assets(&self, line_id: &UnderlyingYarnLine) -> LineAssets {
+    pub(crate) fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
         self.asset_providers
             .values()
-            .map(|p| p.get_assets(line_id))
+            .map(|p| p.get_assets(line))
             .collect()
     }
 
-    pub(crate) fn add_command_task(&mut self, task: Task<()>) -> &mut Self {
+    pub(crate) fn add_command_task(&mut self, task: Box<dyn TaskFinishedIndicator>) -> &mut Self {
         self.command_tasks.push(task);
         self
     }

@@ -1,7 +1,9 @@
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
 mod commands;
 mod dialogue_runner;
+#[cfg(feature = "example_ui")]
+mod example_ui;
 mod line_provider;
 mod localization;
 mod plugin;
@@ -34,7 +36,7 @@ pub mod prelude {
         },
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{FileGenerationMode, Localization, Localizations},
-        plugin::{YarnFileSource, YarnSlingerPlugin},
+        plugin::{YarnFileSource, YarnSlingerPlugin, YarnSlingerSystemSet},
         project::YarnProject,
         yarn_file_asset::YarnFile,
     };
@@ -46,6 +48,8 @@ pub mod prelude {
         VariableStorage, YarnFn, YarnFnLibrary,
     };
     pub(crate) type SystemResult = Result<()>;
+    #[cfg(feature = "example_ui")]
+    pub use crate::example_ui::ExampleYarnSlingerUiPlugin;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
 }

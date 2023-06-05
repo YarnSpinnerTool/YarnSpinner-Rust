@@ -101,13 +101,19 @@ impl StringsFile {
                 if records_equal_except_for_text(record, &other_record) {
                     continue;
                 }
+                let text_is_copied_from_base_language =
+                    Lock::compute_from(&record.text) == record.lock;
                 let text = if record.lock != other_record.lock
                     && !record.text.starts_with(UPDATE_PREFIX)
+                    && !text_is_copied_from_base_language
                 {
                     format!("{UPDATE_PREFIX}{}", &record.text)
-                } else {
+                } else if !text_is_copied_from_base_language {
                     // not `other_record` because that one might not contain (NEEDS UPDATE)
                     record.text.clone()
+                } else {
+                    // This record's text was not translated, so we can safely overwrite it with the new text
+                    other_record.text.clone()
                 };
 
                 changed = true;
@@ -128,9 +134,9 @@ impl StringsFile {
         Ok(changed)
     }
 
-    pub(crate) fn from_string_table<'a>(
+    pub(crate) fn from_string_table(
         language: impl Into<Language>,
-        string_table: impl IntoIterator<Item = (&'a LineId, &'a StringInfo)>,
+        string_table: impl IntoIterator<Item = (LineId, StringInfo)>,
     ) -> Result<Self> {
         let language = language.into();
         let mut records = HashMap::new();
@@ -142,17 +148,18 @@ impl StringsFile {
                     string_info.file_name
                 )
             }
+            let lock = Lock::compute_from(&string_info.text);
             records.insert(
                 id.clone(),
                 StringsFileRecord {
                     language: language.clone(),
-                    id: id.clone(),
-                    text: string_info.text.clone(),
-                    file: string_info.file_name.to_string(),
-                    node: string_info.node_name.clone(),
+                    id,
+                    text: string_info.text,
+                    file: string_info.file_name,
+                    node: string_info.node_name,
                     line_number: string_info.line_number,
-                    lock: Lock::compute_from(&string_info.text),
-                    comment: read_comments(&string_info.metadata),
+                    lock,
+                    comment: read_comments(string_info.metadata),
                 },
             );
         }
@@ -274,11 +281,10 @@ impl Lock {
 /// piece of metadata separated by whitespace. If no metadata exists or
 /// only the line ID is part of the metadata, returns an empty string
 /// instead.
-fn read_comments(metadata: &[String]) -> String {
+fn read_comments(metadata: impl IntoIterator<Item = String>) -> String {
     // Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Importers/YarnProjectImporter.cs#L652>
     let cleaned_metadata: Vec<_> = metadata
-        .iter()
-        .map(|metadata| metadata.to_owned())
+        .into_iter()
         .filter(|metadata| !metadata.starts_with("line:"))
         .collect();
     if cleaned_metadata.is_empty() {

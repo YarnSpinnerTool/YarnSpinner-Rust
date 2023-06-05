@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::{HashMap, HashSet};
 pub(crate) use compilation::{
     RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
 };
@@ -22,6 +22,8 @@ pub struct YarnProject {
     pub(crate) compilation: Compilation,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: AssetServer,
+    pub(crate) metadata: HashMap<LineId, Vec<String>>,
+    pub(crate) watching_for_changes: bool,
 }
 
 impl Debug for YarnProject {
@@ -31,6 +33,8 @@ impl Debug for YarnProject {
             .field("compilation", &self.compilation)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
+            .field("metadata", &self.metadata)
+            .field("watching_for_changes", &self.watching_for_changes)
             .finish()
     }
 }
@@ -55,10 +59,32 @@ impl YarnProject {
     pub fn build_dialogue_runner(&self) -> DialogueRunnerBuilder {
         DialogueRunnerBuilder::from_yarn_project(self)
     }
+
+    pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
+        self.metadata.get(line_id).map(|v| v.as_slice())
+    }
+
+    pub fn headers_for_node(&self, node_name: &str) -> Option<HashMap<&str, Vec<&str>>> {
+        self.compilation
+            .program
+            .as_ref()
+            .unwrap()
+            .nodes
+            .get(node_name)?
+            .headers
+            .iter()
+            .fold(HashMap::new(), |mut map, header| {
+                map.entry(header.key.as_str())
+                    .or_insert_with(Vec::new)
+                    .push(header.value.as_str());
+                map
+            })
+            .into()
+    }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
-#[reflect(Debug, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
+#[reflect(Debug, PartialEq)]
 pub struct LoadYarnProjectEvent {
     pub localizations: Option<Localizations>,
     pub yarn_files: HashSet<YarnFileSource>,
@@ -96,14 +122,18 @@ impl LoadYarnProjectEvent {
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
-        if let Some(localizations) = localizations.as_ref() {
-            if cfg!(target_arch = "wasm32") {
-                assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
-                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on Wasm because this target does not provide a access to the filesystem.");
-            }
-        }
+        assert_valid_cfg(localizations.as_ref());
         self.localizations = localizations;
         self
+    }
+}
+
+pub(crate) fn assert_valid_cfg(localizations: Option<&Localizations>) {
+    if let Some(localizations) = localizations {
+        if cfg!(any(target_arch = "wasm32", target_os = "android")) {
+            assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
+                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target because it does not provide a access to the filesystem.");
+        }
     }
 }
 
@@ -116,3 +146,6 @@ where
         Self::with_yarn_files(yarn_files.into_iter().collect())
     }
 }
+
+#[derive(Debug, Clone, Resource, Default)]
+pub(crate) struct WatchingForChanges(pub(crate) bool);

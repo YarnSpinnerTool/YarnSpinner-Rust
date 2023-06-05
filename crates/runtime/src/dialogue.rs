@@ -36,9 +36,11 @@ pub enum DialogueError {
         selected_option_id: OptionId,
         max_id: usize,
     },
-    #[error("`SetSelectedOption` was called, but Dialogue wasn't waiting for a selection. \
+    #[error("An option was selected, but the dialogue wasn't waiting for a selection. \
             This method should only be called after the Dialogue is waiting for the user to select an option.")]
     UnexpectedOptionSelectionError,
+    #[error("Dialogue was asked to continue running, but it is waiting for the user to select an option first.")]
+    ContinueOnOptionSelectionError,
     #[error("Cannot continue running dialogue. No node has been selected.")]
     NoNodeSelectedOnContinue,
     #[error("No node named \"{node_name}\" has been loaded.")]
@@ -412,6 +414,10 @@ impl Dialogue {
     #[must_use]
     pub fn is_active(&self) -> bool {
         self.vm.is_active()
+    }
+
+    pub fn is_waiting_for_option_selection(&self) -> bool {
+        self.vm.is_waiting_for_option_selection()
     }
 }
 

@@ -5,6 +5,10 @@ use bevy::prelude::*;
 use bevy::tasks::AsyncComputeTaskPool;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -31,6 +35,10 @@ impl IntoIterator for YarnCommandRegistrations {
 }
 
 impl YarnCommandRegistrations {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Adds a new method to the registry. See [`YarnFn`]'s documentation for what kinds of methods are allowed.
     pub fn register_command<Marker, F>(
         &mut self,
@@ -91,15 +99,24 @@ impl YarnCommandRegistrations {
         self.0.is_empty()
     }
 
-    pub fn default_commands() -> Self {
+    pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
         commands
             .register_command("wait", |In(duration): In<f32>| {
+                // Using an `AtomicBool` instead of a `Task<()>` to ensure that Wasm uses the same implementation as native
                 let thread_pool = AsyncComputeTaskPool::get();
-                thread_pool.spawn(async move {
-                    let duration = Duration::from_secs_f32(duration);
-                    sleep(duration);
-                })
+                let finished = Arc::new(AtomicBool::new(false));
+                {
+                    let finished = finished.clone();
+                    thread_pool
+                        .spawn(async move {
+                            let duration = Duration::from_secs_f32(duration);
+                            sleep(duration);
+                            finished.store(true, Ordering::Relaxed);
+                        })
+                        .detach();
+                }
+                finished
             })
             .register_command("stop", |_: In<()>| {
                 unreachable!("The stop command is a compiler builtin and is thus not callable")
@@ -221,7 +238,9 @@ mod tests {
 
         let mut app = App::new();
         let task = method.call(vec![], &mut app.world);
-        assert!(task.is_some());
+        assert!(!task.is_finished());
+        sleep(Duration::from_millis(600));
+        assert!(task.is_finished());
     }
 
     #[test]

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 pub use command_registry::YarnCommandRegistrations;
-pub use command_wrapping::{UntypedYarnCommand, YarnCommand};
+pub use command_wrapping::{TaskFinishedIndicator, UntypedYarnCommand, YarnCommand};
 use seldom_fn_plugin::FnPluginExt;
 
 mod command_registry;

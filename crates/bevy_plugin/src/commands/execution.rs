@@ -4,7 +4,11 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 pub(crate) fn command_execution_plugin(app: &mut App) {
-    app.add_system(execute_commands.after(DialogueExecutionSystemSet));
+    app.add_system(
+        execute_commands
+            .after(DialogueExecutionSystemSet)
+            .in_set(YarnSlingerSystemSet),
+    );
 }
 
 fn execute_commands(world: &mut World) {
@@ -14,9 +18,9 @@ fn execute_commands(world: &mut World) {
             continue;
         };
         let params = event.command.parameters;
-        let task = command.call(params, world);
-        if let Some(task) = task {
-            get_dialogue_runner_mut(world, event.source).add_command_task(task);
+        let task_finished_indicator = command.call(params, world);
+        if !task_finished_indicator.is_finished() {
+            get_dialogue_runner_mut(world, event.source).add_command_task(task_finished_indicator);
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
 use crate::prelude::*;
-use crate::project::{CompilationSystemSet, LoadYarnProjectEvent};
+use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
@@ -21,18 +21,20 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
                     .run_if(resource_exists::<YarnFilesToLoad>()),
                 recompile_loaded_yarn_files
                     .pipe(error)
-                    .run_if(on_event::<RecompileLoadedYarnFilesEvent>()),
+                    .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )
                 .chain()
                 .after(LineIdUpdateSystemSet)
-                .in_set(CompilationSystemSet),
+                .in_set(CompilationSystemSet)
+                .in_set(YarnSlingerSystemSet),
         );
 }
 
 #[derive(Debug, Resource)]
 pub(crate) struct YarnProjectConfigToLoad {
     pub(crate) localizations: Option<Option<Localizations>>,
+    pub(crate) watching_for_changes: bool,
 }
 
 impl YarnProjectConfigToLoad {
@@ -52,14 +54,25 @@ pub(crate) struct YarnFilesBeingLoaded(pub(crate) HashSet<Handle<YarnFile>>);
 fn load_project(
     mut commands: Commands,
     mut events: ResMut<Events<LoadYarnProjectEvent>>,
+    is_watching_for_changes: Res<WatchingForChanges>,
     mut already_loaded: Local<bool>,
 ) -> SystemResult {
     for event in events.drain() {
         if *already_loaded {
             bail!("Yarn project already loaded. Sending multiple LoadYarnProjectEvent is not allowed.");
         }
+        if let Some(localizations) = event.localizations.as_ref() {
+            if localizations.file_generation_mode == FileGenerationMode::Development
+                && !is_watching_for_changes.0
+            {
+                warn!("Localization file generation mode is set to development, but hot reloading is not turned on. \
+                For an optimal development experience, we recommend turning on hot reloading by setting the `watch_for_changes` field of the `AssetPlugin` to `true`. \
+                You can see an example of how to do this in at <https://github.com/bevyengine/bevy/blob/v0.10.1/examples/asset/hot_asset_reloading.rs>");
+            }
+        }
         commands.insert_resource(YarnProjectConfigToLoad {
             localizations: Some(event.localizations),
+            watching_for_changes: is_watching_for_changes.0,
         });
         commands.insert_resource(YarnFilesToLoad(event.yarn_files));
         *already_loaded = true;
@@ -91,6 +104,7 @@ fn recompile_loaded_yarn_files(
     yarn_files: Res<Assets<YarnFile>>,
     yarn_project: Option<ResMut<YarnProject>>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
+    mut events: ResMut<Events<RecompileLoadedYarnFilesEvent>>,
 ) -> SystemResult {
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
@@ -98,15 +112,30 @@ fn recompile_loaded_yarn_files(
     let Some(compilation) = compile_yarn_files(&yarn_project.yarn_files, &yarn_files, yarn_project.localizations.as_ref())? else {
         return Ok(());
     };
+    let metadata = compilation
+        .string_table
+        .iter()
+        .map(|(line_id, string_info)| (line_id.clone(), string_info.metadata.clone()))
+        .collect();
     yarn_project.compilation = compilation;
+    yarn_project.metadata = metadata;
+    let program = yarn_project.compilation.program.clone().unwrap();
     for mut dialogue_runner in dialogue_runners.iter_mut() {
+        let current_node = dialogue_runner.current_node();
+        dialogue_runner.dialogue.replace_program(program.clone());
         dialogue_runner
             .text_provider
             .set_base_string_table(yarn_project.compilation.string_table.clone());
+        if let Some(current_node) = current_node {
+            dialogue_runner
+                .dialogue
+                .set_node(current_node)
+                .err()
+                .map(|_| dialogue_runner.dialogue.set_node_to_start());
+        }
     }
-    let file_count = yarn_project.yarn_files.len();
-    let file_plural = if file_count == 1 { "file" } else { "files" };
-    info!("Successfully recompiled {file_count} yarn {file_plural}");
+    events.clear();
+    info!("Successfully recompiled yarn project because of changes in Yarn files.");
     Ok(())
 }
 
@@ -162,7 +191,7 @@ fn compile_loaded_yarn_files(
                 }
                 let strings_file = StringsFile::from_string_table(
                     localization.language.clone(),
-                    &compilation.string_table,
+                    compilation.string_table.clone(),
                 )
                 .unwrap_or_default();
 
@@ -176,11 +205,18 @@ fn compile_loaded_yarn_files(
         }
     }
 
+    let metadata = compilation
+        .string_table
+        .iter()
+        .map(|(line_id, string_info)| (line_id.clone(), string_info.metadata.clone()))
+        .collect();
     commands.insert_resource(YarnProject {
         yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
         compilation,
         localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         asset_server: asset_server.clone(),
+        watching_for_changes: yarn_project_config_to_load.watching_for_changes,
+        metadata,
     });
 
     let file_plural = if file_count == 1 { "file" } else { "files" };

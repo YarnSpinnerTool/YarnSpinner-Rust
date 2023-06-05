@@ -23,6 +23,10 @@ impl Debug for StringsFileTextProvider {
         f.debug_struct("StringsTableTextProvider")
             .field("asset_server", &())
             .field("localizations", &self.localizations)
+            .field("language", &self.language)
+            .field("base_string_table", &self.base_string_table)
+            .field("strings_file_handle", &self.strings_file_handle)
+            .field("translation_string_table", &self.translation_string_table)
             .finish()
     }
 }
@@ -61,7 +65,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         let Some(localizations) = self.localizations.as_ref() else {
             panic!("Set language to {language}, but no localizations have been registered as supported.");
         };
-        if language == localizations.base_language.language {
+        if language == localizations.base_localization.language {
             self.set_language_invalidating_translation(None);
             return;
         }
@@ -122,9 +126,8 @@ impl TextProvider for StringsFileTextProvider {
     }
 
     fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
-        let Some(handle) = self.strings_file_handle.as_ref() else {
-            return None;
-        };
+        self.language.as_ref()?;
+        let handle = self.strings_file_handle.as_ref()?;
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
             return None;
         }
@@ -132,14 +135,12 @@ impl TextProvider for StringsFileTextProvider {
         let strings_file_has_changed = || {
             asset_events
                 .iter_current_update_events()
-                .filter_map(|event| {
-                    if let AssetEvent::Modified { handle } = event {
-                        Some(handle)
-                    } else {
-                        None
-                    }
+                .any(|event| match event {
+                    AssetEvent::Modified {
+                        handle: modified_handle,
+                    } => modified_handle == handle,
+                    _ => false,
                 })
-                .any(|h| h == handle)
         };
         let has_no_translation_yet = self.translation_string_table.is_none();
         if has_no_translation_yet || strings_file_has_changed() {

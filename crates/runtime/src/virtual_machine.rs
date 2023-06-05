@@ -115,7 +115,7 @@ impl VirtualMachine {
 
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
         let node_name = node_name.into();
-        info!("Running node \"{node_name}\"");
+        debug!("Loading node \"{node_name}\"");
         let Some(current_node) = self.get_node_from_name(&node_name) else {
             return Err(DialogueError::InvalidNode{
                 node_name
@@ -217,7 +217,7 @@ impl VirtualMachine {
                 .push(DialogueEvent::NodeComplete(current_node.name.clone()));
             self.set_execution_state(ExecutionState::Stopped);
             self.batched_events.push(DialogueEvent::DialogueComplete);
-            info!("Run complete.");
+            debug!("Run complete.");
         }
         Ok(std::mem::take(&mut self.batched_events))
     }
@@ -231,7 +231,7 @@ impl VirtualMachine {
         if self.current_node.is_none() || self.current_node_name.is_none() {
             Err(DialogueError::NoNodeSelectedOnContinue)
         } else if self.execution_state == ExecutionState::WaitingOnOptionSelection {
-            Err(DialogueError::UnexpectedOptionSelectionError)
+            Err(DialogueError::ContinueOnOptionSelectionError)
         } else {
             // ## Implementation note:
             // The other checks the original did are not needed because our relevant handlers cannot be `None` per our API.
@@ -272,6 +272,10 @@ impl VirtualMachine {
 
     pub(crate) fn is_active(&self) -> bool {
         self.execution_state != ExecutionState::Stopped
+    }
+
+    pub(crate) fn is_waiting_for_option_selection(&self) -> bool {
+        self.execution_state == ExecutionState::WaitingOnOptionSelection
     }
 
     pub(crate) fn current_node(&self) -> Option<String> {

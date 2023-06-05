@@ -1,15 +1,16 @@
 #![allow(dead_code)]
 
+use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-mod assertations;
+mod assertion;
 
 pub mod prelude {
     pub use super::*;
-    pub use assertations::*;
+    pub use assertion::*;
 }
 
 pub trait AppExt {
@@ -102,6 +103,19 @@ impl AppExt for App {
             .iter_mut(&mut self.world)
             .next()
     }
+}
+
+pub fn setup_default_plugins(app: &mut App) -> &mut App {
+    setup_default_plugins_for_path(app, project_root_path().join("assets").join("tests"))
+}
+
+pub fn setup_default_plugins_for_path(app: &mut App, asset_folder: impl AsRef<Path>) -> &mut App {
+    app.add_plugins(MinimalPlugins)
+        .add_plugin(AssetPlugin {
+            asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
+            ..default()
+        })
+        .add_plugin(AudioPlugin::default())
 }
 
 pub fn project_root_path() -> PathBuf {

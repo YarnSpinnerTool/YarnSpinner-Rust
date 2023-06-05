@@ -117,7 +117,7 @@ impl LineParser {
                 }
                 '[' => {
                     // How long is our current string, in text elements (i.e. visible glyphs)?
-                    self.position = UnicodeSegmentation::graphemes(text.as_str(), true).count();
+                    self.position = text.as_str().graphemes(true).count();
 
                     // The start of a marker!
                     let mut marker = self.parse_attribute_marker()?;

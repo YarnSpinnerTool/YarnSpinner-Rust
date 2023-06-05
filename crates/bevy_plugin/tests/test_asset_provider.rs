@@ -1,3 +1,4 @@
+#![cfg(feature = "audio_assets")]
 use anyhow::{bail, Result};
 use bevy::prelude::*;
 use bevy::utils::Instant;
@@ -11,10 +12,9 @@ mod utils;
 fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "lines_with_ids.yarn",
-        ]));
+    setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
+        "lines_with_ids.yarn",
+    ]));
 
     let project = app.load_project();
     let mut dialogue_runner = project
@@ -39,10 +39,10 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -68,10 +68,10 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
 fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -103,10 +103,10 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
 fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -139,10 +139,10 @@ fn loads_asset_from_translated_localization() -> Result<()> {
 fn panics_on_invalid_language() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
             },
@@ -165,10 +165,10 @@ fn panics_on_invalid_language() {
 fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins).add_plugin(
+    setup_default_plugins(&mut app).add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
             Localizations {
-                base_language: "en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
             },

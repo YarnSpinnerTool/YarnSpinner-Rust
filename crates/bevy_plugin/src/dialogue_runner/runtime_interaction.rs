@@ -7,10 +7,16 @@ use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(
-        (continue_runtime.pipe(panic_on_err), accept_line_hints)
+        (
+            continue_runtime
+                .pipe(panic_on_err)
+                .run_if(resource_exists::<YarnProject>()),
+            accept_line_hints,
+        )
             .chain()
             .after(LineProviderSystemSet)
-            .in_set(DialogueExecutionSystemSet),
+            .in_set(DialogueExecutionSystemSet)
+            .in_set(YarnSlingerSystemSet),
     );
 }
 
@@ -28,6 +34,7 @@ fn continue_runtime(
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
     mut dialogue_start_events: EventWriter<DialogueStartEvent>,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
+    project: Res<YarnProject>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         let is_sending_missed_events = !dialogue_runner.unsent_events.is_empty();
@@ -88,8 +95,9 @@ fn continue_runtime(
             match event {
                 DialogueEvent::Line(line) => {
                     let assets = dialogue_runner.get_assets(&line);
+                    let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
                     present_line_events.send(PresentLineEvent {
-                        line: LocalizedLine::from_yarn_line(line, assets),
+                        line: LocalizedLine::from_yarn_line(line, assets, metadata),
                         source,
                     });
                 }
@@ -98,7 +106,11 @@ fn continue_runtime(
                         .into_iter()
                         .map(|option| {
                             let assets = dialogue_runner.get_assets(&option.line);
-                            DialogueOption::from_yarn_dialogue_option(option, assets)
+                            let metadata = project
+                                .line_metadata(&option.line.id)
+                                .unwrap_or_default()
+                                .to_vec();
+                            DialogueOption::from_yarn_dialogue_option(option, assets, metadata)
                         })
                         .collect();
                     last_options.insert(source, options.clone());
