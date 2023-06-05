@@ -12,9 +12,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
             present_line
                 .run_if(resource_exists::<Typewriter>().and_then(on_event::<PresentLineEvent>())),
             present_options.run_if(on_event::<PresentOptionsEvent>()),
-            continue_dialogue.run_if(
-                resource_exists::<Typewriter>().and_then(not(resource_exists::<OptionSelection>())),
-            ),
+            continue_dialogue.run_if(resource_exists::<Typewriter>()),
         )
             .chain()
             .after(YarnSlingerSystemSet),
@@ -65,7 +63,7 @@ fn continue_dialogue(
     mouse_buttons: Res<Input<MouseButton>>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut typewriter: ResMut<Typewriter>,
-    mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
+    option_selection: Option<Res<OptionSelection>>,
 ) {
     let explicit_continue =
         keys.just_pressed(KeyCode::Space) || mouse_buttons.just_pressed(MouseButton::Left);
@@ -74,15 +72,8 @@ fn continue_dialogue(
             typewriter.fast_forward();
             return;
         }
-
-        if let Some(name) = typewriter.character_name.as_ref() {
-            speaker_change_events.send(SpeakerChangeEvent {
-                character_name: name.clone(),
-                speaking: false,
-            });
-        }
     }
-    if explicit_continue || typewriter.last_before_options {
+    if (explicit_continue || typewriter.last_before_options) && option_selection.is_none() {
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             if !dialogue_runner.is_waiting_for_option_selection() && dialogue_runner.is_running() {
                 dialogue_runner.continue_in_next_update();

@@ -1,6 +1,5 @@
 use crate::example_ui::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
 use crate::example_ui::typewriter::Typewriter;
-use crate::example_ui::updating::SpeakerChangeEvent;
 use crate::prelude::{DialogueOption, DialogueRunner};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -36,7 +35,6 @@ fn show_options(
     mut commands: Commands,
     children: Query<&Children>,
     mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
-    mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
 ) {
     let (entity, mut style, mut visibility) = options_node.single_mut();
     style.display = Display::Flex;
@@ -48,13 +46,6 @@ fn show_options(
     if children.iter_descendants(entity).next().is_none() {
         let mut entity_commands = commands.entity(entity);
         spawn_options(&mut entity_commands, &option_selection.options);
-
-        if let Some(name) = typewriter.character_name.as_ref() {
-            speaker_change_events.send(SpeakerChangeEvent {
-                character_name: name.clone(),
-                speaking: false,
-            });
-        }
     }
 }
 
@@ -93,7 +84,7 @@ fn select_option(
                 *color = Color::NONE.into();
             }
             Interaction::Hovered => {
-                *color = Color::ALICE_BLUE.into();
+                *color = Color::SILVER.into();
             }
             _ => {
                 *color = Color::NONE.into();

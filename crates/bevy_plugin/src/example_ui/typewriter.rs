@@ -1,5 +1,6 @@
 use crate::example_ui::option_selection::OptionSelection;
 use crate::example_ui::setup::{create_dialog_text, DialogueNode};
+use crate::example_ui::updating::SpeakerChangeEvent;
 use crate::prelude::LocalizedLine;
 use bevy::prelude::*;
 use bevy::utils::Instant;
@@ -86,13 +87,25 @@ fn write_text(
     mut text: Query<&mut Text, With<DialogueNode>>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
+    mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
 ) {
     let mut text = text.single_mut();
     if typewriter.last_before_options && option_selection.is_none() {
         *text = default();
         return;
     }
+    if typewriter.is_finished() {
+        return;
+    }
     typewriter.update_current_text();
+    if typewriter.is_finished() {
+        if let Some(name) = typewriter.character_name.as_deref() {
+            speaker_change_events.send(SpeakerChangeEvent {
+                character_name: name.to_string(),
+                speaking: false,
+            });
+        }
+    }
 
     let name = typewriter.character_name.as_deref();
     let current_text = &typewriter.current_text;
