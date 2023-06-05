@@ -8,7 +8,7 @@ exclude = ["assets", "wasm"]
 [features]
 default = []
 audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
-example_ui = ["dep:unicode-segmentation", "bevy/bevy_ui", "bevy/bevy_text"]
+example_ui = ["dep:unicode-segmentation", "bevy/bevy_ui", "bevy/bevy_text", "bevy/bevy_render"]
 
 [dependencies]
 anyhow = "1"
