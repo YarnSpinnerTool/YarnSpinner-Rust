@@ -69,10 +69,10 @@ impl DialogueRunner {
         if !self.is_running {
             bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
         }
-        self.last_selected_option.replace(option);
         self.dialogue
             .set_selected_option(option)
             .map_err(Error::from)?;
+        self.last_selected_option.replace(option);
         self.continue_in_next_update();
         Ok(self)
     }

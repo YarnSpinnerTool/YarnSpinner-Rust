@@ -3,6 +3,7 @@ use crate::example_ui::typewriter::Typewriter;
 use crate::example_ui::updating::SpeakerChangeEvent;
 use crate::prelude::{DialogueOption, DialogueRunner};
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems((
@@ -19,7 +20,12 @@ pub(crate) struct OptionSelection {
 }
 
 impl OptionSelection {
-    pub fn from_option_set(options: Vec<DialogueOption>) -> Self {
+    pub fn from_option_set<'a>(options: impl IntoIterator<Item = &'a DialogueOption>) -> Self {
+        let options = options
+            .into_iter()
+            .filter(|o| o.is_available)
+            .cloned()
+            .collect();
         Self { options }
     }
 }
@@ -53,6 +59,7 @@ fn show_options(
 }
 
 fn select_option(
+    keys: Res<Input<KeyCode>>,
     typewriter: Res<Typewriter>,
     mut commands: Commands,
     mut buttons: Query<
@@ -62,30 +69,58 @@ fn select_option(
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
     mut text: Query<&mut Text, With<DialogueNode>>,
+    option_selection: Res<OptionSelection>,
 ) {
     if !typewriter.is_finished() {
         return;
     }
+
+    let mut selection = None;
+    let key_to_option: HashMap<_, _> = NUMBER_KEYS
+        .into_iter()
+        .zip(option_selection.options.iter().map(|option| option.id))
+        .collect();
+    for (key, option) in key_to_option {
+        if keys.just_pressed(key) {
+            selection = Some(option);
+            break;
+        }
+    }
     for (interaction, button, mut color) in buttons.iter_mut() {
         match *interaction {
-            Interaction::Clicked => {
-                for mut dialogue_runner in dialogue_runners.iter_mut() {
-                    dialogue_runner.select_option(button.0).unwrap();
-                }
-                commands.remove_resource::<OptionSelection>();
+            Interaction::Clicked if selection.is_none() => {
+                selection = Some(button.0);
                 *color = Color::NONE.into();
-                let (entity, mut style, mut visibility) = options_node.single_mut();
-                commands.entity(entity).despawn_descendants();
-                style.display = Display::None;
-                *visibility = Visibility::Hidden;
-                *text.single_mut() = Text::default();
             }
             Interaction::Hovered => {
                 *color = Color::ALICE_BLUE.into();
             }
-            Interaction::None => {
+            _ => {
                 *color = Color::NONE.into();
             }
         }
     }
+    if let Some(id) = selection {
+        for mut dialogue_runner in dialogue_runners.iter_mut() {
+            dialogue_runner.select_option(id).unwrap();
+        }
+        commands.remove_resource::<OptionSelection>();
+        let (entity, mut style, mut visibility) = options_node.single_mut();
+        commands.entity(entity).despawn_descendants();
+        style.display = Display::None;
+        *visibility = Visibility::Hidden;
+        *text.single_mut() = Text::default();
+    }
 }
+
+const NUMBER_KEYS: [KeyCode; 9] = [
+    KeyCode::Key1,
+    KeyCode::Key2,
+    KeyCode::Key3,
+    KeyCode::Key4,
+    KeyCode::Key5,
+    KeyCode::Key6,
+    KeyCode::Key7,
+    KeyCode::Key8,
+    KeyCode::Key9,
+];

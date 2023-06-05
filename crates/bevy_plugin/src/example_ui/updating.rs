@@ -55,7 +55,7 @@ fn present_line(
 
 fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {
     for event in events.iter() {
-        let option_selection = OptionSelection::from_option_set(event.options.clone());
+        let option_selection = OptionSelection::from_option_set(&event.options);
         commands.insert_resource(option_selection);
     }
 }
@@ -84,7 +84,7 @@ fn continue_dialogue(
     }
     if explicit_continue || typewriter.last_before_options {
         for mut dialogue_runner in dialogue_runners.iter_mut() {
-            if !dialogue_runner.is_waiting_for_option_selection() {
+            if !dialogue_runner.is_waiting_for_option_selection() && dialogue_runner.is_running() {
                 dialogue_runner.continue_in_next_update();
             }
         }
