@@ -70,7 +70,7 @@ fn setup(mut commands: Commands) {
                                     flex_direction: FlexDirection::Column,
                                     justify_content: JustifyContent::FlexEnd,
                                     align_items: AlignItems::FlexStart,
-                                    margin: UiRect::top(Val::Px(10.0)),
+                                    margin: UiRect::top(Val::Px(20.0)),
                                     ..default()
                                 },
                                 background_color: Color::WHITE.into(),
@@ -150,8 +150,8 @@ where
     });
 }
 
-const DIALOG_WIDTH: f32 = 800.0 * 0.7;
-const TEXT_BORDER: f32 = 30.0;
+const DIALOG_WIDTH: f32 = 800.0 * 0.8;
+const TEXT_BORDER: f32 = 40.0;
 
 mod style {
     use super::*;
