@@ -2,6 +2,9 @@ title: Start
 position: -157,-193
 ---
 Bartender: Yeah, they're sitting right over there. #line:1
+<<wait 0.7>>
 Ferris: Oh, hi there! #line:2
 -> Good to see you! #line:3
+Ferris: Nice to see you too! #line:4
+Ferris: Thanks for coming, I know you've been busy lately. #line:5
 ===

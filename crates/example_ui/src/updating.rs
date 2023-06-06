@@ -1,6 +1,6 @@
 use crate::option_selection::OptionSelection;
-use crate::setup::{DialogueNameNode, UiRootNode};
-use crate::typewriter::Typewriter;
+use crate::setup::{DialogueNameNode, DialogueNode, UiRootNode};
+use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
@@ -8,8 +8,8 @@ use bevy_yarn_slinger::prelude::*;
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
         (
-            show_dialog.run_if(on_event::<DialogueStartEvent>()),
             hide_dialog.run_if(on_event::<DialogueCompleteEvent>()),
+            show_dialog.run_if(on_event::<DialogueStartEvent>()),
             present_line
                 .run_if(resource_exists::<Typewriter>().and_then(on_event::<PresentLineEvent>())),
             present_options.run_if(on_event::<PresentOptionsEvent>()),
@@ -18,6 +18,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
         )
             .chain()
             .after(YarnSlingerSystemSet)
+            .after(typewriter::spawn)
             .in_set(ExampleYarnSlingerUiSystemSet),
     )
     .add_event::<SpeakerChangeEvent>();
@@ -28,16 +29,11 @@ pub struct SpeakerChangeEvent {
     pub speaking: bool,
 }
 
-fn show_dialog(mut commands: Commands, mut visibility: Query<&mut Visibility, With<UiRootNode>>) {
-    commands.init_resource::<Typewriter>();
+fn show_dialog(mut visibility: Query<&mut Visibility, With<UiRootNode>>) {
     *visibility.single_mut() = Visibility::Inherited;
 }
 
-fn hide_dialog(
-    mut commands: Commands,
-    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
-) {
-    commands.remove_resource::<Typewriter>();
+fn hide_dialog(mut root_visibility: Query<&mut Visibility, With<UiRootNode>>) {
     *root_visibility.single_mut() = Visibility::Hidden;
 }
 
@@ -47,20 +43,23 @@ fn present_line(
     mut typewriter: ResMut<Typewriter>,
     mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
     mut name_node: Query<&mut Text, With<DialogueNameNode>>,
+    mut dialogue_node_text: Query<&mut Text, (With<DialogueNode>, Without<DialogueNameNode>)>,
 ) {
     for event in line_events.iter() {
-        if let Some(name) = event.line.character_name() {
+        let name = if let Some(name) = event.line.character_name() {
             speaker_change_events.send(SpeakerChangeEvent {
                 character_name: name.to_string(),
                 speaking: true,
             });
-            name_node.single_mut().sections[0].value = name.to_string();
+            name.to_string()
         } else {
-            name_node.single_mut().sections[0].value = String::new();
-        }
+            String::new()
+        };
+        name_node.single_mut().sections[0].value = name;
         typewriter.set_line(&event.line);
     }
     *root_visibility.single_mut() = Visibility::Inherited;
+    *dialogue_node_text.single_mut() = Text::default();
 }
 
 fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {

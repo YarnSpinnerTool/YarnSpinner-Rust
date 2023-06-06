@@ -12,11 +12,14 @@ use unicode_segmentation::UnicodeSegmentation;
 pub(crate) fn typewriter_plugin(app: &mut App) {
     app.add_systems(
         (
+            despawn.run_if(on_event::<DialogueCompleteEvent>()),
+            spawn.run_if(on_event::<DialogueStartEvent>()),
             write_text.run_if(resource_exists::<Typewriter>()),
             show_continue.run_if(resource_exists_and_changed::<Typewriter>()),
             bob_continue,
         )
             .chain()
+            .after(YarnSlingerSystemSet)
             .in_set(ExampleYarnSlingerUiSystemSet),
     );
 }
@@ -133,6 +136,14 @@ fn show_continue(
     } else {
         *visibility = Visibility::Hidden;
     }
+}
+
+pub(crate) fn despawn(mut commands: Commands) {
+    commands.remove_resource::<Typewriter>();
+}
+
+pub(crate) fn spawn(mut commands: Commands) {
+    commands.init_resource::<Typewriter>();
 }
 
 fn bob_continue(

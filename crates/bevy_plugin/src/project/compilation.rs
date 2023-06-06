@@ -128,8 +128,8 @@ fn recompile_loaded_yarn_files(
             .set_base_string_table(yarn_project.compilation.string_table.clone());
         if let Some(current_node) = current_node {
             dialogue_runner
-                .dialogue
-                .set_node(current_node)
+                .stop()
+                .start_at_node(current_node)
                 .err()
                 .map(|_| dialogue_runner.dialogue.set_node_to_start());
         }

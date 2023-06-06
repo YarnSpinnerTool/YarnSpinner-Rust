@@ -1,5 +1,5 @@
 use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
-use crate::typewriter::Typewriter;
+use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -11,10 +11,14 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             show_options.run_if(
                 resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
             ),
-            select_option.run_if(
-                resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
-            ),
+            select_option
+                .run_if(
+                    resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
+                )
+                .before(typewriter::despawn),
         )
+            .chain()
+            .after(YarnSlingerSystemSet)
             .in_set(ExampleYarnSlingerUiSystemSet),
     );
 }
@@ -56,6 +60,8 @@ fn show_options(
 }
 
 fn select_option(
+    line_events: EventReader<PresentLineEvent>,
+    dialogue_complete_events: EventReader<DialogueCompleteEvent>,
     keys: Res<Input<KeyCode>>,
     typewriter: Res<Typewriter>,
     mut commands: Commands,
@@ -97,10 +103,15 @@ fn select_option(
         let mut text = text.get_mut(*text_entity).unwrap();
         text.sections[1].style.color = color;
     }
+    let has_selected_id = selection.is_some();
     if let Some(id) = selection {
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             dialogue_runner.select_option(id).unwrap();
         }
+    }
+    let should_despawn =
+        has_selected_id || !line_events.is_empty() || !dialogue_complete_events.is_empty();
+    if should_despawn {
         commands.remove_resource::<OptionSelection>();
         let (entity, mut style, mut visibility) = options_node.single_mut();
         commands.entity(entity).despawn_descendants();
