@@ -1,5 +1,5 @@
 use crate::option_selection::OptionSelection;
-use crate::setup::{DialogueContinueNode, UiRootNode};
+use crate::setup::{DialogueNameNode, UiRootNode};
 use crate::typewriter::Typewriter;
 use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
@@ -30,27 +30,23 @@ pub struct SpeakerChangeEvent {
 
 fn show_dialog(mut commands: Commands, mut visibility: Query<&mut Visibility, With<UiRootNode>>) {
     commands.init_resource::<Typewriter>();
-    *visibility.single_mut() = Visibility::Visible;
+    *visibility.single_mut() = Visibility::Inherited;
 }
 
 fn hide_dialog(
     mut commands: Commands,
     mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
-    mut continue_visibility: Query<
-        &mut Visibility,
-        (Without<UiRootNode>, With<DialogueContinueNode>),
-    >,
 ) {
     commands.remove_resource::<Typewriter>();
     *root_visibility.single_mut() = Visibility::Hidden;
-    *continue_visibility.single_mut() = Visibility::Hidden;
 }
 
 fn present_line(
     mut line_events: EventReader<PresentLineEvent>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
     mut typewriter: ResMut<Typewriter>,
-    mut visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut name_node: Query<&mut Text, With<DialogueNameNode>>,
 ) {
     for event in line_events.iter() {
         if let Some(name) = event.line.character_name() {
@@ -58,10 +54,13 @@ fn present_line(
                 character_name: name.to_string(),
                 speaking: true,
             });
+            name_node.single_mut().sections[0].value = name.to_string();
+        } else {
+            name_node.single_mut().sections[0].value = String::new();
         }
         typewriter.set_line(&event.line);
     }
-    *visibility.single_mut() = Visibility::Visible;
+    *root_visibility.single_mut() = Visibility::Inherited;
 }
 
 fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {

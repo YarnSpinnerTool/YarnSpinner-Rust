@@ -22,7 +22,6 @@ fn main() {
                     title: "Yarn Slinger Story Demo".into(),
                     resolution: (800., 600.).into(),
                     present_mode: PresentMode::AutoVsync,
-                    fit_canvas_to_parent: true,
                     prevent_default_event_handling: false,
                     ..default()
                 }),

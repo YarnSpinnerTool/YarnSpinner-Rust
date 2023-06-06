@@ -45,7 +45,7 @@ fn show_options(
     let (entity, mut style, mut visibility) = options_node.single_mut();
     style.display = Display::Flex;
     if typewriter.is_finished() {
-        *visibility = Visibility::Visible;
+        *visibility = Visibility::Inherited;
     } else {
         *visibility = Visibility::Hidden;
     }

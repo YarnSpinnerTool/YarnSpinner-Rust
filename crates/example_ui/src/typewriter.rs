@@ -118,10 +118,9 @@ fn write_text(
         }
     }
 
-    let name = typewriter.character_name.as_deref();
     let current_text = &typewriter.current_text;
     let rest = typewriter.graphemes_left.join("");
-    *text = create_dialog_text(name, current_text, rest);
+    *text = create_dialog_text(current_text, rest);
 }
 
 fn show_continue(
@@ -130,7 +129,7 @@ fn show_continue(
 ) {
     let mut visibility = visibility.single_mut();
     if typewriter.is_finished() && !typewriter.last_before_options {
-        *visibility = Visibility::Visible;
+        *visibility = Visibility::Inherited;
     } else {
         *visibility = Visibility::Hidden;
     }
