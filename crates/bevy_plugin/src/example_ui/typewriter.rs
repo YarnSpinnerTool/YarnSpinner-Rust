@@ -1,5 +1,7 @@
 use crate::example_ui::option_selection::OptionSelection;
-use crate::example_ui::setup::{create_dialog_text, DialogueNode};
+use crate::example_ui::setup::{
+    create_dialog_text, DialogueContinueNode, DialogueNode, INITIAL_DIALOGUE_CONTINUE_BOTTOM,
+};
 use crate::example_ui::updating::SpeakerChangeEvent;
 use crate::example_ui::ExampleYarnSlingerUiSystemSet;
 use crate::prelude::LocalizedLine;
@@ -8,9 +10,13 @@ use bevy::utils::Instant;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) fn typewriter_plugin(app: &mut App) {
-    app.add_system(
-        write_text
-            .run_if(resource_exists::<Typewriter>())
+    app.add_systems(
+        (
+            write_text.run_if(resource_exists::<Typewriter>()),
+            show_continue.run_if(resource_exists_and_changed::<Typewriter>()),
+            bob_continue,
+        )
+            .chain()
             .in_set(ExampleYarnSlingerUiSystemSet),
     );
 }
@@ -58,7 +64,7 @@ impl Typewriter {
     }
 
     pub(crate) fn is_finished(&self) -> bool {
-        self.graphemes_left.is_empty()
+        self.graphemes_left.is_empty() && !self.current_text.is_empty()
     }
 
     pub(crate) fn fast_forward(&mut self) {
@@ -116,4 +122,31 @@ fn write_text(
     let current_text = &typewriter.current_text;
     let rest = typewriter.graphemes_left.join("");
     *text = create_dialog_text(name, current_text, rest);
+}
+
+fn show_continue(
+    typewriter: Res<Typewriter>,
+    mut visibility: Query<&mut Visibility, With<DialogueContinueNode>>,
+) {
+    let mut visibility = visibility.single_mut();
+    if typewriter.is_finished() && !typewriter.last_before_options {
+        *visibility = Visibility::Visible;
+    } else {
+        *visibility = Visibility::Hidden;
+    }
+}
+
+fn bob_continue(
+    time: Res<Time>,
+    visibility: Query<&Visibility, With<DialogueContinueNode>>,
+    mut style: Query<&mut Style, With<DialogueContinueNode>>,
+) {
+    let visibility = visibility.single();
+    if *visibility == Visibility::Hidden {
+        return;
+    }
+    let mut style = style.single_mut();
+    let pixels =
+        (time.elapsed_seconds() * 3.0).sin().powi(2) * 5.0 + INITIAL_DIALOGUE_CONTINUE_BOTTOM;
+    style.position.bottom = Val::Px(pixels);
 }

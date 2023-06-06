@@ -14,6 +14,9 @@ pub(crate) struct UiRootNode;
 pub(crate) struct DialogueNode;
 
 #[derive(Debug, Default, Component)]
+pub(crate) struct DialogueContinueNode;
+
+#[derive(Debug, Default, Component)]
 pub(crate) struct OptionsNode;
 
 #[derive(Debug, Component)]
@@ -31,11 +34,11 @@ fn setup(mut commands: Commands) {
                     margin: UiRect::bottom(Val::Px(30.0)),
                     ..default()
                 },
+                visibility: Visibility::Hidden,
                 ..default()
             },
             UiRootNode,
         ))
-        .insert(Visibility::Hidden)
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {
@@ -79,36 +82,75 @@ fn setup(mut commands: Commands) {
                         })
                         .with_children(|parent| {
                             // Options
-                            parent
-                                .spawn((
-                                    NodeBundle {
-                                        style: Style {
-                                            display: Display::None,
-                                            flex_direction: FlexDirection::Column,
-                                            justify_content: JustifyContent::FlexEnd,
-                                            align_items: AlignItems::FlexStart,
-                                            margin: UiRect::top(Val::Px(20.0)),
-                                            ..default()
-                                        },
+                            parent.spawn((
+                                NodeBundle {
+                                    style: Style {
+                                        display: Display::None,
+                                        flex_direction: FlexDirection::Column,
+                                        justify_content: JustifyContent::FlexEnd,
+                                        align_items: AlignItems::FlexStart,
+                                        margin: UiRect::top(Val::Px(20.0)),
                                         ..default()
                                     },
-                                    OptionsNode,
-                                ))
-                                .insert(Visibility::Hidden);
+                                    visibility: Visibility::Hidden,
+                                    ..default()
+                                },
+                                OptionsNode,
+                            ));
                         });
 
-                    parent.spawn(ImageBundle {
-                        image: UiImage {
-                            // 29 pixels high
-                            texture: image_handle::DIALOGUE_EDGE.typed(),
-                            flip_y: true,
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                flex_direction: FlexDirection::Column,
+                                ..default()
+                            },
                             ..default()
-                        },
-                        ..default()
-                    });
+                        })
+                        .with_children(|parent| {
+                            parent.spawn(ImageBundle {
+                                image: UiImage {
+                                    // 29 pixels high
+                                    texture: image_handle::DIALOGUE_EDGE.typed(),
+                                    flip_y: true,
+                                    ..default()
+                                },
+                                style: Style {
+                                    size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                    ..default()
+                                },
+                                ..default()
+                            });
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((
+                                ImageBundle {
+                                    image: UiImage {
+                                        // 27 x 27 pixels
+                                        texture: image_handle::DIALOGUE_CONTINUE.typed(),
+                                        ..default()
+                                    },
+                                    style: Style {
+                                        position_type: PositionType::Absolute,
+                                        position: UiRect::bottom(Val::Px(
+                                            INITIAL_DIALOGUE_CONTINUE_BOTTOM,
+                                        )),
+                                        ..default()
+                                    },
+                                    z_index: ZIndex::Local(1),
+                                    visibility: Visibility::Hidden,
+                                    ..default()
+                                },
+                                DialogueContinueNode,
+                            ));
+                        });
                 });
         });
 }
+
+pub(crate) const INITIAL_DIALOGUE_CONTINUE_BOTTOM: f32 = -5.0;
 
 pub(crate) fn create_dialog_text<'a>(
     name: impl Into<Option<&'a str>>,
@@ -160,7 +202,7 @@ where
                 .with_children(|parent| {
                     let sections = [
                         TextSection {
-                            value: format!("{}: ", i + 1),
+                            value: format!("{}:  ", i + 1),
                             style: text_style::option_id(),
                         },
                         TextSection {
@@ -223,6 +265,7 @@ mod text_style {
     pub(crate) fn option_id() -> TextStyle {
         TextStyle {
             font: font_handle::BOLD.typed(),
+            color: Color::WHITE,
             ..option_text()
         }
     }

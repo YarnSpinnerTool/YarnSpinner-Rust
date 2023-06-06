@@ -60,12 +60,13 @@ fn select_option(
     typewriter: Res<Typewriter>,
     mut commands: Commands,
     mut buttons: Query<
-        (&Interaction, &OptionButton, &mut BackgroundColor),
+        (&Interaction, &OptionButton, &Children),
         (With<Button>, Changed<Interaction>),
     >,
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
-    mut text: Query<&mut Text, With<DialogueNode>>,
+    mut dialogue_node_text: Query<&mut Text, With<DialogueNode>>,
+    mut text: Query<&mut Text, Without<DialogueNode>>,
     option_selection: Res<OptionSelection>,
 ) {
     if !typewriter.is_finished() {
@@ -83,19 +84,18 @@ fn select_option(
             break;
         }
     }
-    for (interaction, button, mut color) in buttons.iter_mut() {
-        match *interaction {
+    for (interaction, button, children) in buttons.iter_mut() {
+        let color = match *interaction {
             Interaction::Clicked if selection.is_none() => {
                 selection = Some(button.0);
-                *color = Color::NONE.into();
+                Color::TOMATO
             }
-            Interaction::Hovered => {
-                *color = Color::WHITE.with_a(0.3).into();
-            }
-            _ => {
-                *color = Color::NONE.into();
-            }
-        }
+            Interaction::Hovered => Color::WHITE,
+            _ => Color::TOMATO,
+        };
+        let text_entity = children.iter().find(|&e| text.contains(*e)).unwrap();
+        let mut text = text.get_mut(*text_entity).unwrap();
+        text.sections[1].style.color = color;
     }
     if let Some(id) = selection {
         for mut dialogue_runner in dialogue_runners.iter_mut() {
@@ -106,7 +106,7 @@ fn select_option(
         commands.entity(entity).despawn_descendants();
         style.display = Display::None;
         *visibility = Visibility::Hidden;
-        *text.single_mut() = Text::default();
+        *dialogue_node_text.single_mut() = Text::default();
     }
 }
 

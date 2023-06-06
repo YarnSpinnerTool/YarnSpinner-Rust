@@ -1,6 +1,7 @@
 use bevy::asset::LoadState;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
+use bevy::utils::Instant;
 use bevy::window::PresentMode;
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
@@ -132,11 +133,22 @@ struct Sprites {
     ferris_neutral: Handle<Image>,
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 struct Speaker {
     name: String,
     active: bool,
+    last_active: Instant,
     initial_translation: Vec3,
+}
+impl Default for Speaker {
+    fn default() -> Self {
+        Self {
+            name: "Unknown".into(),
+            active: false,
+            last_active: Instant::now(),
+            initial_translation: Vec3::ZERO,
+        }
+    }
 }
 
 fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) -> bool {
@@ -153,21 +165,28 @@ fn change_speaker(
             .find(|(speaker, ..)| speaker.name.to_lowercase() == event.character_name.to_lowercase()) else {
             continue;
         };
-        speaker.active = event.speaking;
-        if speaker.active {
+        if event.speaking {
+            speaker.last_active = Instant::now();
+            speaker.active = true;
             speaker.initial_translation = transform.translation;
+        } else {
+            speaker.active = false;
         }
     }
 }
 
-fn bob_speaker(time: Res<Time>, mut speakers: Query<(&Speaker, &mut Transform)>) {
+fn bob_speaker(mut speakers: Query<(&Speaker, &mut Transform)>) {
     for (speaker, mut transform) in speakers.iter_mut() {
         let is_back_at_initial_position =
-            (transform.translation.y - speaker.initial_translation.y).abs() < 0.001;
+            (transform.translation.y - speaker.initial_translation.y).powi(2) < 0.001;
+
         if !speaker.active && is_back_at_initial_position {
             continue;
         }
-        transform.translation.y =
-            speaker.initial_translation.y + (time.elapsed_seconds() * 5.0).sin().powi(2) * 0.05;
+        transform.translation.y = speaker.initial_translation.y
+            + (speaker.last_active.elapsed().as_secs_f32() * 5.0)
+                .sin()
+                .powi(2)
+                * 0.05;
     }
 }
