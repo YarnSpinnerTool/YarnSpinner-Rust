@@ -84,7 +84,7 @@ fn select_option(
                 *color = Color::NONE.into();
             }
             Interaction::Hovered => {
-                *color = Color::SILVER.into();
+                *color = Color::WHITE.with_a(0.3).into();
             }
             _ => {
                 *color = Color::NONE.into();

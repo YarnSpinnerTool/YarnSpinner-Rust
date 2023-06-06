@@ -48,7 +48,7 @@ fn setup(mut commands: Commands) {
                         padding: UiRect::all(Val::Px(TEXT_BORDER)),
                         ..default()
                     },
-                    background_color: Color::WHITE.into(),
+                    background_color: Color::WHITE.with_a(0.5).into(),
                     ..default()
                 })
                 .with_children(|parent| {
@@ -73,7 +73,6 @@ fn setup(mut commands: Commands) {
                                     margin: UiRect::top(Val::Px(20.0)),
                                     ..default()
                                 },
-                                background_color: Color::WHITE.into(),
                                 ..default()
                             },
                             OptionsNode,
@@ -125,6 +124,7 @@ where
                             justify_content: JustifyContent::FlexStart,
                             ..default()
                         },
+                        background_color: Color::NONE.into(),
                         ..default()
                     },
                     OptionButton(option.id),
