@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
 
 pub(crate) fn ui_assets_plugin(app: &mut App) {
-    use font_handle::{BOLD as FONT_BOLD_HANDLE, MEDIUM as FONT_MEDIUM_HANDLE};
+    use font_handle::MEDIUM as FONT_MEDIUM_HANDLE;
     load_internal_binary_asset!(
         app,
         FONT_MEDIUM_HANDLE,
@@ -11,26 +11,12 @@ pub(crate) fn ui_assets_plugin(app: &mut App) {
         load_font
     );
 
-    load_internal_binary_asset!(
-        app,
-        FONT_BOLD_HANDLE,
-        "../assets/FiraSans-Bold.ttf",
-        load_font
-    );
-
-    use image_handle::{
-        DIALOGUE_CONTINUE as DIALOGUE_CONTINUE_HANDLE, DIALOGUE_EDGE as DIALOGUE_EDGE_HANDLE,
-    };
-    load_internal_binary_asset!(
-        app,
-        DIALOGUE_EDGE_HANDLE,
-        "../assets/dialogue_edge.png",
-        load_image
-    );
+    use image_handle::{CONTINUE_INDICATOR as CONTINUE_INDICATOR_HANDLE, EDGE as EDGE_HANDLE};
+    load_internal_binary_asset!(app, EDGE_HANDLE, "../assets/dialogue_edge.png", load_image);
 
     load_internal_binary_asset!(
         app,
-        DIALOGUE_CONTINUE_HANDLE,
+        CONTINUE_INDICATOR_HANDLE,
         "../assets/dialogue_continue.png",
         load_image
     );
@@ -56,18 +42,15 @@ pub(crate) mod font_handle {
 
     pub(crate) const MEDIUM: HandleUntyped =
         HandleUntyped::weak_from_u64(Font::TYPE_UUID, 2263821398159872327);
-
-    pub(crate) const BOLD: HandleUntyped =
-        HandleUntyped::weak_from_u64(Font::TYPE_UUID, 2165468797133218757);
 }
 
 pub(crate) mod image_handle {
     use bevy::prelude::*;
     use bevy::reflect::TypeUuid;
 
-    pub(crate) const DIALOGUE_EDGE: HandleUntyped =
+    pub(crate) const EDGE: HandleUntyped =
         HandleUntyped::weak_from_u64(Image::TYPE_UUID, 8465132165468742313);
 
-    pub(crate) const DIALOGUE_CONTINUE: HandleUntyped =
+    pub(crate) const CONTINUE_INDICATOR: HandleUntyped =
         HandleUntyped::weak_from_u64(Image::TYPE_UUID, 5464879846123416874);
 }

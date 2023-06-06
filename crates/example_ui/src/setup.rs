@@ -64,7 +64,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 29 pixels high
-                                texture: image_handle::DIALOGUE_EDGE.typed(),
+                                texture: image_handle::EDGE.typed(),
                                 ..default()
                             },
                             style: Style {
@@ -84,7 +84,7 @@ fn setup(mut commands: Commands) {
                                 position_type: PositionType::Absolute,
                                 position: UiRect {
                                     left: Val::Px(TEXT_BORDER / 2.0),
-                                    top: Val::Px(-10.0),
+                                    top: Val::Px(-8.0),
                                     ..default()
                                 },
                                 ..default()
@@ -163,7 +163,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 29 pixels high
-                                texture: image_handle::DIALOGUE_EDGE.typed(),
+                                texture: image_handle::EDGE.typed(),
                                 flip_y: true,
                                 ..default()
                             },
@@ -181,7 +181,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 27 x 27 pixels
-                                texture: image_handle::DIALOGUE_CONTINUE.typed(),
+                                texture: image_handle::CONTINUE_INDICATOR.typed(),
                                 ..default()
                             },
                             style: Style {
@@ -247,7 +247,7 @@ where
                 .with_children(|parent| {
                     let sections = [
                         TextSection {
-                            value: format!("{}:  ", i + 1),
+                            value: format!("{}: ", i + 1),
                             style: text_style::option_id(),
                         },
                         TextSection {
