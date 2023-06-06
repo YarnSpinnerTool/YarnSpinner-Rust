@@ -46,7 +46,7 @@ fn main() {
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-1.7, 1.3, 1.8)
+        transform: Transform::from_xyz(-1.7, 1.4, 1.8)
             .looking_at(Vec3::new(-1.5, 1.0, 0.8), Vec3::Y),
         ..default()
     });
