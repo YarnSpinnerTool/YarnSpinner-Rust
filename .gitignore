@@ -2,8 +2,8 @@
 Cargo.lock
 .antlr
 
-.blend
-.blend1
+*.blend
+*.blend1
 
 .idea/
 !.idea/scopes/
