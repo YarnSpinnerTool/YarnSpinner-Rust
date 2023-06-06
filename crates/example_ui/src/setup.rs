@@ -99,7 +99,7 @@ fn setup(mut commands: Commands) {
 
             parent
                 .spawn((
-                    fmt_name("text root"),
+                    fmt_name("dialogue"),
                     NodeBundle {
                         style: Style {
                             size: Size::width(Val::Px(DIALOG_WIDTH)),
