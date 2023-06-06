@@ -5,17 +5,16 @@ use std::ops::DerefMut;
 pub(crate) fn bob_speaker(mut speakers: Query<(&Speaker, &mut Transform)>) {
     for (speaker, mut transform) in speakers.iter_mut() {
         let is_back_at_initial_position =
-            (transform.translation.y - speaker.initial_translation.y).powi(2) < 0.001;
+            (transform.translation.y - speaker.initial_translation.y).powi(2) < 1e-5;
 
         if !speaker.active && is_back_at_initial_position {
-            transform.translation.y = speaker.initial_translation.y;
             continue;
         }
         transform.translation.y = speaker.initial_translation.y
-            + (speaker.last_active.elapsed().as_secs_f32() * 10.0)
+            + (speaker.last_active.elapsed().as_secs_f32() * 12.0)
                 .sin()
                 .powi(2)
-                * 0.05;
+                * 0.04;
     }
 }
 
