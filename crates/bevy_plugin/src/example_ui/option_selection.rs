@@ -1,16 +1,22 @@
 use crate::example_ui::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
 use crate::example_ui::typewriter::Typewriter;
+use crate::example_ui::ExampleYarnSlingerUiSystemSet;
 use crate::prelude::{DialogueOption, DialogueRunner};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
-    app.add_systems((
-        show_options
-            .run_if(resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>())),
-        select_option
-            .run_if(resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>())),
-    ));
+    app.add_systems(
+        (
+            show_options.run_if(
+                resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
+            ),
+            select_option.run_if(
+                resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
+            ),
+        )
+            .in_set(ExampleYarnSlingerUiSystemSet),
+    );
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]

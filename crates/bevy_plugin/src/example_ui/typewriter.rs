@@ -1,13 +1,18 @@
 use crate::example_ui::option_selection::OptionSelection;
 use crate::example_ui::setup::{create_dialog_text, DialogueNode};
 use crate::example_ui::updating::SpeakerChangeEvent;
+use crate::example_ui::ExampleYarnSlingerUiSystemSet;
 use crate::prelude::LocalizedLine;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) fn typewriter_plugin(app: &mut App) {
-    app.add_system(write_text.run_if(resource_exists::<Typewriter>()));
+    app.add_system(
+        write_text
+            .run_if(resource_exists::<Typewriter>())
+            .in_set(ExampleYarnSlingerUiSystemSet),
+    );
 }
 
 #[derive(Debug, Clone, PartialEq, Resource)]

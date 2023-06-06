@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;
+pub use updating::SpeakerChangeEvent;
 
 #[derive(Debug, Default)]
 #[non_exhaustive]
 pub struct ExampleYarnSlingerUiPlugin;
+
+#[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
+pub struct ExampleYarnSlingerUiSystemSet;
 
 impl ExampleYarnSlingerUiPlugin {
     pub fn new() -> Self {

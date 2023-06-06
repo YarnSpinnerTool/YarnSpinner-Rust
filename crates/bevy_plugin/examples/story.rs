@@ -45,6 +45,11 @@ fn main() {
         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         spawn_sprites.run_if(sprites_have_loaded),
     ))
+    .add_systems(
+        (change_speaker, bob_speaker)
+            .chain()
+            .after(ExampleYarnSlingerUiSystemSet),
+    )
     .run();
 }
 
@@ -99,7 +104,7 @@ fn spawn_sprites(
     if *done {
         return;
     }
-    commands.spawn(
+    commands.spawn((
         Sprite3d {
             image: sprites.ferris_neutral.clone(),
             pixels_per_metre: 600.,
@@ -110,7 +115,12 @@ fn spawn_sprites(
             ..default()
         }
         .bundle(&mut sprite_params),
-    );
+        Speaker {
+            name: "Ferris".into(),
+            initial_translation: FERRIS_TRANSLATION,
+            ..default()
+        },
+    ));
     *done = true;
 }
 
@@ -122,6 +132,42 @@ struct Sprites {
     ferris_neutral: Handle<Image>,
 }
 
+#[derive(Component, Default)]
+struct Speaker {
+    name: String,
+    active: bool,
+    initial_translation: Vec3,
+}
+
 fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) -> bool {
     asset_server.get_load_state(&sprites.ferris_neutral) == LoadState::Loaded
+}
+
+fn change_speaker(
+    mut speaker_change_events: EventReader<SpeakerChangeEvent>,
+    mut speakers: Query<(&mut Speaker, &mut Transform)>,
+) {
+    for event in speaker_change_events.iter() {
+        let Some((mut speaker, mut transform)) = speakers
+            .iter_mut()
+            .find(|(speaker, ..)| speaker.name.to_lowercase() == event.character_name.to_lowercase()) else {
+            continue;
+        };
+        speaker.active = event.speaking;
+        if speaker.active {
+            speaker.initial_translation = transform.translation;
+        } else {
+            transform.translation = speaker.initial_translation;
+        }
+    }
+}
+
+fn bob_speaker(time: Res<Time>, mut speakers: Query<(&Speaker, &mut Transform)>) {
+    for (speaker, mut transform) in speakers.iter_mut() {
+        if !speaker.active {
+            continue;
+        }
+        transform.translation.y =
+            speaker.initial_translation.y + (time.elapsed_seconds() * 5.0).sin().powi(2) * 0.05;
+    }
 }

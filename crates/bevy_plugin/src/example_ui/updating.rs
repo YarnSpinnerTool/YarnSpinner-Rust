@@ -1,6 +1,7 @@
 use crate::example_ui::option_selection::OptionSelection;
 use crate::example_ui::setup::UiRootNode;
 use crate::example_ui::typewriter::Typewriter;
+use crate::example_ui::ExampleYarnSlingerUiSystemSet;
 use crate::prelude::*;
 use bevy::prelude::*;
 
@@ -15,7 +16,8 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
             continue_dialogue.run_if(resource_exists::<Typewriter>()),
         )
             .chain()
-            .after(YarnSlingerSystemSet),
+            .after(YarnSlingerSystemSet)
+            .in_set(ExampleYarnSlingerUiSystemSet),
     )
     .add_event::<SpeakerChangeEvent>();
 }

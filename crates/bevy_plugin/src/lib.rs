@@ -49,7 +49,9 @@ pub mod prelude {
     };
     pub(crate) type SystemResult = Result<()>;
     #[cfg(feature = "example_ui")]
-    pub use crate::example_ui::ExampleYarnSlingerUiPlugin;
+    pub use crate::example_ui::{
+        ExampleYarnSlingerUiPlugin, ExampleYarnSlingerUiSystemSet, SpeakerChangeEvent,
+    };
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
 }
