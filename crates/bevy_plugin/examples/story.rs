@@ -145,10 +145,10 @@ fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) ->
 
 fn change_speaker(
     mut speaker_change_events: EventReader<SpeakerChangeEvent>,
-    mut speakers: Query<(&mut Speaker, &mut Transform)>,
+    mut speakers: Query<(&mut Speaker, &Transform)>,
 ) {
     for event in speaker_change_events.iter() {
-        let Some((mut speaker, mut transform)) = speakers
+        let Some((mut speaker, transform)) = speakers
             .iter_mut()
             .find(|(speaker, ..)| speaker.name.to_lowercase() == event.character_name.to_lowercase()) else {
             continue;
@@ -156,15 +156,15 @@ fn change_speaker(
         speaker.active = event.speaking;
         if speaker.active {
             speaker.initial_translation = transform.translation;
-        } else {
-            transform.translation = speaker.initial_translation;
         }
     }
 }
 
 fn bob_speaker(time: Res<Time>, mut speakers: Query<(&Speaker, &mut Transform)>) {
     for (speaker, mut transform) in speakers.iter_mut() {
-        if !speaker.active {
+        let is_back_at_initial_position =
+            (transform.translation.y - speaker.initial_translation.y).abs() < 0.001;
+        if !speaker.active && is_back_at_initial_position {
             continue;
         }
         transform.translation.y =

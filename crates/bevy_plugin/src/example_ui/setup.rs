@@ -1,4 +1,4 @@
-use crate::example_ui::assets::font_handle;
+use crate::example_ui::assets::{font_handle, image_handle};
 use crate::prelude::{DialogueOption, OptionId};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -40,44 +40,72 @@ fn setup(mut commands: Commands) {
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::width(Val::Px(DIALOG_WIDTH)),
-                        min_size: Size::height(Val::Px(150.0)),
                         flex_direction: FlexDirection::Column,
-                        justify_content: JustifyContent::SpaceAround,
-                        align_items: AlignItems::FlexStart,
-                        padding: UiRect::all(Val::Px(TEXT_BORDER)),
                         ..default()
                     },
-                    background_color: Color::WHITE.with_a(0.6).into(),
                     ..default()
                 })
                 .with_children(|parent| {
-                    // Dialog itself
-                    parent.spawn((
-                        TextBundle::from_section(String::new(), text_style::standard())
-                            .with_style(style::standard()),
-                        DialogueNode,
-                        Label,
-                    ));
-                })
-                .with_children(|parent| {
-                    // Options
+                    parent.spawn(ImageBundle {
+                        image: UiImage {
+                            // 29 pixels high
+                            texture: image_handle::DIALOGUE_EDGE.typed(),
+                            ..default()
+                        },
+                        ..default()
+                    });
                     parent
-                        .spawn((
-                            NodeBundle {
-                                style: Style {
-                                    display: Display::None,
-                                    flex_direction: FlexDirection::Column,
-                                    justify_content: JustifyContent::FlexEnd,
-                                    align_items: AlignItems::FlexStart,
-                                    margin: UiRect::top(Val::Px(20.0)),
-                                    ..default()
-                                },
+                        .spawn(NodeBundle {
+                            style: Style {
+                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                min_size: Size::height(Val::Px(50.0)),
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::SpaceAround,
+                                align_items: AlignItems::FlexStart,
+                                padding: UiRect::horizontal(Val::Px(TEXT_BORDER)),
                                 ..default()
                             },
-                            OptionsNode,
-                        ))
-                        .insert(Visibility::Hidden);
+                            background_color: Color::BLACK.with_a(0.8).into(),
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            // Dialog itself
+                            parent.spawn((
+                                TextBundle::from_section(String::new(), text_style::standard())
+                                    .with_style(style::standard()),
+                                DialogueNode,
+                                Label,
+                            ));
+                        })
+                        .with_children(|parent| {
+                            // Options
+                            parent
+                                .spawn((
+                                    NodeBundle {
+                                        style: Style {
+                                            display: Display::None,
+                                            flex_direction: FlexDirection::Column,
+                                            justify_content: JustifyContent::FlexEnd,
+                                            align_items: AlignItems::FlexStart,
+                                            margin: UiRect::top(Val::Px(20.0)),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    },
+                                    OptionsNode,
+                                ))
+                                .insert(Visibility::Hidden);
+                        });
+
+                    parent.spawn(ImageBundle {
+                        image: UiImage {
+                            // 29 pixels high
+                            texture: image_handle::DIALOGUE_EDGE.typed(),
+                            flip_y: true,
+                            ..default()
+                        },
+                        ..default()
+                    });
                 });
         });
 }
@@ -182,7 +210,7 @@ mod text_style {
         TextStyle {
             font: font_handle::MEDIUM.typed(),
             font_size: 20.0,
-            color: Color::BLACK,
+            color: Color::WHITE,
         }
     }
     pub(crate) fn name() -> TextStyle {
@@ -202,7 +230,7 @@ mod text_style {
     pub(crate) fn option_text() -> TextStyle {
         TextStyle {
             font_size: 18.0,
-            color: Color::DARK_GRAY,
+            color: Color::TOMATO,
             ..standard()
         }
     }
