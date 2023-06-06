@@ -33,9 +33,10 @@ fn setup(mut commands: Commands) {
             NodeBundle {
                 style: Style {
                     size: Size::width(Val::Percent(100.0)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::FlexEnd,
+                    justify_content: JustifyContent::FlexEnd,
+                    align_items: AlignItems::Center,
                     margin: UiRect::bottom(Val::Px(30.0)),
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -46,9 +47,11 @@ fn setup(mut commands: Commands) {
         .with_children(|parent| {
             parent
                 .spawn((
-                    fmt_name("column"),
+                    fmt_name("top"),
                     NodeBundle {
                         style: Style {
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
                             flex_direction: FlexDirection::Column,
                             ..default()
                         },
@@ -56,159 +59,142 @@ fn setup(mut commands: Commands) {
                     },
                 ))
                 .with_children(|parent| {
-                    parent
-                        .spawn((
-                            fmt_name("top"),
-                            NodeBundle {
-                                style: Style {
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
-                                    flex_direction: FlexDirection::Column,
+                    parent.spawn((
+                        fmt_name("top edge image"),
+                        ImageBundle {
+                            image: UiImage {
+                                // 29 pixels high
+                                texture: image_handle::DIALOGUE_EDGE.typed(),
+                                ..default()
+                            },
+                            style: Style {
+                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                ..default()
+                            },
+                            ..default()
+                        },
+                    ));
+                })
+                .with_children(|parent| {
+                    parent.spawn((
+                        fmt_name("name"),
+                        TextBundle {
+                            text: Text::from_section(String::new(), text_style::name()),
+                            style: Style {
+                                position_type: PositionType::Absolute,
+                                position: UiRect {
+                                    left: Val::Px(TEXT_BORDER / 2.0),
+                                    top: Val::Px(-10.0),
                                     ..default()
                                 },
                                 ..default()
                             },
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn((
-                                fmt_name("top edge image"),
-                                ImageBundle {
-                                    image: UiImage {
-                                        // 29 pixels high
-                                        texture: image_handle::DIALOGUE_EDGE.typed(),
-                                        ..default()
-                                    },
-                                    style: Style {
-                                        size: Size::width(Val::Px(DIALOG_WIDTH)),
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                            ));
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((
-                                fmt_name("name"),
-                                TextBundle {
-                                    text: Text::from_section(String::new(), text_style::name()),
-                                    style: Style {
-                                        position_type: PositionType::Absolute,
-                                        position: UiRect {
-                                            left: Val::Px(TEXT_BORDER / 2.0),
-                                            top: Val::Px(-10.0),
-                                            ..default()
-                                        },
-                                        ..default()
-                                    },
-                                    z_index: ZIndex::Local(1),
-                                    ..default()
-                                },
-                                DialogueNameNode,
-                                Label,
-                            ));
-                        });
+                            z_index: ZIndex::Local(1),
+                            ..default()
+                        },
+                        DialogueNameNode,
+                        Label,
+                    ));
+                });
 
-                    parent
-                        .spawn((
-                            fmt_name("text root"),
-                            NodeBundle {
-                                style: Style {
-                                    size: Size::width(Val::Px(DIALOG_WIDTH)),
-                                    min_size: Size::height(Val::Px(50.0)),
-                                    flex_direction: FlexDirection::Column,
-                                    justify_content: JustifyContent::SpaceAround,
-                                    align_items: AlignItems::FlexStart,
-                                    padding: UiRect::horizontal(Val::Px(TEXT_BORDER)),
-                                    ..default()
-                                },
-                                background_color: Color::BLACK.with_a(0.8).into(),
+            parent
+                .spawn((
+                    fmt_name("text root"),
+                    NodeBundle {
+                        style: Style {
+                            size: Size::width(Val::Px(DIALOG_WIDTH)),
+                            min_size: Size::height(Val::Px(50.0)),
+                            flex_direction: FlexDirection::Column,
+                            justify_content: JustifyContent::SpaceAround,
+                            align_items: AlignItems::FlexStart,
+                            padding: UiRect::horizontal(Val::Px(TEXT_BORDER)),
+                            ..default()
+                        },
+                        background_color: Color::BLACK.with_a(0.8).into(),
+                        ..default()
+                    },
+                ))
+                .with_children(|parent| {
+                    // Dialog itself
+                    parent.spawn((
+                        fmt_name("text"),
+                        TextBundle::from_section(String::new(), text_style::standard())
+                            .with_style(style::standard()),
+                        DialogueNode,
+                        Label,
+                    ));
+                })
+                .with_children(|parent| {
+                    // Options
+                    parent.spawn((
+                        fmt_name("options"),
+                        NodeBundle {
+                            style: Style {
+                                display: Display::None,
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::FlexEnd,
+                                align_items: AlignItems::FlexStart,
+                                margin: UiRect::top(Val::Px(20.0)),
                                 ..default()
                             },
-                        ))
-                        .with_children(|parent| {
-                            // Dialog itself
-                            parent.spawn((
-                                fmt_name("text"),
-                                TextBundle::from_section(String::new(), text_style::standard())
-                                    .with_style(style::standard()),
-                                DialogueNode,
-                                Label,
-                            ));
-                        })
-                        .with_children(|parent| {
-                            // Options
-                            parent.spawn((
-                                fmt_name("options"),
-                                NodeBundle {
-                                    style: Style {
-                                        display: Display::None,
-                                        flex_direction: FlexDirection::Column,
-                                        justify_content: JustifyContent::FlexEnd,
-                                        align_items: AlignItems::FlexStart,
-                                        margin: UiRect::top(Val::Px(20.0)),
-                                        ..default()
-                                    },
-                                    visibility: Visibility::Hidden,
-                                    ..default()
-                                },
-                                OptionsNode,
-                            ));
-                        });
+                            visibility: Visibility::Hidden,
+                            ..default()
+                        },
+                        OptionsNode,
+                    ));
+                });
 
-                    parent
-                        .spawn((
-                            fmt_name("bottom"),
-                            NodeBundle {
-                                style: Style {
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
-                                    flex_direction: FlexDirection::Column,
-                                    ..default()
-                                },
+            parent
+                .spawn((
+                    fmt_name("bottom"),
+                    NodeBundle {
+                        style: Style {
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            flex_direction: FlexDirection::Column,
+                            ..default()
+                        },
+                        ..default()
+                    },
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        fmt_name("bottom edge image"),
+                        ImageBundle {
+                            image: UiImage {
+                                // 29 pixels high
+                                texture: image_handle::DIALOGUE_EDGE.typed(),
+                                flip_y: true,
                                 ..default()
                             },
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn((
-                                fmt_name("bottom edge image"),
-                                ImageBundle {
-                                    image: UiImage {
-                                        // 29 pixels high
-                                        texture: image_handle::DIALOGUE_EDGE.typed(),
-                                        flip_y: true,
-                                        ..default()
-                                    },
-                                    style: Style {
-                                        size: Size::width(Val::Px(DIALOG_WIDTH)),
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                            ));
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((
-                                fmt_name("continue indicator image"),
-                                ImageBundle {
-                                    image: UiImage {
-                                        // 27 x 27 pixels
-                                        texture: image_handle::DIALOGUE_CONTINUE.typed(),
-                                        ..default()
-                                    },
-                                    style: Style {
-                                        position_type: PositionType::Absolute,
-                                        position: UiRect::bottom(Val::Px(
-                                            INITIAL_DIALOGUE_CONTINUE_BOTTOM,
-                                        )),
-                                        ..default()
-                                    },
-                                    z_index: ZIndex::Local(1),
-                                    visibility: Visibility::Hidden,
-                                    ..default()
-                                },
-                                DialogueContinueNode,
-                            ));
-                        });
+                            style: Style {
+                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                ..default()
+                            },
+                            ..default()
+                        },
+                    ));
+                })
+                .with_children(|parent| {
+                    parent.spawn((
+                        fmt_name("continue indicator image"),
+                        ImageBundle {
+                            image: UiImage {
+                                // 27 x 27 pixels
+                                texture: image_handle::DIALOGUE_CONTINUE.typed(),
+                                ..default()
+                            },
+                            style: Style {
+                                position_type: PositionType::Absolute,
+                                position: UiRect::bottom(Val::Px(INITIAL_DIALOGUE_CONTINUE_BOTTOM)),
+                                ..default()
+                            },
+                            z_index: ZIndex::Local(1),
+                            visibility: Visibility::Hidden,
+                            ..default()
+                        },
+                        DialogueContinueNode,
+                    ));
                 });
         });
 }
