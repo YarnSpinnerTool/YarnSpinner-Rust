@@ -48,7 +48,7 @@ fn setup(mut commands: Commands) {
                         padding: UiRect::all(Val::Px(TEXT_BORDER)),
                         ..default()
                     },
-                    background_color: Color::WHITE.with_a(0.5).into(),
+                    background_color: Color::WHITE.with_a(0.6).into(),
                     ..default()
                 })
                 .with_children(|parent| {
