@@ -1,9 +1,9 @@
-use crate::example_ui::option_selection::OptionSelection;
-use crate::example_ui::setup::UiRootNode;
-use crate::example_ui::typewriter::Typewriter;
-use crate::example_ui::ExampleYarnSlingerUiSystemSet;
-use crate::prelude::*;
+use crate::option_selection::OptionSelection;
+use crate::setup::{DialogueContinueNode, UiRootNode};
+use crate::typewriter::Typewriter;
+use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
+use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
@@ -14,6 +14,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
                 .run_if(resource_exists::<Typewriter>().and_then(on_event::<PresentLineEvent>())),
             present_options.run_if(on_event::<PresentOptionsEvent>()),
             continue_dialogue.run_if(resource_exists::<Typewriter>()),
+            hide_on_wait.run_if(on_event::<ExecuteCommandEvent>()),
         )
             .chain()
             .after(YarnSlingerSystemSet)
@@ -32,15 +33,24 @@ fn show_dialog(mut commands: Commands, mut visibility: Query<&mut Visibility, Wi
     *visibility.single_mut() = Visibility::Visible;
 }
 
-fn hide_dialog(mut commands: Commands, mut visibility: Query<&mut Visibility, With<UiRootNode>>) {
+fn hide_dialog(
+    mut commands: Commands,
+    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut continue_visibility: Query<
+        &mut Visibility,
+        (Without<UiRootNode>, With<DialogueContinueNode>),
+    >,
+) {
     commands.remove_resource::<Typewriter>();
-    *visibility.single_mut() = Visibility::Hidden;
+    *root_visibility.single_mut() = Visibility::Hidden;
+    *continue_visibility.single_mut() = Visibility::Hidden;
 }
 
 fn present_line(
     mut line_events: EventReader<PresentLineEvent>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
     mut typewriter: ResMut<Typewriter>,
+    mut visibility: Query<&mut Visibility, With<UiRootNode>>,
 ) {
     for event in line_events.iter() {
         if let Some(name) = event.line.character_name() {
@@ -51,12 +61,22 @@ fn present_line(
         }
         typewriter.set_line(&event.line);
     }
+    *visibility.single_mut() = Visibility::Visible;
 }
 
 fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {
     for event in events.iter() {
         let option_selection = OptionSelection::from_option_set(&event.options);
         commands.insert_resource(option_selection);
+    }
+}
+
+fn hide_on_wait(
+    mut events: EventReader<ExecuteCommandEvent>,
+    mut visibility: Query<&mut Visibility, With<UiRootNode>>,
+) {
+    if events.iter().any(|event| event.command.name == "wait") {
+        *visibility.single_mut() = Visibility::Hidden;
     }
 }
 

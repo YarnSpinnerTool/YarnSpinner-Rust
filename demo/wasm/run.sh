@@ -6,10 +6,10 @@ set -e
 # On Windows, you'll have to remove it and then copy the directory `crates/bevy_plugin/assets` to `crates/bevy_plugin/wasm/assets` manually.
 
 rustup target add wasm32-unknown-unknown
-cargo build --example story --features example_ui --target wasm32-unknown-unknown
+cargo build --bin bevy_yarn_slinger_demo --target wasm32-unknown-unknown
 
 cargo install wasm-bindgen-cli || true
-wasm-bindgen --out-name yarn_slinger_story_demo --out-dir crates/bevy_plugin/wasm/target --target web target/wasm32-unknown-unknown/debug/examples/story.wasm
+wasm-bindgen --out-name bevy_yarn_slinger_demo --out-dir demo/wasm/target --target web target/wasm32-unknown-unknown/debug/bevy_yarn_slinger_demo.wasm
 
 cargo install basic-http-server || true
-basic-http-server crates/bevy_plugin/wasm
+basic-http-server demo/wasm

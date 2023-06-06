@@ -7,24 +7,31 @@ pub(crate) fn ui_assets_plugin(app: &mut App) {
     load_internal_binary_asset!(
         app,
         FONT_MEDIUM_HANDLE,
-        "assets/FiraMono-Medium.ttf",
+        "../assets/FiraMono-Medium.ttf",
         load_font
     );
 
-    load_internal_binary_asset!(app, FONT_BOLD_HANDLE, "assets/FiraSans-Bold.ttf", load_font);
+    load_internal_binary_asset!(
+        app,
+        FONT_BOLD_HANDLE,
+        "../assets/FiraSans-Bold.ttf",
+        load_font
+    );
 
-    use image_handle::{DIALOGUE_EDGE as DIALOGUE_EDGE_HANDLE, DIALOGUE_CONTINUE as DIALOGUE_CONTINUE_HANDLE};
+    use image_handle::{
+        DIALOGUE_CONTINUE as DIALOGUE_CONTINUE_HANDLE, DIALOGUE_EDGE as DIALOGUE_EDGE_HANDLE,
+    };
     load_internal_binary_asset!(
         app,
         DIALOGUE_EDGE_HANDLE,
-        "assets/dialogue_edge.png",
+        "../assets/dialogue_edge.png",
         load_image
     );
-    
+
     load_internal_binary_asset!(
         app,
         DIALOGUE_CONTINUE_HANDLE,
-        "assets/dialogue_continue.png",
+        "../assets/dialogue_continue.png",
         load_image
     );
 }
@@ -60,7 +67,7 @@ pub(crate) mod image_handle {
 
     pub(crate) const DIALOGUE_EDGE: HandleUntyped =
         HandleUntyped::weak_from_u64(Image::TYPE_UUID, 8465132165468742313);
-    
+
     pub(crate) const DIALOGUE_CONTINUE: HandleUntyped =
         HandleUntyped::weak_from_u64(Image::TYPE_UUID, 5464879846123416874);
 }

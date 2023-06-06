@@ -1,0 +1,14 @@
+[package]
+name = "yarn_slinger_examples"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+bevy_yarn_slinger = { path = "../../crates/bevy_plugin" }
+bevy_yarn_slinger_example_ui = { path = "../../crates/example_ui" }
+
+[dependencies.bevy]
+version = "0.10"
+default-features = false
+features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "x11", "bevy_gltf",]

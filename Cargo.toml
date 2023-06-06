@@ -2,11 +2,14 @@
 resolver = "2"
 
 members = [
-    "crates/compiler",
-    "crates/codegen",
-    "crates/core",
-    "crates/macros",
-    "crates/runtime",
+    "crates/example_ui",
     "crates/bevy_plugin",
     "crates/yarn_slinger",
+    "crates/runtime",
+    "crates/compiler",
+    "crates/core",
+    "crates/macros",
+    "crates/codegen",
+    "demo",
+    "examples/bevy_yarn_slinger",
 ]

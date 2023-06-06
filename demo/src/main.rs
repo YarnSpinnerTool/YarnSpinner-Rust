@@ -6,9 +6,7 @@ use bevy::window::PresentMode;
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 use bevy_yarn_slinger::prelude::*;
-
-#[cfg(not(feature = "example_ui"))]
-compile_error!("This example requires the `example_ui` feature to be enabled");
+use bevy_yarn_slinger_example_ui::prelude::*;
 
 fn main() {
     let mut app = App::new();

@@ -1,12 +1,12 @@
-use crate::example_ui::option_selection::OptionSelection;
-use crate::example_ui::setup::{
+use crate::option_selection::OptionSelection;
+use crate::setup::{
     create_dialog_text, DialogueContinueNode, DialogueNode, INITIAL_DIALOGUE_CONTINUE_BOTTOM,
 };
-use crate::example_ui::updating::SpeakerChangeEvent;
-use crate::example_ui::ExampleYarnSlingerUiSystemSet;
-use crate::prelude::LocalizedLine;
+use crate::updating::SpeakerChangeEvent;
+use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy::utils::Instant;
+use bevy_yarn_slinger::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) fn typewriter_plugin(app: &mut App) {

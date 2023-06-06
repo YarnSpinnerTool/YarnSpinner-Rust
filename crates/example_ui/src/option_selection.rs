@@ -1,9 +1,9 @@
-use crate::example_ui::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
-use crate::example_ui::typewriter::Typewriter;
-use crate::example_ui::ExampleYarnSlingerUiSystemSet;
-use crate::prelude::{DialogueOption, DialogueRunner};
+use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
+use crate::typewriter::Typewriter;
+use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(

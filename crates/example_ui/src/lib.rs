@@ -2,6 +2,12 @@ use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;
 pub use updating::SpeakerChangeEvent;
 
+pub mod prelude {
+    pub use crate::{
+        ExampleYarnSlingerUiPlugin, ExampleYarnSlingerUiSystemSet, SpeakerChangeEvent,
+    };
+}
+
 #[derive(Debug, Default)]
 #[non_exhaustive]
 pub struct ExampleYarnSlingerUiPlugin;

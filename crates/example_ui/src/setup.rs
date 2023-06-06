@@ -1,7 +1,7 @@
-use crate::example_ui::assets::{font_handle, image_handle};
-use crate::prelude::{DialogueOption, OptionId};
+use crate::assets::{font_handle, image_handle};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
     app.add_system(setup.on_startup());
