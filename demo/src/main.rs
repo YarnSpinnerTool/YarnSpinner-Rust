@@ -7,6 +7,7 @@ use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger_example_ui::prelude::*;
+use std::ops::Deref;
 
 fn main() {
     let mut app = App::new();
@@ -42,6 +43,7 @@ fn main() {
         setup.on_startup(),
         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         spawn_sprites.run_if(sprites_have_loaded),
+        rotate_sprite,
     ))
     .add_systems(
         (change_speaker, bob_speaker)
@@ -83,6 +85,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     commands.insert_resource(Sprites {
         ferris_neutral: asset_server.load("sprites/ferris_neutral.png"),
+        ferris_happy: asset_server.load("sprites/ferris_happy.png"),
     });
 }
 
@@ -90,6 +93,9 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     let mut dialogue_runner = project.default_dialogue_runner().unwrap();
     // Immediately start showing the dialogue
     dialogue_runner.start();
+    dialogue_runner
+        .command_registrations_mut()
+        .register_command("change_sprite", change_sprite);
     commands.spawn(dialogue_runner);
 }
 
@@ -118,6 +124,7 @@ fn spawn_sprites(
             initial_translation: FERRIS_TRANSLATION,
             ..default()
         },
+        RotatorPhase::default(),
     ));
     *done = true;
 }
@@ -128,6 +135,7 @@ const CAMERA_TRANSLATION: Vec3 = Vec3::new(-1.7, 1.4, 1.8);
 #[derive(Resource)]
 struct Sprites {
     ferris_neutral: Handle<Image>,
+    ferris_happy: Handle<Image>,
 }
 
 #[derive(Component)]
@@ -150,6 +158,7 @@ impl Default for Speaker {
 
 fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) -> bool {
     asset_server.get_load_state(&sprites.ferris_neutral) == LoadState::Loaded
+        && asset_server.get_load_state(&sprites.ferris_happy) == LoadState::Loaded
 }
 
 fn change_speaker(
@@ -186,4 +195,75 @@ fn bob_speaker(mut speakers: Query<(&Speaker, &mut Transform)>) {
                 .powi(2)
                 * 0.05;
     }
+}
+
+fn change_sprite(
+    In((character, sprite)): In<(&str, &str)>,
+    mut speakers: Query<(&Speaker, &Transform, &mut RotatorPhase)>,
+    sprites: Res<Sprites>,
+) {
+    let (.., transform, mut rotator) = speakers
+        .iter_mut()
+        .find(|(speaker, ..)| speaker.name.to_lowercase() == character.to_lowercase())
+        .unwrap();
+    let new_sprite = match sprite {
+        "ferris_neutral" => sprites.ferris_neutral.clone(),
+        "ferris_happy" => sprites.ferris_happy.clone(),
+        _ => panic!("Unknown sprite {sprite}"),
+    };
+    *rotator = RotatorPhase::RotatingTo {
+        initial_transform: *transform,
+        target_transform: {
+            let mut target_transform = *transform;
+            target_transform.rotate_local_y(90.0_f32.to_radians());
+            target_transform
+        },
+        new_sprite,
+    }
+}
+
+fn rotate_sprite(
+    mut rotators: Query<(&mut Transform, &Handle<StandardMaterial>, &mut RotatorPhase)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (mut transform, material, mut rotator) in rotators.iter_mut() {
+        let (RotatorPhase::RotatingTo { initial_transform, target_transform, .. } |
+            RotatorPhase::FinishingRotation { initial_transform, target_transform }) = *rotator else {
+            continue;
+        };
+        transform.rotation = transform.rotation.slerp(target_transform.rotation, 0.1);
+        if transform.rotation.dot(target_transform.rotation) > 0.999 {
+            match rotator.deref() {
+                RotatorPhase::RotatingTo { new_sprite, .. } => {
+                    {
+                        let material = materials.get_mut(material).unwrap();
+                        material.base_color_texture.replace(new_sprite.clone());
+                    }
+                    *rotator = RotatorPhase::FinishingRotation {
+                        initial_transform,
+                        target_transform: target_transform.looking_at(CAMERA_TRANSLATION, Vec3::Y),
+                    };
+                }
+                RotatorPhase::FinishingRotation { .. } => {
+                    *rotator = RotatorPhase::None;
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+}
+
+#[derive(Component, Default)]
+enum RotatorPhase {
+    #[default]
+    None,
+    RotatingTo {
+        new_sprite: Handle<Image>,
+        initial_transform: Transform,
+        target_transform: Transform,
+    },
+    FinishingRotation {
+        initial_transform: Transform,
+        target_transform: Transform,
+    },
 }

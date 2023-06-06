@@ -1,6 +1,6 @@
 language,id,text,file,node,line_number,lock,comment
 de-CH,line:1,"Bartender: Yeah, they're sitting right over there.",story.yarn,Start,4,41a1b8a0,
-de-CH,line:2,"Ferris: Oh, hi there!",story.yarn,Start,6,c82408df,Line metadata: lastline
-de-CH,line:3,Good to see you!,story.yarn,Start,7,b96c3f18,
-de-CH,line:4,Ferris: Nice to see you too!,story.yarn,Start,8,b2b557a8,
-de-CH,line:5,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,9,4201c2bb,
+de-CH,line:2,"Ferris: Oh, hi there!",story.yarn,Start,7,c82408df,Line metadata: lastline
+de-CH,line:3,Good to see you!,story.yarn,Start,8,b96c3f18,
+de-CH,line:4,Ferris: Nice to see you too!,story.yarn,Start,9,b2b557a8,
+de-CH,line:5,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,10,4201c2bb,

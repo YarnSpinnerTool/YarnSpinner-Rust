@@ -3,6 +3,7 @@ position: -157,-193
 ---
 Bartender: Yeah, they're sitting right over there. #line:1
 <<wait 0.7>>
+<<change_sprite ferris ferris_happy>>
 Ferris: Oh, hi there! #line:2
 -> Good to see you! #line:3
 Ferris: Nice to see you too! #line:4
