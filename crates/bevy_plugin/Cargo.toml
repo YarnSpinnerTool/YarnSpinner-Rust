@@ -27,8 +27,9 @@ features = ["bevy_asset", "serialize"]
 
 [dev-dependencies]
 tempfile = "3"
+bevy_editor_pls = "0.4"
 
 [dev-dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "vorbis", "x11"]
+features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "vorbis", "x11", "bevy_gltf"]

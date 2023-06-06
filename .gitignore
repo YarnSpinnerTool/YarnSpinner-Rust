@@ -2,6 +2,9 @@
 Cargo.lock
 .antlr
 
+.blend
+.blend1
+
 .idea/
 !.idea/scopes/
 .vscode/
