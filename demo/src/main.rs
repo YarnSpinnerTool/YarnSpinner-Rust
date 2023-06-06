@@ -7,7 +7,7 @@ use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger_example_ui::prelude::*;
-use std::ops::Deref;
+use std::ops::DerefMut;
 
 fn main() {
     let mut app = App::new();
@@ -124,7 +124,7 @@ fn spawn_sprites(
             initial_translation: FERRIS_TRANSLATION,
             ..default()
         },
-        RotatorPhase::default(),
+        RotationPhase::default(),
     ));
     *done = true;
 }
@@ -199,7 +199,7 @@ fn bob_speaker(mut speakers: Query<(&Speaker, &mut Transform)>) {
 
 fn change_sprite(
     In((character, sprite)): In<(&str, &str)>,
-    mut speakers: Query<(&Speaker, &Transform, &mut RotatorPhase)>,
+    mut speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
     sprites: Res<Sprites>,
 ) {
     let (.., transform, mut rotator) = speakers
@@ -211,59 +211,52 @@ fn change_sprite(
         "ferris_happy" => sprites.ferris_happy.clone(),
         _ => panic!("Unknown sprite {sprite}"),
     };
-    *rotator = RotatorPhase::RotatingTo {
-        initial_transform: *transform,
+    *rotator = RotationPhase::ChangingSprite {
         target_transform: {
             let mut target_transform = *transform;
-            target_transform.rotate_local_y(90.0_f32.to_radians());
+            target_transform.rotate_local_y(-180.0_f32.to_radians());
             target_transform
         },
-        new_sprite,
+        new_sprite: Some(new_sprite),
     }
 }
 
 fn rotate_sprite(
-    mut rotators: Query<(&mut Transform, &Handle<StandardMaterial>, &mut RotatorPhase)>,
+    mut rotators: Query<(
+        &mut Transform,
+        &Handle<StandardMaterial>,
+        &mut RotationPhase,
+    )>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (mut transform, material, mut rotator) in rotators.iter_mut() {
-        let (RotatorPhase::RotatingTo { initial_transform, target_transform, .. } |
-            RotatorPhase::FinishingRotation { initial_transform, target_transform }) = *rotator else {
+        let RotationPhase::ChangingSprite { target_transform, new_sprite } = rotator.deref_mut() else {
             continue;
         };
-        transform.rotation = transform.rotation.slerp(target_transform.rotation, 0.1);
-        if transform.rotation.dot(target_transform.rotation) > 0.999 {
-            match rotator.deref() {
-                RotatorPhase::RotatingTo { new_sprite, .. } => {
-                    {
-                        let material = materials.get_mut(material).unwrap();
-                        material.base_color_texture.replace(new_sprite.clone());
-                    }
-                    *rotator = RotatorPhase::FinishingRotation {
-                        initial_transform,
-                        target_transform: target_transform.looking_at(CAMERA_TRANSLATION, Vec3::Y),
-                    };
-                }
-                RotatorPhase::FinishingRotation { .. } => {
-                    *rotator = RotatorPhase::None;
-                }
-                _ => unreachable!(),
+        transform.rotation = transform.rotation.slerp(target_transform.rotation, 0.12);
+
+        let dot_to_target = transform.rotation.dot(target_transform.rotation).abs();
+        let halfway_done = dot_to_target >= 0.5;
+        if halfway_done {
+            if let Some(new_sprite) = new_sprite.take() {
+                let material = materials.get_mut(material).unwrap();
+                material.base_color_texture.replace(new_sprite);
             }
+        }
+        let done = dot_to_target >= 0.9;
+        if done {
+            transform.rotation = target_transform.rotation;
+            *rotator = RotationPhase::None;
         }
     }
 }
 
 #[derive(Component, Default)]
-enum RotatorPhase {
+enum RotationPhase {
     #[default]
     None,
-    RotatingTo {
-        new_sprite: Handle<Image>,
-        initial_transform: Transform,
-        target_transform: Transform,
-    },
-    FinishingRotation {
-        initial_transform: Transform,
+    ChangingSprite {
+        new_sprite: Option<Handle<Image>>,
         target_transform: Transform,
     },
 }
