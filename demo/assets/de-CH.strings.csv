@@ -3,7 +3,7 @@ de-CH,line:11330430,"Bartender: Yeah, they're sitting right over there.",story.y
 de-CH,line:1768282,"Ferris: Oh, hi there!",story.yarn,Start,7,c82408df,Line metadata: lastline
 de-CH,line:11949485,Good to see you!,story.yarn,Start,8,b96c3f18,
 de-CH,line:241831,Ferris: Nice to see you too!,story.yarn,Start,10,b2b557a8,
-de-CH,line:9767167,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,11,4201c2bb,
+de-CH,line:9767167,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,13,4201c2bb,Line metadata: lastline
 de-CH,line:3857565,No problem!,story.yarn,Start,14,f001e3ed,
 de-CH,line:1194739,"Ferris: So, how is life treating you?",story.yarn,Start,15,8aff655e,
 de-CH,line:117616,"Actually, it's been rather tough...",story.yarn,Start,16,d91d7418,
@@ -22,7 +22,30 @@ de-CH,line:8478498,"Exciting, but also scary!",story.yarn,Start,39,9579ee00,
 de-CH,line:6243530,"Honestly, I'd prefer a little more security.",story.yarn,Start,41,9424e0be,
 de-CH,line:4868554,Ferris: I'm curious. What have you learned so far?,story.yarn,Experience,49,bec136ed,Line metadata: lastline
 de-CH,line:15798771,I've learned a lot about game design,story.yarn,Experience,50,d14c51a9,
-de-CH,line:1800106,My crappy art has improved a lot,story.yarn,Experience,51,6d20685e,
-de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,57,09a19611,Line metadata: lastline
-de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,58,cd464c24,
-de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,59,38523325,
+de-CH,line:12258759,"Ferris: Well, that stands to reason. Did you watch these videos I get recommended all the time? How were they called?",story.yarn,Experience,51,fee622e6,Line metadata: lastline
+de-CH,line:229797,Extra Credits?,story.yarn,Experience,52,459526ad,
+de-CH,line:7204706,Game Maker's Toolkit?,story.yarn,Experience,53,2d6cb178,
+de-CH,line:14498565,GDC talks?,story.yarn,Experience,54,2ac271c6,
+de-CH,line:12824156,"Ferris: Yeah, those!",story.yarn,Experience,56,e3aa2988,Line metadata: lastline
+de-CH,line:16079969,"I've been watching quite a few of them, yeah!",story.yarn,Experience,57,ed2a4259,
+de-CH,line:8042703,"Actually, I've mostly been reading articles and books.",story.yarn,Experience,58,3af5db55,
+de-CH,line:15293577,"Ferris: And, did any of these feature a certain suppremely handsome crab on the cover?",story.yarn,Experience,59,55960087,Line metadata: lastline
+de-CH,line:10651764,"Hehe, I don't think you're featured on many Rust game dev books yet.",story.yarn,Experience,60,4a5226fa,
+de-CH,line:12399876,Ferris: Then better make some good games in Rust so people write books about it!,story.yarn,Experience,62,3cd5e058,
+de-CH,line:8566549,Ferris: What was the most interesting thing you learned?,story.yarn,Experience,64,37d3d0e0,Line metadata: lastline
+de-CH,line:11943124,"Hmm, that's a tough one to come up with on the spot. Gimme a sec.",story.yarn,Experience,65,133946de,
+de-CH,line:8728396,"Ferris: Sure, take your time.",story.yarn,Experience,66,3b1db7d0,
+de-CH,line:1800106,My crappy art has improved a lot,story.yarn,Experience,69,6d20685e,
+de-CH,line:12865043,"Ferris: Oh come on, your art was never ""crappy""!",story.yarn,Experience,71,90d396cd,
+de-CH,line:2530264,Ferris: How did you improve it though? Did you just draw a lot?,story.yarn,Experience,73,b17ef983,Line metadata: lastline
+de-CH,line:2311958,I've learned some new 3D graphics things I didn't know before.,story.yarn,Experience,74,74f5f2c5,
+de-CH,line:11817558,"Not just drawing, but yeah, lots of practice",story.yarn,Experience,75,d6a7e297,
+de-CH,line:10899769,"Ferris: Do you mind elaborating? You know I mostly know about programming, so this is all quite new to me.",story.yarn,Experience,76,a42ac22d,Line metadata: lastline
+de-CH,line:8910434,I've gotten into 3D modeling.,story.yarn,Experience,77,b47c3626,
+de-CH,line:12333512,I've written a couple of cool shaders.,story.yarn,Experience,78,2ffa2ce6,
+de-CH,line:6515587,TODO,story.yarn,Experience,79,337e547a,
+de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,85,09a19611,Line metadata: lastline
+de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,86,cd464c24,
+de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,87,38523325,
+de-CH,line:7574129,TODO,story.yarn,FullTimeInsecurity,88,337e547a,
+de-CH,line:3796063,TODO,story.yarn,ClippyEntry,94,337e547a,

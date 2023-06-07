@@ -8,9 +8,9 @@ Ferris: Oh, hi there! #line:1768282
 -> Good to see you! #line:11949485 
 <<change_sprite ferris ferris_neutral>>
 Ferris: Nice to see you too! #line:241831 
-Ferris: Thanks for coming, I know you've been busy lately. #line:9767167 
 <<declare $sadness to 0>>
 <<declare $happyness to 0>>
+Ferris: Thanks for coming, I know you've been busy lately. #line:9767167 
 -> No problem! #line:3857565 
     Ferris: So, how is life treating you? #line:1194739 
 -> Actually, it's been rather tough... #line:117616 
@@ -48,7 +48,35 @@ position: 76,16
 ---
 Ferris: I'm curious. What have you learned so far? #line:4868554 
 -> I've learned a lot about game design #line:15798771 
+    Ferris: Well, that stands to reason. Did you watch these videos I get recommended all the time? How were they called? #line:12258759 
+    -> Extra Credits? #line:229797 
+    -> Game Maker's Toolkit? #line:7204706 
+    -> GDC talks? #line:14498565 
+    <<change_sprite ferris ferris_happy>>
+    Ferris: Yeah, those! #line:12824156 
+    -> I've been watching quite a few of them, yeah! #line:16079969 
+    -> Actually, I've mostly been reading articles and books. #line:8042703 
+        Ferris: And, did any of these feature a certain suppremely handsome crab on the cover? #line:15293577 
+        -> Hehe, I don't think you're featured on many Rust game dev books yet. #line:10651764 
+            <<set $happyness to $happyness + 1>>
+            Ferris: Then better make some good games in Rust so people write books about it! #line:12399876 
+    <<change_sprite ferris ferris_neutral>>
+    Ferris: What was the most interesting thing you learned? #line:8566549 
+    -> Hmm, that's a tough one to come up with on the spot. Gimme a sec. #line:11943124 
+        Ferris: Sure, take your time. #line:8728396 
+        <<wait 0.8>>
+        <<jump ClippyEntry>>
 -> My crappy art has improved a lot #line:1800106 
+    <<change_sprite ferris ferris_happy>>
+    Ferris: Oh come on, your art was never "crappy"! #line:12865043 
+    <<change_sprite ferris ferris_neutral>>
+    Ferris: How did you improve it though? Did you just draw a lot? #line:2530264 
+    -> I've learned some new 3D graphics things I didn't know before. #line:2311958 
+    -> Not just drawing, but yeah, lots of practice #line:11817558 
+    Ferris: Do you mind elaborating? You know I mostly know about programming, so this is all quite new to me. #line:10899769 
+    -> I've gotten into 3D modeling. #line:8910434 
+    -> I've written a couple of cool shaders. #line:12333512 
+    TODO #line:6515587 
 ===
 
 title: FullTimeInsecurity
@@ -57,5 +85,11 @@ position: -373,7
 Ferris: Wanna talk about it? #line:4768964 
 -> I don't know if this is really what I want to do with my life #line:11812905 
 -> It started out great, but I'm not sure if I can keep it up #line:12295688 
+ TODO #line:7574129 
+===
 
+title: ClippyEntry
+position: -72,287
+---
+ TODO #line:3796063 
 ===
