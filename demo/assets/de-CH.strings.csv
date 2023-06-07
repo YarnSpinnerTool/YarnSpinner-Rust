@@ -1,6 +1,28 @@
 language,id,text,file,node,line_number,lock,comment
-de-CH,line:1,"Bartender: Yeah, they're sitting right over there.",story.yarn,Start,4,41a1b8a0,
-de-CH,line:2,"Ferris: Oh, hi there!",story.yarn,Start,7,c82408df,Line metadata: lastline
-de-CH,line:3,Good to see you!,story.yarn,Start,8,b96c3f18,
-de-CH,line:4,Ferris: Nice to see you too!,story.yarn,Start,10,b2b557a8,
-de-CH,line:5,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,11,4201c2bb,
+de-CH,line:11330430,"Bartender: Yeah, they're sitting right over there.",story.yarn,Start,4,41a1b8a0,
+de-CH,line:1768282,"Ferris: Oh, hi there!",story.yarn,Start,7,c82408df,Line metadata: lastline
+de-CH,line:11949485,Good to see you!,story.yarn,Start,8,b96c3f18,
+de-CH,line:241831,Ferris: Nice to see you too!,story.yarn,Start,10,b2b557a8,
+de-CH,line:9767167,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,11,4201c2bb,
+de-CH,line:3857565,No problem!,story.yarn,Start,14,f001e3ed,
+de-CH,line:1194739,"Ferris: So, how is life treating you?",story.yarn,Start,15,8aff655e,
+de-CH,line:117616,"Actually, it's been rather tough...",story.yarn,Start,16,d91d7418,
+de-CH,line:8556292,"Ferris: Hmm, I'm sorry to hear.",story.yarn,Start,18,791e12b3,
+de-CH,line:13408442,"Ferris: Since we last spoke, you started doing game development, right?.",story.yarn,Start,20,b6f468b6,Line metadata: lastline
+de-CH,line:14604755,"As a hobby, yeah.",story.yarn,Start,21,f3bcfb95,
+de-CH,line:8835991,"Ferris: Natural development from your gaming and programming hobbies, I venture.",story.yarn,Start,22,184d55d5,Line metadata: lastline
+de-CH,line:733854,You know it!,story.yarn,Start,23,d009cbd4,
+de-CH,line:467387,I suppose so.,story.yarn,Start,25,809e2b90,
+de-CH,line:14868721,Don't forget my artsy side!,story.yarn,Start,26,a1eb82c0,
+de-CH,line:5058828,"Ferris: Hehe, that's right!",story.yarn,Start,29,a1768c45,
+de-CH,line:16657049,"Yep, full time even",story.yarn,Start,32,f75f8f4e,
+de-CH,line:11682754,"Ferris: Oh yeah, I can see where your stress is coming from then.",story.yarn,Start,35,7784422b,
+de-CH,line:9864868,Ferris: Your life must be pretty exciting now!,story.yarn,Start,38,539b9103,Line metadata: lastline
+de-CH,line:8478498,"Exciting, but also scary!",story.yarn,Start,39,9579ee00,
+de-CH,line:6243530,"Honestly, I'd prefer a little more security.",story.yarn,Start,41,9424e0be,
+de-CH,line:4868554,Ferris: I'm curious. What have you learned so far?,story.yarn,Experience,49,bec136ed,Line metadata: lastline
+de-CH,line:15798771,I've learned a lot about game design,story.yarn,Experience,50,d14c51a9,
+de-CH,line:1800106,My crappy art has improved a lot,story.yarn,Experience,51,6d20685e,
+de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,57,09a19611,Line metadata: lastline
+de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,58,cd464c24,
+de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,59,38523325,

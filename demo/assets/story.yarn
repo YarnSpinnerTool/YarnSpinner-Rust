@@ -1,12 +1,61 @@
 title: Start
 position: -157,-193
 ---
-Bartender: Yeah, they're sitting right over there. #line:1
+Bartender: Yeah, they're sitting right over there. #line:11330430 
 <<wait 0.5>>
 <<change_sprite ferris ferris_happy>>
-Ferris: Oh, hi there! #line:2
--> Good to see you! #line:3
+Ferris: Oh, hi there! #line:1768282 
+-> Good to see you! #line:11949485 
 <<change_sprite ferris ferris_neutral>>
-Ferris: Nice to see you too! #line:4
-Ferris: Thanks for coming, I know you've been busy lately. #line:5
+Ferris: Nice to see you too! #line:241831 
+Ferris: Thanks for coming, I know you've been busy lately. #line:9767167 
+<<declare $sadness to 0>>
+<<declare $happyness to 0>>
+-> No problem! #line:3857565 
+    Ferris: So, how is life treating you? #line:1194739 
+-> Actually, it's been rather tough... #line:117616 
+    <<set $sadness to $sadness + 1>>
+    Ferris: Hmm, I'm sorry to hear. #line:8556292 
+<<declare $full_time to false>>
+Ferris: Since we last spoke, you started doing game development, right?. #line:13408442
+-> As a hobby, yeah. #line:14604755 
+    Ferris: Natural development from your gaming and programming hobbies, I venture. #line:8835991 
+    -> You know it! #line:733854 
+        <<set $happyness to $happyness + 1>>
+    -> I suppose so. #line:467387 
+    -> Don't forget my artsy side! #line:14868721 
+        <<change_sprite ferris ferris_happy>>
+        <<set $happyness to $happyness + 1>>
+        Ferris: Hehe, that's right! #line:5058828 
+        <<change_sprite ferris ferris_neutral>>
+    <<jump Experience>>
+-> Yep, full time even #line:16657049
+    <<set $full_time to true>>
+    <<if $sadness >= 1>>
+    Ferris: Oh yeah, I can see where your stress is coming from then.#line:11682754 
+    <<jump FullTimeInsecurity>>
+    <<else>>
+    Ferris: Your life must be pretty exciting now! #line:9864868 
+    -> Exciting, but also scary! #line:8478498 
+        <<jump Experience>>
+    -> Honestly, I'd prefer a little more security. #line:6243530 
+        <<set $sadness to $sadness + 1>>
+        <<jump FullTimeInsecurity>>
+    <<endif>>
+===
+title: Experience
+position: 76,16
+---
+Ferris: I'm curious. What have you learned so far? #line:4868554 
+-> I've learned a lot about game design #line:15798771 
+-> My crappy art has improved a lot #line:1800106 
+===
+
+title: FullTimeInsecurity
+position: -373,7
+---
+Ferris: Wanna talk about it? #line:4768964 
+-> I don't know if this is really what I want to do with my life #line:11812905 
+-> It started out great, but I'm not sure if I can keep it up #line:12295688 
+
 ===
