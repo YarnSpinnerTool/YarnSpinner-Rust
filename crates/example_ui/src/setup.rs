@@ -205,10 +205,7 @@ fn fmt_name(name: &str) -> Name {
 
 pub(crate) const INITIAL_DIALOGUE_CONTINUE_BOTTOM: f32 = -5.0;
 
-pub(crate) fn create_dialog_text<'a>(
-    text: impl Into<String>,
-    invisible: impl Into<String>,
-) -> Text {
+pub(crate) fn create_dialog_text(text: impl Into<String>, invisible: impl Into<String>) -> Text {
     Text::from_sections([
         TextSection {
             value: text.into(),

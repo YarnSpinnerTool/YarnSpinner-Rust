@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
+
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;
 pub use updating::SpeakerChangeEvent;
