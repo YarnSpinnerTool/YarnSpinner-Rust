@@ -1,4 +1,5 @@
-use crate::yarn_slinger_integration::{change_sprite, fade_in, RotationPhase, Speaker};
+use crate::visual_effects::RotationPhase;
+use crate::yarn_slinger_integration::{change_sprite, fade_in, Speaker};
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
@@ -18,7 +19,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::BISQUE,
-            illuminance: 10000.,
+            illuminance: 10_000.,
             shadows_enabled: true,
             ..default()
         },

@@ -1,9 +1,10 @@
 use crate::setup::StageCurtains;
+use crate::visual_effects::{Fade, RotationPhase};
 use crate::Sprites;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger_example_ui::prelude::*;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 #[derive(Component)]
@@ -13,6 +14,7 @@ pub(crate) struct Speaker {
     pub(crate) last_active: Instant,
     pub(crate) initial_translation: Vec3,
 }
+
 impl Default for Speaker {
     fn default() -> Self {
         Self {
@@ -69,25 +71,6 @@ pub(crate) fn change_sprite(
     }
 }
 
-#[derive(Component, Default)]
-pub(crate) enum RotationPhase {
-    #[default]
-    None,
-    ChangingSprite {
-        new_sprite: Option<Handle<Image>>,
-        target_transform: Transform,
-    },
-}
-
-#[derive(Debug, Clone, Resource)]
-pub(crate) struct Fade {
-    duration: f32,
-    start_alpha: f32,
-    end_alpha: f32,
-    done: Arc<AtomicBool>,
-    start: Instant,
-}
-
 pub(crate) fn fade_in(
     In(seconds): In<f32>,
     mut commands: Commands,
@@ -102,29 +85,4 @@ pub(crate) fn fade_in(
         start: Instant::now(),
     });
     done
-}
-
-pub(crate) fn handle_fade(
-    mut commands: Commands,
-    fade: ResMut<Fade>,
-    mut color: Query<&mut BackgroundColor, With<StageCurtains>>,
-) {
-    let input = (fade.start.elapsed().as_secs_f32() / fade.duration).min(1.0);
-
-    let smooth_start = |input: f32| input.powi(3);
-    let smooth_end = |input: f32| 1.0 - (1.0 - input).powi(2);
-    let scene_becomes_visible = fade.start_alpha > fade.end_alpha;
-    let easing_fn = if scene_becomes_visible {
-        smooth_start
-    } else {
-        smooth_end
-    };
-    let output = easing_fn(input);
-
-    let alpha = fade.start_alpha + (fade.end_alpha - fade.start_alpha) * output;
-    color.single_mut().0.set_a(alpha);
-    if input >= 0.99 {
-        commands.remove_resource::<Fade>();
-        fade.done.store(true, Ordering::Relaxed);
-    }
 }
