@@ -1,6 +1,7 @@
 use crate::option_selection::OptionSelection;
 use crate::setup::{
-    create_dialog_text, DialogueContinueNode, DialogueNode, INITIAL_DIALOGUE_CONTINUE_BOTTOM,
+    create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode,
+    INITIAL_DIALOGUE_CONTINUE_BOTTOM,
 };
 use crate::updating::SpeakerChangeEvent;
 use crate::ExampleYarnSlingerUiSystemSet;
@@ -102,6 +103,7 @@ fn write_text(
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
+    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
 ) {
     let mut text = text.single_mut();
     if typewriter.last_before_options && option_selection.is_none() {
@@ -110,6 +112,10 @@ fn write_text(
     }
     if typewriter.is_finished() {
         return;
+    }
+    if !typewriter.last_before_options {
+        *root_visibility.single_mut() = Visibility::Inherited;
+        // If this is last before options, the `OptionSelection` will make the visibility inherited as soon as it's ready instead
     }
     typewriter.update_current_text();
     if typewriter.is_finished() {

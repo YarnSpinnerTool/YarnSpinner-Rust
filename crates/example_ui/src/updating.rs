@@ -1,5 +1,5 @@
 use crate::option_selection::OptionSelection;
-use crate::setup::{DialogueNameNode, DialogueNode, UiRootNode};
+use crate::setup::{DialogueNameNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
@@ -41,9 +41,7 @@ fn present_line(
     mut line_events: EventReader<PresentLineEvent>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
     mut typewriter: ResMut<Typewriter>,
-    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
     mut name_node: Query<&mut Text, With<DialogueNameNode>>,
-    mut dialogue_node_text: Query<&mut Text, (With<DialogueNode>, Without<DialogueNameNode>)>,
 ) {
     for event in line_events.iter() {
         let name = if let Some(name) = event.line.character_name() {
@@ -58,8 +56,6 @@ fn present_line(
         name_node.single_mut().sections[0].value = name;
         typewriter.set_line(&event.line);
     }
-    *root_visibility.single_mut() = Visibility::Inherited;
-    *dialogue_node_text.single_mut() = Text::default();
 }
 
 fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {
@@ -84,6 +80,7 @@ fn continue_dialogue(
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
+    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
 ) {
     let explicit_continue =
         keys.just_pressed(KeyCode::Space) || mouse_buttons.just_pressed(MouseButton::Left);
@@ -95,6 +92,7 @@ fn continue_dialogue(
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             if !dialogue_runner.is_waiting_for_option_selection() && dialogue_runner.is_running() {
                 dialogue_runner.continue_in_next_update();
+                *root_visibility.single_mut() = Visibility::Hidden;
             }
         }
     }
