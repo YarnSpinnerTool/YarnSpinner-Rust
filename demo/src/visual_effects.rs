@@ -1,10 +1,9 @@
-use crate::setup::StageCurtains;
+use crate::easing::EasedChange;
+use crate::setup::{MainCamera, StageCurtains};
 use crate::yarn_slinger_integration::Speaker;
 use bevy::prelude::*;
-use bevy::utils::Instant;
+use std::fmt::Debug;
 use std::ops::DerefMut;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 
 pub(crate) fn bob_speaker(mut speakers: Query<(&Speaker, &mut Transform)>) {
     for (speaker, mut transform) in speakers.iter_mut() {
@@ -26,14 +25,10 @@ pub(crate) fn bob_speaker(mut speakers: Query<(&Speaker, &mut Transform)>) {
 pub(crate) enum RotationPhase {
     #[default]
     None,
-    ChangingSprite(SpriteChange),
-}
-
-pub(crate) struct SpriteChange {
-    pub(crate) new_sprite: Option<Handle<Image>>,
-    pub(crate) initial_transform: Transform,
-    pub(crate) duration: f32,
-    pub(crate) start: Instant,
+    ChangingSprite {
+        change: EasedChange<Quat>,
+        sprite: Option<Handle<Image>>,
+    },
 }
 
 pub(crate) fn rotate_sprite(
@@ -45,68 +40,71 @@ pub(crate) fn rotate_sprite(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (mut transform, material, mut rotator) in rotators.iter_mut() {
-        let RotationPhase::ChangingSprite(sprite_change)= rotator.deref_mut() else {
+        let RotationPhase::ChangingSprite{change, sprite}= rotator.deref_mut() else {
             continue;
         };
-        let input = (sprite_change.start.elapsed().as_secs_f32() / sprite_change.duration).min(1.0);
-        let output = ease_out_elastic(input);
-
-        let target_y_rotation = 180.0_f32.to_radians();
-        let y_rotation = target_y_rotation * output;
-        transform.rotation =
-            sprite_change.initial_transform.rotation * Quat::from_rotation_y(y_rotation);
+        let output = change.elastic();
+        transform.rotation = change.from.slerp(change.to, output);
 
         let rotation_half_way_done = output >= 0.5;
         if rotation_half_way_done {
-            if let Some(new_sprite) = sprite_change.new_sprite.take() {
+            if let Some(new_sprite) = sprite.take() {
                 let material = materials.get_mut(material).unwrap();
                 material.base_color_texture.replace(new_sprite);
             }
         }
-        let done = input >= 0.99;
-        if done {
+        if change.is_done() {
             *rotator = RotationPhase::None;
         }
     }
 }
 
-/// Source: <https://easings.net/#easeOutElastic>
-fn ease_out_elastic(x: f32) -> f32 {
-    const C4: f32 = (2.0 * std::f32::consts::PI) / 3.0;
-
-    (2.0_f32).powf(-10.0 * x) * ((x * 10.0 - 0.75) * C4).sin() + 1.0
-}
-
 #[derive(Debug, Clone, Resource)]
-pub(crate) struct Fade {
-    pub(crate) duration: f32,
-    pub(crate) start_alpha: f32,
-    pub(crate) end_alpha: f32,
-    pub(crate) done: Arc<AtomicBool>,
-    pub(crate) start: Instant,
-}
+pub(crate) struct FadeCurtainAlpha(pub(crate) EasedChange<f32>);
 
 pub(crate) fn handle_fade(
     mut commands: Commands,
-    fade: ResMut<Fade>,
+    mut fade: ResMut<FadeCurtainAlpha>,
     mut color: Query<&mut BackgroundColor, With<StageCurtains>>,
 ) {
-    let input = (fade.start.elapsed().as_secs_f32() / fade.duration).min(1.0);
-
-    let smooth_start = |input: f32| input.powi(3);
-    let smooth_end = |input: f32| 1.0 - (1.0 - input).powi(2);
-    let scene_becomes_visible = fade.start_alpha > fade.end_alpha;
-    let easing_fn = if scene_becomes_visible {
-        smooth_start
+    let scene_becomes_visible = fade.0.from > fade.0.to;
+    let output = if scene_becomes_visible {
+        fade.0.smooth_start()
     } else {
-        smooth_end
+        fade.0.smooth_end()
     };
-    let output = easing_fn(input);
 
-    let alpha = fade.start_alpha + (fade.end_alpha - fade.start_alpha) * output;
+    let alpha = fade.0.from + (fade.0.to - fade.0.from) * output;
     color.single_mut().0.set_a(alpha);
-    if input >= 0.99 {
-        commands.remove_resource::<Fade>();
-        fade.done.store(true, Ordering::Relaxed);
+    if fade.0.is_done() {
+        commands.remove_resource::<FadeCurtainAlpha>();
+        fade.0.set_done();
+    }
+}
+
+#[derive(Debug, Clone, Resource)]
+pub(crate) struct CameraMovement(pub(crate) EasedChange<Transform>);
+
+pub(crate) fn move_camera(
+    mut commands: Commands,
+    mut camera_movement: ResMut<CameraMovement>,
+    mut transform: Query<&mut Transform, With<MainCamera>>,
+) {
+    let translation_output = camera_movement.0.smooth_start();
+    let rotation_output = camera_movement.0.smooth_start();
+    let mut transform = transform.single_mut();
+    transform.translation = camera_movement
+        .0
+        .from
+        .translation
+        .lerp(camera_movement.0.to.translation, translation_output);
+    transform.rotation = camera_movement
+        .0
+        .from
+        .rotation
+        .slerp(camera_movement.0.to.rotation, rotation_output);
+    if camera_movement.0.is_done() {
+        commands.remove_resource::<CameraMovement>();
+        camera_movement.0.set_done();
     }
 }

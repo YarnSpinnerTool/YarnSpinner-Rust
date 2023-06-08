@@ -106,6 +106,10 @@ title: FullTimeInsecurity
 position: -373,7
 ---
 Ferris: Wanna talk about it? #line:4768964 
+-> I'd rather speak about happier, actually #line:8437413 
+    Ferris: Sure, I understand. Just know that I'm here if you ever want to talk about it. #line:15615185 
+    Ferris: I bet you must have had some interesting new experiences, though. #line:10640211 
+    <<jump Experience>>
 -> I don't know if this is really what I want to do with my life #line:11812905 
 -> It started out great, but I'm not sure if I can keep it up #line:12295688 
  TODO #line:7574129 
@@ -114,5 +118,18 @@ Ferris: Wanna talk about it? #line:4768964
 title: ClippyEntry
 position: -72,287
 ---
- TODO #line:3796063 
+???: Oh hi there! You peeps are also here? #line:10644447 
+<<wait 0.8>>
+<<move_camera_to_clippy>>
+<<change_sprite ferris ferris_happy>>
+Ferris: Oh hi Clippy! #line:9970032 
+<<rotate clippy>>
+Clippy: WhazZzZuUUuup! #line:10846989 
+Ferris: WhAzzZzuuuUUP! #line:8645644 
+-> WHazzZZUUuuUp! #line:16260189 
+    Everyone: WHAZZZZZUUUUUUUUUUPPPP! #line:4500003 
+-> You two still do that? #line:2996138 
+    Ferris & Clippy: WHAAZZZZZZUUUUUUUUUUPPPP! #line:4775442 
+<<change_sprite ferris ferris_neutral>>
+
 ===

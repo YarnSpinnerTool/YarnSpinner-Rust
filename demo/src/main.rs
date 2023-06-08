@@ -7,6 +7,7 @@ use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger_example_ui::prelude::*;
 
+mod easing;
 mod setup;
 mod visual_effects;
 mod yarn_slinger_integration;
@@ -46,7 +47,8 @@ fn main() {
         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         spawn_sprites.run_if(sprites_have_loaded),
         rotate_sprite,
-        handle_fade.run_if(resource_exists::<Fade>()),
+        handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
+        move_camera.run_if(resource_exists::<CameraMovement>()),
     ))
     .add_systems(
         (change_speaker, bob_speaker)
