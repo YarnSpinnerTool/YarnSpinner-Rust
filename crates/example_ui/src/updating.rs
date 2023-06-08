@@ -14,7 +14,6 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
                 .run_if(resource_exists::<Typewriter>().and_then(on_event::<PresentLineEvent>())),
             present_options.run_if(on_event::<PresentOptionsEvent>()),
             continue_dialogue.run_if(resource_exists::<Typewriter>()),
-            hide_on_wait.run_if(on_event::<ExecuteCommandEvent>()),
         )
             .chain()
             .after(YarnSlingerSystemSet)
@@ -62,15 +61,6 @@ fn present_options(mut commands: Commands, mut events: EventReader<PresentOption
     for event in events.iter() {
         let option_selection = OptionSelection::from_option_set(&event.options);
         commands.insert_resource(option_selection);
-    }
-}
-
-fn hide_on_wait(
-    mut events: EventReader<ExecuteCommandEvent>,
-    mut visibility: Query<&mut Visibility, With<UiRootNode>>,
-) {
-    if events.iter().any(|event| event.command.name == "wait") {
-        *visibility.single_mut() = Visibility::Hidden;
     }
 }
 
