@@ -63,7 +63,7 @@ pub(crate) fn change_sprite(
     };
     *rotator = RotationPhase::ChangingSprite(SpriteChange {
         initial_transform: *transform,
-        duration: 0.7,
+        duration: 1.0,
         start: Instant::now(),
         new_sprite: Some(new_sprite),
     })

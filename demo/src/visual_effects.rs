@@ -56,8 +56,8 @@ pub(crate) fn rotate_sprite(
         transform.rotation =
             sprite_change.initial_transform.rotation * Quat::from_rotation_y(y_rotation);
 
-        let halfway_done = output >= 0.5;
-        if halfway_done {
+        let rotation_half_way_done = output >= 0.5;
+        if rotation_half_way_done {
             if let Some(new_sprite) = sprite_change.new_sprite.take() {
                 let material = materials.get_mut(material).unwrap();
                 material.base_color_texture.replace(new_sprite);
