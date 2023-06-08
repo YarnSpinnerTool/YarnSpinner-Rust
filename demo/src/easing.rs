@@ -1,6 +1,6 @@
+use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy::utils::Instant;
-use std::f32::consts::PI;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -36,10 +36,10 @@ impl<T: Debug + Clone> EasedChange<T> {
     }
 
     /// Source: <https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Animated/Easing.js#L165>
-    pub(crate) fn elastic(&self) -> f32 {
-        const C4: f32 = (2.0 * std::f32::consts::PI) / 3.0;
-
-        (2.0_f32).powf(-10.0 * x) * ((x * 10.0 - 0.75) * C4).sin() + 1.0
+    pub(crate) fn elastic(&self, bounciness: u16) -> f32 {
+        let p = bounciness as f32 * PI;
+        let t = self.input();
+        1.0 - (t * PI / 2.0).cos().powi(3) * (t * p).cos()
     }
 
     pub(crate) fn smooth_start(&self) -> f32 {

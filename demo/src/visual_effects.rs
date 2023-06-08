@@ -43,8 +43,7 @@ pub(crate) fn rotate_sprite(
         let RotationPhase::ChangingSprite{change, sprite}= rotator.deref_mut() else {
             continue;
         };
-        let output = change.elastic();
-        transform.rotation = change.from.slerp(change.to, output);
+        let output = change.elastic(2);
 
         let rotation_half_way_done = output >= 0.5;
         if rotation_half_way_done {
@@ -54,7 +53,10 @@ pub(crate) fn rotate_sprite(
             }
         }
         if change.is_done() {
+            transform.rotation = change.to;
             *rotator = RotationPhase::None;
+        } else {
+            transform.rotation = change.from.slerp(change.to, output);
         }
     }
 }
@@ -67,18 +69,19 @@ pub(crate) fn handle_fade(
     mut fade: ResMut<FadeCurtainAlpha>,
     mut color: Query<&mut BackgroundColor, With<StageCurtains>>,
 ) {
-    let scene_becomes_visible = fade.0.from > fade.0.to;
-    let output = if scene_becomes_visible {
-        fade.0.smooth_start()
-    } else {
-        fade.0.smooth_end()
-    };
-
-    let alpha = fade.0.from + (fade.0.to - fade.0.from) * output;
-    color.single_mut().0.set_a(alpha);
     if fade.0.is_done() {
+        color.single_mut().0.set_a(fade.0.to);
         commands.remove_resource::<FadeCurtainAlpha>();
         fade.0.set_done();
+    } else {
+        let scene_becomes_visible = fade.0.from > fade.0.to;
+        let output = if scene_becomes_visible {
+            fade.0.smooth_start()
+        } else {
+            fade.0.smooth_end()
+        };
+        let alpha = fade.0.from + (fade.0.to - fade.0.from) * output;
+        color.single_mut().0.set_a(alpha);
     }
 }
 
@@ -90,21 +93,23 @@ pub(crate) fn move_camera(
     mut camera_movement: ResMut<CameraMovement>,
     mut transform: Query<&mut Transform, With<MainCamera>>,
 ) {
-    let translation_output = camera_movement.0.smooth_start();
-    let rotation_output = camera_movement.0.smooth_start();
-    let mut transform = transform.single_mut();
-    transform.translation = camera_movement
-        .0
-        .from
-        .translation
-        .lerp(camera_movement.0.to.translation, translation_output);
-    transform.rotation = camera_movement
-        .0
-        .from
-        .rotation
-        .slerp(camera_movement.0.to.rotation, rotation_output);
     if camera_movement.0.is_done() {
         commands.remove_resource::<CameraMovement>();
         camera_movement.0.set_done();
+        *transform.single_mut() = camera_movement.0.to;
+    } else {
+        let translation_output = camera_movement.0.elastic(1);
+        let rotation_output = camera_movement.0.elastic(1);
+        let mut transform = transform.single_mut();
+        transform.translation = camera_movement
+            .0
+            .from
+            .translation
+            .lerp(camera_movement.0.to.translation, translation_output);
+        transform.rotation = camera_movement
+            .0
+            .from
+            .rotation
+            .slerp(camera_movement.0.to.rotation, rotation_output);
     }
 }
