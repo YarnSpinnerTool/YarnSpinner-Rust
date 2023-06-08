@@ -56,6 +56,7 @@ pub(crate) fn change_sprite(
     let new_sprite = match sprite {
         "ferris_neutral" => sprites.ferris_neutral.clone(),
         "ferris_happy" => sprites.ferris_happy.clone(),
+        "clippy" => sprites.clippy.clone(),
         _ => panic!("Unknown sprite {sprite}"),
     };
     *rotator = RotationPhase::ChangingSprite {

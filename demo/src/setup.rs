@@ -1,5 +1,5 @@
 use crate::yarn_slinger_integration::{change_sprite, fade_in, RotationPhase, Speaker};
-use crate::{Sprites, CAMERA_TRANSLATION, FERRIS_TRANSLATION};
+use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams};
@@ -52,6 +52,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(Sprites {
         ferris_neutral: asset_server.load("sprites/ferris_neutral.png"),
         ferris_happy: asset_server.load("sprites/ferris_happy.png"),
+        clippy: asset_server.load("sprites/clippy.png"),
     });
 }
 
@@ -92,6 +93,24 @@ pub(crate) fn spawn_sprites(
         Speaker {
             name: "Ferris".into(),
             initial_translation: FERRIS_TRANSLATION,
+            ..default()
+        },
+        RotationPhase::default(),
+    ));
+    commands.spawn((
+        Sprite3d {
+            image: sprites.clippy.clone(),
+            pixels_per_metre: 350.,
+            partial_alpha: true,
+            unlit: true,
+            transform: Transform::from_translation(CLIPPY_TRANSLATION)
+                .looking_at(CAMERA_TRANSLATION, Vec3::Y),
+            ..default()
+        }
+        .bundle(&mut sprite_params),
+        Speaker {
+            name: "Clippy".into(),
+            initial_translation: CLIPPY_TRANSLATION,
             ..default()
         },
         RotationPhase::default(),
