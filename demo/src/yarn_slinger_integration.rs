@@ -1,7 +1,10 @@
 use crate::easing::EasedChange;
 use crate::setup::StageCurtains;
 use crate::visual_effects::{CameraMovement, FadeCurtainAlpha, RotationPhase};
-use crate::{Sprites, CAMERA_TRANSLATION, FERRIS_TRANSLATION, SECOND_ACT_CAMERA_TRANSLATION};
+use crate::{
+    Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION,
+    SECOND_ACT_CAMERA_TRANSLATION,
+};
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger_example_ui::prelude::*;
@@ -30,18 +33,17 @@ impl Default for Speaker {
 
 pub(crate) fn change_speaker(
     mut speaker_change_events: EventReader<SpeakerChangeEvent>,
-    mut speakers: Query<(&mut Speaker, &Transform)>,
+    mut speakers: Query<&mut Speaker>,
 ) {
     for event in speaker_change_events.iter() {
-        let Some((mut speaker, transform)) = speakers
+        let Some(mut speaker) = speakers
             .iter_mut()
-            .find(|(speaker, ..)| speaker.name.to_lowercase() == event.character_name.to_lowercase()) else {
+            .find(|speaker| speaker.name.to_lowercase() == event.character_name.to_lowercase()) else {
             continue;
         };
         if event.speaking {
             speaker.last_active = Instant::now();
             speaker.active = true;
-            speaker.initial_translation = transform.translation;
         } else {
             speaker.active = false;
         }
@@ -58,39 +60,29 @@ pub(crate) fn change_sprite(
         .find(|(speaker, ..)| speaker.name.to_lowercase() == character.to_lowercase())
         .unwrap();
     let new_sprite = match sprite {
-        "ferris_neutral" => sprites.ferris_neutral.clone(),
-        "ferris_happy" => sprites.ferris_happy.clone(),
-        "clippy" => sprites.clippy.clone(),
+        "ferris_neutral" => Some(sprites.ferris_neutral.clone()),
+        "ferris_happy" => Some(sprites.ferris_happy.clone()),
+        "clippy" => Some(sprites.clippy.clone()),
+        "" => None,
         _ => panic!("Unknown sprite {sprite}"),
     };
     let change = EasedChange::new(
         transform.rotation,
         transform.rotation * Quat::from_rotation_y(PI),
-        1.5,
+        0.65,
     );
     *rotator = RotationPhase::ChangingSprite {
         change,
-        sprite: Some(new_sprite),
+        sprite: new_sprite,
     }
 }
 
 pub(crate) fn rotate_character(
     In(character): In<&str>,
-    mut speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
+    speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
+    sprites: Res<Sprites>,
 ) {
-    let (.., transform, mut rotator) = speakers
-        .iter_mut()
-        .find(|(speaker, ..)| speaker.name.to_lowercase() == character.to_lowercase())
-        .unwrap();
-    let change = EasedChange::new(
-        transform.rotation,
-        transform.rotation * Quat::from_rotation_y(PI),
-        1.5,
-    );
-    *rotator = RotationPhase::ChangingSprite {
-        change,
-        sprite: None,
-    }
+    change_sprite(In((character, "")), speakers, sprites);
 }
 
 pub(crate) fn fade_in(
@@ -108,10 +100,17 @@ pub(crate) fn fade_in(
 pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<AtomicBool> {
     let from_translation =
         Transform::from_translation(CAMERA_TRANSLATION).looking_at(FERRIS_TRANSLATION, Vec3::Y);
-    let mut to_transform = Transform::from_translation(SECOND_ACT_CAMERA_TRANSLATION)
-        .looking_at(FERRIS_TRANSLATION, Vec3::Y);
-    to_transform.rotation *= Quat::from_rotation_y(-45.0_f32.to_radians());
-    let change = EasedChange::new(from_translation, to_transform, 2.0);
+    let vision_target = (FERRIS_TRANSLATION
+        + Vec3::new(
+            CLIPPY_TRANSLATION.x / 6.0,
+            CLIPPY_TRANSLATION.y,
+            CLIPPY_TRANSLATION.z / 6.0,
+        ))
+        / 2.0;
+    let to_transform = Transform::from_translation(SECOND_ACT_CAMERA_TRANSLATION)
+        .looking_at(vision_target, Vec3::Y);
+
+    let change = EasedChange::new(from_translation, to_transform, 1.2);
     let done = change.done.clone();
     commands.insert_resource(CameraMovement(change));
     done
