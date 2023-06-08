@@ -1,4 +1,4 @@
-use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
+use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
@@ -45,6 +45,7 @@ fn show_options(
     mut commands: Commands,
     children: Query<&Children>,
     mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
+    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
     let (entity, mut style, mut visibility) = options_node.single_mut();
     style.display = Display::Flex;
@@ -54,6 +55,7 @@ fn show_options(
         *visibility = Visibility::Hidden;
     }
     if children.iter_descendants(entity).next().is_none() {
+        *root_visibility.single_mut() = Visibility::Inherited;
         let mut entity_commands = commands.entity(entity);
         spawn_options(&mut entity_commands, &option_selection.options);
     }
@@ -74,6 +76,7 @@ fn select_option(
     mut dialogue_node_text: Query<&mut Text, With<DialogueNode>>,
     mut text: Query<&mut Text, Without<DialogueNode>>,
     option_selection: Res<OptionSelection>,
+    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
     if !typewriter.is_finished() {
         return;
@@ -118,6 +121,7 @@ fn select_option(
         style.display = Display::None;
         *visibility = Visibility::Hidden;
         *dialogue_node_text.single_mut() = Text::default();
+        *root_visibility.single_mut() = Visibility::Hidden;
     }
 }
 
