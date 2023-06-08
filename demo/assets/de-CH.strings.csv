@@ -42,10 +42,24 @@ de-CH,line:2311958,I've learned some new 3D graphics things I didn't know before
 de-CH,line:11817558,"Not just drawing, but yeah, lots of practice",story.yarn,Experience,75,d6a7e297,
 de-CH,line:10899769,"Ferris: Do you mind elaborating? You know I mostly know about programming, so this is all quite new to me.",story.yarn,Experience,76,a42ac22d,Line metadata: lastline
 de-CH,line:8910434,I've gotten into 3D modeling.,story.yarn,Experience,77,b47c3626,
-de-CH,line:12333512,I've written a couple of cool shaders.,story.yarn,Experience,78,2ffa2ce6,
-de-CH,line:6515587,TODO,story.yarn,Experience,79,337e547a,
-de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,85,09a19611,Line metadata: lastline
-de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,86,cd464c24,
-de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,87,38523325,
-de-CH,line:7574129,TODO,story.yarn,FullTimeInsecurity,88,337e547a,
-de-CH,line:3796063,TODO,story.yarn,ClippyEntry,94,337e547a,
+de-CH,line:6852198,Ferris: That's cool! I bet it must feel nice actually *seeing* the things you make instead of just writing stuff.,story.yarn,Experience,78,772beab5,Line metadata: lastline
+de-CH,line:3715813,"It's a great feeling. Quite motivating, too!",story.yarn,Experience,79,7efd7762,
+de-CH,line:4627631,Ferris: I bet!,story.yarn,Experience,82,45081e49,
+de-CH,line:15807880,"Yes, but it's also a lot of work until things don't look weird or slightly off.",story.yarn,Experience,84,572968fc,
+de-CH,line:9470465,Ferris: I can imagine.,story.yarn,Experience,85,2732cd3e,
+de-CH,line:15345629,It's a bit demoralizing when you also see how *little* you got done after hours of work.,story.yarn,Experience,86,f57b53c9,
+de-CH,line:15762446,"Ferris: I understand. Don't beat yourself up about it, every artist I've ever talked to has said something similar. It's just part of the process. Getting better takes time, but it's inevitable if you keep at it.",story.yarn,Experience,88,8b820b50,
+de-CH,line:12333512,I've written a couple of cool shaders.,story.yarn,Experience,89,2ffa2ce6,
+de-CH,line:759809,"Ferris: Whenever I see shader code, it all looks like dark magic to me. Is it as different from regular programming as it looks?",story.yarn,Experience,90,c421674d,Line metadata: lastline
+de-CH,line:8590779,"You do have to think about things in a different way, yeah.",story.yarn,Experience,91,361b6da2,
+de-CH,line:14893344,Ferris: I imagine. Maybe I should try it out sometime.,story.yarn,Experience,92,aba8a03e,
+de-CH,line:10787113,"It's not that different, really.",story.yarn,Experience,93,699bd780,
+de-CH,line:14465386,"Ferris: Huh, maybe I should give it a shot sometime then.",story.yarn,Experience,94,0b0c3be0,
+de-CH,line:10734991,Ferris: Are there any other artsy things you can share? I enjoy hearing about things I don't know much yet about.,story.yarn,Experience,95,fbdfbe45,Line metadata: lastline
+de-CH,line:4907851,"Hmm, lemme think.",story.yarn,Experience,96,c3ead9af,
+de-CH,line:2418024,"Ferris: Sure, take your time.",story.yarn,Experience,97,3b1db7d0,
+de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,107,09a19611,Line metadata: lastline
+de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,108,cd464c24,
+de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,109,38523325,
+de-CH,line:7574129,TODO,story.yarn,FullTimeInsecurity,110,337e547a,
+de-CH,line:3796063,TODO,story.yarn,ClippyEntry,116,337e547a,
