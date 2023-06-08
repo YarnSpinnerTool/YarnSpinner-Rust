@@ -1,65 +1,65 @@
 language,id,text,file,node,line_number,lock,comment
-de-CH,line:11330430,"Bartender: Yeah, they're sitting right over there.",story.yarn,Start,4,41a1b8a0,
-de-CH,line:1768282,"Ferris: Oh, hi there!",story.yarn,Start,7,c82408df,Line metadata: lastline
-de-CH,line:11949485,Good to see you!,story.yarn,Start,8,b96c3f18,
-de-CH,line:241831,Ferris: Nice to see you too!,story.yarn,Start,10,b2b557a8,
-de-CH,line:9767167,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,13,4201c2bb,Line metadata: lastline
-de-CH,line:3857565,No problem!,story.yarn,Start,14,f001e3ed,
-de-CH,line:1194739,"Ferris: So, how is life treating you?",story.yarn,Start,15,8aff655e,
-de-CH,line:117616,"Actually, it's been rather tough...",story.yarn,Start,16,d91d7418,
-de-CH,line:8556292,"Ferris: Hmm, I'm sorry to hear.",story.yarn,Start,18,791e12b3,
-de-CH,line:13408442,"Ferris: Since we last spoke, you started doing game development, right?.",story.yarn,Start,20,b6f468b6,Line metadata: lastline
-de-CH,line:14604755,"As a hobby, yeah.",story.yarn,Start,21,f3bcfb95,
-de-CH,line:8835991,"Ferris: Natural development from your gaming and programming hobbies, I venture.",story.yarn,Start,22,184d55d5,Line metadata: lastline
-de-CH,line:733854,You know it!,story.yarn,Start,23,d009cbd4,
-de-CH,line:467387,I suppose so.,story.yarn,Start,25,809e2b90,
-de-CH,line:14868721,Don't forget my artsy side!,story.yarn,Start,26,a1eb82c0,
-de-CH,line:5058828,"Ferris: Hehe, that's right!",story.yarn,Start,29,a1768c45,
-de-CH,line:16657049,"Yep, full time even",story.yarn,Start,32,f75f8f4e,
-de-CH,line:11682754,"Ferris: Oh yeah, I can see where your stress is coming from then.",story.yarn,Start,35,7784422b,
-de-CH,line:9864868,Ferris: Your life must be pretty exciting now!,story.yarn,Start,38,539b9103,Line metadata: lastline
-de-CH,line:8478498,"Exciting, but also scary!",story.yarn,Start,39,9579ee00,
-de-CH,line:6243530,"Honestly, I'd prefer a little more security.",story.yarn,Start,41,9424e0be,
-de-CH,line:4868554,Ferris: I'm curious. What have you learned so far?,story.yarn,Experience,49,bec136ed,Line metadata: lastline
-de-CH,line:15798771,I've learned a lot about game design,story.yarn,Experience,50,d14c51a9,
-de-CH,line:12258759,"Ferris: Well, that stands to reason. Did you watch these videos I get recommended all the time? How were they called?",story.yarn,Experience,51,fee622e6,Line metadata: lastline
-de-CH,line:229797,Extra Credits?,story.yarn,Experience,52,459526ad,
-de-CH,line:7204706,Game Maker's Toolkit?,story.yarn,Experience,53,2d6cb178,
-de-CH,line:14498565,GDC talks?,story.yarn,Experience,54,2ac271c6,
-de-CH,line:12824156,"Ferris: Yeah, those!",story.yarn,Experience,56,e3aa2988,Line metadata: lastline
-de-CH,line:16079969,"I've been watching quite a few of them, yeah!",story.yarn,Experience,57,ed2a4259,
-de-CH,line:8042703,"Actually, I've mostly been reading articles and books.",story.yarn,Experience,58,3af5db55,
-de-CH,line:15293577,"Ferris: And, did any of these feature a certain suppremely handsome crab on the cover?",story.yarn,Experience,59,55960087,Line metadata: lastline
-de-CH,line:10651764,"Hehe, I don't think you're featured on many Rust game dev books yet.",story.yarn,Experience,60,4a5226fa,
-de-CH,line:12399876,Ferris: Then better make some good games in Rust so people write books about it!,story.yarn,Experience,62,3cd5e058,
-de-CH,line:8566549,Ferris: What was the most interesting thing you learned?,story.yarn,Experience,64,37d3d0e0,Line metadata: lastline
-de-CH,line:11943124,"Hmm, that's a tough one to come up with on the spot. Gimme a sec.",story.yarn,Experience,65,133946de,
-de-CH,line:8728396,"Ferris: Sure, take your time.",story.yarn,Experience,66,3b1db7d0,
-de-CH,line:1800106,My crappy art has improved a lot,story.yarn,Experience,69,6d20685e,
-de-CH,line:12865043,"Ferris: Oh come on, your art was never ""crappy""!",story.yarn,Experience,71,90d396cd,
-de-CH,line:2530264,Ferris: How did you improve it though? Did you just draw a lot?,story.yarn,Experience,73,b17ef983,Line metadata: lastline
-de-CH,line:2311958,I've learned some new 3D graphics things I didn't know before.,story.yarn,Experience,74,74f5f2c5,
-de-CH,line:11817558,"Not just drawing, but yeah, lots of practice",story.yarn,Experience,75,d6a7e297,
-de-CH,line:10899769,"Ferris: Do you mind elaborating? You know I mostly know about programming, so this is all quite new to me.",story.yarn,Experience,76,a42ac22d,Line metadata: lastline
-de-CH,line:8910434,I've gotten into 3D modeling.,story.yarn,Experience,77,b47c3626,
-de-CH,line:6852198,Ferris: That's cool! I bet it must feel nice actually *seeing* the things you make instead of just writing stuff.,story.yarn,Experience,78,772beab5,Line metadata: lastline
-de-CH,line:3715813,"It's a great feeling. Quite motivating, too!",story.yarn,Experience,79,7efd7762,
-de-CH,line:4627631,Ferris: I bet!,story.yarn,Experience,82,45081e49,
-de-CH,line:15807880,"Yes, but it's also a lot of work until things don't look weird or slightly off.",story.yarn,Experience,84,572968fc,
-de-CH,line:9470465,Ferris: I can imagine.,story.yarn,Experience,85,2732cd3e,
-de-CH,line:15345629,It's a bit demoralizing when you also see how *little* you got done after hours of work.,story.yarn,Experience,86,f57b53c9,
-de-CH,line:15762446,"Ferris: I understand. Don't beat yourself up about it, every artist I've ever talked to has said something similar. It's just part of the process. Getting better takes time, but it's inevitable if you keep at it.",story.yarn,Experience,88,8b820b50,
-de-CH,line:12333512,I've written a couple of cool shaders.,story.yarn,Experience,89,2ffa2ce6,
-de-CH,line:759809,"Ferris: Whenever I see shader code, it all looks like dark magic to me. Is it as different from regular programming as it looks?",story.yarn,Experience,90,c421674d,Line metadata: lastline
-de-CH,line:8590779,"You do have to think about things in a different way, yeah.",story.yarn,Experience,91,361b6da2,
-de-CH,line:14893344,Ferris: I imagine. Maybe I should try it out sometime.,story.yarn,Experience,92,aba8a03e,
-de-CH,line:10787113,"It's not that different, really.",story.yarn,Experience,93,699bd780,
-de-CH,line:14465386,"Ferris: Huh, maybe I should give it a shot sometime then.",story.yarn,Experience,94,0b0c3be0,
-de-CH,line:10734991,Ferris: Are there any other artsy things you can share? I enjoy hearing about things I don't know much yet about.,story.yarn,Experience,95,fbdfbe45,Line metadata: lastline
-de-CH,line:4907851,"Hmm, lemme think.",story.yarn,Experience,96,c3ead9af,
-de-CH,line:2418024,"Ferris: Sure, take your time.",story.yarn,Experience,97,3b1db7d0,
-de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,107,09a19611,Line metadata: lastline
-de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,108,cd464c24,
-de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,109,38523325,
-de-CH,line:7574129,TODO,story.yarn,FullTimeInsecurity,110,337e547a,
-de-CH,line:3796063,TODO,story.yarn,ClippyEntry,116,337e547a,
+de-CH,line:11330430,"Bartender: Yeah, they're sitting right over there.",story.yarn,Start,5,41a1b8a0,
+de-CH,line:1768282,"Ferris: Oh, hi there!",story.yarn,Start,8,c82408df,Line metadata: lastline
+de-CH,line:11949485,Good to see you!,story.yarn,Start,9,b96c3f18,
+de-CH,line:241831,Ferris: Nice to see you too!,story.yarn,Start,11,b2b557a8,
+de-CH,line:9767167,"Ferris: Thanks for coming, I know you've been busy lately.",story.yarn,Start,14,4201c2bb,Line metadata: lastline
+de-CH,line:3857565,No problem!,story.yarn,Start,15,f001e3ed,
+de-CH,line:1194739,"Ferris: So, how is life treating you?",story.yarn,Start,16,8aff655e,
+de-CH,line:117616,"Actually, it's been rather tough...",story.yarn,Start,17,d91d7418,
+de-CH,line:8556292,"Ferris: Hmm, I'm sorry to hear.",story.yarn,Start,19,791e12b3,
+de-CH,line:13408442,"Ferris: Since we last spoke, you started doing game development, right?.",story.yarn,Start,21,b6f468b6,Line metadata: lastline
+de-CH,line:14604755,"As a hobby, yeah.",story.yarn,Start,22,f3bcfb95,
+de-CH,line:8835991,"Ferris: Natural development from your gaming and programming hobbies, I venture.",story.yarn,Start,23,184d55d5,Line metadata: lastline
+de-CH,line:733854,You know it!,story.yarn,Start,24,d009cbd4,
+de-CH,line:467387,I suppose so.,story.yarn,Start,26,809e2b90,
+de-CH,line:14868721,Don't forget my artsy side!,story.yarn,Start,27,a1eb82c0,
+de-CH,line:5058828,"Ferris: Hehe, that's right!",story.yarn,Start,30,a1768c45,
+de-CH,line:16657049,"Yep, full time even",story.yarn,Start,33,f75f8f4e,
+de-CH,line:11682754,"Ferris: Oh yeah, I can see where your stress is coming from then.",story.yarn,Start,36,7784422b,
+de-CH,line:9864868,Ferris: Your life must be pretty exciting now!,story.yarn,Start,39,539b9103,Line metadata: lastline
+de-CH,line:8478498,"Exciting, but also scary!",story.yarn,Start,40,9579ee00,
+de-CH,line:6243530,"Honestly, I'd prefer a little more security.",story.yarn,Start,42,9424e0be,
+de-CH,line:4868554,Ferris: I'm curious. What have you learned so far?,story.yarn,Experience,50,bec136ed,Line metadata: lastline
+de-CH,line:15798771,I've learned a lot about game design,story.yarn,Experience,51,d14c51a9,
+de-CH,line:12258759,"Ferris: Well, that stands to reason. Did you watch these videos I get recommended all the time? How were they called?",story.yarn,Experience,52,fee622e6,Line metadata: lastline
+de-CH,line:229797,Extra Credits?,story.yarn,Experience,53,459526ad,
+de-CH,line:7204706,Game Maker's Toolkit?,story.yarn,Experience,54,2d6cb178,
+de-CH,line:14498565,GDC talks?,story.yarn,Experience,55,2ac271c6,
+de-CH,line:12824156,"Ferris: Yeah, those!",story.yarn,Experience,57,e3aa2988,Line metadata: lastline
+de-CH,line:16079969,"I've been watching quite a few of them, yeah!",story.yarn,Experience,58,ed2a4259,
+de-CH,line:8042703,"Actually, I've mostly been reading articles and books.",story.yarn,Experience,59,3af5db55,
+de-CH,line:15293577,"Ferris: And, did any of these feature a certain suppremely handsome crab on the cover?",story.yarn,Experience,60,55960087,Line metadata: lastline
+de-CH,line:10651764,"Hehe, I don't think you're featured on many Rust game dev books yet.",story.yarn,Experience,61,4a5226fa,
+de-CH,line:12399876,Ferris: Then better make some good games in Rust so people write books about it!,story.yarn,Experience,63,3cd5e058,
+de-CH,line:8566549,Ferris: What was the most interesting thing you learned?,story.yarn,Experience,65,37d3d0e0,Line metadata: lastline
+de-CH,line:11943124,"Hmm, that's a tough one to come up with on the spot. Gimme a sec.",story.yarn,Experience,66,133946de,
+de-CH,line:8728396,"Ferris: Sure, take your time.",story.yarn,Experience,67,3b1db7d0,
+de-CH,line:1800106,My crappy art has improved a lot,story.yarn,Experience,70,6d20685e,
+de-CH,line:12865043,"Ferris: Oh come on, your art was never ""crappy""!",story.yarn,Experience,72,90d396cd,
+de-CH,line:2530264,Ferris: How did you improve it though? Did you just draw a lot?,story.yarn,Experience,74,b17ef983,Line metadata: lastline
+de-CH,line:2311958,I've learned some new 3D graphics things I didn't know before.,story.yarn,Experience,75,74f5f2c5,
+de-CH,line:11817558,"Not just drawing, but yeah, lots of practice",story.yarn,Experience,76,d6a7e297,
+de-CH,line:10899769,"Ferris: Do you mind elaborating? You know I mostly know about programming, so this is all quite new to me.",story.yarn,Experience,77,a42ac22d,Line metadata: lastline
+de-CH,line:8910434,I've gotten into 3D modeling.,story.yarn,Experience,78,b47c3626,
+de-CH,line:6852198,Ferris: That's cool! I bet it must feel nice actually *seeing* the things you make instead of just writing stuff.,story.yarn,Experience,79,772beab5,Line metadata: lastline
+de-CH,line:3715813,"It's a great feeling. Quite motivating, too!",story.yarn,Experience,80,7efd7762,
+de-CH,line:4627631,Ferris: I bet!,story.yarn,Experience,83,45081e49,
+de-CH,line:15807880,"Yes, but it's also a lot of work until things don't look weird or slightly off.",story.yarn,Experience,85,572968fc,
+de-CH,line:9470465,Ferris: I can imagine.,story.yarn,Experience,86,2732cd3e,
+de-CH,line:15345629,It's a bit demoralizing when you also see how *little* you got done after hours of work.,story.yarn,Experience,87,f57b53c9,
+de-CH,line:15762446,"Ferris: I understand. Don't beat yourself up about it, every artist I've ever talked to has said something similar. It's just part of the process. Getting better takes time, but it's inevitable if you keep at it.",story.yarn,Experience,89,8b820b50,
+de-CH,line:12333512,I've written a couple of cool shaders.,story.yarn,Experience,90,2ffa2ce6,
+de-CH,line:759809,"Ferris: Whenever I see shader code, it all looks like dark magic to me. Is it as different from regular programming as it looks?",story.yarn,Experience,91,c421674d,Line metadata: lastline
+de-CH,line:8590779,"You do have to think about things in a different way, yeah.",story.yarn,Experience,92,361b6da2,
+de-CH,line:14893344,Ferris: I imagine. Maybe I should try it out sometime.,story.yarn,Experience,93,aba8a03e,
+de-CH,line:10787113,"It's not that different, really.",story.yarn,Experience,94,699bd780,
+de-CH,line:14465386,"Ferris: Huh, maybe I should give it a shot sometime then.",story.yarn,Experience,95,0b0c3be0,
+de-CH,line:10734991,Ferris: Are there any other artsy things you can share? I enjoy hearing about things I don't know much yet about.,story.yarn,Experience,96,fbdfbe45,Line metadata: lastline
+de-CH,line:4907851,"Hmm, lemme think.",story.yarn,Experience,97,c3ead9af,
+de-CH,line:2418024,"Ferris: Sure, take your time.",story.yarn,Experience,98,3b1db7d0,
+de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,108,09a19611,Line metadata: lastline
+de-CH,line:11812905,I don't know if this is really what I want to do with my life,story.yarn,FullTimeInsecurity,109,cd464c24,
+de-CH,line:12295688,"It started out great, but I'm not sure if I can keep it up",story.yarn,FullTimeInsecurity,110,38523325,
+de-CH,line:7574129,TODO,story.yarn,FullTimeInsecurity,111,337e547a,
+de-CH,line:3796063,TODO,story.yarn,ClippyEntry,117,337e547a,

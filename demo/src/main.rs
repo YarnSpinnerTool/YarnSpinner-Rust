@@ -46,6 +46,7 @@ fn main() {
         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         spawn_sprites.run_if(sprites_have_loaded),
         rotate_sprite,
+        handle_fade.run_if(resource_exists::<Fade>()),
     ))
     .add_systems(
         (change_speaker, bob_speaker)
