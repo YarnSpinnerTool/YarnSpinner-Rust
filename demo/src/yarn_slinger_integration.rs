@@ -1,5 +1,5 @@
 use crate::setup::StageCurtains;
-use crate::visual_effects::{Fade, RotationPhase};
+use crate::visual_effects::{Fade, RotationPhase, SpriteChange};
 use crate::Sprites;
 use bevy::prelude::*;
 use bevy::utils::Instant;
@@ -61,14 +61,12 @@ pub(crate) fn change_sprite(
         "clippy" => sprites.clippy.clone(),
         _ => panic!("Unknown sprite {sprite}"),
     };
-    *rotator = RotationPhase::ChangingSprite {
-        target_transform: {
-            let mut target_transform = *transform;
-            target_transform.rotate_local_y(-180.0_f32.to_radians());
-            target_transform
-        },
+    *rotator = RotationPhase::ChangingSprite(SpriteChange {
+        initial_transform: *transform,
+        duration: 0.7,
+        start: Instant::now(),
         new_sprite: Some(new_sprite),
-    }
+    })
 }
 
 pub(crate) fn fade_in(
