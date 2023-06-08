@@ -1,9 +1,11 @@
+use crate::easing::EasedChange;
 use crate::setup::StageCurtains;
-use crate::visual_effects::{Fade, RotationPhase, SpriteChange};
-use crate::Sprites;
+use crate::visual_effects::{CameraMovement, FadeCurtainAlpha, RotationPhase};
+use crate::{Sprites, CAMERA_TRANSLATION, FERRIS_TRANSLATION, SECOND_ACT_CAMERA_TRANSLATION};
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger_example_ui::prelude::*;
+use std::f32::consts::PI;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
@@ -61,12 +63,34 @@ pub(crate) fn change_sprite(
         "clippy" => sprites.clippy.clone(),
         _ => panic!("Unknown sprite {sprite}"),
     };
-    *rotator = RotationPhase::ChangingSprite(SpriteChange {
-        initial_transform: *transform,
-        duration: 1.0,
-        start: Instant::now(),
-        new_sprite: Some(new_sprite),
-    })
+    let change = EasedChange::new(
+        transform.rotation,
+        transform.rotation * Quat::from_rotation_y(PI),
+        1.5,
+    );
+    *rotator = RotationPhase::ChangingSprite {
+        change,
+        sprite: Some(new_sprite),
+    }
+}
+
+pub(crate) fn rotate_character(
+    In(character): In<&str>,
+    mut speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
+) {
+    let (.., transform, mut rotator) = speakers
+        .iter_mut()
+        .find(|(speaker, ..)| speaker.name.to_lowercase() == character.to_lowercase())
+        .unwrap();
+    let change = EasedChange::new(
+        transform.rotation,
+        transform.rotation * Quat::from_rotation_y(PI),
+        1.5,
+    );
+    *rotator = RotationPhase::ChangingSprite {
+        change,
+        sprite: None,
+    }
 }
 
 pub(crate) fn fade_in(
@@ -74,13 +98,21 @@ pub(crate) fn fade_in(
     mut commands: Commands,
     color: Query<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let done = Arc::new(AtomicBool::new(false));
-    commands.insert_resource(Fade {
-        duration: seconds,
-        start_alpha: color.single().0.a(),
-        end_alpha: 0.0,
-        done: done.clone(),
-        start: Instant::now(),
-    });
+    let change = EasedChange::new(color.single().0.a(), 0.0, seconds);
+    let done = change.done.clone();
+
+    commands.insert_resource(FadeCurtainAlpha(change));
+    done
+}
+
+pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<AtomicBool> {
+    let from_translation =
+        Transform::from_translation(CAMERA_TRANSLATION).looking_at(FERRIS_TRANSLATION, Vec3::Y);
+    let mut to_transform = Transform::from_translation(SECOND_ACT_CAMERA_TRANSLATION)
+        .looking_at(FERRIS_TRANSLATION, Vec3::Y);
+    to_transform.rotation *= Quat::from_rotation_y(-45.0_f32.to_radians());
+    let change = EasedChange::new(from_translation, to_transform, 2.0);
+    let done = change.done.clone();
+    commands.insert_resource(CameraMovement(change));
     done
 }

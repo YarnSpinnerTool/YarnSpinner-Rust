@@ -1,5 +1,7 @@
 use crate::visual_effects::RotationPhase;
-use crate::yarn_slinger_integration::{change_sprite, fade_in, Speaker};
+use crate::yarn_slinger_integration::{
+    change_sprite, fade_in, move_camera_to_clippy, rotate_character, Speaker,
+};
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
@@ -7,11 +9,14 @@ use bevy_sprite3d::{Sprite3d, Sprite3dParams};
 use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(CAMERA_TRANSLATION)
-            .looking_at(FERRIS_TRANSLATION, Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_translation(CAMERA_TRANSLATION)
+                .looking_at(FERRIS_TRANSLATION, Vec3::Y),
+            ..default()
+        },
+        MainCamera,
+    ));
     commands.spawn(SceneBundle {
         scene: asset_server.load("models/coffee_shop.glb#Scene0"),
         ..default()
@@ -64,12 +69,17 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
     dialogue_runner
         .command_registrations_mut()
         .register_command("change_sprite", change_sprite)
-        .register_command("fade_in", fade_in);
+        .register_command("fade_in", fade_in)
+        .register_command("rotate", rotate_character)
+        .register_command("move_camera_to_clippy", move_camera_to_clippy);
     commands.spawn(dialogue_runner);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Component)]
 pub(crate) struct StageCurtains;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Component)]
+pub(crate) struct MainCamera;
 
 pub(crate) fn spawn_sprites(
     mut commands: Commands,
