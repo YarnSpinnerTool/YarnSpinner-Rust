@@ -1,8 +1,9 @@
 title: Start
 position: -157,-193
 ---
-Bartender: Yeah, they're sitting right over there. #line:11330430 
-<<wait 0.5>>
+<<wait 1.0>>
+Bartender: Yeah, they're sitting right over there. #line:11330430
+<<fade_in 2.5>>
 <<change_sprite ferris ferris_happy>>
 Ferris: Oh, hi there! #line:1768282 
 -> Good to see you! #line:11949485 

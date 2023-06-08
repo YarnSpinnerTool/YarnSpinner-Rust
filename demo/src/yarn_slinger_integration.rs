@@ -1,7 +1,10 @@
+use crate::setup::StageCurtains;
 use crate::Sprites;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger_example_ui::prelude::*;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 #[derive(Component)]
 pub(crate) struct Speaker {
@@ -73,4 +76,44 @@ pub(crate) enum RotationPhase {
         new_sprite: Option<Handle<Image>>,
         target_transform: Transform,
     },
+}
+
+#[derive(Debug, Clone, Resource)]
+pub(crate) struct Fade {
+    duration: f32,
+    start_alpha: f32,
+    end_alpha: f32,
+    done: Arc<AtomicBool>,
+    start: Instant,
+}
+
+pub(crate) fn fade_in(
+    In(seconds): In<f32>,
+    mut commands: Commands,
+    color: Query<&BackgroundColor, With<StageCurtains>>,
+) -> Arc<AtomicBool> {
+    let done = Arc::new(AtomicBool::new(false));
+    commands.insert_resource(Fade {
+        duration: seconds,
+        start_alpha: color.single().0.a(),
+        end_alpha: 0.0,
+        done: done.clone(),
+        start: Instant::now(),
+    });
+    done
+}
+
+pub(crate) fn handle_fade(
+    mut commands: Commands,
+    fade: ResMut<Fade>,
+    mut color: Query<&mut BackgroundColor, With<StageCurtains>>,
+) {
+    let fraction_done = (fade.start.elapsed().as_secs_f32() / fade.duration).min(1.0);
+    let fraction = fraction_done.powi(2);
+    let alpha = fade.start_alpha + (fade.end_alpha - fade.start_alpha) * fraction;
+    color.single_mut().0.set_a(alpha);
+    if fraction_done >= 0.99 {
+        commands.remove_resource::<Fade>();
+        fade.done.store(true, Ordering::Relaxed);
+    }
 }
