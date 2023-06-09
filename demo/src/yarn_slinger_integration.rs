@@ -1,5 +1,5 @@
 use crate::easing::EasedChange;
-use crate::setup::StageCurtains;
+use crate::setup::{MainCamera, StageCurtains};
 use crate::visual_effects::{CameraMovement, FadeCurtainAlpha, RotationPhase};
 use crate::{
     Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION,
@@ -56,6 +56,7 @@ pub(crate) fn change_speaker(
 pub(crate) fn change_sprite(
     In((character, sprite)): In<(&str, &str)>,
     mut speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
+    camera: Query<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
     sprites: Res<Sprites>,
 ) {
     let (.., transform, mut rotator) = speakers
@@ -69,10 +70,16 @@ pub(crate) fn change_sprite(
         "" => None,
         _ => panic!("Unknown sprite {sprite}"),
     };
+    let camera_transform = camera.single();
+
+    // Not using the current rotation because we might be mid-rotation from the last sprite change.
+    let original_rotation = transform
+        .looking_at(camera_transform.translation, Vec3::Y)
+        .rotation;
     let change = EasedChange::new(
-        transform.rotation,
-        transform.rotation * Quat::from_rotation_y(PI),
-        0.65,
+        original_rotation,
+        original_rotation * Quat::from_rotation_y(PI),
+        0.55,
     );
     *rotator = RotationPhase::ChangingSprite {
         change,
@@ -83,9 +90,10 @@ pub(crate) fn change_sprite(
 pub(crate) fn rotate_character(
     In(character): In<&str>,
     speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
+    camera: Query<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
     sprites: Res<Sprites>,
 ) {
-    change_sprite(In((character, "")), speakers, sprites);
+    change_sprite(In((character, "")), speakers, camera, sprites);
 }
 
 pub(crate) fn fade_in(
@@ -105,9 +113,9 @@ pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<At
         Transform::from_translation(CAMERA_TRANSLATION).looking_at(FERRIS_TRANSLATION, Vec3::Y);
     let vision_target = (FERRIS_TRANSLATION
         + Vec3::new(
-            CLIPPY_TRANSLATION.x / 6.0,
-            CLIPPY_TRANSLATION.y,
-            CLIPPY_TRANSLATION.z / 6.0,
+            CLIPPY_TRANSLATION.x * 0.,
+            CLIPPY_TRANSLATION.y * 0.8,
+            CLIPPY_TRANSLATION.z * 0.1,
         ))
         / 2.0;
     let to_transform = Transform::from_translation(SECOND_ACT_CAMERA_TRANSLATION)
