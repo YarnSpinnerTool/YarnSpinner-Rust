@@ -36,16 +36,19 @@ pub(crate) fn change_speaker(
     mut speakers: Query<&mut Speaker>,
 ) {
     for event in speaker_change_events.iter() {
-        let Some(mut speaker) = speakers
-            .iter_mut()
-            .find(|speaker| speaker.name.to_lowercase() == event.character_name.to_lowercase()) else {
-            continue;
-        };
-        if event.speaking {
-            speaker.last_active = Instant::now();
-            speaker.active = true;
-        } else {
-            speaker.active = false;
+        let event_name = event.character_name.to_lowercase();
+        let everyone_is_speaking = event_name == "everyone";
+        let speaker_names: Vec<_> = event_name.split(' ').collect();
+        for mut speaker in &mut speakers {
+            if everyone_is_speaking || speaker_names.contains(&speaker.name.to_lowercase().as_str())
+            {
+                if event.speaking {
+                    speaker.last_active = Instant::now();
+                    speaker.active = true;
+                } else {
+                    speaker.active = false;
+                }
+            }
         }
     }
 }
