@@ -1,6 +1,6 @@
-use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy::utils::Instant;
+use std::f32::consts::PI;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -44,12 +44,12 @@ impl<T: Debug + Clone> EasedChange<T> {
 
     pub(crate) fn smooth_start(&self) -> f32 {
         let x = self.input();
-        x * x * x
+        x.powf(1.5)
     }
 
     pub(crate) fn smooth_end(&self) -> f32 {
         let x = self.input();
         let n = 1.0 - x;
-        1.0 - n * n * n
+        1.0 - n * n
     }
 }

@@ -27,6 +27,7 @@ fn main() {
                     resolution: (800., 600.).into(),
                     present_mode: PresentMode::AutoVsync,
                     prevent_default_event_handling: false,
+                    resizable: false,
                     ..default()
                 }),
                 ..default()

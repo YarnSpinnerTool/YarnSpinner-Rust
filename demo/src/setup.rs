@@ -3,16 +3,33 @@ use crate::yarn_slinger_integration::{
     change_sprite, fade_in, move_camera_to_clippy, rotate_character, Speaker,
 };
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
+use bevy::core_pipeline::bloom::BloomSettings;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams};
 use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Unfortunately, MSAA and HDR are not supported simultaneously under WebGL.
+    // Since this example uses HDR, we must disable MSAA for WASM builds, at least
+    // until WebGPU is ready and no longer behind a feature flag in Web browsers.
+    #[cfg(target_arch = "wasm32")]
+    commands.insert_resource(Msaa::Off);
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_translation(CAMERA_TRANSLATION)
                 .looking_at(FERRIS_TRANSLATION, Vec3::Y),
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
+            tonemapping: Tonemapping::TonyMcMapface,
+            ..default()
+        },
+        #[cfg(not(target_arch = "wasm32"))]
+        BloomSettings {
+            intensity: 0.07,
             ..default()
         },
         MainCamera,
@@ -24,19 +41,38 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::BISQUE,
-            illuminance: 10_000.,
+            illuminance: 1_000.,
             shadows_enabled: true,
             ..default()
         },
         cascade_shadow_config: CascadeShadowConfigBuilder {
             first_cascade_far_bound: 4.0,
-            maximum_distance: 10.0,
+            maximum_distance: 20.0,
             ..default()
         }
         .into(),
-        transform: Transform::from_xyz(-3., 10., 3.).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(-3.5, 2.3, 1.15).looking_at(FERRIS_TRANSLATION, Vec3::Y),
         ..default()
     });
+
+    for (x, y, z) in [
+        (-1.0, 2.5, 0.75),
+        (-1.0, 2.5, -1.6),
+        (3.0, 2.5, 0.75),
+        (3.0, 2.5, -1.6),
+    ] {
+        commands.spawn(PointLightBundle {
+            point_light: PointLight {
+                color: Color::rgb(1.0, 0.78, 0.45),
+                intensity: 80.,
+                shadows_enabled: true,
+                ..default()
+            },
+            transform: Transform::from_xyz(x, y, z),
+            ..default()
+        });
+    }
+
     // Start game with a black background
     commands.spawn((
         NodeBundle {
