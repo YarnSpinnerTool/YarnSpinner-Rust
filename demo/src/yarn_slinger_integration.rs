@@ -81,7 +81,7 @@ pub(crate) fn change_sprite(
     let change = EasedChange::new(
         original_rotation,
         original_rotation * Quat::from_rotation_y(PI),
-        0.4,
+        0.7,
     );
     *rotator = RotationPhase::ChangingSprite {
         change,
@@ -155,6 +155,7 @@ pub(crate) fn show_bang(
             pixels_per_metre: 900.,
             partial_alpha: true,
             unlit: true,
+
             transform: Transform::from_translation(speaker.initial_translation + speaker_back)
                 .looking_at(CAMERA_TRANSLATION, Vec3::Y),
             ..default()
