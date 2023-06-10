@@ -77,6 +77,7 @@ fn select_option(
     mut text: Query<&mut Text, Without<DialogueNode>>,
     option_selection: Res<OptionSelection>,
     mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
+    mut windows: Query<&mut Window>,
 ) {
     if !typewriter.is_finished() {
         return;
@@ -93,15 +94,17 @@ fn select_option(
             break;
         }
     }
+    let mut window = windows.single_mut();
     for (interaction, button, children) in buttons.iter_mut() {
-        let color = match *interaction {
+        let (color, icon) = match *interaction {
             Interaction::Clicked if selection.is_none() => {
                 selection = Some(button.0);
-                Color::TOMATO
+                (Color::TOMATO, CursorIcon::Default)
             }
-            Interaction::Hovered => Color::WHITE,
-            _ => Color::TOMATO,
+            Interaction::Hovered => (Color::WHITE, CursorIcon::Hand),
+            _ => (Color::TOMATO, CursorIcon::Default),
         };
+        window.cursor.icon = icon;
         let text_entity = children.iter().find(|&e| text.contains(*e)).unwrap();
         let mut text = text.get_mut(*text_entity).unwrap();
         text.sections[1].style.color = color;

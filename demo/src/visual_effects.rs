@@ -43,7 +43,7 @@ pub(crate) fn rotate_sprite(
         let RotationPhase::ChangingSprite{change, sprite}= rotator.deref_mut() else {
             continue;
         };
-        let output = change.elastic(2.0);
+        let output = change.elastic(1.3);
 
         let rotation_half_way_done = output >= 0.5;
         if rotation_half_way_done {
