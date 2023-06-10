@@ -1,0 +1,8 @@
+title: Start
+---
+Inserting a resource after you continue this line.
+<<insert_resource "Bob" 42>>
+
+Reading the inserted resource after you continue this line. The output will be printed to the console.
+<<read_resource>>
+===
