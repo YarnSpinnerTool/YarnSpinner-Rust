@@ -65,7 +65,7 @@ Ferris: I'm curious. What have you learned so far? #line:4868554
     Ferris: What was the most interesting thing you learned? #line:8566549 
     -> Hmm, that's a tough one to come up with on the spot. Gimme a sec. #line:11943124 
         Ferris: Sure, take your time. #line:8728396 
-        <<wait 0.8>>
+        <<wait 0.5>>
         <<jump ClippyEntry>>
 -> My crappy art has improved a lot #line:1800106 
     <<change_sprite ferris ferris_happy>>
@@ -96,7 +96,7 @@ Ferris: I'm curious. What have you learned so far? #line:4868554
     Ferris: Are there any other artsy things you can share? I enjoy hearing about things I don't know much yet about. #line:10734991 
     -> Hmm, lemme think. #line:4907851 
         Ferris: Sure, take your time. #line:2418024 
-        <<wait 0.8>>
+        <<wait 0.5>>
         <<jump ClippyEntry>>
     
    
@@ -106,7 +106,7 @@ title: FullTimeInsecurity
 position: -373,7
 ---
 Ferris: Wanna talk about it? #line:4768964 
--> I'd rather speak about happier, actually #line:8437413 
+-> I'd rather speak about something happier, actually #line:8437413 
     Ferris: Sure, I understand. Just know that I'm here if you ever want to talk about it. #line:15615185 
     Ferris: I bet you must have had some interesting new experiences, though. #line:10640211 
     <<jump Experience>>
@@ -122,7 +122,52 @@ Ferris: What do you mean? #line:9979028
 -> It doesn't feel like a real "grown up" job. #line:1206954 
     Ferris: I see. Other than that or the opinions of others, do you feel fulfilled when you are working on a game? #line:13633544 
     -> When I'm in the middle of it? Yeah, I definitely feel a sense of flow. #line:16334452 
+        <<change_sprite ferris ferris_happy>>
+        Ferris: That's good to hear. If you enjoy the work itself, you're doing better than most people.
+        <<change_sprite ferris ferris_neutral>>
+        Ferris: You and me both see video games as an art form, right? That makes you an artist.
+        Ferris: And artists have always been belittled by others working in fields with more manual labor or obvious results.
+        Ferris: But the truth is that people like you shape our culture and society. You're doing important work.
+        Ferris: I'm proud of you for that, and I hope that you can be proud of yourself too.
+        Ferris: If anyone says otherwise, I advise you to either show them some cool art or stop talking to them.
+        Ferris: You deserve to be surrounded by people who believe in you.
+        -> I... wow.
+        -> Thanks, Ferris. I really needed to hear that.
+        -> Fair enough, but I can hardly stop talking to my family
+            Ferris: Tell them how important this is to you. If they don't understand, tell them to at least try and respect your choices.
+            Ferris: Your family loves you and would not want to lose you over something like this.
+            Ferris: I'm sure they'll come around, even if it doesn't seem like it right now.
+            -> I'll try. Thanks, Ferris.
+        <<change_sprite ferris ferris_happy>>
+        Ferris: You're welcome. I'm always here for you.
+        <<change_sprite ferris ferris_neutral>>
+        <<wait 0.5>>
+        <<jump ClippyEntry>>
     -> Not really. It feels like all my friends are moving forward with their lives and I'm just... not. #line:2723516 
+        Ferris: So you feel like you're missing out on something?
+        -> Yeah, that's it.
+        -> Not quite. It's more that I don't feel mature compared to others.
+        Ferris: Alright, I see. You know, it's okay to not quite know where you want to go in life.
+        Ferris: Others might seem like they've got everything figured out, but I guarantee you one thing.
+        Ferris: Everyone, and I tell you, *everyone* is just winging it.
+        Ferris: Me, your friends, your parents, your teachers, your boss, everyone.
+        Ferris: And that's okay. It's alright to stumble. So game development isn't quite your calling, that's fine.
+        Ferris: You're doing the best you can, and no one can ask more of you than that. 
+        Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy.
+        <<declare $helped to true>>
+        -> I... wow.
+        -> Thanks, Ferris. I really needed to hear that.
+        -> I'm not sure if I believe you, but thanks for trying.
+            <<set $helped to false>>
+        <<if $helped>>
+            <<change_sprite ferris ferris_happy>>
+        <<endif>>
+        Ferris: You're welcome. Remember that all of your friends are here for you if you need us.
+        <<if $helped>>
+            <<change_sprite ferris ferris_neutral>>
+        <<endif>>
+        <<wait 0.4>>
+        <<jump ClippyEntry>>
 ===
 
 title: ClippyEntry
