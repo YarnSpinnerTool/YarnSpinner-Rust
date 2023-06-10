@@ -75,6 +75,6 @@ fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) ->
 }
 
 const FERRIS_TRANSLATION: Vec3 = Vec3::new(-1.3, 0.9, 0.35);
-const CLIPPY_TRANSLATION: Vec3 = Vec3::new(1.5, 0.94, -0.5);
+const CLIPPY_TRANSLATION: Vec3 = Vec3::new(1.5, 0.94, -0.45);
 const CAMERA_TRANSLATION: Vec3 = Vec3::new(-1.7, 1.4, 1.8);
 const SECOND_ACT_CAMERA_TRANSLATION: Vec3 = Vec3::new(-2.0, 1.4, 1.8);
