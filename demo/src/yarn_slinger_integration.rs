@@ -143,7 +143,7 @@ pub(crate) fn show_bang(
     let change = EasedChange::new(
         (speaker.initial_translation + speaker_back, 0.0),
         (
-            speaker.initial_translation + Vec3::Y * 0.42 + speaker_back,
+            speaker.initial_translation + Vec3::Y * 0.45 + speaker_back,
             1.0,
         ),
         duration / 3.0,
