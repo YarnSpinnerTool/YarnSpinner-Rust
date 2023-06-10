@@ -79,7 +79,7 @@ pub(crate) fn change_sprite(
     let change = EasedChange::new(
         original_rotation,
         original_rotation * Quat::from_rotation_y(PI),
-        0.55,
+        1.0,
     );
     *rotator = RotationPhase::ChangingSprite {
         change,
