@@ -50,12 +50,16 @@ fn main() {
         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         adapt_materials.run_if(any_with_component::<SceneInstance>()),
         spawn_sprites.run_if(sprites_have_loaded),
-        rotate_sprite,
-        handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
-        move_camera.run_if(resource_exists::<CameraMovement>()),
     ))
     .add_systems(
-        (change_speaker, bob_speaker)
+        (
+            handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
+            move_camera.run_if(resource_exists::<CameraMovement>()),
+            change_speaker,
+            bob_speaker,
+            rotate_sprite,
+            ease_bang.run_if(any_with_component::<Bang>()),
+        )
             .chain()
             .after(ExampleYarnSlingerUiSystemSet),
     )
@@ -67,12 +71,14 @@ struct Sprites {
     ferris_neutral: Handle<Image>,
     ferris_happy: Handle<Image>,
     clippy: Handle<Image>,
+    bang: Handle<Image>,
 }
 
 fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) -> bool {
     asset_server.get_load_state(&sprites.ferris_neutral) == LoadState::Loaded
         && asset_server.get_load_state(&sprites.ferris_happy) == LoadState::Loaded
         && asset_server.get_load_state(&sprites.clippy) == LoadState::Loaded
+        && asset_server.get_load_state(&sprites.bang) == LoadState::Loaded
 }
 
 const FERRIS_TRANSLATION: Vec3 = Vec3::new(-1.3, 0.9, 0.35);

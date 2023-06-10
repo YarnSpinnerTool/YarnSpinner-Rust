@@ -5,7 +5,7 @@
 use crate::prelude::*;
 use std::any::Any;
 use std::borrow::Borrow;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::slice::IterMut;
 use yarn_slinger_macros::all_tuples;
@@ -33,10 +33,12 @@ impl YarnValueWrapper {
     fn convert<T>(&mut self)
     where
         T: TryFrom<YarnValue> + 'static,
-        <T as TryFrom<YarnValue>>::Error: Debug,
+        <T as TryFrom<YarnValue>>::Error: Display,
     {
         let raw = std::mem::take(&mut self.raw).unwrap();
-        let converted: T = raw.try_into().unwrap();
+        let converted: T = raw
+            .try_into()
+            .unwrap_or_else(|e| panic!("Parameter passed to Yarn has invalid type: {e}"));
         self.converted.replace(Box::new(converted));
     }
 }
@@ -71,7 +73,7 @@ all_tuples!(impl_yarn_fn_param_tuple, 0, 16, P);
 struct ResRef<'a, T>
 where
     T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
+    <T as TryFrom<YarnValue>>::Error: Display,
 {
     value: &'a T,
     phantom_data: PhantomData<T>,
@@ -80,7 +82,7 @@ where
 impl<'res, T> YarnFnParam for ResRef<'res, T>
 where
     T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
+    <T as TryFrom<YarnValue>>::Error: Display,
 {
     type Item<'new> = ResRef<'new, T>;
 
@@ -101,7 +103,7 @@ where
 struct ResRefBorrow<'a, T, U>
 where
     T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
+    <T as TryFrom<YarnValue>>::Error: Display,
     T: Borrow<U>,
     U: ?Sized + 'static,
 {
@@ -112,7 +114,7 @@ where
 impl<'res, T, U> YarnFnParam for ResRefBorrow<'res, T, U>
 where
     T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
+    <T as TryFrom<YarnValue>>::Error: Display,
     T: Borrow<U>,
     U: ?Sized + 'static,
 {
@@ -133,7 +135,7 @@ where
 struct ResOwned<T>
 where
     T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
+    <T as TryFrom<YarnValue>>::Error: Display,
 {
     value: T,
 }
@@ -141,7 +143,7 @@ where
 impl<T> YarnFnParam for ResOwned<T>
 where
     T: TryFrom<YarnValue> + 'static,
-    <T as TryFrom<YarnValue>>::Error: Debug,
+    <T as TryFrom<YarnValue>>::Error: Display,
 {
     type Item<'new> = ResOwned<T>;
 

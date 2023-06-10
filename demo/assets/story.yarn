@@ -3,7 +3,9 @@ position: -157,-193
 ---
 <<wait 0.9>>
 Bartender: Yeah, they're sitting right over there. #line:11330430
-<<fade_in 2.0>>
+<<fade_in 1.7>>
+<<show_bang ferris 1.0>>
+<<wait 0.8>>
 <<change_sprite ferris ferris_happy>>
 Ferris: Oh, hi there! #line:1768282 
 -> Good to see you! #line:11949485 
@@ -217,6 +219,7 @@ position: -73,499
 ---
 <<wait 0.5>>
 ???: Oh hi there! You peeps are also here? #line:10644447 
+<<show_bang ferris 1.0>>
 <<wait 0.8>>
 <<move_camera_to_clippy>>
 <<change_sprite ferris ferris_happy>>

@@ -1,6 +1,6 @@
 use crate::visual_effects::RotationPhase;
 use crate::yarn_slinger_integration::{
-    change_sprite, fade_in, move_camera_to_clippy, rotate_character, Speaker,
+    change_sprite, fade_in, move_camera_to_clippy, rotate_character, show_bang, Speaker,
 };
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
 use bevy::core_pipeline::bloom::BloomSettings;
@@ -96,6 +96,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ferris_neutral: asset_server.load("sprites/ferris_neutral.png"),
         ferris_happy: asset_server.load("sprites/ferris_happy.png"),
         clippy: asset_server.load("sprites/clippy.png"),
+        bang: asset_server.load("sprites/bang.png"),
     });
 }
 
@@ -108,7 +109,8 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
         .register_command("change_sprite", change_sprite)
         .register_command("fade_in", fade_in)
         .register_command("rotate", rotate_character)
-        .register_command("move_camera_to_clippy", move_camera_to_clippy);
+        .register_command("move_camera_to_clippy", move_camera_to_clippy)
+        .register_command("show_bang", show_bang);
     commands.spawn(dialogue_runner);
 }
 

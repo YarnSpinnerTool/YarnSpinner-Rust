@@ -1,12 +1,14 @@
 use crate::easing::EasedChange;
 use crate::setup::{MainCamera, StageCurtains};
-use crate::visual_effects::{CameraMovement, FadeCurtainAlpha, RotationPhase};
+use crate::visual_effects::{Bang, CameraMovement, FadeCurtainAlpha, RotationPhase};
 use crate::{
     Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION,
     SECOND_ACT_CAMERA_TRANSLATION,
 };
+use bevy::pbr::NotShadowCaster;
 use bevy::prelude::*;
 use bevy::utils::Instant;
+use bevy_sprite3d::{Sprite3d, Sprite3dParams};
 use bevy_yarn_slinger_example_ui::prelude::*;
 use std::f32::consts::PI;
 use std::sync::atomic::AtomicBool;
@@ -121,4 +123,43 @@ pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<At
     let done = change.done.clone();
     commands.insert_resource(CameraMovement(change));
     done
+}
+
+pub(crate) fn show_bang(
+    In((character, duration)): In<(&str, f32)>,
+    speakers: Query<&Speaker>,
+    mut commands: Commands,
+    mut sprite_params: Sprite3dParams,
+    camera: Query<&Transform, With<MainCamera>>,
+    sprites: Res<Sprites>,
+) {
+    let speaker = speakers
+        .iter()
+        .find(|speaker| speaker.name.to_lowercase() == character.to_lowercase())
+        .unwrap();
+    let camera_transform = camera.single();
+    let speaker_back =
+        (speaker.initial_translation - camera_transform.translation).normalize() * 0.1;
+    let change = EasedChange::new(
+        (speaker.initial_translation + speaker_back, 0.0),
+        (
+            speaker.initial_translation + Vec3::Y * 0.42 + speaker_back,
+            1.0,
+        ),
+        duration / 3.0,
+    );
+    commands.spawn((
+        Sprite3d {
+            image: sprites.bang.clone(),
+            pixels_per_metre: 900.,
+            partial_alpha: true,
+            unlit: true,
+            transform: Transform::from_translation(speaker.initial_translation + speaker_back)
+                .looking_at(CAMERA_TRANSLATION, Vec3::Y),
+            ..default()
+        }
+        .bundle(&mut sprite_params),
+        NotShadowCaster,
+        Bang(change),
+    ));
 }

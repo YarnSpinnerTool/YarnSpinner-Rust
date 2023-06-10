@@ -113,3 +113,32 @@ pub(crate) fn move_camera(
             .slerp(camera_movement.0.to.rotation, rotation_output);
     }
 }
+
+#[derive(Debug, Clone, Component)]
+pub(crate) struct Bang(pub(crate) EasedChange<(Vec3, f32)>);
+
+pub(crate) fn ease_bang(
+    mut bangs: Query<(Entity, &Bang, &mut Transform, &Handle<StandardMaterial>)>,
+    mut standard_materials: ResMut<Assets<StandardMaterial>>,
+    camera: Query<&Transform, (With<MainCamera>, Without<Bang>)>,
+    mut commands: Commands,
+) {
+    for (entity, bang, mut transform, material) in bangs.iter_mut() {
+        let material = standard_materials.get_mut(material).unwrap();
+        if bang.0.start_time.elapsed().as_secs_f32() >= bang.0.duration * 3.0 {
+            commands.entity(entity).despawn_recursive();
+            material.base_color.set_a(0.0);
+            continue;
+        }
+        let translation_output = bang.0.elastic(1.0);
+        let alpha_output = bang.0.smooth_start();
+        let (initial_translation, initial_alpha) = bang.0.from;
+        let (final_translation, final_alpha) = bang.0.to;
+        let camera_transform = camera.single();
+        transform.translation = initial_translation.lerp(final_translation, translation_output);
+        transform.look_at(camera_transform.translation, Vec3::Y);
+        material
+            .base_color
+            .set_a(initial_alpha + (final_alpha - initial_alpha) * alpha_output);
+    }
+}
