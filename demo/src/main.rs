@@ -1,6 +1,7 @@
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
 use bevy::asset::LoadState;
 use bevy::prelude::*;
+use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
@@ -46,6 +47,7 @@ fn main() {
     .add_systems((
         setup.on_startup(),
         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+        adapt_materials.run_if(any_with_component::<SceneInstance>()),
         spawn_sprites.run_if(sprites_have_loaded),
         rotate_sprite,
         handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),

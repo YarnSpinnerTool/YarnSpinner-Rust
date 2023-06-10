@@ -5,6 +5,7 @@ use crate::yarn_slinger_integration::{
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
 use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::core_pipeline::tonemapping::Tonemapping;
+use bevy::gltf::Gltf;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams};
@@ -116,6 +117,26 @@ pub(crate) struct StageCurtains;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Component)]
 pub(crate) struct MainCamera;
+
+pub(crate) fn adapt_materials(
+    gltfs: Res<Assets<Gltf>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    mut done: Local<bool>,
+) {
+    if *done {
+        return;
+    }
+
+    let Some(gltf) = gltfs.get(&asset_server.load("models/coffee_shop.glb")) else {
+        return;
+    };
+    let glass_handle = gltf.named_materials.get("Glass").unwrap();
+    let glass_material = materials.get_mut(glass_handle).unwrap();
+    // No way to export this from Blender, unfortunately
+    glass_material.alpha_mode = AlphaMode::Add;
+    *done = true;
+}
 
 pub(crate) fn spawn_sprites(
     mut commands: Commands,
