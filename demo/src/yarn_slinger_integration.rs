@@ -146,6 +146,7 @@ pub(crate) fn show_bang(
             speaker.initial_translation + Vec3::Y * 0.45 + speaker_back,
             1.0,
         ),
+        // One third is transition, two thirds is just showing the bang.
         duration / 3.0,
     );
     commands.spawn((
