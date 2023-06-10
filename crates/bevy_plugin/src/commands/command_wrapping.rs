@@ -101,7 +101,6 @@ impl TaskFinishedIndicator for Task<()> {
     }
 }
 
-
 macro_rules! impl_task_finished_indicator {
     ($($param: ident),*) => {
         impl<$($param: TaskFinishedIndicator),*> TaskFinishedIndicator for ($($param,)*) where ($($param,)*): Debug {
@@ -114,7 +113,6 @@ macro_rules! impl_task_finished_indicator {
     };
 }
 all_tuples!(impl_task_finished_indicator, 0, 16, F);
-
 
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator>;
