@@ -228,9 +228,26 @@ Ferris: Oh hi Clippy! #line:9970032
 Clippy: WhazZzZuUUuup! #line:10846989 
 Ferris: WhAzzZzuuuUUP! #line:8645644 
 -> WHazzZZUUuuUp! #line:16260189 
-    Everyone: WHAZZZZZUUUUUUUUUUPPPP! #line:4500003 
+    Everyone: WHAAAAAAAZZZZZZZUUUUUUUUUUPPPPPPPP! #line:4500003 
 -> You two are still doing that? #line:2996138 
-    Ferris & Clippy: WHAAZZZZZZUUUUUUUUUUPPPP! #line:4775442 
+    Ferris & Clippy: WHAAAAAAAZZZZZZZUUUUUUUUUUPPPPPPPP! #line:4775442 
 <<change_sprite ferris ferris_neutral>>
-
+Clippy: What a nice surprise! Mind if I join your conversation? #line:7212152 
+Ferris: Sure thing! Our friend here was talking about their experience with game development. #line:4056878 
+Clippy: Oooooh right, you started creating games, I remember! What are you working on right now? #line:4346681 
+-> I'm working on a game about a lizard who wants to become a wizard. A wizard lizard. #line:8405964 
+-> I'm working on a game about a wizard who wants to become a lizard. A lizard wizard. #line:4103693 
+Clippy: That sounds awesome! I can't wait to play it! #line:10244776 
+<<change_sprite ferris ferris_happy>>
+Ferris: I'm sure it will be great! #line:3838147 
+<<rotate clippy>>
+Clippy: Well, it's time for me to go. Let's hang out again sometime, maybe talk a bit more about your game! #line:14517399 
+Ferris: Same for me. It was nice to see both of you! #line:11913139 
+-> Bye Clippy! Bye Ferris! #line:2015670 
+-> Bye friends! Thanks for the lovely time, Ferris! <<if $happyness >= 2>> #line:11413068 
+    Ferris: You're welcome! #line:12789698 
+-> Bye friends! Thanks for cheering me up, Ferris! <<if $sadness >= 1>> #line:12711099 
+    Ferris: That's what friends are for! #line:7692224 
+<<fade_out 2.3>>
+<<quit>>
 ===
