@@ -1,0 +1,8 @@
+title: Start
+---
+The following are some outputs of built-in functions.
+random() = {random()}
+random_range(1,10) = {random_range(1,10)}
+There are more, but let's take a look at a custom function now.
+pow(2,3) = {pow(2,3)}
+===
