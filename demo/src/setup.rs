@@ -1,6 +1,7 @@
 use crate::visual_effects::RotationPhase;
 use crate::yarn_slinger_integration::{
-    change_sprite, fade_in, move_camera_to_clippy, rotate_character, show_bang, Speaker,
+    change_sprite, fade_in, fade_out, move_camera_to_clippy, quit, rotate_character, show_bang,
+    Speaker,
 };
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
 use bevy::core_pipeline::bloom::BloomSettings;
@@ -108,6 +109,8 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
         .command_registrations_mut()
         .register_command("change_sprite", change_sprite)
         .register_command("fade_in", fade_in)
+        .register_command("fade_out", fade_out)
+        .register_command("quit", quit)
         .register_command("rotate", rotate_character)
         .register_command("move_camera_to_clippy", move_camera_to_clippy)
         .register_command("show_bang", show_bang);

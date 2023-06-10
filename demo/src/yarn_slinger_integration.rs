@@ -5,6 +5,7 @@ use crate::{
     Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION,
     SECOND_ACT_CAMERA_TRANSLATION,
 };
+use bevy::app::AppExit;
 use bevy::pbr::NotShadowCaster;
 use bevy::prelude::*;
 use bevy::utils::Instant;
@@ -108,6 +109,22 @@ pub(crate) fn fade_in(
 
     commands.insert_resource(FadeCurtainAlpha(change));
     done
+}
+
+pub(crate) fn fade_out(
+    In(seconds): In<f32>,
+    mut commands: Commands,
+    color: Query<&BackgroundColor, With<StageCurtains>>,
+) -> Arc<AtomicBool> {
+    let change = EasedChange::new(color.single().0.a(), 1.0, seconds);
+    let done = change.done.clone();
+
+    commands.insert_resource(FadeCurtainAlpha(change));
+    done
+}
+
+pub(crate) fn quit(_: In<()>, mut app_exit_events: EventWriter<AppExit>) {
+    app_exit_events.send(AppExit)
 }
 
 pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<AtomicBool> {
