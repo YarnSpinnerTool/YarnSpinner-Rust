@@ -12,4 +12,4 @@ bevy_sprite3d = "=2.4.0"
 [dependencies.bevy]
 version = "0.10"
 default-features = false
-features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "x11", "bevy_gltf",]
+features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "x11", "bevy_gltf", "tonemapping_luts"]

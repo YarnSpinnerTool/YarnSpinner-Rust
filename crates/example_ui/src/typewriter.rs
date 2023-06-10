@@ -61,9 +61,7 @@ impl Typewriter {
                 .map(|s| s.to_string())
                 .collect(),
             last_before_options: line.is_last_line_before_options(),
-            elapsed: 0.0,
-            start: Instant::now(),
-            fast_typing: false,
+            ..default()
         };
     }
 
@@ -91,9 +89,9 @@ impl Typewriter {
 
     fn graphemes_per_second(&self) -> f32 {
         if self.fast_typing {
-            110.0
+            120.0
         } else {
-            30.0
+            40.0
         }
     }
 }
