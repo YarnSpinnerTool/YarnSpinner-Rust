@@ -79,7 +79,7 @@ pub(crate) fn change_sprite(
     let change = EasedChange::new(
         original_rotation,
         original_rotation * Quat::from_rotation_y(PI),
-        1.0,
+        0.7,
     );
     *rotator = RotationPhase::ChangingSprite {
         change,
@@ -112,11 +112,7 @@ pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<At
     let from_translation =
         Transform::from_translation(CAMERA_TRANSLATION).looking_at(FERRIS_TRANSLATION, Vec3::Y);
     let vision_target = (FERRIS_TRANSLATION
-        + Vec3::new(
-            CLIPPY_TRANSLATION.x * 0.,
-            CLIPPY_TRANSLATION.y * 0.8,
-            CLIPPY_TRANSLATION.z * 0.1,
-        ))
+        + Vec3::new(0.0, CLIPPY_TRANSLATION.y * 0.8, CLIPPY_TRANSLATION.z * 0.1))
         / 2.0;
     let to_transform = Transform::from_translation(SECOND_ACT_CAMERA_TRANSLATION)
         .looking_at(vision_target, Vec3::Y);

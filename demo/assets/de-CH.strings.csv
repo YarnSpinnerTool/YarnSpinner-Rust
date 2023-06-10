@@ -58,7 +58,7 @@ de-CH,line:14465386,"Ferris: Huh, maybe I should give it a shot sometime then.",
 de-CH,line:10734991,Ferris: Are there any other artsy things you can share? I enjoy hearing about things I don't know much yet about.,story.yarn,Experience,95,fbdfbe45,Line metadata: lastline
 de-CH,line:4907851,"Hmm, lemme think.",story.yarn,Experience,96,c3ead9af,
 de-CH,line:2418024,"Ferris: Sure, take your time.",story.yarn,Experience,97,3b1db7d0,
-de-CH,line:4768964,Ferris: Wanna talk about it?,story.yarn,FullTimeInsecurity,106,09a19611,Line metadata: lastline
+de-CH,line:4768964,Ferris: Wanna talk about what's troubling you?,story.yarn,FullTimeInsecurity,106,611436ba,Line metadata: lastline
 de-CH,line:8437413,"I'd rather speak about something happier, actually",story.yarn,FullTimeInsecurity,107,d251d066,
 de-CH,line:15615185,"Ferris: Sure, I understand. Just know that I'm here if you ever want to talk about it.",story.yarn,FullTimeInsecurity,108,ba2b2546,
 de-CH,line:10640211,"Ferris: I bet you must have had some interesting new experiences, though.",story.yarn,FullTimeInsecurity,109,30c24727,
@@ -117,28 +117,28 @@ de-CH,line:14346969,"Ferris: Everyone, and I tell you, *everyone* is just wingin
 de-CH,line:13611362,"Ferris: Me, your friends, your parents, your teachers, your boss, everyone.",story.yarn,FullTimeInsecurity,176,a1024501,
 de-CH,line:3249308,"Ferris: And that's okay. It's alright to stumble. So game development isn't quite your calling, that's fine.",story.yarn,FullTimeInsecurity,177,d58de066,
 de-CH,line:3306653,"Ferris: You're doing the best you can, and no one can ask more of you than that.",story.yarn,FullTimeInsecurity,178,ff216cb0,
-de-CH,line:1237066,Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy.,story.yarn,FullTimeInsecurity,179,8082a861,
+de-CH,line:1237066,Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy.,story.yarn,FullTimeInsecurity,180,8082a861,Line metadata: lastline
 de-CH,line:4375824,I... wow.,story.yarn,FullTimeInsecurity,181,d018e9e3,
 de-CH,line:6927534,"Thanks, Ferris. I really needed to hear that.",story.yarn,FullTimeInsecurity,182,7d4bb63b,
 de-CH,line:10380172,"I'm not sure if I believe you, but thanks for trying.",story.yarn,FullTimeInsecurity,183,c691a9af,
 de-CH,line:10407515,Ferris: You're welcome. Remember that all of your friends are here for you if you need us.,story.yarn,FullTimeInsecurity,188,f174db28,
-de-CH,line:3045821,"Ferris: I'm sure you've heard the whole shebang about work-life balance a thousand times, but please remember to take care of yourself.",story.yarn,BackToHobby,197,20b48ee9,
-de-CH,line:16589268,Ferris: You can't do your best work anyway if you're not feeling well.,story.yarn,BackToHobby,198,12bc4b05,Line metadata: lastline
-de-CH,line:9553133,"I know, I know. But it's harder than it sounds.",story.yarn,BackToHobby,199,673980fd,
-de-CH,line:9230738,"Thing is, there is so much to do that I can't get anything done otherwise.",story.yarn,BackToHobby,200,b05c8b30,
-de-CH,line:16505820,"Ferris: Slow down there, Atlas. You can't carry the whole world on your shoulders.",story.yarn,BackToHobby,201,4a4c7c88,
-de-CH,line:12743600,Ferris: Have you tried reducing your scope? Maybe you could keep track of what takes the most time and find a way to cut it down.,story.yarn,BackToHobby,202,0c9a084f,
-de-CH,line:13109790,"Ferris: I'll give you an example: the guy behind the game ""A Short Hike"" knew that he didn't have enough time to make high-quality 3D models for the character.",story.yarn,BackToHobby,203,1a6abf81,
-de-CH,line:2845206,"Ferris: So, he instead added an aggressive pixelation filter on top of the whole thing. Now, the pixels are so big that any detail would be lost anyway.",story.yarn,BackToHobby,204,406f8945,
-de-CH,line:16002133,Ferris: Which means that the details are all created in the best renderer of all: your imagination.,story.yarn,BackToHobby,205,dc610b08,
-de-CH,line:15521172,"Ferris: And that is precisely one of the reasons why the game is so charming. It looks and feels gorgeous, despite very little time spent on the actual models.",story.yarn,BackToHobby,207,790bad80,Line metadata: lastline
-de-CH,line:3753862,"Fair enough, that is worth considering.",story.yarn,BackToHobby,208,b05a1aea,
-de-CH,line:7035055,Ferris: I'm glad I could help!,story.yarn,BackToHobby,209,392b6e59,
-de-CH,line:10644447,???: Oh hi there! You peeps are also here?,story.yarn,ClippyEntry,218,593d56a4,
-de-CH,line:9970032,Ferris: Oh hi Clippy!,story.yarn,ClippyEntry,222,d660f7f8,
-de-CH,line:10846989,Clippy: WhazZzZuUUuup!,story.yarn,ClippyEntry,224,b245c312,
-de-CH,line:8645644,Ferris: WhAzzZzuuuUUP!,story.yarn,ClippyEntry,225,30387600,Line metadata: lastline
-de-CH,line:16260189,WHazzZZUUuuUp!,story.yarn,ClippyEntry,226,f6dd71d8,
-de-CH,line:4500003,Everyone: WHAZZZZZUUUUUUUUUUPPPP!,story.yarn,ClippyEntry,227,3db5db75,
-de-CH,line:2996138,You two are still doing that?,story.yarn,ClippyEntry,228,4a1af638,
-de-CH,line:4775442,Ferris & Clippy: WHAAZZZZZZUUUUUUUUUUPPPP!,story.yarn,ClippyEntry,229,d07ca160,
+de-CH,line:3045821,"Ferris: I'm sure you've heard the whole shebang about work-life balance a thousand times, but please remember to take care of yourself.",story.yarn,WorkLifeBalance,198,20b48ee9,
+de-CH,line:16589268,Ferris: You can't do your best work anyway if you're not feeling well.,story.yarn,WorkLifeBalance,199,12bc4b05,Line metadata: lastline
+de-CH,line:9553133,"I know, I know. But it's harder than it sounds.",story.yarn,WorkLifeBalance,200,673980fd,
+de-CH,line:9230738,"Thing is, there is so much to do that I can't get anything done otherwise.",story.yarn,WorkLifeBalance,201,b05c8b30,
+de-CH,line:16505820,"Ferris: Slow down there, Atlas. You can't carry the whole world on your shoulders.",story.yarn,WorkLifeBalance,202,4a4c7c88,
+de-CH,line:12743600,Ferris: Have you tried reducing your scope? Maybe you could keep track of what takes the most time and find a way to cut it down.,story.yarn,WorkLifeBalance,203,0c9a084f,
+de-CH,line:13109790,"Ferris: I'll give you an example: the guy behind the game ""A Short Hike"" knew that he didn't have enough time to make high-quality 3D models for the character.",story.yarn,WorkLifeBalance,204,1a6abf81,
+de-CH,line:2845206,"Ferris: So, he instead added an aggressive pixelation filter on top of the whole thing. Now, the pixels are so big that any detail would be lost anyway.",story.yarn,WorkLifeBalance,205,406f8945,
+de-CH,line:16002133,Ferris: Which means that the details are all created in the best renderer of all: your imagination.,story.yarn,WorkLifeBalance,206,dc610b08,
+de-CH,line:15521172,"Ferris: And that is precisely one of the reasons why the game is so charming. It looks and feels gorgeous, despite very little time spent on the actual models.",story.yarn,WorkLifeBalance,208,790bad80,Line metadata: lastline
+de-CH,line:3753862,"Fair enough, that is worth considering.",story.yarn,WorkLifeBalance,209,b05a1aea,
+de-CH,line:7035055,Ferris: I'm glad I could help!,story.yarn,WorkLifeBalance,210,392b6e59,
+de-CH,line:10644447,???: Oh hi there! You peeps are also here?,story.yarn,ClippyEntry,219,593d56a4,
+de-CH,line:9970032,Ferris: Oh hi Clippy!,story.yarn,ClippyEntry,223,d660f7f8,
+de-CH,line:10846989,Clippy: WhazZzZuUUuup!,story.yarn,ClippyEntry,225,b245c312,
+de-CH,line:8645644,Ferris: WhAzzZzuuuUUP!,story.yarn,ClippyEntry,226,30387600,Line metadata: lastline
+de-CH,line:16260189,WHazzZZUUuuUp!,story.yarn,ClippyEntry,227,f6dd71d8,
+de-CH,line:4500003,Everyone: WHAZZZZZUUUUUUUUUUPPPP!,story.yarn,ClippyEntry,228,3db5db75,
+de-CH,line:2996138,You two are still doing that?,story.yarn,ClippyEntry,229,4a1af638,
+de-CH,line:4775442,Ferris & Clippy: WHAAZZZZZZUUUUUUUUUUPPPP!,story.yarn,ClippyEntry,230,d07ca160,

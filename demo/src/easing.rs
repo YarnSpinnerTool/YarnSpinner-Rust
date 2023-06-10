@@ -36,8 +36,8 @@ impl<T: Debug + Clone> EasedChange<T> {
     }
 
     /// Source: <https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Animated/Easing.js#L165>
-    pub(crate) fn elastic(&self, bounciness: u16) -> f32 {
-        let p = bounciness as f32 * PI;
+    pub(crate) fn elastic(&self, bounciness: f32) -> f32 {
+        let p = bounciness * PI;
         let t = self.input();
         1.0 - (t * PI / 2.0).cos().powi(3) * (t * p).cos()
     }

@@ -43,7 +43,7 @@ pub(crate) fn rotate_sprite(
         let RotationPhase::ChangingSprite{change, sprite}= rotator.deref_mut() else {
             continue;
         };
-        let output = change.elastic(2);
+        let output = change.elastic(2.0);
 
         let rotation_half_way_done = output >= 0.5;
         if rotation_half_way_done {
@@ -98,8 +98,8 @@ pub(crate) fn move_camera(
         camera_movement.0.set_done();
         *transform.single_mut() = camera_movement.0.to;
     } else {
-        let translation_output = camera_movement.0.elastic(1);
-        let rotation_output = camera_movement.0.elastic(1);
+        let translation_output = camera_movement.0.elastic(1.0);
+        let rotation_output = camera_movement.0.elastic(1.0);
         let mut transform = transform.single_mut();
         transform.translation = camera_movement
             .0

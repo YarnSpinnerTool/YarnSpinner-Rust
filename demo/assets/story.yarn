@@ -45,7 +45,7 @@ Ferris: Since we last spoke, you started doing game development, right?. #line:1
     <<endif>>
 ===
 title: Experience
-position: 76,16
+position: 89,134
 ---
 Ferris: I'm curious. What have you learned so far? #line:4868554 
 -> I've learned a lot about game design #line:15798771 
@@ -103,7 +103,7 @@ Ferris: I'm curious. What have you learned so far? #line:4868554
 title: FullTimeInsecurity
 position: -373,7
 ---
-Ferris: Wanna talk about it? #line:4768964 
+Ferris: Wanna talk about what's troubling you? #line:4768964 
 -> I'd rather speak about something happier, actually #line:8437413 
     Ferris: Sure, I understand. Just know that I'm here if you ever want to talk about it. #line:15615185 
     Ferris: I bet you must have had some interesting new experiences, though. #line:10640211 
@@ -113,7 +113,7 @@ Ferris: Wanna talk about it? #line:4768964
 Ferris: What do you mean? #line:9979028 
 -> I thought developing games was about fun, but it's actually just draining me. #line:3704017 
     Ferris: I believe you. I've heard a lot about game developer burnout on Reddit. #line:3400154 
-    <<jump BackToHobby>>
+    <<jump WorkLifeBalance>>
 -> Making games my job has sucked the fun out of them. I'm getting tired of them. #line:10888897 
     Ferris: I believe you. I think a lot of people who made their passion their job feel the same way. #line:14886996 
     Ferris: Are you working in a genre that you truly like? #line:8925654 
@@ -142,7 +142,7 @@ Ferris: What do you mean? #line:9979028
             <<jump ClippyEntry>>
 -> It's fun, but it's an incredible taxing and thankless job. #line:15150846 
     Ferris: I believe you. I've heard a lot about game developer burnout on Reddit. #line:9097005 
-    <<jump BackToHobby>>
+    <<jump WorkLifeBalance>>
 -> It doesn't feel like a real "grown up" job. #line:1206954 
     Ferris: I'm sorry to hear that. Other than the opinions of others, do you feel fulfilled when you are working on a game? #line:13633544 
     -> When I'm in the middle of it? Yeah, I definitely feel a sense of flow. #line:16334452 
@@ -176,8 +176,8 @@ Ferris: What do you mean? #line:9979028
         Ferris: Me, your friends, your parents, your teachers, your boss, everyone. #line:13611362 
         Ferris: And that's okay. It's alright to stumble. So game development isn't quite your calling, that's fine. #line:3249308 
         Ferris: You're doing the best you can, and no one can ask more of you than that.  #line:3306653 
-        Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy. #line:1237066 
         <<declare $helped to true>>
+        Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy. #line:1237066 
         -> I... wow. #line:4375824 
         -> Thanks, Ferris. I really needed to hear that. #line:6927534 
         -> I'm not sure if I believe you, but thanks for trying. #line:10380172 
@@ -192,7 +192,8 @@ Ferris: What do you mean? #line:9979028
         <<jump ClippyEntry>>
 ===
 
-title: BackToHobby
+title: WorkLifeBalance
+position: -378,277
 ---
 Ferris: I'm sure you've heard the whole shebang about work-life balance a thousand times, but please remember to take care of yourself. #line:3045821 
 Ferris: You can't do your best work anyway if you're not feeling well. #line:16589268 
@@ -212,7 +213,7 @@ Ferris: I'm glad I could help! #line:7035055
 
 ===
 title: ClippyEntry
-position: -72,287
+position: -73,499
 ---
 <<wait 0.5>>
 ???: Oh hi there! You peeps are also here? #line:10644447 
