@@ -1,8 +1,12 @@
+// Disable windows console in release builds
+#![cfg_attr(not(debug_assertations), windows_subsystem = "windows")]
+
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
+use bevy::winit::WinitSettings;
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarn_slinger::prelude::*;
@@ -35,6 +39,10 @@ fn main() {
             }),
     )
     .insert_resource(ClearColor(Color::CYAN))
+    .insert_resource(WinitSettings {
+        unfocused_mode: WinitSettings::desktop_app().unfocused_mode,
+        ..WinitSettings::game()
+    })
     .add_plugin(EditorPlugin::new())
     .add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]).with_localizations(Localizations {

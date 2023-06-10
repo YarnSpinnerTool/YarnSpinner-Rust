@@ -3,6 +3,7 @@ use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use bevy::window::PrimaryWindow;
 use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
@@ -77,7 +78,7 @@ fn select_option(
     mut text: Query<&mut Text, Without<DialogueNode>>,
     option_selection: Res<OptionSelection>,
     mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
-    mut windows: Query<&mut Window>,
+    mut windows: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     if !typewriter.is_finished() {
         return;
