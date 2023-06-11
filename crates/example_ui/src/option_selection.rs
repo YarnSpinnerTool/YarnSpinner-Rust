@@ -87,10 +87,11 @@ fn select_option(
     let mut selection = None;
     let key_to_option: HashMap<_, _> = NUMBER_KEYS
         .into_iter()
+        .zip(NUMPAD_KEYS.into_iter())
         .zip(option_selection.options.iter().map(|option| option.id))
         .collect();
-    for (key, option) in key_to_option {
-        if keys.just_pressed(key) {
+    for ((num_key, numpad_key), option) in key_to_option {
+        if keys.just_pressed(num_key) || keys.just_pressed(numpad_key) {
             selection = Some(option);
             break;
         }
@@ -139,4 +140,16 @@ const NUMBER_KEYS: [KeyCode; 9] = [
     KeyCode::Key7,
     KeyCode::Key8,
     KeyCode::Key9,
+];
+
+const NUMPAD_KEYS: [KeyCode; 9] = [
+    KeyCode::Numpad1,
+    KeyCode::Numpad2,
+    KeyCode::Numpad3,
+    KeyCode::Numpad4,
+    KeyCode::Numpad5,
+    KeyCode::Numpad6,
+    KeyCode::Numpad7,
+    KeyCode::Numpad8,
+    KeyCode::Numpad9,
 ];

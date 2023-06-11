@@ -1,1 +1,5 @@
-target
+build/
+build.zip
+bevy_yarn_slinger_demo.js
+bevy_yarn_slinger_demo.wasm
+bevy_yarn_slinger_demo_bg.wasm

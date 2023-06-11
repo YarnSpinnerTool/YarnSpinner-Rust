@@ -1,3 +1,4 @@
+use crate::commands::update_wait;
 use crate::dialogue_runner::events::DialogueStartEvent;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
@@ -15,6 +16,7 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
         )
             .chain()
             .after(LineProviderSystemSet)
+            .after(update_wait)
             .in_set(DialogueExecutionSystemSet)
             .in_set(YarnSlingerSystemSet),
     );

@@ -1,27 +1,16 @@
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <style>
-      body {
-        background: linear-gradient(
-          135deg,
-          white 0%,
-          white 49%,
-          black 49%,
-          black 51%,
-          white 51%,
-          white 100%
-        );
-        background-repeat: repeat;
-        background-size: 20px 20px;
-      }
-      canvas {
-        background-color: white;
-      }
-    </style>
-  </head>
+<!doctype html>
+<html lang="en">
+
+<body style="margin: 0px;">
   <script type="module">
-    import init from '../../target/bevy_yarn_slinger_demo.js'
-    init()
+    import init from './bevy_yarn_slinger_demo.js'
+
+    init().catch((error) => {
+      if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
+        throw error;
+      }
+    });
   </script>
+</body>
+
 </html>

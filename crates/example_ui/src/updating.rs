@@ -67,13 +67,15 @@ fn present_options(mut commands: Commands, mut events: EventReader<PresentOption
 fn continue_dialogue(
     keys: Res<Input<KeyCode>>,
     mouse_buttons: Res<Input<MouseButton>>,
+    touches: Res<Touches>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
 ) {
-    let explicit_continue =
-        keys.just_pressed(KeyCode::Space) || mouse_buttons.just_pressed(MouseButton::Left);
+    let explicit_continue = keys.just_pressed(KeyCode::Space)
+        || mouse_buttons.just_pressed(MouseButton::Left)
+        || touches.any_just_pressed();
     if explicit_continue && !typewriter.is_finished() {
         typewriter.fast_forward();
         return;

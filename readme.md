@@ -1,13 +1,8 @@
 # Yarn Slinger
 
-**WIP** This project is still early work in progress. There may be large chunks of missing or untested functionality.
-Please ask before contributing, to make sure your work is not wasted or duplicated!
+The Rust port of Yarn Spinner, the friendly tool for writing game dialogue.
 
-Goal of the `Yarn Slinger` project is to bring this capability set to the rust world 
-(specifically [Bevy](https://github.com/bevyengine/bevy)) while maintaining compatibility with the
-`yarn` syntax/language designed by the great team at [Secret Lab](https://secretlab.games/).
-
-## Yarn Spinner
+## Relationship with Yarn Spinner
 
 [Yarn Spinner](https://github.com/YarnSpinnerTool/) is a set of "narrative tools for game development". The original,
 licensed under MIT, allows writers to do their part effectively and efficiently in developing games without doing any
@@ -16,13 +11,3 @@ this project.
 
 ## ... Slinger?
 A slinger is just a _blazingly fast_ spinner ;)
-
-## Build
-
-Building requires pulling in the submodules:
-
-```bash
-git submodule update --init --recursive
-```
-
-As well as installing `protoc`

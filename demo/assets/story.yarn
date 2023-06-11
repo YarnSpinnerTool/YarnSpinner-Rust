@@ -1,7 +1,6 @@
 title: Start
 position: -157,-193
 ---
-<<wait 0.9>>
 Bartender: Yeah, they're sitting right over there. #line:11330430
 <<fade_in 1.7>>
 <<show_bang ferris 1.0>>
