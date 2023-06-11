@@ -4,6 +4,7 @@ use crate::yarn_slinger_integration::{
     Speaker,
 };
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
+#[cfg(not(target_arch = "wasm32"))]
 use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::gltf::Gltf;
