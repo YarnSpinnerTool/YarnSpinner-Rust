@@ -7,13 +7,18 @@ use yarn_slinger_macros::all_tuples;
 /// A function that can be registered into and called from Yarn.
 /// It must have the following properties:
 /// - It is allowed to have zero or more parameters
-/// - Each parameter must be one of the following types or a reference to them:
+/// - Each parameter must be a [`YarnFnParam`], which means of the following types or a reference to them:
 ///   - [`bool`]
-///   - A numeric type or its reference, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`],
+///   - A numeric types, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
 ///   - [`String`] (for a reference, [`&str`] may be used instead of `&String`)
 ///   - [`YarnValue`], which means that a parameter may be any of the above types
+///   - Tuples of the above types.
 /// - It must return a value.
-/// - Its return type must be one of the types listed above, but neither a reference nor a [`YarnValue`].
+/// - Its return type must be one of the following types:
+///   - [`bool`]
+///   - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
+///   - [`String`]
+/// Note that in particular, no references can be returned.
 /// ## Examples
 /// ```rust
 /// fn give_summary(name: &str, age: usize, is_cool: bool) -> String {

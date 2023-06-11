@@ -1,5 +1,6 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
-
+#![warn(missing_docs, missing_debug_implementations)]
+#![doc(include = "../../readme.md")]
 mod commands;
 mod dialogue_runner;
 mod line_provider;

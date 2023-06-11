@@ -2,6 +2,10 @@ use crate::prelude::*;
 use std::borrow::Cow;
 use std::collections::HashMap;
 
+/// A registry of functions that can be called from Yarn after they have been added via [`YarnFnRegistry::register_function`].
+///
+/// # Implementation Notes
+///
 /// A more type safe version of what in the original implementation was an `IDictionary<string, Delegate>`.
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
@@ -26,6 +30,7 @@ impl IntoIterator for YarnFnRegistry {
 }
 
 impl YarnFnRegistry {
+    /// Creates a new empty registry.
     pub fn new() -> Self {
         Self::default()
     }
@@ -47,13 +52,14 @@ impl YarnFnRegistry {
         self
     }
 
+    /// Iterates over all functions in the registry.
     pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
     }
 
-    pub fn add_boxed(
+    pub(crate) fn add_boxed(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         function: Box<dyn UntypedYarnFn>,

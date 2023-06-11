@@ -10,6 +10,7 @@ use std::fmt::{Debug, Formatter};
 
 pub(crate) fn dialogue_runner_builder_plugin(_app: &mut App) {}
 
+/// A builder for [`DialogueRunner`]. This is instantiated for you by calling [`YarnProject::build_dialogue_runner`].
 pub struct DialogueRunnerBuilder {
     variable_storage: Box<dyn VariableStorage>,
     text_provider: SharedTextProvider,

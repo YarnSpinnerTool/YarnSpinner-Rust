@@ -13,6 +13,13 @@ pub(crate) fn command_registry_plugin(app: &mut App) {
 }
 
 #[derive(Debug, PartialEq, Eq, Default)]
+/// A registry of commands that can be called from Yarn after they have been added via [`YarnCommandRegistrations::register_command`].
+/// You can get access to an instance of this struct with [`DialogueRunner::command_registry`] and [`DialogueRunner::command_registry_mut`].
+///
+/// If a command "add_player" with the parameters "name" and "age" has been registered, it can be called from Yarn like this:
+/// ```yarn
+/// <<add_player "John" 42>>
+/// ```
 pub struct YarnCommandRegistrations(pub(crate) InnerRegistry);
 
 type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnCommand>>;
@@ -33,11 +40,14 @@ impl IntoIterator for YarnCommandRegistrations {
 }
 
 impl YarnCommandRegistrations {
+    /// Instantiates a new, empty registry.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Adds a new method to the registry. See [`YarnFn`]'s documentation for what kinds of methods are allowed.
+    /// Adds a new method to the registry. Commands are valid Bevy systems with input and output.
+    ///
+    /// See the documentation of [`YarnCommand`] for more information about which methods are allowed.
     pub fn register_command<Marker, F>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
@@ -53,50 +63,49 @@ impl YarnCommandRegistrations {
         self
     }
 
+    /// Iterates over all registered commands.
     pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnCommand))> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
     }
 
-    pub fn add_boxed(
-        &mut self,
-        name: impl Into<Cow<'static, str>>,
-        command: Box<dyn UntypedYarnCommand>,
-    ) -> &mut Self {
-        let name = name.into();
-        self.0.insert(name, command);
-        self
-    }
-
+    /// Returns `true` if the registry contains a command with the given name.
     pub fn contains_key(&self, name: &str) -> bool {
         self.get(name).is_some()
     }
 
+    /// Returns a reference to the command with the given name, if it exists.
     pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnCommand)> {
         self.0.get(name).map(|f| f.as_ref())
     }
 
+    /// Returns a mutable reference to the command with the given name, if it exists.
     pub fn get_mut(&mut self, name: &str) -> Option<&mut (dyn UntypedYarnCommand)> {
         self.0.get_mut(name).map(|f| f.as_mut())
     }
 
+    /// Iterates over all registered command names.
     pub fn names(&self) -> impl Iterator<Item = &str> {
         self.0.keys().map(|key| key.as_ref())
     }
 
+    /// Iterates over all registered commands.
     pub fn commands(&self) -> impl Iterator<Item = &(dyn UntypedYarnCommand)> {
         self.0.values().map(|value| value.as_ref())
     }
 
+    /// Returns the number of registered commands.
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Returns `true` if the registry contains no commands.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// Constructs an instance of [`YarnCommandRegistrations`] with the builtin commands `wait` and `stop`.
     pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
         commands

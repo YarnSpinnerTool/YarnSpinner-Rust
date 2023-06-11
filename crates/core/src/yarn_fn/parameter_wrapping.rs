@@ -43,8 +43,12 @@ impl YarnValueWrapper {
     }
 }
 
-/// Helper trait for implementing something like [`YarnFn`] yourself.
-/// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
+/// Trait implemented by types that can be used in [`YarnFn`]-like contexts. Implemented by the following types and references of them:
+/// - [`bool`]
+/// - Numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
+/// - [`String`] (for a reference, [`&str`] may be used instead of `&String`)
+/// - [`YarnValue`], which means that a parameter may be any of the above types
+/// - Tuples of the above types.
 pub trait YarnFnParam {
     type Item<'new>: YarnFnParam;
 
