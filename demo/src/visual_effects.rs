@@ -130,15 +130,23 @@ pub(crate) fn ease_bang(
             material.base_color.set_a(0.0);
             continue;
         }
-        let translation_output = bang.0.elastic(1.0);
-        let alpha_output = bang.0.smooth_start();
+        let input = bang.0.input();
         let (initial_translation, initial_alpha) = bang.0.from;
         let (final_translation, final_alpha) = bang.0.to;
         let camera_transform = camera.single();
-        transform.translation = initial_translation.lerp(final_translation, translation_output);
+        transform.translation = if input <= 1.0 {
+            let translation_output = bang.0.elastic(1.0);
+            initial_translation.lerp(final_translation, translation_output)
+        } else {
+            final_translation
+        };
         transform.look_at(camera_transform.translation, Vec3::Y);
-        material
-            .base_color
-            .set_a(initial_alpha + (final_alpha - initial_alpha) * alpha_output);
+        let alpha = if input <= 1.0 {
+            let alpha_output = bang.0.smooth_start();
+            initial_alpha + (final_alpha - initial_alpha) * alpha_output
+        } else {
+            final_alpha
+        };
+        material.base_color.set_a(alpha);
     }
 }

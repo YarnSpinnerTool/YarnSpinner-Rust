@@ -2,17 +2,15 @@ use crate::commands::command_wrapping::YarnCommandWrapper;
 use crate::commands::UntypedYarnCommand;
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy::tasks::AsyncComputeTaskPool;
-use bevy::utils::Instant;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
 use std::time::Duration;
 
-pub(crate) fn command_registry_plugin(_app: &mut App) {}
+mod wait;
+
+pub(crate) fn command_registry_plugin(app: &mut App) {
+    app.fn_plugin(wait::wait_command_plugin);
+}
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct YarnCommandRegistrations(pub(crate) InnerRegistry);
@@ -102,26 +100,8 @@ impl YarnCommandRegistrations {
     pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
         commands
-            .register_command("wait", |In(duration): In<f32>| {
-                // Using an `AtomicBool` instead of a `Task<()>` to ensure that Wasm uses the same implementation as native
-                let thread_pool = AsyncComputeTaskPool::get();
-                let finished = Arc::new(AtomicBool::new(false));
-                {
-                    let finished = finished.clone();
-                    thread_pool
-                        .spawn(async move {
-                            let duration = Duration::from_secs_f32(duration);
-                            let now = Instant::now();
-                            loop {
-                                if now.elapsed() >= duration {
-                                    break;
-                                }
-                            }
-                            finished.store(true, Ordering::Relaxed);
-                        })
-                        .detach();
-                }
-                finished
+            .register_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
+                wait.add(Duration::from_secs_f32(duration))
             })
             .register_command("stop", |_: In<()>| {
                 unreachable!("The stop command is a compiler builtin and is thus not callable")
@@ -143,6 +123,7 @@ macro_rules! yarn_commands {
     };
 }
 
+use crate::commands::command_registry::wait::Wait;
 pub use yarn_commands;
 
 #[cfg(test)]

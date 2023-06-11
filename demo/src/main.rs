@@ -6,7 +6,7 @@ use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
-#[cfg(debug_assertions)]
+#[cfg(feature = "editor")]
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarn_slinger::prelude::*;
@@ -32,7 +32,6 @@ fn main() {
                     resolution: (800., 600.).into(),
                     present_mode: PresentMode::AutoVsync,
                     prevent_default_event_handling: false,
-                    fit_canvas_to_parent: true,
                     resizable: false,
                     ..default()
                 }),
@@ -40,7 +39,7 @@ fn main() {
             }),
     )
     .insert_resource(ClearColor(Color::CYAN));
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "editor")]
     app.add_plugin(EditorPlugin::new());
     app.add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]).with_localizations(Localizations {
