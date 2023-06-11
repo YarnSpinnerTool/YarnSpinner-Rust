@@ -6,7 +6,7 @@ use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
-use bevy::winit::WinitSettings;
+#[cfg(debug_assertions)]
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarn_slinger::prelude::*;
@@ -32,19 +32,17 @@ fn main() {
                     resolution: (800., 600.).into(),
                     present_mode: PresentMode::AutoVsync,
                     prevent_default_event_handling: false,
+                    fit_canvas_to_parent: true,
                     resizable: false,
                     ..default()
                 }),
                 ..default()
             }),
     )
-    .insert_resource(ClearColor(Color::CYAN))
-    .insert_resource(WinitSettings {
-        unfocused_mode: WinitSettings::desktop_app().unfocused_mode,
-        ..WinitSettings::game()
-    })
-    .add_plugin(EditorPlugin::new())
-    .add_plugin(
+    .insert_resource(ClearColor(Color::CYAN));
+    #[cfg(debug_assertions)]
+    app.add_plugin(EditorPlugin::new());
+    app.add_plugin(
         YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]).with_localizations(Localizations {
             base_localization: "en-US".into(),
             translations: vec!["de-CH".into()],

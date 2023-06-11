@@ -13,3 +13,11 @@ members = [
     "demo",
     "examples/bevy_yarn_slinger",
 ]
+
+
+# Source: https://github.com/bevyengine/bevy/blob/main/examples/README.md#1-tweak-your-cargotoml
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1

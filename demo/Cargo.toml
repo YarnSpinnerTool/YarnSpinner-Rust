@@ -6,8 +6,10 @@ edition = "2021"
 [dependencies]
 bevy_yarn_slinger = { path = "../crates/bevy_plugin" }
 bevy_yarn_slinger_example_ui = { path = "../crates/example_ui" }
-bevy_editor_pls = "0.4"
 bevy_sprite3d = "=2.4.0"
+
+[dev-dependencies]
+bevy_editor_pls = "0.4"
 
 [dependencies.bevy]
 version = "0.10"
