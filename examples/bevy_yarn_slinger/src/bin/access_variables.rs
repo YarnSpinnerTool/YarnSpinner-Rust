@@ -32,6 +32,6 @@ fn print_yarn_variable(dialogue_runner: Query<&DialogueRunner>) {
     let dialogue_runner = dialogue_runner.single();
     let value = dialogue_runner.variable_storage().get("$foo");
     if let Ok(value) = value {
-        println!("foo: {foo}");
+        println!("foo: {value}");
     }
 }

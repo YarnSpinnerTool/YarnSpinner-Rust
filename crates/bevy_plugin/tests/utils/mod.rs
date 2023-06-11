@@ -107,7 +107,7 @@ impl AppExt for App {
 }
 
 pub fn setup_default_plugins(app: &mut App) -> &mut App {
-    setup_default_plugins_for_path(app, project_root_path().join("assets").join("tests"))
+    setup_default_plugins_for_path(app, project_root_path().join("assets"))
 }
 
 pub fn setup_default_plugins_for_path(app: &mut App, asset_folder: impl AsRef<Path>) -> &mut App {
