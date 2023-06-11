@@ -56,7 +56,7 @@ impl Debug for DialogueRunnerBuilder {
 
 impl DialogueRunnerBuilder {
     #[must_use]
-    pub fn from_yarn_project(yarn_project: &YarnProject) -> Self {
+    pub(crate) fn from_yarn_project(yarn_project: &YarnProject) -> Self {
         Self {
             variable_storage: Box::new(MemoryVariableStore::new()),
             text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
@@ -75,18 +75,21 @@ impl DialogueRunnerBuilder {
         }
     }
 
+    /// Replaces the [`VariableStorage`] used by the [`DialogueRunner`]. By default, this is a [`MemoryVariableStore`].
     #[must_use]
     pub fn with_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
         self.variable_storage = storage;
         self
     }
 
+    /// Replaces the [`TextProvider`] used by the [`DialogueRunner`]. By default, this is a [`StringsFileTextProvider`].
     #[must_use]
     pub fn with_text_provider(mut self, provider: impl TextProvider + 'static) -> Self {
         self.text_provider.replace(provider);
         self
     }
 
+    /// Adds an [`AssetProvider`] to the [`DialogueRunner`]. By default, none are registered.
     #[must_use]
     pub fn add_asset_provider(mut self, provider: impl AssetProvider + 'static) -> Self {
         self.asset_providers
@@ -94,6 +97,22 @@ impl DialogueRunnerBuilder {
         self
     }
 
+    /// Sets the language used by both the text and asset providers.
+    /// If you want to set them separately, use [`DialogueRunnerBuilder::with_text_language`] and [`DialogueRunnerBuilder::with_asset_language`].
+    ///
+    /// If the [`YarnProject`] has localizations, this will be the language of the base localization by default.
+    /// Otherwise, this value must be left at `None`.
+    #[must_use]
+    pub fn set_language(mut self, language: impl Into<Option<Language>>) -> Self {
+        let language = language.into();
+        self.with_text_language(language.clone())
+            .with_asset_language(language)
+    }
+
+    /// Sets the language used by the text provider.
+    ///
+    /// If the [`YarnProject`] has localizations, this will be the language of the base localization by default.
+    /// Otherwise, this value must be left at `None`.
     #[must_use]
     pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
@@ -101,6 +120,10 @@ impl DialogueRunnerBuilder {
         self
     }
 
+    /// Sets the language used by the asset providers.
+    ///
+    /// If the [`YarnProject`] has localizations, this will be the language of the base localization by default.
+    /// Otherwise, this value must be left at `None`.
     #[must_use]
     pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
@@ -108,30 +131,35 @@ impl DialogueRunnerBuilder {
         self
     }
 
+    /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
     #[must_use]
-    pub fn with_run_selected_option_as_line(mut self, run_selected_option_as_line: bool) -> Self {
+    pub fn with_run_selected_options_as_line(mut self, run_selected_option_as_line: bool) -> Self {
         self.run_selected_options_as_lines = run_selected_option_as_line;
         self
     }
 
+    /// Sets the node that is run when [`DialogueRunner::start`] is executed. By default, this the node named "Start".
     #[must_use]
     pub fn with_start_node(mut self, start_node: impl Into<Option<StartNode>>) -> Self {
         self.start_node = start_node.into();
         self
     }
 
+    /// Extends the standard library with custom functions callable within Yarn files.
     #[must_use]
     pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
         self.library.extend(library);
         self
     }
 
+    /// Extends the command registrations with custom commands callable within Yarn files.
     #[must_use]
     pub fn extend_command_registrations(mut self, commands: YarnCommandRegistrations) -> Self {
         self.commands.extend(commands);
         self
     }
 
+    /// Builds the [`DialogueRunner`].
     pub fn build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
 
@@ -140,25 +168,15 @@ impl DialogueRunnerBuilder {
             .as_ref()
             .map(|l| &l.base_localization.language);
 
-        let text_language = self
-            .text_language
-            .take()
-            .unwrap_or_else(|| base_language.cloned());
-
         let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
             .with_line_hints_enabled(true)
             .with_extended_library(self.library)
-            .with_program(self.compilation.program.unwrap())
-            .with_language_code(text_language);
+            .with_program(self.compilation.program.unwrap());
 
         for asset_provider in self.asset_providers.values_mut() {
             if let Some(ref localizations) = self.localizations {
                 asset_provider.set_localizations(localizations.clone());
             }
-            let asset_language = self
-                .asset_language
-                .take()
-                .unwrap_or_else(|| base_language.cloned());
 
             asset_provider.set_language(asset_language);
             asset_provider.set_asset_server(self.asset_server.clone());
@@ -179,7 +197,7 @@ impl DialogueRunnerBuilder {
 
         let popped_line_hints = dialogue.pop_line_hints();
 
-        Ok(DialogueRunner {
+        let mut dialogue_runner = DialogueRunner {
             dialogue,
             text_provider,
             popped_line_hints,
@@ -194,7 +212,23 @@ impl DialogueRunnerBuilder {
             unsent_events: default(),
             localizations: self.localizations,
             start_node: self.start_node,
-        })
+        };
+
+        let text_language = self
+            .text_language
+            .take()
+            .unwrap_or_else(|| base_language.cloned());
+
+        let asset_language = self
+            .asset_language
+            .take()
+            .unwrap_or_else(|| base_language.cloned());
+
+        dialogue_runner
+            .set_text_language(text_language)?
+            .set_asset_language(asset_language)?;
+
+        Ok(dialogue_runner)
     }
 }
 

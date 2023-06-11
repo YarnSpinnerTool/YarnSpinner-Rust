@@ -36,18 +36,20 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
         .fn_plugin(inner::inner_dialogue_runner_plugin);
 }
 
+/// The main type to interact with the dialogue system.
+/// Created by calling either [`YarnProject::default_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
     pub(crate) text_provider: Box<dyn TextProvider>,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
-    pub will_continue_in_next_update: bool,
+    pub(crate) will_continue_in_next_update: bool,
     pub(crate) last_selected_option: Option<OptionId>,
     pub(crate) commands: YarnCommandRegistrations,
     command_tasks: Vec<Box<dyn TaskFinishedIndicator>>,
     localizations: Option<Localizations>,
     pub(crate) is_running: bool,
-    pub run_selected_options_as_lines: bool,
+    run_selected_options_as_lines: bool,
     pub(crate) just_started: bool,
     pub(crate) popped_line_hints: Option<Vec<LineId>>,
     pub(crate) unsent_events: Vec<DialogueEvent>,
@@ -55,8 +57,16 @@ pub struct DialogueRunner {
 }
 
 impl DialogueRunner {
+    /// The node that will be run by [`DialogueRunner::start`] if it was not overridden by [`DialogueRunnerBuilder::with_start_node`].
     pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
 
+    /// Tells the dialogue runner to try to advance the dialogue in the next update.
+    /// This method must be called by the UI when the user clicks on a button to show the next line.
+    ///
+    /// Note that the actual advancement of the dialogue will be postponed until the following conditions are met:
+    /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`] returning `true`.
+    /// - The asset providers have finished loading their assets, indicated by all [`AssetProvider::are_assets_available`] calls returning `true`.
+    /// - All previously called [`YarnCommand`]s are finished, indicated by their return type's [`TaskFinishedIndicator::is_finished`] returning `true`.
     pub fn continue_in_next_update(&mut self) -> &mut Self {
         if !self.is_running {
             panic!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
@@ -65,6 +75,15 @@ impl DialogueRunner {
         self
     }
 
+    /// Returns whether the dialogue runner will try to advance the dialogue in the next update.
+    /// This can return `true` multiple updates in a row if the conditions mentioned in [`DialogueRunner::continue_in_next_update`] are not yet met.
+    #[must_use]
+    pub fn will_continue_in_next_update(&self) -> bool {
+        self.will_continue_in_next_update
+    }
+
+    /// If the dialogue is currently waiting for the user to select an option, this method will select the option with the given id.
+    /// Implies [`DialogueRunner::continue_in_next_update`].
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
         if !self.is_running {
             bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
@@ -77,16 +96,41 @@ impl DialogueRunner {
         Ok(self)
     }
 
+    /// Returns whether the dialogue runner is currently running. Returns `false` if:
+    /// - The dialogue has not yet been started via [`DialogueRunner::start`] or [`DialogueRunner::start_at_node`]
+    /// - The dialogue has been stopped via [`DialogueRunner::stop`]
+    /// - The dialogue has finished running through all nodes
     #[must_use]
     pub fn is_running(&self) -> bool {
         self.is_running
     }
 
+    /// Returns whether the dialogue runner is currently waiting for the user to select an option.
+    /// If this is true, [`DialogueRunner::select_option`] must be called before the dialogue can continue.
+    /// Calling [`DialogueRunner::continue_in_next_update`] will panic in this case.
     #[must_use]
     pub fn is_waiting_for_option_selection(&self) -> bool {
         self.dialogue.is_waiting_for_option_selection()
     }
 
+    /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
+    /// Calling this is the same as calling [`DialogueRunnerBuilder::with_run_selected_options_as_line`].
+    pub fn set_run_selected_options_as_lines(
+        &mut self,
+        run_selected_options_as_lines: bool,
+    ) -> &mut Self {
+        self.run_selected_options_as_lines = run_selected_options_as_lines;
+        self
+    }
+
+    /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
+    #[must_use]
+    pub fn runs_selected_options_as_lines(&self) -> bool {
+        self.run_selected_options_as_lines
+    }
+
+    /// Stops the execution of the dialogue. Any pending dialogue events will still be sent in the next update, including a [`DialogueCompleteEvent`].
+    /// After this, [`DialogueRunner::start`] or [`DialogueRunner::start_at_node`] must be called before the dialogue can be advanced again.
     pub fn stop(&mut self) -> &mut Self {
         self.is_running = false;
         self.last_selected_option = None;
@@ -98,6 +142,9 @@ impl DialogueRunner {
         self
     }
 
+    /// Starts the dialogue at the start node specified in [`DialogueRunnerBuilder::with_start_node`]. By default, this is the node named `Start`.
+    /// This method or [`DialogueRunner::start_at_node`] must be called after creation or after calling [`DialogueRunner::stop`] before the dialogue can be advanced. Implies [`DialogueRunner::continue_in_next_update`].
+    /// If the dialogue was already running, this method will panic.
     pub fn start(&mut self) -> &mut Self {
         if self.is_running {
             panic!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
@@ -123,6 +170,7 @@ impl DialogueRunner {
         self
     }
 
+    /// Same as [`DialogueRunner::start`], but starts the dialogue at the given node instead of the configured start node.
     pub fn start_at_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
         let node_name = node_name.as_ref();
         if self.is_running {
@@ -137,41 +185,56 @@ impl DialogueRunner {
         Ok(self)
     }
 
+    /// Returns the tags for the node `node_name`.
+    ///
+    /// The tags for a node are defined by setting the `tags` header in
+    /// the node's source code. This header must be a space-separated list
+    ///
+    /// Returns [`None`] if the node is not present in the program.
     #[must_use]
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
         self.dialogue.get_tags_for_node(node_name)
     }
 
+    /// Gets a value indicating whether a specified node exists in the Yarn files.
     #[must_use]
     pub fn node_exists(&self, node_name: &str) -> bool {
         self.dialogue.node_exists(node_name)
     }
 
+    /// Gets the name of the node that this Dialogue is currently executing.
+    /// This is [`None`] if [`DialogueRunner::is_running`] is `false`.
     #[must_use]
     pub fn current_node(&self) -> Option<String> {
         self.dialogue.current_node()
     }
 
+    /// Returns a shallow clone of the registered [`VariableStorage`]. The storage used can be overridden by calling [`DialogueRunnerBuilder::with_variable_storage`].
     #[must_use]
     pub fn variable_storage(&self) -> &dyn VariableStorage {
         self.dialogue.variable_storage()
     }
 
+    /// Returns a shallow mutable clone of the registered [`VariableStorage`]. The storage used can be overridden by calling [`DialogueRunnerBuilder::with_variable_storage`].
     #[must_use]
     pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
         self.dialogue.variable_storage_mut()
     }
 
+    /// Returns whether both the text and asset providers have loaded all their lines. Same as checking both [`DialogueRunner::are_texts_available`] and [`DialogueRunner::are_assets_available`]
     #[must_use]
     pub fn are_lines_available(&self) -> bool {
         self.are_texts_available() && self.are_assets_available()
     }
 
+    /// Returns whether the text provider has loaded all its lines.
     #[must_use]
     fn are_texts_available(&self) -> bool {
         self.text_provider.are_lines_available()
     }
 
+    /// Returns whether all asset providers have loaded all their assets.
+    /// If no asset providers where added via [`DialogueRunnerBuilder::add_asset_provider`], this will always return `true`.
     #[must_use]
     fn are_assets_available(&self) -> bool {
         self.asset_providers
@@ -179,12 +242,14 @@ impl DialogueRunner {
             .all(|provider| provider.are_assets_available())
     }
 
+    /// Sets the language of both the text and asset providers. Same as calling [`DialogueRunner::set_text_language`] and [`DialogueRunner::set_asset_language`].
     pub fn set_language(&mut self, language: impl Into<Language>) -> &mut Self {
         let language = language.into();
         self.set_text_language(language.clone())
             .set_asset_language(language)
     }
 
+    /// Sets the language of the text provider.
     pub fn set_text_language(&mut self, language: impl Into<Language>) -> &mut Self {
         let language = language.into();
         self.assert_localizations_available_for_language(&language);
@@ -192,6 +257,7 @@ impl DialogueRunner {
         self
     }
 
+    /// Sets the language of all asset providers. If no asset providers where added via [`DialogueRunnerBuilder::add_asset_provider`], this will do nothing.
     pub fn set_asset_language(&mut self, language: impl Into<Language>) -> &mut Self {
         let language = language.into();
         self.assert_localizations_available_for_language(&language);

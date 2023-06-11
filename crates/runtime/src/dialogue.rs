@@ -345,7 +345,7 @@ impl Dialogue {
             .map(|node| node.tags)
     }
 
-    /// Gets a value indicating whether a specified node exists in the Program.
+    /// Gets a value indicating whether a specified node exists in the [`Program`].
     #[must_use]
     pub fn node_exists(&self, node_name: &str) -> bool {
         // Not calling `get_node_logging_errors` because this method does not write errors when there are no nodes.
