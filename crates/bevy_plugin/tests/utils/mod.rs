@@ -117,7 +117,8 @@ pub fn setup_default_plugins_for_path(app: &mut App, asset_folder: impl AsRef<Pa
     });
 
     #[cfg(feature = "audio_assets")]
-    app.add_plugin(AudioPlugin::default())
+    app.add_plugin(AudioPlugin::default());
+    app
 }
 
 pub fn project_root_path() -> PathBuf {
