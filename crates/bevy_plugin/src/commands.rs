@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+pub(crate) use command_registry::wait::update_wait;
 pub use command_registry::YarnCommandRegistrations;
 pub use command_wrapping::{TaskFinishedIndicator, UntypedYarnCommand, YarnCommand};
 use seldom_fn_plugin::FnPluginExt;

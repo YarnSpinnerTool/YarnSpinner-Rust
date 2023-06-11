@@ -36,12 +36,11 @@ impl Wait {
     }
 }
 
-fn update_wait(time: Res<Time>, mut wait: ResMut<Wait>) {
+pub(crate) fn update_wait(time: Res<Time>, mut wait: ResMut<Wait>) {
     for period in wait.0.values_mut() {
         if period.duration <= time.delta() {
             period.duration = Duration::from_secs(0);
             period.done.store(true, Ordering::Relaxed);
-            keys_to_remove.push(period.duration);
         } else {
             period.duration -= time.delta();
         }

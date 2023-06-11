@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
 
-mod wait;
+pub(crate) mod wait;
 
 pub(crate) fn command_registry_plugin(app: &mut App) {
     app.fn_plugin(wait::wait_command_plugin);
