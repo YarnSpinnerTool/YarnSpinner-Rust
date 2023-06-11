@@ -3,13 +3,13 @@ use crate::commands::UntypedYarnCommand;
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::tasks::AsyncComputeTaskPool;
+use bevy::utils::Instant;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use std::thread::sleep;
 use std::time::Duration;
 
 pub(crate) fn command_registry_plugin(_app: &mut App) {}
@@ -111,7 +111,12 @@ impl YarnCommandRegistrations {
                     thread_pool
                         .spawn(async move {
                             let duration = Duration::from_secs_f32(duration);
-                            sleep(duration);
+                            let now = Instant::now();
+                            loop {
+                                if now.elapsed() >= duration {
+                                    break;
+                                }
+                            }
                             finished.store(true, Ordering::Relaxed);
                         })
                         .detach();
