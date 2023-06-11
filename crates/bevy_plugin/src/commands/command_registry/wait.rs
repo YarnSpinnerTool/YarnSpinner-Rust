@@ -26,7 +26,7 @@ impl Wait {
     pub(crate) fn add(&mut self, duration: Duration) -> Arc<AtomicBool> {
         let done = Arc::new(AtomicBool::new(false));
         self.0.insert(
-            duration.clone(),
+            duration,
             WaitPeriod {
                 duration,
                 done: done.clone(),
@@ -37,17 +37,14 @@ impl Wait {
 }
 
 fn update_wait(time: Res<Time>, mut wait: ResMut<Wait>) {
-    let mut keys_to_remove = Vec::new();
     for period in wait.0.values_mut() {
         if period.duration <= time.delta() {
             period.duration = Duration::from_secs(0);
             period.done.store(true, Ordering::Relaxed);
-            keys_to_remove.push(period.duration.clone());
+            keys_to_remove.push(period.duration);
         } else {
             period.duration -= time.delta();
         }
     }
-    for key in keys_to_remove {
-        wait.0.remove(&key);
-    }
+    wait.0.remove(&Duration::from_secs(0));
 }
