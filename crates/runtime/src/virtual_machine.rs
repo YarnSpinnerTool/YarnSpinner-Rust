@@ -250,7 +250,7 @@ impl VirtualMachine {
         if selected_option_id.0 >= self.state.current_options.len() {
             return Err(DialogueError::InvalidOptionIdError {
                 selected_option_id,
-                max_id: self.state.current_options.len() - 1,
+                max_id: self.state.current_options.len().saturating_sub(1),
             });
         }
 

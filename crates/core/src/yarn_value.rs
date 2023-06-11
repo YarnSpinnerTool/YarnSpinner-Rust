@@ -1,6 +1,7 @@
 //! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
+use std::fmt::{Display, Formatter};
 use thiserror::Error;
 
 /// Represents a Yarn value. The chosen variant corresponds to the last assignment of the value,
@@ -207,4 +208,14 @@ pub enum YarnValueCastError {
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     ParseBoolError(#[from] std::str::ParseBoolError),
+}
+
+impl Display for YarnValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Number(value) => write!(f, "{value}"),
+            Self::String(value) => write!(f, "{value}"),
+            Self::Boolean(value) => write!(f, "{value}"),
+        }
+    }
 }

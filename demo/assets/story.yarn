@@ -1,0 +1,253 @@
+title: Start
+position: -157,-193
+---
+<<wait 0.9>>
+Bartender: Yeah, they're sitting right over there. #line:11330430
+<<fade_in 1.7>>
+<<show_bang ferris 1.0>>
+<<wait 0.8>>
+<<change_sprite ferris ferris_happy>>
+Ferris: Oh, hi there! #line:1768282 
+-> Good to see you! #line:11949485 
+<<change_sprite ferris ferris_neutral>>
+Ferris: Nice to see you too! #line:241831 
+<<declare $sadness to 0>>
+<<declare $happyness to 0>>
+Ferris: Thanks for coming, I know you've been busy lately. #line:9767167 
+-> No problem! #line:3857565 
+    Ferris: So, how is life treating you? #line:1194739 
+-> Actually, it's been rather tough... #line:117616 
+    <<set $sadness to $sadness + 1>>
+    Ferris: Hmm, I'm sorry to hear. #line:8556292 
+<<declare $full_time to false>>
+Ferris: Since we last spoke, you started doing game development, right?. #line:13408442
+-> As a hobby, yeah. #line:14604755 
+    Ferris: Natural development from your gaming and programming hobbies, I venture. #line:8835991 
+    -> You know it! #line:733854 
+        <<set $happyness to $happyness + 1>>
+    -> I suppose so. #line:467387 
+    -> Don't forget my artsy side! #line:14868721 
+        <<change_sprite ferris ferris_happy>>
+        <<set $happyness to $happyness + 1>>
+        Ferris: Hehe, that's right! #line:5058828 
+        <<change_sprite ferris ferris_neutral>>
+    <<jump Experience>>
+-> Yep, full time even #line:16657049
+    <<set $full_time to true>>
+    <<if $sadness >= 1>>
+    Ferris: Oh yeah, I can see where your stress is coming from then.#line:11682754 
+    <<jump FullTimeInsecurity>>
+    <<else>>
+    Ferris: Your life must be pretty exciting now! #line:9864868 
+    -> Exciting, but also scary! #line:8478498 
+        <<jump Experience>>
+    -> Honestly, I'd prefer a little more security. #line:6243530 
+        <<set $sadness to $sadness + 1>>
+        <<jump FullTimeInsecurity>>
+    <<endif>>
+===
+title: Experience
+position: 89,134
+---
+Ferris: I'm curious. What have you learned so far? #line:4868554 
+-> I've learned a lot about game design #line:15798771 
+    Ferris: Well, that stands to reason. Did you watch these videos I get recommended all the time? How were they called? #line:12258759 
+    -> Extra Credits? #line:229797 
+    -> Game Maker's Toolkit? #line:7204706 
+    -> GDC talks? #line:14498565 
+    <<change_sprite ferris ferris_happy>>
+    Ferris: Yeah, those! #line:12824156 
+    -> I've been watching quite a few of them, yeah! #line:16079969 
+    -> Actually, I've mostly been reading articles and books. #line:8042703 
+        Ferris: And, did any of these feature a certain suppremely handsome crab on the cover? #line:15293577 
+        -> Hehe, I don't think you're featured on many Rust game dev books yet. #line:10651764 
+            <<set $happyness to $happyness + 1>>
+            Ferris: Then better make some good games in Rust so people write books about it! #line:12399876 
+    <<change_sprite ferris ferris_neutral>>
+    Ferris: What was the most interesting thing you learned? #line:8566549 
+    -> Hmm, that's a tough one to come up with on the spot. Gimme a sec. #line:11943124 
+        Ferris: Sure, take your time. #line:8728396 
+        <<jump ClippyEntry>>
+-> My crappy art has improved a lot #line:1800106 
+    <<change_sprite ferris ferris_happy>>
+    Ferris: Oh come on, your art was never "crappy"! #line:12865043 
+    <<change_sprite ferris ferris_neutral>>
+    Ferris: How did you improve it though? Did you just draw a lot? #line:2530264 
+    -> I've learned some new 3D graphics things I didn't know before. #line:2311958 
+    -> Not just drawing, but yeah, lots of practice #line:11817558 
+    Ferris: Do you mind elaborating? You know I mostly know about programming, so this is all quite new to me. #line:10899769 
+    -> I've gotten into 3D modeling. #line:8910434 
+        Ferris: That's cool! I bet it must feel nice actually *seeing* the things you make instead of just writing stuff. #line:6852198 
+        -> It's a great feeling. Quite motivating, too! #line:3715813 
+            <<set $happyness to $happyness + 1>>
+            <<change_sprite ferris ferris_happy>>
+            Ferris: I bet! #line:4627631 
+            <<change_sprite ferris ferris_neutral>>
+        -> Yes, but it's also a lot of work until things don't look weird or slightly off. #line:15807880 
+            Ferris: I can imagine. #line:9470465 
+        -> It's a bit demoralizing when you also see how *little* you got done after hours of work. #line:15345629 
+            <<set $sadness to $sadness + 1>>
+            Ferris: I understand. Don't beat yourself up about it, every artist I've ever talked to has said something similar. It's just part of the process. Getting better takes time, but it's inevitable if you keep at it. #line:15762446 
+    -> I've written a couple of cool shaders. #line:12333512 
+        Ferris: Whenever I see shader code, it all looks like dark magic to me. Is it as different from regular programming as it looks? #line:759809 
+        -> You do have to think about things in a different way, yeah. #line:8590779 
+            Ferris: I imagine. Maybe I should try it out sometime. #line:14893344 
+        -> It's not that different, really. #line:10787113 
+            Ferris: Huh, maybe I should give it a shot sometime then. #line:14465386 
+    Ferris: Are there any other artsy things you can share? I enjoy hearing about things I don't know much about yet. #line:10734991 
+    -> Hmm, lemme think. #line:4907851 
+        Ferris: Sure, take your time. #line:2418024 
+        <<jump ClippyEntry>>
+    
+   
+===
+
+title: FullTimeInsecurity
+position: -373,7
+---
+Ferris: Wanna talk about what's troubling you? #line:4768964 
+-> I'd rather speak about something happier, actually #line:8437413 
+    Ferris: Sure, I understand. Just know that I'm here if you ever want to talk about it. #line:15615185 
+    Ferris: I bet you must have had some interesting new experiences, though. #line:10640211 
+    <<jump Experience>>
+-> I don't know if this is really what I want to do with my life #line:11812905 
+-> It started out great, but I'm not sure if I can keep it up #line:12295688 
+Ferris: What do you mean? #line:9979028 
+-> I thought developing games was about fun, but it's actually just draining me. #line:3704017 
+    Ferris: I believe you. I've heard a lot about game developer burnout on Reddit. #line:3400154 
+    <<jump WorkLifeBalance>>
+-> Making games my job has sucked the fun out of them. I'm getting tired of them. #line:10888897 
+    Ferris: I believe you. I think a lot of people who made their passion their job feel the same way. #line:14886996 
+    Ferris: Are you working in a genre that you truly like? #line:8925654 
+    -> Yes, and that's the problem #line:10938781 
+        Ferris: So this genre that you used to love has now just become a chore, right?  #line:9688601 
+        Ferris: Maybe you could instead work in another genre and reserve your current one for off-work fun only. #line:14634580 
+        -> Huh, that's actually an interesting idea. #line:12995000 
+        -> I can't just throw away everything I built so far #line:2400858 
+    -> Not really #line:9900469 
+        Ferris: Maybe you feel like this because you're not really working on your passion, then. #line:10694386 
+        Ferris: Maybe you could try switching genres and see where that leads you. #line:146125 
+        -> Huh, that's actually an interesting idea. #line:11516874 
+            <<change_sprite ferris ferris_happy>>
+            Ferris: I'm glad I could help! #line:6442433 
+            <<change_sprite ferris ferris_neutral>>
+            <<jump ClippyEntry>>
+        -> I can't just throw away everything I built so far #line:12118946 
+            Ferris: I'm pretty sure whatever you come up with with passion and love will be better than what you build with exhaustion. #line:6734513 
+            -> Fair enough #line:15564450 
+            <<change_sprite ferris ferris_happy>>
+            Ferris: See! I'm always right! #line:7281142 
+            <<change_sprite ferris ferris_neutral>>
+            Ferris: But seriously, I think you should give it a shot. #line:14210724 
+            -> I'll think about it. Thanks, Ferris! #line:16033165 
+            Ferris: You're welcome! #line:8712297 
+            <<jump ClippyEntry>>
+-> It's fun, but it's an incredible taxing and thankless job. #line:15150846 
+    Ferris: I believe you. I've heard a lot about game developer burnout on Reddit. #line:9097005 
+    <<jump WorkLifeBalance>>
+-> It doesn't feel like a real "grown up" job. #line:1206954 
+    Ferris: I'm sorry to hear that. Other than the opinions of others, do you feel fulfilled when you are working on a game? #line:13633544 
+    -> When I'm in the middle of it? Yeah, I definitely feel a sense of flow. #line:16334452 
+        <<change_sprite ferris ferris_happy>>
+        Ferris: That's good to hear. If you enjoy the work itself, you're doing better than most people. #line:14623007 
+        <<change_sprite ferris ferris_neutral>>
+        Ferris: You and me both see video games as an art form, right? That makes you an artist. #line:1116576 
+        Ferris: And artists have always been belittled by others working in fields with more manual labor or obvious results. #line:15864093 
+        Ferris: But the truth is that people like you shape our culture and society. You're doing important work. #line:12776564 
+        Ferris: I'm proud of you for that, and I hope that you can be proud of yourself too. #line:13669729 
+        Ferris: If anyone says otherwise, I advise you to either show them some cool art or stop talking to them. #line:2392459 
+        Ferris: You deserve to be surrounded by people who believe in you. #line:1505716 
+        -> I... wow. #line:14601794 
+        -> Thanks, Ferris. I really needed to hear that. #line:9724654 
+        -> Fair enough, but I can hardly stop talking to my family #line:16482200 
+            Ferris: Tell them how important this is to you. If they don't understand, tell them to at least try and respect your choices. #line:2901141 
+            Ferris: Your family loves you and would not want to lose you over something like this. #line:8679205 
+            Ferris: I'm sure they'll come around, even if it doesn't seem like it right now. #line:13242943 
+            -> I'll try. Thanks, Ferris. #line:2376100 
+        <<change_sprite ferris ferris_happy>>
+        Ferris: You're welcome. I'm always here for you. #line:14926761 
+        <<change_sprite ferris ferris_neutral>>
+        <<jump ClippyEntry>>
+    -> Not really. It feels like all my friends are moving forward with their lives and I'm just... not. #line:2723516 
+        Ferris: So you feel like you're missing out on something? #line:13564826 
+        -> Yeah, that's it. #line:16041985 
+        -> Not quite. It's more that I don't feel mature compared to others. #line:7191380 
+        Ferris: Alright, I see. You know, it's okay to not quite know where you want to go in life. #line:2774469 
+        Ferris: Others might seem like they've got everything figured out, but I guarantee you one thing. #line:10100045 
+        Ferris: Everyone, and I tell you, *everyone* is just winging it. #line:14346969 
+        Ferris: Me, your friends, your parents, your teachers, your boss, everyone. #line:13611362 
+        Ferris: And that's okay. It's alright to stumble. So game development isn't quite your calling, that's fine. #line:3249308 
+        Ferris: You're doing the best you can, and no one can ask more of you than that.  #line:3306653 
+        <<declare $helped to true>>
+        Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy. #line:1237066 
+        -> I... wow. #line:4375824 
+        -> Thanks, Ferris. I really needed to hear that. #line:6927534 
+        -> I'm not sure if I believe you, but thanks for trying. #line:10380172 
+            <<set $helped to false>>
+        <<if $helped>>
+            <<change_sprite ferris ferris_happy>>
+        <<endif>>
+        Ferris: You're welcome. Remember that all of your friends are here for you if you need us. #line:10407515 
+        <<if $helped>>
+            <<change_sprite ferris ferris_neutral>>
+        <<endif>>
+        <<jump ClippyEntry>>
+===
+
+title: WorkLifeBalance
+position: -378,277
+---
+Ferris: I'm sure you've heard the whole shebang about work-life balance a thousand times, but please remember to take care of yourself. #line:3045821 
+Ferris: You can't do your best work anyway if you're not feeling well. #line:16589268 
+-> I know, I know. But it's harder than it sounds. #line:9553133 
+-> Thing is, there is so much to do that I can't get anything done otherwise. #line:9230738 
+Ferris: Slow down there, Atlas. You can't carry the whole world on your shoulders.  #line:16505820 
+Ferris: Have you tried reducing your scope? Maybe you could keep track of what takes the most time and find a way to cut it down. #line:12743600 
+Ferris: I'll give you an example: the guy behind the game "A Short Hike" knew that he didn't have enough time to make high-quality 3D models for the character. #line:13109790 
+Ferris: So, he instead added an aggressive pixelation filter on top of the whole thing. Now, the pixels are so big that any detail would be lost anyway. #line:2845206 
+Ferris: Which means that the details are all created in the best renderer of all: your imagination. #line:16002133 
+<<change_sprite ferris ferris_happy>>
+Ferris: And that is precisely one of the reasons why the game is so charming. It looks and feels gorgeous, despite very little time spent on the actual models. #line:15521172 
+-> Fair enough, that is worth considering. #line:3753862 
+Ferris: I'm glad I could help! #line:7035055 
+<<change_sprite ferris ferris_neutral>>
+<<jump ClippyEntry>>
+
+===
+title: ClippyEntry
+position: -73,499
+---
+<<wait 0.5>>
+???: Oh hi there! You peeps are also here? #line:10644447 
+<<show_bang ferris 1.0>>
+<<wait 0.8>>
+<<move_camera_to_clippy>>
+<<change_sprite ferris ferris_happy>>
+Ferris: Oh hi Clippy! #line:9970032 
+<<rotate clippy>>
+Clippy: WhazZzZuUUuup! #line:10846989 
+Ferris: WhAzzZzuuuUUP! #line:8645644 
+-> WHazzZZUUuuUp! #line:16260189 
+    Everyone: WHAAAAAAAZZZZZZZUUUUUUUUUUPPPPPPPP! #line:4500003 
+-> You two are still doing that? #line:2996138 
+    Ferris & Clippy: WHAAAAAAAZZZZZZZUUUUUUUUUUPPPPPPPP! #line:4775442 
+<<change_sprite ferris ferris_neutral>>
+Clippy: What a nice surprise! Mind if I join your conversation? #line:7212152 
+Ferris: Sure thing! Our friend here was talking about their experience with game development. #line:4056878 
+Clippy: Oooooh right, you started creating games, I remember! What are you working on right now? #line:4346681 
+-> I'm working on a game about a lizard who wants to become a wizard. A wizard lizard. #line:8405964 
+-> I'm working on a game about a wizard who wants to become a lizard. A lizard wizard. #line:4103693 
+Clippy: That sounds awesome! I can't wait to play it! #line:10244776 
+<<change_sprite ferris ferris_happy>>
+Ferris: I'm sure it will be great! #line:3838147 
+<<rotate clippy>>
+Clippy: Well, it's time for me to go. Let's hang out again sometime, maybe talk a bit more about your game! #line:14517399 
+Ferris: Same for me. It was nice to see both of you! #line:11913139 
+-> Bye Clippy! Bye Ferris! #line:2015670 
+-> Bye friends! Thanks for the lovely time, Ferris! <<if $happyness >= 2>> #line:11413068 
+    Ferris: You're welcome! #line:12789698 
+-> Bye friends! Thanks for cheering me up, Ferris! <<if $sadness >= 1>> #line:12711099 
+    Ferris: That's what friends are for! #line:7692224 
+<<fade_out 2.3>>
+<<quit>>
+===

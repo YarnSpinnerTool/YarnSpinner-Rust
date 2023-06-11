@@ -1,9 +1,21 @@
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
+
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;
+pub use updating::SpeakerChangeEvent;
+
+pub mod prelude {
+    pub use crate::{
+        ExampleYarnSlingerUiPlugin, ExampleYarnSlingerUiSystemSet, SpeakerChangeEvent,
+    };
+}
 
 #[derive(Debug, Default)]
 #[non_exhaustive]
 pub struct ExampleYarnSlingerUiPlugin;
+
+#[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
+pub struct ExampleYarnSlingerUiSystemSet;
 
 impl ExampleYarnSlingerUiPlugin {
     pub fn new() -> Self {

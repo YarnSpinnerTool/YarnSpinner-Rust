@@ -1,0 +1,18 @@
+[package]
+name = "bevy_yarn_slinger_example_ui"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+exclude = ["assets", "wasm"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy_yarn_slinger = { path = "../bevy_plugin" }
+unicode-segmentation = "1"
+seldom_fn_plugin = "0.3"
+
+[dependencies.bevy]
+version = "0.10"
+default-features = false
+features = ["bevy_ui", "bevy_text", "bevy_render", "png", "bevy_asset"]

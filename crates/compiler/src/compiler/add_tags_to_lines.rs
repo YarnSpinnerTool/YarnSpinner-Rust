@@ -59,7 +59,9 @@ impl Compiler {
 
         if rewrote_anything.load(Ordering::Relaxed) {
             let result = rewritten_nodes.take();
-            Ok(Some(result.join("\n")))
+            let mut string = result.join("\n");
+            string.push('\n');
+            Ok(Some(string))
         } else {
             Ok(None)
         }

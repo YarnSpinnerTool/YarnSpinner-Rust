@@ -144,7 +144,7 @@ fn can_select_unavailable_choice() -> Result<()> {
 #[test]
 fn generates_files_in_dev_mode() -> Result<()> {
     let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/tests/options.yarn");
+    let original_yarn_path = project_root_path().join("assets//options.yarn");
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, yarn_path)?;
     let mut app = App::new();
@@ -179,7 +179,7 @@ fn setup_dialogue_runner_in_dev_mode(app: &mut App) -> Mut<DialogueRunner> {
 }
 
 fn lines() -> Vec<String> {
-    let mut lines: Vec<_> = include_str!("../assets/tests/options.yarn")
+    let mut lines: Vec<_> = include_str!("../assets/options.yarn")
         .lines()
         .filter(|l| !l.starts_with("title:"))
         .filter(|l| !l.starts_with("position:"))

@@ -2,8 +2,6 @@
 
 mod commands;
 mod dialogue_runner;
-#[cfg(feature = "example_ui")]
-mod example_ui;
 mod line_provider;
 mod localization;
 mod plugin;
@@ -48,8 +46,6 @@ pub mod prelude {
         VariableStorage, YarnFn, YarnFnLibrary,
     };
     pub(crate) type SystemResult = Result<()>;
-    #[cfg(feature = "example_ui")]
-    pub use crate::example_ui::ExampleYarnSlingerUiPlugin;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
     pub(crate) use serde::{Deserialize, Serialize};
 }

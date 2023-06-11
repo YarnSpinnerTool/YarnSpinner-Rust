@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+#[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
@@ -106,16 +107,18 @@ impl AppExt for App {
 }
 
 pub fn setup_default_plugins(app: &mut App) -> &mut App {
-    setup_default_plugins_for_path(app, project_root_path().join("assets").join("tests"))
+    setup_default_plugins_for_path(app, project_root_path().join("assets"))
 }
 
 pub fn setup_default_plugins_for_path(app: &mut App, asset_folder: impl AsRef<Path>) -> &mut App {
-    app.add_plugins(MinimalPlugins)
-        .add_plugin(AssetPlugin {
-            asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
-            ..default()
-        })
-        .add_plugin(AudioPlugin::default())
+    app.add_plugins(MinimalPlugins).add_plugin(AssetPlugin {
+        asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
+        ..default()
+    });
+
+    #[cfg(feature = "audio_assets")]
+    app.add_plugin(AudioPlugin::default());
+    app
 }
 
 pub fn project_root_path() -> PathBuf {

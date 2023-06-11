@@ -1,13 +1,28 @@
-use crate::example_ui::option_selection::OptionSelection;
-use crate::example_ui::setup::{create_dialog_text, DialogueNode};
-use crate::example_ui::updating::SpeakerChangeEvent;
-use crate::prelude::LocalizedLine;
+use crate::option_selection::OptionSelection;
+use crate::setup::{
+    create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode,
+    INITIAL_DIALOGUE_CONTINUE_BOTTOM,
+};
+use crate::updating::SpeakerChangeEvent;
+use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy::utils::Instant;
+use bevy_yarn_slinger::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) fn typewriter_plugin(app: &mut App) {
-    app.add_system(write_text.run_if(resource_exists::<Typewriter>()));
+    app.add_systems(
+        (
+            despawn.run_if(on_event::<DialogueCompleteEvent>()),
+            spawn.run_if(on_event::<DialogueStartEvent>()),
+            write_text.run_if(resource_exists::<Typewriter>()),
+            show_continue.run_if(resource_exists_and_changed::<Typewriter>()),
+            bob_continue,
+        )
+            .chain()
+            .after(YarnSlingerSystemSet)
+            .in_set(ExampleYarnSlingerUiSystemSet),
+    );
 }
 
 #[derive(Debug, Clone, PartialEq, Resource)]
@@ -46,14 +61,12 @@ impl Typewriter {
                 .map(|s| s.to_string())
                 .collect(),
             last_before_options: line.is_last_line_before_options(),
-            elapsed: 0.0,
-            start: Instant::now(),
-            fast_typing: false,
+            ..default()
         };
     }
 
     pub(crate) fn is_finished(&self) -> bool {
-        self.graphemes_left.is_empty()
+        self.graphemes_left.is_empty() && !self.current_text.is_empty()
     }
 
     pub(crate) fn fast_forward(&mut self) {
@@ -76,9 +89,9 @@ impl Typewriter {
 
     fn graphemes_per_second(&self) -> f32 {
         if self.fast_typing {
-            110.0
+            120.0
         } else {
-            30.0
+            40.0
         }
     }
 }
@@ -88,6 +101,7 @@ fn write_text(
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
+    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
 ) {
     let mut text = text.single_mut();
     if typewriter.last_before_options && option_selection.is_none() {
@@ -96,6 +110,10 @@ fn write_text(
     }
     if typewriter.is_finished() {
         return;
+    }
+    if !typewriter.last_before_options {
+        *root_visibility.single_mut() = Visibility::Inherited;
+        // If this is last before options, the `OptionSelection` will make the visibility inherited as soon as it's ready instead
     }
     typewriter.update_current_text();
     if typewriter.is_finished() {
@@ -107,8 +125,42 @@ fn write_text(
         }
     }
 
-    let name = typewriter.character_name.as_deref();
     let current_text = &typewriter.current_text;
     let rest = typewriter.graphemes_left.join("");
-    *text = create_dialog_text(name, current_text, rest);
+    *text = create_dialog_text(current_text, rest);
+}
+
+fn show_continue(
+    typewriter: Res<Typewriter>,
+    mut visibility: Query<&mut Visibility, With<DialogueContinueNode>>,
+) {
+    let mut visibility = visibility.single_mut();
+    if typewriter.is_finished() && !typewriter.last_before_options {
+        *visibility = Visibility::Inherited;
+    } else {
+        *visibility = Visibility::Hidden;
+    }
+}
+
+pub(crate) fn despawn(mut commands: Commands) {
+    commands.remove_resource::<Typewriter>();
+}
+
+pub(crate) fn spawn(mut commands: Commands) {
+    commands.init_resource::<Typewriter>();
+}
+
+fn bob_continue(
+    time: Res<Time>,
+    visibility: Query<&Visibility, With<DialogueContinueNode>>,
+    mut style: Query<&mut Style, With<DialogueContinueNode>>,
+) {
+    let visibility = visibility.single();
+    if *visibility == Visibility::Hidden {
+        return;
+    }
+    let mut style = style.single_mut();
+    let pixels =
+        (time.elapsed_seconds() * 3.0).sin().powi(2) * 5.0 + INITIAL_DIALOGUE_CONTINUE_BOTTOM;
+    style.position.bottom = Val::Px(pixels);
 }

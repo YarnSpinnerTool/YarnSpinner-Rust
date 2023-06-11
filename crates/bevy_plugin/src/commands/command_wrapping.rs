@@ -6,7 +6,7 @@ use bevy::utils::all_tuples;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
@@ -57,6 +57,10 @@ macro_rules! impl_command_function {
     };
 }
 
+// Note that we rely on the highest impl to be <= the highest order of the tuple impls
+// of `SystemParam` created.
+all_tuples!(impl_command_function, 0, 16, F);
+
 pub trait TaskFinishedIndicator: Debug + Send + Sync + 'static {
     fn is_finished(&self) -> bool;
 }
@@ -67,9 +71,27 @@ impl TaskFinishedIndicator for AtomicBool {
     }
 }
 
+impl TaskFinishedIndicator for bool {
+    fn is_finished(&self) -> bool {
+        *self
+    }
+}
+
 impl<T: TaskFinishedIndicator> TaskFinishedIndicator for Arc<T> {
     fn is_finished(&self) -> bool {
         T::is_finished(self.as_ref())
+    }
+}
+
+impl<T: TaskFinishedIndicator> TaskFinishedIndicator for RwLock<T> {
+    fn is_finished(&self) -> bool {
+        self.read().unwrap().is_finished()
+    }
+}
+
+impl<T: TaskFinishedIndicator> TaskFinishedIndicator for Vec<T> {
+    fn is_finished(&self) -> bool {
+        self.iter().all(|t| t.is_finished())
     }
 }
 
@@ -79,15 +101,18 @@ impl TaskFinishedIndicator for Task<()> {
     }
 }
 
-impl TaskFinishedIndicator for () {
-    fn is_finished(&self) -> bool {
-        true
-    }
+macro_rules! impl_task_finished_indicator {
+    ($($param: ident),*) => {
+        impl<$($param: TaskFinishedIndicator),*> TaskFinishedIndicator for ($($param,)*) where ($($param,)*): Debug {
+            #[allow(non_snake_case)]
+            fn is_finished(&self) -> bool {
+                let ($($param,)*) = self;
+                $($param.is_finished() &&)* true
+            }
+        }
+    };
 }
-
-// Note that we rely on the highest impl to be <= the highest order of the tuple impls
-// of `SystemParam` created.
-all_tuples!(impl_command_function, 0, 16, F);
+all_tuples!(impl_task_finished_indicator, 0, 16, F);
 
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator>;

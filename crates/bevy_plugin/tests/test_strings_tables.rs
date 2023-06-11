@@ -22,7 +22,7 @@ fn loads_yarn_assets() {
     let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file = yarn_file_assets.get(&yarn_files[0]).unwrap();
 
-    let expected_source = include_str!("../assets/tests/lines.yarn");
+    let expected_source = include_str!("../assets/lines.yarn");
     assert_eq!(expected_source, yarn_file.content());
     assert_eq!("lines.yarn", yarn_file.file_name());
 }
@@ -30,7 +30,7 @@ fn loads_yarn_assets() {
 #[test]
 fn generates_line_ids() -> anyhow::Result<()> {
     let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/tests/lines.yarn");
+    let original_yarn_path = project_root_path().join("assets//lines.yarn");
     let yarn_path = dir.path().join("lines.yarn");
     fs::copy(&original_yarn_path, &yarn_path)?;
 
@@ -76,7 +76,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
 #[test]
 fn generates_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/tests/lines.yarn");
+    let original_yarn_path = project_root_path().join("assets//lines.yarn");
     let yarn_path = dir.path().join("lines.yarn");
     fs::copy(original_yarn_path, &yarn_path)?;
 
@@ -121,11 +121,11 @@ fn generates_strings_file() -> anyhow::Result<()> {
 #[test]
 fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/tests/options.yarn");
+    let original_yarn_path = project_root_path().join("assets//options.yarn");
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, &yarn_path)?;
 
-    let original_strings_path = project_root_path().join("assets/tests/de-CH.strings.csv");
+    let original_strings_path = project_root_path().join("assets//de-CH.strings.csv");
     let strings_file_path = dir.path().join("de-CH.strings.csv");
     fs::copy(&original_strings_path, &strings_file_path)?;
     let original_strings_file_source = fs::read_to_string(&strings_file_path)?;
@@ -185,7 +185,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
 #[test]
 fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets/tests/lines_with_ids.yarn");
+    let original_yarn_path = project_root_path().join("assets//lines_with_ids.yarn");
     let yarn_path = dir.path().join("lines_with_ids.yarn");
     fs::copy(original_yarn_path, yarn_path)?;
 

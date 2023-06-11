@@ -1,16 +1,27 @@
-use crate::example_ui::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode};
-use crate::example_ui::typewriter::Typewriter;
-use crate::prelude::{DialogueOption, DialogueRunner};
+use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
+use crate::typewriter::{self, Typewriter};
+use crate::ExampleYarnSlingerUiSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use bevy::window::PrimaryWindow;
+use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
-    app.add_systems((
-        show_options
-            .run_if(resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>())),
-        select_option
-            .run_if(resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>())),
-    ));
+    app.add_systems(
+        (
+            show_options.run_if(
+                resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
+            ),
+            select_option
+                .run_if(
+                    resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
+                )
+                .before(typewriter::despawn),
+        )
+            .chain()
+            .after(YarnSlingerSystemSet)
+            .in_set(ExampleYarnSlingerUiSystemSet),
+    );
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]
@@ -35,32 +46,39 @@ fn show_options(
     mut commands: Commands,
     children: Query<&Children>,
     mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
+    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
     let (entity, mut style, mut visibility) = options_node.single_mut();
     style.display = Display::Flex;
     if typewriter.is_finished() {
-        *visibility = Visibility::Visible;
+        *visibility = Visibility::Inherited;
     } else {
         *visibility = Visibility::Hidden;
     }
     if children.iter_descendants(entity).next().is_none() {
+        *root_visibility.single_mut() = Visibility::Inherited;
         let mut entity_commands = commands.entity(entity);
         spawn_options(&mut entity_commands, &option_selection.options);
     }
 }
 
 fn select_option(
+    line_events: EventReader<PresentLineEvent>,
+    dialogue_complete_events: EventReader<DialogueCompleteEvent>,
     keys: Res<Input<KeyCode>>,
     typewriter: Res<Typewriter>,
     mut commands: Commands,
     mut buttons: Query<
-        (&Interaction, &OptionButton, &mut BackgroundColor),
+        (&Interaction, &OptionButton, &Children),
         (With<Button>, Changed<Interaction>),
     >,
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
-    mut text: Query<&mut Text, With<DialogueNode>>,
+    mut dialogue_node_text: Query<&mut Text, With<DialogueNode>>,
+    mut text: Query<&mut Text, Without<DialogueNode>>,
     option_selection: Res<OptionSelection>,
+    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
+    mut windows: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     if !typewriter.is_finished() {
         return;
@@ -77,30 +95,37 @@ fn select_option(
             break;
         }
     }
-    for (interaction, button, mut color) in buttons.iter_mut() {
-        match *interaction {
+    let mut window = windows.single_mut();
+    for (interaction, button, children) in buttons.iter_mut() {
+        let (color, icon) = match *interaction {
             Interaction::Clicked if selection.is_none() => {
                 selection = Some(button.0);
-                *color = Color::NONE.into();
+                (Color::TOMATO, CursorIcon::Default)
             }
-            Interaction::Hovered => {
-                *color = Color::SILVER.into();
-            }
-            _ => {
-                *color = Color::NONE.into();
-            }
-        }
+            Interaction::Hovered => (Color::WHITE, CursorIcon::Hand),
+            _ => (Color::TOMATO, CursorIcon::Default),
+        };
+        window.cursor.icon = icon;
+        let text_entity = children.iter().find(|&e| text.contains(*e)).unwrap();
+        let mut text = text.get_mut(*text_entity).unwrap();
+        text.sections[1].style.color = color;
     }
+    let has_selected_id = selection.is_some();
     if let Some(id) = selection {
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             dialogue_runner.select_option(id).unwrap();
         }
+    }
+    let should_despawn =
+        has_selected_id || !line_events.is_empty() || !dialogue_complete_events.is_empty();
+    if should_despawn {
         commands.remove_resource::<OptionSelection>();
         let (entity, mut style, mut visibility) = options_node.single_mut();
         commands.entity(entity).despawn_descendants();
         style.display = Display::None;
         *visibility = Visibility::Hidden;
-        *text.single_mut() = Text::default();
+        *dialogue_node_text.single_mut() = Text::default();
+        *root_visibility.single_mut() = Visibility::Hidden;
     }
 }
 
