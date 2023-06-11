@@ -33,5 +33,5 @@ unzip -o demo/wasm/build/assets.zip -d demo/wasm/build/assets
 rm demo/wasm/build/assets.zip
 
 # Publish to itch.io.
-zip --recurse-paths demo/wasm/build.zip demo/wasm/build
+(cd demo/wasm/build  && zip --recurse-paths ../build.zip .)
 butler push --fix-permissions --userversion="0.1.0" demo/wasm/build.zip janhohenheim/yarn-slinger-demo:wasm
