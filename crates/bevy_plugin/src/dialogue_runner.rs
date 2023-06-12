@@ -336,7 +336,7 @@ impl DialogueRunner {
         InnerDialogueMut(&mut self.dialogue)
     }
 
-    /// Returns the registered [`TextProvider`].
+    /// Returns the registered [`TextProvider`]. By default, this is a [`StringsFileTextProvider`](crate::default_impl::StringsFileTextProvider).
     #[must_use]
     pub fn text_provider(&self) -> &dyn TextProvider {
         self.text_provider.as_ref()

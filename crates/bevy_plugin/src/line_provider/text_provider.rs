@@ -20,6 +20,9 @@ pub(crate) fn text_provider_plugin(app: &mut App) {
         );
 }
 
+/// Trait for the provider the [`DialogueRunner`]s text. By default, this is a [`StringsFileTextProvider`].
+/// You can override this with [`DialogueRunnerBuilder::with_text_provider`] if you want a custom localization strategy.
+/// For most users however, the default is fine.
 pub trait TextProvider: UnderlyingTextProvider {
     fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
     fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);

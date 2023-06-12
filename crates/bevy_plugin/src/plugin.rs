@@ -10,6 +10,7 @@ pub struct YarnSlingerPlugin {
     project: LoadYarnProjectEvent,
 }
 
+/// The [`SystemSet`] containing all systems used by the [`YarnSlingerPlugin`].
 #[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
 pub struct YarnSlingerSystemSet;
 
