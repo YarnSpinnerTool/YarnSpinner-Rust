@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_ui::prelude::*;
+use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
@@ -9,7 +9,7 @@ fn main() {
         // This starts the compilation process for the Yarn project.
         .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["hello_world.yarn"]))
         // Initialize the bundled example UI
-        .add_plugin(ExampleYarnSlingerUiPlugin::new())
+        .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
             setup_camera.on_startup(),
             // Spawn dialogue runner once the Yarn project has finished compiling

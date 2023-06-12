@@ -62,6 +62,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
 }
 
+/// Assets that were provided by one or more [`AssetProvider`]s. Stores them in the form of [`Handle`]s.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct LineAssets(HashMap<Uuid, HandleUntyped>);
 impl LineAssets {

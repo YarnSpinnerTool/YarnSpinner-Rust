@@ -61,7 +61,7 @@ impl DialogueRunner {
     pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
 
     /// Tells the dialogue runner to try to advance the dialogue in the next update.
-    /// This method must be called by the UI when the user clicks on a button to show the next line.
+    /// This method must be called by the dialogue view when the user clicks on a button to show the next line.
     ///
     /// Note that the actual advancement of the dialogue will be postponed until the following conditions are met:
     /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`] returning `true`.

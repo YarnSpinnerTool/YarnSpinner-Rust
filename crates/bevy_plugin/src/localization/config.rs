@@ -11,6 +11,17 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 
 /// The localizations used by the [`YarnProject`]. Can be set with [`YarnSlingerPlugin::with_localizations`] or
 /// [`LoadYarnProjectEvent::with_localizations`](crate::deferred_loading::LoadYarnProjectEvent::with_localizations).
+///
+/// ## Example
+///
+/// ```rust
+/// use bevy_yarn_slinger::prelude::*;
+/// let localizations = Localizations {
+///     base_localization: "en-US".into(),
+///     translations: vec!["de-CH".into(), "fr-FR".into()],
+///     file_generation_mode: FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS,
+/// };
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Localizations {
@@ -65,6 +76,12 @@ impl Localizations {
 }
 
 /// A supported localization inside [`Localizations`]. Created with [`Localization::with_language`].
+/// You can create this type from types that implement [`Into<Language>`], like this:
+/// ```rust
+/// # use bevy::prelude::*;
+/// # use bevy_yarn_slinger::prelude::*;
+/// let localization: Localization = "de-CH".into();
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -114,6 +131,8 @@ impl Localization {
     }
 }
 
+/// The kind of development experience you wish when creating yarn files and dealing with missing localizations. 
+/// Defaults to [`FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]

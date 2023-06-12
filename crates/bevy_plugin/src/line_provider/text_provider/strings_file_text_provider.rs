@@ -8,6 +8,11 @@ use std::fmt::Debug;
 
 pub(crate) fn strings_file_text_provider_plugin(_app: &mut App) {}
 
+/// The default [`TextProvider`] used by a [`DialogueRunner`] unless overridden with [`DialogueRunnerBuilder::with_text_provider`].
+/// If the [`DialogueRunner`]'s language is the base language, i.e. the one the Yarn files are written in,
+/// this will send the lines as they appear in the Yarn file. If [`DialogueRunner::set_language`] or [`DialogueRunner::set_text_language`] were used to
+/// set the language to a language supported by a translation in the [`Localizations`], this loads the strings file for that translation from the disk at the
+/// specified path. If this fails, the base language is used as a fallback.
 #[derive(Clone)]
 pub struct StringsFileTextProvider {
     asset_server: AssetServer,

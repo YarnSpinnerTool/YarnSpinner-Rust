@@ -9,7 +9,7 @@ editor = ["bevy_editor_pls"]
 
 [dependencies]
 bevy_yarn_slinger = { path = "../crates/bevy_plugin" }
-bevy_yarn_slinger_example_ui = { path = "../crates/example_ui" }
+bevy_yarn_slinger_example_dialogue_view = { path = "../crates/example_dialogue_view" }
 bevy_sprite3d = "=2.4.0"
 bevy_editor_pls = { version = "0.4", optional = true }
 

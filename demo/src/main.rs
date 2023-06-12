@@ -10,7 +10,7 @@ use bevy::window::PresentMode;
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_ui::prelude::*;
+use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 mod easing;
 mod setup;
@@ -48,7 +48,7 @@ fn main() {
             file_generation_mode: FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS,
         }),
     )
-    .add_plugin(ExampleYarnSlingerUiPlugin::new())
+    .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
     .add_plugin(Sprite3dPlugin)
     .add_systems((
         setup.on_startup(),
@@ -66,7 +66,7 @@ fn main() {
             ease_bang.run_if(any_with_component::<Bang>()),
         )
             .chain()
-            .after(ExampleYarnSlingerUiSystemSet),
+            .after(ExampleYarnSlingerDialogueViewSystemSet),
     )
     .run();
 }

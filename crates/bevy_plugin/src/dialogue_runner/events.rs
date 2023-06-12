@@ -14,7 +14,7 @@ pub(crate) fn dialogue_runner_events_plugin(app: &mut App) {
 }
 
 /// An event that is fired after a dialogue advances and wishes to present a line to the user.
-/// A UI should listen for this event and draw it to the screen.
+/// A dialogue view should listen for this event and draw it to the screen.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentLineEvent {
     /// The line to present to the user.
@@ -24,7 +24,7 @@ pub struct PresentLineEvent {
 }
 
 /// An event that is fired after a dialogue advances and wishes to present a set of options to the user.
-/// A UI should listen for this event and draw it to the screen.
+/// A dialogue view should listen for this event and draw it to the screen.
 /// You need to handle this event by calling [`DialogueRunner::select_option`] with the ID found in the provided [`DialogueOption`]s.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentOptionsEvent {

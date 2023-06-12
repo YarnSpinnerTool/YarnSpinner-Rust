@@ -5,6 +5,25 @@ pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
+/// The plugin that provides all Yarn Slinger functionality.
+/// In general, you'll want to create this by providing a list of yarn files to load via [`YarnSlingerPlugin::with_yarn_files`].
+/// If you however do not have access to these file at the start of the program, use [`YarnSlingerPlugin::deferred`] instead to later load the files
+/// by sending a [`LoadYarnProjectEvent`].
+///
+/// Needs to be added after the [`AssetPlugin`] which is usually added as part of the [`DefaultPlugins`].
+///
+/// ## Example
+///
+/// ```rust
+/// use bevy::prelude::*;
+/// use bevy_yarn_slinger::prelude::*;
+///
+/// App::new()
+///     .add_plugins(DefaultPlugins)
+///     .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]));
+/// ```
+///
+/// For more information on how this plugin interacts with the rest of the crate, see the crate-level documentation.
 #[derive(Debug)]
 pub struct YarnSlingerPlugin {
     project: LoadYarnProjectEvent,
@@ -70,6 +89,8 @@ impl YarnSlingerPlugin {
         self
     }
 
+    /// Sets supported localizations. See [`Localizations`] for more information about the format.
+    /// By default, no localizations are used.
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();

@@ -2,7 +2,7 @@
 resolver = "2"
 
 members = [
-    "crates/example_ui",
+    "crates/example_dialogue_view",
     "crates/bevy_plugin",
     "crates/yarn_slinger",
     "crates/runtime",

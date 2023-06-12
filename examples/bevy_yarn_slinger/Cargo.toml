@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 bevy_yarn_slinger = { path = "../../crates/bevy_plugin" }
-bevy_yarn_slinger_example_ui = { path = "../../crates/example_ui" }
+bevy_yarn_slinger_example_dialogue_view = { path = "../../crates/example_dialogue_view" }
 
 [dependencies.bevy]
 version = "0.10"

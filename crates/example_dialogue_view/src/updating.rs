@@ -1,7 +1,7 @@
 use crate::option_selection::OptionSelection;
 use crate::setup::{DialogueNameNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
-use crate::ExampleYarnSlingerUiSystemSet;
+use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 
@@ -18,13 +18,22 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
             .chain()
             .after(YarnSlingerSystemSet)
             .after(typewriter::spawn)
-            .in_set(ExampleYarnSlingerUiSystemSet),
+            .in_set(ExampleYarnSlingerDialogueViewSystemSet),
     )
-    .add_event::<SpeakerChangeEvent>();
+    .add_event::<SpeakerChangeEvent>()
+    .register_type::<SpeakerChangeEvent>();
 }
 
+/// Signals that a speaker has changed.
+/// A speaker starts speaking when a new line is presented with a [`PresentLineEvent`] which has a character name.
+/// A speaker stops speaking when the line is fully displayed on the screen, which happens over the course of a few seconds
+#[derive(Debug, Eq, PartialEq, Hash, Reflect, FromReflect)]
+#[reflect(Debug, PartialEq, Hash)]
+#[non_exhaustive]
 pub struct SpeakerChangeEvent {
+    /// The name of the character who is or was speaking.
     pub character_name: String,
+    /// If `true`, the character just started speaking. Otherwise, they just stopped.
     pub speaking: bool,
 }
 

@@ -4,7 +4,7 @@ use crate::setup::{
     INITIAL_DIALOGUE_CONTINUE_BOTTOM,
 };
 use crate::updating::SpeakerChangeEvent;
-use crate::ExampleYarnSlingerUiSystemSet;
+use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger::prelude::*;
@@ -21,7 +21,7 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
         )
             .chain()
             .after(YarnSlingerSystemSet)
-            .in_set(ExampleYarnSlingerUiSystemSet),
+            .in_set(ExampleYarnSlingerDialogueViewSystemSet),
     );
 }
 
