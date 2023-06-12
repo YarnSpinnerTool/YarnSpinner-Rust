@@ -1,3 +1,5 @@
+#![warn(missing_docs, missing_debug_implementations)]
+
 pub use log;
 
 pub mod prelude {

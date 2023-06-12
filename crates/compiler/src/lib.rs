@@ -1,3 +1,5 @@
+#![warn(missing_docs, missing_debug_implementations)]
+
 mod collections;
 pub(crate) mod compilation_steps;
 pub(crate) mod compiler;

@@ -1,3 +1,4 @@
+#![warn(missing_docs, missing_debug_implementations)]
 mod feature_gates;
 mod generated;
 mod internal_value;

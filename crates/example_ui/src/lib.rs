@@ -1,4 +1,5 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
+#![warn(missing_docs, missing_debug_implementations)]
 
 use bevy::prelude::*;
 use seldom_fn_plugin::FnPluginExt;
