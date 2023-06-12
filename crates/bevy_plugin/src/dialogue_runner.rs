@@ -115,7 +115,7 @@ impl DialogueRunner {
 
     /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
     /// Calling this is the same as calling [`DialogueRunnerBuilder::with_run_selected_options_as_line`].
-    pub fn set_run_selected_options_as_lines(
+    pub fn run_selected_options_as_lines(
         &mut self,
         run_selected_options_as_lines: bool,
     ) -> &mut Self {
@@ -278,31 +278,38 @@ impl DialogueRunner {
         );
     }
 
+    /// Returns the library of functions that can be called from Yarn files.
     #[must_use]
     pub fn library(&self) -> &Library {
         self.dialogue.library()
     }
 
+    /// Mutably returns the library of functions that can be called from Yarn files.
     #[must_use]
     pub fn library_mut(&mut self) -> &mut Library {
         self.dialogue.library_mut()
     }
 
+    /// Returns the command registrations that can be called from Yarn files.
     #[must_use]
     pub fn command_registrations(&self) -> &YarnCommandRegistrations {
         &self.commands
     }
 
+    /// Mutably returns the command registrations that can be called from Yarn files.
     #[must_use]
     pub fn command_registrations_mut(&mut self) -> &mut YarnCommandRegistrations {
         &mut self.commands
     }
 
+    /// Returns the language used by the [`TextProvider`]. If there are no [`Localizations`] available, this will return [`None`].
     #[must_use]
     pub fn text_language(&self) -> Option<Language> {
         self.dialogue.language_code().cloned()
     }
 
+    /// Returns the language used by the [`AssetProvider`]s. If there are no [`Localizations`] available, this will return [`None`].
+    /// Panics if the asset providers have different languages.
     #[must_use]
     pub fn asset_language(&self) -> Option<Language> {
         let languages: HashSet<_> = self
@@ -317,21 +324,25 @@ impl DialogueRunner {
         languages.into_iter().next().flatten()
     }
 
+    /// Returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
     pub fn inner(&self) -> InnerDialogue {
         InnerDialogue(&self.dialogue)
     }
 
+    /// Mutably returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
     pub fn inner_mut(&mut self) -> InnerDialogueMut {
         InnerDialogueMut(&mut self.dialogue)
     }
 
+    /// Returns the registered [`TextProvider`].
     #[must_use]
     pub fn text_provider(&self) -> &dyn TextProvider {
         self.text_provider.as_ref()
     }
 
+    /// Returns the registered [`AssetProvider`] for the given type.
     #[must_use]
     pub fn asset_provider<T: 'static>(&self) -> Option<&dyn AssetProvider> {
         self.asset_providers
@@ -339,6 +350,7 @@ impl DialogueRunner {
             .map(|p| p.as_ref())
     }
 
+    /// Iterates over all registered [`AssetProvider`]s.
     pub fn asset_providers(&self) -> impl Iterator<Item = &dyn AssetProvider> {
         self.asset_providers.values().map(|p| p.as_ref())
     }

@@ -45,10 +45,15 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// Until then, the dialogue will not be advanced when [`DialogueRunner::continue_in_next_update`] is called. This allows you to e.g. move the camera before the dialogue continues.
 /// If you return `()`, the command will be considered finished immediately.
 pub trait YarnCommand<Marker>: Send + Sync + 'static + Clone {
+    /// The input type used to determine the parameters passed to the command from Yarn. A tuple of values will be interpreted as multiple parameters.
+    /// This also counts for arbitrarily nested tuples, which will be flattened.
     type In: YarnFnParam;
+    /// The return type of the command. If there is no return value, this is `()`, which means the command is considered finished immediately.
     type Out: TaskFinishedIndicator;
+    /// The parameters passed to the command from the Bevy ECS.
     type Param: SystemParam;
 
+    #[doc(hidden)]
     fn run(
         &mut self,
         input: YarnFnParamItem<Self::In>,
@@ -149,8 +154,11 @@ macro_rules! impl_task_finished_indicator {
 }
 all_tuples!(impl_task_finished_indicator, 0, 16, F);
 
+/// A type-erased [`YarnCommand`] as it appears in the [`YarnCommandRegistrations`].
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
+    #[doc(hidden)]
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator>;
+    #[doc(hidden)]
     fn clone_box(&self) -> Box<dyn UntypedYarnCommand>;
 }
 

@@ -119,9 +119,25 @@ impl YarnCommandRegistrations {
     }
 }
 
+/// Convenience macro for creating a [`YarnCommandRegistrations`] instance with the given commands.
+/// ## Example
+///
+/// ```rust
+/// # use bevy::prelude::*;
+/// # use bevy_yarn_slinger::prelude::*;
+/// # use bevy_yarn_slinger::yarn_commands;
+///
+/// let commands = yarn_commands! {
+///    "add_player" => add_player,
+/// };
+///
+/// fn add_player(In((name, age)): In<(String, f32)>) {
+///     println!("Adding player {name} with age {age}");
+/// }
+///```
 #[macro_export]
 macro_rules! yarn_commands {
-    ($($name:expr => $function:expr,)*) => {
+    ($($name:expr => $function:expr),* $(,)?) => {
         {
             let mut map = YarnCommands::default();
             $(

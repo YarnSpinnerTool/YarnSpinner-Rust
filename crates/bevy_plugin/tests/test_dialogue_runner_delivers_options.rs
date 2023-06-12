@@ -75,7 +75,7 @@ fn can_show_option_selection_as_line() -> Result<()> {
     {
         let mut dialogue_runner = setup_dialogue_runner(&mut app);
         dialogue_runner.start();
-        dialogue_runner.run_selected_options_as_lines = true;
+        dialogue_runner.run_selected_options_as_lines(true);
     }
     app.continue_dialogue_and_update_n_times(4);
     assert_events!(app contains [

@@ -14,6 +14,24 @@ pub struct YarnSlingerPlugin {
 pub struct YarnSlingerSystemSet;
 
 impl YarnSlingerPlugin {
+    /// Creates a new plugin that loads the given yarn files.
+    /// All yarn files will be shared across [`DialogueRunner`]s.
+    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on, these yarn files will be recompiled if they change during runtime.
+    ///
+    /// The files can be provided in any of the following ways:
+    /// - As a path to the asset (this is the most common usage)
+    /// - As a handle to the asset
+    /// - In memory as a [`YarnFile`]
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use bevy_yarn_slinger::prelude::*;
+    /// let plugin = YarnSlingerPlugin::with_yarn_files(vec![
+    ///    "some_dialogue.yarn",
+    ///    "some_other_dialogue.yarn",
+    /// ]);
+    /// ```
     #[must_use]
     pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
         let yarn_files = yarn_files
@@ -28,17 +46,20 @@ impl YarnSlingerPlugin {
         }
     }
 
+    /// Creates a version of the plugin that does not load anything yet and instead waits until you have sent a [`LoadYarnProjectEvent`].
     #[must_use]
     pub fn deferred() -> DeferredYarnSlingerPlugin {
-        DeferredYarnSlingerPlugin::new()
+        DeferredYarnSlingerPlugin
     }
 
+    /// Adds a yarn file to the list of yarn files provided in [`YarnSlingerPlugin::with_yarn_files`].
     #[must_use]
     pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.project = self.project.add_yarn_file(yarn_file);
         self
     }
 
+    /// Adds further files to the list of yarn files provided in [`YarnSlingerPlugin::with_yarn_files`].
     #[must_use]
     pub fn add_yarn_files(
         mut self,
@@ -65,16 +86,11 @@ impl Plugin for YarnSlingerPlugin {
     }
 }
 
-#[derive(Debug, Default)]
+/// The deferred version of [`YarnSlingerPlugin`]. Created by [`YarnSlingerPlugin::deferred`].
+/// Will not load any yarn files until a [`LoadYarnProjectEvent`] is sent.
+#[derive(Debug)]
 #[non_exhaustive]
 pub struct DeferredYarnSlingerPlugin;
-
-impl DeferredYarnSlingerPlugin {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
 
 impl Plugin for DeferredYarnSlingerPlugin {
     fn build(&self, app: &mut App) {

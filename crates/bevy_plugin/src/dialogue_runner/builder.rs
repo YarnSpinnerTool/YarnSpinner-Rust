@@ -26,9 +26,16 @@ pub struct DialogueRunnerBuilder {
     start_node: Option<StartNode>,
 }
 
-#[derive(Debug, Clone)]
+/// The default node used by [`DialogueRunner::start`].
+/// Can be overridden with [`DialogueRunnerBuilder::with_start_node`].
+///
+/// The default is [`StartNode::DefaultStartNode`].
+#[derive(Debug, Clone, Default)]
 pub enum StartNode {
+    /// The node named "Start"
+    #[default]
     DefaultStartNode,
+    /// A node with a specific name
     Node(String),
 }
 
@@ -71,7 +78,7 @@ impl DialogueRunnerBuilder {
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
             run_selected_options_as_lines: false,
-            start_node: Some(StartNode::DefaultStartNode),
+            start_node: Some(StartNode::default()),
         }
     }
 
@@ -100,10 +107,10 @@ impl DialogueRunnerBuilder {
     /// Sets the language used by both the text and asset providers.
     /// If you want to set them separately, use [`DialogueRunnerBuilder::with_text_language`] and [`DialogueRunnerBuilder::with_asset_language`].
     ///
-    /// If the [`YarnProject`] has localizations, this will be the language of the base localization by default.
+    /// If the [`YarnProject`] has [`Localizations`], this will be the language of the base localization by default.
     /// Otherwise, this value must be left at `None`.
     #[must_use]
-    pub fn set_language(mut self, language: impl Into<Option<Language>>) -> Self {
+    pub fn set_language(self, language: impl Into<Option<Language>>) -> Self {
         let language = language.into();
         self.with_text_language(language.clone())
             .with_asset_language(language)
@@ -111,7 +118,7 @@ impl DialogueRunnerBuilder {
 
     /// Sets the language used by the text provider.
     ///
-    /// If the [`YarnProject`] has localizations, this will be the language of the base localization by default.
+    /// If the [`YarnProject`] has [`Localizations`], this will be the language of the base localization by default.
     /// Otherwise, this value must be left at `None`.
     #[must_use]
     pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
@@ -163,11 +170,6 @@ impl DialogueRunnerBuilder {
     pub fn build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
 
-        let base_language = self
-            .localizations
-            .as_ref()
-            .map(|l| &l.base_localization.language);
-
         let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
             .with_line_hints_enabled(true)
             .with_extended_library(self.library)
@@ -178,7 +180,6 @@ impl DialogueRunnerBuilder {
                 asset_provider.set_localizations(localizations.clone());
             }
 
-            asset_provider.set_language(asset_language);
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
@@ -196,6 +197,12 @@ impl DialogueRunnerBuilder {
         };
 
         let popped_line_hints = dialogue.pop_line_hints();
+
+        let base_language = self
+            .localizations
+            .as_ref()
+            .map(|l| &l.base_localization.language)
+            .cloned();
 
         let mut dialogue_runner = DialogueRunner {
             dialogue,
@@ -217,16 +224,17 @@ impl DialogueRunnerBuilder {
         let text_language = self
             .text_language
             .take()
-            .unwrap_or_else(|| base_language.cloned());
+            .unwrap_or_else(|| base_language.clone());
 
-        let asset_language = self
-            .asset_language
-            .take()
-            .unwrap_or_else(|| base_language.cloned());
+        if let Some(text_language) = text_language {
+            dialogue_runner.set_text_language(text_language);
+        }
 
-        dialogue_runner
-            .set_text_language(text_language)?
-            .set_asset_language(asset_language)?;
+        let asset_language = self.asset_language.take().unwrap_or(base_language);
+
+        if let Some(asset_language) = asset_language {
+            dialogue_runner.set_asset_language(asset_language);
+        }
 
         Ok(dialogue_runner)
     }

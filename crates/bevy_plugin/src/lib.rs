@@ -1,6 +1,6 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 #![warn(missing_docs, missing_debug_implementations)]
-#![doc(include = "../../readme.md")]
+#![doc = include_str!("../../../readme.md")]
 mod commands;
 mod dialogue_runner;
 mod line_provider;
@@ -12,6 +12,7 @@ mod yarn_file_asset;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
+    //! Default implementations for Yarn Slinger traits.
     #[cfg(feature = "audio_assets")]
     pub use crate::line_provider::AudioAssetProvider;
     pub use crate::line_provider::{
@@ -60,6 +61,7 @@ pub use yarn_slinger::prelude::{
 };
 
 pub mod deferred_loading {
+    //! Contains types needed for the deferred loading functionality, which is used when the list of yarn files is not immediately available at startup.
     pub use crate::plugin::DeferredYarnSlingerPlugin;
     pub use crate::project::LoadYarnProjectEvent;
 }
