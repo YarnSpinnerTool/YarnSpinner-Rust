@@ -50,7 +50,7 @@ impl From<YarnFile> for YarnFileSource {
 }
 
 impl YarnFileSource {
-    pub fn load(
+    pub(crate) fn load(
         &self,
         asset_server: &AssetServer,
         assets: &mut ResMut<Assets<YarnFile>>,
