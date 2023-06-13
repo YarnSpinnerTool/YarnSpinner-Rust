@@ -28,7 +28,9 @@ mod logger;
 mod paths;
 mod step;
 mod test_plan;
+mod text_provider;
 use logger::*;
+pub use text_provider::SharedTextProvider;
 use yarn_slinger::log::{self, LevelFilter, SetLoggerError};
 
 pub mod prelude {

@@ -20,6 +20,7 @@ pub struct Dialogue {
 
 pub type Result<T> = std::result::Result<T, DialogueError>;
 
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum DialogueError {
     #[error(transparent)]
@@ -29,8 +30,6 @@ pub enum DialogueError {
         id: LineId,
         language_code: Option<Language>,
     },
-    #[error(transparent)]
-    UnsupportedLanguageError(#[from] UnsupportedLanguageError),
     #[error("{selected_option_id:?} is not a valid option ID (expected a number between 0 and {max_id}.")]
     InvalidOptionIdError {
         selected_option_id: OptionId,

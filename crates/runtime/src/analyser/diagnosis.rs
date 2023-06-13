@@ -16,13 +16,19 @@ use std::iter;
     reflect(Serialize, Deserialize)
 )]
 pub struct Diagnosis {
+    /// The severity of the diagnosis. See [`DiagnosisSeverity`] for more information.
     pub severity: DiagnosisSeverity,
+    /// The user-friendly message of the diagnosis.
     pub message: String,
+    /// The name of the node that caused the diagnosis, if any.
     pub node_name: Option<String>,
+    /// The 1-indexed line number of the node that caused the diagnosis, if any.
     pub line: Option<usize>,
+    /// The 1-indexed column number, i.e. the character index in the line, of the node that caused the diagnosis, if any.
     pub column: Option<usize>,
 }
 
+/// The severity of a [`Diagnosis`], as reported by a [`CompiledProgramAnalyser`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
@@ -33,12 +39,25 @@ pub struct Diagnosis {
     reflect(Serialize, Deserialize)
 )]
 pub enum DiagnosisSeverity {
+    /// An error.
+    ///
+    /// Errors represent serious problems that the user should fix before running the Yarn program.
     Error,
+
+    /// A warning.
+    ///
+    /// Warnings represent possible problems that the user should fix,
+    /// but do not cause the compilation process to fail.
     Warning,
+
+    /// A note.
+    ///
+    /// Notes represent information that the user may find useful, but can safely be ignored.
     Note,
 }
 
 impl Diagnosis {
+    /// Creates a new [`Diagnosis`] with the given severity and message.
     #[must_use]
     pub fn new(severity: DiagnosisSeverity, message: String) -> Self {
         Self {
@@ -50,18 +69,21 @@ impl Diagnosis {
         }
     }
 
+    /// Sets the node name the diagnosis is associated with. By default, this is `None`.
     #[must_use]
     pub fn with_node_name(mut self, node_name: impl Into<String>) -> Self {
         self.node_name = Some(node_name.into());
         self
     }
 
+    /// Sets the 1-indexed line the diagnosis is associated with. By default, this is `None`.
     #[must_use]
     pub fn with_line(mut self, line: usize) -> Self {
         self.line = Some(line);
         self
     }
 
+    /// Sets the 1-indexed column, i.e. the character index in the line, the diagnosis is associated with. By default, this is `None`.
     #[must_use]
     pub fn with_column(mut self, column: usize) -> Self {
         self.column = Some(column);
