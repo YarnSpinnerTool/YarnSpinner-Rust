@@ -126,7 +126,6 @@ pub mod prelude {
 
 pub use crate::commands::UntypedYarnCommand;
 pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
-use crate::prelude::YarnProject;
 pub use yarn_slinger::core::{yarn_fn_type, UntypedYarnFn};
 pub use yarn_slinger::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,

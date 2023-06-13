@@ -5,15 +5,21 @@ use yarn_slinger::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPER
 
 pub(crate) fn localized_line_plugin(_app: &mut App) {}
 
+/// A line from the Yarn file, with all metadata and markup parsed.
+/// The text is localized according to the localization logic used by the [`TextProvider`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct LocalizedLine {
     /// The ID of the line in the string table.
     pub id: LineId,
     /// The original text, with all parsed markers removed.
     pub text: String,
-    /// The list of [`MarkupAttribute`] in this parse result.
+    /// The [`MarkupAttribute`]s in this line. An example of markup is `Hello, [b]world[/b]!`.
     pub attributes: Vec<MarkupAttribute>,
+    /// The list of metadata associated with this line, excluding the line ID.
+    /// Metadata is defined by the hashtags at the end of the line, e.g. `Hello, world! #greeting #friendly`.
+    /// This data is also provided in the `comment` field of a generated [`StringsFile`].
     pub metadata: Vec<String>,
+    /// The assets associated with this line, provided by [`AssetProvider`]s that were added with [`DialogueRunnerBuilder::add_asset_provider`].
     pub assets: LineAssets,
 }
 impl LocalizedLine {
@@ -161,6 +167,9 @@ impl LocalizedLine {
         Self::from_yarn_line(deleted_range, self.assets.clone(), self.metadata.clone())
     }
 
+    /// Returns `true` if this line comes right before an options block.
+    ///
+    /// "right before" means that no commands are called in between them, no variables are set, etc., in which case this returns `false`.
     pub fn is_last_line_before_options(&self) -> bool {
         self.metadata.iter().any(|m| m == "lastline")
     }

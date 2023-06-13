@@ -8,6 +8,18 @@ use std::fmt::Debug;
 
 pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
 
+/// An [`AssetProvider`] that loads assets from disk based on their file extension and name.
+/// If the file extension "png" is associated with the type [`Image`] via [`FileExtensionAssetProvider::with_file_extensions`], and this provider is
+/// asked to look up the asset for a line with the ID "123", it will look for a file named
+/// "123.png" in the line asset subdirectory specified by the [`Localization`] corresponding to the language set by [`DialogueRunner::set_asset_language`].
+/// 
+/// By default, the line asset subdirectory  has the same name as the language, thus for the language "en-US", the provider will 
+/// more specifically look for "assets/en-US/123.png" when calling [`FileExtensionAssetProvider::get_assets`].
+/// 
+/// You can use this provider in a [`DialogueRunner`] by calling [`DialogueRunnerBuilder::add_asset_provider`] with an instance of this type.
+/// 
+/// If you want to load audio assets, the feature `audio_assets` will provide you with an [`AudioAssetProvider`] that is a wrapper around this type
+/// configured in such a way.
 #[derive(Clone, Default)]
 pub struct FileExtensionAssetProvider {
     language: Option<Language>,
@@ -18,6 +30,17 @@ pub struct FileExtensionAssetProvider {
     file_extensions: HashMap<Uuid, Vec<String>>,
 }
 
+/// A convenience macro for specifying file extensions used by [`FileExtensionAssetProvider::with_file_extensions`].
+/// The syntax is as follows:
+/// ```ignore
+/// file_extensions! {
+///     <AssetType1>: ["<ext1>", "<ext2>", ...],
+///     <AssetType2>: ["<ext1>", "<ext2>", ...],
+///     ...
+/// }
+/// ```
+/// where `<AssetType>` is a type implementing [`Asset`](bevy::asset::Asset) and `<ext>` is a file extension without the leading dot.
+/// See [`FileExtensionAssetProvider::with_file_extensions`] for an example.
 #[macro_export]
 macro_rules! file_extensions {
     ($($type:ty: $ext:expr),* $(,)?) => {
@@ -33,10 +56,27 @@ macro_rules! file_extensions {
 pub use file_extensions;
 
 impl FileExtensionAssetProvider {
+    /// Initializes a new [`FileExtensionAssetProvider`] with no file extensions.
+    /// Call [`FileExtensionAssetProvider::with_file_extensions`] to add file extensions.
     pub fn new() -> Self {
         default()
     }
 
+    /// Adds file extensions for the given type. For convenience, you can use the [`file_extensions`] macro to specify the extensions.
+    /// 
+    /// ## Example
+    /// 
+    /// ```
+    /// use bevy::prelude::*;
+    /// use bevy_yarn_slinger::file_extensions;
+    /// use bevy_yarn_slinger::prelude::*;
+    ///
+    /// let file_extension_provider = FileExtensionAssetProvider::new()
+    ///     .with_file_extensions(file_extensions! {
+    ///        Image: ["png", "jpg", "jpeg"],
+    ///        AudioSource: ["mp3", "ogg", "wav"],
+    ///     });
+    /// ```
     pub fn with_file_extensions<T, U, V>(mut self, file_extensions: T) -> Self
     where
         T: IntoIterator<Item = (Uuid, U)>,
