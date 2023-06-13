@@ -51,7 +51,7 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
-    pub fn from_message(message: impl Into<String>) -> Self {
+    pub(crate) fn from_message(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             file_name: Default::default(),
@@ -81,27 +81,27 @@ impl Diagnostic {
             .with_start_line(lines_around.first_line)
     }
 
-    pub fn with_file_name(mut self, file_name: impl Into<String>) -> Self {
+    pub(crate) fn with_file_name(mut self, file_name: impl Into<String>) -> Self {
         self.file_name = Some(file_name.into());
         self
     }
 
-    pub fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
+    pub(crate) fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
         self.range = Some(range.into());
         self
     }
 
-    pub fn with_context(mut self, context: impl Into<String>) -> Self {
+    pub(crate) fn with_context(mut self, context: impl Into<String>) -> Self {
         self.context = Some(context.into());
         self
     }
 
-    pub fn with_start_line(mut self, start_line: usize) -> Self {
+    pub(crate) fn with_start_line(mut self, start_line: usize) -> Self {
         self.start_line = start_line;
         self
     }
 
-    pub fn with_severity(mut self, severity: DiagnosticSeverity) -> Self {
+    pub(crate) fn with_severity(mut self, severity: DiagnosticSeverity) -> Self {
         self.severity = severity;
         self
     }
@@ -181,7 +181,9 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
     (byte_start, byte_end)
 }
 
+/// Trait implemented for `Vec<Diagnostic>` to provide utility methods.
 pub trait DiagnosticVec {
+    /// Returns `true` if any of the [`Diagnostic`]s in the vector are of [`DiagnosticSeverity::Error`].
     fn has_errors(&self) -> bool;
 }
 

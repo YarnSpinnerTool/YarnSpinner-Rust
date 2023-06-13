@@ -121,6 +121,8 @@ impl Compilation {
     }
 }
 
+/// A collection of [`Diagnostic`] objects that describe problems that occurred during compilation.
+/// At least one of these diagnostics will have a severity of [`DiagnosticSeverity::Error`].
 #[derive(Error, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

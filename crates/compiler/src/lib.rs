@@ -16,6 +16,7 @@ pub(crate) mod visitors;
 pub use crate::compiler::Result;
 
 pub mod prelude {
+    //! Everything you need to get started with the Yarn Slinger compiler.
     pub(crate) use crate::{
         compiler::antlr_rust_ext::*, compiler::run_compilation::*, compiler::utils::*,
         file_parse_result::*, parser::*, parser_rule_context_ext::*, string_table_manager::*,
