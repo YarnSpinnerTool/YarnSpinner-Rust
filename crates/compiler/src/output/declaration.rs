@@ -79,7 +79,7 @@ impl Declaration {
         self.range.as_ref()?.start.line.into()
     }
 
-    pub(crate) fn new(name: impl Into<String>, r#type: impl Into<Type>) -> Self {
+    pub fn new(name: impl Into<String>, r#type: impl Into<Type>) -> Self {
         Self {
             name: name.into(),
             r#type: r#type.into(),
@@ -92,48 +92,41 @@ impl Declaration {
         }
     }
 
-    pub(crate) fn with_type(mut self, r#type: impl Into<Type>) -> Self {
+    pub fn with_type(mut self, r#type: impl Into<Type>) -> Self {
         self.r#type = r#type.into();
         self
     }
 
-    pub(crate) fn with_default_value(mut self, default_value: impl Into<YarnValue>) -> Self {
+    pub fn with_default_value(mut self, default_value: impl Into<YarnValue>) -> Self {
         self.default_value = Some(default_value.into());
         self
     }
 
-    pub(crate) fn with_name(mut self, name: impl Into<String>) -> Self {
+    pub fn with_name(mut self, name: impl Into<String>) -> Self {
         self.name = name.into();
         self
     }
 
-    pub(crate) fn with_description(mut self, description: impl Into<String>) -> Self {
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
 
-    pub(crate) fn with_description_optional(
-        mut self,
-        description: impl Into<Option<String>>,
-    ) -> Self {
+    pub fn with_description_optional(mut self, description: impl Into<Option<String>>) -> Self {
         self.description = description.into();
         self
     }
 
-    pub(crate) fn with_source_file_name(
-        mut self,
-        source_file_name: impl Into<DeclarationSource>,
-    ) -> Self {
+    pub fn with_source_file_name(mut self, source_file_name: impl Into<DeclarationSource>) -> Self {
         self.source_file_name = source_file_name.into();
         self
     }
 
-    pub(crate) fn with_source_node_name(mut self, source_node_name: impl Into<String>) -> Self {
+    pub fn with_source_node_name(mut self, source_node_name: impl Into<String>) -> Self {
         self.source_node_name = Some(source_node_name.into());
         self
     }
-
-    pub(crate) fn with_source_node_name_optional(
+    pub fn with_source_node_name_optional(
         mut self,
         source_node_name: impl Into<Option<String>>,
     ) -> Self {
@@ -141,12 +134,12 @@ impl Declaration {
         self
     }
 
-    pub(crate) fn with_implicit(mut self) -> Self {
+    pub fn with_implicit(mut self) -> Self {
         self.is_implicit = true;
         self
     }
 
-    pub(crate) fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
+    pub fn with_range(mut self, range: impl Into<Range<Position>>) -> Self {
         self.range = Some(range.into());
         self
     }
