@@ -10,9 +10,24 @@
 //! - [`YarnProject`]: A [`Resource`](bevy::prelude::Resource) for the compiled Yarn project, which is created for you when [`YarnSlingerPlugin`] is added.
 //! - [`DialogueRunner`]: The [`Component`](bevy::prelude::Component) running through the Yarn files and sending events for things you should draw on the screen.
 //! Can be created from a [`YarnProject`].
+//!
+//! ## Dialogue Views
+//!
 //! The dialogue runner itself does not draw anything to the screen, it only tells you what content to present.
 //! Any plugin that handles the actual drawing is called a *dialogue view*. We provide an [example dialogue view](https://crates.io/crates/bevy_yarn_slinger_example_dialogue_view)
 //! that you can use to explore the features of Yarn Slinger and get started quickly.
+//!
+//! Specifically, a dialogue view is required to do the following things
+//! - Handle the [`PresentLineEvent`] and draw the line to the screen.
+//! - Handle the [`PresentOptionsEvent`] and draw the options to the screen.
+//! - Call [`DialogueRunner::continue_in_next_update`] when the user wishes to continue the dialogue.
+//! - Pass a user's option selection to the right dialogue runner via [`DialogueRunner::select_option`].
+//!
+//! See the documentation for the [`events`] module for additional optional events that may be handled
+//!
+//! Note that while [`DialogueRunner`]s are setup in such a way that you can have multiple instances running in parallel (such as for split-screen co-op),
+//! a general-purpose dialogue view is not required to support this use-case, as every game that does this will have it's own way of wanting to deal with this.
+//! In particular, the [example dialogue view](https://crates.io/crates/bevy_yarn_slinger_example_dialogue_view) only supports a single [`DialogueRunner`].
 //!
 //! ## Demo
 //!
@@ -93,6 +108,14 @@ pub mod default_impl {
     pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
 }
 
+pub mod events {
+    //! Events that are sent by the [`DialogueRunner`]. A dialogue view is expected to at least handle [`PresentLineEvent`] and [`PresentOptionsEvent`].
+    pub use crate::dialogue_runner::{
+        DialogueCompleteEvent, DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent,
+        NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent,
+    };
+}
+
 pub mod prelude {
     //! Everything you need to get starting using Yarn Slinger.
 
@@ -102,9 +125,7 @@ pub mod prelude {
         commands::{YarnCommand, YarnCommandRegistrations},
         default_impl::FileExtensionAssetProvider,
         dialogue_runner::{
-            DialogueCompleteEvent, DialogueOption, DialogueRunner, DialogueRunnerBuilder,
-            DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent, LocalizedLine,
-            NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent, StartNode,
+            DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine, StartNode,
         },
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{FileGenerationMode, Localization, Localizations},

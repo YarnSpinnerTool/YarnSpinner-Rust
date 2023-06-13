@@ -1,7 +1,7 @@
 use anyhow::Result;
 use bevy::prelude::*;
 use bevy::utils::Instant;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarn_slinger::{events::*, prelude::*};
 use std::thread::sleep;
 use utils::prelude::*;
 

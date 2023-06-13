@@ -1,6 +1,6 @@
 use anyhow::Result;
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarn_slinger::{events::*, prelude::*};
 use std::fs;
 use tempfile::tempdir;
 use utils::prelude::*;

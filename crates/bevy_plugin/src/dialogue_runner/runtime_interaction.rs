@@ -1,5 +1,6 @@
 use crate::commands::update_wait;
 use crate::dialogue_runner::events::DialogueStartEvent;
+use crate::events::*;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;

@@ -7,7 +7,7 @@ use crate::updating::SpeakerChangeEvent;
 use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::Instant;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarn_slinger::{events::*, prelude::*};
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) fn typewriter_plugin(app: &mut App) {

@@ -1,5 +1,6 @@
 use crate::commands::UntypedYarnCommand;
 use crate::dialogue_runner::DialogueExecutionSystemSet;
+use crate::events::ExecuteCommandEvent;
 use crate::prelude::*;
 use bevy::prelude::*;
 

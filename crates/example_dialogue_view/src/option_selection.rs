@@ -4,7 +4,7 @@ use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarn_slinger::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(

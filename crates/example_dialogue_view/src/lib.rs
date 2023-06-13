@@ -3,11 +3,13 @@
 //! This one shows text in a dialogue box inspired by Legend of Zelda: Breath of the Wild.
 //!
 //! ## Demo
+//!
 //! The [Yarn Slinger Demo](https://janhohenheim.itch.io/yarn-slinger-demo) uses this dialogue view, so you can play that in the browser if you
 //! want to see it in action. Additionally, all [Bevy Yarn Slinger examples](https://github.com/yarn-slinger/yarn-slinger/tree/main/examples/bevy_yarn_slinger/src/bin) use
 //! this dialogue view as well.
 //!
 //! ## Usage
+//!
 //! It's enough to simply register [`ExampleYarnSlingerDialogueViewPlugin`] the plugin alongside the [`YarnSlingerPlugin`](bevy_yarn_slinger::prelude::YarnSlingerPlugin):
 //! ```rust
 //! use bevy::prelude::*;
@@ -26,9 +28,14 @@
 //!
 //! ## Inputs
 //!
-//! - Advance the dialogue: press the spacebar, left click or tap the screen after the text is done typing.
+//! - Advance the dialogue: press the space bar, left click or tap the screen after the text is done typing.
 //! - Type out the text faster: Same as above, but hold press before the text is done typing.
 //! - Select an option: press the number key corresponding to the option you want to select or click/tap the option.
+//!
+//! ## Limitations
+//!
+//! This dialogue view expects only a single instance of [`DialogueRunner`](bevy_yarn_slinger::prelude::DialogueRunner) to be running.
+//! Its behavior is otherwise undefined.
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 #![warn(missing_docs, missing_debug_implementations)]
