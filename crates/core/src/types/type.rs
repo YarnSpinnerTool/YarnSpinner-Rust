@@ -107,6 +107,7 @@ impl Type {
         format!("{}.{}", self.name(), method_name)
     }
 
+    /// The types that can be explicitly constructed in Yarn with variable assignments.
     pub const EXPLICITLY_CONSTRUCTABLE: &'static [Type] = &[
         Type::Any,
         Type::Number,
@@ -135,7 +136,7 @@ pub struct TypeProperties {
 }
 
 impl TypeProperties {
-    pub fn from_name(name: &'static str) -> Self {
+    pub(crate) fn from_name(name: &'static str) -> Self {
         Self {
             name,
             description: name.to_owned(),
@@ -143,12 +144,12 @@ impl TypeProperties {
         }
     }
 
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    pub(crate) fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = description.into();
         self
     }
 
-    pub fn with_methods(mut self, registry: YarnFnRegistry) -> Self {
+    pub(crate) fn with_methods(mut self, registry: YarnFnRegistry) -> Self {
         self.methods = registry;
         self
     }
@@ -200,7 +201,7 @@ impl_type! {
 
 // The macro has problems with the following expansions
 
-pub trait StrRefExt {
+trait StrRefExt {
     fn r#type() -> Type;
 }
 
