@@ -44,7 +44,7 @@ impl Compiler {
         // Were there any error-level diagnostics?
         if diagnostics.has_errors() {
             // We encountered a parse error. Bail here; we aren't confident in our ability to correctly insert a line tag.
-            return Err(CompilerError { diagnostics });
+            return Err(CompilerError(diagnostics));
         }
 
         // Create the line listener, which will produce TextReplacements for each new line tag.

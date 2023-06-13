@@ -138,7 +138,7 @@ impl DialogueRunnerBuilder {
         self
     }
 
-    /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
+    /// If set, every line the user selects will emit a [`PresentLineEvent`](crate::events::PresentLineEvent). Defaults to `false`.
     #[must_use]
     pub fn with_run_selected_options_as_line(mut self, run_selected_option_as_line: bool) -> Self {
         self.run_selected_options_as_lines = run_selected_option_as_line;

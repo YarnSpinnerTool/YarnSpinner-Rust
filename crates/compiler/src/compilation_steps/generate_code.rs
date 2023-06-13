@@ -36,13 +36,11 @@ pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIn
         let total_diagnostics: Vec<_> = results
             .iter()
             .filter_map(|result| result.as_ref().err())
-            .flat_map(|error| error.diagnostics.iter())
+            .flat_map(|error| error.0.iter())
             .cloned()
             .chain(state.diagnostics.iter().cloned())
             .collect();
-        Err(CompilerError {
-            diagnostics: total_diagnostics,
-        })
+        Err(CompilerError(total_diagnostics))
     } else {
         let compilations = results.into_iter().map(|r| r.unwrap());
         Ok(Compilation::combine(
@@ -77,9 +75,7 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
 
     // Don't attempt to generate debug information if compilation produced errors
     if compiler_diagnostics.borrow().has_errors() {
-        Err(CompilerError {
-            diagnostics: compiler_diagnostics.borrow().clone(),
-        })
+        Err(CompilerError(compiler_diagnostics.borrow().clone()))
     } else {
         let debug_infos: HashMap<_, _> = compiler_debug_infos
             .borrow()

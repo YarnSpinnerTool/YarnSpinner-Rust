@@ -64,7 +64,7 @@ impl DialogueRunner {
     /// This method must be called by the dialogue view when the user clicks on a button to show the next line.
     ///
     /// Note that the actual advancement of the dialogue will be postponed until the following conditions are met:
-    /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`] returning `true`.
+    /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`](yarn_slinger::prelude::TextProvider::are_lines_available) returning `true`.
     /// - The asset providers have finished loading their assets, indicated by all [`AssetProvider::are_assets_available`] calls returning `true`.
     /// - All previously called [`YarnCommand`]s are finished, indicated by their return type's [`TaskFinishedIndicator::is_finished`] returning `true`.
     pub fn continue_in_next_update(&mut self) -> &mut Self {
@@ -221,7 +221,7 @@ impl DialogueRunner {
         self.dialogue.variable_storage_mut()
     }
 
-    /// Returns whether both the text and asset providers have loaded all their lines. Same as checking both [`DialogueRunner::are_texts_available`] and [`DialogueRunner::are_assets_available`]
+    /// Returns whether both the text and asset providers have loaded all their lines.
     #[must_use]
     pub fn are_lines_available(&self) -> bool {
         self.are_texts_available() && self.are_assets_available()

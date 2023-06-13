@@ -663,7 +663,7 @@ mod tests {
         }
         .compile();
 
-        let diagnostics = result.unwrap_err().diagnostics;
+        let diagnostics = result.unwrap_err().0;
 
         assert_eq!(3, diagnostics.len());
 
@@ -773,7 +773,7 @@ mod tests {
         }
         .compile();
 
-        let diagnostics = result.unwrap_err().diagnostics;
+        let diagnostics = result.unwrap_err().0;
 
         assert_eq!(4, diagnostics.len());
 

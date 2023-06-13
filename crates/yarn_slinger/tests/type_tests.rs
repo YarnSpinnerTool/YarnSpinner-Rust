@@ -152,7 +152,7 @@ fn test_variable_declarations_disallow_duplicates() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("$int has already been declared")));
 }
@@ -170,7 +170,7 @@ fn test_expressions_disallow_mismatched_types() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message == "$int (Number) cannot be assigned a String"));
 }
@@ -260,7 +260,7 @@ fn test_null_not_allowed() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("Null is not a permitted type")));
 }
@@ -366,7 +366,7 @@ fn test_failing_function_signatures() {
         println!("{}", result);
 
         let diagnostic_messages = result
-            .diagnostics
+            .0
             .iter()
             .map(|d| d.message.clone())
             .collect::<Vec<_>>();
@@ -693,7 +693,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
 
     assert_eq!(
         "Function \"func\" expects 1 parameter, but received 2",
-        result.diagnostics[0].message,
+        result.0[0].message,
     );
 }
 
@@ -711,7 +711,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
     println!("{}", result);
 
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("expects a Number, not a Bool")));
 }
@@ -737,7 +737,7 @@ fn test_if_statement_expressions_must_be_boolean() {
 
     println!("{}", result);
 
-    assert!(result.diagnostics.iter().any(|d| d
+    assert!(result.0.iter().any(|d| d
         .message
         .contains("Terms of 'if statement' must be Bool, not String")));
 }

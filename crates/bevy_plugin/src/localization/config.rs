@@ -131,7 +131,7 @@ impl Localization {
     }
 }
 
-/// The kind of development experience you wish when creating yarn files and dealing with missing localizations. 
+/// The kind of development experience you wish when creating yarn files and dealing with missing localizations.
 /// Defaults to [`FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]

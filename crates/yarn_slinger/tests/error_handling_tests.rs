@@ -13,7 +13,7 @@ fn test_malformed_if_statement() {
         .unwrap_err();
 
     println!("{}", result);
-    assert!(result.diagnostics.iter().any(|d| d
+    assert!(result.0.iter().any(|d| d
         .message
         .contains("Expected an <<endif>> to match the <<if>> statement on line 3")));
 }
@@ -33,10 +33,10 @@ fn test_extraneous_else() {
     .unwrap_err();
 
     println!("{}", result);
-    assert!(result.diagnostics.iter().any(|d| d
+    assert!(result.0.iter().any(|d| d
         .message
         .contains("More than one <<else>> statement in an <<if>> statement isn't allowed")));
-    assert!(result.diagnostics.iter().any(|d| d
+    assert!(result.0.iter().any(|d| d
         .message
         .contains("Unexpected \"endif\" while reading a statement")));
 }
@@ -49,7 +49,7 @@ fn test_empty_command() {
     println!("{}", result);
 
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("Command text expected")));
 }
@@ -62,7 +62,7 @@ fn test_invalid_variable_name_in_set_or_declare() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message == "Variable names need to start with a $"));
 
@@ -72,7 +72,7 @@ fn test_invalid_variable_name_in_set_or_declare() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message == "Variable names need to start with a $"));
 }
@@ -84,7 +84,7 @@ fn test_invalid_function_call() {
         .unwrap_err();
 
     println!("{}", result);
-    assert!(result.diagnostics.iter().any(|d| d
+    assert!(result.0.iter().any(|d| d
         .message
         .contains("Unexpected \">>\" while reading a function call")));
 }
@@ -96,7 +96,7 @@ fn test_compiling_same_file_twice_fails() {
         .read_file(space_demo_scripts_path().join("Sally.yarn"))
         .extend_library(TestBase::new().dialogue.library().clone())
         .compile();
-    let diagnostics = result.unwrap_err().diagnostics;
+    let diagnostics = result.unwrap_err().0;
     assert!(diagnostics
         .iter()
         .any(|d| d.message.contains("Duplicate line ID line:794945")));

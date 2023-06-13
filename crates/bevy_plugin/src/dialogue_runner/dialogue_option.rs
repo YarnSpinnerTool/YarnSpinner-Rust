@@ -5,7 +5,7 @@ use bevy::prelude::*;
 pub(crate) fn dialogue_option_plugin(_app: &mut App) {}
 
 /// An option that can be presented to the user during a dialogue.
-/// Given to you by a [`PresentOptionsEvent`].
+/// Given to you by a [`PresentOptionsEvent`](crate::events::PresentOptionsEvent).
 #[derive(Debug, Clone, PartialEq)]
 pub struct DialogueOption {
     /// The [`LocalizedLine`] that should be presented to the user for this option.

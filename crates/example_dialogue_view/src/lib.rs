@@ -58,7 +58,7 @@ pub mod prelude {
 pub struct ExampleYarnSlingerDialogueViewPlugin;
 
 /// The [`SystemSet`] containing all systems added by the [`ExampleYarnSlingerDialogueViewPlugin`].
-/// Is run after the [`YarnSlingerSystemSet`]
+/// Is run after the [`YarnSlingerSystemSet`](bevy_yarn_slinger::prelude::YarnSlingerSystemSet).
 #[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
 pub struct ExampleYarnSlingerDialogueViewSystemSet;
 

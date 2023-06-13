@@ -8,7 +8,7 @@ pub(crate) fn audio_asset_provider_plugin(_app: &mut App) {}
 
 /// A wrapper around [`FileExtensionAssetProvider`] that is configured to load audio assets.
 /// See [`FileExtensionAssetProvider`] for information on how assets are searched.
-/// 
+///
 /// Requires the `audio_assets` feature, in which case it can be used in a [`DialogueRunner`] by calling [`DialogueRunnerBuilder::add_asset_provider`].
 #[derive(Debug, Clone)]
 pub struct AudioAssetProvider(FileExtensionAssetProvider);

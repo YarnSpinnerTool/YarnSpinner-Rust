@@ -17,7 +17,7 @@ pub struct LocalizedLine {
     pub attributes: Vec<MarkupAttribute>,
     /// The list of metadata associated with this line, excluding the line ID.
     /// Metadata is defined by the hashtags at the end of the line, e.g. `Hello, world! #greeting #friendly`.
-    /// This data is also provided in the `comment` field of a generated [`StringsFile`].
+    /// This data is also provided in the `comment` field of a generated strings file.
     pub metadata: Vec<String>,
     /// The assets associated with this line, provided by [`AssetProvider`]s that were added with [`DialogueRunnerBuilder::add_asset_provider`].
     pub assets: LineAssets,
