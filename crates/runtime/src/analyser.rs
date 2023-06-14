@@ -2,6 +2,7 @@
 
 pub(crate) use self::default_analysers::*;
 pub use self::{context::*, diagnosis::*};
+use crate::prelude::Dialogue;
 use std::fmt::Debug;
 use yarn_slinger_core::prelude::*;
 
@@ -9,6 +10,8 @@ mod context;
 pub(crate) mod default_analysers;
 mod diagnosis;
 
+/// A trait for analysing a compiled Yarn program. Can be used by adding them to a [`Context`] with [`Context::add_analyser`] and then applied to a
+/// compiled Yarn program with [`Dialogue::analyse`].
 pub trait CompiledProgramAnalyser: Debug {
     /// Reads data from the provided program that is later used in [`CompiledProgramAnalyser::collect_diagnoses`].
     fn diagnose(&mut self, program: &Program);

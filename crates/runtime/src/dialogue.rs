@@ -376,6 +376,7 @@ impl Dialogue {
         self.vm.current_node()
     }
 
+    /// Analyses the currently loaded Yarn program with the given [`Context`]. Call [`Context::finish_analysis`] afterwards to get the results.
     pub fn analyse(&self, context: &mut Context) -> &Self {
         let program = self
             .vm
