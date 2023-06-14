@@ -138,6 +138,7 @@ impl Dialogue {
         self
     }
 
+    /// Sets or replaces the currently loaded [`Program`]. If the program is replaced, all internal state is reset.
     #[must_use]
     pub fn with_program(mut self, program: Program) -> Self {
         self.replace_program(program);
@@ -163,6 +164,8 @@ impl Dialogue {
         self.language_code.as_ref()
     }
 
+    /// Sets the [`Dialogue`]'s language. A value of `None` means that you are using the base language, i.e. the one the Yarn files are written in.
+    /// Returns the last language code.
     pub fn set_language_code(
         &mut self,
         language_code: impl Into<Option<Language>>,
@@ -201,18 +204,22 @@ impl Dialogue {
         &mut self.vm.line_hints_enabled
     }
 
+    /// Gets the currently registered [`TextProvider`].
     pub fn text_provider(&self) -> &dyn TextProvider {
         self.vm.text_provider()
     }
 
+    /// Mutable gets the currently registered [`TextProvider`].
     pub fn text_provider_mut(&mut self) -> &mut dyn TextProvider {
         self.vm.text_provider_mut()
     }
 
+    /// Gets the currently registered [`VariableStorage`].
     pub fn variable_storage(&self) -> &dyn VariableStorage {
         self.vm.variable_storage()
     }
 
+    /// Mutable gets the currently registered [`VariableStorage`].
     pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
         self.vm.variable_storage_mut()
     }
@@ -245,12 +252,14 @@ impl Dialogue {
         self.vm.continue_()
     }
 
+    /// Sets or replaces the [`Dialogue`]'s current [`Program`]. The program is replaced, all current state is reset.
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
         self.vm.program.replace(program);
         self.vm.reset_state();
         self
     }
 
+    /// Merges the currently set [`Program`] with the given one. If there is no program set, the given one is set.
     pub fn add_program(&mut self, program: Program) -> &mut Self {
         if let Some(existing_program) = self.vm.program.as_mut() {
             *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
@@ -418,6 +427,9 @@ impl Dialogue {
         self.vm.is_active()
     }
 
+    /// Returns `true` if the last call to [`Dialogue::continue_`] returned [`DialogueEvent::Options`] and the dialogue is therefore
+    /// waiting for the user to select an option via [`Dialogue::set_selected_option`]. If this is `true`, calling [`Dialogue::continue_`] will error
+    /// and [`Dialogue::next`] will panic.
     pub fn is_waiting_for_option_selection(&self) -> bool {
         self.vm.is_waiting_for_option_selection()
     }
