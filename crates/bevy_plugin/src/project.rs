@@ -9,8 +9,7 @@ mod compilation;
 
 pub(crate) fn project_plugin(app: &mut App) {
     app.fn_plugin(compilation::project_compilation_plugin)
-        .add_event::<LoadYarnProjectEvent>()
-        .register_type::<LoadYarnProjectEvent>();
+        .add_event::<LoadYarnProjectEvent>();
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
@@ -105,8 +104,7 @@ impl YarnProject {
 
 /// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSlingerPlugin::deferred`].
 /// If you know the yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_files`] instead.
-#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
-#[reflect(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,

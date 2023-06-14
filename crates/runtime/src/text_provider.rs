@@ -13,10 +13,15 @@ use yarn_slinger_core::prelude::*;
 ///
 /// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
+    /// Passes the [`LineId`]s that this [`TextProvider`] should soon provide text for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
+    /// Returns the text for the given [`LineId`]. Will only be called if [`TextProvider::are_lines_available`] returns `true`.
     fn get_text(&self, id: &LineId) -> Option<String>;
+    /// Sets the current language. If `None` is passed, the base language will be used.
     fn set_language(&mut self, language: Option<Language>);
+    /// Returns the current language. If `None` is returned, the base language is used.
     fn get_language(&self) -> Option<Language>;
+    /// Returns whether the text for all lines announced by [`AssetProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
     fn are_lines_available(&self) -> bool;
 }
 

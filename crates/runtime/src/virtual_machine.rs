@@ -16,13 +16,9 @@ mod execution_state;
 mod state;
 
 #[derive(Debug)]
-#[cfg_attr(feature = "bevy", derive(Reflect))]
-#[cfg_attr(feature = "bevy", reflect(Debug))]
 pub(crate) struct VirtualMachine {
-    #[cfg_attr(feature = "bevy", reflect(ignore))]
     pub(crate) library: Library,
     pub(crate) program: Option<Program>,
-    #[cfg_attr(feature = "bevy", reflect(ignore))]
     pub(crate) variable_storage: Box<dyn VariableStorage>,
     pub(crate) line_hints_enabled: bool,
     current_node_name: Option<String>,
@@ -31,7 +27,6 @@ pub(crate) struct VirtualMachine {
     current_node: Option<Node>,
     batched_events: Vec<DialogueEvent>,
     line_parser: LineParser,
-    #[cfg_attr(feature = "bevy", reflect(ignore))]
     text_provider: Box<dyn TextProvider>,
     language_code: Option<Language>,
 }

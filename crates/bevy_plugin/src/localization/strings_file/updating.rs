@@ -85,7 +85,7 @@ fn update_all_strings_files_for_string_table(
                 &strings_file_handle,
             );
 
-            let strings_file_path = localizations.strings_file_path(&language).unwrap();
+            let strings_file_path = localizations.strings_file_path(language.clone()).unwrap();
 
             let new_strings_file = match StringsFile::from_string_table(
                 language.clone(),

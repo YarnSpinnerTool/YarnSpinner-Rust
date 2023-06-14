@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [features]
 default = []
-serde = ["dep:serde", "bevy?/serialize", "yarn_slinger_core/serde"]
+serde = ["dep:serde", "bevy?/serialize", "yarn_slinger_core/serde", "icu_locid/serde"]
 bevy = ["dep:bevy", "yarn_slinger_core/bevy"]
 
 [dependencies]

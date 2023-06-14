@@ -11,10 +11,7 @@ use std::fs::File;
 use std::path::Path;
 
 pub(crate) fn strings_file_asset_plugin(app: &mut App) {
-    app.register_type::<StringsFile>()
-        .register_type::<StringsFileRecord>()
-        .add_asset::<StringsFile>()
-        .register_asset_reflect::<StringsFile>()
+    app.add_asset::<StringsFile>()
         .init_asset_loader::<StringsFileAssetLoader>();
 }
 
@@ -41,10 +38,7 @@ impl AssetLoader for StringsFileAssetLoader {
     }
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Reflect, Default, Serialize, Deserialize, FromReflect, TypeUuid,
-)]
-#[reflect(Debug, PartialEq, Serialize, Default, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, TypeUuid)]
 #[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
 #[non_exhaustive]
 pub(crate) struct StringsFile(HashMap<LineId, StringsFileRecord>);
@@ -217,8 +211,7 @@ fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecor
 }
 const UPDATE_PREFIX: &str = "(NEEDS UPDATE) ";
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect)]
-#[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub(crate) struct StringsFileRecord {
     /// The language that the line is written in.
     pub(crate) language: Language,

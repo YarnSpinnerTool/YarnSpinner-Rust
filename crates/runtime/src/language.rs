@@ -1,22 +1,19 @@
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use core::fmt::Display;
+use icu_locid::LanguageIdentifier;
 
 /// IETF BCP 47 code.
 /// The default is "en-US".
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
-#[cfg_attr(
-    all(feature = "bevy", feature = "serde"),
-    reflect(Serialize, Deserialize)
-)]
 #[non_exhaustive]
-pub struct Language(String);
+pub struct Language(pub(crate) LanguageIdentifier);
 impl Language {
+    /// Creates a new `Language` from a string. Panics if the string is not a valid IETF BCP 47 code.
     pub fn new(language: impl Into<String>) -> Self {
-        Self(language.into())
+        let language = language.into();
+        Self(language.parse().unwrap())
     }
 }
 
@@ -37,12 +34,7 @@ where
     String: From<T>,
 {
     fn from(language: T) -> Self {
-        Self(language.into())
-    }
-}
-
-impl AsRef<str> for Language {
-    fn as_ref(&self) -> &str {
-        &self.0
+        let language: String = language.into();
+        Self::new(language)
     }
 }

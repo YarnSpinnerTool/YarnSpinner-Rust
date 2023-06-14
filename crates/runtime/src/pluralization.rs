@@ -1,4 +1,5 @@
 use crate::pluralization::generated::generate_provider;
+use crate::prelude::Language;
 use fixed_decimal::{DoublePrecision, FixedDecimal};
 use icu_locid::Locale;
 use icu_plurals::{PluralCategory, PluralRuleType};
@@ -14,8 +15,9 @@ pub(crate) struct Pluralization {
 }
 
 impl Pluralization {
-    pub(crate) fn new(locale: impl AsRef<str>) -> Self {
-        let locale: Locale = locale.as_ref().parse().unwrap();
+    pub(crate) fn new(language: impl Into<Language>) -> Self {
+        let language = language.into();
+        let locale: Locale = language.0.into();
         let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&locale);
         Self {
             cardinal_rules,

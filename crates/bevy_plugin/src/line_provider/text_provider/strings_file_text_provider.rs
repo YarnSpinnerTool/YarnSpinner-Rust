@@ -75,7 +75,11 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
             return;
         }
         let Some(localization) = localizations.translation(&language) else {
-            let languages = localizations.supported_languages().map(|l| l.as_ref()).collect::<Vec<_>>().join(", ");
+            let languages = localizations
+                .supported_languages()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
             panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
         };
         let path = localization.strings_file.as_path();

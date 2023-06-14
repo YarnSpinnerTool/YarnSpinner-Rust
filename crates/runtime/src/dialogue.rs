@@ -11,8 +11,6 @@ use yarn_slinger_core::prelude::*;
 ///
 /// The main functions of interest are [`Dialogue::continue_`] and [`Dialogue::set_selected_option`].
 #[derive(Debug)]
-#[cfg_attr(feature = "bevy", derive(Reflect))]
-#[cfg_attr(feature = "bevy", reflect(Debug))]
 pub struct Dialogue {
     vm: VirtualMachine,
     language_code: Option<Language>,
