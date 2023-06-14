@@ -16,6 +16,7 @@ pub struct Dialogue {
     language_code: Option<Language>,
 }
 
+#[allow(missing_docs)]
 pub type Result<T> = std::result::Result<T, DialogueError>;
 
 #[allow(missing_docs)]
@@ -103,22 +104,26 @@ impl Iterator for Dialogue {
 
 // Builder API
 impl Dialogue {
+    /// Sets the language code for the [`Dialogue`].
     pub fn with_language_code(mut self, language_code: impl Into<Option<Language>>) -> Self {
         self.set_language_code(language_code);
         self
     }
 
+    /// Extends the [`Dialogue`]'s [`Library`] with the given [`Library`].
     #[must_use]
     pub fn with_extended_library(mut self, library: Library) -> Self {
         self.library_mut().extend(library.into_iter());
         self
     }
 
+    /// Sets the current node to the one with the given name.
     pub fn with_node_at(mut self, node_name: &str) -> Result<Self> {
         self.set_node(node_name)?;
         Ok(self)
     }
 
+    /// Sets the current node to the node named [`Dialogue::DEFAULT_START_NODE_NAME`], i.e. `"Start"`.
     pub fn with_node_at_start(mut self) -> Result<Self> {
         self.set_node_to_start()?;
         Ok(self)
