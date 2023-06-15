@@ -13,8 +13,8 @@ pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
 /// asked to look up the asset for a line with the ID "123", it will look for a file named
 /// "123.png" in the line asset subdirectory specified by the [`Localization`] corresponding to the language set by [`DialogueRunner::set_asset_language`].
 ///
-/// By default, the line asset subdirectory  has the same name as the language, thus for the language "en-US", the provider will
-/// more specifically look for "assets/en-US/123.png" when calling [`FileExtensionAssetProvider::get_assets`].
+/// By default, the line asset subdirectory will be "dialogue/<language>". So for the language "en-US" and the line ID "123", the provider will
+/// specifically look for "assets/dialogue/en-US/123.png" when calling [`FileExtensionAssetProvider::get_assets`].
 ///
 /// You can use this provider in a [`DialogueRunner`] by calling [`DialogueRunnerBuilder::add_asset_provider`] with an instance of this type.
 ///
