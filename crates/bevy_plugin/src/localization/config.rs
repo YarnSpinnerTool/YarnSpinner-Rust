@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::project::DEFAULT_ASSET_DIR;
 use bevy::prelude::*;
 use std::iter;
 use std::path::{Path, PathBuf};
@@ -24,7 +25,8 @@ pub(crate) fn localization_config_plugin(app: &mut App) {
 pub struct Localizations {
     /// The language the Yarn files themselves are written in.
     pub base_localization: Localization,
-    /// The supported translations of the Yarn files. Will be loaded from somewhere by the [`TextProvider`]. See [`StringsFileTextProvider`](crate::default_impl::StringsFileTextProvider) for how this is done by default.
+    /// The supported translations of the Yarn files. Will be loaded from somewhere by the [`TextProvider`].
+    /// See [`StringsFileTextProvider`](crate::default_impl::StringsFileTextProvider) for how this is done by default.
     pub translations: Vec<Localization>,
     /// How the strings files and line IDs should be generated. Defaults to [`FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS`].
     pub file_generation_mode: FileGenerationMode,
@@ -80,10 +82,10 @@ pub struct Localization {
     /// The language of this localization.
     pub language: Language,
     /// The path to the strings file for this localization inside the `assets` folder.
-    /// Defaults to `{language}.strings.csv`. So, for the language "de-CH", you'd end up with "assets/de-CH.strings.csv".
+    /// Defaults to `dialogue/{language}.strings.csv`. So, for the language "de-CH", you'd end up with "assets/dialogue/de-CH.strings.csv".
     pub strings_file: PathBuf,
-    /// The path to the subfolder containing the assets for this localization inside the `assets` folder.
-    /// Defaults to `{language}/`.  So, for the language "de-CH", you'd end up with "assets/de-CH/".
+    /// The path to the subdirectory containing the assets for this localization inside the `assets` folder.
+    /// Defaults to `dialogue/{language}/`.  So, for the language "de-CH", you'd end up with "assets/dialogue/de-CH/".
     pub assets_sub_folder: PathBuf,
 }
 
@@ -98,10 +100,16 @@ where
 
 impl Localization {
     /// Creates a new [`Localization`] with the given language.
+    /// Can also be created from types that implement [`Into<Language>`], like this:
+    /// ```rust
+    /// # use bevy::prelude::*;
+    /// # use bevy_yarn_slinger::prelude::*;
+    /// let localization: Localization = "de-CH".into();
+    /// ```
     pub fn with_language(language: impl Into<Language>) -> Self {
         let language = language.into();
-        let strings_file = PathBuf::from(format!("{language}.strings.csv"));
-        let assets_sub_folder = PathBuf::from(format!("{language}/"));
+        let strings_file = PathBuf::from(format!("{DEFAULT_ASSET_DIR}/{language}.strings.csv"));
+        let assets_sub_folder = PathBuf::from(format!("{DEFAULT_ASSET_DIR}/{language}/"));
         Self {
             language,
             strings_file,
@@ -115,7 +123,7 @@ impl Localization {
         self
     }
 
-    /// Sets the path to the subfolder containing the assets for this localization inside the `assets` folder.
+    /// Sets the path to the subdirectory containing the assets for this localization inside the `assets` folder.
     pub fn with_assets_sub_folder(mut self, assets_sub_folder: impl Into<PathBuf>) -> Self {
         self.assets_sub_folder = assets_sub_folder.into();
         self

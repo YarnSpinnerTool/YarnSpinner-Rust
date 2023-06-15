@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Possible sources to load a [`YarnFile`] from.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -10,36 +10,16 @@ pub enum YarnFileSource {
     /// A [`YarnFile`] that is already present in memory, created with [`YarnFile::new`].
     InMemory(YarnFile),
     /// A [`YarnFile`] that is present on the filesystem, addressed by its path. This will be loaded into an [`AssetServer`].
-    Path(PathBuf),
+    /// Use [`YarnFileSource::file`] for convenience.
+    File(PathBuf),
+    /// A folder which is searched for [`YarnFile`]s recursively, loading all files with the `.yarn` extension into the [`AssetServer`].
+    /// Use [`YarnFileSource::folder`] for convenience.
+    Folder(PathBuf),
 }
 
 impl From<Handle<YarnFile>> for YarnFileSource {
     fn from(handle: Handle<YarnFile>) -> Self {
         Self::Handle(handle)
-    }
-}
-
-impl From<String> for YarnFileSource {
-    fn from(path: String) -> Self {
-        Self::Path(path.into())
-    }
-}
-
-impl From<&str> for YarnFileSource {
-    fn from(path: &str) -> Self {
-        Self::Path(path.into())
-    }
-}
-
-impl From<PathBuf> for YarnFileSource {
-    fn from(path: PathBuf) -> Self {
-        Self::Path(path)
-    }
-}
-
-impl From<&Path> for YarnFileSource {
-    fn from(path: &Path) -> Self {
-        Self::Path(path.into())
     }
 }
 
@@ -50,15 +30,52 @@ impl From<YarnFile> for YarnFileSource {
 }
 
 impl YarnFileSource {
+    /// Convenience function to create a [`YarnFileSource::File`] from a path.
+    pub fn file(path: impl Into<PathBuf>) -> Self {
+        Self::File(path.into())
+    }
+
+    /// Convenience function to create a [`YarnFileSource::folder`] from a path.
+    pub fn folder(path: impl Into<PathBuf>) -> Self {
+        Self::Folder(path.into())
+    }
+
     pub(crate) fn load(
         &self,
         asset_server: &AssetServer,
         assets: &mut ResMut<Assets<YarnFile>>,
-    ) -> Handle<YarnFile> {
+    ) -> Vec<Handle<YarnFile>> {
         match self {
-            Self::Handle(handle) => handle.clone(),
-            Self::InMemory(yarn_file) => assets.add(yarn_file.clone()),
-            Self::Path(path) => asset_server.load(path.as_path()),
+            Self::Handle(handle) => vec![handle.clone()],
+            Self::InMemory(yarn_file) => vec![assets.add(yarn_file.clone())],
+            Self::File(path) => vec![asset_server.load(path.as_path())],
+            Self::Folder(path) => {
+                let handles: Vec<_> = asset_server
+                    .load_folder(path.as_path())
+                    .unwrap_or_else(|e| {
+                        panic!(
+                            "Failed to load Yarn file folder {path}: {e}",
+                            path = path.display()
+                        )
+                    })
+                    .into_iter()
+                    .filter_map(|handle| {
+                        (asset_server
+                            .get_handle_path(&handle)?
+                            .path()
+                            .extension()?
+                            .to_str()?
+                            == "yarn")
+                            .then(|| handle.typed())
+                    })
+                    .collect();
+                assert!(
+                    !handles.is_empty(),
+                    "No Yarn files found in the assets subdirectory {path}",
+                    path = path.display()
+                );
+                handles
+            }
         }
     }
 }

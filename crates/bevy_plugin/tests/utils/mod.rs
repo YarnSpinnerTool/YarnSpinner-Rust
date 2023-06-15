@@ -74,7 +74,7 @@ impl AppExt for App {
             self.try_dialogue_runner().unwrap()
         } else {
             let project = self.load_project();
-            let dialogue_runner = project.default_dialogue_runner().unwrap();
+            let dialogue_runner = project.default_dialogue_runner();
             let entity = self.world.spawn(dialogue_runner).id();
             self.world.get::<DialogueRunner>(entity).unwrap()
         }
@@ -85,7 +85,7 @@ impl AppExt for App {
             self.try_dialogue_runner_mut().unwrap()
         } else {
             let project = self.load_project();
-            let dialogue_runner = project.default_dialogue_runner().unwrap();
+            let dialogue_runner = project.default_dialogue_runner();
             let entity = self.world.spawn(dialogue_runner).id();
             self.world.get_mut::<DialogueRunner>(entity).unwrap()
         }

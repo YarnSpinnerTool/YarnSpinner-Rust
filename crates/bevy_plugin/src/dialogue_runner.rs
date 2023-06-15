@@ -53,7 +53,7 @@ pub struct DialogueRunner {
     pub(crate) just_started: bool,
     pub(crate) popped_line_hints: Option<Vec<LineId>>,
     pub(crate) unsent_events: Vec<DialogueEvent>,
-    start_node: Option<StartNode>,
+    start_node: StartNode,
 }
 
 impl DialogueRunner {
@@ -153,16 +153,11 @@ impl DialogueRunner {
         self.just_started = true;
         if self.dialogue.current_node().is_none() {
             match self.start_node.clone() {
-                Some(StartNode::DefaultStartNode) => {
+                StartNode::DefaultStartNode => {
                     self.dialogue.set_node_to_start().unwrap(); // Would have panicked in `DialogueRunnerBuilder::build()` already if this was invalid
                 }
-                Some(StartNode::Node(node_name)) => {
+                StartNode::Node(node_name) => {
                     self.dialogue.set_node(node_name).unwrap(); // Would have panicked in `DialogueRunnerBuilder::build()` already if this was invalid
-                }
-                None => {
-                    panic!("Can't start dialogue: `DialogueRunnerBuilder::with_start_node(None)` was called when building the dialogue runner, \
-                    but then tried to start the dialogue without specifying a node to start at. Please call `DialogueRunner::start_at_node(..)` instead.\
-                    Alternatively, you can call `DialogueRunnerBuilder::with_start_node(..)` with a node name or leave it at its default value of `DialogueRunner::DEFAULT_START_NODE_NAME`.");
                 }
             }
         }

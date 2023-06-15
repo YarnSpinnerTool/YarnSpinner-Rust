@@ -61,6 +61,10 @@ fn load_project(
         if *already_loaded {
             bail!("Yarn project already loaded. Sending multiple LoadYarnProjectEvent is not allowed.");
         }
+        assert!(!event.yarn_files.is_empty(),
+            "Failed to load Yarn project in deferred mode: no yarn files were specified. \
+            Did run `LoadYarnProjectEvent::empty()` without adding any yarn files with `LoadYarnProjectEvent::add_yarn_file` and `LoadYarnProjectEvent::add_yarn_files`? \
+            If you wanted to load from the default directory instead, use `LoadYarnProjectEvent::default()`.");
         if let Some(localizations) = event.localizations.as_ref() {
             if localizations.file_generation_mode == FileGenerationMode::Development
                 && !is_watching_for_changes.0
@@ -92,7 +96,7 @@ fn add_yarn_files_to_load_queue(
     let handles = yarn_files_to_load
         .0
         .drain()
-        .map(|source| source.load(&asset_server, &mut assets));
+        .flat_map(|source| source.load(&asset_server, &mut assets));
     yarn_files_being_loaded.0.extend(handles);
 }
 

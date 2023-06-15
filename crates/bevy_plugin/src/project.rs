@@ -68,7 +68,7 @@ impl YarnProject {
 
     /// Constructs a [`DialogueRunner`] from this project using all defaults of [`DialogueRunnerBuilder`] .
     /// This is a convenience method for calling [`DialogueRunnerBuilder::build`] on an unconfigured builder returned by [`YarnProject::build_dialogue_runner`].
-    pub fn default_dialogue_runner(&self) -> Result<DialogueRunner> {
+    pub fn default_dialogue_runner(&self) -> DialogueRunner {
         self.build_dialogue_runner().build()
     }
 
@@ -110,7 +110,22 @@ pub struct LoadYarnProjectEvent {
     pub(crate) yarn_files: HashSet<YarnFileSource>,
 }
 
+impl Default for LoadYarnProjectEvent {
+    fn default() -> Self {
+        Self {
+            localizations: None,
+            yarn_files: HashSet::from([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
+        }
+    }
+}
+
 impl LoadYarnProjectEvent {
+    /// See [`YarnSlingerPlugin::new`].
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// See [`YarnSlingerPlugin::with_yarn_files`].
     #[must_use]
     pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
@@ -156,7 +171,7 @@ pub(crate) fn assert_valid_cfg(localizations: Option<&Localizations>) {
     if let Some(localizations) = localizations {
         if cfg!(any(target_arch = "wasm32", target_os = "android")) {
             assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
-                           "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target because it does not provide a access to the filesystem.");
+               "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target because it does not provide a access to the filesystem.");
         }
     }
 }
@@ -173,3 +188,5 @@ where
 
 #[derive(Debug, Clone, Resource, Default)]
 pub(crate) struct WatchingForChanges(pub(crate) bool);
+
+pub(crate) const DEFAULT_ASSET_DIR: &str = "dialogue";

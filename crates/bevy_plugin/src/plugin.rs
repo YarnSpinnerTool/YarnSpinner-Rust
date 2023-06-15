@@ -20,11 +20,11 @@ mod yarn_file_source;
 ///
 /// App::new()
 ///     .add_plugins(DefaultPlugins)
-///     .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]));
+///     .add_plugin(YarnSlingerPlugin::new());
 /// ```
 ///
 /// For more information on how this plugin interacts with the rest of the crate, see the crate-level documentation.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct YarnSlingerPlugin {
     project: LoadYarnProjectEvent,
 }
@@ -34,14 +34,17 @@ pub struct YarnSlingerPlugin {
 pub struct YarnSlingerSystemSet;
 
 impl YarnSlingerPlugin {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Creates a new plugin that loads the given yarn files.
     /// All yarn files will be shared across [`DialogueRunner`]s.
-    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on, these yarn files will be recompiled if they change during runtime.
+    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
+    /// these yarn files will be recompiled if they change during runtime.
     ///
-    /// The files can be provided in any of the following ways:
-    /// - As a path to the asset (this is the most common usage)
-    /// - As a handle to the asset
-    /// - In memory as a [`YarnFile`]
+    /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.
     ///
     /// # Example
     ///
@@ -72,14 +75,14 @@ impl YarnSlingerPlugin {
         DeferredYarnSlingerPlugin
     }
 
-    /// Adds a yarn file to the list of yarn files provided in [`YarnSlingerPlugin::with_yarn_files`].
+    /// Adds a Yarn file source to the files that will be loaded and compiled.
     #[must_use]
     pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.project = self.project.add_yarn_file(yarn_file);
         self
     }
 
-    /// Adds further files to the list of yarn files provided in [`YarnSlingerPlugin::with_yarn_files`].
+    /// Adds multiple Yarn file source to the files that will be loaded and compiled.
     #[must_use]
     pub fn add_yarn_files(
         mut self,
@@ -102,6 +105,10 @@ impl YarnSlingerPlugin {
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
+        assert!(!self.project.yarn_files.is_empty(), "Cannot initialize Yarn Slinger plugin because no Yarn files were specified. \
+        Did you call `YarnSlingerPlugin::with_yarn_files()` without any Yarn file sources? \
+        If you really want to load no Yarn files right now and do that later, use `YarnSlingerPlugin::deferred()` instead.\
+        If you wanted to load from the default directory instead, use `YarnSlingerPlugin::default()`.");
         app.add_plugin(Self::deferred())
             .world
             .send_event(self.project.clone());
@@ -174,8 +181,8 @@ impl YarnApp for App {
 
     fn is_watching_for_changes(&self) -> bool {
         let asset_plugins: Vec<&AssetPlugin> = self.get_added_plugins();
-        let asset_plugin: &AssetPlugin = asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the AssetPlugin. \
-        Please add the YarnSlingerPlugin after the AssetPlugin, which is commonly located in the DefaultPlugins");
+        let asset_plugin: &AssetPlugin = asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
+        Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`");
         asset_plugin.watch_for_changes
     }
 }

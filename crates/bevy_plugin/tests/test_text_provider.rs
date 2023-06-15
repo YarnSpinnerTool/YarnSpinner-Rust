@@ -9,7 +9,7 @@ fn loads_line_without_localization() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-        "lines_with_ids.yarn",
+        YarnFileSource::file("lines_with_ids.yarn"),
     ]));
 
     let line = app
@@ -25,7 +25,7 @@ fn fails_to_get_invalid_line() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-        "lines_with_ids.yarn",
+        YarnFileSource::file("lines_with_ids.yarn"),
     ]));
 
     let result = app
@@ -40,13 +40,12 @@ fn loads_line_from_base_language_without_explicit_language() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     app.load_lines();
@@ -64,13 +63,12 @@ fn loads_line_from_base_language_with_explicit_language() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     app.dialogue_runner_mut().set_text_language("en-US");
@@ -91,13 +89,12 @@ fn panics_when_loading_missing_language() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     app.dialogue_runner_mut().set_text_language("fr-FR");
@@ -110,13 +107,12 @@ fn loads_line_from_fallback_on_missing_line() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     app.dialogue_runner_mut().set_text_language("de-CH");
@@ -136,13 +132,12 @@ fn loads_line_from_translated_language() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     app.dialogue_runner_mut().set_text_language("de-CH");

@@ -23,7 +23,7 @@ pub struct DialogueRunnerBuilder {
     localizations: Option<Localizations>,
     asset_server: AssetServer,
     run_selected_options_as_lines: bool,
-    start_node: Option<StartNode>,
+    start_node: StartNode,
 }
 
 /// The default node used by [`DialogueRunner::start`].
@@ -37,6 +37,15 @@ pub enum StartNode {
     DefaultStartNode,
     /// A node with a specific name
     Node(String),
+}
+
+impl<T> From<T> for StartNode
+where
+    T: Into<String>,
+{
+    fn from(node: T) -> Self {
+        StartNode::Node(node.into())
+    }
 }
 
 impl Debug for DialogueRunnerBuilder {
@@ -78,7 +87,7 @@ impl DialogueRunnerBuilder {
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
             run_selected_options_as_lines: false,
-            start_node: Some(StartNode::default()),
+            start_node: StartNode::default(),
         }
     }
 
@@ -147,7 +156,7 @@ impl DialogueRunnerBuilder {
 
     /// Sets the node that is run when [`DialogueRunner::start`] is executed. By default, this the node named "Start".
     #[must_use]
-    pub fn with_start_node(mut self, start_node: impl Into<Option<StartNode>>) -> Self {
+    pub fn with_start_node(mut self, start_node: impl Into<StartNode>) -> Self {
         self.start_node = start_node.into();
         self
     }
@@ -166,8 +175,15 @@ impl DialogueRunnerBuilder {
         self
     }
 
+    /// Builds the [`DialogueRunner`]. See [`DialogueRunner::try_build`] for the fallible version.
+    pub fn build(mut self) -> DialogueRunner {
+        self.try_build().unwrap_or_else(|error| {
+            panic!("Failed to build DialogueRunner: {error}");
+        })
+    }
+
     /// Builds the [`DialogueRunner`].
-    pub fn build(mut self) -> Result<DialogueRunner> {
+    pub fn try_build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
 
         let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
@@ -183,18 +199,14 @@ impl DialogueRunnerBuilder {
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
-        if let Some(start_node) = self.start_node.clone() {
-            match start_node {
-                StartNode::DefaultStartNode => {
-                    dialogue.set_node_to_start()?;
-                }
-                StartNode::Node(node) => {
-                    dialogue.set_node(node)?;
-                }
+        match self.start_node.clone() {
+            StartNode::DefaultStartNode => {
+                dialogue.set_node_to_start()?;
             }
-        } else {
-            info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
-        };
+            StartNode::Node(node) => {
+                dialogue.set_node(node)?;
+            }
+        }
 
         let popped_line_hints = dialogue.pop_line_hints();
 

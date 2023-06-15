@@ -41,10 +41,10 @@
 //! - When the [`YarnProject`] [`Resource`](bevy::prelude::Resource) is added, spawn a [`DialogueRunner`] from it.
 //! The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>())`.
 //!
-//! The following example is taken from the [hello world example](https://github.com/yarn-slinger/yarn-slinger/blob/main/examples/bevy_yarn_slinger/src/bin/hello_world.rs).
+//! The following example is adapted from the [hello world example](https://github.com/yarn-slinger/yarn-slinger/blob/main/examples/bevy_yarn_slinger/src/bin/hello_world.rs).
 //!
 //! ```yarn
-//! // assets/hello_world.yarn
+//! // assets/dialogue/hello_world.yarn
 //! title: Start
 //! ---
 //! Hello world!
@@ -60,9 +60,8 @@
 //! fn main() {
 //!     let mut app = App::new();
 //!     app.add_plugins(DefaultPlugins)
-//!         // Get the `hello_world.yarn` file from the `assets` folder.
-//!         // This starts the compilation process for the Yarn project.
-//!         .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["hello_world.yarn"]))
+//!         // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder
+//!         .add_plugin(YarnSlingerPlugin::new())
 //!         // Initialize the bundled example UI
 //!         .add_plugin(ExampleYarnSlingerUiPlugin::new())
 //!         .add_systems((
@@ -79,7 +78,7 @@
 //!
 //! fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 //!     // Create a dialogue runner from the project
-//!     let mut dialogue_runner = project.default_dialogue_runner().unwrap();
+//!     let mut dialogue_runner = project.default_dialogue_runner();
 //!     // Immediately start showing the dialogue to the player
 //!     dialogue_runner.start();
 //!     commands.spawn(dialogue_runner);

@@ -42,7 +42,7 @@ fn main() {
     #[cfg(feature = "editor")]
     app.add_plugin(EditorPlugin::new());
     app.add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]).with_localizations(Localizations {
+        YarnSlingerPlugin::new().with_localizations(Localizations {
             base_localization: "en-US".into(),
             translations: vec!["de-CH".into()],
             file_generation_mode: FileGenerationMode::DEVELOPMENT_ON_SUPPORTED_PLATFORMS,

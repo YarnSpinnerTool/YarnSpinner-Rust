@@ -13,14 +13,14 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-        "lines_with_ids.yarn",
+        YarnFileSource::file("lines_with_ids.yarn"),
     ]));
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
-        .build()?;
+        .build();
     dialogue_runner.start();
     app.world.spawn(dialogue_runner);
 
@@ -40,13 +40,12 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     let project = app.load_project();
@@ -54,7 +53,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("en-US"))
-        .build()?;
+        .build();
     dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
@@ -69,20 +68,19 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     let project = app.load_project();
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
-        .build()?;
+        .build();
     dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
@@ -104,13 +102,12 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     let project = app.load_project();
@@ -118,7 +115,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("de-CH"))
-        .build()?;
+        .build();
     dialogue_runner.start();
     app.world.spawn(dialogue_runner);
     app.load_lines();
@@ -140,13 +137,12 @@ fn panics_on_invalid_language() {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     let project = app.load_project();
@@ -154,8 +150,7 @@ fn panics_on_invalid_language() {
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("fr-FR"))
-        .build()
-        .unwrap();
+        .build();
     dialogue_runner.start().continue_in_next_update();
     app.world.spawn(dialogue_runner);
     app.load_lines();
@@ -166,13 +161,12 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
 
     setup_default_plugins(&mut app).add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["lines_with_ids.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec![],
                 file_generation_mode: FileGenerationMode::Production,
-            },
-        ),
+            }),
     );
 
     let project = app.load_project();
@@ -180,7 +174,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
         .with_asset_language(Language::new("en-US"))
-        .build()?;
+        .build();
 
     dialogue_runner.start();
     app.world.spawn(dialogue_runner);

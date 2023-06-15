@@ -161,19 +161,20 @@ fn generates_files_in_dev_mode() -> Result<()> {
 
 fn setup_dialogue_runner(app: &mut App) -> Mut<DialogueRunner> {
     setup_default_plugins(app)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]))
+        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
+            YarnFileSource::file("options.yarn"),
+        ]))
         .dialogue_runner_mut()
 }
 
 fn setup_dialogue_runner_in_dev_mode(app: &mut App) -> Mut<DialogueRunner> {
     app.add_plugin(
-        YarnSlingerPlugin::with_yarn_files(vec!["options.yarn"]).with_localizations(
-            Localizations {
-                base_localization: "en-US".into(),
+        YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("options.yarn")])
+            .with_localizations(Localizations {
+                base_localization: "../en-US".into(),
                 translations: vec!["de-CH".into()],
                 file_generation_mode: FileGenerationMode::Development,
-            },
-        ),
+            }),
     )
     .dialogue_runner_mut()
 }

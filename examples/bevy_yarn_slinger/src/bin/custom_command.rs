@@ -6,9 +6,7 @@ use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "custom_command.yarn",
-        ]))
+        .add_plugin(YarnSlingerPlugin::new())
         .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
             setup_camera.on_startup(),
@@ -22,7 +20,10 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.default_dialogue_runner().unwrap();
+    let mut dialogue_runner = project
+        .build_dialogue_runner()
+        .with_start_node("CustomCommand")
+        .build();
     // Add our custom commands to the dialogue runner
     dialogue_runner
         .command_registrations_mut()

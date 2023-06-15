@@ -1,4 +1,4 @@
-title: Start
+title: AccessVariables
 ---
 Setting $foo to 1 after you continue this line
 <<set $foo to 1>>

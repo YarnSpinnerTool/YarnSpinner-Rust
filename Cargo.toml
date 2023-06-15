@@ -15,8 +15,18 @@ members = [
 ]
 
 # Source: https://github.com/bevyengine/bevy/blob/main/examples/README.md#1-tweak-your-cargotoml
+## Make Wasm builds as small as possible
 [profile.wasm-release]
 inherits = "release"
 opt-level = "z"
 lto = "fat"
 codegen-units = 1
+
+# Source: https://bevyengine.org/learn/book/getting-started/setup/#compile-with-performance-optimizations
+## Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+## Enable high optimizations for dependencies (incl. Bevy)
+[profile.dev.package."*"]
+opt-level = 3

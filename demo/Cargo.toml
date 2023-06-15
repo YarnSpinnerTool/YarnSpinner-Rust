@@ -3,6 +3,7 @@ name = "bevy_yarn_slinger_demo"
 version = "0.1.0"
 edition = "2021"
 
+
 [features]
 default = []
 editor = ["bevy_editor_pls"]

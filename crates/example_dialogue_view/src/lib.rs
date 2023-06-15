@@ -19,7 +19,7 @@
 //!
 //! App::new()
 //!    .add_plugin(DefaultPlugins)
-//!    .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["story.yarn"]))
+//!    .add_plugin(YarnSlingerPlugin::new())
 //!    .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new());
 //! ```
 //!

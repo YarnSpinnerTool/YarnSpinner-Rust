@@ -110,7 +110,9 @@ struct Data(String);
 
 fn setup_dialogue_runner(app: &mut App) -> Mut<DialogueRunner> {
     let mut dialogue_runner = setup_default_plugins(app)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["commands.yarn"]))
+        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
+            YarnFileSource::file("commands.yarn"),
+        ]))
         .dialogue_runner_mut();
     dialogue_runner
         .command_registrations_mut()
@@ -130,6 +132,8 @@ fn setup_dialogue_runner(app: &mut App) -> Mut<DialogueRunner> {
 
 fn setup_dialogue_runner_for_wait(app: &mut App) -> Mut<DialogueRunner> {
     setup_default_plugins(app)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec!["wait.yarn"]))
+        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
+            YarnFileSource::file("wait.yarn"),
+        ]))
         .dialogue_runner_mut()
 }

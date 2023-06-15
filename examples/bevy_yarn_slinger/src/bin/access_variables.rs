@@ -6,9 +6,7 @@ use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "access_variables.yarn",
-        ]))
+        .add_plugin(YarnSlingerPlugin::new())
         .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
             setup_camera.on_startup(),
@@ -23,7 +21,7 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.default_dialogue_runner().unwrap();
+    let mut dialogue_runner = project.build_dialogue_runner().with_start_node("AccessVariables").build();
     dialogue_runner.start();
     commands.spawn(dialogue_runner);
 }
