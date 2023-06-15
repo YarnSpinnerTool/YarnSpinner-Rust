@@ -247,7 +247,7 @@ fn default_language_is_base_language() {
 }
 
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {
-    setup_default_plugins(app)
+    app.setup_default_plugins()
         .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
             "lines.yarn",
         )))
@@ -256,11 +256,12 @@ fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRun
 
 fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner> {
     #[allow(unused_mut)]
-    let mut dialogue_runner_builder = setup_default_plugins(app)
+    let mut dialogue_runner_builder = app
+        .setup_default_plugins()
         .add_plugin(
             YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
                 .with_localizations(Localizations {
-                    base_localization: "../en-US".into(),
+                    base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],
                 })
                 .with_file_generation_mode(FileGenerationMode::Production),
@@ -293,7 +294,7 @@ fn english_lines() -> Vec<String> {
 
 #[cfg(feature = "audio_assets")]
 fn german_lines() -> Vec<String> {
-    let file = include_str!("../assets/de-CH.strings.csv");
+    let file = include_str!("../assets/dialogue/de-CH.strings.csv");
     let mut reader = csv::Reader::from_reader(file.as_bytes());
     reader
         .records()

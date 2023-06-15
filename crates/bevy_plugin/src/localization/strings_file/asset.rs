@@ -1,12 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Runtime/StringTableEntry.cs>
 
 use crate::prelude::*;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use bevy::asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::utils::HashMap;
 use sha2::{Digest, Sha256};
+use std::fs;
 use std::fs::File;
 use std::path::Path;
 
@@ -165,8 +166,19 @@ impl StringsFile {
         let assets_path = get_assets_dir_path(asset_server)?;
         let assets_path = assets_path.as_ref();
         let full_path = assets_path.join(path);
-        let file = File::create(&full_path).with_context(|| {
-            format!("Failed to create strings file \"{}\"", full_path.display(),)
+        if let Some(parent_dir) = full_path.parent() {
+            fs::create_dir_all(parent_dir).map_err(|e| {
+                anyhow!(
+                    "Failed to create dialogue asset subdirectory \"{}\": {e}",
+                    parent_dir.display(),
+                )
+            })?;
+        }
+        let file = File::create(&full_path).map_err(|e| {
+            anyhow!(
+                "Failed to create strings file \"{}\": {e}",
+                full_path.display(),
+            )
         })?;
         let mut writer = csv::Writer::from_writer(file);
         let mut records = self.0.iter().map(|(_, record)| record).collect::<Vec<_>>();

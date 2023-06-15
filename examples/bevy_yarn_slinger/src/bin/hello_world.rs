@@ -24,7 +24,10 @@ fn setup_camera(mut commands: Commands) {
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     // Create a dialogue runner from the project.
     // If you have a node named "Start", you can skip the builder and just use "project.default_dialogue_runner()" instead
-    let mut dialogue_runner = project.build_dialogue_runner().with_start_node("HelloWorld").build();
+    let mut dialogue_runner = project
+        .build_dialogue_runner()
+        .with_start_node("HelloWorld")
+        .build();
     // Immediately start showing the dialogue to the player
     dialogue_runner.start();
     commands.spawn(dialogue_runner);

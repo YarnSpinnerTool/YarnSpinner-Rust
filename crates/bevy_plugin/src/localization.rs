@@ -6,8 +6,8 @@ pub(crate) use self::{
 use crate::prelude::*;
 use bevy::prelude::*;
 
-mod localizations;
 mod line_id_generation;
+mod localizations;
 mod strings_file;
 
 pub(crate) fn localization_plugin(app: &mut App) {

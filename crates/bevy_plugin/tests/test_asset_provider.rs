@@ -12,9 +12,10 @@ mod utils;
 fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
 
-    setup_default_plugins(&mut app).add_plugin(YarnSlingerPlugin::with_yarn_source(
-        YarnFileSource::file("lines_with_ids.yarn"),
-    ));
+    app.setup_default_plugins()
+        .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+            "lines_with_ids.yarn",
+        )));
 
     let project = app.load_project();
     let mut dialogue_runner = project
@@ -39,10 +40,10 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
-    setup_default_plugins(&mut app).add_plugin(
+    app.setup_default_plugins().add_plugin(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
-                base_localization: "../en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec![],
             })
             .with_file_generation_mode(FileGenerationMode::Production),
@@ -67,10 +68,10 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
 fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
 
-    setup_default_plugins(&mut app).add_plugin(
+    app.setup_default_plugins().add_plugin(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
-                base_localization: "../en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec![],
             })
             .with_file_generation_mode(FileGenerationMode::Production),
@@ -92,7 +93,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     let path = asset_server.get_handle_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
-    assert_eq!("en-US/9.ogg", path.path().to_str().unwrap());
+    assert_eq!("dialogue/en-US/9.ogg", path.path().to_str().unwrap());
 
     Ok(())
 }
@@ -101,10 +102,10 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
 fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
 
-    setup_default_plugins(&mut app).add_plugin(
+    app.setup_default_plugins().add_plugin(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
-                base_localization: "../en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
             .with_file_generation_mode(FileGenerationMode::Production),
@@ -127,7 +128,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     let path = asset_server.get_handle_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
-    assert_eq!("de-CH/10.ogg", path.path().to_str().unwrap());
+    assert_eq!("dialogue/de-CH/10.ogg", path.path().to_str().unwrap());
     Ok(())
 }
 
@@ -136,10 +137,10 @@ fn loads_asset_from_translated_localization() -> Result<()> {
 fn panics_on_invalid_language() {
     let mut app = App::new();
 
-    setup_default_plugins(&mut app).add_plugin(
+    app.setup_default_plugins().add_plugin(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
-                base_localization: "../en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
             .with_file_generation_mode(FileGenerationMode::Production),
@@ -160,10 +161,10 @@ fn panics_on_invalid_language() {
 fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
 
-    setup_default_plugins(&mut app).add_plugin(
+    app.setup_default_plugins().add_plugin(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
-                base_localization: "../en-US".into(),
+                base_localization: "en-US".into(),
                 translations: vec![],
             })
             .with_file_generation_mode(FileGenerationMode::Production),

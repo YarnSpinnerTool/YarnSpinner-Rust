@@ -32,6 +32,8 @@ pub trait AppExt {
     fn try_dialogue_runner(&self) -> Option<&DialogueRunner>;
     #[must_use]
     fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>>;
+    fn setup_default_plugins(&mut self) -> &mut App;
+    fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App;
 }
 
 impl AppExt for App {
@@ -104,21 +106,21 @@ impl AppExt for App {
             .iter_mut(&mut self.world)
             .next()
     }
-}
 
-pub fn setup_default_plugins(app: &mut App) -> &mut App {
-    setup_default_plugins_for_path(app, project_root_path().join("assets"))
-}
+    fn setup_default_plugins(&mut self) -> &mut App {
+        self.setup_default_plugins_for_path(project_root_path().join("assets"))
+    }
 
-pub fn setup_default_plugins_for_path(app: &mut App, asset_folder: impl AsRef<Path>) -> &mut App {
-    app.add_plugins(MinimalPlugins).add_plugin(AssetPlugin {
-        asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
-        ..default()
-    });
+    fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App {
+        self.add_plugins(MinimalPlugins).add_plugin(AssetPlugin {
+            asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
+            ..default()
+        });
 
-    #[cfg(feature = "audio_assets")]
-    app.add_plugin(AudioPlugin::default());
-    app
+        #[cfg(feature = "audio_assets")]
+        self.add_plugin(AudioPlugin::default());
+        self
+    }
 }
 
 pub fn project_root_path() -> PathBuf {

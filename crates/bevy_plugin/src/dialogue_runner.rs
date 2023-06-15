@@ -12,7 +12,7 @@ use crate::commands::TaskFinishedIndicator;
 use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use bevy::utils::HashSet;
 use bevy::{prelude::*, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
@@ -175,7 +175,7 @@ impl DialogueRunner {
         self.just_started = true;
         self.dialogue
             .set_node(node_name)
-            .with_context(|| format!("Can't start dialogue from node {node_name}:"))?;
+            .map_err(|e| anyhow!("Can't start dialogue from node {node_name}: {e}"))?;
         self.continue_in_next_update();
         Ok(self)
     }

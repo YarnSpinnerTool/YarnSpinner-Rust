@@ -10,7 +10,7 @@ mod utils;
 #[test]
 fn errs_on_selection_without_start() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app)
+    app.setup_dialogue_runner()
         .select_option(OptionId(0))
         .unwrap_err();
 
@@ -20,7 +20,7 @@ fn errs_on_selection_without_start() -> Result<()> {
 #[test]
 fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start();
+    app.setup_dialogue_runner().start();
     app.continue_dialogue_and_update_n_times(4);
     assert_events!(app contains [
         PresentLineEvent (n = 0),
@@ -34,7 +34,7 @@ fn delivers_option_set() -> Result<()> {
 #[test]
 fn errs_on_unexpected_selection_timing() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start();
+    app.setup_dialogue_runner().start();
     app.continue_dialogue_and_update_n_times(3);
     app.dialogue_runner_mut()
         .select_option(OptionId(0))
@@ -45,7 +45,7 @@ fn errs_on_unexpected_selection_timing() -> Result<()> {
 #[test]
 fn errs_on_unexpected_selection_value() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start();
+    app.setup_dialogue_runner().start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut()
         .select_option(OptionId(2))
@@ -57,7 +57,7 @@ fn errs_on_unexpected_selection_value() -> Result<()> {
 #[test]
 fn option_selection_implies_continue() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start();
+    app.setup_dialogue_runner().start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
@@ -73,7 +73,7 @@ fn option_selection_implies_continue() -> Result<()> {
 fn can_show_option_selection_as_line() -> Result<()> {
     let mut app = App::new();
     {
-        let mut dialogue_runner = setup_dialogue_runner(&mut app);
+        let mut dialogue_runner = app.setup_dialogue_runner();
         dialogue_runner.start();
         dialogue_runner.run_selected_options_as_lines(true);
     }
@@ -101,7 +101,7 @@ fn can_show_option_selection_as_line() -> Result<()> {
 #[test]
 fn can_jump_around_nodes() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start();
+    app.setup_dialogue_runner().start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(1))?;
     app.update();
@@ -121,7 +121,7 @@ fn can_jump_around_nodes() -> Result<()> {
 #[test]
 fn can_select_unavailable_choice() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner(&mut app).start();
+    app.setup_dialogue_runner().start();
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.continue_dialogue_and_update_n_times(2);
@@ -144,14 +144,15 @@ fn can_select_unavailable_choice() -> Result<()> {
 #[test]
 fn generates_files_in_dev_mode() -> Result<()> {
     let dir = tempdir()?;
-    let original_yarn_path = project_root_path().join("assets//options.yarn");
+    let original_yarn_path = project_root_path().join("assets/options.yarn");
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, yarn_path)?;
     let mut app = App::new();
-    setup_default_plugins_for_path(&mut app, dir.path());
-
-    setup_dialogue_runner_in_dev_mode(&mut app).start();
+    app.setup_default_plugins_for_path(dir.path())
+        .setup_dialogue_runner_in_dev_mode()
+        .start();
     app.update();
+
     assert_events!(app contains [
         PresentLineEvent with |event| event.line.text == lines()[0],
     ]);
@@ -159,24 +160,31 @@ fn generates_files_in_dev_mode() -> Result<()> {
     Ok(())
 }
 
-fn setup_dialogue_runner(app: &mut App) -> Mut<DialogueRunner> {
-    setup_default_plugins(app)
-        .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
-            "options.yarn",
-        )))
-        .dialogue_runner_mut()
+trait OptionTestAppExt {
+    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner>;
+    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<DialogueRunner>;
 }
 
-fn setup_dialogue_runner_in_dev_mode(app: &mut App) -> Mut<DialogueRunner> {
-    app.add_plugin(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
-            .with_localizations(Localizations {
-                base_localization: "../en-US".into(),
-                translations: vec!["de-CH".into()],
-            })
-            .with_file_generation_mode(FileGenerationMode::Development),
-    )
-    .dialogue_runner_mut()
+impl OptionTestAppExt for App {
+    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
+        self.setup_default_plugins()
+            .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+                "options.yarn",
+            )))
+            .dialogue_runner_mut()
+    }
+
+    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<DialogueRunner> {
+        self.add_plugin(
+            YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
+                .with_localizations(Localizations {
+                    base_localization: "en-US".into(),
+                    translations: vec!["de-CH".into()],
+                })
+                .with_file_generation_mode(FileGenerationMode::Development),
+        )
+        .dialogue_runner_mut()
+    }
 }
 
 fn lines() -> Vec<String> {
