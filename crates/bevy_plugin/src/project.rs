@@ -5,6 +5,8 @@ pub(crate) use compilation::{
     RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
 };
 use std::fmt::Debug;
+use std::iter;
+
 mod compilation;
 
 pub(crate) fn project_plugin(app: &mut App) {
@@ -35,6 +37,7 @@ pub struct YarnProject {
     pub(crate) asset_server: AssetServer,
     pub(crate) metadata: HashMap<LineId, Vec<String>>,
     pub(crate) watching_for_changes: bool,
+    pub(crate) file_generation_mode: FileGenerationMode,
 }
 
 impl Debug for YarnProject {
@@ -103,11 +106,12 @@ impl YarnProject {
 }
 
 /// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSlingerPlugin::deferred`].
-/// If you know the yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_files`] instead.
+/// If you know the yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_sources`] instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,
+    pub(crate) file_generation_mode: FileGenerationMode,
 }
 
 impl Default for LoadYarnProjectEvent {
@@ -115,6 +119,7 @@ impl Default for LoadYarnProjectEvent {
         Self {
             localizations: None,
             yarn_files: HashSet::from([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
+            file_generation_mode: default(),
         }
     }
 }
@@ -126,9 +131,13 @@ impl LoadYarnProjectEvent {
         Self::default()
     }
 
-    /// See [`YarnSlingerPlugin::with_yarn_files`].
+    /// See [`YarnSlingerPlugin::with_yarn_sources`].
     #[must_use]
-    pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
+    pub fn with_yarn_sources<T, U>(yarn_files: T) -> Self
+    where
+        T: IntoIterator<Item = U>,
+        U: Into<YarnFileSource>,
+    {
         let yarn_files = yarn_files
             .into_iter()
             .map(|yarn_file| yarn_file.into())
@@ -136,19 +145,25 @@ impl LoadYarnProjectEvent {
         Self {
             localizations: None,
             yarn_files,
+            file_generation_mode: default(),
         }
     }
 
-    /// See [`YarnSlingerPlugin::add_yarn_file`].
     #[must_use]
-    pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
+    pub fn with_yarn_source(yarn_file_source: impl Into<YarnFileSource>) -> Self {
+        Self::with_yarn_sources(iter::once(yarn_file_source))
+    }
+
+    /// See [`YarnSlingerPlugin::add_yarn_source`].
+    #[must_use]
+    pub fn add_yarn_source(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.yarn_files.insert(yarn_file.into());
         self
     }
 
-    /// See [`YarnSlingerPlugin::add_yarn_files`].
+    /// See [`YarnSlingerPlugin::add_yarn_sources`].
     #[must_use]
-    pub fn add_yarn_files(
+    pub fn add_yarn_sources(
         mut self,
         yarn_files: impl IntoIterator<Item = impl Into<YarnFileSource>>,
     ) -> Self {
@@ -161,18 +176,18 @@ impl LoadYarnProjectEvent {
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
-        assert_valid_cfg(localizations.as_ref());
         self.localizations = localizations;
         self
     }
-}
 
-pub(crate) fn assert_valid_cfg(localizations: Option<&Localizations>) {
-    if let Some(localizations) = localizations {
+    #[must_use]
+    pub fn with_file_generation_mode(mut self, file_generation_mode: FileGenerationMode) -> Self {
+        self.file_generation_mode = file_generation_mode;
         if cfg!(any(target_arch = "wasm32", target_os = "android")) {
-            assert_ne!(localizations.file_generation_mode, FileGenerationMode::Development,
-               "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target because it does not provide a access to the filesystem.");
+            assert_ne!(self.file_generation_mode, FileGenerationMode::Development,
+               "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target.");
         }
+        self
     }
 }
 
@@ -182,7 +197,7 @@ where
     U: Into<YarnFileSource>,
 {
     fn from(yarn_files: T) -> Self {
-        Self::with_yarn_files(yarn_files.into_iter().collect())
+        Self::with_yarn_sources(yarn_files)
     }
 }
 

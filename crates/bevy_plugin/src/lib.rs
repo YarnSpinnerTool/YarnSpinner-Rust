@@ -95,6 +95,7 @@ mod plugin;
 mod project;
 mod utils;
 mod yarn_file_asset;
+mod file_generation_mode;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
@@ -127,10 +128,11 @@ pub mod prelude {
             DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine, StartNode,
         },
         line_provider::{AssetProvider, LineAssets, TextProvider},
-        localization::{FileGenerationMode, Localization, Localizations},
+        localization::{Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin, YarnSlingerSystemSet},
         project::YarnProject,
         yarn_file_asset::YarnFile,
+        file_generation_mode::FileGenerationMode,
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};
     pub(crate) use anyhow::{Context, Error, Result};

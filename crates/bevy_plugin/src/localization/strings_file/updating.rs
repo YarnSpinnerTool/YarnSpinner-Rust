@@ -12,6 +12,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
                 .in_set(YarnSlingerSystemSet)
                 .run_if(
                     in_development
+                        .and_then(has_localizations)
                         .and_then(resource_exists::<YarnProject>())
                         .and_then(events_in_queue::<UpdateAllStringsFilesForStringTableEvent>()),
                 ),)
@@ -93,7 +94,7 @@ fn update_all_strings_files_for_string_table(
             ) {
                 Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
-                    if localizations.file_generation_mode == FileGenerationMode::Development {
+                    if project.file_generation_mode == FileGenerationMode::Development {
                         debug!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
                             strings_file_path.display())
                     } else {

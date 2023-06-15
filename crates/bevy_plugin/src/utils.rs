@@ -16,14 +16,23 @@ pub(crate) fn in_development(
     project_to_load: Option<Res<YarnProjectConfigToLoad>>,
 ) -> bool {
     if let Some(project) = project {
-        if let Some(localizations) = project.localizations.as_ref() {
-            return localizations.file_generation_mode == FileGenerationMode::Development;
-        }
+        return project.file_generation_mode == FileGenerationMode::Development;
     }
     if let Some(project_to_load) = project_to_load {
-        if let Some(Some(ref localizations)) = project_to_load.localizations {
-            return localizations.file_generation_mode == FileGenerationMode::Development;
-        }
+        return project_to_load.file_generation_mode == FileGenerationMode::Development;
+    }
+    false
+}
+
+pub(crate) fn has_localizations(
+    project: Option<Res<YarnProject>>,
+    project_to_load: Option<Res<YarnProjectConfigToLoad>>,
+) -> bool {
+    if let Some(project) = project {
+        return project.localizations.is_some();
+    }
+    if let Some(project_to_load) = project_to_load {
+        return matches!(project_to_load.localizations, Some(Some(_)));
     }
     false
 }

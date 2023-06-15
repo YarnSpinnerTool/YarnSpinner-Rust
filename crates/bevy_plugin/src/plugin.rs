@@ -1,14 +1,15 @@
 use crate::prelude::*;
-use crate::project::{assert_valid_cfg, LoadYarnProjectEvent, WatchingForChanges};
+use crate::project::{LoadYarnProjectEvent, WatchingForChanges};
 use bevy::prelude::*;
 pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
 /// The plugin that provides all Yarn Slinger functionality.
-/// In general, you'll want to create this by providing a list of yarn files to load via [`YarnSlingerPlugin::with_yarn_files`].
-/// If you however do not have access to these file at the start of the program, use [`YarnSlingerPlugin::deferred`] instead to later load the files
-/// by sending a [`LoadYarnProjectEvent`].
+/// In general, you'll want to create this by searching for Yarn files in "assets/dialogue", which [`YarnSlingerPlugin::new`] does under the hood.
+/// You can also provide a list of yarn files to load via [`YarnSlingerPlugin::with_yarn_sources`].
+/// If you however do not know the paths to any files nor have them in-memory at the start of the program,
+/// use [`YarnSlingerPlugin::deferred`] instead to later load the files by sending a [`LoadYarnProjectEvent`].
 ///
 /// Needs to be added after the [`AssetPlugin`] which is usually added as part of the [`DefaultPlugins`].
 ///
@@ -50,22 +51,26 @@ impl YarnSlingerPlugin {
     ///
     /// ```rust
     /// use bevy_yarn_slinger::prelude::*;
-    /// let plugin = YarnSlingerPlugin::with_yarn_files(vec![
+    /// let plugin = YarnSlingerPlugin::with_yarn_sources([
     ///    "some_dialogue.yarn",
     ///    "some_other_dialogue.yarn",
     /// ]);
     /// ```
     #[must_use]
-    pub fn with_yarn_files(yarn_files: Vec<impl Into<YarnFileSource>>) -> Self {
-        let yarn_files = yarn_files
-            .into_iter()
-            .map(|yarn_file| yarn_file.into())
-            .collect();
+    pub fn with_yarn_sources<T, U>(yarn_files: T) -> Self
+    where
+        T: IntoIterator<Item = U>,
+        U: Into<YarnFileSource>,
+    {
         Self {
-            project: LoadYarnProjectEvent {
-                localizations: None,
-                yarn_files,
-            },
+            project: LoadYarnProjectEvent::with_yarn_sources(yarn_files),
+        }
+    }
+
+    #[must_use]
+    pub fn with_yarn_source(yarn_file_source: impl Into<YarnFileSource>) -> Self {
+        Self {
+            project: LoadYarnProjectEvent::with_yarn_source(yarn_file_source),
         }
     }
 
@@ -77,18 +82,18 @@ impl YarnSlingerPlugin {
 
     /// Adds a Yarn file source to the files that will be loaded and compiled.
     #[must_use]
-    pub fn add_yarn_file(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
-        self.project = self.project.add_yarn_file(yarn_file);
+    pub fn add_yarn_source(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
+        self.project = self.project.add_yarn_source(yarn_file);
         self
     }
 
     /// Adds multiple Yarn file source to the files that will be loaded and compiled.
     #[must_use]
-    pub fn add_yarn_files(
+    pub fn add_yarn_sources(
         mut self,
         yarn_files: impl IntoIterator<Item = impl Into<YarnFileSource>>,
     ) -> Self {
-        self.project = self.project.add_yarn_files(yarn_files);
+        self.project = self.project.add_yarn_sources(yarn_files);
         self
     }
 
@@ -96,9 +101,13 @@ impl YarnSlingerPlugin {
     /// By default, no localizations are used.
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
-        let localizations = localizations.into();
-        assert_valid_cfg(localizations.as_ref());
-        self.project.localizations = localizations;
+        self.project = self.project.with_localizations(localizations);
+        self
+    }
+
+    #[must_use]
+    pub fn with_file_generation_mode(mut self, file_generation_mode: FileGenerationMode) -> Self {
+        self.project = self.project.with_file_generation_mode(file_generation_mode);
         self
     }
 }
@@ -177,6 +186,7 @@ impl YarnApp for App {
             .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
             .fn_plugin(crate::commands::commands_plugin)
+            .fn_plugin(crate::file_generation_mode::file_generation_mode_plugin)
     }
 
     fn is_watching_for_changes(&self) -> bool {

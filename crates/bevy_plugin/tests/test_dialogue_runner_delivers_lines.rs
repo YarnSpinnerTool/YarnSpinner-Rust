@@ -248,9 +248,9 @@ fn default_language_is_base_language() {
 
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {
     setup_default_plugins(app)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            YarnFileSource::file("lines.yarn"),
-        ]))
+        .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+            "lines.yarn",
+        )))
         .dialogue_runner_mut()
 }
 
@@ -258,12 +258,12 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
     #[allow(unused_mut)]
     let mut dialogue_runner_builder = setup_default_plugins(app)
         .add_plugin(
-            YarnSlingerPlugin::with_yarn_files(vec![YarnFileSource::file("lines_with_ids.yarn")])
+            YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
                 .with_localizations(Localizations {
                     base_localization: "../en-US".into(),
                     translations: vec!["de-CH".into()],
-                    file_generation_mode: FileGenerationMode::Production,
-                }),
+                })
+                .with_file_generation_mode(FileGenerationMode::Production),
         )
         .load_project()
         .build_dialogue_runner();

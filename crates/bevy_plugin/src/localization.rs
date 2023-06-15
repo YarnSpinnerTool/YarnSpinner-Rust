@@ -1,4 +1,4 @@
-pub use self::config::*;
+pub use self::localizations::*;
 pub(crate) use self::{
     line_id_generation::LineIdUpdateSystemSet,
     strings_file::UpdateAllStringsFilesForStringTableEvent, strings_file::*,
@@ -6,12 +6,12 @@ pub(crate) use self::{
 use crate::prelude::*;
 use bevy::prelude::*;
 
-mod config;
+mod localizations;
 mod line_id_generation;
 mod strings_file;
 
 pub(crate) fn localization_plugin(app: &mut App) {
-    app.fn_plugin(config::localization_config_plugin)
+    app.fn_plugin(localizations::localization_config_plugin)
         .fn_plugin(line_id_generation::line_id_generation_plugin)
         .fn_plugin(strings_file::strings_file_plugin);
 }

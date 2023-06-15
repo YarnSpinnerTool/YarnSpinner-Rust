@@ -35,6 +35,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
 pub(crate) struct YarnProjectConfigToLoad {
     pub(crate) localizations: Option<Option<Localizations>>,
     pub(crate) watching_for_changes: bool,
+    pub(crate) file_generation_mode: FileGenerationMode,
 }
 
 impl YarnProjectConfigToLoad {
@@ -65,18 +66,18 @@ fn load_project(
             "Failed to load Yarn project in deferred mode: no yarn files were specified. \
             Did run `LoadYarnProjectEvent::empty()` without adding any yarn files with `LoadYarnProjectEvent::add_yarn_file` and `LoadYarnProjectEvent::add_yarn_files`? \
             If you wanted to load from the default directory instead, use `LoadYarnProjectEvent::default()`.");
-        if let Some(localizations) = event.localizations.as_ref() {
-            if localizations.file_generation_mode == FileGenerationMode::Development
-                && !is_watching_for_changes.0
-            {
-                warn!("Localization file generation mode is set to development, but hot reloading is not turned on. \
+        if event.file_generation_mode == FileGenerationMode::Development
+            && !is_watching_for_changes.0
+        {
+            warn!("Localization file generation mode is set to development, but hot reloading is not turned on. \
                 For an optimal development experience, we recommend turning on hot reloading by setting the `watch_for_changes` field of the `AssetPlugin` to `true`. \
                 You can see an example of how to do this in at <https://github.com/bevyengine/bevy/blob/v0.10.1/examples/asset/hot_asset_reloading.rs>");
-            }
         }
+
         commands.insert_resource(YarnProjectConfigToLoad {
             localizations: Some(event.localizations),
             watching_for_changes: is_watching_for_changes.0,
+            file_generation_mode: event.file_generation_mode,
         });
         commands.insert_resource(YarnFilesToLoad(event.yarn_files));
         *already_loaded = true;
@@ -113,7 +114,7 @@ fn recompile_loaded_yarn_files(
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
     };
-    let Some(compilation) = compile_yarn_files(&yarn_project.yarn_files, &yarn_files, yarn_project.localizations.as_ref())? else {
+    let Some(compilation) = compile_yarn_files(&yarn_project.yarn_files, &yarn_files, yarn_project.localizations.as_ref(), yarn_project.file_generation_mode)? else {
         return Ok(());
     };
     let metadata = compilation
@@ -169,25 +170,23 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
+    let yarn_project_config_to_load = yarn_project_config_to_load.unwrap();
     let localizations = yarn_project_config_to_load
+        .localizations
         .as_ref()
-        .map(|c| c.localizations.as_ref().unwrap().as_ref())
-        .unwrap();
-    let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, localizations)? else {
+        .unwrap()
+        .as_ref();
+    let file_generation_mode = yarn_project_config_to_load.file_generation_mode;
+    let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, localizations, file_generation_mode)? else {
         return Ok(());
     };
     let file_count = yarn_files_being_loaded.0.len();
 
-    let yarn_project_config_to_load = yarn_project_config_to_load.as_ref().unwrap();
-    if yarn_project_config_to_load
-        .localizations()
-        .map(|l| l.file_generation_mode == FileGenerationMode::Development)
-        .unwrap_or_default()
-    {
-        update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
-            compilation.string_table.clone(),
-        ));
+    if file_generation_mode == FileGenerationMode::Development {
         if let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap() {
+            update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
+                compilation.string_table.clone(),
+            ));
             for localization in &localizations.translations {
                 let path = localization.strings_file.as_path();
                 if asset_server.asset_io().is_file(path) {
@@ -220,6 +219,7 @@ fn compile_loaded_yarn_files(
         localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         asset_server: asset_server.clone(),
         watching_for_changes: yarn_project_config_to_load.watching_for_changes,
+        file_generation_mode,
         metadata,
     });
 
@@ -239,6 +239,7 @@ fn compile_yarn_files(
     yarn_file_handles: &HashSet<Handle<YarnFile>>,
     yarn_files: &Res<Assets<YarnFile>>,
     localizations: Option<&Localizations>,
+    file_generation_mode: FileGenerationMode,
 ) -> Result<Option<Compilation>> {
     let yarn_files = yarn_file_handles
         .iter()
@@ -248,7 +249,7 @@ fn compile_yarn_files(
             .clone()
             .find(|file| file.string_table.values().any(|v| v.is_implicit_tag))
         {
-            if localizations.file_generation_mode == FileGenerationMode::Development {
+            if file_generation_mode == FileGenerationMode::Development {
                 info!(
                     "Waiting with compilation until \"{}\" is automatically tagged",
                     untagged_file.file.file_name
