@@ -103,9 +103,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.default_dialogue_runner();
-    // Immediately start showing the dialogue
-    dialogue_runner.start();
+    let mut dialogue_runner = project.create_dialogue_runner();
     dialogue_runner
         .command_registrations_mut()
         .register_command("change_sprite", change_sprite)
@@ -115,6 +113,8 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
         .register_command("rotate", rotate_character)
         .register_command("move_camera_to_clippy", move_camera_to_clippy)
         .register_command("show_bang", show_bang);
+    // Immediately start showing the dialogue
+    dialogue_runner.start_node("Start").unwrap();
     commands.spawn(dialogue_runner);
 }
 

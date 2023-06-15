@@ -171,11 +171,10 @@ fn test_line_hints() {
 
     let result = Compiler::new().read_file(path).compile().unwrap();
 
-    let mut dialogue = TestBase::new()
-        .with_compilation(result)
-        .dialogue
-        .with_line_hints_enabled(true)
-        .with_node_at_start()
+    let mut dialogue = TestBase::new().with_compilation(result).dialogue;
+    dialogue
+        .set_line_hints_enabled(true)
+        .set_node("Start")
         .unwrap();
 
     let mut line_hints_were_sent = false;
@@ -262,7 +261,7 @@ fn test_selecting_option_from_inside_option_callback() {
                 .expect_line("final line"),
         )
         .with_compilation(result);
-    test_base.dialogue.set_node_to_start().unwrap();
+    test_base.dialogue.set_node("Start").unwrap();
 
     while let Some(events) = test_base.dialogue.next() {
         for event in events {

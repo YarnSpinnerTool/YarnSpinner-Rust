@@ -134,9 +134,9 @@ fn recompile_loaded_yarn_files(
         if let Some(current_node) = current_node {
             dialogue_runner
                 .stop()
-                .start_at_node(current_node)
+                .start_node(current_node)
                 .err()
-                .map(|_| dialogue_runner.dialogue.set_node_to_start());
+                .map(|_| dialogue_runner.dialogue.set_node("Start"));
         }
     }
     events.clear();
@@ -251,13 +251,13 @@ fn compile_yarn_files(
         {
             if file_generation_mode == FileGenerationMode::Development {
                 info!(
-                    "Waiting with compilation until \"{}\" is automatically tagged",
+                    "Waiting with compilation until \"{}\" gets its line IDs generated",
                     untagged_file.file.file_name
                 );
                 return Ok(None);
             } else {
-                bail!("Failed to compile yarn files: Localization mode is on, but \"{}\" is not tagged. \
-                    Cannot tag it automatically either because we are not in `FileGenerationMode::Development`",
+                bail!("Failed to compile yarn files: Localization mode is on, but \"{}\" is not does not have full line IDs. \
+                    Cannot generate the line IDs automatically either because we are not in `FileGenerationMode::Development`",
                     untagged_file.file.file_name);
             }
         }

@@ -26,7 +26,7 @@ pub(crate) struct CompilationSystemSet;
 /// app.add_system(setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
 ///
 /// fn setup_dialogue_runners(mut commands: Commands, project: Res<YarnProject>) {
-///    commands.spawn(project.default_dialogue_runner());
+///    commands.spawn(project.create_dialogue_runner());
 /// }
 /// ```
 #[derive(Resource)]
@@ -71,7 +71,7 @@ impl YarnProject {
 
     /// Constructs a [`DialogueRunner`] from this project using all defaults of [`DialogueRunnerBuilder`] .
     /// This is a convenience method for calling [`DialogueRunnerBuilder::build`] on an unconfigured builder returned by [`YarnProject::build_dialogue_runner`].
-    pub fn default_dialogue_runner(&self) -> DialogueRunner {
+    pub fn create_dialogue_runner(&self) -> DialogueRunner {
         self.build_dialogue_runner().build()
     }
 

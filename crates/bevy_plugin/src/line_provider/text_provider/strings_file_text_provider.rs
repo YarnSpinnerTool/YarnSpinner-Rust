@@ -103,7 +103,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
 }
 
 impl StringsFileTextProvider {
-    /// Create a new text provider from a Yarn project. This will be done for you when using [`YarnProject::default_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
+    /// Create a new text provider from a Yarn project. This will be done for you when using [`YarnProject::create_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
     pub fn from_yarn_project(yarn_project: &YarnProject) -> Self {
         Self {
             asset_server: yarn_project.asset_server.clone(),

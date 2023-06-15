@@ -53,7 +53,7 @@ impl<'a> InnerDialogueMut<'a> {
 
     /// Proxy for [`Dialogue::set_node_to_start`].
     pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
-        self.0.set_node_to_start()?;
+        self.0.set_node("Start")?;
         Ok(self)
     }
 

@@ -11,7 +11,7 @@ fn main() {
         .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
             setup_camera.on_startup(),
-            // Spawn dialogue runner once the Yarn project has finished compiling
+            // Spawn the dialogue runner once the Yarn project has finished compiling
             spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         ))
         .run();
@@ -23,12 +23,8 @@ fn setup_camera(mut commands: Commands) {
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     // Create a dialogue runner from the project.
-    // If you have a node named "Start", you can skip the builder and just use "project.default_dialogue_runner()" instead
-    let mut dialogue_runner = project
-        .build_dialogue_runner()
-        .with_start_node("HelloWorld")
-        .build();
+    let mut dialogue_runner = project.create_dialogue_runner();
     // Immediately start showing the dialogue to the player
-    dialogue_runner.start();
+    dialogue_runner.start_node("HelloWorld").unwrap();
     commands.spawn(dialogue_runner);
 }

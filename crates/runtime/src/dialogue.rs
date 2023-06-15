@@ -102,50 +102,6 @@ impl Iterator for Dialogue {
     }
 }
 
-// Builder API
-impl Dialogue {
-    /// Sets the language code for the [`Dialogue`].
-    pub fn with_language_code(mut self, language_code: impl Into<Option<Language>>) -> Self {
-        self.set_language_code(language_code);
-        self
-    }
-
-    /// Extends the [`Dialogue`]'s [`Library`] with the given [`Library`].
-    #[must_use]
-    pub fn with_extended_library(mut self, library: Library) -> Self {
-        self.library_mut().extend(library.into_iter());
-        self
-    }
-
-    /// Sets the current node to the one with the given name.
-    pub fn with_node_at(mut self, node_name: &str) -> Result<Self> {
-        self.set_node(node_name)?;
-        Ok(self)
-    }
-
-    /// Sets the current node to the node named [`Dialogue::DEFAULT_START_NODE_NAME`], i.e. `"Start"`.
-    pub fn with_node_at_start(mut self) -> Result<Self> {
-        self.set_node_to_start()?;
-        Ok(self)
-    }
-
-    /// Activates [`Dialogue::next`] being able to return [`DialogueEvent::LineHints`] events.
-    /// Note that line hints for [`Dialogue::with_node_at_start`] and [`Dialogue::with_node_at`] will only be sent if this
-    /// method was called beforehand.
-    #[must_use]
-    pub fn with_line_hints_enabled(mut self, enabled: bool) -> Self {
-        self.vm.line_hints_enabled = enabled;
-        self
-    }
-
-    /// Sets or replaces the currently loaded [`Program`]. If the program is replaced, all internal state is reset.
-    #[must_use]
-    pub fn with_program(mut self, program: Program) -> Self {
-        self.replace_program(program);
-        self
-    }
-}
-
 // Accessors
 impl Dialogue {
     /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
@@ -199,9 +155,9 @@ impl Dialogue {
 
     /// Mutable gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
-    #[must_use]
-    pub fn line_hints_enabled_mut(&mut self) -> &mut bool {
-        &mut self.vm.line_hints_enabled
+    pub fn set_line_hints_enabled(&mut self, enabled: bool) -> &mut Self {
+        self.vm.line_hints_enabled = enabled;
+        self
     }
 
     /// Gets the currently registered [`TextProvider`].
@@ -227,9 +183,6 @@ impl Dialogue {
 
 // VM proxy
 impl Dialogue {
-    /// The name used by [`Dialogue::set_node_to_start`] and [`Dialogue::with_node_at_start`].
-    pub const DEFAULT_START_NODE_NAME: &'static str = "Start";
-
     /// Starts, or continues, execution of the current program.
     ///
     /// Calling this method returns a batch of [`DialogueEvent`]s that should be handled by the caller before calling [`Dialogue::continue_`] again.
@@ -283,16 +236,6 @@ impl Dialogue {
     /// Returns an error if no node with the value of `node_name` has been loaded.
     pub fn set_node(&mut self, node_name: impl Into<String>) -> Result<&mut Self> {
         self.vm.set_node(node_name)?;
-        Ok(self)
-    }
-
-    /// Calls [`Dialogue::set_node`] with the [`Dialogue::DEFAULT_START_NODE_NAME`].
-    ///
-    /// ## Errors
-    ///
-    /// Returns an error if no node with the value of [`Dialogue::DEFAULT_START_NODE_NAME`] has been loaded.
-    pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
-        self.set_node(Self::DEFAULT_START_NODE_NAME)?;
         Ok(self)
     }
 

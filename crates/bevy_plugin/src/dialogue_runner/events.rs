@@ -81,7 +81,7 @@ pub struct LineHintsEvent {
     pub source: Entity,
 }
 
-/// An event that is fired when a dialogue has been started via [`DialogueRunner::start`] or  via [`DialogueRunner::start_at_node`]/
+/// An event that is fired when a dialogue has been started via [`DialogueRunner::start_node`]/
 /// Handling this event is **optional** for dialogue views.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DialogueStartEvent {

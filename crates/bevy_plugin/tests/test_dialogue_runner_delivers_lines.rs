@@ -15,7 +15,7 @@ fn panics_on_continue_without_start() {
 #[test]
 fn start_implies_continue() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start();
+    setup_dialogue_runner_without_localizations(&mut app).start_node("Start")?;
     app.update();
     assert_events!(app contains [
         DialogueStartEvent,
@@ -38,7 +38,7 @@ fn stop_without_start_is_allowed() -> Result<()> {
 #[test]
 fn stop_sends_events() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start();
+    setup_dialogue_runner_without_localizations(&mut app).start_node("Start")?;
     app.update();
 
     app.dialogue_runner_mut().stop();
@@ -63,7 +63,7 @@ fn stop_sends_events() -> Result<()> {
 #[test]
 fn stop_resets_dialogue() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start();
+    setup_dialogue_runner_without_localizations(&mut app).start_node("Start")?;
 
     app.update();
     assert_events!(app contains [
@@ -73,7 +73,7 @@ fn stop_resets_dialogue() -> Result<()> {
         PresentLineEvent with |event| event.line.text == english_lines()[0]
     ]);
 
-    app.dialogue_runner_mut().stop().start();
+    app.dialogue_runner_mut().stop().start_node("Start")?;
     app.update();
     assert_events!(app contains [
         DialogueCompleteEvent,
@@ -99,7 +99,7 @@ fn stop_resets_dialogue() -> Result<()> {
 fn panics_on_continue_after_stop() {
     let mut app = App::new();
     setup_dialogue_runner_without_localizations(&mut app)
-        .start()
+        .start_node("Start")
         .stop()
         .continue_in_next_update();
 }
@@ -107,7 +107,7 @@ fn panics_on_continue_after_stop() {
 #[test]
 fn presents_all_lines() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start();
+    setup_dialogue_runner_without_localizations(&mut app).start_node("Start")?;
     for i in 1..=12 {
         println!("Line {i}");
         app.continue_dialogue_and_update();
@@ -132,7 +132,7 @@ fn presents_all_lines() -> Result<()> {
 #[should_panic]
 fn panics_on_continue_after_all_lines() {
     let mut app = App::new();
-    setup_dialogue_runner_without_localizations(&mut app).start();
+    setup_dialogue_runner_without_localizations(&mut app).start_node("Start")?;
     while app.dialogue_runner().is_running() {
         app.continue_dialogue_and_update();
     }
@@ -143,7 +143,7 @@ fn panics_on_continue_after_all_lines() {
 #[cfg(feature = "audio_assets")]
 fn serves_assets_after_loading() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_with_localizations(&mut app).start();
+    setup_dialogue_runner_with_localizations(&mut app).start_node("Start")?;
     app.update();
     assert_events!(app contains [
         DialogueStartEvent,
@@ -174,7 +174,7 @@ fn serves_assets_after_loading() -> Result<()> {
 #[cfg(feature = "audio_assets")]
 fn serves_translations() -> Result<()> {
     let mut app = App::new();
-    setup_dialogue_runner_with_localizations(&mut app).start();
+    setup_dialogue_runner_with_localizations(&mut app).start_node("Start")?;
     app.load_lines();
 
     for _ in 1..=6 {

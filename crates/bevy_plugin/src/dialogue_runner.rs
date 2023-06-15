@@ -3,7 +3,7 @@ pub use self::events::{
     NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent,
 };
 pub use self::{
-    builder::{DialogueRunnerBuilder, StartNode},
+    builder::DialogueRunnerBuilder,
     dialogue_option::DialogueOption,
     inner::{InnerDialogue, InnerDialogueMut},
     localized_line::LocalizedLine,
@@ -37,7 +37,7 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
 }
 
 /// The main type to interact with the dialogue system.
-/// Created by calling either [`YarnProject::default_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
+/// Created by calling either [`YarnProject::create_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
     pub(crate) dialogue: Dialogue,
@@ -53,13 +53,9 @@ pub struct DialogueRunner {
     pub(crate) just_started: bool,
     pub(crate) popped_line_hints: Option<Vec<LineId>>,
     pub(crate) unsent_events: Vec<DialogueEvent>,
-    start_node: StartNode,
 }
 
 impl DialogueRunner {
-    /// The node that will be run by [`DialogueRunner::start`] if it was not overridden by [`DialogueRunnerBuilder::with_start_node`].
-    pub const DEFAULT_START_NODE_NAME: &'static str = Dialogue::DEFAULT_START_NODE_NAME;
-
     /// Tells the dialogue runner to try to advance the dialogue in the next update.
     /// This method must be called by the dialogue view when the user clicks on a button to show the next line.
     ///
@@ -97,7 +93,7 @@ impl DialogueRunner {
     }
 
     /// Returns whether the dialogue runner is currently running. Returns `false` if:
-    /// - The dialogue has not yet been started via [`DialogueRunner::start`] or [`DialogueRunner::start_at_node`]
+    /// - The dialogue has not yet been started via [`DialogueRunner::start_node`]
     /// - The dialogue has been stopped via [`DialogueRunner::stop`]
     /// - The dialogue has finished running through all nodes
     #[must_use]
@@ -130,7 +126,7 @@ impl DialogueRunner {
     }
 
     /// Stops the execution of the dialogue. Any pending dialogue events will still be sent in the next update, including a [`DialogueCompleteEvent`].
-    /// After this, [`DialogueRunner::start`] or [`DialogueRunner::start_at_node`] must be called before the dialogue can be advanced again.
+    /// After this, [`DialogueRunner::start_node`] must be called before the dialogue can be advanced again.
     pub fn stop(&mut self) -> &mut Self {
         self.is_running = false;
         self.last_selected_option = None;
@@ -142,31 +138,10 @@ impl DialogueRunner {
         self
     }
 
-    /// Starts the dialogue at the start node specified in [`DialogueRunnerBuilder::with_start_node`]. By default, this is the node named `Start`.
-    /// This method or [`DialogueRunner::start_at_node`] must be called after creation or after calling [`DialogueRunner::stop`] before the dialogue can be advanced. Implies [`DialogueRunner::continue_in_next_update`].
+    /// Starts the dialogue at the given node.
+    /// This method must be called after creation or after calling [`DialogueRunner::stop`] before the dialogue can be advanced. Implies [`DialogueRunner::continue_in_next_update`].
     /// If the dialogue was already running, this method will panic.
-    pub fn start(&mut self) -> &mut Self {
-        if self.is_running {
-            panic!("Can't start dialogue: the dialogue is currently in the middle of running. Stop the dialogue first.");
-        }
-        self.is_running = true;
-        self.just_started = true;
-        if self.dialogue.current_node().is_none() {
-            match self.start_node.clone() {
-                StartNode::DefaultStartNode => {
-                    self.dialogue.set_node_to_start().unwrap(); // Would have panicked in `DialogueRunnerBuilder::build()` already if this was invalid
-                }
-                StartNode::Node(node_name) => {
-                    self.dialogue.set_node(node_name).unwrap(); // Would have panicked in `DialogueRunnerBuilder::build()` already if this was invalid
-                }
-            }
-        }
-        self.continue_in_next_update();
-        self
-    }
-
-    /// Same as [`DialogueRunner::start`], but starts the dialogue at the given node instead of the configured start node.
-    pub fn start_at_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
+    pub fn start_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
         let node_name = node_name.as_ref();
         if self.is_running {
             bail!("Can't start dialogue from node {node_name}: the dialogue is currently in the middle of running. Stop the dialogue first.");

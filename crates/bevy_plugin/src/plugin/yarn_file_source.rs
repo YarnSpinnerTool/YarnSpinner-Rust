@@ -69,11 +69,10 @@ impl YarnFileSource {
                             .then(|| handle.typed())
                     })
                     .collect();
-                assert!(
-                    !handles.is_empty(),
-                    "No Yarn files found in the assets subdirectory {path}",
-                    path = path.display()
-                );
+                if handles.is_empty() {
+                    warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Slinger won't be able to do anything this run. \
+                        Help: Add some yarn files to get started.", path = path.display());
+                }
                 handles
             }
         }

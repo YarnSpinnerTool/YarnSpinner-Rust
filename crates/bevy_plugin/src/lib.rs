@@ -124,9 +124,7 @@ pub mod prelude {
     pub use crate::{
         commands::{YarnCommand, YarnCommandRegistrations},
         default_impl::FileExtensionAssetProvider,
-        dialogue_runner::{
-            DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine, StartNode,
-        },
+        dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
         file_generation_mode::FileGenerationMode,
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{Localization, Localizations},

@@ -10,7 +10,7 @@ mod utils;
 #[test]
 fn waits_on_command() -> Result<()> {
     let mut app = App::new();
-    app.setup_dialogue_runner_for_wait().start();
+    app.setup_dialogue_runner_for_wait().start_node("Start")?;
     app.update();
     assert_events!(app contains [
         PresentLineEvent with |event| event.line.text == "Starting wait",
@@ -44,7 +44,7 @@ fn waits_on_command() -> Result<()> {
 #[test]
 fn executes_commands_and_fns() -> Result<()> {
     let mut app = App::new();
-    app.setup_dialogue_runner().start();
+    app.setup_dialogue_runner().start_node("Start")?;
     app.update();
     assert_events!(app contains [
         PresentLineEvent with |event| event.line.text == "Setting variable",

@@ -136,7 +136,7 @@ impl TestBase {
     /// Executes the named node, and checks any assertions made during
     /// execution. Fails the test if an assertion made in Yarn fails.
     pub fn run_standard_testcase(&mut self) -> &mut Self {
-        self.dialogue.set_node_to_start().unwrap();
+        self.dialogue.set_node("Start").unwrap();
 
         while let Some(events) = self.dialogue.next() {
             for event in events {

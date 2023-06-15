@@ -21,11 +21,8 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project
-        .build_dialogue_runner()
-        .with_start_node("AccessVariables")
-        .build();
-    dialogue_runner.start();
+    let mut dialogue_runner = project.create_dialogue_runner();
+    dialogue_runner.start_node("AccessVariables").unwrap();
     commands.spawn(dialogue_runner);
 }
 

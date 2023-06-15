@@ -23,29 +23,6 @@ pub struct DialogueRunnerBuilder {
     localizations: Option<Localizations>,
     asset_server: AssetServer,
     run_selected_options_as_lines: bool,
-    start_node: StartNode,
-}
-
-/// The default node used by [`DialogueRunner::start`].
-/// Can be overridden with [`DialogueRunnerBuilder::with_start_node`].
-///
-/// The default is [`StartNode::DefaultStartNode`].
-#[derive(Debug, Clone, Default)]
-pub enum StartNode {
-    /// The node named "Start"
-    #[default]
-    DefaultStartNode,
-    /// A node with a specific name
-    Node(String),
-}
-
-impl<T> From<T> for StartNode
-where
-    T: Into<String>,
-{
-    fn from(node: T) -> Self {
-        StartNode::Node(node.into())
-    }
 }
 
 impl Debug for DialogueRunnerBuilder {
@@ -65,7 +42,6 @@ impl Debug for DialogueRunnerBuilder {
                 "run_selected_options_as_lines",
                 &self.run_selected_options_as_lines,
             )
-            .field("start_node", &self.start_node)
             .finish()
     }
 }
@@ -87,7 +63,6 @@ impl DialogueRunnerBuilder {
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
             run_selected_options_as_lines: false,
-            start_node: StartNode::default(),
         }
     }
 
@@ -154,13 +129,6 @@ impl DialogueRunnerBuilder {
         self
     }
 
-    /// Sets the node that is run when [`DialogueRunner::start`] is executed. By default, this the node named "Start".
-    #[must_use]
-    pub fn with_start_node(mut self, start_node: impl Into<StartNode>) -> Self {
-        self.start_node = start_node.into();
-        self
-    }
-
     /// Extends the standard library with custom functions callable within Yarn files.
     #[must_use]
     pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
@@ -186,10 +154,12 @@ impl DialogueRunnerBuilder {
     pub fn try_build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
 
-        let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
-            .with_line_hints_enabled(true)
-            .with_extended_library(self.library)
-            .with_program(self.compilation.program.unwrap());
+        let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone());
+        dialogue
+            .set_line_hints_enabled(true)
+            .library_mut()
+            .extend(self.library);
+        dialogue.add_program(self.compilation.program.unwrap());
 
         for asset_provider in self.asset_providers.values_mut() {
             if let Some(ref localizations) = self.localizations {
@@ -197,15 +167,6 @@ impl DialogueRunnerBuilder {
             }
 
             asset_provider.set_asset_server(self.asset_server.clone());
-        }
-
-        match self.start_node.clone() {
-            StartNode::DefaultStartNode => {
-                dialogue.set_node_to_start()?;
-            }
-            StartNode::Node(node) => {
-                dialogue.set_node(node)?;
-            }
         }
 
         let popped_line_hints = dialogue.pop_line_hints();
@@ -230,7 +191,6 @@ impl DialogueRunnerBuilder {
             just_started: default(),
             unsent_events: default(),
             localizations: self.localizations,
-            start_node: self.start_node,
         };
 
         let text_language = self
