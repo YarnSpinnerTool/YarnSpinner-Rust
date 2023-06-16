@@ -11,7 +11,7 @@ use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 
-/// A method that can be registered as a command for Yarn files via [`YarnCommandRegistrations::add_command`].
+/// A method that can be registered as a command for Yarn files via [`YarnCommands::add_command`].
 ///
 /// The signature of the method must adhere to the following rules:
 /// - The first parameter must be of the type `In<T>`, where `T` can be converted into a [`YarnFnParam`]. This stands for the parameters passed to the command from Yarn.
@@ -20,8 +20,8 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// ```rust
 /// # use bevy_yarn_slinger::prelude::*;
 /// # use bevy::prelude::*;
-/// # let mut command_registrations = YarnCommandRegistrations::new();
-/// command_registrations.add_command("add_player", add_player);
+/// # let mut commands = YarnCommands::new();
+/// commands.add_command("add_player", add_player);
 ///
 /// fn add_player(In((name, age)): In<(String, f32)>) {
 ///     println!("Adding player {name} with age {age}");
@@ -31,8 +31,8 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// ```rust
 /// # use bevy_yarn_slinger::prelude::*;
 /// # use bevy::prelude::*;
-/// # let mut command_registrations = YarnCommandRegistrations::new();
-/// command_registrations.add_command("add_player", add_player);
+/// # let mut commands = YarnCommands::new();
+/// commands.add_command("add_player", add_player);
 ///
 /// fn add_player(_: In<()>, time: Res<Time>) {
 ///    println!("Time since game start: {}", time.elapsed_seconds());
@@ -99,7 +99,7 @@ macro_rules! impl_command_function {
 // of `SystemParam` created.
 all_tuples!(impl_command_function, 0, 16, F);
 
-/// Trait implemented by the return types of methods registered in the [`YarnCommandRegistrations`](crate::prelude::YarnCommandRegistrations).
+/// Trait implemented by the return types of methods registered in the [`YarnCommandRegistrations`](crate::prelude::YarnCommands).
 pub trait TaskFinishedIndicator: Debug + Send + Sync + 'static {
     /// Returns `true` if the task is finished.
     fn is_finished(&self) -> bool;
@@ -154,7 +154,7 @@ macro_rules! impl_task_finished_indicator {
 }
 all_tuples!(impl_task_finished_indicator, 0, 16, F);
 
-/// A type-erased [`YarnCommand`] as it appears in the [`YarnCommandRegistrations`].
+/// A type-erased [`YarnCommand`] as it appears in the [`YarnCommands`].
 pub trait UntypedYarnCommand: Debug + Send + Sync + 'static {
     #[doc(hidden)]
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator>;

@@ -76,6 +76,10 @@ impl YarnFnRegistry {
     pub(crate) fn names(&self) -> impl Iterator<Item = &str> {
         self.0.keys().map(|key| key.as_ref())
     }
+
+    pub(crate) fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
+        self.0.values().map(|value| value.as_ref())
+    }
 }
 
 #[cfg(test)]

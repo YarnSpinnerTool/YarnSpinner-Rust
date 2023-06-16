@@ -121,7 +121,7 @@ impl CommandAppExt for App {
                 "commands.yarn",
             )))
             .dialogue_runner_mut();
-        dialogue_runner.command_registrations_mut().add_command(
+        dialogue_runner.commands_mut().add_command(
             "set_data",
             |In(param): In<String>, mut commands: Commands| {
                 commands.insert_resource(Data(param));

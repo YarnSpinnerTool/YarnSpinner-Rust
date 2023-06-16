@@ -105,7 +105,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     let mut dialogue_runner = project.create_dialogue_runner();
     dialogue_runner
-        .command_registrations_mut()
+        .commands_mut()
         .add_command("change_sprite", change_sprite)
         .add_command("fade_in", fade_in)
         .add_command("fade_out", fade_out)

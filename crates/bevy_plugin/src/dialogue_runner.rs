@@ -45,7 +45,7 @@ pub struct DialogueRunner {
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     pub(crate) will_continue_in_next_update: bool,
     pub(crate) last_selected_option: Option<OptionId>,
-    pub(crate) commands: YarnCommandRegistrations,
+    pub(crate) commands: YarnCommands,
     command_tasks: Vec<Box<dyn TaskFinishedIndicator>>,
     localizations: Option<Localizations>,
     pub(crate) is_running: bool,
@@ -271,13 +271,13 @@ impl DialogueRunner {
 
     /// Returns the command registrations that can be called from Yarn files.
     #[must_use]
-    pub fn command_registrations(&self) -> &YarnCommandRegistrations {
+    pub fn commands(&self) -> &YarnCommands {
         &self.commands
     }
 
     /// Mutably returns the command registrations that can be called from Yarn files.
     #[must_use]
-    pub fn command_registrations_mut(&mut self) -> &mut YarnCommandRegistrations {
+    pub fn commands_mut(&mut self) -> &mut YarnCommands {
         &mut self.commands
     }
 

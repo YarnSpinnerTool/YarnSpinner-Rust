@@ -124,7 +124,7 @@ pub mod prelude {
     #[cfg(feature = "audio_assets")]
     pub use crate::default_impl::AudioAssetProvider;
     pub use crate::{
-        commands::{YarnCommand, YarnCommandRegistrations},
+        commands::{YarnCommand, YarnCommands},
         default_impl::FileExtensionAssetProvider,
         development_file_generation::DevelopmentFileGeneration,
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
@@ -139,7 +139,7 @@ pub mod prelude {
     pub(crate) use yarn_slinger::prelude::*;
     pub use yarn_slinger::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
-        VariableStorage, YarnFn, YarnFnLibrary,
+        VariableStorage, YarnFn, YarnLibrary,
     };
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;

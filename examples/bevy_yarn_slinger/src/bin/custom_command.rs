@@ -23,7 +23,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     let mut dialogue_runner = project.create_dialogue_runner();
     // Add our custom commands to the dialogue runner
     dialogue_runner
-        .command_registrations_mut()
+        .commands_mut()
         .add_command("insert_resource", insert_resource)
         .add_command("read_resource", read_resource);
     dialogue_runner.start_node("CustomCommand");

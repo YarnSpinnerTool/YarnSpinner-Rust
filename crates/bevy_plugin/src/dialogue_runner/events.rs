@@ -37,8 +37,8 @@ pub struct PresentOptionsEvent {
 }
 
 /// An event that is fired after a dialogue advances and wishes to execute a command.
-/// Events are generally handled by looking them up in the [`YarnCommandRegistrations`] of a [`DialogueRunner`],
-/// accessed via [`DialogueRunner::command_registrations`] and [`DialogueRunner::command_registrations_mut`].
+/// Events are generally handled by looking them up in the [`YarnCommands`] of a [`DialogueRunner`],
+/// accessed via [`DialogueRunner::commands`] and [`DialogueRunner::commands_mut`].
 /// However, a command is allowed much more freedom in its syntax than one might think, and as such, not all commands are registerable.
 /// Thus, you can listen for this event and handle it yourself if you wish to build your own command syntax for e.g. a DSL.
 /// Handling this event is optional for dialogue views.

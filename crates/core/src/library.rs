@@ -46,10 +46,12 @@ impl Library {
         self.0.extend(other.0 .0);
     }
 
+    /// Iterates over the names and functions in the library.
     pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
         self.0.iter()
     }
 
+    /// Gets a function by name.
     pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
         self.0.get(name)
     }
@@ -62,6 +64,12 @@ impl Library {
         format!("$Yarn.Internal.Visiting.{node_name}")
     }
 
+    /// Creates a [`Library`] with the standard functions that are included in Yarn Slinger.
+    /// These are:
+    /// - `string`: Converts a value to a string.
+    /// - `number`: Converts a value to a number.
+    /// - `bool`: Converts a value to a boolean.
+    /// - Comparison operators for numbers, strings, and booleans. (`==`, `!=`, `<`, `<=`, `>`, `>=`)
     pub fn standard_library() -> Self {
         let mut library = yarn_library!(
             "string" => <String as From<YarnValue >>::from,
@@ -122,6 +130,11 @@ impl Library {
     /// Iterates over the names of all functions in the library.
     pub fn names(&self) -> impl Iterator<Item = &str> {
         self.0.names()
+    }
+
+    /// Iterates over all functions in the library.
+    pub fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
+        self.0.functions()
     }
 
     /// Registers the methods found inside a type.

@@ -15,8 +15,8 @@ pub struct DialogueRunnerBuilder {
     variable_storage: Box<dyn VariableStorage>,
     text_provider: SharedTextProvider,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
-    library: YarnFnLibrary,
-    commands: YarnCommandRegistrations,
+    library: YarnLibrary,
+    commands: YarnCommands,
     compilation: Compilation,
     localizations: Option<Localizations>,
     asset_server: AssetServer,
@@ -47,7 +47,7 @@ impl DialogueRunnerBuilder {
             )),
             asset_providers: HashMap::new(),
             library: create_extended_standard_library(),
-            commands: YarnCommandRegistrations::builtin_commands(),
+            commands: YarnCommands::builtin_commands(),
             compilation: yarn_project.compilation().clone(),
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
@@ -134,8 +134,8 @@ impl DialogueRunnerBuilder {
     }
 }
 
-fn create_extended_standard_library() -> YarnFnLibrary {
-    let mut library = YarnFnLibrary::standard_library();
+fn create_extended_standard_library() -> YarnLibrary {
+    let mut library = YarnLibrary::standard_library();
     library
         .add_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
         .add_function("random_range", |min: f32, max: f32| {

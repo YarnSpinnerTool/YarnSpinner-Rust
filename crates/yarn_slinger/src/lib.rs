@@ -14,7 +14,7 @@ pub mod prelude {
         LineInfo, Result as YarnCompilerResult, StringInfo,
     };
     pub use crate::core::{
-        yarn_library, IntoYarnValueFromNonYarnValue, Library as YarnFnLibrary, LineId,
+        yarn_library, IntoYarnValueFromNonYarnValue, Library as YarnLibrary, LineId,
         Program as YarnProgram, YarnFn, YarnValue,
     };
     pub use crate::runtime::{

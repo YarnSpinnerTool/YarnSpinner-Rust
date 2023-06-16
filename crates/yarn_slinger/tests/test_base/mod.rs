@@ -116,8 +116,8 @@ impl TestBase {
 
     #[must_use]
     pub fn extend_library(mut self, extend_fn: impl Fn(&mut Library)) -> Self {
-        let mut library = self.dialogue.library_mut();
-        extend_fn(&mut library);
+        let library = self.dialogue.library_mut();
+        extend_fn(library);
         self
     }
 
