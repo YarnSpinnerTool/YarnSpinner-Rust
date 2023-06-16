@@ -18,7 +18,7 @@
 //! use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 //!
 //! App::new()
-//!    .add_plugin(DefaultPlugins)
+//!    .add_plugins(DefaultPlugins)
 //!    .add_plugin(YarnSlingerPlugin::new())
 //!    .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new());
 //! ```

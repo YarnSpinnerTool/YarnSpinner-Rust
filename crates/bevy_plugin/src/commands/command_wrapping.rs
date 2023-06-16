@@ -32,7 +32,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// # use bevy_yarn_slinger::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut command_registrations = YarnCommandRegistrations::new();
-/// command_registrations.register_command("print_time", print_time);
+/// command_registrations.register_command("add_player", add_player);
 ///
 /// fn add_player(_: In<()>, time: Res<Time>) {
 ///    println!("Time since game start: {}", time.elapsed_seconds());

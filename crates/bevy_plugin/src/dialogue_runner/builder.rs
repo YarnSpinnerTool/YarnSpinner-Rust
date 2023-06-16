@@ -18,11 +18,8 @@ pub struct DialogueRunnerBuilder {
     library: YarnFnLibrary,
     commands: YarnCommandRegistrations,
     compilation: Compilation,
-    text_language: Option<Option<Language>>,
-    asset_language: Option<Option<Language>>,
     localizations: Option<Localizations>,
     asset_server: AssetServer,
-    run_selected_options_as_lines: bool,
 }
 
 impl Debug for DialogueRunnerBuilder {
@@ -34,14 +31,8 @@ impl Debug for DialogueRunnerBuilder {
             .field("library", &self.library)
             .field("commands", &self.commands)
             .field("compilation", &self.compilation)
-            .field("text_language", &self.text_language)
-            .field("asset_language", &self.asset_language)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
-            .field(
-                "run_selected_options_as_lines",
-                &self.run_selected_options_as_lines,
-            )
             .finish()
     }
 }
@@ -58,11 +49,8 @@ impl DialogueRunnerBuilder {
             library: create_extended_standard_library(),
             commands: YarnCommandRegistrations::builtin_commands(),
             compilation: yarn_project.compilation().clone(),
-            text_language: None,
-            asset_language: None,
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
-            run_selected_options_as_lines: false,
         }
     }
 
@@ -85,61 +73,6 @@ impl DialogueRunnerBuilder {
     pub fn add_asset_provider(mut self, provider: impl AssetProvider + 'static) -> Self {
         self.asset_providers
             .insert(provider.type_id(), Box::new(provider));
-        self
-    }
-
-    /// Sets the language used by both the text and asset providers.
-    /// If you want to set them separately, use [`DialogueRunnerBuilder::with_text_language`] and [`DialogueRunnerBuilder::with_asset_language`].
-    ///
-    /// If the [`YarnProject`] has [`Localizations`], this will be the language of the base localization by default.
-    /// Otherwise, this value must be left at `None`.
-    #[must_use]
-    pub fn set_language(self, language: impl Into<Option<Language>>) -> Self {
-        let language = language.into();
-        self.with_text_language(language.clone())
-            .with_asset_language(language)
-    }
-
-    /// Sets the language used by the text provider.
-    ///
-    /// If the [`YarnProject`] has [`Localizations`], this will be the language of the base localization by default.
-    /// Otherwise, this value must be left at `None`.
-    #[must_use]
-    pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
-        let language = language.into();
-        self.text_language.replace(language);
-        self
-    }
-
-    /// Sets the language used by the asset providers.
-    ///
-    /// If the [`YarnProject`] has localizations, this will be the language of the base localization by default.
-    /// Otherwise, this value must be left at `None`.
-    #[must_use]
-    pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
-        let language = language.into();
-        self.asset_language.replace(language);
-        self
-    }
-
-    /// If set, every line the user selects will emit a [`PresentLineEvent`](crate::events::PresentLineEvent). Defaults to `false`.
-    #[must_use]
-    pub fn with_run_selected_options_as_line(mut self, run_selected_option_as_line: bool) -> Self {
-        self.run_selected_options_as_lines = run_selected_option_as_line;
-        self
-    }
-
-    /// Extends the standard library with custom functions callable within Yarn files.
-    #[must_use]
-    pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
-        self.library.extend(library);
-        self
-    }
-
-    /// Extends the command registrations with custom commands callable within Yarn files.
-    #[must_use]
-    pub fn extend_command_registrations(mut self, commands: YarnCommandRegistrations) -> Self {
-        self.commands.extend(commands);
         self
     }
 
@@ -181,8 +114,8 @@ impl DialogueRunnerBuilder {
             dialogue,
             text_provider,
             popped_line_hints,
+            run_selected_options_as_lines: false,
             asset_providers: self.asset_providers,
-            run_selected_options_as_lines: self.run_selected_options_as_lines,
             commands: self.commands,
             is_running: default(),
             command_tasks: default(),
@@ -193,19 +126,8 @@ impl DialogueRunnerBuilder {
             localizations: self.localizations,
         };
 
-        let text_language = self
-            .text_language
-            .take()
-            .unwrap_or_else(|| base_language.clone());
-
-        if let Some(text_language) = text_language {
-            dialogue_runner.set_text_language(text_language);
-        }
-
-        let asset_language = self.asset_language.take().unwrap_or(base_language);
-
-        if let Some(asset_language) = asset_language {
-            dialogue_runner.set_asset_language(asset_language);
+        if let Some(base_language) = base_language {
+            dialogue_runner.set_language(base_language);
         }
 
         Ok(dialogue_runner)

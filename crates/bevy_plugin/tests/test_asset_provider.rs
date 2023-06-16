@@ -53,9 +53,10 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
-        .with_asset_language(Language::new("en-US"))
         .build();
-    dialogue_runner.start_node("Start");
+    dialogue_runner
+        .set_asset_language("en-US")
+        .start_node("Start");
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
@@ -115,9 +116,10 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
-        .with_asset_language(Language::new("de-CH"))
         .build();
-    dialogue_runner.start_node("Start");
+    dialogue_runner
+        .set_asset_language("de-CH")
+        .start_node("Start");
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
@@ -150,11 +152,10 @@ fn panics_on_invalid_language() {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
-        .with_asset_language(Language::new("fr-FR"))
         .build();
     dialogue_runner
-        .start_node("Start")
-        .continue_in_next_update();
+        .set_asset_language("fr-FR")
+        .start_node("Start");
     app.world.spawn(dialogue_runner);
     app.load_lines();
 }
@@ -176,10 +177,11 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut dialogue_runner = project
         .build_dialogue_runner()
         .add_asset_provider(AudioAssetProvider::new())
-        .with_asset_language(Language::new("en-US"))
         .build();
 
-    dialogue_runner.start_node("Start");
+    dialogue_runner
+        .set_asset_language("en-US")
+        .start_node("Start");
     app.world.spawn(dialogue_runner);
     app.load_lines();
 

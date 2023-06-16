@@ -159,6 +159,7 @@ impl DialogueRunner {
         self.dialogue
             .set_node(node_name)
             .map_err(|e| anyhow!("Can't start dialogue from node {node_name}: {e}"))?;
+        self.popped_line_hints = self.dialogue.pop_line_hints();
         self.continue_in_next_update();
         Ok(self)
     }

@@ -42,16 +42,19 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
     }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
+        if self.is_base_language() {
+            return self.base_string_table.get(id).map(|info| info.text.clone());
+        }
+
         self.translation_string_table
             .as_ref()
             .and_then(|table| table.get(id).cloned())
             .or_else(|| {
-                if let Some(language) = self.language.as_ref() {
-                    if self.translation_string_table.is_some() {
-                        warn!("Did not find translation for line {id} in language {language} because it is untranslated, falling back to base language.");
-                    } else {
-                        warn!("Did not find translation for line {id} in language {language} because the strings file has not been loaded yet, falling back to base language.");
-                    }
+                let language = self.language.as_ref().unwrap();
+                if self.translation_string_table.is_some() {
+                    warn!("Did not find translation for line {id} in language {language} because it is untranslated, falling back to base language.");
+                } else {
+                    warn!("Did not find translation for line {id} in language {language} because the strings file has not been loaded yet, falling back to base language.");
                 }
                 self.base_string_table.get(id).map(|info| info.text.clone())
             })
@@ -63,9 +66,10 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         }
 
         self.set_language_invalidating_translation(language.clone());
-        let Some(language) = language else {
+        if self.is_base_language() {
             return;
-        };
+        }
+        let language = language.unwrap();
 
         let Some(localizations) = self.localizations.as_ref() else {
             panic!("Set language to {language}, but no localizations have been registered as supported.");
@@ -96,7 +100,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
     }
 
     fn are_lines_available(&self) -> bool {
-        let is_base_language = self.language.is_none();
+        let is_base_language = self.is_base_language();
         let has_fetched_translation = || self.translation_string_table.is_some();
         is_base_language || has_fetched_translation()
     }
@@ -119,6 +123,15 @@ impl StringsFileTextProvider {
         self.translation_string_table = None;
         self.strings_file_handle = None;
     }
+
+    fn is_base_language(&self) -> bool {
+        self.language.is_none()
+            || self.language.as_ref()
+                == self
+                    .localizations
+                    .as_ref()
+                    .map(|localizations| &localizations.base_localization.language)
+    }
 }
 
 impl TextProvider for StringsFileTextProvider {
@@ -136,7 +149,9 @@ impl TextProvider for StringsFileTextProvider {
     }
 
     fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
-        self.language.as_ref()?;
+        if self.is_base_language() {
+            return None;
+        }
         let handle = self.strings_file_handle.as_ref()?;
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
             return None;

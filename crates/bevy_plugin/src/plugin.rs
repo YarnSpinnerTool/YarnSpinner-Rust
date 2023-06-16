@@ -52,8 +52,8 @@ impl YarnSlingerPlugin {
     /// ```rust
     /// use bevy_yarn_slinger::prelude::*;
     /// let plugin = YarnSlingerPlugin::with_yarn_sources([
-    ///    "some_dialogue.yarn",
-    ///    "some_other_dialogue.yarn",
+    ///    YarnFileSource::file("some_dialogue.yarn"),
+    ///    YarnFileSource::file("some_other_dialogue.yarn"),
     /// ]);
     /// ```
     #[must_use]

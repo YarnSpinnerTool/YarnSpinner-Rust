@@ -29,6 +29,23 @@ fn loads_yarn_assets() {
 }
 
 #[test]
+#[should_panic]
+fn panics_on_localization_without_line_ids_in_production() {
+    let mut app = App::new();
+
+    app.setup_default_plugins().add_plugin(
+        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines.yarn"))
+            .with_localizations(Localizations {
+                base_localization: "en-US".into(),
+                translations: vec!["de-CH".into()],
+            })
+            .with_file_generation_mode(FileGenerationMode::Production),
+    );
+
+    let _yarn_file = app.load_project();
+}
+
+#[test]
 fn generates_line_ids() -> anyhow::Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/lines.yarn");
@@ -43,7 +60,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_file_generation_mode(FileGenerationMode::Development),
     );
 
     let yarn_file = app.load_project().yarn_files().next().unwrap().clone();
@@ -130,6 +147,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
 
     let original_strings_path = project_root_path().join("assets/dialogue/de-CH.strings.csv");
     let strings_file_path = dir.path().join("dialogue/de-CH.strings.csv");
+    fs::create_dir_all(strings_file_path.parent().unwrap())?;
     fs::copy(&original_strings_path, &strings_file_path)?;
     let original_strings_file_source = fs::read_to_string(&strings_file_path)?;
     let original_strings_file_line_ids: Vec<_> = original_strings_file_source

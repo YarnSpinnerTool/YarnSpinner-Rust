@@ -21,12 +21,3 @@ inherits = "release"
 opt-level = "z"
 lto = "fat"
 codegen-units = 1
-
-# Source: https://bevyengine.org/learn/book/getting-started/setup/#compile-with-performance-optimizations
-## Enable a small amount of optimization in debug mode
-[profile.dev]
-opt-level = 1
-
-## Enable high optimizations for dependencies (incl. Bevy)
-[profile.dev.package."*"]
-opt-level = 3
