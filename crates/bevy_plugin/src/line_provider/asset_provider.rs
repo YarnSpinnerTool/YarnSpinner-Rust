@@ -25,17 +25,99 @@ pub(crate) fn asset_provider_plugin(app: &mut App) {
 /// You can also fetch assets in a similar way by using the [`FileExtensionAssetProvider`] struct.
 pub trait AssetProvider: Debug + Send + Sync {
     /// Returns the type as a [`dyn Any`]. Used for polymorphism. Should be implemented like this:
-    /// ```ignore
+    /// ```
+    /// # use std::any::Any;
+    /// # use bevy::asset::AssetServer;
+    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarn_slinger::UnderlyingYarnLine;
+    /// # #[derive(Debug)]
+    /// # struct Foo;
+    /// # impl AssetProvider for Foo {
     /// fn as_any(&self) -> &dyn Any {
     ///    self
     /// }
+    /// #
+    /// # fn as_any_mut(&mut self) -> &mut dyn Any {
+    /// #        todo!()
+    /// #    }
+    /// #
+    /// # fn get_language(&self) -> Option<Language> {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn set_language(&mut self, language: Option<Language>) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn set_localizations(&mut self, localizations: Localizations) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn set_asset_server(&mut self, asset_server: AssetServer) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn are_assets_available(&self) -> bool {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn accept_line_hints(&mut self, line_ids: &[LineId]) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    /// #          todo!()
+    /// #      }
+    /// # }
+    /// ```
     fn as_any(&self) -> &dyn Any;
 
     /// Returns the type as a mutable [`dyn Any`]. Used for polymorphism. Should be implemented like this:
-    /// ```ignore
+    /// ```
+    /// # use std::any::Any;
+    /// # use bevy::asset::AssetServer;
+    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarn_slinger::UnderlyingYarnLine;
+    /// # #[derive(Debug)]
+    /// # struct Foo;
+    /// # impl AssetProvider for Foo {
+    /// # fn as_any(&self) -> &dyn Any {
+    /// #    self
+    /// # }
+    /// #
     /// fn as_any_mut(&mut self) -> &mut dyn Any {
-    ///   self
+    ///     self
     /// }
+    /// #
+    /// # fn get_language(&self) -> Option<Language> {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn set_language(&mut self, language: Option<Language>) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn set_localizations(&mut self, localizations: Localizations) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn set_asset_server(&mut self, asset_server: AssetServer) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn are_assets_available(&self) -> bool {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn accept_line_hints(&mut self, line_ids: &[LineId]) {
+    /// #          todo!()
+    /// #      }
+    /// #
+    /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    /// #          todo!()
+    /// #      }
+    /// # }
+    /// ```
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
     /// Returns the [`Language`] that this [`AssetProvider`] is currently using. If there are no [`Localizations`] set, this returns [`None`].

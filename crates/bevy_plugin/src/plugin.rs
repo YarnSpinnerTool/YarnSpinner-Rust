@@ -15,7 +15,7 @@ mod yarn_file_source;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```no_run
 /// use bevy::prelude::*;
 /// use bevy_yarn_slinger::prelude::*;
 ///
