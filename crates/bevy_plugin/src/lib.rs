@@ -18,10 +18,10 @@
 //! that you can use to explore the features of Yarn Slinger and get started quickly.
 //!
 //! Specifically, a dialogue view is required to do the following things
-//! - Handle the [`PresentLineEvent`] and draw the line to the screen.
-//! - Handle the [`PresentOptionsEvent`] and draw the options to the screen.
-//! - Call [`DialogueRunner::continue_in_next_update`] when the user wishes to continue the dialogue.
-//! - Pass a user's option selection to the right dialogue runner via [`DialogueRunner::select_option`].
+//! - Handle the [`PresentLineEvent`](crate::events::PresentLineEvent) and draw the line to the screen.
+//! - Handle the [`PresentOptionsEvent`](crate::events::PresentOptionsEvent) and draw the options to the screen.
+//! - Call [`DialogueRunner::continue_in_next_update`](crate::prelude::DialogueRunner::continue_in_next_update) when the user wishes to continue the dialogue.
+//! - Pass a user's option selection to the right dialogue runner via [`DialogueRunner::select_option`](crate::prelude::DialogueRunner::select_option).
 //!
 //! See the documentation for the [`events`] module for additional optional events that may be handled
 //!
@@ -85,6 +85,10 @@
 //!     commands.spawn(dialogue_runner);
 //! }
 //! ```
+//!
+//! [`DialogueRunner`]: crate::prelude::DialogueRunner
+//! [`YarnProject`]: crate::prelude::YarnProject
+//! [`YarnSlingerPlugin`]: crate::prelude::YarnSlingerPlugin
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 #![warn(missing_docs, missing_debug_implementations)]

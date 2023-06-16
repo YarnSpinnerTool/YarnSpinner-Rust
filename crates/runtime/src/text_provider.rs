@@ -20,7 +20,7 @@ pub trait TextProvider: Debug + Send + Sync {
     fn set_language(&mut self, language: Option<Language>);
     /// Returns the current language. If `None` is returned, the base language is used.
     fn get_language(&self) -> Option<Language>;
-    /// Returns whether the text for all lines announced by [`AssetProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
+    /// Returns whether the text for all lines announced by [`TextProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
     fn are_lines_available(&self) -> bool;
 }
 

@@ -45,6 +45,6 @@ pub enum DialogueEvent {
     ///
     /// Corresponds to Yarn Spinner's `PrepareForLinesHandler`
     LineHints(Vec<LineId>),
-    /// The dialogue was completed. Set it to a new node via [`Dialogue::set_node`] or [`Dialogue::set_node_to_start`] before calling [`Dialogue::continue_`] again.
+    /// The dialogue was completed. Set it to a new node via [`Dialogue::set_node`] before calling [`Dialogue::continue_`] again.
     DialogueComplete,
 }

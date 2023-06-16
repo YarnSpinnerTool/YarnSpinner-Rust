@@ -76,7 +76,7 @@ impl DialogueRunnerBuilder {
         self
     }
 
-    /// Builds the [`DialogueRunner`]. See [`DialogueRunner::try_build`] for the fallible version.
+    /// Builds the [`DialogueRunner`]. See [`DialogueRunnerBuilder::try_build`] for the fallible version.
     pub fn build(self) -> DialogueRunner {
         self.try_build().unwrap_or_else(|error| {
             panic!("Failed to build DialogueRunner: {error}");

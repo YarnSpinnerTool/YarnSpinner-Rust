@@ -110,7 +110,6 @@ impl DialogueRunner {
     }
 
     /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
-    /// Calling this is the same as calling [`DialogueRunnerBuilder::with_run_selected_options_as_line`].
     pub fn run_selected_options_as_lines(
         &mut self,
         run_selected_options_as_lines: bool,

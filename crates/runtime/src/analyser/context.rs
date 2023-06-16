@@ -50,7 +50,7 @@ impl Context {
         self
     }
 
-    /// Collects the diagnoses from all analysers in the [`Context`] that were previously used with [`Context::diagnose_program`].
+    /// Collects the diagnoses from all analysers in the [`Context`] that were previously used with [`Dialogue::analyse`].
     #[must_use]
     pub fn finish_analysis(&self) -> Vec<Diagnosis> {
         self.0

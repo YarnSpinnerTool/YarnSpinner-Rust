@@ -51,12 +51,6 @@ impl<'a> InnerDialogueMut<'a> {
         Ok(self)
     }
 
-    /// Proxy for [`Dialogue::set_node_to_start`].
-    pub fn set_node_to_start(&mut self) -> Result<&mut Self> {
-        self.0.set_node("Start")?;
-        Ok(self)
-    }
-
     /// Proxy for [`Dialogue::analyse`].
     #[must_use]
     pub fn analyse(&self, context: &mut YarnAnalysisContext) -> &Self {

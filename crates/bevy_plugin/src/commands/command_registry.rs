@@ -14,7 +14,7 @@ pub(crate) fn command_registry_plugin(app: &mut App) {
 
 #[derive(Debug, PartialEq, Eq, Default)]
 /// A registry of commands that can be called from Yarn after they have been added via [`YarnCommands::add_command`].
-/// You can get access to an instance of this struct with [`DialogueRunner::command_registry`] and [`DialogueRunner::command_registry_mut`].
+/// You can get access to an instance of this struct with [`DialogueRunner::commands`] and [`DialogueRunner::commands_mut`].
 ///
 /// If a command "add_player" with the parameters "name" and "age" has been registered, it can be called from Yarn like this:
 /// ```yarn
