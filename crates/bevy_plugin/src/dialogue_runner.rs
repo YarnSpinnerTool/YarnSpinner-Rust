@@ -65,7 +65,7 @@ impl DialogueRunner {
     /// - All previously called [`YarnCommand`]s are finished, indicated by their return type's [`TaskFinishedIndicator::is_finished`] returning `true`.
     pub fn continue_in_next_update(&mut self) -> &mut Self {
         if !self.is_running {
-            panic!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start()` or `DialogueRunner::start_at_node(..)` before calling `DialogueRunner::continue_in_next_update()`.");
+            panic!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start_node()` before calling `DialogueRunner::continue_in_next_update()`.");
         }
         self.will_continue_in_next_update = true;
         self

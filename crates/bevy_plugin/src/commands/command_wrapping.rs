@@ -99,7 +99,7 @@ macro_rules! impl_command_function {
 // of `SystemParam` created.
 all_tuples!(impl_command_function, 0, 16, F);
 
-/// Trait implemented by the return types of methods registered in the [`YarnCommandRegistrations`](crate::prelude::YarnCommands).
+/// Trait implemented by the return types of methods registered in the [`YarnCommands`].
 pub trait TaskFinishedIndicator: Debug + Send + Sync + 'static {
     /// Returns `true` if the task is finished.
     fn is_finished(&self) -> bool;

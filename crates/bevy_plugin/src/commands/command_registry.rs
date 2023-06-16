@@ -139,7 +139,7 @@ impl YarnCommands {
 macro_rules! yarn_commands {
     ($($name:expr => $function:expr),* $(,)?) => {
         {
-            let mut map = YarnCommandRegistrations::default();
+            let mut map = YarnCommands::default();
             $(
                 map.register_command($name, $function);
             )*

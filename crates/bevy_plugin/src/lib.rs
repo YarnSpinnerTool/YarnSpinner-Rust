@@ -81,7 +81,7 @@
 //!     // Create a dialogue runner from the project
 //!     let mut dialogue_runner = project.create_dialogue_runner();
 //!     // Immediately show the dialogue to the player by starting at the "Start" node
-//!     dialogue_runner.start_at("Start");
+//!     dialogue_runner.start_node("Start");
 //!     commands.spawn(dialogue_runner);
 //! }
 //! ```
