@@ -38,8 +38,8 @@ pub struct DialogueOption {
 }
 
 /// The identifying number for an option. You should not need to create these yourself, since you get them from [`DialogueOption`]s.
-/// 
-/// Since the IDs are just zero-based indices, you can also derive them yourself. Note that the index numeration includes options which 
+///
+/// Since the IDs are just zero-based indices, you can also derive them yourself. Note that the index numeration includes options which
 /// have [`DialogueOption::is_available`] set to `false`, so the index of an option may not be as it appears in the list of options presented to the user.11
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
