@@ -114,7 +114,7 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
         .register_command("move_camera_to_clippy", move_camera_to_clippy)
         .register_command("show_bang", show_bang);
     // Immediately start showing the dialogue
-    dialogue_runner.start_node("Start").unwrap();
+    dialogue_runner.start_node("Start");
     commands.spawn(dialogue_runner);
 }
 

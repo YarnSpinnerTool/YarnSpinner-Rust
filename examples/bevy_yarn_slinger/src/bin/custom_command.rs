@@ -26,7 +26,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
         .command_registrations_mut()
         .register_command("insert_resource", insert_resource)
         .register_command("read_resource", read_resource);
-    dialogue_runner.start_node("CustomCommand").unwrap();
+    dialogue_runner.start_node("CustomCommand");
     commands.spawn(dialogue_runner);
 }
 

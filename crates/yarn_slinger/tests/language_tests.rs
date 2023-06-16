@@ -77,11 +77,9 @@ fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
     let result = Compiler::default().read_file(path).compile().unwrap();
 
-    let has_options = TestBase::default()
-        .with_compilation(result)
-        .dialogue
-        .with_node_at_start()
-        .unwrap()
+    let mut dialogue = TestBase::default().with_compilation(result).dialogue;
+    dialogue.set_node("Start").unwrap();
+    let has_options = dialogue
         .flatten()
         .any(|event| matches!(event, DialogueEvent::Options(_)));
     assert!(!has_options);

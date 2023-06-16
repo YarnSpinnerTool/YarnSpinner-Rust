@@ -141,7 +141,15 @@ impl DialogueRunner {
     /// Starts the dialogue at the given node.
     /// This method must be called after creation or after calling [`DialogueRunner::stop`] before the dialogue can be advanced. Implies [`DialogueRunner::continue_in_next_update`].
     /// If the dialogue was already running, this method will panic.
-    pub fn start_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
+    ///
+    /// See [`DialogueRunner::try_start_node`] for a fallible version of this method.
+    pub fn start_node(&mut self, node_name: impl AsRef<str>) -> &mut Self {
+        self.try_start_node(node_name)
+            .unwrap_or_else(|e| panic!("{e}"))
+    }
+
+    /// Fallible version of [`DialogueRunner::start_node`].
+    pub fn try_start_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
         let node_name = node_name.as_ref();
         if self.is_running {
             bail!("Can't start dialogue from node {node_name}: the dialogue is currently in the middle of running. Stop the dialogue first.");

@@ -60,18 +60,17 @@ impl Default for TestBase {
         let variable_store = MemoryVariableStore::new();
         let string_table = SharedTextProvider::new(StringTableTextProvider::new());
 
-        let dialogue = Dialogue::new(
+        let mut dialogue = Dialogue::new(
             Box::new(variable_store.clone()),
             Box::new(string_table.clone()),
-        )
-        .with_extended_library(Library::new().with_function(
-            "assert",
-            |value: YarnValue| {
+        );
+        dialogue
+            .library_mut()
+            .register_function("assert", |value: YarnValue| {
                 let is_truthy: bool = value.try_into().unwrap();
                 assert!(is_truthy);
                 true
-            },
-        ));
+            });
 
         Self {
             dialogue,

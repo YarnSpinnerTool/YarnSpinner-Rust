@@ -134,9 +134,12 @@ fn recompile_loaded_yarn_files(
         if let Some(current_node) = current_node {
             dialogue_runner
                 .stop()
-                .start_node(current_node)
-                .err()
-                .map(|_| dialogue_runner.dialogue.set_node("Start"));
+                .try_start_node(current_node)
+                .map(|_| ())
+                .ok()
+                .unwrap_or_else(|| {
+                    dialogue_runner.start_node("Start");
+                });
         }
     }
     events.clear();
