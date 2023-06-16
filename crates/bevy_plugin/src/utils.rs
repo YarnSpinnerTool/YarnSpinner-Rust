@@ -16,10 +16,10 @@ pub(crate) fn in_development(
     project_to_load: Option<Res<YarnProjectConfigToLoad>>,
 ) -> bool {
     if let Some(project) = project {
-        return project.file_generation_mode == FileGenerationMode::Development;
+        return project.development_file_generation == DevelopmentFileGeneration::Full;
     }
     if let Some(project_to_load) = project_to_load {
-        return project_to_load.file_generation_mode == FileGenerationMode::Development;
+        return project_to_load.development_file_generation == DevelopmentFileGeneration::Full;
     }
     false
 }

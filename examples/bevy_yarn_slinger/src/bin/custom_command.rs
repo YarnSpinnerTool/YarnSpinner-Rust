@@ -24,8 +24,8 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     // Add our custom commands to the dialogue runner
     dialogue_runner
         .command_registrations_mut()
-        .register_command("insert_resource", insert_resource)
-        .register_command("read_resource", read_resource);
+        .add_command("insert_resource", insert_resource)
+        .add_command("read_resource", read_resource);
     dialogue_runner.start_node("CustomCommand");
     commands.spawn(dialogue_runner);
 }

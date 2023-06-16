@@ -48,14 +48,20 @@ pub enum DialogueError {
 }
 
 impl Dialogue {
+    /// Creates a new [`Dialogue`] instance with the given [`VariableStorage`] and [`TextProvider`].
+    /// - The [`TextProvider`] is used to retrieve the text of lines and options.
+    /// - The [`VariableStorage`] is used to store and retrieve variables.
+    ///
+    /// If you don't need any fancy behavior, you can use [`StringTableTextProvider`] and [`MemoryVariableStore`].
     #[must_use]
     pub fn new(
         variable_storage: Box<dyn VariableStorage>,
         text_provider: Box<dyn TextProvider>,
     ) -> Self {
-        let library = Library::standard_library()
-            .with_function("visited", visited(variable_storage.clone()))
-            .with_function("visited_count", visited_count(variable_storage.clone()));
+        let mut library = Library::standard_library();
+        library
+            .add_function("visited", visited(variable_storage.clone()))
+            .add_function("visited_count", visited_count(variable_storage.clone()));
 
         let dialogue_text_processor = Box::new(DialogueTextProcessor::new());
         let line_parser = LineParser::new()

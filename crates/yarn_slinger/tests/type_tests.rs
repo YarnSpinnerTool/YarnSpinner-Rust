@@ -271,10 +271,10 @@ fn test_function_signatures() {
     test_base
         .dialogue
         .library_mut()
-        .register_function("func_void_bool", || true)
-        .register_function("func_int_bool", |_i: i32| true)
-        .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
+        .add_function("func_void_bool", || true)
+        .add_function("func_int_bool", |_i: i32| true)
+        .add_function("func_int_int_bool", |_i: i32, _j: i32| true)
+        .add_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for source in [
         "<<set $bool = func_void_bool()>>",
@@ -330,10 +330,10 @@ fn test_failing_function_signatures() {
     test_base
         .dialogue
         .library_mut()
-        .register_function("func_void_bool", || true)
-        .register_function("func_int_bool", |_i: i32| true)
-        .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
+        .add_function("func_void_bool", || true)
+        .add_function("func_int_bool", |_i: i32| true)
+        .add_function("func_int_int_bool", |_i: i32, _j: i32| true)
+        .add_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for (source, expected_exception_message) in [
         (
@@ -618,15 +618,15 @@ fn test_implicit_function_declarations() {
                 .expect_line("true")
                 .expect_line("true"),
         )
-        .extend_library(
-            Library::new()
-                .with_function("func_void_bool", || true)
-                .with_function("func_void_int", || 1)
-                .with_function("func_void_str", || "llo".to_owned())
-                .with_function("func_int_bool", |_i: i64| true)
-                .with_function("func_bool_bool", |_b: bool| true)
-                .with_function("func_str_bool", |_s: &str| true),
-        );
+        .extend_library(|library| {
+            library
+                .add_function("func_void_bool", || true)
+                .add_function("func_void_int", || 1)
+                .add_function("func_void_str", || "llo".to_owned())
+                .add_function("func_int_bool", |_i: i64| true)
+                .add_function("func_bool_bool", |_b: bool| true)
+                .add_function("func_str_bool", |_s: &str| true);
+        });
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared
@@ -657,11 +657,11 @@ fn test_nested_implicit_function_declarations() {
     ";
     let test_base = TestBase::new()
         .with_test_plan(TestPlan::new().expect_line("true"))
-        .extend_library(
-            Library::new()
-                .with_function("func_int_bool", |i: i64| i == 1)
-                .with_function("func_bool_bool", |b: bool| b),
-        );
+        .extend_library(|library| {
+            library
+                .add_function("func_int_bool", |i: i64| i == 1)
+                .add_function("func_bool_bool", |b: bool| b);
+        });
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared

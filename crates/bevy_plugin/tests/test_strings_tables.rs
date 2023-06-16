@@ -39,7 +39,7 @@ fn panics_on_localization_without_line_ids_in_production() {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     let _yarn_file = app.load_project();
@@ -60,7 +60,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Development),
+            .with_development_file_generation(DevelopmentFileGeneration::Full),
     );
 
     let yarn_file = app.load_project().yarn_files().next().unwrap().clone();
@@ -107,7 +107,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Development),
+            .with_development_file_generation(DevelopmentFileGeneration::Full),
     );
 
     app.load_project();
@@ -164,7 +164,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Development),
+            .with_development_file_generation(DevelopmentFileGeneration::Full),
     );
 
     app.load_project();
@@ -217,7 +217,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Development),
+            .with_development_file_generation(DevelopmentFileGeneration::Full),
     );
 
     app.load_project();
@@ -288,7 +288,7 @@ fn does_not_panic_on_missing_language_when_not_selected() {
                 base_localization: "en-US".into(),
                 translations: vec!["fr-FR".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     app.load_project();

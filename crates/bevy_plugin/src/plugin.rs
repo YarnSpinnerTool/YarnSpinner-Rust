@@ -35,12 +35,19 @@ pub struct YarnSlingerPlugin {
 pub struct YarnSlingerSystemSet;
 
 impl YarnSlingerPlugin {
+    /// Creates a new plugin that loads Yarn files from the folder "assets/dialogue".
+    ///
+    /// All yarn files will be shared across [`DialogueRunner`]s.
+    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
+    /// these yarn files will be recompiled if they change during runtime.
+    ///
+    /// Calling this is equivalent to calling [`YarnSlingerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new plugin that loads the given yarn files.
+    /// Creates a new plugin that loads Yarn files from the given sources.
     /// All yarn files will be shared across [`DialogueRunner`]s.
     /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
     /// these yarn files will be recompiled if they change during runtime.
@@ -67,6 +74,21 @@ impl YarnSlingerPlugin {
         }
     }
 
+    /// Creates a new plugin that loads Yarn files from the given source.
+    /// All yarn files will be shared across [`DialogueRunner`]s.
+    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
+    /// these yarn files will be recompiled if they change during runtime.
+    ///
+    /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.
+    ///
+    /// Calling this with [`YarnFileSource::folder`] and passing `"dialogue"` is equivalent to calling [`YarnSlingerPlugin::new`].
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use bevy_yarn_slinger::prelude::*;
+    /// let plugin = YarnSlingerPlugin::with_yarn_source(YarnFileSource::folder("yarn_files"));
+    /// ```
     #[must_use]
     pub fn with_yarn_source(yarn_file_source: impl Into<YarnFileSource>) -> Self {
         Self {
@@ -105,9 +127,16 @@ impl YarnSlingerPlugin {
         self
     }
 
+    /// Sets the development file generation mode, which determines how aggressively Yarn Slinger will generate files that aid in development.
+    /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
     #[must_use]
-    pub fn with_file_generation_mode(mut self, file_generation_mode: FileGenerationMode) -> Self {
-        self.project = self.project.with_file_generation_mode(file_generation_mode);
+    pub fn with_development_file_generation(
+        mut self,
+        development_file_generation: DevelopmentFileGeneration,
+    ) -> Self {
+        self.project = self
+            .project
+            .with_development_file_generation(development_file_generation);
         self
     }
 }
@@ -186,7 +215,7 @@ impl YarnApp for App {
             .fn_plugin(crate::line_provider::line_provider_plugin)
             .fn_plugin(crate::project::project_plugin)
             .fn_plugin(crate::commands::commands_plugin)
-            .fn_plugin(crate::file_generation_mode::file_generation_mode_plugin)
+            .fn_plugin(crate::development_file_generation::development_file_generation_plugin)
     }
 
     fn is_watching_for_changes(&self) -> bool {

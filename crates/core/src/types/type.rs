@@ -79,7 +79,7 @@ impl Type {
         self.properties().description
     }
 
-    pub fn methods(&self) -> YarnFnRegistry {
+    pub fn methods(&self) -> Library {
         self.properties().methods
     }
 
@@ -99,7 +99,7 @@ impl Type {
     /// Adapted from the `FindImplementingTypeForMethod`, but massively simplified because
     /// we removed type hierarchies.
     pub fn has_method(&self, name: &str) -> bool {
-        self.methods().contains_key(name)
+        self.methods().contains_function(name)
     }
 
     /// Does not check whether the method exists. Use [`Type::has_method`] for that.
@@ -132,7 +132,7 @@ pub struct TypeProperties {
     pub description: String,
 
     /// The collection of methods that are available on this type.
-    pub methods: YarnFnRegistry,
+    pub methods: Library,
 }
 
 impl TypeProperties {
@@ -149,8 +149,8 @@ impl TypeProperties {
         self
     }
 
-    pub(crate) fn with_methods(mut self, registry: YarnFnRegistry) -> Self {
-        self.methods = registry;
+    pub(crate) fn with_methods(mut self, methods: Library) -> Self {
+        self.methods = methods;
         self
     }
 }

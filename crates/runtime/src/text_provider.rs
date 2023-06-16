@@ -3,7 +3,6 @@ use crate::prelude::Language;
 use log::error;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use thiserror::Error;
 use yarn_slinger_core::prelude::*;
 
 /// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue). The default implementation is [`StringTableTextProvider`], which keeps the

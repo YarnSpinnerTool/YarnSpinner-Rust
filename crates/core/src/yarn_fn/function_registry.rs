@@ -10,7 +10,7 @@ use std::collections::HashMap;
 /// Necessary because of Rust's type system, as every function signature comes with a distinct type,
 /// so we cannot simply hold a collection of different functions without all this effort.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct YarnFnRegistry(pub(crate) InnerRegistry);
+pub(crate) struct YarnFnRegistry(pub(crate) InnerRegistry);
 
 type InnerRegistry = HashMap<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
 
@@ -30,13 +30,8 @@ impl IntoIterator for YarnFnRegistry {
 }
 
 impl YarnFnRegistry {
-    /// Creates a new empty registry.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Adds a new function to the registry. See [`YarnFn`]'s documentation for what kinds of functions are allowed.
-    pub fn register_function<Marker, F>(
+    pub(crate) fn register_function<Marker, F>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         function: F,
@@ -53,7 +48,7 @@ impl YarnFnRegistry {
     }
 
     /// Iterates over all functions in the registry.
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
@@ -69,45 +64,19 @@ impl YarnFnRegistry {
         self
     }
 
-    pub fn contains_key(&self, name: &str) -> bool {
+    /// Returns `true` if the registry contains a function with the given name.
+    pub(crate) fn contains_function(&self, name: &str) -> bool {
         self.get(name).is_some()
     }
 
-    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
+    pub(crate) fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
         self.0.get(name).map(|f| f.as_ref())
     }
 
-    pub fn names(&self) -> impl Iterator<Item = &str> {
+    pub(crate) fn names(&self) -> impl Iterator<Item = &str> {
         self.0.keys().map(|key| key.as_ref())
     }
-
-    pub fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
-        self.0.values().map(|value| value.as_ref())
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
 }
-
-/// Create a [`YarnFnRegistry`] from a list of named functions.
-#[macro_export]
-macro_rules! yarn_fn_registry {
-    ($($name:expr => $function:expr,)*) => {
-        {
-            let mut map = YarnFnRegistry::default();
-            $(
-                map.register_function($name, $function);
-            )*
-            map
-        }
-    };
-}
-pub use yarn_fn_registry;
 
 #[cfg(test)]
 mod tests {

@@ -106,13 +106,13 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
     let mut dialogue_runner = project.create_dialogue_runner();
     dialogue_runner
         .command_registrations_mut()
-        .register_command("change_sprite", change_sprite)
-        .register_command("fade_in", fade_in)
-        .register_command("fade_out", fade_out)
-        .register_command("quit", quit)
-        .register_command("rotate", rotate_character)
-        .register_command("move_camera_to_clippy", move_camera_to_clippy)
-        .register_command("show_bang", show_bang);
+        .add_command("change_sprite", change_sprite)
+        .add_command("fade_in", fade_in)
+        .add_command("fade_out", fade_out)
+        .add_command("quit", quit)
+        .add_command("rotate", rotate_character)
+        .add_command("move_camera_to_clippy", move_camera_to_clippy)
+        .add_command("show_bang", show_bang);
     // Immediately start showing the dialogue
     dialogue_runner.start_node("Start");
     commands.spawn(dialogue_runner);

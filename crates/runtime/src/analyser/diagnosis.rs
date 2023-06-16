@@ -6,6 +6,7 @@ use crate::prelude::*;
 use core::fmt::{Display, Formatter};
 use std::iter;
 
+/// A result of analysing a compiled Yarn program with [`Dialogue::analyse`]. Created by the [`CompiledProgramAnalyser`]s used in the given [`Context`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]

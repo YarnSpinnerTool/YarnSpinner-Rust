@@ -38,35 +38,35 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// }
     /// #
     /// # fn as_any_mut(&mut self) -> &mut dyn Any {
-    /// #        todo!()
+    /// #        unreachable!()
     /// #    }
     /// #
     /// # fn get_language(&self) -> Option<Language> {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn set_language(&mut self, language: Option<Language>) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn set_localizations(&mut self, localizations: Localizations) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn set_asset_server(&mut self, asset_server: AssetServer) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn are_assets_available(&self) -> bool {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn accept_line_hints(&mut self, line_ids: &[LineId]) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// # }
     /// ```
@@ -90,31 +90,31 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// }
     /// #
     /// # fn get_language(&self) -> Option<Language> {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn set_language(&mut self, language: Option<Language>) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn set_localizations(&mut self, localizations: Localizations) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn set_asset_server(&mut self, asset_server: AssetServer) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn are_assets_available(&self) -> bool {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn accept_line_hints(&mut self, line_ids: &[LineId]) {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// #
     /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
-    /// #          todo!()
+    /// #          unreachable!()
     /// #      }
     /// # }
     /// ```

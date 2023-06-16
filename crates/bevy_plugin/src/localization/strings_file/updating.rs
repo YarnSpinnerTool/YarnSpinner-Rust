@@ -94,7 +94,7 @@ fn update_all_strings_files_for_string_table(
             ) {
                 Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
-                    if project.file_generation_mode == FileGenerationMode::Development {
+                    if project.development_file_generation == DevelopmentFileGeneration::Full {
                         debug!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
                             strings_file_path.display())
                     } else {

@@ -264,7 +264,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
                     base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],
                 })
-                .with_file_generation_mode(FileGenerationMode::Production),
+                .with_development_file_generation(DevelopmentFileGeneration::None),
         )
         .load_project()
         .build_dialogue_runner();

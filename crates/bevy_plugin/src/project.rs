@@ -37,7 +37,7 @@ pub struct YarnProject {
     pub(crate) asset_server: AssetServer,
     pub(crate) metadata: HashMap<LineId, Vec<String>>,
     pub(crate) watching_for_changes: bool,
-    pub(crate) file_generation_mode: FileGenerationMode,
+    pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
 impl Debug for YarnProject {
@@ -111,7 +111,7 @@ impl YarnProject {
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,
-    pub(crate) file_generation_mode: FileGenerationMode,
+    pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
 impl Default for LoadYarnProjectEvent {
@@ -119,7 +119,7 @@ impl Default for LoadYarnProjectEvent {
         Self {
             localizations: None,
             yarn_files: HashSet::from([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
-            file_generation_mode: default(),
+            development_file_generation: default(),
         }
     }
 }
@@ -145,10 +145,11 @@ impl LoadYarnProjectEvent {
         Self {
             localizations: None,
             yarn_files,
-            file_generation_mode: default(),
+            development_file_generation: default(),
         }
     }
 
+    /// See [`YarnSlingerPlugin::with_yarn_source`].
     #[must_use]
     pub fn with_yarn_source(yarn_file_source: impl Into<YarnFileSource>) -> Self {
         Self::with_yarn_sources(iter::once(yarn_file_source))
@@ -180,12 +181,16 @@ impl LoadYarnProjectEvent {
         self
     }
 
+    /// See [`YarnSlingerPlugin::with_development_file_generation`].
     #[must_use]
-    pub fn with_file_generation_mode(mut self, file_generation_mode: FileGenerationMode) -> Self {
-        self.file_generation_mode = file_generation_mode;
+    pub fn with_development_file_generation(
+        mut self,
+        development_file_generation: DevelopmentFileGeneration,
+    ) -> Self {
+        self.development_file_generation = development_file_generation;
         if cfg!(any(target_arch = "wasm32", target_os = "android")) {
-            assert_ne!(self.file_generation_mode, FileGenerationMode::Development,
-               "Failed to build Yarn Slinger plugin: File generation mode \"Development\" is not supported on this target.");
+            assert_eq!(self.development_file_generation, DevelopmentFileGeneration::None,
+                       "Failed to build Yarn Slinger plugin: On `DevelopmentFileGeneration::None` is supported on this platform.");
         }
         self
     }

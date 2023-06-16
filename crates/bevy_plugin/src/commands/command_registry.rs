@@ -13,7 +13,7 @@ pub(crate) fn command_registry_plugin(app: &mut App) {
 }
 
 #[derive(Debug, PartialEq, Eq, Default)]
-/// A registry of commands that can be called from Yarn after they have been added via [`YarnCommandRegistrations::register_command`].
+/// A registry of commands that can be called from Yarn after they have been added via [`YarnCommandRegistrations::add_command`].
 /// You can get access to an instance of this struct with [`DialogueRunner::command_registry`] and [`DialogueRunner::command_registry_mut`].
 ///
 /// If a command "add_player" with the parameters "name" and "age" has been registered, it can be called from Yarn like this:
@@ -48,7 +48,7 @@ impl YarnCommandRegistrations {
     /// Adds a new method to the registry. Commands are valid Bevy systems with input and output.
     ///
     /// See the documentation of [`YarnCommand`] for more information about which methods are allowed.
-    pub fn register_command<Marker, F>(
+    pub fn add_command<Marker, F>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         command: F,
@@ -109,10 +109,10 @@ impl YarnCommandRegistrations {
     pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
         commands
-            .register_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
+            .add_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
                 wait.add(Duration::from_secs_f32(duration))
             })
-            .register_command("stop", |_: In<()>| {
+            .add_command("stop", |_: In<()>| {
                 unreachable!("The stop command is a compiler builtin and is thus not callable")
             });
         commands
@@ -161,13 +161,13 @@ mod tests {
     #[test]
     fn can_add_fn_with_empty_tuple_in_args() {
         let mut methods = YarnCommandRegistrations::default();
-        methods.register_command("test", |_: In<()>| {});
+        methods.add_command("test", |_: In<()>| {});
     }
 
     #[test]
     fn can_add_fn_with_one_in_arg() {
         let mut methods = YarnCommandRegistrations::default();
-        methods.register_command("test", |_: In<f32>| {});
+        methods.add_command("test", |_: In<f32>| {});
     }
 
     #[test]
@@ -175,7 +175,7 @@ mod tests {
     fn can_call_fn_with_no_args() {
         let mut methods = YarnCommandRegistrations::default();
 
-        methods.register_command("test", |_: In<()>| panic!("It works!"));
+        methods.add_command("test", |_: In<()>| panic!("It works!"));
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
         method.call(vec![], &mut app.world);
@@ -185,7 +185,7 @@ mod tests {
     fn can_call_fn_with_one_arg() {
         let mut methods = YarnCommandRegistrations::default();
 
-        methods.register_command("test", |In(a): In<f32>| assert_eq!(1.0, a));
+        methods.add_command("test", |In(a): In<f32>| assert_eq!(1.0, a));
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
         method.call(to_method_params([1.0]), &mut app.world);
@@ -195,15 +195,15 @@ mod tests {
     fn can_add_multiple_fns() {
         let mut methods = YarnCommandRegistrations::default();
 
-        methods.register_command("test1", |_: In<()>| {});
-        methods.register_command("test2", |_: In<f32>| {});
+        methods.add_command("test1", |_: In<()>| {});
+        methods.add_command("test2", |_: In<f32>| {});
     }
 
     #[test]
     fn can_call_multiple_fns() {
         let mut methods = YarnCommandRegistrations::default();
-        methods.register_command("test1", |_: In<()>| {});
-        methods.register_command("test2", |In(a): In<f32>| assert_eq!(1.0, a));
+        methods.add_command("test1", |_: In<()>| {});
+        methods.add_command("test2", |In(a): In<f32>| assert_eq!(1.0, a));
 
         let mut app = App::new();
         {
@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn can_mutate_world() {
         let mut methods = YarnCommandRegistrations::default();
-        methods.register_command("test", |In(a): In<f32>, mut commands: Commands| {
+        methods.add_command("test", |In(a): In<f32>, mut commands: Commands| {
             commands.insert_resource(Data(a))
         });
 
@@ -241,7 +241,7 @@ mod tests {
         AsyncComputeTaskPool::init(TaskPool::new);
 
         let mut methods = YarnCommandRegistrations::default();
-        methods.register_command("test", |_: In<()>| -> Task<()> {
+        methods.add_command("test", |_: In<()>| -> Task<()> {
             let thread_pool = AsyncComputeTaskPool::get();
             thread_pool.spawn(async move { sleep(Duration::from_millis(500)) })
         });
@@ -258,7 +258,7 @@ mod tests {
     fn debug_prints_signature() {
         let mut methods = YarnCommandRegistrations::default();
 
-        methods.register_command("test", |_: In<(f32, f32)>| {});
+        methods.add_command("test", |_: In<(f32, f32)>| {});
         let debug_string = format!("{:?}", methods);
 
         let element_start = debug_string.find('{').unwrap();

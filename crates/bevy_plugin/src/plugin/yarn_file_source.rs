@@ -9,10 +9,10 @@ pub enum YarnFileSource {
     Handle(Handle<YarnFile>),
     /// A [`YarnFile`] that is already present in memory, created with [`YarnFile::new`].
     InMemory(YarnFile),
-    /// A [`YarnFile`] that is present on the filesystem, addressed by its path. This will be loaded into an [`AssetServer`].
+    /// A [`YarnFile`] inside the `assets` folder. This will be loaded into the [`AssetServer`].
     /// Use [`YarnFileSource::file`] for convenience.
     File(PathBuf),
-    /// A folder which is searched for [`YarnFile`]s recursively, loading all files with the `.yarn` extension into the [`AssetServer`].
+    /// A folder inside the `assets` folder which is searched for [`YarnFile`]s recursively, loading all files with the `.yarn` extension into the [`AssetServer`].
     /// Use [`YarnFileSource::folder`] for convenience.
     Folder(PathBuf),
 }

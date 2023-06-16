@@ -5,7 +5,6 @@
 
 use test_base::prelude::*;
 use yarn_slinger::compiler::*;
-use yarn_slinger::core::*;
 use yarn_slinger::runtime::*;
 
 mod test_base;
@@ -199,14 +198,14 @@ fn test_line_hints() {
 
 #[test]
 fn test_function_argument_type_inference() {
-    let test_base = TestBase::new().extend_library(
-        Library::new()
-            // Register some functions
-            .with_function("ConcatString", |a: &str, b: &str| format!("{a}{b}"))
-            .with_function("AddInt", |a: i32, b: i32| a + b)
-            .with_function("AddFloat", |a: f32, b: f32| a + b)
-            .with_function("NegateBool", |a: bool| !a),
-    );
+    let test_base = TestBase::new().extend_library(|library| {
+        // Register some functions
+        library
+            .add_function("ConcatString", |a: &str, b: &str| format!("{a}{b}"))
+            .add_function("AddInt", |a: i32, b: i32| a + b)
+            .add_function("AddFloat", |a: f32, b: f32| a + b)
+            .add_function("NegateBool", |a: bool| !a);
+    });
 
     // Run some code to exercise these functions
     let source = "\

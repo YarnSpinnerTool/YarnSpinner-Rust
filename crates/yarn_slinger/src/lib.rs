@@ -14,7 +14,7 @@ pub mod prelude {
         LineInfo, Result as YarnCompilerResult, StringInfo,
     };
     pub use crate::core::{
-        yarn_fn_registry, IntoYarnValueFromNonYarnValue, Library as YarnFnLibrary, LineId,
+        yarn_library, IntoYarnValueFromNonYarnValue, Library as YarnFnLibrary, LineId,
         Program as YarnProgram, YarnFn, YarnValue,
     };
     pub use crate::runtime::{
@@ -28,7 +28,7 @@ pub mod prelude {
 pub mod core {
     //! Core types and traits that are used by both the compiler and runtime.
     pub use yarn_slinger_core::prelude::{
-        yarn_fn_registry, yarn_fn_type, Header, Instruction, IntoYarnValueFromNonYarnValue,
+        yarn_fn_type, yarn_library, Header, Instruction, IntoYarnValueFromNonYarnValue,
         InvalidOpCodeError, Library, LineId, Node, Position, Program, Type, UntypedYarnFn, YarnFn,
         YarnFnParam, YarnFnParamItem, YarnValue, YarnValueCastError, YarnValueWrapper,
         YarnValueWrapperIter,

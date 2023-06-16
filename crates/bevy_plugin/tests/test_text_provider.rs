@@ -47,7 +47,7 @@ fn loads_line_from_base_language_without_explicit_language() {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     app.load_lines();
@@ -70,7 +70,7 @@ fn loads_line_from_base_language_with_explicit_language() {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     app.dialogue_runner_mut().set_text_language("en-US");
@@ -96,7 +96,7 @@ fn panics_when_loading_missing_language() {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     app.dialogue_runner_mut().set_text_language("fr-FR");
@@ -114,7 +114,7 @@ fn loads_line_from_fallback_on_missing_line() {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     app.dialogue_runner_mut().set_text_language("de-CH");
@@ -139,7 +139,7 @@ fn loads_line_from_translated_language() {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             })
-            .with_file_generation_mode(FileGenerationMode::Production),
+            .with_development_file_generation(DevelopmentFileGeneration::None),
     );
 
     app.dialogue_runner_mut().set_text_language("de-CH");

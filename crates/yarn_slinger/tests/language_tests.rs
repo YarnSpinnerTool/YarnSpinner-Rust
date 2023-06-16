@@ -171,9 +171,9 @@ fn test_sources() {
         let path = test_data_path().join(&file);
         let test_plan = path.with_extension("testplan");
 
-        let test_base = TestBase::default().extend_library(
-            Library::new().with_function("add_three_operands", |a: i32, b: i32, c: i32| a + b + c),
-        );
+        let test_base = TestBase::default().extend_library(|library| {
+            library.add_function("add_three_operands", |a: i32, b: i32, c: i32| a + b + c);
+        });
         let result = Compiler::default()
             .read_file(&path)
             .extend_library(test_base.dialogue.library().clone())
@@ -193,12 +193,12 @@ fn test_sources() {
             let mut test_base = test_base
                 .read_test_plan(test_plan)
                 .with_compilation(compilation)
-                .extend_library(
-                    Library::new()
-                        .with_function("dummy_bool", || true)
-                        .with_function("dummy_number", || 1)
-                        .with_function("dummy_string", || "string".to_owned()),
-                );
+                .extend_library(|library| {
+                    library
+                        .add_function("dummy_bool", || true)
+                        .add_function("dummy_number", || 1)
+                        .add_function("dummy_string", || "string".to_owned());
+                });
 
             // If this file contains a Start node, run the test case
             // (otherwise, we're just testing its parseability, which

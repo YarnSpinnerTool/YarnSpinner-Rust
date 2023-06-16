@@ -66,7 +66,7 @@ impl Default for TestBase {
         );
         dialogue
             .library_mut()
-            .register_function("assert", |value: YarnValue| {
+            .add_function("assert", |value: YarnValue| {
                 let is_truthy: bool = value.try_into().unwrap();
                 assert!(is_truthy);
                 true
@@ -83,42 +83,51 @@ impl Default for TestBase {
 }
 
 impl TestBase {
+    #[must_use]
     pub fn new() -> Self {
         Default::default()
     }
 
     /// Sets the current test plan to one loaded from a given path.
+    #[must_use]
     pub fn read_test_plan(self, path: impl AsRef<Path>) -> Self {
         self.with_test_plan(TestPlan::read(path))
     }
 
+    #[must_use]
     pub fn with_test_plan(mut self, test_plan: TestPlan) -> Self {
         self.test_plan.replace(test_plan);
         self
     }
 
+    #[must_use]
     pub fn with_runtime_errors_do_not_cause_failure(self) -> Self {
         self.runtime_errors_cause_failure
             .store(false, Ordering::Relaxed);
         self
     }
 
+    #[must_use]
     pub fn with_compilation(self, compilation: Compilation) -> Self {
         let string_table = compilation.string_table;
         self.with_program(compilation.program.unwrap())
             .with_string_table(string_table)
     }
 
-    pub fn extend_library(mut self, library: Library) -> Self {
-        self.dialogue.library_mut().extend(library.into_iter());
+    #[must_use]
+    pub fn extend_library(mut self, extend_fn: impl Fn(&mut Library)) -> Self {
+        let mut library = self.dialogue.library_mut();
+        extend_fn(&mut library);
         self
     }
 
+    #[must_use]
     pub fn with_program(mut self, program: Program) -> Self {
         self.dialogue.add_program(program);
         self
     }
 
+    #[must_use]
     pub fn with_string_table(mut self, string_table: HashMap<LineId, StringInfo>) -> Self {
         let string_table: HashMap<_, _> = string_table
             .into_iter()

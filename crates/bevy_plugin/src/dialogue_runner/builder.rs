@@ -77,7 +77,7 @@ impl DialogueRunnerBuilder {
     }
 
     /// Builds the [`DialogueRunner`]. See [`DialogueRunner::try_build`] for the fallible version.
-    pub fn build(mut self) -> DialogueRunner {
+    pub fn build(self) -> DialogueRunner {
         self.try_build().unwrap_or_else(|error| {
             panic!("Failed to build DialogueRunner: {error}");
         })
@@ -135,9 +135,10 @@ impl DialogueRunnerBuilder {
 }
 
 fn create_extended_standard_library() -> YarnFnLibrary {
-    YarnFnLibrary::standard_library()
-        .with_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
-        .with_function("random_range", |min: f32, max: f32| {
+    let mut library = YarnFnLibrary::standard_library();
+    library
+        .add_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
+        .add_function("random_range", |min: f32, max: f32| {
             if let Some(min) = min.as_int() {
                 if let Some(max_inclusive) = max.as_int() {
                     return SmallRng::from_entropy().gen_range(min..=max_inclusive) as f32;
@@ -145,34 +146,35 @@ fn create_extended_standard_library() -> YarnFnLibrary {
             }
             SmallRng::from_entropy().gen_range(min..max)
         })
-        .with_function("dice", |sides: u32| {
+        .add_function("dice", |sides: u32| {
             if sides == 0 {
                 return 1;
             }
             SmallRng::from_entropy().gen_range(1..=sides)
         })
-        .with_function("round", |num: f32| num.round() as i32)
-        .with_function("round_places", |num: f32, places: u32| {
+        .add_function("round", |num: f32| num.round() as i32)
+        .add_function("round_places", |num: f32, places: u32| {
             num.round_places(places)
         })
-        .with_function("floor", |num: f32| num.floor() as i32)
-        .with_function("ceil", |num: f32| num.ceil() as i32)
-        .with_function("inc", |num: f32| {
+        .add_function("floor", |num: f32| num.floor() as i32)
+        .add_function("ceil", |num: f32| num.ceil() as i32)
+        .add_function("inc", |num: f32| {
             if let Some(num) = num.as_int() {
                 num + 1
             } else {
                 num.ceil() as i32
             }
         })
-        .with_function("dec", |num: f32| {
+        .add_function("dec", |num: f32| {
             if let Some(num) = num.as_int() {
                 num - 1
             } else {
                 num.floor() as i32
             }
         })
-        .with_function("decimal", |num: f32| num.fract())
-        .with_function("int", |num: f32| num.trunc() as i32)
+        .add_function("decimal", |num: f32| num.fract())
+        .add_function("int", |num: f32| num.trunc() as i32);
+    library
 }
 
 trait FloatExt: Copy {

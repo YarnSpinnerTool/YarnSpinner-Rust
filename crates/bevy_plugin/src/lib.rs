@@ -88,9 +88,10 @@
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 #![warn(missing_docs, missing_debug_implementations)]
+
 mod commands;
+mod development_file_generation;
 mod dialogue_runner;
-mod file_generation_mode;
 mod line_provider;
 mod localization;
 mod plugin;
@@ -125,8 +126,8 @@ pub mod prelude {
     pub use crate::{
         commands::{YarnCommand, YarnCommandRegistrations},
         default_impl::FileExtensionAssetProvider,
+        development_file_generation::DevelopmentFileGeneration,
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
-        file_generation_mode::FileGenerationMode,
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{Localization, Localizations},
         plugin::{YarnFileSource, YarnSlingerPlugin, YarnSlingerSystemSet},

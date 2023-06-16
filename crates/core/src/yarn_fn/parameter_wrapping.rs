@@ -18,6 +18,7 @@ pub struct YarnValueWrapper {
     converted: Option<Box<dyn Any>>,
 }
 
+#[doc(hidden)]
 pub type YarnValueWrapperIter<'a> = IterMut<'a, YarnValueWrapper>;
 
 impl From<YarnValue> for YarnValueWrapper {
@@ -50,11 +51,15 @@ impl YarnValueWrapper {
 /// - [`YarnValue`], which means that a parameter may be any of the above types
 /// - Tuples of the above types.
 pub trait YarnFnParam {
+    /// The item type returned when constructing this [`YarnFn`] param. The value of this associated type should be `Self`, instantiated with a new lifetime.
+    /// You could think of `YarnFnParam::Item<'new>` as being an operation that changes the lifetime bound to `Self`.
     type Item<'new>: YarnFnParam;
 
+    #[doc(hidden)]
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
 }
 
+/// Shorthand way of accessing the associated type [`YarnFnParam::Item`] for a given [`YarnFnParam`].
 pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
 
 macro_rules! impl_yarn_fn_param_tuple {

@@ -33,10 +33,13 @@ use yarn_slinger_macros::all_tuples;
 /// Narrator: {give_summary($name, $age, $is_cool)}
 /// ```
 pub trait YarnFn<Marker>: Clone + Send + Sync {
+    /// The type of the value returned by this function. See [`YarnFn`] for more information about what is allowed.
     type Out: IntoYarnValueFromNonYarnValue + 'static;
-    /// The `Option`s are guaranteed to be `Some` and are just typed like this to be able to `std::mem::take` them.
+    #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>) -> Self::Out;
+    /// The [`TypeId`]s of the parameters of this function.
     fn parameter_types(&self) -> Vec<TypeId>;
+    /// The [`TypeId`] of the return type of this function.
     fn return_type(&self) -> TypeId {
         TypeId::of::<Self::Out>()
     }
@@ -45,9 +48,13 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
+    #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
+    #[doc(hidden)]
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
+    /// The [`TypeId`]s of the parameters of this function.
     fn parameter_types(&self) -> Vec<TypeId>;
+    /// The [`TypeId`] of the return type of this function.
     fn return_type(&self) -> TypeId;
 }
 
@@ -65,7 +72,7 @@ where
 {
     fn call(&self, input: Vec<YarnValue>) -> YarnValue {
         let output = self.function.call(input);
-        output.into_untyped_value()
+        output.into_yarn_value()
     }
 
     fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
@@ -151,7 +158,7 @@ impl Eq for Box<dyn UntypedYarnFn> {}
 /// A macro for using [`YarnFn`] as a return type or parameter type without needing
 /// to know the implementation details of the [`YarnFn`] trait.
 ///
-/// This is useful when registering functions in a [`Library`] with [`Library::register_function`].
+/// This is useful when registering functions in a [`Library`] with [`Library::add_function`].
 #[macro_export]
 macro_rules! yarn_fn_type {
     (impl Fn($($param:ty),+) -> $ret:ty) => {

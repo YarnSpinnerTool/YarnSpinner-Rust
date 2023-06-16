@@ -31,13 +31,18 @@ pub enum YarnValue {
     Boolean(bool),
 }
 
+/// The return value of a [`YarnFn`]. See [`YarnFn`] for more information on the kinds of signatures that can be registered.
+///
 /// Needed to ensure that the return type of a registered function is
 /// able to be turned into a [`YarnValue`], but not a [`YarnValue`] itself.
 pub trait IntoYarnValueFromNonYarnValue {
-    fn into_untyped_value(self) -> YarnValue;
+    #[doc(hidden)]
+    fn into_yarn_value(self) -> YarnValue;
 }
 
 impl YarnValue {
+    /// Checks if two [`YarnValue`]s are equal, with a given epsilon for two [`YarnValue::Number`]s.
+    /// Note that all equality operations are type-safe, i.e. comparing a [`YarnValue::Number`] to a [`YarnValue::String`] will always return `false`.
     pub fn eq(&self, other: &Self, epsilon: f32) -> bool {
         match (self, other) {
             (Self::Number(a), Self::Number(b)) => (a - b).abs() < epsilon,
@@ -87,7 +92,7 @@ macro_rules! impl_floating_point {
 
 
             impl IntoYarnValueFromNonYarnValue for $from_type {
-                fn into_untyped_value(self) -> YarnValue {
+                fn into_yarn_value(self) -> YarnValue {
                     self.into()
                 }
             }
@@ -123,7 +128,7 @@ macro_rules! impl_whole_number {
             }
 
             impl IntoYarnValueFromNonYarnValue for $from_type {
-                fn into_untyped_value(self) -> YarnValue {
+                fn into_yarn_value(self) -> YarnValue {
                     self.into()
                 }
             }
@@ -162,7 +167,7 @@ impl From<&str> for YarnValue {
 }
 
 impl IntoYarnValueFromNonYarnValue for String {
-    fn into_untyped_value(self) -> YarnValue {
+    fn into_yarn_value(self) -> YarnValue {
         self.into()
     }
 }
@@ -194,13 +199,14 @@ impl From<bool> for YarnValue {
 }
 
 impl IntoYarnValueFromNonYarnValue for bool {
-    fn into_untyped_value(self) -> YarnValue {
+    fn into_yarn_value(self) -> YarnValue {
         self.into()
     }
 }
 
-#[derive(Error, Debug)]
 /// Represents a failure to convert one variant of [`YarnValue`] to a base type.
+#[derive(Error, Debug)]
+#[allow(missing_docs)]
 pub enum YarnValueCastError {
     #[error(transparent)]
     ParseFloatError(#[from] std::num::ParseFloatError),

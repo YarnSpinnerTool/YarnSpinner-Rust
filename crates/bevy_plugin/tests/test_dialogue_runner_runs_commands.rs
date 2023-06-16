@@ -121,17 +121,15 @@ impl CommandAppExt for App {
                 "commands.yarn",
             )))
             .dialogue_runner_mut();
-        dialogue_runner
-            .command_registrations_mut()
-            .register_command(
-                "set_data",
-                |In(param): In<String>, mut commands: Commands| {
-                    commands.insert_resource(Data(param));
-                },
-            );
+        dialogue_runner.command_registrations_mut().add_command(
+            "set_data",
+            |In(param): In<String>, mut commands: Commands| {
+                commands.insert_resource(Data(param));
+            },
+        );
         dialogue_runner
             .library_mut()
-            .register_function("triplicate_data", |data: &str| {
+            .add_function("triplicate_data", |data: &str| {
                 format!("{data}{data}{data}", data = data)
             });
         dialogue_runner

@@ -11,7 +11,7 @@ use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 
-/// A method that can be registered as a command for Yarn files via [`YarnCommandRegistrations::register_command`].
+/// A method that can be registered as a command for Yarn files via [`YarnCommandRegistrations::add_command`].
 ///
 /// The signature of the method must adhere to the following rules:
 /// - The first parameter must be of the type `In<T>`, where `T` can be converted into a [`YarnFnParam`]. This stands for the parameters passed to the command from Yarn.
@@ -21,7 +21,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// # use bevy_yarn_slinger::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut command_registrations = YarnCommandRegistrations::new();
-/// command_registrations.register_command("add_player", add_player);
+/// command_registrations.add_command("add_player", add_player);
 ///
 /// fn add_player(In((name, age)): In<(String, f32)>) {
 ///     println!("Adding player {name} with age {age}");
@@ -32,7 +32,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// # use bevy_yarn_slinger::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut command_registrations = YarnCommandRegistrations::new();
-/// command_registrations.register_command("add_player", add_player);
+/// command_registrations.add_command("add_player", add_player);
 ///
 /// fn add_player(_: In<()>, time: Res<Time>) {
 ///    println!("Time since game start: {}", time.elapsed_seconds());

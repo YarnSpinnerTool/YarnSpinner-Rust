@@ -181,7 +181,7 @@ impl OptionTestAppExt for App {
                     base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],
                 })
-                .with_file_generation_mode(FileGenerationMode::Development),
+                .with_development_file_generation(DevelopmentFileGeneration::Full),
         )
         .dialogue_runner_mut()
     }
