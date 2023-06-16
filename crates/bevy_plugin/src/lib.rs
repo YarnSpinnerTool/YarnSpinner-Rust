@@ -80,8 +80,8 @@
 //! fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 //!     // Create a dialogue runner from the project
 //!     let mut dialogue_runner = project.create_dialogue_runner();
-//!     // Immediately start showing the dialogue to the player
-//!     dialogue_runner.start();
+//!     // Immediately show the dialogue to the player by starting at the "Start" node
+//!     dialogue_runner.start_at("Start");
 //!     commands.spawn(dialogue_runner);
 //! }
 //! ```
