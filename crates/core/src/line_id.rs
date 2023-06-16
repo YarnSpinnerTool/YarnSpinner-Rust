@@ -2,6 +2,11 @@
 use crate::prelude::*;
 use std::fmt::Display;
 
+/// The unique ID of a line in a Yarn script. In a Yarn script, line IDs look like this:
+/// ```yarn
+/// Darth Vader: I am your father! #line:123
+/// Luke: Noooooo #line:nooooo
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

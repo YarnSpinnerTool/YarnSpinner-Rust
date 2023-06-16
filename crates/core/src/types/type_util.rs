@@ -2,6 +2,7 @@
 
 use crate::types::Type;
 
+/// A trait for checking if a (maybe [`Option`] of) [`Type`] is a subtype of a (maybe [`Option`] of) [`Type`].
 pub trait SubTypeOf<T: ?Sized = Self> {
     /// Checks to see if `self` is equal to `parent`,
     /// or if `parent` exists in `self`'s type hierarchy.

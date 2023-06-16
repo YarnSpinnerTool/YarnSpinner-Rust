@@ -33,10 +33,15 @@ use thiserror::Error;
 )]
 pub enum Type {
     #[default]
+    /// The type representing any value
     Any,
+    /// The type representing booleans
     Boolean,
+    /// The type representing functions
     Function(FunctionType),
+    /// The type representing numbers
     Number,
+    /// The type representing strings
     String,
 }
 
@@ -50,7 +55,9 @@ impl Display for Type {
     }
 }
 
+/// A trait that provides a way to format both [`Type`] and `Option<Type>` as a string.
 pub trait TypeFormat {
+    /// Formats this type as a string.
     fn format(&self) -> String;
 }
 
@@ -71,14 +78,17 @@ impl TypeFormat for Type {
 }
 
 impl Type {
+    /// Returns the name of this type.
     pub fn name(&self) -> &'static str {
         self.properties().name
     }
 
+    /// Returns a more verbose description of this type.
     pub fn description(&self) -> String {
         self.properties().description
     }
 
+    /// Returns the methods of this that can be called from Yarn scripts.
     pub fn methods(&self) -> Library {
         self.properties().methods
     }
@@ -124,7 +134,7 @@ impl Type {
 /// - Represents the `IType` interface in the original implementation.
 /// - `Parent` is not implemented because it is set to `AnyType` everywhere anyways.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeProperties {
+pub(crate) struct TypeProperties {
     /// The name of this type.
     pub name: &'static str,
 
@@ -266,6 +276,7 @@ impl From<&YarnValue> for Type {
 
 #[derive(Error, Debug)]
 /// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
+#[allow(missing_docs)]
 pub enum InvalidDowncastError {
     #[error("Cannot convert TypeId {:?} to a Yarn Slinger `Type`", .0)]
     InvalidTypeId(TypeId),
