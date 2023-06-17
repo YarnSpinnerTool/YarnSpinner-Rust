@@ -106,6 +106,8 @@ impl YarnCommands {
     }
 
     /// Constructs an instance of [`YarnCommands`] with the builtin commands `wait` and `stop`.
+    /// - `stop`: Stops the execution of the dialogue.
+    /// - `wait`: Waits for the given amount of seconds before continuing the dialogue. Note that this does not block and that Bevy will continue updating as normal in the meantime.
     pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
         commands

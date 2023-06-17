@@ -125,10 +125,20 @@ impl Default for LoadYarnProjectEvent {
 }
 
 impl LoadYarnProjectEvent {
-    /// See [`YarnSlingerPlugin::new`].
+    /// See [`YarnSlingerPlugin::new`]. Shares the same limitations regarding platform support.
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        {
+            Self::default()
+        }
+        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+        {
+            panic!(
+                "LoadYarnProjectEvent::new() is not supported on this platform because it tries to load files from the \"dialogue\" directory in the assets folder. \
+                However, this platform does not allow loading a file without naming it explicitly. \
+                Use `LoadYarnProjectEvent::with_yarn_source` or `LoadYarnProjectEvent::with_yarn_sources` instead.")
+        }
     }
 
     /// See [`YarnSlingerPlugin::with_yarn_sources`].

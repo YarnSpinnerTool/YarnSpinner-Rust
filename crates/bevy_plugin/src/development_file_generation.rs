@@ -18,7 +18,7 @@ pub enum DevelopmentFileGeneration {
     /// - Marks lines in strings files that have been changed since they were translated by appending "NEEDS UPDATE" to the respective line texts.
     ///
     /// It is recommended to combine this setting with Bevy's [hot reload functionality](https://bevy-cheatbook.github.io/assets/hot-reload.html).
-    /// Note that because of the extensive use of the filesystem, this setting is not available on Wasm.
+    /// Note that because of the extensive use of the filesystem, this setting is not available on Wasm or Android.
     Full,
     /// The recommended setting for shipping the game:
     /// - Does not change any Yarn or strings files on disk.
@@ -35,7 +35,7 @@ impl DevelopmentFileGeneration {
         }
         #[cfg(any(target_arch = "wasm32", target_os = "android"))]
         {
-            Self::Production
+            Self::None
         }
     };
 }
@@ -48,7 +48,7 @@ impl Default for DevelopmentFileGeneration {
         }
         #[cfg(not(debug_assertions))]
         {
-            Self::Production
+            Self::None
         }
     }
 }

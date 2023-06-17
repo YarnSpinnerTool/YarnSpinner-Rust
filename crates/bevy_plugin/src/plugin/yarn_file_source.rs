@@ -14,6 +14,8 @@ pub enum YarnFileSource {
     File(PathBuf),
     /// A folder inside the `assets` folder which is searched for [`YarnFile`]s recursively, loading all files with the `.yarn` extension into the [`AssetServer`].
     /// Use [`YarnFileSource::folder`] for convenience.
+    ///
+    /// Not supported on Wasm and Android because Bevy cannot load folders on these platforms.
     Folder(PathBuf),
 }
 
@@ -36,8 +38,17 @@ impl YarnFileSource {
     }
 
     /// Convenience function to create a [`YarnFileSource::folder`] from a path.
+    /// Panics on Wasm and Android because Bevy cannot load folders on these platforms.
     pub fn folder(path: impl Into<PathBuf>) -> Self {
-        Self::Folder(path.into())
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        {
+            Self::Folder(path.into())
+        }
+        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+        {
+            let _ = path;
+            panic!("YarnFileSource::folder is not supported on this platform. Help: Use YarnFileSource::file instead and specify all Yarn files you want to load.")
+        }
     }
 
     pub(crate) fn load(
@@ -50,31 +61,44 @@ impl YarnFileSource {
             Self::InMemory(yarn_file) => vec![assets.add(yarn_file.clone())],
             Self::File(path) => vec![asset_server.load(path.as_path())],
             Self::Folder(path) => {
-                let handles: Vec<_> = asset_server
-                    .load_folder(path.as_path())
-                    .unwrap_or_else(|e| {
-                        panic!(
-                            "Failed to load Yarn file folder {path}: {e}",
-                            path = path.display()
-                        )
-                    })
-                    .into_iter()
-                    .filter_map(|handle| {
-                        (asset_server
-                            .get_handle_path(&handle)?
-                            .path()
-                            .extension()?
-                            .to_str()?
-                            == "yarn")
-                            .then(|| handle.typed())
-                    })
-                    .collect();
-                if handles.is_empty() {
-                    warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Slinger won't be able to do anything this run. \
-                        Help: Add some yarn files to get started.", path = path.display());
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+                {
+                    Self::load_folder(asset_server, path)
                 }
-                handles
+                #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+                {
+                    let _ = path;
+                    panic!("YarnFileSource::Folder is not supported on this platform. Help: Use YarnFileSource::File instead and specify all Yarn files you want to load.")
+                }
             }
         }
+    }
+
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+    fn load_folder(asset_server: &AssetServer, path: &PathBuf) -> Vec<Handle<YarnFile>> {
+        let handles: Vec<_> = asset_server
+            .load_folder(path.as_path())
+            .unwrap_or_else(|e| {
+                panic!(
+                    "Failed to load Yarn file folder {path}: {e}",
+                    path = path.display()
+                )
+            })
+            .into_iter()
+            .filter_map(|handle| {
+                (asset_server
+                    .get_handle_path(&handle)?
+                    .path()
+                    .extension()?
+                    .to_str()?
+                    == "yarn")
+                    .then(|| handle.typed())
+            })
+            .collect();
+        if handles.is_empty() {
+            warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Slinger won't be able to do anything this run. \
+                        Help: Add some yarn files to get started.", path = path.display());
+        }
+        handles
     }
 }

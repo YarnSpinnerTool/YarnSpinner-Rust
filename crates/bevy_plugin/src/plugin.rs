@@ -21,8 +21,11 @@ mod yarn_file_source;
 ///
 /// App::new()
 ///     .add_plugins(DefaultPlugins)
+///     // Load all Yarn files from the "assets/dialogue" folder by default.
 ///     .add_plugin(YarnSlingerPlugin::new());
 /// ```
+///
+/// Note that the above does not work on Wasm or Android, since Bevy cannot query folders on these platforms. See [`YarnSlingerPlugin::new`] for more information.
 ///
 /// For more information on how this plugin interacts with the rest of the crate, see the crate-level documentation.
 #[derive(Debug, Default)]
@@ -35,7 +38,9 @@ pub struct YarnSlingerPlugin {
 pub struct YarnSlingerSystemSet;
 
 impl YarnSlingerPlugin {
-    /// Creates a new plugin that loads Yarn files from the folder "assets/dialogue".
+    /// Creates a new plugin that loads Yarn files from the folder "assets/dialogue" when not on Wasm or Android.
+    /// Otherwise this panics since Bevy cannot query folders on these platforms.
+    /// Use [`YarnSlingerPlugin::with_yarn_source`] or [`YarnSlingerPlugin::with_yarn_sources`] there instead.
     ///
     /// All yarn files will be shared across [`DialogueRunner`]s.
     /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
@@ -44,7 +49,17 @@ impl YarnSlingerPlugin {
     /// Calling this is equivalent to calling [`YarnSlingerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        {
+            Self::default()
+        }
+        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+        {
+            panic!(
+                "YarnSlingerPlugin::new() is not supported on this platform because it tries to load files from the \"dialogue\" directory in the assets folder. \
+                However, this platform does not allow loading a file without naming it explicitly. \
+                Use `YarnSlingerPlugin::with_yarn_source` or `YarnSlingerPlugin::with_yarn_sources` instead.")
+        }
     }
 
     /// Creates a new plugin that loads Yarn files from the given sources.

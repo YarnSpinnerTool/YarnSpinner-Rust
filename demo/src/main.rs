@@ -41,10 +41,13 @@ fn main() {
     .insert_resource(ClearColor(Color::CYAN));
     #[cfg(feature = "editor")]
     app.add_plugin(EditorPlugin::new());
-    app.add_plugin(YarnSlingerPlugin::new().with_localizations(Localizations {
-        base_localization: "en-US".into(),
-        translations: vec!["de-CH".into()],
-    }))
+    app.add_plugin(
+        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn"))
+            .with_localizations(Localizations {
+                base_localization: "en-US".into(),
+                translations: vec!["de-CH".into()],
+            }),
+    )
     .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
     .add_plugin(Sprite3dPlugin)
     .add_systems((
