@@ -1,10 +1,10 @@
 use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
-use crate::ExampleYarnSlingerUiSystemSet;
+use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarn_slinger::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(
@@ -20,7 +20,7 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
         )
             .chain()
             .after(YarnSlingerSystemSet)
-            .in_set(ExampleYarnSlingerUiSystemSet),
+            .in_set(ExampleYarnSlingerDialogueViewSystemSet),
     );
 }
 

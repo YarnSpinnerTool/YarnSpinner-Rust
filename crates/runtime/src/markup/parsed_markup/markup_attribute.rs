@@ -46,6 +46,8 @@ impl MarkupAttribute {
         }
     }
 
+    /// Returns the value of the property with the given name, if it exists.
+    /// For examples, the text `Hello [size=20]world[/size]` has a property named `size` with the value `20`.
     pub fn property(&self, name: &str) -> Option<&MarkupValue> {
         self.properties.get(name)
     }

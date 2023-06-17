@@ -18,13 +18,18 @@ use core::fmt::Display;
     reflect(Serialize, Deserialize)
 )]
 pub enum MarkupValue {
+    /// An integer value. Note that while Yarn variables make no distinction between integers and floats, markup values do.
     Integer(u32),
+    /// A floating-point value. Note that while Yarn variables make no distinction between integers and floats, markup values do.
     Float(f32),
+    /// A string value.
     String(String),
+    /// A boolean value.
     Bool(bool),
 }
 
 impl MarkupValue {
+    /// Returns the name of the enum variant.
     pub fn type_name(&self) -> &'static str {
         match self {
             MarkupValue::Integer(_) => "Integer",

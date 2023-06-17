@@ -1,15 +1,13 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_ui::prelude::*;
+use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 // For comments about the setup, see hello_world.rs
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "access_variables.yarn",
-        ]))
-        .add_plugin(ExampleYarnSlingerUiPlugin::new())
+        .add_plugin(YarnSlingerPlugin::new())
+        .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
             setup_camera.on_startup(),
             spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
@@ -23,8 +21,8 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.default_dialogue_runner().unwrap();
-    dialogue_runner.start();
+    let mut dialogue_runner = project.create_dialogue_runner();
+    dialogue_runner.start_node("AccessVariables");
     commands.spawn(dialogue_runner);
 }
 

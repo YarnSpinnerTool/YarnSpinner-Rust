@@ -1,10 +1,17 @@
 /target
-Cargo.lock
+# Keeping Cargo.lock because of the demo.
+# Cargo.lock
 .antlr
 
+# Assets
 *.blend
 *.blend1
 
+# IDEs
 .idea/
 !.idea/scopes/
 .vscode/
+
+# Build artefacts
+*.zip
+*.wasm

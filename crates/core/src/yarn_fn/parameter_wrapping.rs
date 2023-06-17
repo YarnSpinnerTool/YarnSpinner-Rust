@@ -18,6 +18,7 @@ pub struct YarnValueWrapper {
     converted: Option<Box<dyn Any>>,
 }
 
+#[doc(hidden)]
 pub type YarnValueWrapperIter<'a> = IterMut<'a, YarnValueWrapper>;
 
 impl From<YarnValue> for YarnValueWrapper {
@@ -43,14 +44,22 @@ impl YarnValueWrapper {
     }
 }
 
-/// Helper trait for implementing something like [`YarnFn`] yourself.
-/// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
+/// Trait implemented by types that can be used in [`YarnFn`]-like contexts. Implemented by the following types and references of them:
+/// - [`bool`]
+/// - Numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
+/// - [`String`] (for a reference, [`&str`] may be used instead of `&String`)
+/// - [`YarnValue`], which means that a parameter may be any of the above types
+/// - Tuples of the above types.
 pub trait YarnFnParam {
+    /// The item type returned when constructing this [`YarnFn`] param. The value of this associated type should be `Self`, instantiated with a new lifetime.
+    /// You could think of `YarnFnParam::Item<'new>` as being an operation that changes the lifetime bound to `Self`.
     type Item<'new>: YarnFnParam;
 
+    #[doc(hidden)]
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
 }
 
+/// Shorthand way of accessing the associated type [`YarnFnParam::Item`] for a given [`YarnFnParam`].
 pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
 
 macro_rules! impl_yarn_fn_param_tuple {

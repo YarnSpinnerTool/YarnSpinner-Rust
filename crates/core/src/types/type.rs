@@ -33,10 +33,15 @@ use thiserror::Error;
 )]
 pub enum Type {
     #[default]
+    /// The type representing any value
     Any,
+    /// The type representing booleans
     Boolean,
+    /// The type representing functions
     Function(FunctionType),
+    /// The type representing numbers
     Number,
+    /// The type representing strings
     String,
 }
 
@@ -50,7 +55,9 @@ impl Display for Type {
     }
 }
 
+/// A trait that provides a way to format both [`Type`] and `Option<Type>` as a string.
 pub trait TypeFormat {
+    /// Formats this type as a string.
     fn format(&self) -> String;
 }
 
@@ -71,15 +78,18 @@ impl TypeFormat for Type {
 }
 
 impl Type {
+    /// Returns the name of this type.
     pub fn name(&self) -> &'static str {
         self.properties().name
     }
 
+    /// Returns a more verbose description of this type.
     pub fn description(&self) -> String {
         self.properties().description
     }
 
-    pub fn methods(&self) -> YarnFnRegistry {
+    /// Returns the methods of this that can be called from Yarn scripts.
+    pub fn methods(&self) -> Library {
         self.properties().methods
     }
 
@@ -99,7 +109,7 @@ impl Type {
     /// Adapted from the `FindImplementingTypeForMethod`, but massively simplified because
     /// we removed type hierarchies.
     pub fn has_method(&self, name: &str) -> bool {
-        self.methods().contains_key(name)
+        self.methods().contains_function(name)
     }
 
     /// Does not check whether the method exists. Use [`Type::has_method`] for that.
@@ -107,6 +117,7 @@ impl Type {
         format!("{}.{}", self.name(), method_name)
     }
 
+    /// The types that can be explicitly constructed in Yarn with variable assignments.
     pub const EXPLICITLY_CONSTRUCTABLE: &'static [Type] = &[
         Type::Any,
         Type::Number,
@@ -123,7 +134,7 @@ impl Type {
 /// - Represents the `IType` interface in the original implementation.
 /// - `Parent` is not implemented because it is set to `AnyType` everywhere anyways.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeProperties {
+pub(crate) struct TypeProperties {
     /// The name of this type.
     pub name: &'static str,
 
@@ -131,11 +142,11 @@ pub struct TypeProperties {
     pub description: String,
 
     /// The collection of methods that are available on this type.
-    pub methods: YarnFnRegistry,
+    pub methods: Library,
 }
 
 impl TypeProperties {
-    pub fn from_name(name: &'static str) -> Self {
+    pub(crate) fn from_name(name: &'static str) -> Self {
         Self {
             name,
             description: name.to_owned(),
@@ -143,13 +154,13 @@ impl TypeProperties {
         }
     }
 
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    pub(crate) fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = description.into();
         self
     }
 
-    pub fn with_methods(mut self, registry: YarnFnRegistry) -> Self {
-        self.methods = registry;
+    pub(crate) fn with_methods(mut self, methods: Library) -> Self {
+        self.methods = methods;
         self
     }
 }
@@ -200,7 +211,7 @@ impl_type! {
 
 // The macro has problems with the following expansions
 
-pub trait StrRefExt {
+trait StrRefExt {
     fn r#type() -> Type;
 }
 
@@ -265,6 +276,7 @@ impl From<&YarnValue> for Type {
 
 #[derive(Error, Debug)]
 /// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
+#[allow(missing_docs)]
 pub enum InvalidDowncastError {
     #[error("Cannot convert TypeId {:?} to a Yarn Slinger `Type`", .0)]
     InvalidTypeId(TypeId),

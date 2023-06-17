@@ -1,4 +1,4 @@
-title: Start
+title: CustomCommand
 ---
 Inserting a resource after you continue this line.
 <<insert_resource "Bob" 42>>

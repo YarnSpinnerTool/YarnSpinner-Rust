@@ -1,3 +1,10 @@
+//! Types handling the parsing of Yarn markup.
+//! Yarn markup looks like this:
+//! ```yarn
+//! Mae: [shout]I'm a cat![/shout]!
+//! Greg: You're a [size=12]cat[/size]!
+//! ```
+//! The parsing extracts the information that "Mae" and "Greg" are characters, that "shout" and "size" are attributes, and that "size" has a value of "12".
 mod attribute_marker_processor;
 mod line_parser;
 mod markup_parse_error;

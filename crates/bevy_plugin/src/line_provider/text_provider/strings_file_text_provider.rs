@@ -1,13 +1,20 @@
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 use bevy::asset::LoadState;
+use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 pub(crate) fn strings_file_text_provider_plugin(_app: &mut App) {}
 
+/// The default [`TextProvider`] used by a [`DialogueRunner`] unless overridden with [`DialogueRunnerBuilder::with_text_provider`].
+/// If the [`DialogueRunner`]'s language is the base language, i.e. the one the Yarn files are written in,
+/// this will send the lines as they appear in the Yarn file. If [`DialogueRunner::set_language`] or [`DialogueRunner::set_text_language`] were used to
+/// set the language to a language supported by a translation in the [`Localizations`], this loads the strings file for that translation from the disk at the
+/// specified path. If this fails, the base language is used as a fallback.
 #[derive(Clone)]
 pub struct StringsFileTextProvider {
     asset_server: AssetServer,
@@ -16,6 +23,7 @@ pub struct StringsFileTextProvider {
     base_string_table: HashMap<LineId, StringInfo>,
     strings_file_handle: Option<Handle<StringsFile>>,
     translation_string_table: Option<HashMap<LineId, String>>,
+    event_reader: Arc<RwLock<ManualEventReader<AssetEvent<StringsFile>>>>,
 }
 
 impl Debug for StringsFileTextProvider {
@@ -27,6 +35,7 @@ impl Debug for StringsFileTextProvider {
             .field("base_string_table", &self.base_string_table)
             .field("strings_file_handle", &self.strings_file_handle)
             .field("translation_string_table", &self.translation_string_table)
+            .field("event_reader", &self.event_reader)
             .finish()
     }
 }
@@ -37,16 +46,19 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
     }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
+        if self.is_base_language() {
+            return self.base_string_table.get(id).map(|info| info.text.clone());
+        }
+
         self.translation_string_table
             .as_ref()
             .and_then(|table| table.get(id).cloned())
             .or_else(|| {
-                if let Some(language) = self.language.as_ref() {
-                    if self.translation_string_table.is_some() {
-                        warn!("Did not find translation for line {id} in language {language} because it is untranslated, falling back to base language.");
-                    } else {
-                        warn!("Did not find translation for line {id} in language {language} because the strings file has not been loaded yet, falling back to base language.");
-                    }
+                let language = self.language.as_ref().unwrap();
+                if self.translation_string_table.is_some() {
+                    warn!("Did not find translation for line {id} in language {language} because it is untranslated, falling back to base language.");
+                } else {
+                    warn!("Did not find translation for line {id} in language {language} because the strings file has not been loaded yet, falling back to base language.");
                 }
                 self.base_string_table.get(id).map(|info| info.text.clone())
             })
@@ -58,9 +70,10 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         }
 
         self.set_language_invalidating_translation(language.clone());
-        let Some(language) = language else {
+        if self.is_base_language() {
             return;
-        };
+        }
+        let language = language.unwrap();
 
         let Some(localizations) = self.localizations.as_ref() else {
             panic!("Set language to {language}, but no localizations have been registered as supported.");
@@ -70,7 +83,11 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
             return;
         }
         let Some(localization) = localizations.translation(&language) else {
-            let languages = localizations.supported_languages().map(|l| l.as_ref()).collect::<Vec<_>>().join(", ");
+            let languages = localizations
+                .supported_languages()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
             panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
         };
         let path = localization.strings_file.as_path();
@@ -87,13 +104,14 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
     }
 
     fn are_lines_available(&self) -> bool {
-        let is_base_language = self.language.is_none();
+        let is_base_language = self.is_base_language();
         let has_fetched_translation = || self.translation_string_table.is_some();
         is_base_language || has_fetched_translation()
     }
 }
 
 impl StringsFileTextProvider {
+    /// Create a new text provider from a Yarn project. This will be done for you when using [`YarnProject::create_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
     pub fn from_yarn_project(yarn_project: &YarnProject) -> Self {
         Self {
             asset_server: yarn_project.asset_server.clone(),
@@ -102,12 +120,22 @@ impl StringsFileTextProvider {
             base_string_table: yarn_project.compilation.string_table.clone(),
             strings_file_handle: None,
             translation_string_table: None,
+            event_reader: Default::default(),
         }
     }
     fn set_language_invalidating_translation(&mut self, language: impl Into<Option<Language>>) {
         self.language = language.into();
         self.translation_string_table = None;
         self.strings_file_handle = None;
+    }
+
+    fn is_base_language(&self) -> bool {
+        self.language.is_none()
+            || self.language.as_ref()
+                == self
+                    .localizations
+                    .as_ref()
+                    .map(|localizations| &localizations.base_localization.language)
     }
 }
 
@@ -126,21 +154,22 @@ impl TextProvider for StringsFileTextProvider {
     }
 
     fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>> {
-        self.language.as_ref()?;
+        if self.is_base_language() {
+            return None;
+        }
         let handle = self.strings_file_handle.as_ref()?;
         if self.asset_server.get_load_state(handle) != LoadState::Loaded {
             return None;
         }
         let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
-            asset_events
-                .iter_current_update_events()
-                .any(|event| match event {
-                    AssetEvent::Modified {
-                        handle: modified_handle,
-                    } => modified_handle == handle,
-                    _ => false,
-                })
+            let mut reader = self.event_reader.write().unwrap();
+            reader.iter(asset_events).any(|event| match event {
+                AssetEvent::Modified {
+                    handle: modified_handle,
+                } => modified_handle == handle,
+                _ => false,
+            })
         };
         let has_no_translation_yet = self.translation_string_table.is_none();
         if has_no_translation_yet || strings_file_has_changed() {

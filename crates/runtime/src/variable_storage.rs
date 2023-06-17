@@ -5,6 +5,7 @@ use std::sync::{Arc, RwLock};
 use thiserror::Error;
 use yarn_slinger_core::prelude::*;
 
+#[allow(missing_docs)]
 pub type Result<T> = std::result::Result<T, VariableStorageError>;
 
 /// Provides a mechanism for storing and retrieving instances
@@ -16,14 +17,25 @@ pub type Result<T> = std::result::Result<T, VariableStorageError>;
 /// which is more domain specific than the semi-corresponding `Convertible`.
 /// We also cannot use generics in this trait because we need to be able to clone this box.
 pub trait VariableStorage: Debug + Send + Sync {
+    /// Creates a shallow clone of this variable storage, i.e. a clone that
+    /// shares the same underlying storage and will thus be perfectly in sync
+    /// with the original instance.
     fn clone_shallow(&self) -> Box<dyn VariableStorage>;
+    /// Sets the value of a variable. Must fail with a [`VariableStorageError::InvalidVariableName`] if the variable name does not start with a `$`.
     fn set(&mut self, name: String, value: YarnValue) -> Result<()>;
+    /// Gets the value of a variable. Must fail with a [`VariableStorageError::InvalidVariableName`] if the variable name does not start with a `$`.
+    /// If the variable is not defined, must fail with a [`VariableStorageError::VariableNotFound`].
     fn get(&self, name: &str) -> Result<YarnValue>;
+    /// Returns `true` if the variable is defined, `false` otherwise.
     fn contains(&self, name: &str) -> bool {
         self.get(name).is_ok()
     }
+    /// Extends this variable storage with the given values. Must fail with a [`VariableStorageError::InvalidVariableName`] if any of the variable names do not start with a `$`.
+    /// Existing variables must be overwritten.
     fn extend(&mut self, values: HashMap<String, YarnValue>) -> Result<()>;
+    /// Returns a map of all variables in this variable storage.
     fn variables(&self) -> HashMap<String, YarnValue>;
+    /// Clears all variables in this variable storage.
     fn clear(&mut self);
 }
 
@@ -35,6 +47,7 @@ impl Extend<(String, YarnValue)> for Box<dyn VariableStorage> {
     }
 }
 
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum VariableStorageError {
     #[error("{name} is not a valid variable name: Variable names must start with a '$'. (Did you mean to use '${name}'?)")]
@@ -58,6 +71,7 @@ impl Clone for Box<dyn VariableStorage> {
 pub struct MemoryVariableStore(Arc<RwLock<HashMap<String, YarnValue>>>);
 
 impl MemoryVariableStore {
+    /// Creates a new empty `MemoryVariableStore`.
     pub fn new() -> Self {
         Self::default()
     }

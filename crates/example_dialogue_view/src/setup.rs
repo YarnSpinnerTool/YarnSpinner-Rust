@@ -200,7 +200,7 @@ fn setup(mut commands: Commands) {
 }
 
 fn fmt_name(name: &str) -> Name {
-    Name::new(format!("Yarn Slinger example UI {name} node"))
+    Name::new(format!("Yarn Slinger example dialogue view {name} node"))
 }
 
 pub(crate) const INITIAL_DIALOGUE_CONTINUE_BOTTOM: f32 = -5.0;

@@ -25,9 +25,7 @@ pub(crate) fn clean_up_diagnostics(mut state: CompilationIntermediate) -> Compil
     }
     state.diagnostics = ordered_unique_diagnostics;
     if state.diagnostics.has_errors() {
-        state.result = Some(Err(CompilerError {
-            diagnostics: state.diagnostics.clone(),
-        }));
+        state.result = Some(Err(CompilerError(state.diagnostics.clone())));
     } else if let Some(Ok(compilation)) = state.result.as_mut() {
         compilation.warnings = state.diagnostics.clone();
     }

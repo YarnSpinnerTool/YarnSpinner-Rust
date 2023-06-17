@@ -317,7 +317,7 @@ a {very} cool expression
         }
         .compile();
 
-        let diagnostics = result.unwrap_err().diagnostics;
+        let diagnostics = result.unwrap_err().0;
         assert_eq!(2, diagnostics.len());
 
         let range = Position {

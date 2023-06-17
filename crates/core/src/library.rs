@@ -2,21 +2,27 @@
 
 use crate::prelude::*;
 use std::borrow::Cow;
+use std::collections::hash_map;
 use std::fmt::Display;
 
 /// A collection of functions that can be called from Yarn scripts.
+///
+/// Can be conveniently created with the [`yarn_library!`] macro.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Library(YarnFnRegistry);
 
 impl Extend<<YarnFnRegistry as IntoIterator>::Item> for Library {
-    fn extend<T: IntoIterator<Item = <YarnFnRegistry as IntoIterator>::Item>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = (Cow<'static, str>, Box<dyn UntypedYarnFn>)>>(
+        &mut self,
+        iter: T,
+    ) {
         self.0.extend(iter);
     }
 }
 
 impl IntoIterator for Library {
-    type Item = <YarnFnRegistry as IntoIterator>::Item;
-    type IntoIter = <YarnFnRegistry as IntoIterator>::IntoIter;
+    type Item = (Cow<'static, str>, Box<dyn UntypedYarnFn>);
+    type IntoIter = hash_map::IntoIter<Cow<'static, str>, Box<dyn UntypedYarnFn>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -24,22 +30,28 @@ impl IntoIterator for Library {
 }
 
 impl Library {
+    /// Creates a new empty library. Does not include the functions of [`Library::standard_library`].
     pub fn new() -> Self {
         Self::default()
     }
+
     /// Loads functions from another [`Library`].
     ///
-    /// If the other library contains a function with the same name as
-    /// one in this library, the function in the other library takes
-    /// precedence.
+    /// Will overwrite any functions that have the same name.
+    ///
+    /// ## Implementation Notes
+    ///
+    /// The original implementation throws an exception if a function with the same name already exists.
     pub fn import(&mut self, other: Self) {
         self.0.extend(other.0 .0);
     }
 
+    /// Iterates over the names and functions in the library.
     pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
         self.0.iter()
     }
 
+    /// Gets a function by name.
     pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
         self.0.get(name)
     }
@@ -52,14 +64,20 @@ impl Library {
         format!("$Yarn.Internal.Visiting.{node_name}")
     }
 
+    /// Creates a [`Library`] with the standard functions that are included in Yarn Slinger.
+    /// These are:
+    /// - `string`: Converts a value to a string.
+    /// - `number`: Converts a value to a number.
+    /// - `bool`: Converts a value to a boolean.
+    /// - Comparison operators for numbers, strings, and booleans. (`==`, `!=`, `<`, `<=`, `>`, `>=`)
     pub fn standard_library() -> Self {
-        let mut library = Library(yarn_fn_registry!(
+        let mut library = yarn_library!(
             "string" => <String as From<YarnValue >>::from,
             "number" => |value: YarnValue| f32::try_from(value).expect("Failed to convert a Yarn value to a number"),
             "bool" => |value: YarnValue| bool::try_from(value).expect("Failed to convert a Yarn value to a bool"),
-        ));
+        );
         for r#type in [Type::Number, Type::String, Type::Boolean] {
-            library.register_methods(r#type);
+            library.add_methods(r#type);
         }
         library
     }
@@ -72,7 +90,7 @@ impl Library {
     /// ```
     /// # use yarn_slinger_core::prelude::*;
     /// # let mut library = Library::default();
-    /// library.register_function("string_length", string_length);
+    /// library.add_function("string_length", string_length);
     ///
     /// fn string_length(string: String) -> usize {
     ///     string.len()
@@ -84,13 +102,13 @@ impl Library {
     /// ```
     /// # use yarn_slinger_core::prelude::*;
     /// # let mut library = Library::default();
-    /// library.register_function("length_times_two", string_length_multiplied(2));
+    /// library.add_function("length_times_two", string_length_multiplied(2));
     ///
     /// fn string_length_multiplied(factor: usize) -> yarn_fn_type! { impl Fn(String) -> usize } {
     ///     move |s: String| s.len() * factor
     /// }
     /// ```
-    pub fn register_function<Marker, F>(
+    pub fn add_function<Marker, F>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         function: F,
@@ -104,22 +122,23 @@ impl Library {
         self
     }
 
-    pub fn with_function<Marker, F>(
-        mut self,
-        name: impl Into<Cow<'static, str>>,
-        function: F,
-    ) -> Self
-    where
-        Marker: 'static,
-        F: YarnFn<Marker> + 'static + Clone,
-        F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
-    {
-        self.register_function(name, function);
-        self
+    /// Returns `true` if the library contains a function with the given name.
+    pub fn contains_function(&self, name: &str) -> bool {
+        self.0.contains_function(name)
+    }
+
+    /// Iterates over the names of all functions in the library.
+    pub fn names(&self) -> impl Iterator<Item = &str> {
+        self.0.names()
+    }
+
+    /// Iterates over all functions in the library.
+    pub fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
+        self.0.functions()
     }
 
     /// Registers the methods found inside a type.
-    fn register_methods(&mut self, r#type: Type) {
+    fn add_methods(&mut self, r#type: Type) {
         for (name, function) in r#type.methods().into_iter() {
             let canonical_name = r#type.get_canonical_name_for_method(name.as_ref());
             self.0.add_boxed(canonical_name, function.clone());
@@ -139,3 +158,33 @@ impl Display for Library {
         Ok(())
     }
 }
+
+/// Create a [`Library`] from a list of named functions.
+///
+/// ## Example
+///
+/// ```rust
+/// # use yarn_slinger_core::yarn_library;
+/// # use yarn_slinger_core::prelude::*;
+///
+/// let library = yarn_library! {
+///    "pow" => pow,
+/// };
+///
+/// fn pow(base: f32, exponent: i32) -> f32 {
+///    base.powi(exponent)
+/// }
+///```
+#[macro_export]
+macro_rules! yarn_library {
+    ($($name:expr => $function:expr,)*) => {
+        {
+            let mut map = Library::default();
+            $(
+                map.add_function($name, $function);
+            )*
+            map
+        }
+    };
+}
+pub use yarn_library;

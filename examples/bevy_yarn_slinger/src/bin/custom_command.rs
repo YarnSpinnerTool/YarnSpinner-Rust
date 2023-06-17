@@ -1,15 +1,13 @@
 use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_ui::prelude::*;
+use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 // For comments about the setup, see hello_world.rs
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::with_yarn_files(vec![
-            "custom_command.yarn",
-        ]))
-        .add_plugin(ExampleYarnSlingerUiPlugin::new())
+        .add_plugin(YarnSlingerPlugin::new())
+        .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
             setup_camera.on_startup(),
             spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
@@ -22,13 +20,13 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.default_dialogue_runner().unwrap();
+    let mut dialogue_runner = project.create_dialogue_runner();
     // Add our custom commands to the dialogue runner
     dialogue_runner
-        .command_registrations_mut()
-        .register_command("insert_resource", insert_resource)
-        .register_command("read_resource", read_resource);
-    dialogue_runner.start();
+        .commands_mut()
+        .add_command("insert_resource", insert_resource)
+        .add_command("read_resource", read_resource);
+    dialogue_runner.start_node("CustomCommand");
     commands.spawn(dialogue_runner);
 }
 

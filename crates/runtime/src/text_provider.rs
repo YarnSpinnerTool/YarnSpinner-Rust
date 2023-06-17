@@ -3,32 +3,32 @@ use crate::prelude::Language;
 use log::error;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
-use thiserror::Error;
 use yarn_slinger_core::prelude::*;
 
-/// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue).
+/// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue). The default implementation is [`StringTableTextProvider`], which keeps the
+/// text for the base language, i.e. the language the Yarn files are written in, and the text for the currently selected translation in memory.
 ///
 /// ## Implementation notes
 ///
 /// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
+    /// Passes the [`LineId`]s that this [`TextProvider`] should soon provide text for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
+    /// Returns the text for the given [`LineId`]. Will only be called if [`TextProvider::are_lines_available`] returns `true`.
     fn get_text(&self, id: &LineId) -> Option<String>;
+    /// Sets the current language. If `None` is passed, the base language will be used.
     fn set_language(&mut self, language: Option<Language>);
+    /// Returns the current language. If `None` is returned, the base language is used.
     fn get_language(&self) -> Option<Language>;
+    /// Returns whether the text for all lines announced by [`TextProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
     fn are_lines_available(&self) -> bool;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Error)]
-#[error("The language {language_code:?} is not supported by this text provider")]
-pub struct UnsupportedLanguageError {
-    language_code: Language,
-}
-
+#[allow(missing_docs)]
 pub type StringTable = HashMap<LineId, String>;
 
-/// A basic implementation of [`TextProvider`] that uses a [`StringTable`] to store the text.
+/// A basic implementation of [`TextProvider`] which keeps the text for the base language,
+/// i.e. the language the Yarn files are written in, and the text for the currently selected translation in memory.
 #[derive(Debug, Clone, Default)]
 pub struct StringTableTextProvider {
     base_language_table: StringTable,
@@ -38,14 +38,17 @@ pub struct StringTableTextProvider {
 }
 
 impl StringTableTextProvider {
+    /// Creates a new [`StringTableTextProvider`].
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Adds strings for the base language, i.e. the language that the Yarn files are written in.
     pub fn extend_base_language(&mut self, string_table: HashMap<LineId, String>) {
         self.base_language_table.extend(string_table);
     }
 
+    /// Adds strings for the a specific language. If this is not the language used selected by [`TextProvider::set_language`], the strings will be ignored.
     pub fn extend_translation(
         &mut self,
         language: impl Into<Language>,
@@ -100,40 +103,5 @@ impl TextProvider for StringTableTextProvider {
             .as_ref()
             .map(|(language, _)| language);
         translation_language == Some(language)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SharedTextProvider(pub Arc<RwLock<Box<dyn TextProvider>>>);
-
-impl SharedTextProvider {
-    pub fn new(text_provider: impl TextProvider + 'static) -> Self {
-        Self(Arc::new(RwLock::new(Box::new(text_provider))))
-    }
-
-    pub fn replace(&mut self, text_provider: impl TextProvider + 'static) {
-        *self.0.write().unwrap() = Box::new(text_provider);
-    }
-}
-
-impl TextProvider for SharedTextProvider {
-    fn accept_line_hints(&mut self, line_ids: &[LineId]) {
-        self.0.write().unwrap().accept_line_hints(line_ids);
-    }
-
-    fn get_text(&self, id: &LineId) -> Option<String> {
-        self.0.read().unwrap().get_text(id)
-    }
-
-    fn set_language(&mut self, language: Option<Language>) {
-        self.0.write().unwrap().set_language(language);
-    }
-
-    fn get_language(&self) -> Option<Language> {
-        self.0.read().unwrap().get_language()
-    }
-
-    fn are_lines_available(&self) -> bool {
-        self.0.read().unwrap().are_lines_available()
     }
 }

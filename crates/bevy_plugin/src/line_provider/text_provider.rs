@@ -20,10 +20,24 @@ pub(crate) fn text_provider_plugin(app: &mut App) {
         );
 }
 
+/// Trait for the provider the [`DialogueRunner`]s text. By default, this is a [`StringsFileTextProvider`].
+/// You can override this with [`DialogueRunnerBuilder::with_text_provider`] if you want a custom localization strategy.
+/// For most users however, the default is fine.
 pub trait TextProvider: UnderlyingTextProvider {
+    /// Stores a string table containing the base language strings, i.e. the strings found in the Yarn files themselves.
     fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
+
+    /// Extends the string table set by [`TextProvider::set_base_string_table`] with additional strings.
     fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
+
+    /// Stores the assets fetched by [`TextProvider::fetch_assets`].
+    /// This functionality is split into two functions because [`TextProvider::take_fetched_assets`] is mutable,
+    /// so we lose access to the [`World`] when calling it since it contains this very [`TextProvider`].
+    ///
     fn take_fetched_assets(&mut self, asset: Box<dyn Any>);
+    /// Fetches any necessary assets. The returned value is then passed to [`TextProvider::take_fetched_assets`].
+    /// This functionality is split into two functions because [`TextProvider::take_fetched_assets`] is mutable,
+    /// so we lose access to the [`World`] when calling it since it contains this very [`TextProvider`].
     fn fetch_assets(&self, world: &World) -> Option<Box<dyn Any + 'static>>;
 }
 

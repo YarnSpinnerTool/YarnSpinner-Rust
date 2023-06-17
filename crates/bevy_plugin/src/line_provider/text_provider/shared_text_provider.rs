@@ -8,14 +8,18 @@ use std::sync::{Arc, RwLock};
 
 pub(crate) fn shared_text_provider_plugin(_app: &mut App) {}
 
+/// A [`TextProvider`] that wraps another [`TextProvider`] and is shallow cloned. It can thus be shared between users.
 #[derive(Debug, Clone)]
 pub(crate) struct SharedTextProvider(Arc<RwLock<Box<dyn TextProvider>>>);
 
 impl SharedTextProvider {
-    pub fn new(text_provider: impl TextProvider + 'static) -> Self {
+    /// Creates a new [`SharedTextProvider`] wrapping a [`TextProvider`].
+    pub(crate) fn new(text_provider: impl TextProvider + 'static) -> Self {
         Self(Arc::new(RwLock::new(Box::new(text_provider))))
     }
-    pub fn replace(&mut self, text_provider: impl TextProvider + 'static) {
+
+    /// Replace the underlying [`TextProvider`] with another one. All copies of this [`SharedTextProvider`] will be affected.
+    pub(crate) fn replace(&mut self, text_provider: impl TextProvider + 'static) {
         *self.0.write().unwrap() = Box::new(text_provider);
     }
 }

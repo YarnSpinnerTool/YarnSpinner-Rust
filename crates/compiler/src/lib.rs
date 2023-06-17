@@ -1,3 +1,13 @@
+//! The compiler components of Yarn Slinger. These mostly follow the same structure as the original Yarn Spinner compiler.
+//!
+//! You probably don't want to use this crate directly, except if you're coming from another language than Rust and want to call Yarn Slinger via FFI.
+//! Otherwise:
+//! - If you're a game developer, you'll want to use a crate that is already designed for your game engine of choice,
+//! such as [`bevy_yarn_slinger`](https://crates.io/crates/bevy_yarn_slinger) for the [Bevy engine](https://bevyengine.org/).
+//! - If you wish to write an adapter crate for an engine yourself, use the [`yarn_slinger`](https://crates.io/crates/yarn_slinger) crate.
+//!
+#![warn(missing_docs, missing_debug_implementations)]
+
 mod collections;
 pub(crate) mod compilation_steps;
 pub(crate) mod compiler;
@@ -14,6 +24,7 @@ pub(crate) mod visitors;
 pub use crate::compiler::Result;
 
 pub mod prelude {
+    //! Everything you need to get started with the Yarn Slinger compiler.
     pub(crate) use crate::{
         compiler::antlr_rust_ext::*, compiler::run_compilation::*, compiler::utils::*,
         file_parse_result::*, parser::*, parser_rule_context_ext::*, string_table_manager::*,

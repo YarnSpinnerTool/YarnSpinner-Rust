@@ -3,6 +3,7 @@ use crate::markup::TRIM_WHITESPACE_PROPERTY;
 use crate::prelude::*;
 use thiserror::Error;
 
+#[allow(missing_docs)]
 #[derive(Error, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

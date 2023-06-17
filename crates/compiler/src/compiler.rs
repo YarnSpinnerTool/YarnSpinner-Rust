@@ -11,6 +11,7 @@ pub(crate) mod run_compilation;
 pub(crate) mod utils;
 pub use add_tags_to_lines::*;
 
+#[allow(missing_docs)]
 pub type Result<T> = std::result::Result<T, CompilerError>;
 
 /// An object that contains Yarn source code to compile, and instructions on
@@ -46,20 +47,24 @@ pub struct Compiler {
 }
 
 impl Compiler {
+    /// Creates a new [`Compiler`] with the default settings and no files added yet.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Adds a file to the compilation.
     pub fn add_file(&mut self, file: File) -> &mut Self {
         self.files.push(file);
         self
     }
 
+    /// Adds multiple files to the compilation.
     pub fn add_files(&mut self, files: impl IntoIterator<Item = File>) -> &mut Self {
         self.files.extend(files);
         self
     }
 
+    /// Adds a file to the compilation by reading it from disk. Fallible version of [`Compiler::read_file`].
     pub fn try_read_file(&mut self, file_path: impl AsRef<Path>) -> std::io::Result<&mut Self> {
         let file_name = file_path.as_ref().to_string_lossy().to_string();
         let file_content = std::fs::read_to_string(file_path)?;
@@ -70,25 +75,30 @@ impl Compiler {
         Ok(self)
     }
 
+    /// Adds a file to the compilation by reading it from disk. For the fallible version, see [`Compiler::try_read_file`].
     pub fn read_file(&mut self, file_path: impl AsRef<Path>) -> &mut Self {
         self.try_read_file(file_path).unwrap()
     }
 
+    /// Extends the Yarn function library with the given [`Library`]. The standard library is only added if this is called with [`Library::standard_library`].
     pub fn extend_library(&mut self, library: Library) -> &mut Self {
         self.library.extend(library.into_iter());
         self
     }
 
+    /// Sets the compilation type, which allows premature stopping of the compilation process. By default, this is [`CompilationType::FullCompilation`].
     pub fn with_compilation_type(&mut self, compilation_type: CompilationType) -> &mut Self {
         self.compilation_type = compilation_type;
         self
     }
 
+    /// Adds a variable declaration to the compilation.
     pub fn declare_variable(&mut self, declaration: Declaration) -> &mut Self {
         self.variable_declarations.push(declaration);
         self
     }
 
+    /// Compiles the Yarn files previously added into a [`Compilation`].
     pub fn compile(&self) -> Result<Compilation> {
         run_compilation::compile(self)
     }
@@ -129,11 +139,12 @@ pub enum CompilationType {
     /// function declaration set, and string table.
     #[default]
     FullCompilation,
-    // The compiler will derive only the variable and function declarations,
-    // and file tags, found in the script.
+
+    /// The compiler will derive only the variable and function declarations,
+    /// and file tags, found in the script.
     DeclarationsOnly,
 
-    // The compiler will generate a string table only.
+    /// The compiler will generate a string table only.
     StringsOnly,
 }
 

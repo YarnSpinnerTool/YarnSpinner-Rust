@@ -121,6 +121,8 @@ impl Compilation {
     }
 }
 
+/// A collection of [`Diagnostic`] objects that describe problems that occurred during compilation.
+/// At least one of these diagnostics will have a severity of [`DiagnosticSeverity::Error`].
 #[derive(Error, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -129,9 +131,7 @@ impl Compilation {
     all(feature = "bevy", feature = "serde"),
     reflect(Serialize, Deserialize)
 )]
-pub struct CompilerError {
-    pub diagnostics: Vec<Diagnostic>,
-}
+pub struct CompilerError(pub Vec<Diagnostic>);
 
 impl Debug for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -143,17 +143,15 @@ impl Debug for CompilerError {
 }
 
 impl CompilerError {
+    /// Acts as a [`Debug`] implementation that does not pretty-print the diagnostics.
     pub fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for diagnostic in &self.diagnostics {
-            writeln!(f, "{:?}", diagnostic)?;
-        }
-        Ok(())
+        f.debug_set().entries(&self.0).finish()
     }
 }
 
 impl Display for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for diagnostic in &self.diagnostics {
+        for diagnostic in &self.0 {
             writeln!(f, "{}", diagnostic)?;
         }
         Ok(())

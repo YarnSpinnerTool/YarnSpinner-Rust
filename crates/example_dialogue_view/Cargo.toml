@@ -1,5 +1,5 @@
 [package]
-name = "bevy_yarn_slinger_example_ui"
+name = "bevy_yarn_slinger_example_dialogue_view"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"

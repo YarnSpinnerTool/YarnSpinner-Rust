@@ -2,7 +2,7 @@
 resolver = "2"
 
 members = [
-    "crates/example_ui",
+    "crates/example_dialogue_view",
     "crates/bevy_plugin",
     "crates/yarn_slinger",
     "crates/runtime",
@@ -15,6 +15,7 @@ members = [
 ]
 
 # Source: https://github.com/bevyengine/bevy/blob/main/examples/README.md#1-tweak-your-cargotoml
+## Make Wasm builds as small as possible
 [profile.wasm-release]
 inherits = "release"
 opt-level = "z"

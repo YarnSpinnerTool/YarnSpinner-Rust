@@ -4,3 +4,4 @@
 /crates/core/src/generated/yarn.rs linguist-generated=true
 /crates/runtime/src/pluralization/icu/**/* linguist-generated=true
 .idea/**/* linguist-generated=true
+Cargo.lock linguist-generated=true

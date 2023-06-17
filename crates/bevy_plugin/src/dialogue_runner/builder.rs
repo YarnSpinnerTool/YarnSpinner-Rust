@@ -10,25 +10,16 @@ use std::fmt::{Debug, Formatter};
 
 pub(crate) fn dialogue_runner_builder_plugin(_app: &mut App) {}
 
+/// A builder for [`DialogueRunner`]. This is instantiated for you by calling [`YarnProject::build_dialogue_runner`].
 pub struct DialogueRunnerBuilder {
     variable_storage: Box<dyn VariableStorage>,
     text_provider: SharedTextProvider,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
-    library: YarnFnLibrary,
-    commands: YarnCommandRegistrations,
+    library: YarnLibrary,
+    commands: YarnCommands,
     compilation: Compilation,
-    text_language: Option<Option<Language>>,
-    asset_language: Option<Option<Language>>,
     localizations: Option<Localizations>,
     asset_server: AssetServer,
-    run_selected_options_as_lines: bool,
-    start_node: Option<StartNode>,
-}
-
-#[derive(Debug, Clone)]
-pub enum StartNode {
-    DefaultStartNode,
-    Node(String),
 }
 
 impl Debug for DialogueRunnerBuilder {
@@ -40,22 +31,15 @@ impl Debug for DialogueRunnerBuilder {
             .field("library", &self.library)
             .field("commands", &self.commands)
             .field("compilation", &self.compilation)
-            .field("text_language", &self.text_language)
-            .field("asset_language", &self.asset_language)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
-            .field(
-                "run_selected_options_as_lines",
-                &self.run_selected_options_as_lines,
-            )
-            .field("start_node", &self.start_node)
             .finish()
     }
 }
 
 impl DialogueRunnerBuilder {
     #[must_use]
-    pub fn from_yarn_project(yarn_project: &YarnProject) -> Self {
+    pub(crate) fn from_yarn_project(yarn_project: &YarnProject) -> Self {
         Self {
             variable_storage: Box::new(MemoryVariableStore::new()),
             text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
@@ -63,29 +47,28 @@ impl DialogueRunnerBuilder {
             )),
             asset_providers: HashMap::new(),
             library: create_extended_standard_library(),
-            commands: YarnCommandRegistrations::builtin_commands(),
+            commands: YarnCommands::builtin_commands(),
             compilation: yarn_project.compilation().clone(),
-            text_language: None,
-            asset_language: None,
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
-            run_selected_options_as_lines: false,
-            start_node: Some(StartNode::DefaultStartNode),
         }
     }
 
+    /// Replaces the [`VariableStorage`] used by the [`DialogueRunner`]. By default, this is a [`MemoryVariableStore`].
     #[must_use]
     pub fn with_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
         self.variable_storage = storage;
         self
     }
 
+    /// Replaces the [`TextProvider`] used by the [`DialogueRunner`]. By default, this is a [`StringsFileTextProvider`].
     #[must_use]
     pub fn with_text_provider(mut self, provider: impl TextProvider + 'static) -> Self {
         self.text_provider.replace(provider);
         self
     }
 
+    /// Adds an [`AssetProvider`] to the [`DialogueRunner`]. By default, none are registered.
     #[must_use]
     pub fn add_asset_provider(mut self, provider: impl AssetProvider + 'static) -> Self {
         self.asset_providers
@@ -93,97 +76,46 @@ impl DialogueRunnerBuilder {
         self
     }
 
-    #[must_use]
-    pub fn with_text_language(mut self, language: impl Into<Option<Language>>) -> Self {
-        let language = language.into();
-        self.text_language.replace(language);
-        self
+    /// Builds the [`DialogueRunner`]. See [`DialogueRunnerBuilder::try_build`] for the fallible version.
+    pub fn build(self) -> DialogueRunner {
+        self.try_build().unwrap_or_else(|error| {
+            panic!("Failed to build DialogueRunner: {error}");
+        })
     }
 
-    #[must_use]
-    pub fn with_asset_language(mut self, language: impl Into<Option<Language>>) -> Self {
-        let language = language.into();
-        self.asset_language.replace(language);
-        self
-    }
-
-    #[must_use]
-    pub fn with_run_selected_option_as_line(mut self, run_selected_option_as_line: bool) -> Self {
-        self.run_selected_options_as_lines = run_selected_option_as_line;
-        self
-    }
-
-    #[must_use]
-    pub fn with_start_node(mut self, start_node: impl Into<Option<StartNode>>) -> Self {
-        self.start_node = start_node.into();
-        self
-    }
-
-    #[must_use]
-    pub fn extend_library(mut self, library: YarnFnLibrary) -> Self {
-        self.library.extend(library);
-        self
-    }
-
-    #[must_use]
-    pub fn extend_command_registrations(mut self, commands: YarnCommandRegistrations) -> Self {
-        self.commands.extend(commands);
-        self
-    }
-
-    pub fn build(mut self) -> Result<DialogueRunner> {
+    /// Builds the [`DialogueRunner`].
+    pub fn try_build(mut self) -> Result<DialogueRunner> {
         let text_provider = Box::new(self.text_provider);
 
-        let base_language = self
-            .localizations
-            .as_ref()
-            .map(|l| &l.base_localization.language);
-
-        let text_language = self
-            .text_language
-            .take()
-            .unwrap_or_else(|| base_language.cloned());
-
-        let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone())
-            .with_line_hints_enabled(true)
-            .with_extended_library(self.library)
-            .with_program(self.compilation.program.unwrap())
-            .with_language_code(text_language);
+        let mut dialogue = Dialogue::new(self.variable_storage, text_provider.clone());
+        dialogue
+            .set_line_hints_enabled(true)
+            .library_mut()
+            .extend(self.library);
+        dialogue.add_program(self.compilation.program.unwrap());
 
         for asset_provider in self.asset_providers.values_mut() {
             if let Some(ref localizations) = self.localizations {
                 asset_provider.set_localizations(localizations.clone());
             }
-            let asset_language = self
-                .asset_language
-                .take()
-                .unwrap_or_else(|| base_language.cloned());
 
-            asset_provider.set_language(asset_language);
             asset_provider.set_asset_server(self.asset_server.clone());
         }
 
-        if let Some(start_node) = self.start_node.clone() {
-            match start_node {
-                StartNode::DefaultStartNode => {
-                    dialogue.set_node_to_start()?;
-                }
-                StartNode::Node(node) => {
-                    dialogue.set_node(node)?;
-                }
-            }
-        } else {
-            info!("Dialogue has no start node, so it will need an explicitly set node to be run.");
-        };
-
         let popped_line_hints = dialogue.pop_line_hints();
 
-        Ok(DialogueRunner {
+        let base_language = self
+            .localizations
+            .as_ref()
+            .map(|l| &l.base_localization.language)
+            .cloned();
+
+        let mut dialogue_runner = DialogueRunner {
             dialogue,
             text_provider,
             popped_line_hints,
+            run_selected_options_as_lines: false,
             asset_providers: self.asset_providers,
-            run_selected_options_as_lines: self.run_selected_options_as_lines,
             commands: self.commands,
             is_running: default(),
             command_tasks: default(),
@@ -192,15 +124,21 @@ impl DialogueRunnerBuilder {
             just_started: default(),
             unsent_events: default(),
             localizations: self.localizations,
-            start_node: self.start_node,
-        })
+        };
+
+        if let Some(base_language) = base_language {
+            dialogue_runner.set_language(base_language);
+        }
+
+        Ok(dialogue_runner)
     }
 }
 
-fn create_extended_standard_library() -> YarnFnLibrary {
-    YarnFnLibrary::standard_library()
-        .with_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
-        .with_function("random_range", |min: f32, max: f32| {
+fn create_extended_standard_library() -> YarnLibrary {
+    let mut library = YarnLibrary::standard_library();
+    library
+        .add_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
+        .add_function("random_range", |min: f32, max: f32| {
             if let Some(min) = min.as_int() {
                 if let Some(max_inclusive) = max.as_int() {
                     return SmallRng::from_entropy().gen_range(min..=max_inclusive) as f32;
@@ -208,34 +146,35 @@ fn create_extended_standard_library() -> YarnFnLibrary {
             }
             SmallRng::from_entropy().gen_range(min..max)
         })
-        .with_function("dice", |sides: u32| {
+        .add_function("dice", |sides: u32| {
             if sides == 0 {
                 return 1;
             }
             SmallRng::from_entropy().gen_range(1..=sides)
         })
-        .with_function("round", |num: f32| num.round() as i32)
-        .with_function("round_places", |num: f32, places: u32| {
+        .add_function("round", |num: f32| num.round() as i32)
+        .add_function("round_places", |num: f32, places: u32| {
             num.round_places(places)
         })
-        .with_function("floor", |num: f32| num.floor() as i32)
-        .with_function("ceil", |num: f32| num.ceil() as i32)
-        .with_function("inc", |num: f32| {
+        .add_function("floor", |num: f32| num.floor() as i32)
+        .add_function("ceil", |num: f32| num.ceil() as i32)
+        .add_function("inc", |num: f32| {
             if let Some(num) = num.as_int() {
                 num + 1
             } else {
                 num.ceil() as i32
             }
         })
-        .with_function("dec", |num: f32| {
+        .add_function("dec", |num: f32| {
             if let Some(num) = num.as_int() {
                 num - 1
             } else {
                 num.floor() as i32
             }
         })
-        .with_function("decimal", |num: f32| num.fract())
-        .with_function("int", |num: f32| num.trunc() as i32)
+        .add_function("decimal", |num: f32| num.fract())
+        .add_function("int", |num: f32| num.trunc() as i32);
+    library
 }
 
 trait FloatExt: Copy {

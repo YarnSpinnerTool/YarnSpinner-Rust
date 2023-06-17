@@ -152,7 +152,7 @@ fn test_variable_declarations_disallow_duplicates() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("$int has already been declared")));
 }
@@ -170,7 +170,7 @@ fn test_expressions_disallow_mismatched_types() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message == "$int (Number) cannot be assigned a String"));
 }
@@ -260,7 +260,7 @@ fn test_null_not_allowed() {
 
     println!("{}", result);
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("Null is not a permitted type")));
 }
@@ -271,10 +271,10 @@ fn test_function_signatures() {
     test_base
         .dialogue
         .library_mut()
-        .register_function("func_void_bool", || true)
-        .register_function("func_int_bool", |_i: i32| true)
-        .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
+        .add_function("func_void_bool", || true)
+        .add_function("func_int_bool", |_i: i32| true)
+        .add_function("func_int_int_bool", |_i: i32, _j: i32| true)
+        .add_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for source in [
         "<<set $bool = func_void_bool()>>",
@@ -330,10 +330,10 @@ fn test_failing_function_signatures() {
     test_base
         .dialogue
         .library_mut()
-        .register_function("func_void_bool", || true)
-        .register_function("func_int_bool", |_i: i32| true)
-        .register_function("func_int_int_bool", |_i: i32, _j: i32| true)
-        .register_function("func_string_string_bool", |_i: &str, _j: &str| true);
+        .add_function("func_void_bool", || true)
+        .add_function("func_int_bool", |_i: i32| true)
+        .add_function("func_int_int_bool", |_i: i32, _j: i32| true)
+        .add_function("func_string_string_bool", |_i: &str, _j: &str| true);
 
     for (source, expected_exception_message) in [
         (
@@ -366,7 +366,7 @@ fn test_failing_function_signatures() {
         println!("{}", result);
 
         let diagnostic_messages = result
-            .diagnostics
+            .0
             .iter()
             .map(|d| d.message.clone())
             .collect::<Vec<_>>();
@@ -618,15 +618,15 @@ fn test_implicit_function_declarations() {
                 .expect_line("true")
                 .expect_line("true"),
         )
-        .extend_library(
-            Library::new()
-                .with_function("func_void_bool", || true)
-                .with_function("func_void_int", || 1)
-                .with_function("func_void_str", || "llo".to_owned())
-                .with_function("func_int_bool", |_i: i64| true)
-                .with_function("func_bool_bool", |_b: bool| true)
-                .with_function("func_str_bool", |_s: &str| true),
-        );
+        .extend_library(|library| {
+            library
+                .add_function("func_void_bool", || true)
+                .add_function("func_void_int", || 1)
+                .add_function("func_void_str", || "llo".to_owned())
+                .add_function("func_int_bool", |_i: i64| true)
+                .add_function("func_bool_bool", |_b: bool| true)
+                .add_function("func_str_bool", |_s: &str| true);
+        });
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared
@@ -657,11 +657,11 @@ fn test_nested_implicit_function_declarations() {
     ";
     let test_base = TestBase::new()
         .with_test_plan(TestPlan::new().expect_line("true"))
-        .extend_library(
-            Library::new()
-                .with_function("func_int_bool", |i: i64| i == 1)
-                .with_function("func_bool_bool", |b: bool| b),
-        );
+        .extend_library(|library| {
+            library
+                .add_function("func_int_bool", |i: i64| i == 1)
+                .add_function("func_bool_bool", |b: bool| b);
+        });
 
     // the library is NOT attached to this compilation job; all
     // functions will be implicitly declared
@@ -693,7 +693,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
 
     assert_eq!(
         "Function \"func\" expects 1 parameter, but received 2",
-        result.diagnostics[0].message,
+        result.0[0].message,
     );
 }
 
@@ -711,7 +711,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
     println!("{}", result);
 
     assert!(result
-        .diagnostics
+        .0
         .iter()
         .any(|d| d.message.contains("expects a Number, not a Bool")));
 }
@@ -737,7 +737,7 @@ fn test_if_statement_expressions_must_be_boolean() {
 
     println!("{}", result);
 
-    assert!(result.diagnostics.iter().any(|d| d
+    assert!(result.0.iter().any(|d| d
         .message
         .contains("Terms of 'if statement' must be Bool, not String")));
 }

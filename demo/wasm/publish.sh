@@ -17,7 +17,8 @@ rm -r demo/wasm/build || true
 mkdir -p demo/wasm/build
 
 # Run `wasm-bindgen`.
-cargo install wasm-bindgen-cli || true
+# Keep this in sync with the version in `Cargo.lock`.
+cargo install wasm-bindgen-cli --version 0.2.87 || true
 wasm-bindgen --no-typescript --out-name bevy_yarn_slinger_demo --out-dir demo/wasm/build/ --target web target/wasm32-unknown-unknown/wasm-release/bevy_yarn_slinger_demo.wasm
 
 # Run wasm-opt. This must be run after wasm-bindgen because wasm-bindgen thinks the optimized .wasm is broken.

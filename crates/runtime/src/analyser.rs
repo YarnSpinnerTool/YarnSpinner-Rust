@@ -9,6 +9,8 @@ mod context;
 pub(crate) mod default_analysers;
 mod diagnosis;
 
+/// A trait for analysing a compiled Yarn program. Can be used by adding them to a [`Context`] with [`Context::add_analyser`] and then applied to a
+/// compiled Yarn program with [`Dialogue::analyse`](crate::prelude::Dialogue).
 pub trait CompiledProgramAnalyser: Debug {
     /// Reads data from the provided program that is later used in [`CompiledProgramAnalyser::collect_diagnoses`].
     fn diagnose(&mut self, program: &Program);
