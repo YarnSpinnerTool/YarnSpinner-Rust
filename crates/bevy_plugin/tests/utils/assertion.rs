@@ -1,4 +1,5 @@
 use bevy::ecs::event::ManualEventReader;
+use bevy::prelude::*;
 use bevy_yarn_slinger::events::*;
 
 #[derive(Debug, Default)]
@@ -16,6 +17,25 @@ pub struct EventAsserter {
 impl EventAsserter {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn clear_events(&mut self, app: &mut App) {
+        self.present_line_reader
+            .clear(&mut app.world.resource::<Events<PresentLineEvent>>());
+        self.present_options_reader
+            .clear(&mut app.world.resource::<Events<PresentOptionsEvent>>());
+        self.dialogue_start_reader
+            .clear(&mut app.world.resource::<Events<DialogueStartEvent>>());
+        self.dialogue_complete_reader
+            .clear(&mut app.world.resource::<Events<DialogueCompleteEvent>>());
+        self.node_start_reader
+            .clear(&mut app.world.resource::<Events<NodeStartEvent>>());
+        self.node_complete_reader
+            .clear(&mut app.world.resource::<Events<NodeCompleteEvent>>());
+        self.line_hints_reader
+            .clear(&mut app.world.resource::<Events<LineHintsEvent>>());
+        self.execute_command_reader
+            .clear(&mut app.world.resource::<Events<ExecuteCommandEvent>>());
     }
 }
 

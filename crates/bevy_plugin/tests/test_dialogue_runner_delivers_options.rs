@@ -22,7 +22,10 @@ fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
     let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
-    app.continue_dialogue_and_update_n_times(4);
+    app.continue_dialogue_and_update_n_times(3);
+    asserter.clear_events(&mut app);
+    app.continue_dialogue_and_update();
+
     assert_events!(asserter, app contains [
         PresentLineEvent (n = 0),
         PresentOptionsEvent with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
@@ -60,6 +63,8 @@ fn option_selection_implies_continue() -> Result<()> {
     let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
+    asserter.clear_events(&mut app);
+
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
     assert_events!(asserter, app contains [
@@ -79,7 +84,10 @@ fn can_show_option_selection_as_line() -> Result<()> {
         dialogue_runner.start_node("Start");
         dialogue_runner.run_selected_options_as_lines(true);
     }
-    app.continue_dialogue_and_update_n_times(4);
+    app.continue_dialogue_and_update_n_times(3);
+    asserter.clear_events(&mut app);
+    app.continue_dialogue_and_update();
+
     assert_events!(asserter, app contains [
         PresentLineEvent (n = 0),
         PresentOptionsEvent with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
@@ -105,6 +113,8 @@ fn can_jump_around_nodes() -> Result<()> {
     let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
+    asserter.clear_events(&mut app);
+
     app.dialogue_runner_mut().select_option(OptionId(1))?;
     app.update();
     assert_events!(asserter, app contains [
@@ -127,7 +137,10 @@ fn can_select_unavailable_choice() -> Result<()> {
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
-    app.continue_dialogue_and_update_n_times(2);
+    app.continue_dialogue_and_update();
+    asserter.clear_events(&mut app);
+
+    app.continue_dialogue_and_update();
     assert_events!(asserter, app contains [
         PresentLineEvent (n = 0),
         PresentOptionsEvent with |event|

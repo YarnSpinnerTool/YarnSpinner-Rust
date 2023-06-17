@@ -165,6 +165,7 @@ impl Display for Library {
 ///
 /// ```rust
 /// # use yarn_slinger_core::yarn_library;
+/// # use yarn_slinger_core::prelude::*;
 ///
 /// let library = yarn_library! {
 ///    "pow" => pow,

@@ -42,6 +42,7 @@ fn stop_sends_events() -> Result<()> {
     let mut asserter = EventAsserter::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
     app.update();
+    asserter.clear_events(&mut app);
 
     app.dialogue_runner_mut().stop();
     app.update();
