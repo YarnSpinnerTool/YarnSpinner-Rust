@@ -143,7 +143,7 @@ macro_rules! yarn_commands {
         {
             let mut map = YarnCommands::default();
             $(
-                map.register_command($name, $function);
+                map.add_command($name, $function);
             )*
             map
         }
