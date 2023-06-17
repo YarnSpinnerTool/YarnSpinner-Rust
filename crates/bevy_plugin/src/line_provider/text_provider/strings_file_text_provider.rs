@@ -158,14 +158,17 @@ impl TextProvider for StringsFileTextProvider {
         }
         let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
-            asset_events
-                .iter_current_update_events()
-                .any(|event| match event {
-                    AssetEvent::Modified {
-                        handle: modified_handle,
-                    } => modified_handle == handle,
-                    _ => false,
-                })
+            // Since we can't store the reader meaningfully as we're not in a mutable reference,
+            // we have to create a new one every time. This approach might read some events twice.
+            // We're not too worried about it because in the worst case we'll just end up cloning the strings file a second time
+            // since it's still loaded in memory, which means it won't be parsed again.
+            let mut reader = asset_events.get_reader();
+            reader.iter(&asset_events).any(|event| match event {
+                AssetEvent::Modified {
+                    handle: modified_handle,
+                } => modified_handle == handle,
+                _ => false,
+            })
         };
         let has_no_translation_yet = self.translation_string_table.is_none();
         if has_no_translation_yet || strings_file_has_changed() {

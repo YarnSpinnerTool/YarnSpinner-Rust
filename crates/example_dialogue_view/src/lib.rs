@@ -10,8 +10,8 @@
 //!
 //! ## Usage
 //!
-//! It's enough to simply register [`ExampleYarnSlingerDialogueViewPlugin`] the plugin alongside the [`YarnSlingerPlugin`](bevy_yarn_slinger::prelude::YarnSlingerPlugin):
-//! ```rust
+//! It's enough to simply register [`ExampleYarnSlingerDialogueViewPlugin`] alongside [`YarnSlingerPlugin`](bevy_yarn_slinger::prelude::YarnSlingerPlugin):
+//! ```no_run
 //! use bevy::prelude::*;
 //! use bevy_yarn_slinger::*;
 //! use bevy_yarn_slinger::prelude::YarnSlingerPlugin;
