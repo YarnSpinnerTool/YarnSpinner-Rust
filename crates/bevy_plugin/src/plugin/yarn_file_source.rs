@@ -75,9 +75,9 @@ impl YarnFileSource {
     }
 
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-    fn load_folder(asset_server: &AssetServer, path: &PathBuf) -> Vec<Handle<YarnFile>> {
+    fn load_folder(asset_server: &AssetServer, path: &std::path::Path) -> Vec<Handle<YarnFile>> {
         let handles: Vec<_> = asset_server
-            .load_folder(path.as_path())
+            .load_folder(path)
             .unwrap_or_else(|e| {
                 panic!(
                     "Failed to load Yarn file folder {path}: {e}",
