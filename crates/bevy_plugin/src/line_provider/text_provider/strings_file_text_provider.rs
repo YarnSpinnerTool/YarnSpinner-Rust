@@ -163,7 +163,7 @@ impl TextProvider for StringsFileTextProvider {
             // We're not too worried about it because in the worst case we'll just end up cloning the strings file a second time
             // since it's still loaded in memory, which means it won't be parsed again.
             let mut reader = asset_events.get_reader();
-            reader.iter(&asset_events).any(|event| match event {
+            reader.iter(asset_events).any(|event| match event {
                 AssetEvent::Modified {
                     handle: modified_handle,
                 } => modified_handle == handle,
