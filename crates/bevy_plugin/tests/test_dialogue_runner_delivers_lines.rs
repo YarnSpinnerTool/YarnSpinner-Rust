@@ -191,6 +191,7 @@ fn serves_translations() -> Result<()> {
     app.dialogue_runner_mut()
         .set_asset_language("de-CH")
         .continue_in_next_update();
+    asserter.clear_events(&mut app);
     app.load_lines();
     assert_events!(asserter, app contains
         PresentLineEvent with |event| event.line.text == english_lines()[7] && event.line.assets.get_handle::<AudioSource>().is_some()
@@ -245,10 +246,18 @@ fn default_language_is_base_language() {
         Some(Language::from("en-US")),
         dialogue_runner.text_language()
     );
-    assert_eq!(
-        Some(Language::from("en-US")),
-        dialogue_runner.asset_language()
-    );
+    #[cfg(feature = "audio_assets")]
+    {
+        assert_eq!(
+            Some(Language::from("en-US")),
+            dialogue_runner.asset_language()
+        );
+    }
+
+    #[cfg(not(feature = "audio_assets"))]
+    {
+        assert_eq!(None, dialogue_runner.asset_language());
+    }
 }
 
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<DialogueRunner> {

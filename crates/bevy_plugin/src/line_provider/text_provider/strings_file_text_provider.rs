@@ -1,10 +1,12 @@
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 use bevy::asset::LoadState;
+use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 pub(crate) fn strings_file_text_provider_plugin(_app: &mut App) {}
 
@@ -21,6 +23,7 @@ pub struct StringsFileTextProvider {
     base_string_table: HashMap<LineId, StringInfo>,
     strings_file_handle: Option<Handle<StringsFile>>,
     translation_string_table: Option<HashMap<LineId, String>>,
+    event_reader: Arc<RwLock<ManualEventReader<AssetEvent<StringsFile>>>>,
 }
 
 impl Debug for StringsFileTextProvider {
@@ -32,6 +35,7 @@ impl Debug for StringsFileTextProvider {
             .field("base_string_table", &self.base_string_table)
             .field("strings_file_handle", &self.strings_file_handle)
             .field("translation_string_table", &self.translation_string_table)
+            .field("event_reader", &self.event_reader)
             .finish()
     }
 }
@@ -116,6 +120,7 @@ impl StringsFileTextProvider {
             base_string_table: yarn_project.compilation.string_table.clone(),
             strings_file_handle: None,
             translation_string_table: None,
+            event_reader: Default::default(),
         }
     }
     fn set_language_invalidating_translation(&mut self, language: impl Into<Option<Language>>) {
@@ -158,11 +163,7 @@ impl TextProvider for StringsFileTextProvider {
         }
         let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
-            // Since we can't store the reader meaningfully as we're not in a mutable reference,
-            // we have to create a new one every time. This approach might read some events twice.
-            // We're not too worried about it because in the worst case we'll just end up cloning the strings file a second time
-            // since it's still loaded in memory, which means it won't be parsed again.
-            let mut reader = asset_events.get_reader();
+            let mut reader = self.event_reader.write().unwrap();
             reader.iter(asset_events).any(|event| match event {
                 AssetEvent::Modified {
                     handle: modified_handle,

@@ -82,7 +82,7 @@ macro_rules! assert_events {
         let events = $app.world.resource::<bevy::prelude::Events<$event>>();
         let reader = $crate::prelude::get_reader!($asserter, $event);
         let events: Vec<&$event> = reader.iter(&events).collect();
-        assert_eq!($num, events.len(), "Expected {} events of type {}, but found {}: {events:?}", stringify!($num), stringify!($event), events.len());
+        assert_eq!($num, events.len(), "Expected {} events of type {}, but found {}: {events:#?}", stringify!($num), stringify!($event), events.len());
         $(
             {
                 fn get_pred() -> impl Fn(&$event) -> bool {
