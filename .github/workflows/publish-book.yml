@@ -1,0 +1,53 @@
+name: Publish Book
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  mdbook:
+    runs-on: ubuntu-20.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: "latest"
+
+      - run: mdbook build docs
+
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check for missing pages in SUMMARY.md
+        working-directory: ./docs
+        run: ./verify_summary.sh
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: "latest"
+
+      - name: Build
+        working-directory: ./docs
+        run: mdbook build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        # Only deploy if pushed to the main branch
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/book
+          # Don't store history of gh-pages branch
+          # This ensures that the repository size doesn't grow too much
+          force_orphan: true

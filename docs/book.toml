@@ -1,0 +1,6 @@
+[book]
+authors = ["Jan Hohenheim"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Yarn Slinger Book"
