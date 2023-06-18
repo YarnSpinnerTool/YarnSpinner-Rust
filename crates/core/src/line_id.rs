@@ -3,7 +3,7 @@ use crate::prelude::*;
 use std::fmt::Display;
 
 /// The unique ID of a line in a Yarn script. In a Yarn script, line IDs look like this:
-/// ```yarn
+/// ```text
 /// Darth Vader: I am your father! #line:123
 /// Luke: Noooooo #line:nooooo
 /// ```

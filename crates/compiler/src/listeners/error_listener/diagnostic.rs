@@ -168,16 +168,9 @@ fn convert_absolute_range_to_relative(diagnostic: &Diagnostic) -> (usize, usize)
         + range.end.character
         // - 1 because the Diagnostic range is exclusive, but the annotation range is inclusive
         - 1;
-    let byte_start = context
-        .char_indices()
-        .map(|(i, _)| i)
-        .nth(relative_start)
-        .unwrap();
-    let byte_end = context
-        .char_indices()
-        .map(|(i, _)| i)
-        .nth(relative_end)
-        .unwrap();
+    let mut char_indices = context.char_indices().map(|(i, _)| i);
+    let byte_start = char_indices.clone().nth(relative_start).unwrap();
+    let byte_end = char_indices.nth(relative_end).unwrap_or(byte_start);
     (byte_start, byte_end)
 }
 

@@ -1,6 +1,6 @@
 //! Types handling the parsing of Yarn markup.
 //! Yarn markup looks like this:
-//! ```yarn
+//! ```text
 //! Mae: [shout]I'm a cat![/shout]!
 //! Greg: You're a [size=12]cat[/size]!
 //! ```

@@ -26,7 +26,7 @@ use yarn_slinger_macros::all_tuples;
 /// }
 /// ```
 /// Which may be called from Yarn as follows:
-/// ```yarn
+/// ```text
 /// <<set $name to "Bob">>
 /// <<set $age to 42>>
 /// <<set $is_cool to true>>

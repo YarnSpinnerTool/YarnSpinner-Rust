@@ -124,7 +124,7 @@ fn handle_yarn_file_events(
         if is_watching {
             added_tags.insert(handle.clone_weak());
         } else {
-            let mut yarn_file = assets.get_mut(handle).unwrap();
+            let yarn_file = assets.get_mut(handle).unwrap();
             yarn_file.file.source = source_with_added_ids;
 
             let string_table = YarnCompiler::new()

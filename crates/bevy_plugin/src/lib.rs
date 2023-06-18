@@ -43,8 +43,8 @@
 //!
 //! The following example is adapted from the [hello world example](https://github.com/yarn-slinger/yarn-slinger/blob/main/examples/bevy_yarn_slinger/src/bin/hello_world.rs).
 //!
-//! ```yarn
-//! // assets/dialogue/hello_world.yarn
+//! ```text
+//! # assets/dialogue/hello_world.yarn
 //! title: Start
 //! ---
 //! Hello world!
