@@ -4,6 +4,7 @@
     - [Basics](./working_with_yarn_slinger/yarn_files/basics.md)
     - [Running Examples](./working_with_yarn_slinger/yarn_files/running_examples.md)
     - [Lines](./working_with_yarn_slinger/yarn_files/lines.md)
+    - [Variables](./working_with_yarn_slinger/yarn_files/variables.md)
     - [Options](./working_with_yarn_slinger/yarn_files/options.md)
   - [Bevy Plugin](./working_with_yarn_slinger/bevy_plugin.md)
 - [Differences to Yarn Spinner for Unity](./differences_to_yarn_spinner_for_unity.md)
