@@ -68,5 +68,5 @@ Shopkeeper: Welcome to my shop! What can I do for you?
 ```
 
 The above file will result in the following dialogue window:
-TODO
 
+![cond_options.png](cond_options.png)

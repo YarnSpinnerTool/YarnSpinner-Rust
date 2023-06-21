@@ -27,7 +27,10 @@ use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
+        app.add_plugins(DefaultPlugins.set(AssetPlugin {
+            watch_for_changes: true,
+            ..default()
+        }))
         .add_plugin(YarnSlingerPlugin::new())
         .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems((
@@ -71,7 +74,8 @@ Run your game with `cargo run` and you should see the following:
 
 It might have taken a while to compile, but the good news is that the code you're running now
 supports *hot reloading*, which means that you can change your Yarn file and save it while the game is running
-and the changes will be visible immediately. No recompilation required!
+and the changes will be visible immediately, as long as you didn't already close the dialog by completing it. 
+No recompilation required!
 
 Try it out now. Can you make the dialogue say "Goodbye World!" instead?
 What happens when write the text as if a character spoke it, e.g. "Narrator: Hello World!"?

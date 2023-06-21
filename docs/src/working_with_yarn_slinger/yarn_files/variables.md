@@ -21,7 +21,7 @@ Ferris: Hello, {$name}! I heard you are {$age} years old!
 ```
 This will be displayed as:
 
-TODO
+![variables.png](variables.png)
 
 You can change the value of a variable with the `<<set>>` command:
 
