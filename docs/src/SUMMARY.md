@@ -13,5 +13,6 @@
   - [Bevy Plugin](./working_with_yarn_slinger/bevy_plugin.md)
     - [Custom Functions](./working_with_yarn_slinger/bevy_plugin/custom_functions.md)
     - [Custom Commands](./working_with_yarn_slinger/bevy_plugin/custom_commands.md)
+    - [Dialog Views](./working_with_yarn_slinger/bevy_plugin/dialog_views.md)
 - [Differences to Yarn Spinner for Unity](./differences_to_yarn_spinner_for_unity.md)
 - [Porting Yarn Slinger](./porting_yarn_slinger.md)

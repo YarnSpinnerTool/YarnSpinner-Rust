@@ -70,7 +70,7 @@ Shopkeeper: Here you go!
 ===
 ```
 
-Finally, boolean variables can be used to determine whether an option should be available or not:
+Finally, boolean [variables](variables.md) can be used to determine whether an option should be available or not:
 ```text
 title: Start
 ---
@@ -85,3 +85,7 @@ Shopkeeper: Welcome to my shop! What can I do for you?
 The above file will result in the following dialogue window:
 
 ![cond_options.png](cond_options.png)
+
+Keeping the disabled options hidden is the behavior of the [dialogue view](../bevy_plugin/dialog_views.md) used here, 
+but these options are delivered to the view, which means you could still show them to the user
+in e.g. a greyed-out state.
