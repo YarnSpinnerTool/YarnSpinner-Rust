@@ -25,7 +25,22 @@ Ferris: So, how's life these days?
 ===
 ```
 In this example, the character "Ferris" will only answer with "That's great to hear!" if the player chooses the first option.
-You can also next options inside of each other:
+This can also be used to conditionally set variables:
+
+```text
+title: Start
+---
+Ferris: So, how's life these days?
+<<declare $mood = "">>
+-> Pretty good, actually.
+    <<set $mood = "good">>
+-> Could be better.
+    <<set $mood = "bad">>
+Ferris: I see. So you're feeling {$mood}?
+===
+```
+
+You can also nest options within options:
 ```text
 title: Start
 ---

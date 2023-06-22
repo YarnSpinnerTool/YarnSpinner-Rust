@@ -14,6 +14,22 @@ Which will result in something like this:
 The curly braces (`{}`) are not part of the function call, but are used to interpolate the result of the function into the text,
 as seen previously in the chapter [Variables](variables.md).
 
+Speaking about variables, you can also use them as parameters:
+```text
+title: Start
+---
+<<declare $sides = 0>>
+How many sides does your die have?
+-> One
+    <<set $sides = 1>>
+-> Six
+    <<set $sides = 6>>
+-> Six thousand
+    <<set $sides = 6000>>
+Rolling a die with {$sides} sides and got a {dice($sides)}!
+===
+```
+
 There are a number of built-in functions available, such as the `dice` function used above.
 Defining your own functions is specific to the game engine used. 
 For Bevy, see the chapter [Custom Functions](../bevy_plugin/custom_functions.md).
