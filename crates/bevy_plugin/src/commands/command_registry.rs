@@ -17,7 +17,7 @@ pub(crate) fn command_registry_plugin(app: &mut App) {
 /// You can get access to an instance of this struct with [`DialogueRunner::commands`] and [`DialogueRunner::commands_mut`].
 ///
 /// If a command "add_player" with the parameters "name" and "age" has been registered, it can be called from Yarn like this:
-/// ```yarn
+/// ```text
 /// <<add_player "John" 42>>
 /// ```
 pub struct YarnCommands(pub(crate) InnerRegistry);
