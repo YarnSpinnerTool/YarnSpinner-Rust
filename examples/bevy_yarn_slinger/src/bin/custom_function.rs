@@ -8,10 +8,13 @@ fn main() {
     app.add_plugins(DefaultPlugins)
         .add_plugin(YarnSlingerPlugin::new())
         .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
-        .add_systems((
-            setup_camera.on_startup(),
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        ))
+        .add_systems(
+            Update,
+            (
+                setup_camera.on_startup(),
+                spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+            ),
+        )
         .run();
 }
 

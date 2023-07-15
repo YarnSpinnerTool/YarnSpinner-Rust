@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
-    app.add_system(setup.on_startup());
+    app.add_systems(Update, setup.on_startup());
 }
 
 #[derive(Debug, Default, Component)]

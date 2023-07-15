@@ -23,7 +23,7 @@ pub(crate) struct CompilationSystemSet;
 /// # use bevy::prelude::*;
 /// # use bevy_yarn_slinger::prelude::*;
 /// # let mut app = App::new();
-/// app.add_system(setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
+/// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
 ///
 /// fn setup_dialogue_runners(mut commands: Commands, project: Res<YarnProject>) {
 ///    commands.spawn(project.create_dialogue_runner());

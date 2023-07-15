@@ -11,11 +11,14 @@ fn main() {
         .add_plugin(YarnSlingerPlugin::new())
         // Initialize the bundled example UI
         .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
-        .add_systems((
-            setup_camera.on_startup(),
-            // Spawn the dialogue runner once the Yarn project has finished compiling
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        ))
+        .add_systems(
+            Update,
+            (
+                setup_camera.on_startup(),
+                // Spawn the dialogue runner once the Yarn project has finished compiling
+                spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+            ),
+        )
         .run();
 }
 

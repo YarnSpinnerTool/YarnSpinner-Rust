@@ -50,13 +50,17 @@ fn main() {
     )
     .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
     .add_plugin(Sprite3dPlugin)
-    .add_systems((
-        setup.on_startup(),
-        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        adapt_materials.run_if(any_with_component::<SceneInstance>()),
-        spawn_sprites.run_if(sprites_have_loaded),
-    ))
     .add_systems(
+        Update,
+        (
+            setup.on_startup(),
+            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+            adapt_materials.run_if(any_with_component::<SceneInstance>()),
+            spawn_sprites.run_if(sprites_have_loaded),
+        ),
+    )
+    .add_systems(
+        Update,
         (
             handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
             move_camera.run_if(resource_exists::<CameraMovement>()),

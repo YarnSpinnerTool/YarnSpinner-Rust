@@ -67,11 +67,14 @@
 //!         .add_plugin(YarnSlingerPlugin::new())
 //!         // Initialize the bundled example UI. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
 //!         // .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
-//!         .add_systems((
-//!             setup_camera.on_startup(),
-//!             // Spawn dialogue runner once the Yarn project has finished compiling
-//!             spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-//!         ))
+//!         .add_systems(
+//!             Update,
+//!             (
+//!                 setup_camera.on_startup(),
+//!                 // Spawn dialogue runner once the Yarn project has finished compiling
+//!                 spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+//!             )
+//!         )
 //!         .run();
 //! }
 //!

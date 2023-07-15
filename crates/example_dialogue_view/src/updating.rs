@@ -7,6 +7,7 @@ use bevy_yarn_slinger::{events::*, prelude::*};
 
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             hide_dialog.run_if(on_event::<DialogueCompleteEvent>()),
             show_dialog.run_if(on_event::<DialogueStartEvent>()),

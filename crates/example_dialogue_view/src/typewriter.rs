@@ -12,6 +12,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) fn typewriter_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             despawn.run_if(on_event::<DialogueCompleteEvent>()),
             spawn.run_if(on_event::<DialogueStartEvent>()),

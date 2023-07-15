@@ -8,6 +8,7 @@ use bevy_yarn_slinger::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             show_options.run_if(
                 resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
