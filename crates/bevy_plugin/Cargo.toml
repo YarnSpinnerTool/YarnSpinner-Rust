@@ -19,7 +19,7 @@ sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 
 [dependencies.bevy]
-version = "0.10"
+version = "0.11"
 default-features = false
 features = ["bevy_asset", "serialize"]
 
@@ -27,6 +27,13 @@ features = ["bevy_asset", "serialize"]
 tempfile = "3"
 
 [dev-dependencies.bevy]
-version = "0.10"
+version = "0.11"
 default-features = false
-features = ["bevy_core_pipeline", "bevy_render", "bevy_winit", "filesystem_watcher", "x11", "bevy_audio"]
+features = [
+  "bevy_core_pipeline",
+  "bevy_render",
+  "bevy_winit",
+  "filesystem_watcher",
+  "x11",
+  "bevy_audio",
+]
