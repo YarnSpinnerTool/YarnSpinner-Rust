@@ -12,7 +12,7 @@ use crate::types::Type;
 ///
 /// Corresponds to the internal `Value` class in the original C# implementation.
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(

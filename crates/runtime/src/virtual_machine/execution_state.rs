@@ -7,7 +7,7 @@ use crate::prelude::*;
 /// Does not contain `DeliveringContent` since that that state would be used to indicate
 /// that a handler is currently running, which we don't have.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default, Hash))]
 #[cfg_attr(

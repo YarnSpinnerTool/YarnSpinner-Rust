@@ -10,7 +10,7 @@ use std::hash::Hash;
 use yarn_slinger::prelude::YarnFile as InnerYarnFile;
 
 /// A Yarn file. These will mostly be created by loading them from disk with the [`AssetServer`].
-#[derive(Debug, Clone, Eq, PartialEq, Reflect, FromReflect, TypeUuid, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Reflect, TypeUuid, Serialize, Deserialize)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 #[uuid = "32570e61-d69d-4f87-9552-9da2a62ecfd1"]
 pub struct YarnFile {

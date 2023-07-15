@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use yarn_slinger_core::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Default)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default))]
 #[cfg_attr(

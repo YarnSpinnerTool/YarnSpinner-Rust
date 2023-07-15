@@ -20,7 +20,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
         );
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect)]
 #[reflect(Debug, Default, PartialEq)]
 pub(crate) struct UpdateAllStringsFilesForStringTableEvent(
     pub(crate) std::collections::HashMap<LineId, StringInfo>,

@@ -38,11 +38,11 @@ pub(crate) struct YarnProjectConfigToLoad {
     pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
 pub(crate) struct YarnFilesToLoad(pub(crate) HashSet<YarnFileSource>);
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect, FromReflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect)]
 #[reflect(Debug, Resource, Default, PartialEq)]
 pub(crate) struct YarnFilesBeingLoaded(pub(crate) HashSet<Handle<YarnFile>>);
 
@@ -95,7 +95,7 @@ fn add_yarn_files_to_load_queue(
     yarn_files_being_loaded.0.extend(handles);
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, FromReflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect)]
 #[reflect(Debug, Default, PartialEq)]
 pub(crate) struct RecompileLoadedYarnFilesEvent;
 

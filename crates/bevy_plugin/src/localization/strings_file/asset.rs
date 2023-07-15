@@ -261,7 +261,7 @@ pub(crate) struct StringsFileRecord {
     pub(crate) comment: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize, FromReflect)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Reflect, Serialize, Deserialize)]
 #[reflect(Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub(crate) struct Lock(String);
 

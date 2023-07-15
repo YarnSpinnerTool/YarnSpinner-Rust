@@ -23,7 +23,7 @@ pub type Result<T> = std::result::Result<T, CompilerError>;
 ///
 /// This type is a combination of the original `CompilationStep` and `Compiler` types, optimized for easier, fluent calling.
 #[derive(Debug, Clone, PartialEq, Default)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(
@@ -106,7 +106,7 @@ impl Compiler {
 
 /// Represents the contents of a file to compile.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(
@@ -127,7 +127,7 @@ pub struct File {
 
 /// The types of compilation that the compiler will do.
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect,))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash, Default))]
 #[cfg_attr(

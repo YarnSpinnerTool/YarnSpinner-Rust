@@ -10,7 +10,7 @@ pub(crate) fn function_type_properties(function_type: &FunctionType) -> TypeProp
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default, Hash))]
 #[cfg_attr(
