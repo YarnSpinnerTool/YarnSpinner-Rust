@@ -3,6 +3,7 @@ use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::bail;
 use bevy::prelude::*;
+use bevy::reflect::TypePath;
 use bevy::utils::HashSet;
 use std::fmt::Debug;
 

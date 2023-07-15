@@ -4,7 +4,7 @@ use crate::prelude::*;
 use anyhow::{anyhow, bail};
 use bevy::asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
-use bevy::reflect::TypeUuid;
+use bevy::reflect::{TypePath, TypeUuid};
 use bevy::utils::HashMap;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -39,7 +39,7 @@ impl AssetLoader for StringsFileAssetLoader {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, TypeUuid)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, TypeUuid, TypePath)]
 #[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
 #[non_exhaustive]
 pub(crate) struct StringsFile(HashMap<LineId, StringsFileRecord>);
