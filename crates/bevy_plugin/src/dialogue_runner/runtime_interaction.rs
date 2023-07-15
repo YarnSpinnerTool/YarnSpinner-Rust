@@ -9,6 +9,7 @@ use bevy::utils::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             continue_runtime
                 .pipe(panic_on_err)

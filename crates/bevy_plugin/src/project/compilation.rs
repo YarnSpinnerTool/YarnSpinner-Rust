@@ -3,7 +3,6 @@ use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::bail;
 use bevy::prelude::*;
-use bevy::reflect::TypePath;
 use bevy::utils::HashSet;
 use std::fmt::Debug;
 
@@ -13,6 +12,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
         .init_resource::<YarnFilesBeingLoaded>()
         .add_event::<RecompileLoadedYarnFilesEvent>()
         .add_systems(
+            Update,
             (
                 load_project.pipe(panic_on_err),
                 add_yarn_files_to_load_queue

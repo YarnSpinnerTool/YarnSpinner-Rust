@@ -6,6 +6,7 @@ use bevy::utils::{HashMap, HashSet};
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_event::<UpdateAllStringsFilesForStringTableEvent>()
         .add_systems(
+            Update,
             (update_all_strings_files_for_string_table
                 .pipe(panic_on_err)
                 .after(LineIdUpdateSystemSet)
