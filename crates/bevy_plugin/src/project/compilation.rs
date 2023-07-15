@@ -95,7 +95,7 @@ fn add_yarn_files_to_load_queue(
     yarn_files_being_loaded.0.extend(handles);
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Event)]
 #[reflect(Debug, Default, PartialEq)]
 pub(crate) struct RecompileLoadedYarnFilesEvent;
 
