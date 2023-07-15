@@ -162,7 +162,7 @@ impl Plugin for YarnSlingerPlugin {
         Did you call `YarnSlingerPlugin::with_yarn_files()` without any Yarn file sources? \
         If you really want to load no Yarn files right now and do that later, use `YarnSlingerPlugin::deferred()` instead.\
         If you wanted to load from the default directory instead, use `YarnSlingerPlugin::default()`.");
-        app.add_plugin(Self::deferred())
+        app.add_plugins(Self::deferred())
             .world
             .send_event(self.project.clone());
     }
