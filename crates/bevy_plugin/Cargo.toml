@@ -12,7 +12,7 @@ audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 [dependencies]
 anyhow = "1"
 csv = "1"
-seldom_fn_plugin = "0.3"
+seldom_fn_plugin = "0.4"
 serde = { version = "1", features = ["derive"] }
 yarn_slinger = { path = "../yarn_slinger", features = ["bevy", "serde"] }
 sha2 = "0.10"
