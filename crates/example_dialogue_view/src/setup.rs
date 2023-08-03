@@ -32,7 +32,7 @@ fn setup(mut commands: Commands) {
             fmt_name("root"),
             NodeBundle {
                 style: Style {
-                    size: Size::width(Val::Percent(100.0)),
+                    width: Val::Percent(100.0),
                     justify_content: JustifyContent::FlexEnd,
                     align_items: AlignItems::Center,
                     margin: UiRect::bottom(Val::Px(30.0)),
@@ -68,7 +68,7 @@ fn setup(mut commands: Commands) {
                                 ..default()
                             },
                             style: Style {
-                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                width: Val::Px(DIALOG_WIDTH),
                                 ..default()
                             },
                             ..default()
@@ -102,8 +102,8 @@ fn setup(mut commands: Commands) {
                     fmt_name("dialogue"),
                     NodeBundle {
                         style: Style {
-                            size: Size::width(Val::Px(DIALOG_WIDTH)),
-                            min_size: Size::height(Val::Px(50.0)),
+                            width: Val::Px(DIALOG_WIDTH),
+                            max_height: Val::Px(50.0),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
@@ -168,7 +168,7 @@ fn setup(mut commands: Commands) {
                                 ..default()
                             },
                             style: Style {
-                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                width: Val::Px(DIALOG_WIDTH),
                                 ..default()
                             },
                             ..default()
