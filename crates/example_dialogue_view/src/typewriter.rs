@@ -163,5 +163,5 @@ fn bob_continue(
     let mut style = style.single_mut();
     let pixels =
         (time.elapsed_seconds() * 3.0).sin().powi(2) * 5.0 + INITIAL_DIALOGUE_CONTINUE_BOTTOM;
-    style.position.bottom = Val::Px(pixels);
+    style.bottom = Val::Px(pixels);
 }
