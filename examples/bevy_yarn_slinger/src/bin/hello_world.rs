@@ -8,16 +8,14 @@ fn main() {
         // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder.
         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
         // .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
-        .add_plugin(YarnSlingerPlugin::new())
+        .add_plugins(YarnSlingerPlugin::new())
         // Initialize the bundled example UI
-        .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
+        .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
+        .add_systems(Startup, setup_camera)
         .add_systems(
             Update,
-            (
-                setup_camera.on_startup(),
-                // Spawn the dialogue runner once the Yarn project has finished compiling
-                spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-            ),
+            // Spawn the dialogue runner once the Yarn project has finished compiling
+            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         )
         .run();
 }

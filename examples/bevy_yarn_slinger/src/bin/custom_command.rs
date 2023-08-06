@@ -6,14 +6,12 @@ use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugin(YarnSlingerPlugin::new())
-        .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
+        .add_plugins(YarnSlingerPlugin::new())
+        .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
+        .add_systems(Startup, setup_camera)
         .add_systems(
             Update,
-            (
-                setup_camera.on_startup(),
-                spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-            ),
+            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
         )
         .run();
 }

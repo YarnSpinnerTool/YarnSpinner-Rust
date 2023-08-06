@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use bevy::asset::load_internal_binary_asset;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
