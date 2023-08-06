@@ -10,7 +10,7 @@ exclude = ["assets", "wasm"]
 [dependencies]
 bevy_yarn_slinger = { path = "../bevy_plugin" }
 unicode-segmentation = "1"
-seldom_fn_plugin = "0.3"
+seldom_fn_plugin = "0.4"
 
 [dependencies.bevy]
 version = "0.11"
