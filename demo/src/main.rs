@@ -1,6 +1,8 @@
 // Disable windows console in release builds
 #![cfg_attr(not(debug_assertations), windows_subsystem = "windows")]
 
+use std::time::Duration;
+
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
 use bevy::asset::{ChangeWatcher, LoadState};
 use bevy::prelude::*;
