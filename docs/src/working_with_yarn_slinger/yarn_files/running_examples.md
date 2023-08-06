@@ -31,8 +31,8 @@ fn main() {
             watch_for_changes: true,
             ..default()
         }))
-        .add_plugin(YarnSlingerPlugin::new())
-        .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
+        .add_plugins(YarnSlingerPlugin::new())
+        .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
         .add_systems(Update, (
             setup_camera.on_startup(),
             spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),

@@ -22,7 +22,7 @@ mod yarn_file_source;
 /// App::new()
 ///     .add_plugins(DefaultPlugins)
 ///     // Load all Yarn files from the "assets/dialogue" folder by default.
-///     .add_plugin(YarnSlingerPlugin::new());
+///     .add_plugins(YarnSlingerPlugin::new());
 /// ```
 ///
 /// Note that the above does not work on Wasm or Android, since Bevy cannot query folders on these platforms. See [`YarnSlingerPlugin::new`] for more information.

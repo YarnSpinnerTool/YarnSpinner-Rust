@@ -7,7 +7,7 @@ fn main() {
     app.add_plugins(DefaultPlugins)
         // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder.
         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
-        // .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
+        // .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
         .add_plugins(YarnSlingerPlugin::new())
         // Initialize the bundled example UI
         .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())

@@ -112,13 +112,13 @@ impl AppExt for App {
     }
 
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App {
-        self.add_plugins(MinimalPlugins).add_plugin(AssetPlugin {
+        self.add_plugins(MinimalPlugins).add_plugins(AssetPlugin {
             asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
             ..default()
         });
 
         #[cfg(feature = "audio_assets")]
-        self.add_plugin(AudioPlugin::default());
+        self.add_plugins(AudioPlugin::default());
         self
     }
 }
