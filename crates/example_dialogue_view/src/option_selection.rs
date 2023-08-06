@@ -100,7 +100,7 @@ fn select_option(
     let mut window = windows.single_mut();
     for (interaction, button, children) in buttons.iter_mut() {
         let (color, icon) = match *interaction {
-            Interaction::Clicked if selection.is_none() => {
+            Interaction::Pressed if selection.is_none() => {
                 selection = Some(button.0);
                 (Color::TOMATO, CursorIcon::Default)
             }
