@@ -100,7 +100,7 @@ fn setup(mut commands: Commands) {
                     NodeBundle {
                         style: Style {
                             width: Val::Px(DIALOG_WIDTH),
-                            max_height: Val::Px(50.0),
+                            min_height: Val::Px(50.0),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
