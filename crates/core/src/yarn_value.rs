@@ -14,7 +14,7 @@ use thiserror::Error;
 ///
 /// Corresponds to C#'s [`Convert`](https://docs.microsoft.com/en-us/dotnet/api/system.convert?view=net-5.0) class.
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "bevy", derive(Reflect,))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(
