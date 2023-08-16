@@ -1,7 +1,7 @@
 /// A complete Yarn program.
 use crate::prelude::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -25,7 +25,7 @@ pub struct Program {
 /// A collection of instructions
 use crate::prelude::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -53,7 +53,7 @@ pub struct Node {
 }
 use crate::prelude::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -67,7 +67,7 @@ pub struct Header {
 /// A single Yarn instruction.
 use crate::prelude::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -85,7 +85,7 @@ pub mod instruction {
     /// The type of instruction that this is.
     use crate::prelude::*;
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
     #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
     #[cfg_attr(
         all(feature = "bevy", feature = "serde"),
@@ -224,7 +224,7 @@ pub mod instruction {
 /// A value used by an Instruction.
 use crate::prelude::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -239,7 +239,7 @@ pub mod operand {
     /// The type of operand this is.
     use crate::prelude::*;
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    #[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
     #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
     #[cfg_attr(
         all(feature = "bevy", feature = "serde"),

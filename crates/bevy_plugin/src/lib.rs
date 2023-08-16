@@ -63,15 +63,18 @@
 //!     app.add_plugins(DefaultPlugins)
 //!         // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder
 //!         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
-//!         // .add_plugin(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
-//!         .add_plugin(YarnSlingerPlugin::new())
+//!         // .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
+//!         .add_plugins(YarnSlingerPlugin::new())
 //!         // Initialize the bundled example UI. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
-//!         // .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
-//!         .add_systems((
-//!             setup_camera.on_startup(),
-//!             // Spawn dialogue runner once the Yarn project has finished compiling
-//!             spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-//!         ))
+//!         // .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
+//!         .add_systems(
+//!             Update,
+//!             (
+//!                 setup_camera.on_startup(),
+//!                 // Spawn dialogue runner once the Yarn project has finished compiling
+//!                 spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+//!             )
+//!         )
 //!         .run();
 //! }
 //!

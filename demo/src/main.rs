@@ -1,8 +1,10 @@
 // Disable windows console in release builds
 #![cfg_attr(not(debug_assertations), windows_subsystem = "windows")]
 
+use std::time::Duration;
+
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
-use bevy::asset::LoadState;
+use bevy::asset::{ChangeWatcher, LoadState};
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
@@ -23,7 +25,7 @@ fn main() {
         DefaultPlugins
             .set(AssetPlugin {
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-                watch_for_changes: true,
+                watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
                 ..default()
             })
             .set(WindowPlugin {
@@ -40,23 +42,27 @@ fn main() {
     )
     .insert_resource(ClearColor(Color::CYAN));
     #[cfg(feature = "editor")]
-    app.add_plugin(EditorPlugin::new());
-    app.add_plugin(
+    app.add_plugins(EditorPlugin::new());
+    app.add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
             }),
     )
-    .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
-    .add_plugin(Sprite3dPlugin)
-    .add_systems((
-        setup.on_startup(),
-        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        adapt_materials.run_if(any_with_component::<SceneInstance>()),
-        spawn_sprites.run_if(sprites_have_loaded),
-    ))
+    .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
+    .add_plugins(Sprite3dPlugin)
+    .add_systems(Startup, setup)
     .add_systems(
+        Update,
+        (
+            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+            adapt_materials.run_if(any_with_component::<SceneInstance>()),
+            spawn_sprites.run_if(sprites_have_loaded),
+        ),
+    )
+    .add_systems(
+        Update,
         (
             handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
             move_camera.run_if(resource_exists::<CameraMovement>()),

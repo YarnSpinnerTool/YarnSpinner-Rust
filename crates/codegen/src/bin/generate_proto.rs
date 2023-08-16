@@ -13,7 +13,7 @@ fn main() -> Result<()> {
             ".",
             "use crate::prelude::*;\
              #[cfg_attr(feature = \"serde\", derive(Serialize, Deserialize))]\n\
-             #[cfg_attr(feature = \"bevy\", derive(Reflect, FromReflect))]\n\
+             #[cfg_attr(feature = \"bevy\", derive(Reflect))]\n\
              #[cfg_attr(feature = \"bevy\", reflect(Debug, PartialEq))]\n\
              #[cfg_attr(\n\
                  all(feature = \"bevy\", feature = \"serde\"),\n\

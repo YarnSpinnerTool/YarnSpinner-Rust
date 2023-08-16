@@ -9,7 +9,7 @@ use std::iter;
 /// A result of analysing a compiled Yarn program with [`Dialogue::analyse`]. Created by the [`CompiledProgramAnalyser`]s used in the given [`Context`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[non_exhaustive]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(
@@ -32,7 +32,7 @@ pub struct Diagnosis {
 /// The severity of a [`Diagnosis`], as reported by a [`CompiledProgramAnalyser`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[non_exhaustive]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(

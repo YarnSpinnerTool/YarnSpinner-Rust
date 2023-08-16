@@ -22,10 +22,11 @@ pub(crate) fn ui_assets_plugin(app: &mut App) {
     );
 }
 
-fn load_font(bytes: &[u8]) -> Font {
+fn load_font(bytes: &[u8], _path: String) -> Font {
     Font::try_from_bytes(bytes.to_vec()).unwrap()
 }
-fn load_image(bytes: &[u8]) -> Image {
+
+fn load_image(bytes: &[u8], _path: String) -> Image {
     const IS_SRGB: bool = true;
     Image::from_buffer(
         bytes,

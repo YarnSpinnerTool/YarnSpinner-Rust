@@ -13,7 +13,8 @@ mod strings_file_text_provider;
 pub(crate) fn text_provider_plugin(app: &mut App) {
     app.fn_plugin(shared_text_provider::shared_text_provider_plugin)
         .fn_plugin(strings_file_text_provider::strings_file_text_provider_plugin)
-        .add_system(
+        .add_systems(
+            Update,
             fetch_resources
                 .in_set(LineProviderSystemSet)
                 .in_set(YarnSlingerSystemSet),

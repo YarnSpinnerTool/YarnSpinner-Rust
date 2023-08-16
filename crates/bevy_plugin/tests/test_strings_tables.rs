@@ -12,7 +12,7 @@ mod utils;
 fn loads_yarn_assets() {
     let mut app = App::new();
 
-    app.setup_default_plugins().add_plugin(
+    app.setup_default_plugins().add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines.yarn"))
             .with_localizations(None),
     );
@@ -33,7 +33,7 @@ fn loads_yarn_assets() {
 fn panics_on_localization_without_line_ids_in_production() {
     let mut app = App::new();
 
-    app.setup_default_plugins().add_plugin(
+    app.setup_default_plugins().add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
@@ -54,7 +54,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.setup_default_plugins_for_path(dir.path()).add_plugin(
+    app.setup_default_plugins_for_path(dir.path()).add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
@@ -101,7 +101,7 @@ fn generates_strings_file() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.setup_default_plugins_for_path(dir.path()).add_plugin(
+    app.setup_default_plugins_for_path(dir.path()).add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
@@ -158,7 +158,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.setup_default_plugins_for_path(dir.path()).add_plugin(
+    app.setup_default_plugins_for_path(dir.path()).add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
@@ -211,7 +211,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     let mut app = App::new();
 
-    app.setup_default_plugins_for_path(dir.path()).add_plugin(
+    app.setup_default_plugins_for_path(dir.path()).add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
@@ -282,7 +282,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 fn does_not_panic_on_missing_language_when_not_selected() {
     let mut app = App::new();
 
-    app.setup_default_plugins().add_plugin(
+    app.setup_default_plugins().add_plugins(
         YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),

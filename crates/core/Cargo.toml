@@ -17,6 +17,5 @@ strum = "0.24"
 strum_macros = "0.24"
 thiserror = "1"
 prost = "0.11"
-serde = { version = "1", features = ["derive"] , optional = true }
-bevy = { version = "0.10", default-features = false, optional = true }
-
+serde = { version = "1", features = ["derive"], optional = true }
+bevy = { version = "0.11", default-features = false, optional = true }

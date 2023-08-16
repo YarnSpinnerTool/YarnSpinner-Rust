@@ -11,6 +11,7 @@ pub(crate) struct LineIdUpdateSystemSet;
 
 pub(crate) fn line_id_generation_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             handle_yarn_file_events
                 .pipe(panic_on_err)

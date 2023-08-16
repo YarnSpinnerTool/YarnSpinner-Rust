@@ -7,6 +7,7 @@ use bevy_yarn_slinger::{events::*, prelude::*};
 
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             hide_dialog.run_if(on_event::<DialogueCompleteEvent>()),
             show_dialog.run_if(on_event::<DialogueStartEvent>()),
@@ -27,7 +28,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
 /// Signals that a speaker has changed.
 /// A speaker starts speaking when a new line is presented with a [`PresentLineEvent`] which has a character name.
 /// A speaker stops speaking when the line is fully displayed on the screen, which happens over the course of a few seconds
-#[derive(Debug, Eq, PartialEq, Hash, Reflect, FromReflect)]
+#[derive(Debug, Eq, PartialEq, Hash, Reflect, Event)]
 #[reflect(Debug, PartialEq, Hash)]
 #[non_exhaustive]
 pub struct SpeakerChangeEvent {

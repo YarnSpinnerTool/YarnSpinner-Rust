@@ -15,7 +15,7 @@ use unicode_segmentation::UnicodeSegmentation;
 pub type Result<T> = std::result::Result<T, MarkupParseError>;
 
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug))]
 #[cfg_attr(

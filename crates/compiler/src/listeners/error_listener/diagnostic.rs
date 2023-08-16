@@ -23,7 +23,7 @@ use yarn_slinger_core::prelude::*;
 ///
 /// The properties marked as `Obsolete` were not implemented.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(
@@ -192,7 +192,7 @@ impl DiagnosticVec for Vec<Diagnostic> {
 ///
 /// The `Info` variant was not implemented because it was unused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, strum_macros::Display)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default, Hash))]
 #[cfg_attr(

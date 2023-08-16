@@ -11,7 +11,7 @@ pub(crate) struct NoMarkupTextProcessor;
 
 impl NoMarkupTextProcessor {
     pub(crate) fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 
