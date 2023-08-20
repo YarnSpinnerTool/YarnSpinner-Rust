@@ -50,7 +50,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     commands.spawn(dialogue_runner);
 }
 ```
-Don't worry, we will look at what this code does in detail later. For now, just treat it as something
+Don't worry, we will look at what this code does in detail later, in the chapter [Bevy Plugin / Setup](../bevy_plugin/setup.md). For now, just treat it as something
 that runs your Yarn files.
 
 Finally, add your Yarn files to the assets. Inside the folder `assets/dialogue`, add a file named `example.yarn` with the content
