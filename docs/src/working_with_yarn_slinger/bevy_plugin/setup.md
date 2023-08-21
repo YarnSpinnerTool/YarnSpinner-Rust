@@ -134,7 +134,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 ```
 
 The main way of interacting with Yarn files during runtime and managing the flow of a dialog is through a
-[`DialogRunner`](./running_dialogs.md). To do this, we use the [`YarnProject`](./compiling_yarn_files.md) resource we referenced in the `run_if` section above.
+[`DialogRunner`](./dialog_runner.md). To do this, we use the [`YarnProject`](./compiling_yarn_files.md) resource we referenced in the `run_if` section above.
 It represents our compiled Yarn files, which we use to create a new dialog runner.   
 We then point it to the [node](../yarn_files/nodes.md) named "Start" of our Yarn file.
 We use `start_node` for this, which will "move" the dialog runner to the provided node and start executing the dialog in the next frame, 
