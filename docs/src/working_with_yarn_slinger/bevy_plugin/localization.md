@@ -8,23 +8,28 @@ Let's first look at how to use localization and then explain what's going on und
 
 ## Using Localization the Easy Way
 
-We specify our supported localizations when adding the [`YarnSlingerPlugin` (or using deferred compilation)](./compiling_yarn_files.md):
+We specify our supported localizations when creating the [`YarnSlingerPlugin` (or using deferred compilation)](./compiling_yarn_files.md):
 
 ```rust
-app
-// ...
-.add_plugin(YarnSlingerPlugin::new().with_localizations(Localizations {
+YarnSlingerPlugin::new().with_localizations(Localizations {
     base_localization: "en-US".into(),
     translations: vec!["de-CH".into()],
-}))
+})
 ```
 
 The *base localization* is the language in which your Yarn files are already written.
 The *translations* are all languages you want to support.
 
 Put the code shown above into the example used in the [setup](./setup.md) and run the game. 
-You should see that some files were generated for you:
 
+Now take a look at your Yarn file at `assets/dialog/example.yarn`. 
+You will see that your
+
+You should see that a file was generated for you:
+
+![strings_file_generated.png](strings_file_generated.png)
+
+This newly
 
 ## Customizing 
 

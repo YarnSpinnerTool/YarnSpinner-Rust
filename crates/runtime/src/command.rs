@@ -34,7 +34,7 @@ pub struct Command {
     /// The parameters are returned without underlying type information, so you will have to convert them using `YarnValue::try_into`.
     pub parameters: Vec<YarnValue>,
 
-    /// The raw, unprocessed command as it appeared in the yarn file between the `<<` and `>>` characters.
+    /// The raw, unprocessed command as it appeared in the Yarn file between the `<<` and `>>` characters.
     pub raw: String,
 }
 

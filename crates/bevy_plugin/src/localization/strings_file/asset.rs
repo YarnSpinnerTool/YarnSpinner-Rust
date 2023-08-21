@@ -248,11 +248,11 @@ pub(crate) struct StringsFileRecord {
     /// the line's text as it appeared in the base localization CSV file.
     ///
     /// When a new StringTableEntry is created in a localized CSV file for a
-    /// .yarn file, the Lock value is copied over from the base CSV file,
+    /// .Yarn file, the Lock value is copied over from the base CSV file,
     /// and used for the translated entry.
     ///
     /// Because the base localization CSV is regenerated every time the
-    /// .yarn file is imported, the base localization Lock value will change
+    /// .Yarn file is imported, the base localization Lock value will change
     /// if a line's text changes. This means that if the base lock and
     /// translated lock differ, the translated line is out of date, and
     /// needs to be updated.

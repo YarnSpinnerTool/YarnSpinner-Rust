@@ -96,11 +96,11 @@ fn update_all_strings_files_for_string_table(
                 Ok(new_strings_file) => new_strings_file,
                 Err(e) => {
                     if project.development_file_generation == DevelopmentFileGeneration::Full {
-                        debug!("Updating \"{}\" soon (lang: {language}) because the following yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
+                        debug!("Updating \"{}\" soon (lang: {language}) because the following Yarn files were changed or loaded but do not have full line IDs yet: {file_names}",
                             strings_file_path.display())
                     } else {
                         error!(
-                            "Tried to update \"{}\" (lang: {language}) because the following yarn files were changed or loaded: {file_names}, but couldn't because: {e}",
+                            "Tried to update \"{}\" (lang: {language}) because the following Yarn files were changed or loaded: {file_names}, but couldn't because: {e}",
                             strings_file_path.display(),
                         );
                     }
@@ -111,7 +111,7 @@ fn update_all_strings_files_for_string_table(
                 dirty_paths.insert((strings_file_handle, strings_file_path));
 
                 info!(
-                    "Updated \"{}\" (lang: {language}) because the following yarn files were changed or loaded: {file_names}",
+                    "Updated \"{}\" (lang: {language}) because the following Yarn files were changed or loaded: {file_names}",
                     strings_file_path.display(),
                 );
             }
@@ -144,7 +144,7 @@ fn lint_strings_file(
             .map(|asset_path| format!("at {}", asset_path.path().display()))
             .unwrap_or_else(|| "created at runtime".to_owned());
         warn!(
-            "Strings file {source} contains the following strings for yarn files were not found in the project: {superfluous_file_names}. \
+            "Strings file {source} contains the following strings for Yarn files were not found in the project: {superfluous_file_names}. \
             Either you forgot to add these files to the project or the strings belonged to files that were deleted. \
             You may want to delete these entries from the strings file manually. Yarn Slinger will not do this for you because it may lead to loss of work.",
         );

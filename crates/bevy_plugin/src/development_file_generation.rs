@@ -5,14 +5,14 @@ pub(crate) fn development_file_generation_plugin(app: &mut App) {
     app.register_type::<DevelopmentFileGeneration>();
 }
 
-/// The kind of development experience you wish when creating yarn files and dealing with missing localizations.
+/// The kind of development experience you wish when creating Yarn files and dealing with missing localizations.
 /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum DevelopmentFileGeneration {
     /// The recommended setting for a development environment:
-    /// - Generates line IDs for all lines in loaded yarn files and writes them back to disk.
+    /// - Generates line IDs for all lines in loaded Yarn files and writes them back to disk.
     /// - Generates new strings files for all languages that are missing them, filling them with the lines found in the Yarn files.
     /// - Adds new lines to strings files when they have been added to a loaded Yarn file.
     /// - Marks lines in strings files that have been changed since they were translated by appending "NEEDS UPDATE" to the respective line texts.

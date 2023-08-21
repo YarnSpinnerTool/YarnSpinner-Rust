@@ -80,7 +80,7 @@ impl YarnFileSource {
             .load_folder(path)
             .unwrap_or_else(|e| {
                 panic!(
-                    "Failed to load Yarn file folder {path}: {e}",
+                    "Failed to load Yarn file folder {path}: {e}.\nHelp: Does the folder exist under the assets directory?",
                     path = path.display()
                 )
             })
@@ -97,7 +97,7 @@ impl YarnFileSource {
             .collect();
         if handles.is_empty() {
             warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Slinger won't be able to do anything this run. \
-                        Help: Add some yarn files to get started.", path = path.display());
+                        Help: Add some Yarn files to get started.", path = path.display());
         }
         handles
     }

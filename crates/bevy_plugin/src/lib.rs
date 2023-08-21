@@ -168,7 +168,7 @@ pub use yarn_slinger::prelude::{
 };
 
 pub mod deferred_loading {
-    //! Contains types needed for the deferred loading functionality, which is used when the list of yarn files is not immediately available at startup.
+    //! Contains types needed for the deferred loading functionality, which is used when the list of Yarn files is not immediately available at startup.
     pub use crate::plugin::DeferredYarnSlingerPlugin;
     pub use crate::project::LoadYarnProjectEvent;
 }

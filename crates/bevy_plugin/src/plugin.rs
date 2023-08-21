@@ -7,7 +7,7 @@ mod yarn_file_source;
 
 /// The plugin that provides all Yarn Slinger functionality.
 /// In general, you'll want to create this by searching for Yarn files in "assets/dialogue", which [`YarnSlingerPlugin::new`] does under the hood.
-/// You can also provide a list of yarn files to load via [`YarnSlingerPlugin::with_yarn_sources`].
+/// You can also provide a list of Yarn files to load via [`YarnSlingerPlugin::with_yarn_sources`].
 /// If you however do not know the paths to any files nor have them in-memory at the start of the program,
 /// use [`YarnSlingerPlugin::deferred`] instead to later load the files by sending a [`LoadYarnProjectEvent`].
 ///
@@ -42,9 +42,9 @@ impl YarnSlingerPlugin {
     /// Otherwise this panics since Bevy cannot query folders on these platforms.
     /// Use [`YarnSlingerPlugin::with_yarn_source`] or [`YarnSlingerPlugin::with_yarn_sources`] there instead.
     ///
-    /// All yarn files will be shared across [`DialogueRunner`]s.
+    /// All Yarn files will be shared across [`DialogueRunner`]s.
     /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
-    /// these yarn files will be recompiled if they change during runtime.
+    /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// Calling this is equivalent to calling [`YarnSlingerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
     #[must_use]
@@ -63,9 +63,9 @@ impl YarnSlingerPlugin {
     }
 
     /// Creates a new plugin that loads Yarn files from the given sources.
-    /// All yarn files will be shared across [`DialogueRunner`]s.
+    /// All Yarn files will be shared across [`DialogueRunner`]s.
     /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
-    /// these yarn files will be recompiled if they change during runtime.
+    /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.
     ///
@@ -90,9 +90,9 @@ impl YarnSlingerPlugin {
     }
 
     /// Creates a new plugin that loads Yarn files from the given source.
-    /// All yarn files will be shared across [`DialogueRunner`]s.
+    /// All Yarn files will be shared across [`DialogueRunner`]s.
     /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
-    /// these yarn files will be recompiled if they change during runtime.
+    /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.
     ///
@@ -169,7 +169,7 @@ impl Plugin for YarnSlingerPlugin {
 }
 
 /// The deferred version of [`YarnSlingerPlugin`]. Created by [`YarnSlingerPlugin::deferred`].
-/// Will not load any yarn files until a [`LoadYarnProjectEvent`] is sent.
+/// Will not load any Yarn files until a [`LoadYarnProjectEvent`] is sent.
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct DeferredYarnSlingerPlugin;

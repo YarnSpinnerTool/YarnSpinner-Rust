@@ -106,7 +106,7 @@ impl YarnProject {
 }
 
 /// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSlingerPlugin::deferred`].
-/// If you know the yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_sources`] instead.
+/// If you know the Yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_sources`] instead.
 #[derive(Debug, Clone, PartialEq, Eq, Event)]
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
