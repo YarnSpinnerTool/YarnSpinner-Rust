@@ -21,7 +21,7 @@ mod string_info;
 /// In contrast to the original implementation, where this struct was called a `CompilationResult`, we return
 /// an actual [`Result`], so this type is guaranteed to only hold warnings as opposed to all diagnostics.
 #[derive(Debug, Clone, PartialEq, Default)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, Default))]
 #[cfg_attr(
@@ -124,7 +124,7 @@ impl Compilation {
 /// A collection of [`Diagnostic`] objects that describe problems that occurred during compilation.
 /// At least one of these diagnostics will have a severity of [`DiagnosticSeverity::Error`].
 #[derive(Error, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(

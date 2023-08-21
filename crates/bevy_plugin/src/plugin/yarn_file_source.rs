@@ -1,9 +1,9 @@
 use crate::prelude::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, reflect::TypePath};
 use std::path::PathBuf;
 
 /// Possible sources to load a [`YarnFile`] from.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, TypePath)]
 pub enum YarnFileSource {
     /// A [`YarnFile`] that is already present in the asset server, addressed by its [`Handle`].
     Handle(Handle<YarnFile>),

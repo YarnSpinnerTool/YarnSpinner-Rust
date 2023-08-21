@@ -10,7 +10,7 @@ use core::fmt::Display;
 /// You do not create instances of this struct yourself. It is created
 /// by objects that can parse markup, such as [`Dialogue`]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(

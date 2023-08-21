@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_yarn_slinger::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
-    app.add_system(setup.on_startup());
+    app.add_systems(Startup, setup);
 }
 
 #[derive(Debug, Default, Component)]
@@ -32,7 +32,7 @@ fn setup(mut commands: Commands) {
             fmt_name("root"),
             NodeBundle {
                 style: Style {
-                    size: Size::width(Val::Percent(100.0)),
+                    width: Val::Percent(100.0),
                     justify_content: JustifyContent::FlexEnd,
                     align_items: AlignItems::Center,
                     margin: UiRect::bottom(Val::Px(30.0)),
@@ -68,7 +68,7 @@ fn setup(mut commands: Commands) {
                                 ..default()
                             },
                             style: Style {
-                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                width: Val::Px(DIALOG_WIDTH),
                                 ..default()
                             },
                             ..default()
@@ -82,11 +82,8 @@ fn setup(mut commands: Commands) {
                             text: Text::from_section(String::new(), text_style::name()),
                             style: Style {
                                 position_type: PositionType::Absolute,
-                                position: UiRect {
-                                    left: Val::Px(TEXT_BORDER / 2.0),
-                                    top: Val::Px(-8.0),
-                                    ..default()
-                                },
+                                left: Val::Px(TEXT_BORDER / 2.0),
+                                top: Val::Px(-8.0),
                                 ..default()
                             },
                             z_index: ZIndex::Local(1),
@@ -102,8 +99,8 @@ fn setup(mut commands: Commands) {
                     fmt_name("dialogue"),
                     NodeBundle {
                         style: Style {
-                            size: Size::width(Val::Px(DIALOG_WIDTH)),
-                            min_size: Size::height(Val::Px(50.0)),
+                            width: Val::Px(DIALOG_WIDTH),
+                            min_height: Val::Px(50.0),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
@@ -168,7 +165,7 @@ fn setup(mut commands: Commands) {
                                 ..default()
                             },
                             style: Style {
-                                size: Size::width(Val::Px(DIALOG_WIDTH)),
+                                width: Val::Px(DIALOG_WIDTH),
                                 ..default()
                             },
                             ..default()
@@ -186,7 +183,7 @@ fn setup(mut commands: Commands) {
                             },
                             style: Style {
                                 position_type: PositionType::Absolute,
-                                position: UiRect::bottom(Val::Px(INITIAL_DIALOGUE_CONTINUE_BOTTOM)),
+                                bottom: Val::Px(INITIAL_DIALOGUE_CONTINUE_BOTTOM),
                                 ..default()
                             },
                             z_index: ZIndex::Local(1),
@@ -270,10 +267,7 @@ mod style {
     use super::*;
     pub(crate) fn standard() -> Style {
         Style {
-            max_size: Size {
-                width: Val::Px(DIALOG_WIDTH - 2.0 * TEXT_BORDER),
-                height: Val::Undefined,
-            },
+            max_width: Val::Px(DIALOG_WIDTH - 2.0 * TEXT_BORDER),
             ..default()
         }
     }
@@ -281,10 +275,7 @@ mod style {
         const INDENT_MODIFIER: f32 = 1.0;
         Style {
             margin: UiRect::horizontal(Val::Px((INDENT_MODIFIER - 1.0) * TEXT_BORDER)),
-            max_size: Size {
-                width: Val::Px(DIALOG_WIDTH - 2.0 * INDENT_MODIFIER * TEXT_BORDER),
-                height: Val::Undefined,
-            },
+            max_width: Val::Px(DIALOG_WIDTH - 2.0 * INDENT_MODIFIER * TEXT_BORDER),
             ..default()
         }
     }

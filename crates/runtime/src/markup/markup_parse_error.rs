@@ -5,7 +5,7 @@ use thiserror::Error;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "bevy", derive(Reflect, FromReflect))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
 #[cfg_attr(

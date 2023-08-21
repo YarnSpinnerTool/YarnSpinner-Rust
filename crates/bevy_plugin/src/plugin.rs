@@ -22,7 +22,7 @@ mod yarn_file_source;
 /// App::new()
 ///     .add_plugins(DefaultPlugins)
 ///     // Load all Yarn files from the "assets/dialogue" folder by default.
-///     .add_plugin(YarnSlingerPlugin::new());
+///     .add_plugins(YarnSlingerPlugin::new());
 /// ```
 ///
 /// Note that the above does not work on Wasm or Android, since Bevy cannot query folders on these platforms. See [`YarnSlingerPlugin::new`] for more information.
@@ -162,7 +162,7 @@ impl Plugin for YarnSlingerPlugin {
         Did you call `YarnSlingerPlugin::with_yarn_files()` without any Yarn file sources? \
         If you really want to load no Yarn files right now and do that later, use `YarnSlingerPlugin::deferred()` instead.\
         If you wanted to load from the default directory instead, use `YarnSlingerPlugin::default()`.");
-        app.add_plugin(Self::deferred())
+        app.add_plugins(Self::deferred())
             .world
             .send_event(self.project.clone());
     }
@@ -237,6 +237,7 @@ impl YarnApp for App {
         let asset_plugins: Vec<&AssetPlugin> = self.get_added_plugins();
         let asset_plugin: &AssetPlugin = asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
         Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`");
-        asset_plugin.watch_for_changes
+
+        asset_plugin.watch_for_changes.is_some()
     }
 }

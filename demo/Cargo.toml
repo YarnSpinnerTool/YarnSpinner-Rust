@@ -11,10 +11,22 @@ editor = ["bevy_editor_pls"]
 [dependencies]
 bevy_yarn_slinger = { path = "../crates/bevy_plugin" }
 bevy_yarn_slinger_example_dialogue_view = { path = "../crates/example_dialogue_view" }
-bevy_sprite3d = "=2.4.0"
-bevy_editor_pls = { version = "0.4", optional = true }
+bevy_sprite3d = "2.5"
+# No bevy v0.11 compatible release yet, see <https://github.com/jakobhellermann/bevy_editor_pls/issues/81>
+bevy_editor_pls = { git = "https://github.com/jakobhellermann/bevy_editor_pls", rev = "f72483a", version = "0.4", optional = true }
 
 [dependencies.bevy]
-version = "0.10"
+version = "0.11"
 default-features = false
-features = ["bevy_core_pipeline", "bevy_pbr", "bevy_render", "bevy_sprite", "bevy_winit", "filesystem_watcher", "png", "x11", "bevy_gltf", "tonemapping_luts"]
+features = [
+  "bevy_core_pipeline",
+  "bevy_pbr",
+  "bevy_render",
+  "bevy_sprite",
+  "bevy_winit",
+  "filesystem_watcher",
+  "png",
+  "x11",
+  "bevy_gltf",
+  "tonemapping_luts",
+]

@@ -8,6 +8,7 @@ use bevy_yarn_slinger::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(
+        Update,
         (
             show_options.run_if(
                 resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
@@ -99,7 +100,7 @@ fn select_option(
     let mut window = windows.single_mut();
     for (interaction, button, children) in buttons.iter_mut() {
         let (color, icon) = match *interaction {
-            Interaction::Clicked if selection.is_none() => {
+            Interaction::Pressed if selection.is_none() => {
                 selection = Some(button.0);
                 (Color::TOMATO, CursorIcon::Default)
             }

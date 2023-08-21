@@ -19,8 +19,8 @@
 //!
 //! App::new()
 //!    .add_plugins(DefaultPlugins)
-//!    .add_plugin(YarnSlingerPlugin::new())
-//!    .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new());
+//!    .add_plugins(YarnSlingerPlugin::new())
+//!    .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new());
 //! ```
 //!
 //! This crate also exposes the [`SpeakerChangeEvent`] which you can use to animate characters while they are speaking,

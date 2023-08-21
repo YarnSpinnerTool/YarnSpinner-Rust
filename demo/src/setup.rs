@@ -82,7 +82,8 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             background_color: Color::BLACK.into(),
             z_index: ZIndex::Global(-1),
             style: Style {
-                size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+                width: Val::Percent(100.),
+                height: Val::Percent(100.),
                 position_type: PositionType::Absolute,
                 ..default()
             },

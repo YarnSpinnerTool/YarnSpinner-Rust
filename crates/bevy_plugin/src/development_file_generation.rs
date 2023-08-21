@@ -7,7 +7,7 @@ pub(crate) fn development_file_generation_plugin(app: &mut App) {
 
 /// The kind of development experience you wish when creating yarn files and dealing with missing localizations.
 /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, FromReflect, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 #[reflect(Debug, Default, PartialEq, Hash, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum DevelopmentFileGeneration {

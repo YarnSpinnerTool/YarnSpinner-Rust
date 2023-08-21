@@ -23,7 +23,7 @@ pub(crate) struct CompilationSystemSet;
 /// # use bevy::prelude::*;
 /// # use bevy_yarn_slinger::prelude::*;
 /// # let mut app = App::new();
-/// app.add_system(setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
+/// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
 ///
 /// fn setup_dialogue_runners(mut commands: Commands, project: Res<YarnProject>) {
 ///    commands.spawn(project.create_dialogue_runner());
@@ -107,7 +107,7 @@ impl YarnProject {
 
 /// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSlingerPlugin::deferred`].
 /// If you know the yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_sources`] instead.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Event)]
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,
