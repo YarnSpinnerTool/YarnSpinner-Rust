@@ -59,5 +59,3 @@ Whether you used `YarnSlingerPlugin` or `LoadYarnProjectEvent`, as soon as the c
 You can react to its creation by guarding your systems with `.run_if(resource_added::<YarnProject>())`, as seen in the [setup](./setup.md).
 
 Once you have the `YarnProject`, you can use it to spawn a `DialogRunner` which in turn can, well, [run dialogs](./dialog_runner.md)
-
-
