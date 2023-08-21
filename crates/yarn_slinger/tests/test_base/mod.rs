@@ -47,7 +47,7 @@ pub struct TestBase {
     pub dialogue: Dialogue,
     pub test_plan: Option<TestPlan>,
     pub string_table: SharedTextProvider,
-    pub variable_store: MemoryVariableStore,
+    pub variable_storage: MemoryVariableStorage,
     runtime_errors_cause_failure: Arc<AtomicBool>,
 }
 
@@ -57,11 +57,11 @@ impl Default for TestBase {
         if let Err(_e) = init_logger(runtime_errors_cause_failure.clone()) {
             // We've set the logger twice, that's alright for the tests.
         }
-        let variable_store = MemoryVariableStore::new();
+        let variable_storage = MemoryVariableStorage::new();
         let string_table = SharedTextProvider::new(StringTableTextProvider::new());
 
         let mut dialogue = Dialogue::new(
-            Box::new(variable_store.clone()),
+            Box::new(variable_storage.clone()),
             Box::new(string_table.clone()),
         );
         dialogue
@@ -75,7 +75,7 @@ impl Default for TestBase {
         Self {
             dialogue,
             runtime_errors_cause_failure,
-            variable_store,
+            variable_storage,
             string_table,
             test_plan: Default::default(),
         }

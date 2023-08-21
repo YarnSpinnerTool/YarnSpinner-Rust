@@ -1,4 +1,4 @@
-use crate::default_impl::{MemoryVariableStore, StringsFileTextProvider};
+use crate::default_impl::{MemoryVariableStorage, StringsFileTextProvider};
 use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
 use bevy::prelude::*;
@@ -41,7 +41,7 @@ impl DialogueRunnerBuilder {
     #[must_use]
     pub(crate) fn from_yarn_project(yarn_project: &YarnProject) -> Self {
         Self {
-            variable_storage: Box::new(MemoryVariableStore::new()),
+            variable_storage: Box::new(MemoryVariableStorage::new()),
             text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
                 yarn_project,
             )),
@@ -54,7 +54,7 @@ impl DialogueRunnerBuilder {
         }
     }
 
-    /// Replaces the [`VariableStorage`] used by the [`DialogueRunner`]. By default, this is a [`MemoryVariableStore`].
+    /// Replaces the [`VariableStorage`] used by the [`DialogueRunner`]. By default, this is a [`MemoryVariableStorage`].
     #[must_use]
     pub fn with_variable_storage(mut self, storage: Box<dyn VariableStorage>) -> Self {
         self.variable_storage = storage;

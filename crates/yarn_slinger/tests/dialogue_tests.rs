@@ -228,7 +228,7 @@ fn test_function_argument_type_inference() {
     let storage = test_base
         .with_compilation(result)
         .run_standard_testcase()
-        .variable_store
+        .variable_storage
         .clone_shallow();
 
     // The values should be of the right type and value

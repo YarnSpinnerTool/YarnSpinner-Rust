@@ -68,16 +68,16 @@ impl Clone for Box<dyn VariableStorage> {
 
 /// A simple concrete implementation of [`VariableStorage`] that keeps all variables in memory.
 #[derive(Debug, Clone, Default)]
-pub struct MemoryVariableStore(Arc<RwLock<HashMap<String, YarnValue>>>);
+pub struct MemoryVariableStorage(Arc<RwLock<HashMap<String, YarnValue>>>);
 
-impl MemoryVariableStore {
-    /// Creates a new empty `MemoryVariableStore`.
+impl MemoryVariableStorage {
+    /// Creates a new empty `MemoryVariableStorage`.
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl VariableStorage for MemoryVariableStore {
+impl VariableStorage for MemoryVariableStorage {
     fn clone_shallow(&self) -> Box<dyn VariableStorage> {
         Box::new(self.clone())
     }
@@ -114,7 +114,7 @@ impl VariableStorage for MemoryVariableStore {
     }
 }
 
-impl MemoryVariableStore {
+impl MemoryVariableStorage {
     fn validate_name(name: impl AsRef<str>) -> Result<()> {
         let name = name.as_ref();
         if name.starts_with('$') {

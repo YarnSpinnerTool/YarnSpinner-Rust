@@ -52,7 +52,7 @@ impl Dialogue {
     /// - The [`TextProvider`] is used to retrieve the text of lines and options.
     /// - The [`VariableStorage`] is used to store and retrieve variables.
     ///
-    /// If you don't need any fancy behavior, you can use [`StringTableTextProvider`] and [`MemoryVariableStore`].
+    /// If you don't need any fancy behavior, you can use [`StringTableTextProvider`] and [`MemoryVariableStorage`].
     #[must_use]
     pub fn new(
         variable_storage: Box<dyn VariableStorage>,
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn is_send_sync() {
-        let variable_storage = Box::new(MemoryVariableStore::new());
+        let variable_storage = Box::new(MemoryVariableStorage::new());
         let text_provider = Box::new(StringTableTextProvider::new());
         let dialogue = Dialogue::new(variable_storage, text_provider);
         accept_send_sync(dialogue);

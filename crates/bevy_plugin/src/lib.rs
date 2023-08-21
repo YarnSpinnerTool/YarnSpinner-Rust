@@ -113,7 +113,7 @@ pub mod default_impl {
     pub use crate::line_provider::{
         file_extensions, FileExtensionAssetProvider, StringsFileTextProvider,
     };
-    pub use yarn_slinger::runtime::{MemoryVariableStore, StringTableTextProvider};
+    pub use yarn_slinger::runtime::{MemoryVariableStorage, StringTableTextProvider};
 }
 
 pub mod events {
