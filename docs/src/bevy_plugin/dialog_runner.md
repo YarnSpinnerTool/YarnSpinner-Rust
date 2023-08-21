@@ -1,17 +1,17 @@
 # `DialogRunner` and a High Level Overview
 
 The main way to actually manipulate the state of your dialog is through a `DialogRunner`.
-You create it from a `YarnProject` (see [Compiling Yarn Files](./compiling_yarn_files.md)) with either
+You create it from a `YarnProject` (see [Compiling Yarn Files](compiling_yarn_files.md)) with either
 `YarnProject::create_dialog_runner()` or `YarnProject::build_dialog_runner()`. 
 The first uses default configurations which should be alright for many use-cases, 
 while the latter allows you to add or change functionality.
 
 ## Dialog Flow
 
-The actual navigation through a dialog is handled by a [dialog view](./dialog_views.md), 
+The actual navigation through a dialog is handled by a [dialog view](dialog_views.md), 
 which is responsible for back-and-forth interaction with the player.
 As such, most of the methods provided by a `DialogRunner` are to be called by such a view.
-The one you will want to call yourself, as seen in the [setup](./setup.md), is `DialogRunner::start_node`,
+The one you will want to call yourself, as seen in the [setup](setup.md), is `DialogRunner::start_node`,
 which will tell the `DialogRunner` to start running from the provided [node](../yarn_files/nodes.md).
 
 ## Variable Storage
@@ -30,19 +30,19 @@ For information on how to create your own variable storage, see the chapter [Var
 ## Functions and Commands
 
 Yarn files can contain user-defined functions and commands. These can be accessed with
-`DialogRunner::library()` and `DialogRunner::commands()`. For more information, see the chapters [Custom Functions](./custom_functions.md) 
-and [Custom Commands](./custom_commands.md).
+`DialogRunner::library()` and `DialogRunner::commands()`. For more information, see the chapters [Custom Functions](custom_functions.md) 
+and [Custom Commands](custom_commands.md).
 
 ## Text and Assets
 
 We make a distinction between *text*, which are the written words organized into *lines* contained in Yarn files or in 
-[localization files](./localization.md), and *assets*, which are supplemental data associated with a line. 
+[localization files](localization.md), and *assets*, which are supplemental data associated with a line. 
 Assets are referenced over a Bevy `Handle` and can be used for things such as voiceover sound files or images that might need translation.
 
-Of note is that using assets **requires** using [localization](./localization.md), or at least thinking about it.
+Of note is that using assets **requires** using [localization](localization.md), or at least thinking about it.
 As a consequence, language settings are split between text and assets. After all, a player might want to hear lines delivered in the original recorded language but read the text translated into their own language.
 
-You can read more about how current language can be set for a `DialogRunner` in the [localization](./localization.md) chapter.
+You can read more about how current language can be set for a `DialogRunner` in the [localization](localization.md) chapter.
 
 Text is provided by a `TextProvider`. While it can be overwritten, the default `StringsFileTextProvider` will be a good choice for
 nearly all users. The only reason you might have to create an own `TextProvider` is if you want a very custom localization strategy, such as
@@ -50,7 +50,7 @@ translating text automatically through AI.
 
 Assets are provided by `AssetProvider`s. In contrast to the `TextProvider`, you might very well create your own `AssetProvider`. 
 For your convenience, Yarn Slinger already ships with an `AudioAssetProvider` that you can use for voice lines and a `FileExtensionAssetProvider` 
-that can load any asset based on naming conventions and file extensions. See the chapter [Assets](./assets.md).
+that can load any asset based on naming conventions and file extensions. See the chapter [Assets](assets.md).
 
 Text and asset providers can be set through the builder API and accessed later with `DialogRunner::text_provider()` and `DialogRunner::asset_providers()`. If you know the exact type `T` of `AssetProvider` you
 want, you can call `DialogRunner::asset_provider::<T>()` instead.

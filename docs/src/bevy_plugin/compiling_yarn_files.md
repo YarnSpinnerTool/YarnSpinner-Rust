@@ -7,7 +7,7 @@ you when the compilation is finished. You can however steer how and when this is
 ## Starting the Compilation Process
 
 Generally, you'll want your game to compile the Yarn files as soon as possible. This
-is why the [`YarnSpinnerPlugin`](./setup.md) will start doing so by default when it is added to the app.
+is why the [`YarnSpinnerPlugin`](setup.md) will start doing so by default when it is added to the app.
 
 If for some reason you do not wish to start compilation right away, you can *defer* this process. To do this,
 construct the `YarnSpinnerPlugin` with `YarnSpinnerPlugin::deferred()` when adding it. Then, whenever you are ready
@@ -44,18 +44,18 @@ As you might have guessed by now, `YarnSlingerPlugin::new()` is simply a shortha
 `YarnSlingerPlugin::with_development_file_generation()` accepts a `DevelopmentFileGeneration`, which tells Yarn Slinger how aggressively to generate useful files on runtime.
 "Useful" refers to the developer and not the user. The default is `DevelopmentFileGeneration::TRY_FULL`, which will be `DevelopmentFileGeneration::Full` on platforms which support filesystem access, 
 i.e. all except Wasm and Android. See the documentation for the full list of effects. Suffice it to say
-that this is not very important when developing without localization, but becomes vital otherwise. See the [Localization](./localization.md) chapter for more.
+that this is not very important when developing without localization, but becomes vital otherwise. See the [Localization](localization.md) chapter for more.
 
 Since these settings are intended for development, you can use `YarnSlingerPlugin::with_development_file_generation(DevelopmentFileGeneration::None)` when shipping your game to optimize the runtime costs and
 avoid generating files that are useless to the player.
 
 ### Localization
 
-The settings accessed by `YarnSlingerPlugin::with_localizatons` are important enough to warrant their own chapter. See [Localization](./localization.md).
+The settings accessed by `YarnSlingerPlugin::with_localizatons` are important enough to warrant their own chapter. See [Localization](localization.md).
 
 ## After the Compilation
 
 Whether you used `YarnSlingerPlugin` or `LoadYarnProjectEvent`, as soon as the compilation finished, a `YarnProject` resource will be inserted into the Bevy world. 
-You can react to its creation by guarding your systems with `.run_if(resource_added::<YarnProject>())`, as seen in the [setup](./setup.md).
+You can react to its creation by guarding your systems with `.run_if(resource_added::<YarnProject>())`, as seen in the [setup](setup.md).
 
-Once you have the `YarnProject`, you can use it to spawn a `DialogRunner` which in turn can, well, [run dialogs](./dialog_runner.md)
+Once you have the `YarnProject`, you can use it to spawn a `DialogRunner` which in turn can, well, [run dialogs](dialog_runner.md)

@@ -19,7 +19,7 @@ The line `cargo add bevy --features filesystem_watcher` ensures that we can use 
 while the game is running and it will reload them automatically on change.
 
 The dependency `bevy_yarn_slinger` is for the Yarn Slinger Bevy plugin proper, while `bevy_yarn_slinger_example_dialogue_view` 
-gives us a nice default [dialog view](./dialog_views.md), so we can actually see the text we've written and have options to click on.
+gives us a nice default [dialog view](dialog_views.md), so we can actually see the text we've written and have options to click on.
 
 ## Adding the Yarn Files
 
@@ -101,7 +101,7 @@ This self-explanatory line initializes the plugin. When using the standard const
 files ending in `.yarn` will be compiled as soon as the game starts.
 
 The plugin makes sure all components of Yarn Slinger work except for any actual graphics. You need to 
-instantiate a [dialog view](./dialog_views.md) for that:
+instantiate a [dialog view](dialog_views.md) for that:
 
 ```rust
 ExampleYarnSlingerDialogueViewPlugin::new(),
@@ -127,7 +127,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 ```
 
 The main way of interacting with Yarn files during runtime and managing the flow of a dialog is through a
-[`DialogRunner`](./dialog_runner.md). To do this, we use the [`YarnProject`](./compiling_yarn_files.md) resource we referenced in the `run_if` section above.
+[`DialogRunner`](dialog_runner.md). To do this, we use the [`YarnProject`](compiling_yarn_files.md) resource we referenced in the `run_if` section above.
 It represents our compiled Yarn files, which we use to create a new dialog runner.   
 We then point it to the [node](../yarn_files/nodes.md) named "Start" of our Yarn file.
 We use `start_node` for this, which will "move" the dialog runner to the provided node and start executing the dialog in the next frame, 
