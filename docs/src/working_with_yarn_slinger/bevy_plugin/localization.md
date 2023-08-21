@@ -52,7 +52,7 @@ de-CH,line:13032079,Hello World!,example.yarn,Start,4,7f83b165,
 ```
 
 Since this is a CSV, let's open it in an application that renders the content as a table:
-![img.png](strings_file_new.png)
+![strings_file_new.png](strings_file_new.png)
 
 You can see that our line from before is in there! Notice how the `id` matches across the files.
 
@@ -83,11 +83,11 @@ Hello World! #line:13032079
 In case you can't see this, your editor might still have the old state of the file cached. It usually helps to change focus, tab out to another window, or closing and reopening the editor.
 The strings file should now also contain a new entry:
 
-![img.png](strings_file_another_line.png)
+![strings_file_another_line.png](strings_file_another_line.png)
 
 Let's translate some of this. Change the string "Hello World!" in this file to "Hallo Welt!", which is German, and save it:
 
-![img.png](strings_file_translated.png)
+![strings_file_translated.png](strings_file_translated.png)
 
 The game will currently happily ignore this as by default it uses the base language, which means it will take
 its text straight from the Yarn files. But we can easily switch the language:
@@ -101,8 +101,23 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 }
 ```
 
-Run the game again and you should be greeted by this text: TODO
+Run the game again and you should be greeted by this text: 
+![translated_line.png](translated_line.png)
 
-## Customizing 
+Hurray! See how painless localization can be?
 
-TODO
+## Languages
+
+TODO format, asset vs text language
+
+## File Editing Workflow
+
+TODO needs updating, removing lines, autoclean
+
+## Shipping the Game
+
+TODO fallback, files to include
+
+## Customization
+
+TODO locations

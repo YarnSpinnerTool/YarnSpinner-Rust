@@ -110,10 +110,18 @@ impl StringsFile {
                     // This record's text was not translated, so we can safely overwrite it with the new text
                     other_record.text.clone()
                 };
+                let comment = if record.comment.is_empty() {
+                    other_record.comment.clone()
+                } else {
+                    record.comment.clone()
+                };
 
                 changed = true;
-                *record = other_record;
-                record.text = text;
+                *record = StringsFileRecord {
+                    text,
+                    comment,
+                    ..other_record
+                };
             } else if single_yarn_file {
                 removed_lines.push(id.clone());
                 changed = true;
@@ -223,6 +231,27 @@ fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecor
 }
 const UPDATE_PREFIX: &str = "(NEEDS UPDATE) ";
 
+fn combine_comments(full_old_comment: &str, new_metadata: &str) -> String {
+    let translator_comment = extract_translator_comment(full_old_comment);
+    let new_metadata = (!new_metadata.is_empty()).then_some(new_metadata);
+    [translator_comment, new_metadata]
+        .into_iter()
+        .filter_map(|s| s)
+        .collect::<Vec<_>>()
+        .join(LINE_METADATA_PREFIX_SEPARATOR)
+}
+
+fn extract_translator_comment(comment: &str) -> Option<&str> {
+    let mut split = comment.split(LINE_METADATA_PREFIX);
+    split
+        .next()
+        .filter(|s| !s.is_empty())
+        .map(|s| s.trim_end_matches(LINE_METADATA_PREFIX_SEPARATOR))
+}
+
+const LINE_METADATA_PREFIX: &str = "Line metadata: ";
+const LINE_METADATA_PREFIX_SEPARATOR: &str = ", ";
+
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub(crate) struct StringsFileRecord {
     /// The language that the line is written in.
@@ -295,6 +324,91 @@ fn read_comments(metadata: impl IntoIterator<Item = String>) -> String {
     if cleaned_metadata.is_empty() {
         String::new()
     } else {
-        format!("Line metadata: {}", cleaned_metadata.join(" "))
+        format!("{LINE_METADATA_PREFIX}{}", cleaned_metadata.join(" "))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn combines_comments_without_change() {
+        let old = "Foo, Line metadata: Bar";
+        let new = "Line metadata: Bar";
+        let combined = combine_comments(old, new);
+        assert_eq!(old, &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_deletion() {
+        let old = "Foo, Line metadata: Bar";
+        let new = "";
+        let combined = combine_comments(old, new);
+        assert_eq!("Foo", &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_insertion() {
+        let old = "Foo, Line metadata: Bar";
+        let new = "Line metadata: Bar, Baz";
+        let combined = combine_comments(old, new);
+        assert_eq!("Foo, Line metadata: Bar, Baz", &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_change() {
+        let old = "Foo, Line metadata: Bar";
+        let new = "Line metadata: Baz";
+        let combined = combine_comments(old, new);
+        assert_eq!("Foo, Line metadata: Baz", &combined)
+    }
+
+    #[test]
+    fn combines_comments_without_meta() {
+        let old = "Foo";
+        let new = "";
+        let combined = combine_comments(old, new);
+        assert_eq!(old, &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_new_meta() {
+        let old = "Foo";
+        let new = "Line metadata: Bar";
+        let combined = combine_comments(old, new);
+        assert_eq!("Foo, Line metadata: Bar", &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_only_same_meta() {
+        let old = "Line metadata: Bar";
+        let new = "Line metadata: Bar";
+        let combined = combine_comments(old, new);
+        assert_eq!(old, &combined)
+    }
+
+    #[test]
+    fn combines_empty_comments() {
+        let old = "";
+        let new = "";
+        let combined = combine_comments(old, new);
+        assert_eq!(old, &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_only_new_meta() {
+        let old = "";
+        let new = "Line metadata: Bar";
+        let combined = combine_comments(old, new);
+        assert_eq!(new, &combined)
+    }
+
+    #[test]
+    fn combines_comments_with_only_changed_meta() {
+        let old = "Line metadata: Bar";
+        let new = "Line metadata: Baz";
+        let combined = combine_comments(old, new);
+        assert_eq!(new, &combined)
     }
 }
