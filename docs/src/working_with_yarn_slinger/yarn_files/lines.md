@@ -1,7 +1,7 @@
 # Lines
 
 As you might have figured out by playing around with the file from last chapter, a *line*
-can be spoken by a character. The following yarn file...
+can be spoken by a character. The following Yarn file...
 ```text
 title: Start
 ---

@@ -1,6 +1,6 @@
 # Running Examples
 
-You can run yarn files by copy-pasting them into [Try Yarn Spinner](https://try.yarnspinner.dev).
+You can run Yarn files by copy-pasting them into [Try Yarn Spinner](https://try.yarnspinner.dev).
 This is nice because it runs directly in your browser and so doesn't require any setup. Since Yarn Slinger
 and Yarn Spinner read Yarn files the same way, the behavior will be identical to how it would be in your game.
 The only thing to look out for is that Try Yarn Spinner will only start at a node named "Start".
