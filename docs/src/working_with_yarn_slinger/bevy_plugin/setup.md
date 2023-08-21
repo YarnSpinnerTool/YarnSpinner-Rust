@@ -38,29 +38,32 @@ Add the following code to your `src/main.rs`.
 
 ```rust
 // src/main.rs
-use bevy::prelude::*;
+use bevy::{prelude::*, asset::ChangeWatcher, utils::Duration};
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(AssetPlugin {
-        // Activate hot reloading
-        watch_for_changes: true,
-        ..default()
-    }))
-    // Add the Yarn Slinger plugin. 
-    // As soon as this plugin is built, a Yarn project will be compiled 
-    // from all Yarn files found under assets/dialog/*.yarn
-    .add_plugin(YarnSlingerPlugin::new())
-    // Add the example dialogue view plugin
-    .add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
-    .add_systems((
-        // Setup a 2D camera so we can see the text
-        setup_camera.on_startup(),
-        // Spawn the dialog as soon as the Yarn project finished compiling
-        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+    app.add_plugins((
+        DefaultPlugins.set(AssetPlugin {
+            // Activate hot reloading
+            watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
+            ..default()
+        }),
+        // Add the Yarn Slinger plugin. 
+        // As soon as this plugin is built, a Yarn project will be compiled 
+        // from all Yarn files found under assets/dialog/*.yarn
+        YarnSlingerPlugin::new(),
+        // Add the example dialogue view plugin
+        ExampleYarnSlingerDialogueViewPlugin::new(),
     ))
+    // Setup a 2D camera so we can see the text
+    .add_systems(Startup, setup_camera)
+    // Spawn the dialog as soon as the Yarn project finished compiling
+    .add_systems(
+        Update,
+        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+    )
     .run();
 }
 
@@ -79,11 +82,11 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 Reiterating the comments in the code, let's take a look at some snippets.
 
 ```rust
-app.add_plugins(DefaultPlugins.set(AssetPlugin {
+DefaultPlugins.set(AssetPlugin {
     // Activate hot reloading
-    watch_for_changes: true,
+    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
     ..default()
-}))
+}),
 ```
 
 This setting for the `AssetPlugin` enables you to edit the Yarn files on the fly while your game is running and
@@ -91,9 +94,7 @@ see the effects instantaneously. We recommend using this workflow on all platfor
 
 
 ```rust
-app
-// ...
-.add_plugin(YarnSlingerPlugin::new())
+YarnSlingerPlugin::new(),
 ```
 
 This self-explanatory line initializes the plugin. When using the standard constructor with no options, Yarn files will be searched for in the directory `<your game>/assets/dialog/`, where all 
@@ -103,9 +104,7 @@ The plugin makes sure all components of Yarn Slinger work except for any actual 
 instantiate a [dialog view](./dialog_views.md) for that:
 
 ```rust
-app
-// ...
-.add_plugin(ExampleYarnSlingerDialogueViewPlugin::new())
+ExampleYarnSlingerDialogueViewPlugin::new(),
 ```
 
 Here we initialize the dialogue view shipped by the `bevy_yarn_slinger_example_dialogue_view` crate. It
@@ -113,15 +112,9 @@ offers some sensible defaults which you can see in the screenshots used througho
 and use your own dialogue view instead.
 
 ```rust
-app
-// ...
-.add_systems((
-    // ...
-    // Spawn the dialog as soon as the Yarn project finished compiling
-    spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-))
+spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
 ```
-The line `.run_if(resource_added::<YarnProject>()` is our way of saying "run this system once as soon as our Yarn files are done compiling".
+The method `.run_if(resource_added::<YarnProject>()` is our way of saying "run this system once as soon as our Yarn files are done compiling".
 Let's look at what will actually be run in that moment:
 
 ```rust

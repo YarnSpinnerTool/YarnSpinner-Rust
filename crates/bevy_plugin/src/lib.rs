@@ -53,29 +53,34 @@
 //!
 //! ```no_run
 //! // src/main.rs
-//! use bevy::prelude::*;
+//! use bevy::{prelude::*, asset::ChangeWatcher, utils::Duration};
 //! use bevy_yarn_slinger::prelude::*;
 //! // Use the example dialogue view to see the dialogue in action. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
 //! // use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 //!
 //! fn main() {
 //!     let mut app = App::new();
-//!     app.add_plugins(DefaultPlugins)
-//!         // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder
-//!         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
-//!         // .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
-//!         .add_plugins(YarnSlingerPlugin::new())
+//!     app.add_plugins((
+//!         DefaultPlugins.set(AssetPlugin {
+//!             // Activate hot reloading
+//!             watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
+//!             ..default()
+//!         }),
+//!         // Add the Yarn Slinger plugin.
+//!         // As soon as this plugin is built, a Yarn project will be compiled
+//!         // from all Yarn files found under assets/dialog/*.yarn
+//!         YarnSlingerPlugin::new(),
 //!         // Initialize the bundled example UI. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
-//!         // .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
-//!         .add_systems(
-//!             Update,
-//!             (
-//!                 setup_camera.on_startup(),
-//!                 // Spawn dialogue runner once the Yarn project has finished compiling
-//!                 spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-//!             )
-//!         )
-//!         .run();
+//!         // ExampleYarnSlingerDialogueViewPlugin::new(),
+//!     ))
+//!     // Setup a 2D camera so we can see the text
+//!     .add_systems(Startup, setup_camera)
+//!     // Spawn the dialog as soon as the Yarn project finished compiling
+//!     .add_systems(
+//!         Update,
+//!         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+//!     )
+//!     .run();
 //! }
 //!
 //! fn setup_camera(mut commands: Commands) {
@@ -83,9 +88,8 @@
 //! }
 //!
 //! fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-//!     // Create a dialogue runner from the project
 //!     let mut dialogue_runner = project.create_dialogue_runner();
-//!     // Immediately show the dialogue to the player by starting at the "Start" node
+//!     // Start the dialog at the node with the title "Start"
 //!     dialogue_runner.start_node("Start");
 //!     commands.spawn(dialogue_runner);
 //! }

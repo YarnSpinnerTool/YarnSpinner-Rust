@@ -13,18 +13,18 @@ We specify our supported localizations when adding the [`YarnSlingerPlugin` (or 
 ```rust
 app
 // ...
-.add_plugin(YarnSlingerPlugin::new()
-    .with_localizations(Localizations {
-        base_localization: "en-US".into(),
-        translations: vec!["de-CH".into()],
-    })
-)
+.add_plugin(YarnSlingerPlugin::new().with_localizations(Localizations {
+    base_localization: "en-US".into(),
+    translations: vec!["de-CH".into()],
+}))
 ```
 
 The *base localization* is the language in which your Yarn files are already written.
 The *translations* are all languages you want to support.
 
-TODO
+Put the code shown above into the example used in the [setup](./setup.md) and run the game. 
+You should see that some files were generated for you:
+
 
 ## Customizing 
 
