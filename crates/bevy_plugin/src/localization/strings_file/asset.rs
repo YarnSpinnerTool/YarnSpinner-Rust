@@ -110,11 +110,7 @@ impl StringsFile {
                     // This record's text was not translated, so we can safely overwrite it with the new text
                     other_record.text.clone()
                 };
-                let comment = if record.comment.is_empty() {
-                    other_record.comment.clone()
-                } else {
-                    record.comment.clone()
-                };
+                let comment = combine_comments(&record.comment, &other_record.comment);
 
                 changed = true;
                 *record = StringsFileRecord {
