@@ -16,7 +16,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// The signature of the method must adhere to the following rules:
 /// - The first parameter must be of the type `In<T>`, where `T` can be converted into a [`YarnFnParam`]. This stands for the parameters passed to the command from Yarn.
 /// Multiple parameters are supported as values wrapped in a tuple.
-/// For example, to register a command that is called from yarn like `<<add_player "John" 42>>`, the first parameter must be of the type `In<(String, i32)>` and a call to `register_command` might look like this:
+/// For example, to register a command that is called from Yarn like `<<add_player "John" 42>>`, the first parameter must be of the type `In<(String, i32)>` and a call to `register_command` might look like this:
 /// ```rust
 /// # use bevy_yarn_slinger::prelude::*;
 /// # use bevy::prelude::*;
