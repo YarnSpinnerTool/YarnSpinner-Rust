@@ -116,16 +116,55 @@ When you use `DialogRunner::set_language()` as shown above, you will set the lan
 You can be more granular by using `DialogRunner::set_text_language()` and `DialogRunner::set_asset_language()` separately instead.
 This allows you to support use cases such as showing the text in the player's native language and play voiceover sound in the original recorded language, which might be a different one.
 
-To read more about how to use and localize assets, read the chapter [Assets](./assets.md).
+## Assets
+
+Since assets require using localization, they are searched for in folders named after the language they support. 
+For the example used throughout this chapter, the assets for the base localization would be searched for in `assets/dialog/en-US/`, while the assets for the `de-CH` 
+translation will be searched at `assets/dialog/de-CH/`. This is however more a convention than a rule, as a given `AssetProvider` is allowed to look for its assets wherever.
+The asset providers shipped by Yarn Slinger will additionally expect assets to be named after the line ID they belong to. For example, the `AudioAssetProvider` would look for the
+voice line reading our "Hello World!" line at `assets/dialog/en-US/13032079.mp3` for the base localization.
+
+To read more about how to use assets, read the chapter [Assets](./assets.md).
 
 ## File Editing Workflow
 
-TODO needs updating, removing lines, autoclean
+The strings file can be freely edited by a translator in the *text* and *comment* fields. 
+While you can translate the texts yourself, the format being straightforward allows the translator to also be someone else that is not involved with the coding part of the game at all.
+
+You might have some questions regarding what happens when one person edits a Yarn file while another edits the strings file. As a general rule,
+the strings file will try to "keep up" with the Yarn file without ever destroying anything that was already translated.  
+
+As you've seen, new lines will be amended. If the Yarn file has a line edited, it will be changed in the strings file as well if it was not yet translated. 
+If there is already a translation, it will be marked by a "NEEDS UPDATE" prefix in the text. If a line was deleted in the Yarn file, it will also be deleted
+in the strings file if it was untranslated. Otherwise, it will be left untouched. 
+
+Bottom line: if there's a translation, it will **never** be removed.
 
 ## Shipping the Game
 
-TODO fallback, files to include
+Once you want to build your game for a release, you should disable the automatic file creation and editing.
+To do this, add the following line to the plugin creation:
+```rust
+YarnSlingerPlugin::new()
+// ...
+.with_development_file_generation(DevelopmentFileGeneration::None)
+```
+
+This will change the behavior of missing translations to simply fall back to the base localization.
+
+
+While you're on it, you might also want to disable Bevy's hot reloading.
 
 ## Customization
 
-TODO locations
+You may have wondered what the `.into()`s were for in the lines at the beginning of the chapter:
+
+```rust
+YarnSlingerPlugin::new().with_localizations(Localizations {
+    base_localization: "en-US".into(),
+    translations: vec!["de-CH".into()],
+})
+```
+
+They're here because a localization is not just a string with a language code, but an entire struct, namely `Localization`.
+You can construct this struct directly the path to the strings file and where assets are searched for.
