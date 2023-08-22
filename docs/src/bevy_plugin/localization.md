@@ -152,7 +152,6 @@ YarnSlingerPlugin::new()
 
 This will change the behavior of missing translations to simply fall back to the base localization.
 
-
 While you're on it, you might also want to disable Bevy's hot reloading.
 
 ## Customization
