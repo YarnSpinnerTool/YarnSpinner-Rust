@@ -38,7 +38,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 ```
 
 TODO: Code does not work
-TODO: Mention default dialog vview does not support this
+TODO: Mention default dialog view does not support this
 TODO: Where stuff is searched
 TODO: FileExtensionAssetProvider
 TODO: Own AssetProvider?
