@@ -20,7 +20,16 @@ fn pow(base: f32, exponent: f32) -> f32 {
 }
 ```
 
-This function can now be called from the Yarn file like this:
+The following snippet is of special importance:
+```rust
+dialogue_runner.library_mut().add_function("pow", pow);
+```
+The first parameter of `add_function()` is the name of the function as seen by Yarn, `"pow"` in this case.
+The second parameter is the Rust function that will be called in the background. 
+Here, we reference the function definition of `fn pow(...)`, but you could also register a lambda.
+
+
+This `pow` function can now be called from the Yarn file like this:
 
 ```text
 title: Start
@@ -30,7 +39,7 @@ Two to the power of three is {pow(2,3)}
 ```
 
 Which will result in the following output:
-![img.png](custom_fn.png)
+![custom_fn.png](custom_fn.png)
 
 ## Allowed Signatures
 
