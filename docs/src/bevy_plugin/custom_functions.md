@@ -43,4 +43,51 @@ Which will result in the following output:
 
 ## Allowed Signatures
 
-TODO
+Custom functions need to follow some rules. Don't worry, they're pretty lax.
+
+- Their parameter and output types need to be primitive types or `String`
+- Parameters are allowed to be references
+- Parameters can have the special type `YarnValue`, which stands for any input type.
+Additionally, functions are assumed to have no side effects. You can read the full list of requirements in the docs for `YarnFn`.
+
+Here are some examples of valid functions:
+```rust
+fn add(a: f32, b: f32) -> f32 {
+    a + b
+}
+
+fn concat(a: &str, b: &str) -> String {
+    format!("{a}{b}")
+}
+
+fn greet(name: &str, age: usize) -> String {
+    format!("Hello {name}, you are {age} years old!")
+}
+
+fn format_anything(value: YarnValue) -> String {
+    format!("Got the following value: {value}")
+}
+```
+
+If you need functions that have side effects, e.g. for manipulating the game world, use [custom commands](./custom_commands.md) instead.
+
+## Size constraints
+
+Registered Rust functions can have a maximum of 16 parameters. 
+If you need more, you can wrap parameters in tuples:
+
+```rust
+fn add((a, b): (f32, f32)) -> f32 {
+    a + b
+}
+```
+
+Tuples are treated as separate parameters when calling the function from Yarn:
+```text
+title: Start
+---
+Two plus three is {add(2, 3)}
+===
+```
+
+Since tuples can be nested, you can use have potentially infinite parameters.
