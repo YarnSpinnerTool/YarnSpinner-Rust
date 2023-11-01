@@ -1,12 +1,7 @@
-use crate::pluralization::generated::generate_provider;
 use crate::prelude::Language;
 use fixed_decimal::{DoublePrecision, FixedDecimal};
-use icu_locid::Locale;
 use icu_plurals::{PluralCategory, PluralRuleType};
 use icu_plurals::{PluralOperands, PluralRules};
-use icu_provider::DataLocale;
-
-mod generated;
 
 #[derive(Debug)]
 pub(crate) struct Pluralization {
@@ -17,8 +12,9 @@ pub(crate) struct Pluralization {
 impl Pluralization {
     pub(crate) fn new(language: impl Into<Language>) -> Self {
         let language = language.into();
-        let locale: Locale = language.0.into();
-        let (cardinal_rules, ordinal_rules) = construct_cardinal_and_ordinal_rules(&locale);
+        let locale = language.0.into();
+        let cardinal_rules = PluralRules::try_new(&locale, PluralRuleType::Cardinal).unwrap();
+        let ordinal_rules = PluralRules::try_new(&locale, PluralRuleType::Ordinal).unwrap();
         Self {
             cardinal_rules,
             ordinal_rules,
@@ -36,18 +32,6 @@ impl Pluralization {
     }
 }
 
-fn construct_cardinal_and_ordinal_rules(
-    locale: impl Into<DataLocale>,
-) -> (PluralRules, PluralRules) {
-    let provider = generate_provider();
-    let locale = locale.into();
-    let cardinal_rules =
-        PluralRules::try_new_unstable(&provider, &locale, PluralRuleType::Cardinal).unwrap();
-    let ordinal_rules =
-        PluralRules::try_new_unstable(&provider, &locale, PluralRuleType::Ordinal).unwrap();
-    (cardinal_rules, ordinal_rules)
-}
-
 fn get_into_plural_operand(value: f32) -> PluralOperands {
     let rounded = value.round();
     let floating_point = (rounded - value).abs();
@@ -63,7 +47,6 @@ mod tests {
     //! Adapted from `TestNumberPlurals` in <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/LanguageTests.cs>
 
     use super::*;
-    use icu_locid::locale;
 
     #[test]
     fn test_number_plurals() {
@@ -142,19 +125,5 @@ mod tests {
                 "locale: {locale}, value: {value}, type: Ordinal"
             );
         }
-    }
-
-    #[test]
-    fn smoke_test() {
-        let provider = generate_provider();
-        let pr = PluralRules::try_new_unstable(
-            &provider,
-            &locale!("en").into(),
-            PluralRuleType::Cardinal,
-        )
-        .expect("Failed to construct a PluralRules struct.");
-
-        assert_eq!(PluralCategory::One, pr.category_for(1_usize));
-        assert_eq!(PluralCategory::Other, pr.category_for(5_usize));
     }
 }
