@@ -35,8 +35,8 @@ fn handle_yarn_file_events_outside_development(
 ) {
     for event in events.iter() {
         let AssetEvent::Modified { handle } = event else {
-                continue;
-            };
+            continue;
+        };
         if !(yarn_files_being_loaded.0.contains(handle) || project.yarn_files.contains(handle)) {
             continue;
         }
@@ -90,7 +90,9 @@ fn handle_yarn_file_events(
             }
             last_recompiled_yarn_file.replace(yarn_file.clone());
             for mut dialogue_runner in dialogue_runners.iter_mut() {
-                dialogue_runner.text_provider.extend_base_string_table(yarn_file.string_table.clone());
+                dialogue_runner
+                    .text_provider
+                    .extend_base_string_table(yarn_file.string_table.clone());
             }
             added_tags.remove(handle);
             recompilation_needed = true;

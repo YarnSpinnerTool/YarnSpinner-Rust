@@ -112,9 +112,7 @@ impl VirtualMachine {
         let node_name = node_name.into();
         debug!("Loading node \"{node_name}\"");
         let Some(current_node) = self.get_node_from_name(&node_name) else {
-            return Err(DialogueError::InvalidNode{
-                node_name
-            });
+            return Err(DialogueError::InvalidNode { node_name });
         };
         self.current_node = Some(current_node.clone());
 

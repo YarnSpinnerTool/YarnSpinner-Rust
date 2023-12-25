@@ -273,7 +273,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Type::Function(mut function_type) = function_declaration.r#type.clone() else {
-                 unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
+                unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
             };
 
             // we have an existing function but its undefined
