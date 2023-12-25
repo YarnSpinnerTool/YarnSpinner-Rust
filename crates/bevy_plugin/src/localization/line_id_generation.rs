@@ -149,7 +149,8 @@ fn add_tags_to_lines(yarn_file: &YarnFile) -> YarnCompilerResult<Option<String>>
     let existing_tags = yarn_file
         .string_table
         .iter()
-        .filter_map(|(key, string_info)| (!string_info.is_implicit_tag).then(|| key.clone()))
+        .filter(|(_, string_info)| !string_info.is_implicit_tag)
+        .map(|(key, _)| key.clone())
         .collect();
     YarnCompiler::add_tags_to_lines(yarn_file.file.source.clone(), existing_tags)
 }

@@ -387,12 +387,10 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
         // The type of the value depends on the declared type of the
         // variable
-        let Some(var_id) = ctx.get_token(yarnspinnerlexer::VAR_ID, 0) else {
-                // We don't have a variable name for this Variable context.
-                // The parser will have generated an error for us in an
-                // earlier stage; here, we'll bail out.
-            return None
-        };
+        // the parser will have generated an error for us in an
+        // earlier stage if we don't have a variable name for
+        // this Variable context; here, we'll bail out.
+        let var_id = ctx.get_token(yarnspinnerlexer::VAR_ID, 0)?;
         let name = var_id.get_text();
         if let Some(declaration) = self.declarations().find(|decl| decl.name == name) {
             return Some(declaration.r#type.clone());
