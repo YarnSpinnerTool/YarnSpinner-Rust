@@ -40,7 +40,7 @@ pub(crate) fn rotate_sprite(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (mut transform, material, mut rotator) in rotators.iter_mut() {
-        let RotationPhase::ChangingSprite{change, sprite}= rotator.deref_mut() else {
+        let RotationPhase::ChangingSprite { change, sprite } = rotator.deref_mut() else {
             continue;
         };
         let output = change.elastic(1.3);

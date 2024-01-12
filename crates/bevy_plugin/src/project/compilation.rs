@@ -109,7 +109,13 @@ fn recompile_loaded_yarn_files(
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
     };
-    let Some(compilation) = compile_yarn_files(&yarn_project.yarn_files, &yarn_files, yarn_project.localizations.as_ref(), yarn_project.development_file_generation)? else {
+    let Some(compilation) = compile_yarn_files(
+        &yarn_project.yarn_files,
+        &yarn_files,
+        yarn_project.localizations.as_ref(),
+        yarn_project.development_file_generation,
+    )?
+    else {
         return Ok(());
     };
     let metadata = compilation
@@ -175,7 +181,13 @@ fn compile_loaded_yarn_files(
         .unwrap()
         .as_ref();
     let development_file_generation = yarn_project_config_to_load.development_file_generation;
-    let Some(compilation) = compile_yarn_files(&yarn_files_being_loaded.0, &yarn_files, localizations, development_file_generation)? else {
+    let Some(compilation) = compile_yarn_files(
+        &yarn_files_being_loaded.0,
+        &yarn_files,
+        localizations,
+        development_file_generation,
+    )?
+    else {
         return Ok(());
     };
     let file_count = yarn_files_being_loaded.0.len();

@@ -82,7 +82,7 @@ impl Compiler {
 
     /// Extends the Yarn function library with the given [`Library`]. The standard library is only added if this is called with [`Library::standard_library`].
     pub fn extend_library(&mut self, library: Library) -> &mut Self {
-        self.library.extend(library.into_iter());
+        self.library.extend(library);
         self
     }
 

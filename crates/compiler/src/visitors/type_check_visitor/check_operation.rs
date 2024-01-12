@@ -122,10 +122,18 @@ impl<'input> TypeCheckVisitor<'input> {
         // annoyingly the function will already have an implicit definition created for it
         // we will have to strip that out and add in a new one with the new return type
         for term in terms {
-            let Term::Expression(expression) = term else { continue; };
-            let ExpressionContextAll::ExpValueContext(value_context) = expression.as_ref() else { continue; };
-            let Some(value) = value_context.value() else { continue; };
-            let ValueContextAll::ValueFuncContext(func_context) = value.as_ref() else { continue; };
+            let Term::Expression(expression) = term else {
+                continue;
+            };
+            let ExpressionContextAll::ExpValueContext(value_context) = expression.as_ref() else {
+                continue;
+            };
+            let Some(value) = value_context.value() else {
+                continue;
+            };
+            let ValueContextAll::ValueFuncContext(func_context) = value.as_ref() else {
+                continue;
+            };
 
             let id = func_context
                 .function_call()

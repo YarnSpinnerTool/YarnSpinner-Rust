@@ -73,10 +73,7 @@ fn continue_runtime(
                     let Some(option) = options.into_iter().find(|o| o.id == option) else {
                         let expected_options = last_options
                             .values()
-                            .flat_map(|options|
-                                options
-                                    .iter()
-                                    .map(|option| option.id.to_string()))
+                            .flat_map(|options| options.iter().map(|option| option.id.to_string()))
                             .collect::<Vec<_>>()
                             .join(", ");
                         bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");

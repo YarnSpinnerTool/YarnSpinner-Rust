@@ -95,9 +95,9 @@ impl YarnProject {
             .get(node_name)?
             .headers
             .iter()
-            .fold(HashMap::new(), |mut map, header| {
+            .fold(HashMap::new(), |mut map: HashMap<_, Vec<_>>, header| {
                 map.entry(header.key.as_str())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(header.value.as_str());
                 map
             })
