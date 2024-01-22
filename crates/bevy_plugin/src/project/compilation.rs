@@ -21,7 +21,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
                     .pipe(panic_on_err)
                     .run_if(resource_exists::<YarnFilesToLoad>()),
                 recompile_loaded_yarn_files
-                    .pipe(error)
+                    .map(error)
                     .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )

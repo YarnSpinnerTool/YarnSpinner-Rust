@@ -12,7 +12,7 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
         Update,
         (
             continue_runtime
-                .map(panic_on_err)
+                .pipe(panic_on_err)
                 .run_if(resource_exists::<YarnProject>()),
             accept_line_hints,
         )
