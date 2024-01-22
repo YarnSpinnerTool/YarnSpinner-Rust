@@ -166,7 +166,7 @@ impl AssetProvider for FileExtensionAssetProvider {
                                 let file_name = format!("{}.{}", file_name_without_extension, ext);
                                 let path = dir.join(file_name);
 
-                                if asset_server.asset_io().is_file(&path) {
+                                if asset_server.is_file(&path) {
                                     Some((*type_id, asset_server.load_untyped(path)))
                                 } else {
                                     None
@@ -197,7 +197,7 @@ impl FileExtensionAssetProvider {
                     for line_id in self.line_ids.iter() {
                         let file_name = format!("{}.ogg", line_id.0.trim_start_matches("line:"));
                         let path = dir.join(file_name);
-                        if asset_server.asset_io().is_file(&path) {
+                        if asset_server.is_file(&path) {
                             let handle = asset_server.load_untyped(path);
                             self.handles.insert(handle);
                         } else {

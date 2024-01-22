@@ -200,7 +200,7 @@ fn compile_loaded_yarn_files(
             ));
             for localization in &localizations.translations {
                 let path = localization.strings_file.as_path();
-                if asset_server.asset_io().is_file(path) {
+                if asset_server.is_file(path) {
                     continue;
                 }
                 let strings_file = StringsFile::from_string_table(

@@ -171,8 +171,7 @@ impl StringsFile {
     }
 
     pub(crate) fn write_asset(&self, asset_server: &AssetServer, path: &Path) -> Result<()> {
-        let assets_path = get_assets_dir_path(asset_server)?;
-        let assets_path = assets_path.as_ref();
+        let assets_path = asset_server.get_assets_dir_path()?;
         let full_path = assets_path.join(path);
         if let Some(parent_dir) = full_path.parent() {
             fs::create_dir_all(parent_dir).map_err(|e| {

@@ -91,7 +91,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
             panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
         };
         let path = localization.strings_file.as_path();
-        if self.asset_server.asset_io().is_file(path) {
+        if self.asset_server.is_file(path) {
             self.strings_file_handle
                 .replace(self.asset_server.load(path));
         } else {
