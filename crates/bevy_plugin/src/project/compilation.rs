@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::bail;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::{error, HashSet};
 use std::fmt::Debug;
 
 pub(crate) fn project_compilation_plugin(app: &mut App) {
@@ -14,14 +14,14 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
         .add_systems(
             Update,
             (
-                load_project.pipe(panic_on_err),
+                load_project.map(panic_on_err),
                 add_yarn_files_to_load_queue
                     .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
                 compile_loaded_yarn_files
-                    .pipe(panic_on_err)
+                    .map(panic_on_err)
                     .run_if(resource_exists::<YarnFilesToLoad>()),
                 recompile_loaded_yarn_files
-                    .pipe(error)
+                    .map(error)
                     .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )

@@ -27,7 +27,7 @@ pub struct FileExtensionAssetProvider {
     language: Option<Language>,
     localizations: Option<Localizations>,
     asset_server: Option<AssetServer>,
-    handles: HashSet<HandleUntyped>,
+    handles: HashSet<UntypedHandle>,
     line_ids: HashSet<LineId>,
     file_extensions: HashMap<Uuid, Vec<String>>,
 }

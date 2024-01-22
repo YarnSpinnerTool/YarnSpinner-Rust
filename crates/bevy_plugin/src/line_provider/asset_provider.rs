@@ -146,7 +146,7 @@ pub trait AssetProvider: Debug + Send + Sync {
 
 /// Assets that were provided by one or more [`AssetProvider`]s. Stores them in the form of [`Handle`]s.
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct LineAssets(HashMap<Uuid, HandleUntyped>);
+pub struct LineAssets(HashMap<Uuid, UntypedHandle>);
 impl LineAssets {
     /// Creates a new empty [`LineAssets`] struct.
     pub fn new() -> Self {
@@ -154,7 +154,7 @@ impl LineAssets {
     }
 
     /// Creates a new [`LineAssets`] struct from an iterator of untyped [`Handle`]s and the [`Uuid`] of the [`Asset`] they reference.
-    pub fn with_assets(handles: impl IntoIterator<Item = (Uuid, HandleUntyped)>) -> Self {
+    pub fn with_assets(handles: impl IntoIterator<Item = (Uuid, UntypedHandle)>) -> Self {
         Self(handles.into_iter().collect())
     }
 
@@ -179,15 +179,15 @@ impl LineAssets {
     }
 }
 
-impl From<HashMap<Uuid, HandleUntyped>> for LineAssets {
-    fn from(h: HashMap<Uuid, HandleUntyped>) -> Self {
+impl From<HashMap<Uuid, UntypedHandle>> for LineAssets {
+    fn from(h: HashMap<Uuid, UntypedHandle>) -> Self {
         Self(h)
     }
 }
 
 impl IntoIterator for LineAssets {
-    type Item = <HashMap<Uuid, HandleUntyped> as IntoIterator>::Item;
-    type IntoIter = <HashMap<Uuid, HandleUntyped> as IntoIterator>::IntoIter;
+    type Item = <HashMap<Uuid, UntypedHandle> as IntoIterator>::Item;
+    type IntoIter = <HashMap<Uuid, UntypedHandle> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -203,14 +203,14 @@ impl Extend<LineAssets> for LineAssets {
     }
 }
 
-impl Extend<(Uuid, HandleUntyped)> for LineAssets {
-    fn extend<T: IntoIterator<Item = (Uuid, HandleUntyped)>>(&mut self, iter: T) {
+impl Extend<(Uuid, UntypedHandle)> for LineAssets {
+    fn extend<T: IntoIterator<Item = (Uuid, UntypedHandle)>>(&mut self, iter: T) {
         self.0.extend(iter)
     }
 }
 
-impl FromIterator<(Uuid, HandleUntyped)> for LineAssets {
-    fn from_iter<T: IntoIterator<Item = (Uuid, HandleUntyped)>>(iter: T) -> Self {
+impl FromIterator<(Uuid, UntypedHandle)> for LineAssets {
+    fn from_iter<T: IntoIterator<Item = (Uuid, UntypedHandle)>>(iter: T) -> Self {
         Self(HashMap::from_iter(iter))
     }
 }

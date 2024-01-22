@@ -41,17 +41,16 @@ pub(crate) mod font_handle {
     use bevy::prelude::*;
     use bevy::reflect::TypeUuid;
 
-    pub(crate) const MEDIUM: HandleUntyped =
-        HandleUntyped::weak_from_u64(Font::TYPE_UUID, 2263821398159872327);
+    pub(crate) const MEDIUM: Handle<Font> = Handle::weak_from_u128(2263821398159872327);
 }
 
 pub(crate) mod image_handle {
     use bevy::prelude::*;
     use bevy::reflect::TypeUuid;
 
-    pub(crate) const EDGE: HandleUntyped =
-        HandleUntyped::weak_from_u64(Image::TYPE_UUID, 8465132165468742313);
+    pub(crate) const EDGE: Handle<Image> =
+        Handle::weak_from_u128(Image::TYPE_UUID, 8465132165468742313);
 
-    pub(crate) const CONTINUE_INDICATOR: HandleUntyped =
-        HandleUntyped::weak_from_u64(Image::TYPE_UUID, 5464879846123416874);
+    pub(crate) const CONTINUE_INDICATOR: Handle<Image> =
+        Handle::weak_from_u128(5464879846123416874);
 }
