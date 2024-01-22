@@ -58,15 +58,16 @@ fn load_project(
             bail!("Yarn project already loaded. Sending multiple LoadYarnProjectEvent is not allowed.");
         }
         assert!(!event.yarn_files.is_empty(),
-            "Failed to load Yarn project in deferred mode: no yarn files were specified. \
-            Did run `LoadYarnProjectEvent::empty()` without adding any yarn files with `LoadYarnProjectEvent::add_yarn_file` and `LoadYarnProjectEvent::add_yarn_files`? \
+            "Failed to load Yarn project in deferred mode: no Yarn files were specified. \
+            Did run `LoadYarnProjectEvent::empty()` without adding any Yarn files with `LoadYarnProjectEvent::add_yarn_file` and `LoadYarnProjectEvent::add_yarn_files`? \
             If you wanted to load from the default directory instead, use `LoadYarnProjectEvent::default()`.");
         if event.development_file_generation == DevelopmentFileGeneration::Full
             && !is_watching_for_changes.0
         {
             warn!("Development file generation mode is set to `Full`, but hot reloading is not turned on. \
-                For an optimal development experience, we recommend turning on hot reloading by setting the `watch_for_changes` field of the `AssetPlugin` to `true`. \
-                You can see an example of how to do this in at <https://github.com/bevyengine/bevy/blob/v0.10.1/examples/asset/hot_asset_reloading.rs>");
+                For an optimal development experience, we recommend turning on hot reloading by setting the `watch_for_changes` field of the `AssetPlugin` to `Some`, \
+                e.g. via `watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200))`. \
+                You can see an example of how to do this in at <https://github.com/bevyengine/bevy/blob/v0.11.0/examples/asset/hot_asset_reloading.rs>");
         }
 
         commands.insert_resource(YarnProjectConfigToLoad {
@@ -266,7 +267,7 @@ fn compile_yarn_files(
                 );
                 return Ok(None);
             } else {
-                bail!("Failed to compile yarn files: Localization mode is on, but \"{}\" is not does not have full line IDs. \
+                bail!("Failed to compile Yarn files: Localization mode is on, but \"{}\" is not does not have full line IDs. \
                     Cannot generate the line IDs automatically either because we are not in `DevelopmentFileGeneration::Full`",
                     untagged_file.file.file_name);
             }

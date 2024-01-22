@@ -1,6 +1,6 @@
 # Running Examples
 
-You can run yarn files by copy-pasting them into [Try Yarn Spinner](https://try.yarnspinner.dev).
+You can run Yarn files by copy-pasting them into [Try Yarn Spinner](https://try.yarnspinner.dev).
 This is nice because it runs directly in your browser and so doesn't require any setup. Since Yarn Slinger
 and Yarn Spinner read Yarn files the same way, the behavior will be identical to how it would be in your game.
 The only thing to look out for is that Try Yarn Spinner will only start at a node named "Start".
@@ -21,23 +21,27 @@ Then, in your `src/main.rs`, add the following code:
 
 ```rust
 // src/main.rs
-use bevy::prelude::*;
+use bevy::{prelude::*, asset::ChangeWatcher, utils::Duration};
 use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
-        app.add_plugins(DefaultPlugins.set(AssetPlugin {
-            watch_for_changes: true,
+
+    app.add_plugins((
+        DefaultPlugins.set(AssetPlugin {
+            watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
             ..default()
-        }))
-        .add_plugins(YarnSlingerPlugin::new())
-        .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
-        .add_systems(Update, (
-            setup_camera.on_startup(),
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        ))
-        .run();
+        }),
+        YarnSlingerPlugin::new(),
+        ExampleYarnSlingerDialogueViewPlugin::new(),
+    ))
+    .add_systems(Startup, setup_camera)
+    .add_systems(
+        Update,
+        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+    )
+    .run();
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -51,8 +55,8 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 }
 ```
 
-Don't worry, we will look at what this code does in detail later. For now, just treat it as something
-that runs your Yarn files.
+Don't worry, we will look at what this code does in detail later, in the chapter [Bevy Plugin / Setup](../bevy_plugin/setup.md). 
+For now, just treat it as something that runs your Yarn files.
 
 Finally, add your Yarn files to the assets. Inside the folder `assets/dialogue`, add a file named `example.yarn` with the content
 you want to run. Let's use the example from the last chapter:

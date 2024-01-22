@@ -417,7 +417,7 @@ fn test_initial_values() -> anyhow::Result<()> {
         .declare_variable(Declaration::new("$external_bool", Type::Number).with_default_value(42))
         .compile()?;
 
-    let mut variable_storage = test_base.variable_store.clone_shallow();
+    let mut variable_storage = test_base.variable_storage.clone_shallow();
     variable_storage.set("$external_str".to_string(), "Hello".into())?;
     variable_storage.set("$external_int".to_string(), 42.into())?;
     variable_storage.set("$external_bool".to_string(), true.into())?;

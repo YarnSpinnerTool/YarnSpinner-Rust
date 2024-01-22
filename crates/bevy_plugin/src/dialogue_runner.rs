@@ -320,12 +320,13 @@ impl DialogueRunner {
         self.text_provider.as_ref()
     }
 
-    /// Returns the registered [`AssetProvider`] for the given type.
+    /// Returns the registered [`AssetProvider`] of the given type if it was previously registered with [`DialogueRunnerBuilder::add_asset_provider`].
     #[must_use]
-    pub fn asset_provider<T: 'static>(&self) -> Option<&dyn AssetProvider> {
+    pub fn asset_provider<T: 'static>(&self) -> Option<&T> {
         self.asset_providers
-            .get(&TypeId::of::<T>())
-            .map(|p| p.as_ref())
+            .values()
+            .filter_map(|p| p.as_any().downcast_ref())
+            .next()
     }
 
     /// Iterates over all registered [`AssetProvider`]s.
