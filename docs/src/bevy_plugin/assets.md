@@ -22,5 +22,5 @@ These annotations will also be written into the "comment" field of strings files
 
 ## Asset Providers
 
-TODO
+TODO (Feel free to [contribute](https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/src/bevy_plugin/assets.md)!)
 
