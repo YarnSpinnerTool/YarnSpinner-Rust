@@ -92,7 +92,7 @@ impl YarnFileSource {
                     .extension()?
                     .to_str()?
                     == "yarn")
-                    .then(|| handle.typed())
+                    .then(|| handle.untyped().typed())
             })
             .collect();
         if handles.is_empty() {

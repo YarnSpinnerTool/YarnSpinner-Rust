@@ -165,9 +165,7 @@ impl TextProvider for StringsFileTextProvider {
         let strings_file_has_changed = || {
             let mut reader = self.event_reader.write().unwrap();
             reader.iter(asset_events).any(|event| match event {
-                AssetEvent::Modified {
-                    handle: modified_handle,
-                } => modified_handle == handle,
+                AssetEvent::Modified { id } => *id == handle.id(),
                 _ => false,
             })
         };

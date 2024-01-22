@@ -166,7 +166,7 @@ impl LineAssets {
         T: Asset,
     {
         self.0.iter().find_map(|(type_id, handle)| {
-            (T::type_path() == *type_id).then(|| handle.clone().typed())
+            (T::type_path() == *type_id).then(|| handle.clone().untyped().typed())
         })
     }
 
