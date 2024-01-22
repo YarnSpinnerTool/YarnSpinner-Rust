@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
-use bevy::asset::LoadState;
+use bevy::asset::{LoadState, LoadedUntypedAsset};
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet, Uuid};
 use std::any::Any;
@@ -27,7 +27,7 @@ pub struct FileExtensionAssetProvider {
     language: Option<Language>,
     localizations: Option<Localizations>,
     asset_server: Option<AssetServer>,
-    handles: HashSet<UntypedHandle>,
+    handles: HashSet<Handle<LoadedUntypedAsset>>,
     line_ids: HashSet<LineId>,
     file_extensions: HashMap<Uuid, Vec<String>>,
 }

@@ -12,7 +12,7 @@ use std::fs::File;
 use std::path::Path;
 
 pub(crate) fn strings_file_asset_plugin(app: &mut App) {
-    app.add_asset::<StringsFile>()
+    app.init_asset::<StringsFile>()
         .init_asset_loader::<StringsFileAssetLoader>();
 }
 
