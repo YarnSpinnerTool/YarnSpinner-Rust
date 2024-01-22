@@ -52,10 +52,15 @@ impl AssetServerExt for AssetServer {
     }
 
     fn is_file(&self, path: impl AsRef<Path>) -> bool {
-        let Ok(root) = self.get_assets_dir_path() else {
-            return false;
-        };
-        let path = root.join(path.as_ref());
-        path.is_file()
+        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
+        panic!("AssetServer::is_file is not supported on this platform. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        {
+            let Ok(root) = self.get_assets_dir_path() else {
+                return false;
+            };
+            let path = root.join(path.as_ref());
+            path.is_file()
+        }
     }
 }
