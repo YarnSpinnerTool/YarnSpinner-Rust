@@ -1,9 +1,6 @@
 use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::*;
-use annotate_snippets::{
-    display_list::{DisplayList, FormatOptions},
-    snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
-};
+use annotate_snippets::{Annotation, AnnotationType, Renderer, Slice, Snippet, SourceAnnotation};
 use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
@@ -132,14 +129,10 @@ impl Display for Diagnostic {
                     range: convert_absolute_range_to_relative(self),
                 }],
             }],
-            opt: FormatOptions {
-                color: true,
-                ..Default::default()
-            },
         };
-
-        let display_list = DisplayList::from(snippet);
-        writeln!(f, "{}", display_list)?;
+        let renderer = Renderer::styled();
+        let annotations = renderer.render(snippet);
+        writeln!(f, "{}", annotations)?;
 
         Ok(())
     }

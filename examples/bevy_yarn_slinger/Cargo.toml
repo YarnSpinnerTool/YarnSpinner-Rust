@@ -9,7 +9,7 @@ bevy_yarn_slinger = { path = "../../crates/bevy_plugin" }
 bevy_yarn_slinger_example_dialogue_view = { path = "../../crates/example_dialogue_view" }
 
 [dependencies.bevy]
-version = "0.11"
+version = "0.12"
 default-features = false
 features = [
   "bevy_core_pipeline",
@@ -17,7 +17,7 @@ features = [
   "bevy_render",
   "bevy_sprite",
   "bevy_winit",
-  "filesystem_watcher",
+  "file_watcher",
   "png",
   "x11",
   "bevy_gltf",
