@@ -140,7 +140,7 @@ fn lint_strings_file(
         .join(", ");
     if !superfluous_file_names.is_empty() {
         let source = asset_server
-            .get_handle_path(handle)
+            .get_path(handle)
             .map(|asset_path| format!("at {}", asset_path.path().display()))
             .unwrap_or_else(|| "created at runtime".to_owned());
         warn!(

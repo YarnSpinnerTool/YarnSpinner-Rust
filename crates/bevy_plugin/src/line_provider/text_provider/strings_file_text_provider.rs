@@ -176,7 +176,7 @@ impl TextProvider for StringsFileTextProvider {
             let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
             let expected_language = self.language.as_ref().unwrap();
             if let Some(record) = strings_file.get_offending_language(expected_language) {
-                let path = self.asset_server.get_handle_path(handle).unwrap();
+                let path = self.asset_server.get_path(handle).unwrap();
                 panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
                            path = path.path().display(),
                            id = record.id,

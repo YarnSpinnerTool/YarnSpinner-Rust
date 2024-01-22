@@ -91,7 +91,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
-    let path = asset_server.get_handle_path(asset).unwrap();
+    let path = asset_server.get_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
     assert_eq!("dialogue/en-US/9.ogg", path.path().to_str().unwrap());
@@ -127,7 +127,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
-    let path = asset_server.get_handle_path(asset).unwrap();
+    let path = asset_server.get_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
     assert_eq!("dialogue/de-CH/10.ogg", path.path().to_str().unwrap());

@@ -87,7 +87,7 @@ impl YarnFileSource {
             .into_iter()
             .filter_map(|handle| {
                 (asset_server
-                    .get_handle_path(&handle)?
+                    .get_path(&handle)?
                     .path()
                     .extension()?
                     .to_str()?

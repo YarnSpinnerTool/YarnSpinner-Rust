@@ -103,7 +103,7 @@ fn handle_yarn_file_events(
             continue;
         }
         let asset_path = asset_server
-            .get_handle_path(handle.clone())
+            .get_path(handle.clone())
             .with_context(|| format!("Failed to overwrite Yarn file \"{}\" with new IDs because it was not found on disk",
                                      yarn_file.file_name()))?;
         let assets_path = get_assets_dir_path(&asset_server)?;
