@@ -39,8 +39,7 @@ impl AssetLoader for StringsFileAssetLoader {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, TypeUuid, TypePath)]
-#[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, Asset, TypePath)]
 #[non_exhaustive]
 pub(crate) struct StringsFile(HashMap<LineId, StringsFileRecord>);
 
