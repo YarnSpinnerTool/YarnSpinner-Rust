@@ -18,7 +18,8 @@ yarn_slinger = { path = "../yarn_slinger", features = ["bevy", "serde"] }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 
-[dependencies.bevy]
+
+[target.'cfg(any(target_arch = "wasm32", target_os = "android"))'.dependencies.bevy]
 version = "0.12"
 default-features = false
 features = ["bevy_asset", "serialize"]
@@ -38,3 +39,8 @@ features = [
   "bevy_audio",
   "multi-threaded",
 ]
+
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies.bevy]
+version = "0.12"
+default-features = false
+features = ["bevy_asset", "serialize", "file_watcher",]
