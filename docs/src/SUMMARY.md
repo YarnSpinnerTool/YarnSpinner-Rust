@@ -1,5 +1,5 @@
 - [Introduction](./introduction.md)
-- [Yarn Files](yarn_files.md)
+- [Yarn Files](./yarn_files.md)
   - [Basics](./yarn_files/basics.md)
   - [Running Examples](./yarn_files/running_examples.md)
   - [Lines](./yarn_files/lines.md)
