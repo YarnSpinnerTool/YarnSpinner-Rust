@@ -66,7 +66,6 @@ macro_rules! get_reader {
         &mut $asserter.execute_command_reader
     };
 }
-pub use get_reader;
 
 #[macro_export]
 macro_rules! assert_events {
@@ -80,7 +79,7 @@ macro_rules! assert_events {
     };
     ($asserter:ident, $app:ident contains $event:ident (n = $num:expr) $(with $pred:expr)?) => {
         let events = $app.world.resource::<bevy::prelude::Events<$event>>();
-        let reader = $crate::prelude::get_reader!($asserter, $event);
+        let reader = $crate::get_reader!($asserter, $event);
         let events: Vec<&$event> = reader.iter(&events).collect();
         assert_eq!($num, events.len(), "Expected {} events of type {}, but found {}: {events:#?}", stringify!($num), stringify!($event), events.len());
         $(
@@ -95,5 +94,3 @@ macro_rules! assert_events {
         )?
     };
 }
-
-pub use assert_events;

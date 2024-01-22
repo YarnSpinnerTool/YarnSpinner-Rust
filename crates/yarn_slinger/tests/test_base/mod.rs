@@ -34,6 +34,7 @@ pub use text_provider::SharedTextProvider;
 use yarn_slinger::log::{self, LevelFilter, SetLoggerError};
 
 pub mod prelude {
+    #[allow(unused_imports)] // False positive
     pub use crate::test_base::{extensions::*, paths::*, step::*, test_plan::*, *};
 }
 
