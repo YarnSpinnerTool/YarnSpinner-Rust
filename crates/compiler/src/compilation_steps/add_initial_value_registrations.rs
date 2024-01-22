@@ -28,7 +28,7 @@ pub(crate) fn add_initial_value_registrations(
         };
         if let Some(ref mut program) = compilation.program {
             let value = match &declaration.r#type {
-                    Type::String => Operand::from(String::try_from(default_value).unwrap()),
+                    Type::String => Operand::from(String::from(default_value)),
                     Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
                     Type::Boolean => Operand::from(bool::try_from(default_value).unwrap()),
                     _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new", declaration.r#type.format()),

@@ -66,7 +66,6 @@ macro_rules! get_reader {
         &mut $asserter.execute_command_reader
     };
 }
-pub use get_reader;
 
 #[macro_export]
 macro_rules! assert_events {
@@ -95,5 +94,3 @@ macro_rules! assert_events {
         )?
     };
 }
-
-pub use assert_events;

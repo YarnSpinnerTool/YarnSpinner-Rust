@@ -232,7 +232,7 @@ fn combine_comments(full_old_comment: &str, new_metadata: &str) -> String {
     let new_metadata = (!new_metadata.is_empty()).then_some(new_metadata);
     [translator_comment, new_metadata]
         .into_iter()
-        .filter_map(|s| s)
+        .flatten()
         .collect::<Vec<_>>()
         .join(LINE_METADATA_PREFIX_SEPARATOR)
 }

@@ -11,7 +11,6 @@ mod assertion;
 
 pub mod prelude {
     pub use super::*;
-    pub use assertion::*;
 }
 
 pub trait AppExt {

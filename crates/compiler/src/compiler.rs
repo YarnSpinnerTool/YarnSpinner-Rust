@@ -9,7 +9,6 @@ mod add_tags_to_lines;
 pub(crate) mod antlr_rust_ext;
 pub(crate) mod run_compilation;
 pub(crate) mod utils;
-pub use add_tags_to_lines::*;
 
 #[allow(missing_docs)]
 pub type Result<T> = std::result::Result<T, CompilerError>;
