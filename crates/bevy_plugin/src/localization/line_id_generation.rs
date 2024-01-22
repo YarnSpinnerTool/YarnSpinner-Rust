@@ -34,10 +34,11 @@ fn handle_yarn_file_events_outside_development(
     mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
 ) {
     for event in events.iter() {
-        let AssetEvent::Modified { handle } = event else {
+        let AssetEvent::Modified { id } = event else {
             continue;
         };
-        if !(yarn_files_being_loaded.0.contains(handle) || project.yarn_files.contains(handle)) {
+        let handle = Handle::Weak(*id);
+        if !(yarn_files_being_loaded.0.contains(&handle) || project.yarn_files.contains(&handle)) {
             continue;
         }
         recompile_events.send(RecompileLoadedYarnFilesEvent);
@@ -59,29 +60,32 @@ fn handle_yarn_file_events(
     let mut recompilation_needed = false;
     let mut already_handled = HashSet::new();
     for event in events.iter() {
-        let (AssetEvent::Created { handle } | AssetEvent::Modified { handle }) = event else {
+        let (AssetEvent::LoadedWithDependencies { id } | AssetEvent::Modified { id }) = event
+        else {
             continue;
         };
-        if already_handled.contains(handle) {
+
+        let handle = Handle::Weak(*id);
+        if already_handled.contains(&handle) {
             continue;
         }
         already_handled.insert(handle);
-        if !yarn_files_being_loaded.0.contains(handle)
+        if !yarn_files_being_loaded.0.contains(&handle)
             && !project
                 .as_ref()
-                .map(|p| p.yarn_files.contains(handle))
+                .map(|p| p.yarn_files.contains(&handle))
                 .unwrap_or_default()
         {
             continue;
         }
-        let yarn_file = assets.get(handle).unwrap();
+        let yarn_file = assets.get(&handle).unwrap();
 
         update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
             yarn_file.string_table.clone(),
         ));
 
         let Some(source_with_added_ids) = add_tags_to_lines(yarn_file)? else {
-            if matches!(event, AssetEvent::Created { .. }) {
+            if matches!(event, AssetEvent::LoadedWithDependencies { .. }) {
                 continue;
             }
             if last_recompiled_yarn_file.as_ref() == Some(yarn_file) {
@@ -94,12 +98,12 @@ fn handle_yarn_file_events(
                     .text_provider
                     .extend_base_string_table(yarn_file.string_table.clone());
             }
-            added_tags.remove(handle);
+            added_tags.remove(&handle);
             recompilation_needed = true;
             continue;
         };
 
-        if added_tags.contains(handle) {
+        if added_tags.contains(&handle) {
             continue;
         }
         let asset_path = asset_server
@@ -127,7 +131,7 @@ fn handle_yarn_file_events(
         if is_watching {
             added_tags.insert(handle.clone_weak());
         } else {
-            let yarn_file = assets.get_mut(handle).unwrap();
+            let yarn_file = assets.get_mut(&handle).unwrap();
             yarn_file.file.source = source_with_added_ids;
 
             let string_table = YarnCompiler::new()
