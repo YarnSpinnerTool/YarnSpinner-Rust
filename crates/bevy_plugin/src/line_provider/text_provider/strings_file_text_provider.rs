@@ -158,7 +158,7 @@ impl TextProvider for StringsFileTextProvider {
             return None;
         }
         let handle = self.strings_file_handle.as_ref()?;
-        if self.asset_server.get_load_state(handle) != LoadState::Loaded {
+        if !self.asset_server.is_loaded_with_dependencies(handle) {
             return None;
         }
         let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();

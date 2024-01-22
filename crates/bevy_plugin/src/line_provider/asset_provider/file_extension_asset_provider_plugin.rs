@@ -138,7 +138,7 @@ impl AssetProvider for FileExtensionAssetProvider {
         };
         self.handles
             .iter()
-            .all(|handle| asset_server.get_load_state(handle) == LoadState::Loaded)
+            .all(|handle| asset_server.is_loaded_with_dependencies(handle))
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {
