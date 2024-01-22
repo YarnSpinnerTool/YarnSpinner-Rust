@@ -35,8 +35,8 @@ fn handle_yarn_file_events_outside_development(
 ) {
     for event in events.iter() {
         let AssetEvent::Modified { handle } = event else {
-                continue;
-            };
+            continue;
+        };
         if !(yarn_files_being_loaded.0.contains(handle) || project.yarn_files.contains(handle)) {
             continue;
         }
@@ -90,7 +90,9 @@ fn handle_yarn_file_events(
             }
             last_recompiled_yarn_file.replace(yarn_file.clone());
             for mut dialogue_runner in dialogue_runners.iter_mut() {
-                dialogue_runner.text_provider.extend_base_string_table(yarn_file.string_table.clone());
+                dialogue_runner
+                    .text_provider
+                    .extend_base_string_table(yarn_file.string_table.clone());
             }
             added_tags.remove(handle);
             recompilation_needed = true;
@@ -149,7 +151,8 @@ fn add_tags_to_lines(yarn_file: &YarnFile) -> YarnCompilerResult<Option<String>>
     let existing_tags = yarn_file
         .string_table
         .iter()
-        .filter_map(|(key, string_info)| (!string_info.is_implicit_tag).then(|| key.clone()))
+        .filter(|(_, string_info)| !string_info.is_implicit_tag)
+        .map(|(key, _)| key.clone())
         .collect();
     YarnCompiler::add_tags_to_lines(yarn_file.file.source.clone(), existing_tags)
 }

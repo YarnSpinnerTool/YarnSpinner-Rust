@@ -148,12 +148,14 @@ impl LineParser {
                         }
                         if let Some(prop) = marker.properties.get(TRIM_WHITESPACE_PROPERTY) {
                             let MarkupValue::Bool(trim_whitespace) = prop else {
-                                return Err(MarkupParseError::TrimWhitespaceAttributeIsNotBoolean {
-                                    input: self.input.clone(),
-                                    name: marker.name,
-                                    position: self.position,
-                                    type_: prop.type_name().to_lowercase(),
-                                });
+                                return Err(
+                                    MarkupParseError::TrimWhitespaceAttributeIsNotBoolean {
+                                        input: self.input.clone(),
+                                        name: marker.name,
+                                        position: self.position,
+                                        type_: prop.type_name().to_lowercase(),
+                                    },
+                                );
                             };
                             trim_whitespace_if_able = *trim_whitespace;
                         }
@@ -637,7 +639,7 @@ impl LineParser {
     fn peek_numeric(&mut self) -> Result<bool> {
         self.consume_whitespace()?;
         let Some(next) = self.peek_next() else {
-            return Ok(false)
+            return Ok(false);
         };
         Ok(next.is_ascii_digit())
     }
