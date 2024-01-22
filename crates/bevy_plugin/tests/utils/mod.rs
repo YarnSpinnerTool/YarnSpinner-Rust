@@ -7,10 +7,11 @@ use bevy_yarn_slinger::prelude::*;
 use bevy_yarn_slinger::UnderlyingYarnLine;
 use std::path::{Path, PathBuf};
 
-mod assertion;
+pub mod assertion;
 
 pub mod prelude {
-    pub use super::*;
+    #[allow(unused_imports)] // False positive
+    pub use super::{assertion::*, *};
 }
 
 pub trait AppExt {
