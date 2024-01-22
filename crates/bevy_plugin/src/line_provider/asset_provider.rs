@@ -146,16 +146,16 @@ pub trait AssetProvider: Debug + Send + Sync {
 
 /// Assets that were provided by one or more [`AssetProvider`]s. Stores them in the form of [`Handle`]s.
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct LineAssets(HashMap<Uuid, Handle<LoadedUntypedAsset>>);
+pub struct LineAssets(HashMap<&'static str, Handle<LoadedUntypedAsset>>);
 impl LineAssets {
     /// Creates a new empty [`LineAssets`] struct.
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
-    /// Creates a new [`LineAssets`] struct from an iterator of untyped [`Handle`]s and the [`Uuid`] of the [`Asset`] they reference.
+    /// Creates a new [`LineAssets`] struct from an iterator of untyped [`Handle`]s and the [`TypePath::type_path`] of the [`Asset`] they reference.
     pub fn with_assets(
-        handles: impl IntoIterator<Item = (Uuid, Handle<LoadedUntypedAsset>)>,
+        handles: impl IntoIterator<Item = (&'static str, Handle<LoadedUntypedAsset>)>,
     ) -> Self {
         Self(handles.into_iter().collect())
     }
@@ -166,7 +166,7 @@ impl LineAssets {
         T: Asset,
     {
         self.0.iter().find_map(|(type_id, handle)| {
-            (T::TYPE_UUID == *type_id).then(|| handle.clone().typed())
+            (T::type_path() == *type_id).then(|| handle.clone().typed())
         })
     }
 
@@ -181,15 +181,15 @@ impl LineAssets {
     }
 }
 
-impl From<HashMap<Uuid, Handle<LoadedUntypedAsset>>> for LineAssets {
-    fn from(h: HashMap<Uuid, Handle<LoadedUntypedAsset>>) -> Self {
+impl From<HashMap<&'static str, Handle<LoadedUntypedAsset>>> for LineAssets {
+    fn from(h: HashMap<&'static str, Handle<LoadedUntypedAsset>>) -> Self {
         Self(h)
     }
 }
 
 impl IntoIterator for LineAssets {
-    type Item = <HashMap<Uuid, Handle<LoadedUntypedAsset>> as IntoIterator>::Item;
-    type IntoIter = <HashMap<Uuid, Handle<LoadedUntypedAsset>> as IntoIterator>::IntoIter;
+    type Item = <HashMap<&'static str, Handle<LoadedUntypedAsset>> as IntoIterator>::Item;
+    type IntoIter = <HashMap<&'static str, Handle<LoadedUntypedAsset>> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -205,14 +205,19 @@ impl Extend<LineAssets> for LineAssets {
     }
 }
 
-impl Extend<(Uuid, Handle<LoadedUntypedAsset>)> for LineAssets {
-    fn extend<T: IntoIterator<Item = (Uuid, Handle<LoadedUntypedAsset>)>>(&mut self, iter: T) {
+impl Extend<(&'static str, Handle<LoadedUntypedAsset>)> for LineAssets {
+    fn extend<T: IntoIterator<Item = (&'static str, Handle<LoadedUntypedAsset>)>>(
+        &mut self,
+        iter: T,
+    ) {
         self.0.extend(iter)
     }
 }
 
-impl FromIterator<(Uuid, Handle<LoadedUntypedAsset>)> for LineAssets {
-    fn from_iter<T: IntoIterator<Item = (Uuid, Handle<LoadedUntypedAsset>)>>(iter: T) -> Self {
+impl FromIterator<(&'static str, Handle<LoadedUntypedAsset>)> for LineAssets {
+    fn from_iter<T: IntoIterator<Item = (&'static str, Handle<LoadedUntypedAsset>)>>(
+        iter: T,
+    ) -> Self {
         Self(HashMap::from_iter(iter))
     }
 }

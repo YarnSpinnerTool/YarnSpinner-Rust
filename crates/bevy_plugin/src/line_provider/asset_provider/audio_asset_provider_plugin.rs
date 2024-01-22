@@ -19,7 +19,7 @@ pub struct AudioAssetProvider(FileExtensionAssetProvider);
 impl Default for AudioAssetProvider {
     fn default() -> Self {
         Self(
-            FileExtensionAssetProvider::new().with_file_extensions(file_extensions! {
+            FileExtensionAssetProvider::new().with_file_extensions(crate::file_extensions! {
                 AudioSource: ["mp3", "ogg", "wav"],
             }),
         )

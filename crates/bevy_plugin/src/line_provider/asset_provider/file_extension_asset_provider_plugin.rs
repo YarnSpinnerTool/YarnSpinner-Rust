@@ -29,7 +29,7 @@ pub struct FileExtensionAssetProvider {
     asset_server: Option<AssetServer>,
     handles: HashSet<Handle<LoadedUntypedAsset>>,
     line_ids: HashSet<LineId>,
-    file_extensions: HashMap<Uuid, Vec<String>>,
+    file_extensions: HashMap<&'static str, Vec<String>>,
 }
 
 /// A convenience macro for specifying file extensions used by [`FileExtensionAssetProvider::with_file_extensions`].
@@ -49,7 +49,7 @@ macro_rules! file_extensions {
         {
             bevy::utils::HashMap::from([
                 $(
-                    (<$type as bevy::reflect::TypeUuid>::TYPE_UUID, $ext),
+                    (<$type as bevy::reflect::TypePath>::type_path(), $ext),
                 )*
             ])
         }
@@ -81,7 +81,7 @@ impl FileExtensionAssetProvider {
     /// ```
     pub fn with_file_extensions<T, U, V>(mut self, file_extensions: T) -> Self
     where
-        T: IntoIterator<Item = (Uuid, U)>,
+        T: IntoIterator<Item = (&'static str, U)>,
         U: IntoIterator<Item = V>,
         V: AsRef<str>,
     {
