@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::asset::LoadedAsset;
+use bevy::asset::{io::Reader, AsyncReadExt, LoadedAsset};
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::{
@@ -77,15 +77,20 @@ pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
 struct YarnFileAssetLoader;
 
 impl AssetLoader for YarnFileAssetLoader {
+    type Asset = YarnFile;
+    type Settings = ();
+    type Error = anyhow::Error;
     fn load<'a>(
         &'a self,
-        bytes: &'a [u8],
+        reader: &'a mut Reader,
+        _settings: &'a (),
         load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, SystemResult> {
+    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
+            let mut bytes = Vec::new();
+            reader.read_to_end(&mut bytes).await?;
             let yarn_file = read_yarn_file(bytes, load_context)?;
-            load_context.set_default_asset(LoadedAsset::new(yarn_file));
-            Ok(())
+            Ok(yarn_file)
         })
     }
 
@@ -94,11 +99,8 @@ impl AssetLoader for YarnFileAssetLoader {
     }
 }
 
-fn read_yarn_file<'a>(
-    bytes: &'a [u8],
-    load_context: &'a mut LoadContext,
-) -> Result<YarnFile, Error> {
-    let source = String::from_utf8(bytes.to_vec())?;
+fn read_yarn_file(bytes: Vec<u8>, load_context: &LoadContext) -> Result<YarnFile, Error> {
+    let source = String::from_utf8(bytes)?;
     let file_name = load_context
         .path()
         .file_name()

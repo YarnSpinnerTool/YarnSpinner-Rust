@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 use anyhow::{anyhow, bail};
-use bevy::asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
+use bevy::asset::{io::Reader, AssetLoader, AsyncReadExt, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
 use bevy::reflect::{TypePath, TypeUuid};
 use bevy::utils::HashMap;
@@ -20,17 +20,22 @@ pub(crate) fn strings_file_asset_plugin(app: &mut App) {
 struct StringsFileAssetLoader;
 
 impl AssetLoader for StringsFileAssetLoader {
+    type Asset = StringsFile;
+    type Settings = ();
+    type Error = anyhow::Error;
     fn load<'a>(
         &'a self,
-        bytes: &'a [u8],
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, SystemResult> {
+        reader: &'a mut Reader,
+        _settings: &'a (),
+        _load_context: &'a mut LoadContext,
+    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
-            let mut reader = csv::Reader::from_reader(bytes);
-            let records: csv::Result<Vec<_>> = reader.deserialize().collect();
+            let mut bytes = Vec::new();
+            reader.read_to_end(&mut bytes).await?;
+            let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
+            let records: csv::Result<Vec<_>> = csv_reader.deserialize().collect();
             let strings_file = StringsFile::new_with_single_language(records?)?;
-            load_context.set_default_asset(LoadedAsset::new(strings_file));
-            Ok(())
+            Ok(strings_file)
         })
     }
 
