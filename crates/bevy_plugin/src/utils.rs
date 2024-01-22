@@ -1,7 +1,5 @@
 use crate::prelude::*;
 use crate::project::YarnProjectConfigToLoad;
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
-use bevy::asset::io::{file::FileAssetReader, AssetSourceId};
 use bevy::prelude::*;
 use std::path::Path;
 
@@ -42,21 +40,6 @@ pub(crate) fn events_in_queue<T: Event>() -> impl FnMut(EventReader<T>) -> bool 
 }
 
 pub(crate) fn get_assets_dir_path(asset_server: &AssetServer) -> Result<impl AsRef<Path> + '_> {
-    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
-    {
-        let asset_source = asset_server
-            .get_source(AssetSourceId::Default)
-            .context("Failed to get default asset source")?;
-        let asset_reader = asset_source.reader();
-        let file_asset_reader = asset_reader.downcast_ref::<FileAssetReader>().context(
-            "Failed to downcast the default asset reader to `FileAssetReader`. \
-    The vanilla Bevy `FileAssetReader` is the only one supported by Yarn Slinger",
-        )?;
-        Ok(file_asset_reader.root_path())
-    }
-    #[cfg(any(target_arch = "wasm32", target_os = "android"))]
-    {
-        let _asset_server = asset_server;
-        Ok(Path::new("./assets"))
-    }
+    let _asset_server = asset_server;
+    Ok(Path::new("./assets"))
 }
