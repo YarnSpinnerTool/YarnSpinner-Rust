@@ -38,7 +38,7 @@ struct SomethingAddedByYarnSlinger {
 }
 
 // Commands are valid Bevy systems with inputs (and optional outputs).
-// The `In` param will determine the yarn signature. This function can thus be called like
+// The `In` param will determine the Yarn signature. This function can thus be called like
 // `<<insert_resource "Bob" 42>>` in Yarn.
 fn insert_resource(In((name, age)): In<(&str, f32)>, mut commands: Commands) {
     commands.insert_resource(SomethingAddedByYarnSlinger {
