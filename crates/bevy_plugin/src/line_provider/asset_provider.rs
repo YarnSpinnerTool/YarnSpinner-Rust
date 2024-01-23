@@ -138,7 +138,10 @@ pub trait AssetProvider: Debug + Send + Sync {
 
     /// Returns whether the assets for all lines announced by [`AssetProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
     /// This method is allowed to process already loaded assets to make them ready for delivery.
-    fn update_asset_availability(&mut self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool;
+    fn update_asset_availability(
+        &mut self,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> bool;
 
     /// Passes the [`LineId`]s that this [`AssetProvider`] should soon provide assets for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
     fn accept_line_hints(&mut self, line_ids: &[LineId]);

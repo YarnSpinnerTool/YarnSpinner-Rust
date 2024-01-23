@@ -179,7 +179,7 @@ impl StringsFile {
                 )
             })?;
         }
-        let file = File::create(&path)
+        let file = File::create(path)
             .map_err(|e| anyhow!("Failed to create strings file \"{}\": {e}", path.display(),))?;
         let mut writer = csv::Writer::from_writer(file);
         let mut records = self.0.iter().map(|(_, record)| record).collect::<Vec<_>>();

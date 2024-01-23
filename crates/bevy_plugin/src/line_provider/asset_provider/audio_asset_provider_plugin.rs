@@ -58,7 +58,10 @@ impl AssetProvider for AudioAssetProvider {
         self.0.set_asset_server(asset_server)
     }
 
-    fn update_asset_availability(&mut self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
+    fn update_asset_availability(
+        &mut self,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> bool {
         self.0.update_asset_availability(loaded_untyped_assets)
     }
 
