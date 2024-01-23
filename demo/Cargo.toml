@@ -8,8 +8,8 @@ default = []
 editor = ["dep:bevy_editor_pls"]
 
 [dependencies]
+bevy = "0.12"
 bevy_yarn_slinger = { path = "../crates/bevy_plugin" }
 bevy_yarn_slinger_example_dialogue_view = { path = "../crates/example_dialogue_view" }
 bevy_sprite3d = "2.7"
 bevy_editor_pls = { version = "0.7", optional = true }
-bevy = "0.12"
