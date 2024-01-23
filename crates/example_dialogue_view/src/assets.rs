@@ -1,6 +1,6 @@
 use bevy::asset::load_internal_binary_asset;
 use bevy::prelude::*;
-use bevy::render::texture::{CompressedImageFormats, ImageType};
+use bevy::render::texture::{CompressedImageFormats, ImageSampler, ImageType};
 
 pub(crate) fn ui_assets_plugin(app: &mut App) {
     use font_handle::MEDIUM as FONT_MEDIUM_HANDLE;
@@ -33,6 +33,7 @@ fn load_image(bytes: &[u8], _path: String) -> Image {
         ImageType::Extension("png"),
         CompressedImageFormats::NONE,
         IS_SRGB,
+        ImageSampler::Default,
     )
     .unwrap()
 }
@@ -48,8 +49,7 @@ pub(crate) mod image_handle {
     use bevy::prelude::*;
     use bevy::reflect::TypeUuid;
 
-    pub(crate) const EDGE: Handle<Image> =
-        Handle::weak_from_u128(Image::TYPE_UUID, 8465132165468742313);
+    pub(crate) const EDGE: Handle<Image> = Handle::weak_from_u128(8465132165468742313);
 
     pub(crate) const CONTINUE_INDICATOR: Handle<Image> =
         Handle::weak_from_u128(5464879846123416874);

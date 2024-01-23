@@ -64,7 +64,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 29 pixels high
-                                texture: image_handle::EDGE.typed(),
+                                texture: image_handle::EDGE,
                                 ..default()
                             },
                             style: Style {
@@ -160,7 +160,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 29 pixels high
-                                texture: image_handle::EDGE.typed(),
+                                texture: image_handle::EDGE,
                                 flip_y: true,
                                 ..default()
                             },
@@ -178,7 +178,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 27 x 27 pixels
-                                texture: image_handle::CONTINUE_INDICATOR.typed(),
+                                texture: image_handle::CONTINUE_INDICATOR,
                                 ..default()
                             },
                             style: Style {

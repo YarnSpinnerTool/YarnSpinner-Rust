@@ -86,10 +86,10 @@ struct Sprites {
 }
 
 fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) -> bool {
-    asset_server.get_load_state(&sprites.ferris_neutral) == LoadState::Loaded
-        && asset_server.get_load_state(&sprites.ferris_happy) == LoadState::Loaded
-        && asset_server.get_load_state(&sprites.clippy) == LoadState::Loaded
-        && asset_server.get_load_state(&sprites.bang) == LoadState::Loaded
+    asset_server.get_load_state(&sprites.ferris_neutral) == Some(LoadState::Loaded)
+        && asset_server.get_load_state(&sprites.ferris_happy) == Some(LoadState::Loaded)
+        && asset_server.get_load_state(&sprites.clippy) == Some(LoadState::Loaded)
+        && asset_server.get_load_state(&sprites.bang) == Some(LoadState::Loaded)
 }
 
 const FERRIS_TRANSLATION: Vec3 = Vec3::new(-1.3, 0.9, 0.35);

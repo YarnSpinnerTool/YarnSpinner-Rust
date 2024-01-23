@@ -172,7 +172,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
         .world
         .resource::<AssetServer>()
         .load_untyped("dialogue/de-CH.strings.csv");
-    while app.world.resource::<AssetServer>().get_load_state(&handle) != LoadState::Loaded {
+    while app.world.resource::<AssetServer>().get_load_state(&handle) != Some(LoadState::Loaded) {
         app.update();
     }
 
