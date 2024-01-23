@@ -29,9 +29,6 @@ pub trait AppExt {
     fn dialogue_runner_entity(&mut self) -> Entity;
 
     #[must_use]
-    fn existing_dialogue_runner(&self, entity: Entity) -> &DialogueRunner;
-
-    #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
     fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner>;
@@ -99,10 +96,6 @@ impl AppExt for App {
             let dialogue_runner = project.create_dialogue_runner();
             self.world.spawn(dialogue_runner).id()
         }
-    }
-
-    fn existing_dialogue_runner(&self, entity: Entity) -> &DialogueRunner {
-        self.world.get::<DialogueRunner>(entity).unwrap()
     }
 
     fn dialogue_runner(&mut self) -> &DialogueRunner {
