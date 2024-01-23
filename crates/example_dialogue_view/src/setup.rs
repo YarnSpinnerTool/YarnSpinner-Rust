@@ -35,7 +35,7 @@ fn setup(mut commands: Commands) {
                     width: Val::Percent(100.0),
                     justify_content: JustifyContent::FlexEnd,
                     align_items: AlignItems::Center,
-                    margin: UiRect::bottom(Val::Px(30.0)),
+                    margin: UiRect::px(0.0, 0.0, 30.0, 30.0),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
