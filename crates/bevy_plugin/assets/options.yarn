@@ -1,9 +1,9 @@
 title: Start
 position: -45,-407
 ---
-Ancient Reptilian Brain: There is nothing. Only warm, primordial blackness. Your conscience ferments in it -- no larger than a single grain of malt. You don't have to do anything anymore. #line:16424300 
-Ancient Reptilian Brain: Ever. #line:7921416 
-Ancient Reptilian Brain: Never ever. #line:104279 
+Ancient Reptilian Brain: There is nothing. Only warm, primordial blackness. Your conscience ferments in it -- no larger than a single grain of malt. You don't have to do anything anymore.
+Ancient Reptilian Brain: Ever.
+Ancient Reptilian Brain: Never ever.
 <<set $never to false>>
 <<jump Hub0>>
 
@@ -11,12 +11,12 @@ Ancient Reptilian Brain: Never ever. #line:104279
 title: Hub0
 position: -43,-216
 ---
--> You: Never ever ever? <<if $never == false>> #line:6317413 
-    Ancient Reptilian Brain: Never ever ever ever, baby! #line:12999476 
+-> You: Never ever ever? <<if $never == false>>
+    Ancient Reptilian Brain: Never ever ever ever, baby!
     <<set $never to true>>
     <<jump Hub0>>
--> You: (Simply keep on non-existing.) #line:4588916 
-    Ancient Reptilian Brain: An inordinate amount of time passes. It is utterly void of struggle. No ex-wives are contained within it. #line:12168470 
+-> You: (Simply keep on non-existing.)
+    Ancient Reptilian Brain: An inordinate amount of time passes. It is utterly void of struggle. No ex-wives are contained within it.
 
 <<set $great to false>>
 <<jump Hub1>>
@@ -24,36 +24,36 @@ position: -43,-216
 title: Hub1
 position: -41,-19
 ---
--> You: This is great! <<if $great == false>> #line:1637797 
-    Ancient Reptilian Brain: Yes. It. Is. #line:13552675 
+-> You: This is great! <<if $great == false>>
+    Ancient Reptilian Brain: Yes. It. Is.
     <<set $great to true>>
     <<jump Hub1>>
--> You: Gimme some more. #line:10468257 
-    Ancient Reptilian Brain: You got it, sweet brother! Nothing upon nothing, upon nothing! #line:6582518 
-    -> You: I like nothing #line:12694433 
+-> You: Gimme some more.
+    Ancient Reptilian Brain: You got it, sweet brother! Nothing upon nothing, upon nothing!
+    -> You: I like nothing
         <<jump Nothing>>
-    -> You: How about you cough up some more of that sweet oblivion? #line:15653375 
+    -> You: How about you cough up some more of that sweet oblivion?
         <<jump Oblivion>>
--> You: What was that about the *ex-* something? #line:4627767 
-    Limbic System: An awareness creeps up on you. A mass lies hidden in your dead angle, soaking in some lurid, acidic sauce. It's bloated and shameful, a ball of meat surrounding you... This is a terrible line of questioning, and it will only lead to more awareness of the meat-thing. #line:9149332 
-    -> You: (Plunge back into the fathomless deep.) #line:1632750 
-        Ancient Reptilian Brain: There. No ball of meat, no light in the formless nothing. Just nightswimming! #line:14533121 
-            -> You: I like nothing  #line:11951468 
+-> You: What was that about the *ex-* something?
+    Limbic System: An awareness creeps up on you. A mass lies hidden in your dead angle, soaking in some lurid, acidic sauce. It's bloated and shameful, a ball of meat surrounding you... This is a terrible line of questioning, and it will only lead to more awareness of the meat-thing.
+    -> You: (Plunge back into the fathomless deep.)
+        Ancient Reptilian Brain: There. No ball of meat, no light in the formless nothing. Just nightswimming!
+            -> You: I like nothing 
                 <<jump Nothing>>
-            -> You: How about you cough up some more of that sweet oblivion? #line:8347728 
+            -> You: How about you cough up some more of that sweet oblivion?
                 <<jump Oblivion>>
-    -> You: No, I wanted to know about the ex-something. #line:11590346 
-        Ancient Reptilian Brain: Ex-love, ex-tenderness. It is foolish of you to resurface to the loss. Not after all the damage you suffered to get here, some of it irreversible... Stay, sail with me through the Abyssopelagic Zone! #line:3124260 
+    -> You: No, I wanted to know about the ex-something.
+        Ancient Reptilian Brain: Ex-love, ex-tenderness. It is foolish of you to resurface to the loss. Not after all the damage you suffered to get here, some of it irreversible... Stay, sail with me through the Abyssopelagic Zone!
 ===
 title: Nothing
 position: 180,320
 ---
-Ancient Reptilian Brain: I know you do, baby... I know... #line:6091886 
-You: How about you cough up some more of that sweet oblivion? #line:8567238 
+Ancient Reptilian Brain: I know you do, baby... I know...
+You: How about you cough up some more of that sweet oblivion?
 <<jump Oblivion>>
 ===
 title: Oblivion
 position: -220,311
 ---
-Ancient Reptilian Brain: Coming right up, sir. Smooth passage... #line:12126216 
+Ancient Reptilian Brain: Coming right up, sir. Smooth passage...
 ===

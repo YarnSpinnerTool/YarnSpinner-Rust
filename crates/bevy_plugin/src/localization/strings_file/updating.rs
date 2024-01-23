@@ -1,5 +1,4 @@
 use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
-use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
