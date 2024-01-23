@@ -40,14 +40,12 @@ fn load_image(bytes: &[u8], _path: String) -> Image {
 
 pub(crate) mod font_handle {
     use bevy::prelude::*;
-    
 
     pub(crate) const MEDIUM: Handle<Font> = Handle::weak_from_u128(2263821398159872327);
 }
 
 pub(crate) mod image_handle {
     use bevy::prelude::*;
-    
 
     pub(crate) const EDGE: Handle<Image> = Handle::weak_from_u128(8465132165468742313);
 

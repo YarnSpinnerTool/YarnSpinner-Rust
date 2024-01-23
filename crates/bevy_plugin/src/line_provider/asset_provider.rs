@@ -4,7 +4,7 @@ use crate::UnderlyingYarnLine;
 pub use audio_asset_provider_plugin::AudioAssetProvider;
 use bevy::asset::{Asset, LoadedUntypedAsset};
 use bevy::prelude::*;
-use bevy::utils::{HashMap};
+use bevy::utils::HashMap;
 pub use file_extension_asset_provider_plugin::{file_extensions, FileExtensionAssetProvider};
 use std::any::Any;
 use std::fmt::Debug;

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
-use bevy::asset::{LoadedUntypedAsset};
+use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 use std::any::Any;

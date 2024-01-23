@@ -4,7 +4,7 @@ use crate::prelude::*;
 use anyhow::{anyhow, bail};
 use bevy::asset::{io::Reader, AssetLoader, AsyncReadExt, BoxedFuture, LoadContext};
 use bevy::prelude::*;
-use bevy::reflect::{TypePath};
+use bevy::reflect::TypePath;
 use bevy::utils::HashMap;
 use sha2::{Digest, Sha256};
 use std::fs;
