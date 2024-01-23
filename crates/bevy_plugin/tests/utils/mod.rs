@@ -129,6 +129,7 @@ impl AppExt for App {
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App {
         self.add_plugins(MinimalPlugins).add_plugins(AssetPlugin {
             file_path: asset_folder.as_ref().to_string_lossy().to_string(),
+            watch_for_changes_override: Some(false),
             ..default()
         });
 
