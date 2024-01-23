@@ -151,7 +151,7 @@ fn recompile_loaded_yarn_files(
         }
     }
     events.clear();
-    info!("Successfully recompiled yarn project because of changes in Yarn files.");
+    info!("Successfully recompiled Yarn project because of changes in Yarn files.");
     Ok(())
 }
 
@@ -241,7 +241,7 @@ fn compile_loaded_yarn_files(
     });
 
     let file_plural = if file_count == 1 { "file" } else { "files" };
-    info!("Successfully compiled {file_count} yarn {file_plural}");
+    info!("Successfully compiled {file_count} Yarn {file_plural}");
 
     *dirty = false;
     Ok(())

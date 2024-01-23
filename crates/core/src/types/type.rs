@@ -9,7 +9,7 @@ use std::any::TypeId;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
 
-/// All types in the virtual machine, both built-in, i.e. usable in yarn scripts, and internal.
+/// All types in the virtual machine, both built-in, i.e. usable in Yarn scripts, and internal.
 ///
 /// Whenever this appears in an `Option` with the `None` type,
 /// treat it as an undefined type.
