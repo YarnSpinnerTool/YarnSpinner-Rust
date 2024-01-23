@@ -33,9 +33,10 @@ fn setup(mut commands: Commands) {
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
                     justify_content: JustifyContent::FlexEnd,
                     align_items: AlignItems::Center,
-                    margin: UiRect::px(0.0, 0.0, 30.0, 30.0),
+                    padding: UiRect::bottom(Val::Px(30.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
