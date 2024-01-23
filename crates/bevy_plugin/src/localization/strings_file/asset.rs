@@ -170,10 +170,8 @@ impl StringsFile {
         Ok(Self(records))
     }
 
-    pub(crate) fn write_asset(&self, asset_server: &AssetServer, path: &Path) -> Result<()> {
-        let assets_path = asset_server.get_assets_dir_path()?;
-        let full_path = assets_path.join(path);
-        if let Some(parent_dir) = full_path.parent() {
+    pub(crate) fn write_asset(&self, path: &Path) -> Result<()> {
+        if let Some(parent_dir) = path.parent() {
             fs::create_dir_all(parent_dir).map_err(|e| {
                 anyhow!(
                     "Failed to create dialogue asset subdirectory \"{}\": {e}",
@@ -181,12 +179,8 @@ impl StringsFile {
                 )
             })?;
         }
-        let file = File::create(&full_path).map_err(|e| {
-            anyhow!(
-                "Failed to create strings file \"{}\": {e}",
-                full_path.display(),
-            )
-        })?;
+        let file = File::create(&path)
+            .map_err(|e| anyhow!("Failed to create strings file \"{}\": {e}", path.display(),))?;
         let mut writer = csv::Writer::from_writer(file);
         let mut records = self.0.iter().map(|(_, record)| record).collect::<Vec<_>>();
         records.sort_by(|lhs, rhs| {

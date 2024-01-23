@@ -1,3 +1,4 @@
+use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use anyhow::ensure;
 use bevy::{prelude::*, reflect::TypePath};
@@ -57,6 +58,7 @@ impl YarnFileSource {
         &self,
         asset_server: &AssetServer,
         assets: &mut ResMut<Assets<YarnFile>>,
+        asset_root: &AssetRoot,
     ) -> Result<Vec<Handle<YarnFile>>> {
         match self {
             Self::Handle(handle) => Ok(vec![handle.clone()]),
@@ -65,7 +67,7 @@ impl YarnFileSource {
             Self::Folder(path) => {
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
                 {
-                    Self::load_folder(asset_server, path)
+                    Self::load_folder(asset_server, path.as_path(), asset_root)
                 }
                 #[cfg(any(target_arch = "wasm32", target_os = "android"))]
                 {
@@ -80,10 +82,10 @@ impl YarnFileSource {
     fn load_folder(
         asset_server: &AssetServer,
         path: &std::path::Path,
+        asset_root: &AssetRoot,
     ) -> Result<Vec<Handle<YarnFile>>> {
+        let path = asset_root.0.join(path);
         // recursively glob
-        let root = asset_server.get_assets_dir_path()?;
-        let path = root.join(path);
         ensure!(path.is_dir(), "Failed to load Yarn file folder {path}.\nHelp: Does the folder exist under the assets directory?", path = path.display());
         let handles: Result<Vec<_>> =
             glob(path.join("**/*.yarn").to_str().with_context(|| {
@@ -94,7 +96,8 @@ impl YarnFileSource {
             })?)?
             .map(|entry| {
                 let full_path = entry?;
-                let path = full_path.strip_prefix(&root)?;
+                // strip
+                let path = full_path.strip_prefix(&asset_root.0)?;
                 let path = path.to_str().unwrap();
                 Ok(asset_server.load(path.to_owned()))
             })

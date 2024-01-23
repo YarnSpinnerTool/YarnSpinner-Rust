@@ -1,3 +1,4 @@
+use crate::plugin::AssetRoot;
 use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
@@ -33,6 +34,7 @@ fn update_all_strings_files_for_string_table(
     project: Res<YarnProject>,
     mut languages_to_handles: Local<HashMap<Language, Handle<StringsFile>>>,
     mut expected_file_names: Local<HashSet<String>>,
+    asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     let localizations = project.localizations.as_ref().unwrap();
     if localizations.translations.is_empty() {
@@ -115,7 +117,8 @@ fn update_all_strings_files_for_string_table(
     languages_to_handles.clear();
     for (handle, path) in &dirty_paths {
         let strings_file = strings_files.get(handle).unwrap();
-        strings_file.write_asset(&asset_server, path)?;
+        let path = asset_root.0.join(path);
+        strings_file.write_asset(&path)?;
     }
     Ok(())
 }

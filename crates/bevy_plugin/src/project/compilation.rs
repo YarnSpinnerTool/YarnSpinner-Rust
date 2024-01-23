@@ -1,4 +1,5 @@
 use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
+use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::bail;
@@ -87,6 +88,7 @@ fn add_yarn_files_to_load_queue(
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
+    asset_root: Res<AssetRoot>,
 ) -> Result<()> {
     if yarn_files_to_load.0.is_empty() {
         return Ok(());
@@ -94,7 +96,7 @@ fn add_yarn_files_to_load_queue(
     let handles: Result<Vec<_>> = yarn_files_to_load
         .0
         .drain()
-        .map(|source| source.load(&asset_server, &mut assets))
+        .map(|source| source.load(&asset_server, &mut assets, &asset_root))
         .collect();
     let handles = handles?;
     let handles = handles.iter().flat_map(|handles| handles.iter()).cloned();
@@ -163,6 +165,7 @@ fn compile_loaded_yarn_files(
     mut dirty: Local<bool>,
     yarn_project_config_to_load: Option<Res<YarnProjectConfigToLoad>>,
     asset_server: Res<AssetServer>,
+    asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     if yarn_files_being_loaded.is_changed() {
         *dirty = true;
@@ -206,7 +209,9 @@ fn compile_loaded_yarn_files(
             ));
             for localization in &localizations.translations {
                 let path = localization.strings_file.as_path();
-                if asset_server.is_file(path) {
+                let path = asset_root.0.join(path);
+
+                if path.is_file() {
                     continue;
                 }
                 let strings_file = StringsFile::from_string_table(
@@ -215,7 +220,7 @@ fn compile_loaded_yarn_files(
                 )
                 .unwrap_or_default();
 
-                strings_file.write_asset(&asset_server, path)?;
+                strings_file.write_asset(&path)?;
                 info!(
                     "Generated \"{}\" (lang: {}).",
                     path.display(),

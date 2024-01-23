@@ -1,10 +1,10 @@
 use crate::localization::UpdateAllStringsFilesForStringTableEvent;
+use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use std::hash::Hash;
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
 pub(crate) struct LineIdUpdateSystemSet;
@@ -56,6 +56,7 @@ fn handle_yarn_file_events(
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut added_tags: Local<HashSet<Handle<YarnFile>>>,
     mut last_recompiled_yarn_file: Local<Option<YarnFile>>,
+    asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
     let mut already_handled = HashSet::new();
@@ -110,19 +111,17 @@ fn handle_yarn_file_events(
             .get_path(handle.clone())
             .with_context(|| format!("Failed to overwrite Yarn file \"{}\" with new IDs because it was not found on disk",
                                      yarn_file.file_name()))?;
-        let assets_path = asset_server.get_assets_dir_path()?;
-        let path_within_asset_dir: PathBuf =
-            [assets_path.as_ref(), asset_path.path()].iter().collect();
+        let path = asset_root.0.join(asset_path.path());
 
-        std::fs::write(&path_within_asset_dir, &source_with_added_ids)
+        std::fs::write(&path, &source_with_added_ids)
                     .context(
                         format!("Failed to overwrite Yarn file at {} with new line IDs. \
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
-                                path_within_asset_dir.display()))?;
+                                path.display()))?;
 
         info!(
             "Automatically generated line IDs for Yarn file at {}",
-            path_within_asset_dir.display()
+            path.display()
         );
         let is_watching = project
             .as_ref()
