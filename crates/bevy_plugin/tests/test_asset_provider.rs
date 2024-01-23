@@ -93,7 +93,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     let asset_server = app.world.resource::<AssetServer>();
     let path = asset_server.get_path(asset).unwrap();
 
-    // Note that this does not contains backslashes on Windows
+    // Note that this does not contain backslashes on Windows
     assert_eq!("dialogue/en-US/9.ogg", path.path().to_str().unwrap());
 
     Ok(())

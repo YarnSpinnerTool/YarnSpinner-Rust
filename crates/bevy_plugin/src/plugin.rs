@@ -234,6 +234,14 @@ impl YarnApp for App {
     }
 
     fn is_watching_for_changes(&self) -> bool {
-        cfg!(all(not(target_arch = "wasm32"), not(target_os = "android")))
+        let on_by_default = cfg!(all(not(target_arch = "wasm32"), not(target_os = "android")));
+
+        let asset_plugins: Vec<&AssetPlugin> = self.get_added_plugins();
+        let asset_plugin: &AssetPlugin = asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
+        Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`");
+
+        asset_plugin
+            .watch_for_changes_override
+            .unwrap_or(on_by_default)
     }
 }
