@@ -2,7 +2,7 @@
 set -e
 
 # Note that the provided `assets` symlink only works on macOS and Linux.
-# On Windows, you'll have to remove it and then copy the directory `crates/bevy_plugin/assets` to `crates/bevy_plugin/wasm/assets` manually.
+# On Windows you'll have to remove it and then copy the directory `demo/assets` to `demo/wasm/assets` manually.
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
