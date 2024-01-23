@@ -68,6 +68,7 @@ impl AppExt for App {
             if self.dialogue_runner_mut().update_line_availability(&assets) {
                 break;
             }
+            self.update();
         }
         self
     }

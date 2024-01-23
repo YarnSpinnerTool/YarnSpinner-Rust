@@ -131,13 +131,14 @@ impl AssetProvider for FileExtensionAssetProvider {
         &mut self,
         loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
     ) -> bool {
-        if self.language.is_none()
-            || self.localizations.is_none()
-            || self.line_ids.is_empty()
-            || self.loading_handles.is_empty()
-        {
+        if self.language.is_none() || self.localizations.is_none() || self.line_ids.is_empty() {
             return false;
         };
+
+        if self.loading_handles.is_empty() && self.loaded_handles.is_empty() {
+            return true;
+        }
+
         let Some(asset_server) = self.asset_server.as_ref() else {
             return false;
         };
@@ -180,7 +181,7 @@ impl AssetProvider for FileExtensionAssetProvider {
                 if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
                     let file_name_without_extension = line.id.0.trim_start_matches("line:");
-                    let Some(asset_server) = self.asset_server.as_ref() else {
+                    let Some(asset_SERVER) = self.asset_server.as_ref() else {
                         return default();
                     };
                     let assets = self
@@ -190,7 +191,6 @@ impl AssetProvider for FileExtensionAssetProvider {
                             exts.iter().find_map(|ext| {
                                 let file_name = format!("{}.{}", file_name_without_extension, ext);
                                 let path = dir.join(file_name);
-
                                 self.loaded_handles
                                     .get(&path)
                                     .map(|handle| (*type_id, handle.clone()))
@@ -214,6 +214,7 @@ impl FileExtensionAssetProvider {
                 if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
                     self.loading_handles.clear();
+                    self.loaded_handles.clear();
                     let Some(asset_server) = self.asset_server.as_ref() else {
                         return;
                     };
