@@ -75,7 +75,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         }
         let language = language.unwrap();
 
-        let Some(localizations) = self.localizations.as_ref() else {
+        let Some(localizations) = self.localizations.clone() else {
             panic!("Set language to {language}, but no localizations have been registered as supported.");
         };
         if language == localizations.base_localization.language {
@@ -93,7 +93,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         let path = localization.strings_file.as_path();
         if self.asset_server.is_file(path) {
             self.strings_file_handle
-                .replace(self.asset_server.load(path));
+                .replace(self.asset_server.load(path.to_owned()));
         } else {
             panic!("Set language to {language}, but the expected strings file at {path} does not exist.", path = path.display());
         }

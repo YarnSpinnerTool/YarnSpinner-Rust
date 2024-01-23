@@ -45,7 +45,7 @@ fn update_all_strings_files_for_string_table(
         let language = &localization.language;
         let path = localization.strings_file.as_path();
         let handle = if asset_server.is_file(path) {
-            asset_server.load(path)
+            asset_server.load(path.to_owned())
         } else {
             bail!("Strings file at {path} for language {language} does not exist. Have you deleted or moved it while the program was running?", path = path.display());
         };

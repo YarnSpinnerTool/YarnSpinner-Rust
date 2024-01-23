@@ -61,7 +61,7 @@ impl YarnFileSource {
         match self {
             Self::Handle(handle) => Ok(vec![handle.clone()]),
             Self::InMemory(yarn_file) => Ok(vec![assets.add(yarn_file.clone())]),
-            Self::File(path) => Ok(vec![asset_server.load(path.as_path())]),
+            Self::File(path) => Ok(vec![asset_server.load(path.clone())]),
             Self::Folder(path) => {
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
                 {
@@ -93,10 +93,10 @@ impl YarnFileSource {
                 )
             })?)?
             .map(|entry| {
-                let full_path = entry.unwrap();
+                let full_path = entry?;
                 let path = full_path.strip_prefix(&root)?;
                 let path = path.to_str().unwrap();
-                Ok(asset_server.load(path))
+                Ok(asset_server.load(path.to_owned()))
             })
             .collect();
         let handles = handles?;
