@@ -1,6 +1,6 @@
 # Yarn Slinger
 
-The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. The more in [the book](https://yarn-slinger.github.io/yarn-slinger/).
+The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. Read more in [the book](https://yarn-slinger.github.io/yarn-slinger/).
 
 ## Relationship with Yarn Spinner
 
