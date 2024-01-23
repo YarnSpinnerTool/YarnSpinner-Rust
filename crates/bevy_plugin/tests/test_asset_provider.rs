@@ -28,7 +28,11 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 
     app.load_project();
     let start = Instant::now();
-    while !app.dialogue_runner().are_lines_available() {
+    let entity = app.dialogue_runner_entity();
+    while !app
+        .existing_dialogue_runner(entity)
+        .are_lines_available(app.world.resource::<Assets<LoadedUntypedAsset>>())
+    {
         if start.elapsed().as_secs() > 2 {
             return Ok(());
         }
@@ -59,9 +63,10 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
         .set_asset_language("en-US")
         .start_node("Start");
     app.world.spawn(dialogue_runner);
+
     app.load_lines();
 
-    let entity = app.create_dialogue_runner();
+    let entity = app.dialogue_runner_entity();
     let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
     let assets = app
         .existing_dialogue_runner(entity)
@@ -92,7 +97,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
-    let entity = app.create_dialogue_runner();
+    let entity = app.dialogue_runner_entity();
     let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
     let assets = app
         .existing_dialogue_runner(entity)
@@ -132,7 +137,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
-    let entity = app.create_dialogue_runner();
+    let entity = app.dialogue_runner_entity();
     let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
     let assets = app
         .existing_dialogue_runner(entity)
@@ -196,9 +201,10 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
         .set_asset_language("en-US")
         .start_node("Start");
     app.world.spawn(dialogue_runner);
+
     app.load_lines();
 
-    let entity = app.create_dialogue_runner();
+    let entity = app.dialogue_runner_entity();
     let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
     let assets = app
         .existing_dialogue_runner(entity)

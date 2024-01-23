@@ -59,7 +59,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn are_assets_available(&self) -> bool {
+    /// #  fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
     /// #          unreachable!()
     /// #      }
     /// #
@@ -77,7 +77,8 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// Returns the type as a mutable [`dyn Any`]. Used for polymorphism. Should be implemented like this:
     /// ```
     /// # use std::any::Any;
-    /// # use bevy::asset::AssetServer;
+    /// # use bevy::asset::LoadedUntypedAsset;
+    /// # use bevy::prelude::*;
     /// # use bevy_yarn_slinger::prelude::*;
     /// # use bevy_yarn_slinger::UnderlyingYarnLine;
     /// # #[derive(Debug)]
@@ -107,7 +108,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn are_assets_available(&self) -> bool {
+    /// #  fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
     /// #          unreachable!()
     /// #      }
     /// #
@@ -115,7 +116,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    /// #  fn get_assets(&self, line: &UnderlyingYarnLine, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> LineAssets {
     /// #          unreachable!()
     /// #      }
     /// # }
@@ -136,7 +137,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     fn set_asset_server(&mut self, asset_server: AssetServer);
 
     /// Returns whether the assets for all lines announced by [`AssetProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
-    fn are_assets_available(&self) -> bool;
+    fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool;
 
     /// Passes the [`LineId`]s that this [`AssetProvider`] should soon provide assets for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
     fn accept_line_hints(&mut self, line_ids: &[LineId]);

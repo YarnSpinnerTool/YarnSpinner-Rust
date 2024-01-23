@@ -60,7 +60,7 @@ fn continue_runtime(
 
             if !(dialogue_runner.will_continue_in_next_update
                 && dialogue_runner.poll_tasks_and_check_if_done()
-                && dialogue_runner.are_lines_available())
+                && dialogue_runner.are_lines_available(&loaded_untyped_assets))
             {
                 continue;
             }

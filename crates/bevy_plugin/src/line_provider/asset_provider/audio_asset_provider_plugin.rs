@@ -58,8 +58,8 @@ impl AssetProvider for AudioAssetProvider {
         self.0.set_asset_server(asset_server)
     }
 
-    fn are_assets_available(&self) -> bool {
-        self.0.are_assets_available()
+    fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
+        self.0.are_assets_available(loaded_untyped_assets)
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {

@@ -202,8 +202,8 @@ impl DialogueRunner {
 
     /// Returns whether both the text and asset providers have loaded all their lines.
     #[must_use]
-    pub fn are_lines_available(&self) -> bool {
-        self.are_texts_available() && self.are_assets_available()
+    pub fn are_lines_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
+        self.are_texts_available() && self.are_assets_available(loaded_untyped_assets)
     }
 
     /// Returns whether the text provider has loaded all its lines.
@@ -215,10 +215,10 @@ impl DialogueRunner {
     /// Returns whether all asset providers have loaded all their assets.
     /// If no asset providers where added via [`DialogueRunnerBuilder::add_asset_provider`], this will always return `true`.
     #[must_use]
-    fn are_assets_available(&self) -> bool {
+    fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
         self.asset_providers
             .values()
-            .all(|provider| provider.are_assets_available())
+            .all(|provider| provider.are_assets_available(loaded_untyped_assets))
     }
 
     /// Sets the language of both the text and asset providers. Same as calling [`DialogueRunner::set_text_language`] and [`DialogueRunner::set_asset_language`].

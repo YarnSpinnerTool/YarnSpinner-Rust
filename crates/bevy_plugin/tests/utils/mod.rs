@@ -26,7 +26,7 @@ pub trait AppExt {
     fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
 
     #[must_use]
-    fn create_dialogue_runner(&mut self) -> Entity;
+    fn dialogue_runner_entity(&mut self) -> Entity;
 
     #[must_use]
     fn existing_dialogue_runner(&self, entity: Entity) -> &DialogueRunner;
@@ -60,7 +60,11 @@ impl AppExt for App {
 
     fn load_lines(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_lines_available() {
+        let entity = self.dialogue_runner_entity();
+        while !self
+            .existing_dialogue_runner(entity)
+            .are_lines_available(self.world.resource::<Assets<LoadedUntypedAsset>>())
+        {
             self.update();
         }
         self
@@ -78,10 +82,20 @@ impl AppExt for App {
         self
     }
 
-    fn create_dialogue_runner(&mut self) -> Entity {
-        let project = self.load_project();
-        let dialogue_runner = project.create_dialogue_runner();
-        self.world.spawn(dialogue_runner).id()
+    fn dialogue_runner_entity(&mut self) -> Entity {
+        let existing_entity = self
+            .world
+            .iter_entities()
+            .filter(|e| self.world.get::<DialogueRunner>(e.id()).is_some())
+            .map(|e| e.id())
+            .next();
+        if let Some(entity) = existing_entity {
+            entity
+        } else {
+            let project = self.load_project();
+            let dialogue_runner = project.create_dialogue_runner();
+            self.world.spawn(dialogue_runner).id()
+        }
     }
 
     fn existing_dialogue_runner(&self, entity: Entity) -> &DialogueRunner {
@@ -89,21 +103,13 @@ impl AppExt for App {
     }
 
     fn dialogue_runner(&mut self) -> &DialogueRunner {
-        if self.try_dialogue_runner().is_some() {
-            self.try_dialogue_runner().unwrap()
-        } else {
-            let entity = self.create_dialogue_runner();
-            self.world.get::<DialogueRunner>(entity).unwrap()
-        }
+        let entity = self.dialogue_runner_entity();
+        self.world.get::<DialogueRunner>(entity).unwrap()
     }
 
     fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner> {
-        if self.try_dialogue_runner().is_some() {
-            self.try_dialogue_runner_mut().unwrap()
-        } else {
-            let entity = self.create_dialogue_runner();
-            self.world.get_mut::<DialogueRunner>(entity).unwrap()
-        }
+        let entity = self.dialogue_runner_entity();
+        self.world.get_mut::<DialogueRunner>(entity).unwrap()
     }
 
     fn try_dialogue_runner(&self) -> Option<&DialogueRunner> {

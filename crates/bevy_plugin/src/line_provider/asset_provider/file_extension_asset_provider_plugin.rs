@@ -125,7 +125,7 @@ impl AssetProvider for FileExtensionAssetProvider {
         self.asset_server.replace(asset_server);
     }
 
-    fn are_assets_available(&self) -> bool {
+    fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
         if self.language.is_none()
             || self.localizations.is_none()
             || self.line_ids.is_empty()
@@ -136,9 +136,19 @@ impl AssetProvider for FileExtensionAssetProvider {
         let Some(asset_server) = self.asset_server.as_ref() else {
             return false;
         };
-        self.handles
+        let loaded_handles: Vec<_> = self
+            .handles
             .iter()
-            .all(|handle| asset_server.is_loaded_with_dependencies(handle))
+            .filter_map(|handle| loaded_untyped_assets.get(handle))
+            .collect();
+        if loaded_handles.len() != self.handles.len() {
+            false
+        } else {
+            loaded_handles
+                .iter()
+                .map(|loaded| loaded.handle.id())
+                .all(|id| asset_server.is_loaded_with_dependencies(id))
+        }
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {
@@ -170,14 +180,10 @@ impl AssetProvider for FileExtensionAssetProvider {
                                 let file_name = format!("{}.{}", file_name_without_extension, ext);
                                 let path = dir.join(file_name);
 
-                                if asset_server.is_file(&path) {
-                                    let loading_handle = asset_server.load_untyped(path);
-                                    loaded_untyped_assets
-                                        .get(&loading_handle)
-                                        .map(|loaded| (*type_id, loaded.handle.clone()))
-                                } else {
-                                    None
-                                }
+                                let loading_handle = asset_server.load_untyped(path);
+                                loaded_untyped_assets
+                                    .get(&loading_handle)
+                                    .map(|loaded| (*type_id, loaded.handle.clone()))
                             })
                         })
                         .collect::<HashSet<_>>();
@@ -206,16 +212,8 @@ impl FileExtensionAssetProvider {
                             let file_name =
                                 format!("{}.{extension}", line_id.0.trim_start_matches("line:"));
                             let path = dir.join(file_name);
-                            if asset_server.is_file(&path) {
-                                let handle = asset_server.load_untyped(path);
-                                self.handles.insert(handle);
-                            } else {
-                                debug!(
-                                    "Asset file \"{path}\" for line \"{line_id}\" does not exist",
-                                    path = path.display(),
-                                    line_id = line_id.0
-                                );
-                            }
+                            let handle = asset_server.load_untyped(path);
+                            self.handles.insert(handle);
                         }
                     }
                 } else {
