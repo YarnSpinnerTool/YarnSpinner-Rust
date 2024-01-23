@@ -220,7 +220,8 @@ impl FileExtensionAssetProvider {
                             let file_name =
                                 format!("{}.{extension}", line_id.0.trim_start_matches("line:"));
                             let path = dir.join(file_name);
-                            let handle = asset_server.load_untyped(path.clone());
+                            let asset_path = path.to_string_lossy().replace('\\', "/");
+                            let handle = asset_server.load_untyped(asset_path);
                             self.loading_handles.insert(path, handle);
                         }
                     }

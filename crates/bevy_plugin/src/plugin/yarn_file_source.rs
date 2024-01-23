@@ -85,8 +85,11 @@ impl YarnFileSource {
         asset_root: &AssetRoot,
     ) -> Result<Vec<Handle<YarnFile>>> {
         let path = asset_root.0.join(path);
-        // recursively glob
-        ensure!(path.is_dir(), "Failed to load Yarn file folder {path}.\nHelp: Does the folder exist under the assets directory?", path = path.display());
+        ensure!(
+            path.is_dir(),
+            "Failed to load Yarn file folder {path}.\nHelp: Does the folder exist?",
+            path = path.display()
+        );
         let handles: Result<Vec<_>> =
             glob(path.join("**/*.yarn").to_str().with_context(|| {
                 format!(
@@ -96,10 +99,9 @@ impl YarnFileSource {
             })?)?
             .map(|entry| {
                 let full_path = entry?;
-                // strip
                 let path = full_path.strip_prefix(&asset_root.0)?;
-                let path = path.to_str().unwrap();
-                Ok(asset_server.load(path.to_owned()))
+                let asset_path = path.to_string_lossy().replace('\\', "/");
+                Ok(asset_server.load(asset_path))
             })
             .collect();
         let handles = handles?;
