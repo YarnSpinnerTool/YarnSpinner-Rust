@@ -33,7 +33,7 @@ fn handle_yarn_file_events_outside_development(
     project: Res<YarnProject>,
     mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
 ) {
-    for event in events.iter() {
+    for event in events.read() {
         let AssetEvent::Modified { id } = event else {
             continue;
         };
@@ -59,7 +59,7 @@ fn handle_yarn_file_events(
 ) -> SystemResult {
     let mut recompilation_needed = false;
     let mut already_handled = HashSet::new();
-    for event in events.iter() {
+    for event in events.read() {
         let (AssetEvent::LoadedWithDependencies { id } | AssetEvent::Modified { id }) = event
         else {
             continue;

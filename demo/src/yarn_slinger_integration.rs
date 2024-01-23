@@ -38,7 +38,7 @@ pub(crate) fn change_speaker(
     mut speaker_change_events: EventReader<SpeakerChangeEvent>,
     mut speakers: Query<&mut Speaker>,
 ) {
-    for event in speaker_change_events.iter() {
+    for event in speaker_change_events.read() {
         let event_name = event.character_name.to_lowercase();
         let everyone_is_speaking = event_name == "everyone";
         let speaker_names: Vec<_> = event_name.split(' ').collect();

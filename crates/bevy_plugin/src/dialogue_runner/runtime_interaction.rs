@@ -146,7 +146,7 @@ fn accept_line_hints(
     mut events: EventReader<LineHintsEvent>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
 ) {
-    for event in events.iter() {
+    for event in events.read() {
         let mut dialogue_runner = dialogue_runners.get_mut(event.source).unwrap();
         for asset_provider in dialogue_runner.asset_providers.values_mut() {
             asset_provider.accept_line_hints(&event.line_ids);

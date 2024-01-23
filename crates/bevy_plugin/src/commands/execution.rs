@@ -33,7 +33,7 @@ fn clone_events(
     reader: &mut ManualEventReader<ExecuteCommandEvent>,
 ) -> Vec<ExecuteCommandEvent> {
     let events = world.resource::<Events<ExecuteCommandEvent>>();
-    reader.iter(events).cloned().collect()
+    reader.read(events).cloned().collect()
 }
 
 fn clone_command(

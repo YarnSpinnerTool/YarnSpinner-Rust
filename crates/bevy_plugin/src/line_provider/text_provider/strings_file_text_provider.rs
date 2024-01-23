@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
-use bevy::asset::LoadState;
+
 use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
 use std::any::Any;
@@ -164,7 +164,7 @@ impl TextProvider for StringsFileTextProvider {
         let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
             let mut reader = self.event_reader.write().unwrap();
-            reader.iter(asset_events).any(|event| match event {
+            reader.read(asset_events).any(|event| match event {
                 AssetEvent::Modified { id } => *id == handle.id(),
                 _ => false,
             })

@@ -1,7 +1,7 @@
 use crate::prelude::*;
-use bevy::asset::{io::Reader, AsyncReadExt, LoadedAsset};
+use bevy::asset::{io::Reader, AsyncReadExt};
 use bevy::prelude::*;
-use bevy::reflect::TypeUuid;
+
 use bevy::{
     asset::{AssetLoader, LoadContext},
     utils::BoxedFuture,
