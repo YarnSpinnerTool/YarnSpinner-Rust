@@ -53,7 +53,7 @@
 //!
 //! ```no_run
 //! // src/main.rs
-//! use bevy::{prelude::*, asset::ChangeWatcher, utils::Duration};
+//! use bevy::{prelude::*, utils::Duration};
 //! use bevy_yarn_slinger::prelude::*;
 //! // Use the example dialogue view to see the dialogue in action. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
 //! // use bevy_yarn_slinger_example_dialogue_view::prelude::*;
@@ -61,11 +61,6 @@
 //! fn main() {
 //!     let mut app = App::new();
 //!     app.add_plugins((
-//!         DefaultPlugins.set(AssetPlugin {
-//!             // Activate hot reloading
-//!             watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-//!             ..default()
-//!         }),
 //!         // Add the Yarn Slinger plugin.
 //!         // As soon as this plugin is built, a Yarn project will be compiled
 //!         // from all Yarn files found under assets/dialog/*.yarn
