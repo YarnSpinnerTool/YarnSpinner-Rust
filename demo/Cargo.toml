@@ -28,4 +28,6 @@ features = [
   "x11",
   "bevy_gltf",
   "tonemapping_luts",
+  "file_watcher",
+  "multi-threaded",
 ]

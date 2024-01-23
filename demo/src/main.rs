@@ -4,7 +4,7 @@
 use std::time::Duration;
 
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
-use bevy::asset::{ChangeWatcher, LoadState};
+use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
@@ -21,25 +21,17 @@ mod yarn_slinger_integration;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(
-        DefaultPlugins
-            .set(AssetPlugin {
-                #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-                watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                ..default()
-            })
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Yarn Slinger Story Demo".into(),
-                    resolution: (800., 600.).into(),
-                    present_mode: PresentMode::AutoVsync,
-                    prevent_default_event_handling: false,
-                    resizable: false,
-                    ..default()
-                }),
-                ..default()
-            }),
-    )
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Yarn Slinger Story Demo".into(),
+            resolution: (800., 600.).into(),
+            present_mode: PresentMode::AutoVsync,
+            prevent_default_event_handling: false,
+            resizable: false,
+            ..default()
+        }),
+        ..default()
+    }))
     .insert_resource(ClearColor(Color::CYAN));
     #[cfg(feature = "editor")]
     app.add_plugins(EditorPlugin::new());

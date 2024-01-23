@@ -170,7 +170,7 @@ pub(crate) fn show_bang(
         Sprite3d {
             image: sprites.bang.clone(),
             pixels_per_metre: 900.,
-            partial_alpha: true,
+            alpha_mode: AlphaMode::Blend,
             unlit: true,
 
             transform: Transform::from_translation(speaker.initial_translation + speaker_back)
