@@ -1,6 +1,6 @@
 # Yarn Slinger
 
-The Rust port of Yarn Spinner, the friendly tool for writing game dialogue.
+The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. The more in [the book](https://yarn-slinger.github.io/yarn-slinger/).
 
 ## Relationship with Yarn Spinner
 
@@ -10,4 +10,5 @@ actual coding. Yarn Spinner® and Secret Lab® are trade marks of Secret Lab Pty
 this project.
 
 ## ... Slinger?
+
 A slinger is just a _blazingly fast_ spinner ;)
