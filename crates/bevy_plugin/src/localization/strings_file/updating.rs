@@ -45,7 +45,7 @@ fn update_all_strings_files_for_string_table(
     for localization in &localizations.translations {
         let language = &localization.language;
         let path = localization.strings_file.as_path();
-        let asset_path = path.to_string_lossy().replace("\\", "/");
+        let asset_path = path.to_string_lossy().replace('\\', "/");
         let handle = asset_server.load(asset_path);
         languages_to_handles.insert(language.clone(), handle);
     }

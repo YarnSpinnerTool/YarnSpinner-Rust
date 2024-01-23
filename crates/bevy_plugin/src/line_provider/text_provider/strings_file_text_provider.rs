@@ -91,7 +91,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
             panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
         };
         let path = localization.strings_file.as_path();
-        let asset_path = path.to_string_lossy().replace("\\", "/");
+        let asset_path = path.to_string_lossy().replace('\\', "/");
         self.strings_file_handle
             .replace(self.asset_server.load(asset_path));
     }

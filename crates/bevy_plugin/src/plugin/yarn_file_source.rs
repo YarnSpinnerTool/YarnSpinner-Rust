@@ -100,7 +100,7 @@ impl YarnFileSource {
             .map(|entry| {
                 let full_path = entry?;
                 let path = full_path.strip_prefix(&asset_root.0)?;
-                let asset_path = path.to_string_lossy().replace("\\", "/");
+                let asset_path = path.to_string_lossy().replace('\\', "/");
                 Ok(asset_server.load(asset_path))
             })
             .collect();
