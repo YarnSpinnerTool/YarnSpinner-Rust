@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use bevy::asset::LoadedUntypedAsset;
 #[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
@@ -23,6 +24,12 @@ pub trait AppExt {
 
     fn continue_dialogue_and_update(&mut self) -> &mut App;
     fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
+
+    #[must_use]
+    fn create_dialogue_runner(&mut self) -> Entity;
+
+    #[must_use]
+    fn existing_dialogue_runner(&self, entity: Entity) -> &DialogueRunner;
 
     #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
@@ -71,13 +78,21 @@ impl AppExt for App {
         self
     }
 
+    fn create_dialogue_runner(&mut self) -> Entity {
+        let project = self.load_project();
+        let dialogue_runner = project.create_dialogue_runner();
+        self.world.spawn(dialogue_runner).id()
+    }
+
+    fn existing_dialogue_runner(&self, entity: Entity) -> &DialogueRunner {
+        self.world.get::<DialogueRunner>(entity).unwrap()
+    }
+
     fn dialogue_runner(&mut self) -> &DialogueRunner {
         if self.try_dialogue_runner().is_some() {
             self.try_dialogue_runner().unwrap()
         } else {
-            let project = self.load_project();
-            let dialogue_runner = project.create_dialogue_runner();
-            let entity = self.world.spawn(dialogue_runner).id();
+            let entity = self.create_dialogue_runner();
             self.world.get::<DialogueRunner>(entity).unwrap()
         }
     }
@@ -86,9 +101,7 @@ impl AppExt for App {
         if self.try_dialogue_runner().is_some() {
             self.try_dialogue_runner_mut().unwrap()
         } else {
-            let project = self.load_project();
-            let dialogue_runner = project.create_dialogue_runner();
-            let entity = self.world.spawn(dialogue_runner).id();
+            let entity = self.create_dialogue_runner();
             self.world.get_mut::<DialogueRunner>(entity).unwrap()
         }
     }
@@ -129,18 +142,26 @@ pub fn project_root_path() -> PathBuf {
 
 pub trait DialogueRunnerExt {
     #[must_use]
-    fn get_assets_for_id(&self, line_id: &str) -> LineAssets;
+    fn get_assets_for_id(
+        &self,
+        line_id: &str,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> LineAssets;
 }
 
 impl DialogueRunnerExt for DialogueRunner {
-    fn get_assets_for_id(&self, line_id: &str) -> LineAssets {
+    fn get_assets_for_id(
+        &self,
+        line_id: &str,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> LineAssets {
         let line_id = UnderlyingYarnLine {
             id: LineId(line_id.to_string()),
             text: String::new(),
             attributes: vec![],
         };
         self.asset_providers()
-            .map(|p| p.get_assets(&line_id))
+            .map(|p| p.get_assets(&line_id, loaded_untyped_assets))
             .collect()
     }
 }

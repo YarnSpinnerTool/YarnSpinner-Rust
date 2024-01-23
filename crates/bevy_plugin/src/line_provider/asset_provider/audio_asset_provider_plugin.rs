@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
@@ -65,7 +66,11 @@ impl AssetProvider for AudioAssetProvider {
         self.0.accept_line_hints(line_ids)
     }
 
-    fn get_assets(&self, line: &YarnLine) -> LineAssets {
-        self.0.get_assets(line)
+    fn get_assets(
+        &self,
+        line: &YarnLine,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> LineAssets {
+        self.0.get_assets(line, loaded_untyped_assets)
     }
 }

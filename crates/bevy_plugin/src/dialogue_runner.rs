@@ -13,6 +13,7 @@ use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use anyhow::{anyhow, bail};
+use bevy::asset::LoadedUntypedAsset;
 use bevy::utils::HashSet;
 use bevy::{prelude::*, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
@@ -335,10 +336,14 @@ impl DialogueRunner {
     }
 
     #[must_use]
-    pub(crate) fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    pub(crate) fn get_assets(
+        &self,
+        line: &UnderlyingYarnLine,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> LineAssets {
         self.asset_providers
             .values()
-            .map(|p| p.get_assets(line))
+            .map(|p| p.get_assets(line, loaded_untyped_assets))
             .collect()
     }
 

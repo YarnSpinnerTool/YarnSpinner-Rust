@@ -27,9 +27,11 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// Returns the type as a [`dyn Any`]. Used for polymorphism. Should be implemented like this:
     /// ```
     /// # use std::any::Any;
-    /// # use bevy::asset::AssetServer;
+    /// # use bevy::asset::LoadedUntypedAsset;
+    /// # use bevy::prelude::*;
     /// # use bevy_yarn_slinger::prelude::*;
     /// # use bevy_yarn_slinger::UnderlyingYarnLine;
+    ///
     /// # #[derive(Debug)]
     /// # struct Foo;
     /// # impl AssetProvider for Foo {
@@ -65,7 +67,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    /// #  fn get_assets(&self, line: &UnderlyingYarnLine, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> LineAssets {
     /// #          unreachable!()
     /// #      }
     /// # }
@@ -140,13 +142,18 @@ pub trait AssetProvider: Debug + Send + Sync {
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
 
     /// Returns the [`LineAssets`] for the given [`UnderlyingYarnLine`]. Will only be called if [`AssetProvider::are_assets_available`] returns `true`,
-    /// so an implementor is expected to panic if the assets are not available.
-    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
+    /// so an implementor is expected to panic if the assets are not available. `
+    /// loaded_untyped_assets` is passed to that implementors can internally call [`AssetServer::load_untyped`].
+    fn get_assets(
+        &self,
+        line: &UnderlyingYarnLine,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> LineAssets;
 }
 
 /// Assets that were provided by one or more [`AssetProvider`]s. Stores them in the form of [`Handle`]s.
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct LineAssets(HashMap<&'static str, Handle<LoadedUntypedAsset>>);
+pub struct LineAssets(HashMap<&'static str, UntypedHandle>);
 impl LineAssets {
     /// Creates a new empty [`LineAssets`] struct.
     pub fn new() -> Self {
@@ -154,9 +161,7 @@ impl LineAssets {
     }
 
     /// Creates a new [`LineAssets`] struct from an iterator of untyped [`Handle`]s and the [`TypePath::type_path`] of the [`Asset`] they reference.
-    pub fn with_assets(
-        handles: impl IntoIterator<Item = (&'static str, Handle<LoadedUntypedAsset>)>,
-    ) -> Self {
+    pub fn with_assets(handles: impl IntoIterator<Item = (&'static str, UntypedHandle)>) -> Self {
         Self(handles.into_iter().collect())
     }
 
@@ -166,7 +171,7 @@ impl LineAssets {
         T: Asset,
     {
         self.0.iter().find_map(|(type_id, handle)| {
-            (T::type_path() == *type_id).then(|| handle.clone().untyped().typed())
+            (T::type_path() == *type_id).then(|| handle.clone().typed())
         })
     }
 
@@ -181,15 +186,15 @@ impl LineAssets {
     }
 }
 
-impl From<HashMap<&'static str, Handle<LoadedUntypedAsset>>> for LineAssets {
-    fn from(h: HashMap<&'static str, Handle<LoadedUntypedAsset>>) -> Self {
+impl From<HashMap<&'static str, UntypedHandle>> for LineAssets {
+    fn from(h: HashMap<&'static str, UntypedHandle>) -> Self {
         Self(h)
     }
 }
 
 impl IntoIterator for LineAssets {
-    type Item = <HashMap<&'static str, Handle<LoadedUntypedAsset>> as IntoIterator>::Item;
-    type IntoIter = <HashMap<&'static str, Handle<LoadedUntypedAsset>> as IntoIterator>::IntoIter;
+    type Item = <HashMap<&'static str, UntypedHandle> as IntoIterator>::Item;
+    type IntoIter = <HashMap<&'static str, UntypedHandle> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -205,19 +210,14 @@ impl Extend<LineAssets> for LineAssets {
     }
 }
 
-impl Extend<(&'static str, Handle<LoadedUntypedAsset>)> for LineAssets {
-    fn extend<T: IntoIterator<Item = (&'static str, Handle<LoadedUntypedAsset>)>>(
-        &mut self,
-        iter: T,
-    ) {
+impl Extend<(&'static str, UntypedHandle)> for LineAssets {
+    fn extend<T: IntoIterator<Item = (&'static str, UntypedHandle)>>(&mut self, iter: T) {
         self.0.extend(iter)
     }
 }
 
-impl FromIterator<(&'static str, Handle<LoadedUntypedAsset>)> for LineAssets {
-    fn from_iter<T: IntoIterator<Item = (&'static str, Handle<LoadedUntypedAsset>)>>(
-        iter: T,
-    ) -> Self {
+impl FromIterator<(&'static str, UntypedHandle)> for LineAssets {
+    fn from_iter<T: IntoIterator<Item = (&'static str, UntypedHandle)>>(iter: T) -> Self {
         Self(HashMap::from_iter(iter))
     }
 }

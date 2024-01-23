@@ -149,7 +149,11 @@ impl AssetProvider for FileExtensionAssetProvider {
         self.reload_assets();
     }
 
-    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
+    fn get_assets(
+        &self,
+        line: &UnderlyingYarnLine,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> LineAssets {
         if let Some(language) = self.language.as_ref() {
             if let Some(localizations) = self.localizations.as_ref() {
                 if let Some(localization) = localizations.supported_localization(language) {
@@ -167,7 +171,10 @@ impl AssetProvider for FileExtensionAssetProvider {
                                 let path = dir.join(file_name);
 
                                 if asset_server.is_file(&path) {
-                                    Some((*type_id, asset_server.load_untyped(path)))
+                                    let loading_handle = asset_server.load_untyped(path);
+                                    loaded_untyped_assets
+                                        .get(&loading_handle)
+                                        .map(|loaded| (*type_id, loaded.handle.clone()))
                                 } else {
                                     None
                                 }
@@ -195,17 +202,20 @@ impl FileExtensionAssetProvider {
                         return;
                     };
                     for line_id in self.line_ids.iter() {
-                        let file_name = format!("{}.ogg", line_id.0.trim_start_matches("line:"));
-                        let path = dir.join(file_name);
-                        if asset_server.is_file(&path) {
-                            let handle = asset_server.load_untyped(path);
-                            self.handles.insert(handle);
-                        } else {
-                            debug!(
-                                "Asset file \"{path}\" for line \"{line_id}\" does not exist",
-                                path = path.display(),
-                                line_id = line_id.0
-                            );
+                        for extension in self.file_extensions.values().flatten() {
+                            let file_name =
+                                format!("{}.{extension}", line_id.0.trim_start_matches("line:"));
+                            let path = dir.join(file_name);
+                            if asset_server.is_file(&path) {
+                                let handle = asset_server.load_untyped(path);
+                                self.handles.insert(handle);
+                            } else {
+                                debug!(
+                                    "Asset file \"{path}\" for line \"{line_id}\" does not exist",
+                                    path = path.display(),
+                                    line_id = line_id.0
+                                );
+                            }
                         }
                     }
                 } else {

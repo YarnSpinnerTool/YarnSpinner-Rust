@@ -4,6 +4,7 @@ use crate::events::*;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
+use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
@@ -38,6 +39,7 @@ fn continue_runtime(
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
     mut dialogue_start_events: EventWriter<DialogueStartEvent>,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
+    loaded_untyped_assets: Res<Assets<LoadedUntypedAsset>>,
     project: Res<YarnProject>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
@@ -95,7 +97,7 @@ fn continue_runtime(
         for event in events {
             match event {
                 DialogueEvent::Line(line) => {
-                    let assets = dialogue_runner.get_assets(&line);
+                    let assets = dialogue_runner.get_assets(&line, &loaded_untyped_assets);
                     let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
                     present_line_events.send(PresentLineEvent {
                         line: LocalizedLine::from_yarn_line(line, assets, metadata),
@@ -106,7 +108,8 @@ fn continue_runtime(
                     let options: Vec<DialogueOption> = options
                         .into_iter()
                         .map(|option| {
-                            let assets = dialogue_runner.get_assets(&option.line);
+                            let assets =
+                                dialogue_runner.get_assets(&option.line, &loaded_untyped_assets);
                             let metadata = project
                                 .line_metadata(&option.line.id)
                                 .unwrap_or_default()
