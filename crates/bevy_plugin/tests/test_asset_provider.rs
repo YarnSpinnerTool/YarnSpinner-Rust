@@ -28,11 +28,12 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 
     app.load_project();
     let start = Instant::now();
-    let entity = app.dialogue_runner_entity();
-    while !app
-        .existing_dialogue_runner(entity)
-        .are_lines_available(app.world.resource::<Assets<LoadedUntypedAsset>>())
-    {
+    loop {
+        let assets = app.clone_loaded_untyped_assets();
+        if app.dialogue_runner_mut().update_line_availability(&assets) {
+            break;
+        }
+
         if start.elapsed().as_secs() > 2 {
             return Ok(());
         }
@@ -238,6 +239,6 @@ where
             text: String::new(),
             attributes: vec![],
         };
-        T::get_assets(self, &yarn_line, loaded_untyped_handles)
+        T::get_assets(self, &yarn_line)
     }
 }

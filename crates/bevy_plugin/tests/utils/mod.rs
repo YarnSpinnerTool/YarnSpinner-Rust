@@ -41,6 +41,9 @@ pub trait AppExt {
     fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>>;
     fn setup_default_plugins(&mut self) -> &mut App;
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App;
+
+    #[must_use]
+    fn clone_loaded_untyped_assets(&self) -> Assets<LoadedUntypedAsset>;
 }
 
 impl AppExt for App {
@@ -60,12 +63,11 @@ impl AppExt for App {
 
     fn load_lines(&mut self) -> &mut App {
         self.load_project();
-        let entity = self.dialogue_runner_entity();
-        while !self
-            .existing_dialogue_runner(entity)
-            .are_lines_available(self.world.resource::<Assets<LoadedUntypedAsset>>())
-        {
-            self.update();
+        loop {
+            let assets = self.clone_loaded_untyped_assets();
+            if self.dialogue_runner_mut().update_line_availability(&assets) {
+                break;
+            }
         }
         self
     }
@@ -140,6 +142,19 @@ impl AppExt for App {
         self.add_plugins(AudioPlugin::default());
         self
     }
+
+    fn clone_loaded_untyped_assets(&self) -> Assets<LoadedUntypedAsset> {
+        self.world
+            .resource::<Assets<LoadedUntypedAsset>>()
+            .iter()
+            .map(|(_handle, asset)| LoadedUntypedAsset {
+                handle: asset.handle.clone(),
+            })
+            .fold(Assets::default(), |mut assets, asset| {
+                assets.add(asset);
+                assets
+            })
+    }
 }
 
 pub fn project_root_path() -> PathBuf {
@@ -167,7 +182,7 @@ impl DialogueRunnerExt for DialogueRunner {
             attributes: vec![],
         };
         self.asset_providers()
-            .map(|p| p.get_assets(&line_id, loaded_untyped_assets))
+            .map(|p| p.get_assets(&line_id))
             .collect()
     }
 }

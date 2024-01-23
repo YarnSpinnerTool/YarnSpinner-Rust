@@ -59,7 +59,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
+    /// #  fn update_asset_availability(&mut self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
     /// #          unreachable!()
     /// #      }
     /// #
@@ -67,7 +67,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn get_assets(&self, line: &UnderlyingYarnLine, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> LineAssets {
+    /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
     /// #          unreachable!()
     /// #      }
     /// # }
@@ -108,7 +108,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
+    /// #  fn update_asset_availability(&mut self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool {
     /// #          unreachable!()
     /// #      }
     /// #
@@ -116,7 +116,7 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// #          unreachable!()
     /// #      }
     /// #
-    /// #  fn get_assets(&self, line: &UnderlyingYarnLine, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> LineAssets {
+    /// #  fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
     /// #          unreachable!()
     /// #      }
     /// # }
@@ -137,19 +137,15 @@ pub trait AssetProvider: Debug + Send + Sync {
     fn set_asset_server(&mut self, asset_server: AssetServer);
 
     /// Returns whether the assets for all lines announced by [`AssetProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
-    fn are_assets_available(&self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool;
+    /// This method is allowed to process already loaded assets to make them ready for delivery.
+    fn update_asset_availability(&mut self, loaded_untyped_assets: &Assets<LoadedUntypedAsset>) -> bool;
 
     /// Passes the [`LineId`]s that this [`AssetProvider`] should soon provide assets for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
 
-    /// Returns the [`LineAssets`] for the given [`UnderlyingYarnLine`]. Will only be called if [`AssetProvider::are_assets_available`] returns `true`,
-    /// so an implementor is expected to panic if the assets are not available. `
-    /// loaded_untyped_assets` is passed to that implementors can internally call [`AssetServer::load_untyped`].
-    fn get_assets(
-        &self,
-        line: &UnderlyingYarnLine,
-        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
-    ) -> LineAssets;
+    /// Returns the [`LineAssets`] for the given [`UnderlyingYarnLine`]. Will only be called if [`AssetProvider::update_asset_availability`] returns `true`,
+    /// so an implementor is expected to panic if the assets are not available.
+    fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets;
 }
 
 /// Assets that were provided by one or more [`AssetProvider`]s. Stores them in the form of [`Handle`]s.

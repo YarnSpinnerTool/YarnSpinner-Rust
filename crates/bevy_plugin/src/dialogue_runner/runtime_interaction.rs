@@ -60,7 +60,7 @@ fn continue_runtime(
 
             if !(dialogue_runner.will_continue_in_next_update
                 && dialogue_runner.poll_tasks_and_check_if_done()
-                && dialogue_runner.are_lines_available(&loaded_untyped_assets))
+                && dialogue_runner.update_line_availability(&loaded_untyped_assets))
             {
                 continue;
             }
@@ -97,7 +97,7 @@ fn continue_runtime(
         for event in events {
             match event {
                 DialogueEvent::Line(line) => {
-                    let assets = dialogue_runner.get_assets(&line, &loaded_untyped_assets);
+                    let assets = dialogue_runner.get_assets(&line);
                     let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
                     present_line_events.send(PresentLineEvent {
                         line: LocalizedLine::from_yarn_line(line, assets, metadata),
@@ -108,8 +108,7 @@ fn continue_runtime(
                     let options: Vec<DialogueOption> = options
                         .into_iter()
                         .map(|option| {
-                            let assets =
-                                dialogue_runner.get_assets(&option.line, &loaded_untyped_assets);
+                            let assets = dialogue_runner.get_assets(&option.line);
                             let metadata = project
                                 .line_metadata(&option.line.id)
                                 .unwrap_or_default()
