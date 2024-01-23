@@ -1,5 +1,5 @@
 // Disable windows console in release builds
-#![cfg_attr(not(debug_assertations), windows_subsystem = "windows")]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
 use bevy::asset::LoadState;
