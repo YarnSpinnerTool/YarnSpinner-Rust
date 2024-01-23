@@ -1,7 +1,9 @@
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 use anyhow::ensure;
 use bevy::{prelude::*, reflect::TypePath};
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 use glob::glob;
 use std::path::PathBuf;
 
@@ -72,6 +74,7 @@ impl YarnFileSource {
                 #[cfg(any(target_arch = "wasm32", target_os = "android"))]
                 {
                     let _ = path;
+                    let _ = asset_root;
                     panic!("YarnFileSource::Folder is not supported on this platform. Help: Use YarnFileSource::File instead and specify all Yarn files you want to load.")
                 }
             }
