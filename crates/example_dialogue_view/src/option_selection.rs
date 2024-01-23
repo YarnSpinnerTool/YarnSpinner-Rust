@@ -64,7 +64,6 @@ fn show_options(
 }
 
 fn select_option(
-    line_events: EventReader<PresentLineEvent>,
     dialogue_complete_events: EventReader<DialogueCompleteEvent>,
     keys: Res<Input<KeyCode>>,
     typewriter: Res<Typewriter>,
@@ -118,8 +117,7 @@ fn select_option(
             dialogue_runner.select_option(id).unwrap();
         }
     }
-    let should_despawn =
-        has_selected_id || !line_events.is_empty() || !dialogue_complete_events.is_empty();
+    let should_despawn = has_selected_id || !dialogue_complete_events.is_empty();
     if should_despawn {
         commands.remove_resource::<OptionSelection>();
         let (entity, mut style, mut visibility) = options_node.single_mut();
