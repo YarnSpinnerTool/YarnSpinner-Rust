@@ -1,5 +1,7 @@
 use crate::prelude::*;
+use anyhow::ensure;
 use bevy::{prelude::*, reflect::TypePath};
+use glob::glob;
 use std::path::PathBuf;
 
 /// Possible sources to load a [`YarnFile`] from.
@@ -55,11 +57,11 @@ impl YarnFileSource {
         &self,
         asset_server: &AssetServer,
         assets: &mut ResMut<Assets<YarnFile>>,
-    ) -> Vec<Handle<YarnFile>> {
+    ) -> Result<Vec<Handle<YarnFile>>> {
         match self {
-            Self::Handle(handle) => vec![handle.clone()],
-            Self::InMemory(yarn_file) => vec![assets.add(yarn_file.clone())],
-            Self::File(path) => vec![asset_server.load(path.as_path())],
+            Self::Handle(handle) => Ok(vec![handle.clone()]),
+            Self::InMemory(yarn_file) => Ok(vec![assets.add(yarn_file.clone())]),
+            Self::File(path) => Ok(vec![asset_server.load(path.as_path())]),
             Self::Folder(path) => {
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
                 {
@@ -75,30 +77,34 @@ impl YarnFileSource {
     }
 
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-    fn load_folder(asset_server: &AssetServer, path: &std::path::Path) -> Vec<Handle<YarnFile>> {
-        let handles: Vec<_> = asset_server
-            .load_folder(path)
-            .unwrap_or_else(|e| {
-                panic!(
-                    "Failed to load Yarn file folder {path}: {e}.\nHelp: Does the folder exist under the assets directory?",
-                    path = path.display()
+    fn load_folder(
+        asset_server: &AssetServer,
+        path: &std::path::Path,
+    ) -> Result<Vec<Handle<YarnFile>>> {
+        // recursively glob
+        let root = asset_server.get_assets_dir_path()?;
+        let path = root.join(path);
+        ensure!(path.is_dir(), "Failed to load Yarn file folder {path}.\nHelp: Does the folder exist under the assets directory?", path = path.display());
+        let handles: Result<Vec<_>> =
+            glob(path.join("**/*.yarn").to_str().with_context(|| {
+                format!(
+                    "Failed to create string from path: {path}",
+                    path = path.display(),
                 )
-            })
-            .into_iter()
-            .filter_map(|handle| {
-                (asset_server
-                    .get_path(&handle)?
-                    .path()
-                    .extension()?
-                    .to_str()?
-                    == "yarn")
-                    .then(|| handle.untyped().typed())
+            })?)?
+            .map(|entry| {
+                let full_path = entry.unwrap();
+                let path = full_path.strip_prefix(&root)?;
+                let path = path.to_str().unwrap();
+                Ok(asset_server.load(path))
             })
             .collect();
+        let handles = handles?;
+
         if handles.is_empty() {
             warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Slinger won't be able to do anything this run. \
                         Help: Add some Yarn files to get started.", path = path.display());
         }
-        handles
+        Ok(handles)
     }
 }

@@ -1986,6 +1986,7 @@ dependencies = [
  "anyhow",
  "bevy 0.12.1",
  "csv",
+ "glob",
  "rand",
  "seldom_fn_plugin",
  "serde",

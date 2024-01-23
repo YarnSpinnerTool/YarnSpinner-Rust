@@ -69,7 +69,7 @@ fn handle_yarn_file_events(
         if already_handled.contains(&handle) {
             continue;
         }
-        already_handled.insert(handle);
+        already_handled.insert(handle.clone());
         if !yarn_files_being_loaded.0.contains(&handle)
             && !project
                 .as_ref()

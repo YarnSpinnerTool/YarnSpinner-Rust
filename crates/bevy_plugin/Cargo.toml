@@ -44,3 +44,6 @@ features = [
 version = "0.12"
 default-features = false
 features = ["bevy_asset", "serialize", "file_watcher",]
+
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies]
+glob = "0.3.1"

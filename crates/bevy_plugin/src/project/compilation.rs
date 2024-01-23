@@ -16,6 +16,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
             (
                 load_project.pipe(panic_on_err),
                 add_yarn_files_to_load_queue
+                    .pipe(panic_on_err)
                     .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
                 compile_loaded_yarn_files
                     .pipe(panic_on_err)
@@ -86,15 +87,20 @@ fn add_yarn_files_to_load_queue(
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
-) {
+) -> Result<()> {
     if yarn_files_to_load.0.is_empty() {
-        return;
+        return Ok(());
     }
-    let handles = yarn_files_to_load
+    let handles: Result<Vec<_>> = yarn_files_to_load
         .0
         .drain()
-        .flat_map(|source| source.load(&asset_server, &mut assets));
+        .map(|source| source.load(&asset_server, &mut assets))
+        .collect();
+    let handles = handles?;
+    let handles = handles.iter().flat_map(|handles| handles.iter()).cloned();
+
     yarn_files_being_loaded.0.extend(handles);
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Event)]
