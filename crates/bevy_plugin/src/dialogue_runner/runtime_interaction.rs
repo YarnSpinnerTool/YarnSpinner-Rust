@@ -4,6 +4,7 @@ use crate::events::*;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
+use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
@@ -38,6 +39,7 @@ fn continue_runtime(
     mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
     mut dialogue_start_events: EventWriter<DialogueStartEvent>,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
+    loaded_untyped_assets: Res<Assets<LoadedUntypedAsset>>,
     project: Res<YarnProject>,
 ) -> SystemResult {
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
@@ -58,7 +60,7 @@ fn continue_runtime(
 
             if !(dialogue_runner.will_continue_in_next_update
                 && dialogue_runner.poll_tasks_and_check_if_done()
-                && dialogue_runner.are_lines_available())
+                && dialogue_runner.update_line_availability(&loaded_untyped_assets))
             {
                 continue;
             }
@@ -146,7 +148,7 @@ fn accept_line_hints(
     mut events: EventReader<LineHintsEvent>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
 ) {
-    for event in events.iter() {
+    for event in events.read() {
         let mut dialogue_runner = dialogue_runners.get_mut(event.source).unwrap();
         for asset_provider in dialogue_runner.asset_providers.values_mut() {
             asset_provider.accept_line_hints(&event.line_ids);

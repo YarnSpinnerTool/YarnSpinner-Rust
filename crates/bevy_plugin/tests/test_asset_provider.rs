@@ -27,7 +27,12 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 
     app.load_project();
     let start = Instant::now();
-    while !app.dialogue_runner().are_lines_available() {
+    loop {
+        let assets = app.clone_loaded_untyped_assets();
+        if app.dialogue_runner_mut().update_line_availability(&assets) {
+            break;
+        }
+
         if start.elapsed().as_secs() > 2 {
             return Ok(());
         }
@@ -58,6 +63,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
         .set_asset_language("en-US")
         .start_node("Start");
     app.world.spawn(dialogue_runner);
+
     app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:99");
@@ -91,9 +97,9 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
-    let path = asset_server.get_handle_path(asset).unwrap();
+    let path = asset_server.get_path(asset).unwrap();
 
-    // Note that this does not contains backslashes on Windows
+    // Note that this does not contain backslashes on Windows
     assert_eq!("dialogue/en-US/9.ogg", path.path().to_str().unwrap());
 
     Ok(())
@@ -127,7 +133,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
-    let path = asset_server.get_handle_path(asset).unwrap();
+    let path = asset_server.get_path(asset).unwrap();
 
     // Note that this does not contains backslashes on Windows
     assert_eq!("dialogue/de-CH/10.ogg", path.path().to_str().unwrap());
@@ -183,6 +189,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
         .set_asset_language("en-US")
         .start_node("Start");
     app.world.spawn(dialogue_runner);
+
     app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:9");

@@ -13,6 +13,7 @@ use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use anyhow::{anyhow, bail};
+use bevy::asset::LoadedUntypedAsset;
 use bevy::utils::HashSet;
 use bevy::{prelude::*, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
@@ -61,7 +62,7 @@ impl DialogueRunner {
     ///
     /// Note that the actual advancement of the dialogue will be postponed until the following conditions are met:
     /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`](yarn_slinger::prelude::TextProvider::are_lines_available) returning `true`.
-    /// - The asset providers have finished loading their assets, indicated by all [`AssetProvider::are_assets_available`] calls returning `true`.
+    /// - The asset providers have finished loading their assets, indicated by all [`AssetProvider::update_asset_availability`] calls returning `true`.
     /// - All previously called [`YarnCommand`]s are finished, indicated by their return type's [`TaskFinishedIndicator::is_finished`] returning `true`.
     pub fn continue_in_next_update(&mut self) -> &mut Self {
         if !self.is_running {
@@ -201,8 +202,11 @@ impl DialogueRunner {
 
     /// Returns whether both the text and asset providers have loaded all their lines.
     #[must_use]
-    pub fn are_lines_available(&self) -> bool {
-        self.are_texts_available() && self.are_assets_available()
+    pub fn update_line_availability(
+        &mut self,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> bool {
+        self.are_texts_available() && self.update_asset_availability(loaded_untyped_assets)
     }
 
     /// Returns whether the text provider has loaded all its lines.
@@ -214,10 +218,13 @@ impl DialogueRunner {
     /// Returns whether all asset providers have loaded all their assets.
     /// If no asset providers where added via [`DialogueRunnerBuilder::add_asset_provider`], this will always return `true`.
     #[must_use]
-    fn are_assets_available(&self) -> bool {
+    fn update_asset_availability(
+        &mut self,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> bool {
         self.asset_providers
-            .values()
-            .all(|provider| provider.are_assets_available())
+            .values_mut()
+            .all(|provider| provider.update_asset_availability(loaded_untyped_assets))
     }
 
     /// Sets the language of both the text and asset providers. Same as calling [`DialogueRunner::set_text_language`] and [`DialogueRunner::set_asset_language`].

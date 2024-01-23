@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use bevy::asset::LoadedUntypedAsset;
 #[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
@@ -25,6 +26,9 @@ pub trait AppExt {
     fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
 
     #[must_use]
+    fn dialogue_runner_entity(&mut self) -> Entity;
+
+    #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
     fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner>;
@@ -34,6 +38,9 @@ pub trait AppExt {
     fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>>;
     fn setup_default_plugins(&mut self) -> &mut App;
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App;
+
+    #[must_use]
+    fn clone_loaded_untyped_assets(&self) -> Assets<LoadedUntypedAsset>;
 }
 
 impl AppExt for App {
@@ -53,7 +60,11 @@ impl AppExt for App {
 
     fn load_lines(&mut self) -> &mut App {
         self.load_project();
-        while !self.dialogue_runner().are_lines_available() {
+        loop {
+            let assets = self.clone_loaded_untyped_assets();
+            if self.dialogue_runner_mut().update_line_availability(&assets) {
+                break;
+            }
             self.update();
         }
         self
@@ -71,26 +82,30 @@ impl AppExt for App {
         self
     }
 
-    fn dialogue_runner(&mut self) -> &DialogueRunner {
-        if self.try_dialogue_runner().is_some() {
-            self.try_dialogue_runner().unwrap()
+    fn dialogue_runner_entity(&mut self) -> Entity {
+        let existing_entity = self
+            .world
+            .iter_entities()
+            .filter(|e| self.world.get::<DialogueRunner>(e.id()).is_some())
+            .map(|e| e.id())
+            .next();
+        if let Some(entity) = existing_entity {
+            entity
         } else {
             let project = self.load_project();
             let dialogue_runner = project.create_dialogue_runner();
-            let entity = self.world.spawn(dialogue_runner).id();
-            self.world.get::<DialogueRunner>(entity).unwrap()
+            self.world.spawn(dialogue_runner).id()
         }
     }
 
+    fn dialogue_runner(&mut self) -> &DialogueRunner {
+        let entity = self.dialogue_runner_entity();
+        self.world.get::<DialogueRunner>(entity).unwrap()
+    }
+
     fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner> {
-        if self.try_dialogue_runner().is_some() {
-            self.try_dialogue_runner_mut().unwrap()
-        } else {
-            let project = self.load_project();
-            let dialogue_runner = project.create_dialogue_runner();
-            let entity = self.world.spawn(dialogue_runner).id();
-            self.world.get_mut::<DialogueRunner>(entity).unwrap()
-        }
+        let entity = self.dialogue_runner_entity();
+        self.world.get_mut::<DialogueRunner>(entity).unwrap()
     }
 
     fn try_dialogue_runner(&self) -> Option<&DialogueRunner> {
@@ -113,13 +128,27 @@ impl AppExt for App {
 
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App {
         self.add_plugins(MinimalPlugins).add_plugins(AssetPlugin {
-            asset_folder: asset_folder.as_ref().to_string_lossy().to_string(),
+            file_path: asset_folder.as_ref().to_string_lossy().to_string(),
+            watch_for_changes_override: Some(false),
             ..default()
         });
 
         #[cfg(feature = "audio_assets")]
         self.add_plugins(AudioPlugin::default());
         self
+    }
+
+    fn clone_loaded_untyped_assets(&self) -> Assets<LoadedUntypedAsset> {
+        self.world
+            .resource::<Assets<LoadedUntypedAsset>>()
+            .iter()
+            .map(|(_handle, asset)| LoadedUntypedAsset {
+                handle: asset.handle.clone(),
+            })
+            .fold(Assets::default(), |mut assets, asset| {
+                assets.add(asset);
+                assets
+            })
     }
 }
 

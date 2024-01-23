@@ -94,33 +94,6 @@ impl From<Operand> for YarnValue {
     }
 }
 
-impl TryFrom<i32> for OpCode {
-    type Error = InvalidOpCodeError;
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(OpCode::JumpTo),
-            1 => Ok(OpCode::Jump),
-            2 => Ok(OpCode::RunLine),
-            3 => Ok(OpCode::RunCommand),
-            4 => Ok(OpCode::AddOption),
-            5 => Ok(OpCode::ShowOptions),
-            6 => Ok(OpCode::PushString),
-            7 => Ok(OpCode::PushFloat),
-            8 => Ok(OpCode::PushBool),
-            9 => Ok(OpCode::PushNull),
-            10 => Ok(OpCode::JumpIfFalse),
-            11 => Ok(OpCode::Pop),
-            12 => Ok(OpCode::CallFunc),
-            13 => Ok(OpCode::PushVariable),
-            14 => Ok(OpCode::StoreVariable),
-            15 => Ok(OpCode::Stop),
-            16 => Ok(OpCode::RunNode),
-            _ => Err(InvalidOpCodeError(value)),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

@@ -2,9 +2,9 @@
 
 use crate::prelude::*;
 use anyhow::{anyhow, bail};
-use bevy::asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
+use bevy::asset::{io::Reader, AssetLoader, AsyncReadExt, BoxedFuture, LoadContext};
 use bevy::prelude::*;
-use bevy::reflect::{TypePath, TypeUuid};
+use bevy::reflect::TypePath;
 use bevy::utils::HashMap;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -12,7 +12,7 @@ use std::fs::File;
 use std::path::Path;
 
 pub(crate) fn strings_file_asset_plugin(app: &mut App) {
-    app.add_asset::<StringsFile>()
+    app.init_asset::<StringsFile>()
         .init_asset_loader::<StringsFileAssetLoader>();
 }
 
@@ -20,17 +20,22 @@ pub(crate) fn strings_file_asset_plugin(app: &mut App) {
 struct StringsFileAssetLoader;
 
 impl AssetLoader for StringsFileAssetLoader {
+    type Asset = StringsFile;
+    type Settings = ();
+    type Error = anyhow::Error;
     fn load<'a>(
         &'a self,
-        bytes: &'a [u8],
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, SystemResult> {
+        reader: &'a mut Reader,
+        _settings: &'a (),
+        _load_context: &'a mut LoadContext,
+    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
-            let mut reader = csv::Reader::from_reader(bytes);
-            let records: csv::Result<Vec<_>> = reader.deserialize().collect();
+            let mut bytes = Vec::new();
+            reader.read_to_end(&mut bytes).await?;
+            let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
+            let records: csv::Result<Vec<_>> = csv_reader.deserialize().collect();
             let strings_file = StringsFile::new_with_single_language(records?)?;
-            load_context.set_default_asset(LoadedAsset::new(strings_file));
-            Ok(())
+            Ok(strings_file)
         })
     }
 
@@ -39,8 +44,7 @@ impl AssetLoader for StringsFileAssetLoader {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, TypeUuid, TypePath)]
-#[uuid = "2e897914-f0f7-4b7f-b181-4d84b8ff6164"]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, Asset, TypePath)]
 #[non_exhaustive]
 pub(crate) struct StringsFile(HashMap<LineId, StringsFileRecord>);
 
@@ -166,11 +170,8 @@ impl StringsFile {
         Ok(Self(records))
     }
 
-    pub(crate) fn write_asset(&self, asset_server: &AssetServer, path: &Path) -> Result<()> {
-        let assets_path = get_assets_dir_path(asset_server)?;
-        let assets_path = assets_path.as_ref();
-        let full_path = assets_path.join(path);
-        if let Some(parent_dir) = full_path.parent() {
+    pub(crate) fn write_asset(&self, path: &Path) -> Result<()> {
+        if let Some(parent_dir) = path.parent() {
             fs::create_dir_all(parent_dir).map_err(|e| {
                 anyhow!(
                     "Failed to create dialogue asset subdirectory \"{}\": {e}",
@@ -178,12 +179,8 @@ impl StringsFile {
                 )
             })?;
         }
-        let file = File::create(&full_path).map_err(|e| {
-            anyhow!(
-                "Failed to create strings file \"{}\": {e}",
-                full_path.display(),
-            )
-        })?;
+        let file = File::create(path)
+            .map_err(|e| anyhow!("Failed to create strings file \"{}\": {e}", path.display(),))?;
         let mut writer = csv::Writer::from_writer(file);
         let mut records = self.0.iter().map(|(_, record)| record).collect::<Vec<_>>();
         records.sort_by(|lhs, rhs| {

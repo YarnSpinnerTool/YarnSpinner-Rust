@@ -1,5 +1,5 @@
-use crate::default_impl::file_extensions;
 use crate::prelude::*;
+use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
@@ -19,7 +19,7 @@ pub struct AudioAssetProvider(FileExtensionAssetProvider);
 impl Default for AudioAssetProvider {
     fn default() -> Self {
         Self(
-            FileExtensionAssetProvider::new().with_file_extensions(file_extensions! {
+            FileExtensionAssetProvider::new().with_file_extensions(crate::file_extensions! {
                 AudioSource: ["mp3", "ogg", "wav"],
             }),
         )
@@ -58,8 +58,11 @@ impl AssetProvider for AudioAssetProvider {
         self.0.set_asset_server(asset_server)
     }
 
-    fn are_assets_available(&self) -> bool {
-        self.0.are_assets_available()
+    fn update_asset_availability(
+        &mut self,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> bool {
+        self.0.update_asset_availability(loaded_untyped_assets)
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {

@@ -239,11 +239,9 @@ mod tests {
 
     #[test]
     fn executes_task() {
-        AsyncComputeTaskPool::init(TaskPool::new);
-
         let mut methods = YarnCommands::default();
         methods.add_command("test", |_: In<()>| -> Task<()> {
-            let thread_pool = AsyncComputeTaskPool::get();
+            let thread_pool = AsyncComputeTaskPool::get_or_init(TaskPool::new);
             thread_pool.spawn(async move { sleep(Duration::from_millis(500)) })
         });
         let method = methods.get_mut("test").unwrap();

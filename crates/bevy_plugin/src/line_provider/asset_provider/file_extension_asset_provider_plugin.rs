@@ -1,10 +1,11 @@
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
-use bevy::asset::LoadState;
+use bevy::asset::{LoadState, LoadedUntypedAsset};
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet, Uuid};
+use bevy::utils::{HashMap, HashSet};
 use std::any::Any;
 use std::fmt::Debug;
+use std::path::PathBuf;
 
 pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
 
@@ -27,9 +28,10 @@ pub struct FileExtensionAssetProvider {
     language: Option<Language>,
     localizations: Option<Localizations>,
     asset_server: Option<AssetServer>,
-    handles: HashSet<HandleUntyped>,
+    loading_handles: HashMap<PathBuf, Handle<LoadedUntypedAsset>>,
+    loaded_handles: HashMap<PathBuf, UntypedHandle>,
     line_ids: HashSet<LineId>,
-    file_extensions: HashMap<Uuid, Vec<String>>,
+    file_extensions: HashMap<&'static str, Vec<String>>,
 }
 
 /// A convenience macro for specifying file extensions used by [`FileExtensionAssetProvider::with_file_extensions`].
@@ -49,7 +51,7 @@ macro_rules! file_extensions {
         {
             bevy::utils::HashMap::from([
                 $(
-                    (<$type as bevy::reflect::TypeUuid>::TYPE_UUID, $ext),
+                    (<$type as bevy::reflect::TypePath>::type_path(), $ext),
                 )*
             ])
         }
@@ -81,7 +83,7 @@ impl FileExtensionAssetProvider {
     /// ```
     pub fn with_file_extensions<T, U, V>(mut self, file_extensions: T) -> Self
     where
-        T: IntoIterator<Item = (Uuid, U)>,
+        T: IntoIterator<Item = (&'static str, U)>,
         U: IntoIterator<Item = V>,
         V: AsRef<str>,
     {
@@ -125,20 +127,44 @@ impl AssetProvider for FileExtensionAssetProvider {
         self.asset_server.replace(asset_server);
     }
 
-    fn are_assets_available(&self) -> bool {
-        if self.language.is_none()
-            || self.localizations.is_none()
-            || self.line_ids.is_empty()
-            || self.handles.is_empty()
-        {
+    fn update_asset_availability(
+        &mut self,
+        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
+    ) -> bool {
+        if self.language.is_none() || self.localizations.is_none() || self.line_ids.is_empty() {
             return false;
         };
+
+        if self.loading_handles.is_empty() && self.loaded_handles.is_empty() {
+            return true;
+        }
+
         let Some(asset_server) = self.asset_server.as_ref() else {
             return false;
         };
-        self.handles
+
+        self.loading_handles.retain(|_path, handle| {
+            asset_server.get_load_state(handle.id()) != Some(LoadState::Failed)
+        });
+        let newly_loaded: HashMap<_, _> = self
+            .loading_handles
             .iter()
-            .all(|handle| asset_server.get_load_state(handle) == LoadState::Loaded)
+            .filter_map(|(path, handle)| {
+                loaded_untyped_assets
+                    .get(handle)
+                    .map(|loaded| (path.clone(), loaded.handle.clone()))
+            })
+            .collect();
+        self.loading_handles
+            .retain(|path, _| !newly_loaded.contains_key(path));
+        self.loaded_handles.extend(newly_loaded);
+        if !self.loading_handles.is_empty() {
+            false
+        } else {
+            self.loaded_handles
+                .iter()
+                .all(|(_path, handle)| asset_server.is_loaded_with_dependencies(handle.id()))
+        }
     }
 
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {
@@ -155,9 +181,6 @@ impl AssetProvider for FileExtensionAssetProvider {
                 if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
                     let file_name_without_extension = line.id.0.trim_start_matches("line:");
-                    let Some(asset_server) = self.asset_server.as_ref() else {
-                        return default();
-                    };
                     let assets = self
                         .file_extensions
                         .iter()
@@ -165,12 +188,9 @@ impl AssetProvider for FileExtensionAssetProvider {
                             exts.iter().find_map(|ext| {
                                 let file_name = format!("{}.{}", file_name_without_extension, ext);
                                 let path = dir.join(file_name);
-
-                                if asset_server.asset_io().is_file(&path) {
-                                    Some((*type_id, asset_server.load_untyped(path)))
-                                } else {
-                                    None
-                                }
+                                self.loaded_handles
+                                    .get(&path)
+                                    .map(|handle| (*type_id, handle.clone()))
                             })
                         })
                         .collect::<HashSet<_>>();
@@ -190,22 +210,18 @@ impl FileExtensionAssetProvider {
             if let Some(localizations) = self.localizations.as_ref() {
                 if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
-                    self.handles.clear();
+                    self.loading_handles.clear();
+                    self.loaded_handles.clear();
                     let Some(asset_server) = self.asset_server.as_ref() else {
                         return;
                     };
                     for line_id in self.line_ids.iter() {
-                        let file_name = format!("{}.ogg", line_id.0.trim_start_matches("line:"));
-                        let path = dir.join(file_name);
-                        if asset_server.asset_io().is_file(&path) {
-                            let handle = asset_server.load_untyped(path);
-                            self.handles.insert(handle);
-                        } else {
-                            debug!(
-                                "Asset file \"{path}\" for line \"{line_id}\" does not exist",
-                                path = path.display(),
-                                line_id = line_id.0
-                            );
+                        for extension in self.file_extensions.values().flatten() {
+                            let file_name =
+                                format!("{}.{extension}", line_id.0.trim_start_matches("line:"));
+                            let path = dir.join(file_name);
+                            let handle = asset_server.load_untyped(path.clone());
+                            self.loading_handles.insert(path, handle);
                         }
                     }
                 } else {
@@ -222,7 +238,7 @@ impl Debug for FileExtensionAssetProvider {
             .field("language", &self.language)
             .field("localizations", &self.localizations)
             .field("asset_server", &())
-            .field("handles", &self.handles)
+            .field("handles", &self.loading_handles)
             .field("line_ids", &self.line_ids)
             .finish()
     }

@@ -1,10 +1,8 @@
 // Disable windows console in release builds
 #![cfg_attr(not(debug_assertations), windows_subsystem = "windows")]
 
-use std::time::Duration;
-
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
-use bevy::asset::{ChangeWatcher, LoadState};
+use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
@@ -21,25 +19,17 @@ mod yarn_slinger_integration;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(
-        DefaultPlugins
-            .set(AssetPlugin {
-                #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-                watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                ..default()
-            })
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Yarn Slinger Story Demo".into(),
-                    resolution: (800., 600.).into(),
-                    present_mode: PresentMode::AutoVsync,
-                    prevent_default_event_handling: false,
-                    resizable: false,
-                    ..default()
-                }),
-                ..default()
-            }),
-    )
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Yarn Slinger Story Demo".into(),
+            resolution: (800., 600.).into(),
+            present_mode: PresentMode::AutoVsync,
+            prevent_default_event_handling: false,
+            resizable: false,
+            ..default()
+        }),
+        ..default()
+    }))
     .insert_resource(ClearColor(Color::CYAN));
     #[cfg(feature = "editor")]
     app.add_plugins(EditorPlugin::new());
@@ -86,10 +76,10 @@ struct Sprites {
 }
 
 fn sprites_have_loaded(sprites: Res<Sprites>, asset_server: Res<AssetServer>) -> bool {
-    asset_server.get_load_state(&sprites.ferris_neutral) == LoadState::Loaded
-        && asset_server.get_load_state(&sprites.ferris_happy) == LoadState::Loaded
-        && asset_server.get_load_state(&sprites.clippy) == LoadState::Loaded
-        && asset_server.get_load_state(&sprites.bang) == LoadState::Loaded
+    asset_server.get_load_state(&sprites.ferris_neutral) == Some(LoadState::Loaded)
+        && asset_server.get_load_state(&sprites.ferris_happy) == Some(LoadState::Loaded)
+        && asset_server.get_load_state(&sprites.clippy) == Some(LoadState::Loaded)
+        && asset_server.get_load_state(&sprites.bang) == Some(LoadState::Loaded)
 }
 
 const FERRIS_TRANSLATION: Vec3 = Vec3::new(-1.3, 0.9, 0.35);

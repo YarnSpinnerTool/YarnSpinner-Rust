@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use crate::project::{LoadYarnProjectEvent, WatchingForChanges};
 use bevy::prelude::*;
+use std::path::PathBuf;
 pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
@@ -176,17 +177,18 @@ pub struct DeferredYarnSlingerPlugin;
 
 impl Plugin for DeferredYarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        let watching = app.is_watching_for_changes();
         app.register_yarn_types()
             .register_sub_plugins()
-            .insert_resource(WatchingForChanges(watching));
+            .register_watching_for_changes()
+            .register_asset_root();
     }
 }
 
 trait YarnApp {
     fn register_yarn_types(&mut self) -> &mut Self;
     fn register_sub_plugins(&mut self) -> &mut Self;
-    fn is_watching_for_changes(&self) -> bool;
+    fn register_watching_for_changes(&mut self) -> &mut Self;
+    fn register_asset_root(&mut self) -> &mut Self;
 }
 impl YarnApp for App {
     fn register_yarn_types(&mut self) -> &mut Self {
@@ -233,11 +235,30 @@ impl YarnApp for App {
             .fn_plugin(crate::development_file_generation::development_file_generation_plugin)
     }
 
-    fn is_watching_for_changes(&self) -> bool {
-        let asset_plugins: Vec<&AssetPlugin> = self.get_added_plugins();
-        let asset_plugin: &AssetPlugin = asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
-        Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`");
+    fn register_watching_for_changes(&mut self) -> &mut Self {
+        let on_by_default = cfg!(all(not(target_arch = "wasm32"), not(target_os = "android")));
 
-        asset_plugin.watch_for_changes.is_some()
+        let asset_plugin = get_asset_plugin(self);
+        let watching_for_changes = asset_plugin
+            .watch_for_changes_override
+            .unwrap_or(on_by_default);
+
+        self.insert_resource(WatchingForChanges(watching_for_changes))
+    }
+
+    fn register_asset_root(&mut self) -> &mut Self {
+        let asset_plugin = get_asset_plugin(self);
+        let path_str = asset_plugin.file_path.clone();
+        let path = PathBuf::from(path_str);
+        self.insert_resource(AssetRoot(path))
     }
 }
+
+fn get_asset_plugin(app: &App) -> &AssetPlugin {
+    let asset_plugins: Vec<&AssetPlugin> = app.get_added_plugins();
+    asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
+    Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`")
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Resource)]
+pub(crate) struct AssetRoot(pub(crate) PathBuf);

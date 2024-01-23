@@ -10,9 +10,9 @@ exclude = ["assets", "wasm"]
 [dependencies]
 bevy_yarn_slinger = { path = "../bevy_plugin" }
 unicode-segmentation = "1"
-seldom_fn_plugin = "0.4"
+seldom_fn_plugin = "0.5"
 
 [dependencies.bevy]
-version = "0.11"
+version = "0.12"
 default-features = false
 features = ["bevy_ui", "bevy_text", "bevy_render", "png", "bevy_asset"]

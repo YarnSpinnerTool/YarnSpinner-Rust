@@ -52,7 +52,7 @@ fn present_line(
     mut typewriter: ResMut<Typewriter>,
     mut name_node: Query<&mut Text, With<DialogueNameNode>>,
 ) {
-    for event in line_events.iter() {
+    for event in line_events.read() {
         let name = if let Some(name) = event.line.character_name() {
             speaker_change_events.send(SpeakerChangeEvent {
                 character_name: name.to_string(),
@@ -68,7 +68,7 @@ fn present_line(
 }
 
 fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {
-    for event in events.iter() {
+    for event in events.read() {
         let option_selection = OptionSelection::from_option_set(&event.options);
         commands.insert_resource(option_selection);
     }

@@ -64,7 +64,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 29 pixels high
-                                texture: image_handle::EDGE.typed(),
+                                texture: image_handle::EDGE,
                                 ..default()
                             },
                             style: Style {
@@ -160,7 +160,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 29 pixels high
-                                texture: image_handle::EDGE.typed(),
+                                texture: image_handle::EDGE,
                                 flip_y: true,
                                 ..default()
                             },
@@ -178,7 +178,7 @@ fn setup(mut commands: Commands) {
                         ImageBundle {
                             image: UiImage {
                                 // 27 x 27 pixels
-                                texture: image_handle::CONTINUE_INDICATOR.typed(),
+                                texture: image_handle::CONTINUE_INDICATOR,
                                 ..default()
                             },
                             style: Style {
@@ -285,14 +285,14 @@ mod text_style {
     use super::*;
     pub(crate) fn standard() -> TextStyle {
         TextStyle {
-            font: font_handle::MEDIUM.typed(),
+            font: font_handle::MEDIUM,
             font_size: 20.0,
             color: Color::WHITE,
         }
     }
     pub(crate) fn name() -> TextStyle {
         TextStyle {
-            font: font_handle::MEDIUM.typed(),
+            font: font_handle::MEDIUM,
             font_size: 18.0,
             ..standard()
         }
@@ -300,7 +300,7 @@ mod text_style {
 
     pub(crate) fn option_id() -> TextStyle {
         TextStyle {
-            font: font_handle::MEDIUM.typed(),
+            font: font_handle::MEDIUM,
             color: Color::ALICE_BLUE,
             ..option_text()
         }

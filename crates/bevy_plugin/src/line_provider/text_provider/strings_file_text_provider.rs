@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
-use bevy::asset::LoadState;
+
 use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
 use std::any::Any;
@@ -75,7 +75,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         }
         let language = language.unwrap();
 
-        let Some(localizations) = self.localizations.as_ref() else {
+        let Some(localizations) = self.localizations.clone() else {
             panic!("Set language to {language}, but no localizations have been registered as supported.");
         };
         if language == localizations.base_localization.language {
@@ -91,12 +91,8 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
             panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
         };
         let path = localization.strings_file.as_path();
-        if self.asset_server.asset_io().is_file(path) {
-            self.strings_file_handle
-                .replace(self.asset_server.load(path));
-        } else {
-            panic!("Set language to {language}, but the expected strings file at {path} does not exist.", path = path.display());
-        }
+        self.strings_file_handle
+            .replace(self.asset_server.load(path.to_owned()));
     }
 
     fn get_language(&self) -> Option<Language> {
@@ -158,16 +154,14 @@ impl TextProvider for StringsFileTextProvider {
             return None;
         }
         let handle = self.strings_file_handle.as_ref()?;
-        if self.asset_server.get_load_state(handle) != LoadState::Loaded {
+        if !self.asset_server.is_loaded_with_dependencies(handle) {
             return None;
         }
         let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
             let mut reader = self.event_reader.write().unwrap();
-            reader.iter(asset_events).any(|event| match event {
-                AssetEvent::Modified {
-                    handle: modified_handle,
-                } => modified_handle == handle,
+            reader.read(asset_events).any(|event| match event {
+                AssetEvent::Modified { id } => *id == handle.id(),
                 _ => false,
             })
         };
@@ -176,7 +170,7 @@ impl TextProvider for StringsFileTextProvider {
             let strings_file = world.resource::<Assets<StringsFile>>().get(handle).unwrap();
             let expected_language = self.language.as_ref().unwrap();
             if let Some(record) = strings_file.get_offending_language(expected_language) {
-                let path = self.asset_server.get_handle_path(handle).unwrap();
+                let path = self.asset_server.get_path(handle).unwrap();
                 panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
                            path = path.path().display(),
                            id = record.id,

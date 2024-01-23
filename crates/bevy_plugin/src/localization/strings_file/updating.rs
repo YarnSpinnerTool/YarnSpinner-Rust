@@ -1,5 +1,5 @@
+use crate::plugin::AssetRoot;
 use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
-use anyhow::bail;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 
@@ -34,6 +34,7 @@ fn update_all_strings_files_for_string_table(
     project: Res<YarnProject>,
     mut languages_to_handles: Local<HashMap<Language, Handle<StringsFile>>>,
     mut expected_file_names: Local<HashSet<String>>,
+    asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     let localizations = project.localizations.as_ref().unwrap();
     if localizations.translations.is_empty() {
@@ -44,11 +45,7 @@ fn update_all_strings_files_for_string_table(
     for localization in &localizations.translations {
         let language = &localization.language;
         let path = localization.strings_file.as_path();
-        let handle = if asset_server.asset_io().is_file(path) {
-            asset_server.load(path)
-        } else {
-            bail!("Strings file at {path} for language {language} does not exist. Have you deleted or moved it while the program was running?", path = path.display());
-        };
+        let handle = asset_server.load(path.to_owned());
         languages_to_handles.insert(language.clone(), handle);
     }
     if languages_to_handles.is_empty() {
@@ -120,7 +117,8 @@ fn update_all_strings_files_for_string_table(
     languages_to_handles.clear();
     for (handle, path) in &dirty_paths {
         let strings_file = strings_files.get(handle).unwrap();
-        strings_file.write_asset(&asset_server, path)?;
+        let path = asset_root.0.join(path);
+        strings_file.write_asset(&path)?;
     }
     Ok(())
 }
@@ -140,7 +138,7 @@ fn lint_strings_file(
         .join(", ");
     if !superfluous_file_names.is_empty() {
         let source = asset_server
-            .get_handle_path(handle)
+            .get_path(handle)
             .map(|asset_path| format!("at {}", asset_path.path().display()))
             .unwrap_or_else(|| "created at runtime".to_owned());
         warn!(

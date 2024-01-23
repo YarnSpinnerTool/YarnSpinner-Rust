@@ -158,7 +158,7 @@ pub(crate) fn spawn_sprites(
         Sprite3d {
             image: sprites.ferris_neutral.clone(),
             pixels_per_metre: 600.,
-            partial_alpha: true,
+            alpha_mode: AlphaMode::Blend,
             unlit: true,
             transform: Transform::from_translation(FERRIS_TRANSLATION)
                 .looking_at(CAMERA_TRANSLATION, Vec3::Y),
@@ -176,7 +176,7 @@ pub(crate) fn spawn_sprites(
         Sprite3d {
             image: sprites.clippy.clone(),
             pixels_per_metre: 350.,
-            partial_alpha: true,
+            alpha_mode: AlphaMode::Blend,
             unlit: true,
             transform: Transform::from_translation(CLIPPY_TRANSLATION)
                 .looking_at(CAMERA_TRANSLATION, Vec3::Y),

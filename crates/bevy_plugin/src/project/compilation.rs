@@ -1,9 +1,10 @@
 use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
+use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::bail;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::utils::{error, HashSet};
 use std::fmt::Debug;
 
 pub(crate) fn project_compilation_plugin(app: &mut App) {
@@ -16,12 +17,13 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
             (
                 load_project.pipe(panic_on_err),
                 add_yarn_files_to_load_queue
+                    .pipe(panic_on_err)
                     .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
                 compile_loaded_yarn_files
                     .pipe(panic_on_err)
                     .run_if(resource_exists::<YarnFilesToLoad>()),
                 recompile_loaded_yarn_files
-                    .pipe(error)
+                    .map(error)
                     .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
             )
@@ -86,15 +88,21 @@ fn add_yarn_files_to_load_queue(
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
-) {
+    asset_root: Res<AssetRoot>,
+) -> Result<()> {
     if yarn_files_to_load.0.is_empty() {
-        return;
+        return Ok(());
     }
-    let handles = yarn_files_to_load
+    let handles: Result<Vec<_>> = yarn_files_to_load
         .0
         .drain()
-        .flat_map(|source| source.load(&asset_server, &mut assets));
+        .map(|source| source.load(&asset_server, &mut assets, &asset_root))
+        .collect();
+    let handles = handles?;
+    let handles = handles.iter().flat_map(|handles| handles.iter()).cloned();
+
     yarn_files_being_loaded.0.extend(handles);
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Event)]
@@ -157,6 +165,7 @@ fn compile_loaded_yarn_files(
     mut dirty: Local<bool>,
     yarn_project_config_to_load: Option<Res<YarnProjectConfigToLoad>>,
     asset_server: Res<AssetServer>,
+    asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     if yarn_files_being_loaded.is_changed() {
         *dirty = true;
@@ -200,7 +209,9 @@ fn compile_loaded_yarn_files(
             ));
             for localization in &localizations.translations {
                 let path = localization.strings_file.as_path();
-                if asset_server.asset_io().is_file(path) {
+                let path = asset_root.0.join(path);
+
+                if path.is_file() {
                     continue;
                 }
                 let strings_file = StringsFile::from_string_table(
@@ -209,7 +220,7 @@ fn compile_loaded_yarn_files(
                 )
                 .unwrap_or_default();
 
-                strings_file.write_asset(&asset_server, path)?;
+                strings_file.write_asset(&path)?;
                 info!(
                     "Generated \"{}\" (lang: {}).",
                     path.display(),

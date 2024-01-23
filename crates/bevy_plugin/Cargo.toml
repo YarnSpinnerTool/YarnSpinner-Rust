@@ -12,14 +12,15 @@ audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 [dependencies]
 anyhow = "1"
 csv = "1"
-seldom_fn_plugin = "0.4"
+seldom_fn_plugin = "0.5"
 serde = { version = "1", features = ["derive"] }
 yarn_slinger = { path = "../yarn_slinger", features = ["bevy", "serde"] }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 
-[dependencies.bevy]
-version = "0.11"
+
+[target.'cfg(any(target_arch = "wasm32", target_os = "android"))'.dependencies.bevy]
+version = "0.12"
 default-features = false
 features = ["bevy_asset", "serialize"]
 
@@ -27,13 +28,22 @@ features = ["bevy_asset", "serialize"]
 tempfile = "3"
 
 [dev-dependencies.bevy]
-version = "0.11"
+version = "0.12"
 default-features = false
 features = [
   "bevy_core_pipeline",
   "bevy_render",
   "bevy_winit",
-  "filesystem_watcher",
+  "file_watcher",
   "x11",
   "bevy_audio",
+  "multi-threaded",
 ]
+
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies.bevy]
+version = "0.12"
+default-features = false
+features = ["bevy_asset", "serialize", "file_watcher",]
+
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies]
+glob = "0.3.1"
