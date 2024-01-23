@@ -164,19 +164,11 @@ pub fn project_root_path() -> PathBuf {
 
 pub trait DialogueRunnerExt {
     #[must_use]
-    fn get_assets_for_id(
-        &self,
-        line_id: &str,
-        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
-    ) -> LineAssets;
+    fn get_assets_for_id(&self, line_id: &str) -> LineAssets;
 }
 
 impl DialogueRunnerExt for DialogueRunner {
-    fn get_assets_for_id(
-        &self,
-        line_id: &str,
-        loaded_untyped_assets: &Assets<LoadedUntypedAsset>,
-    ) -> LineAssets {
+    fn get_assets_for_id(&self, line_id: &str) -> LineAssets {
         let line_id = UnderlyingYarnLine {
             id: LineId(line_id.to_string()),
             text: String::new(),

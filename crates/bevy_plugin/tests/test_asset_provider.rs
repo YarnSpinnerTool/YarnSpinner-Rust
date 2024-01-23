@@ -1,6 +1,5 @@
 #![cfg(feature = "audio_assets")]
 use anyhow::{bail, Result};
-use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarn_slinger::prelude::*;
@@ -67,11 +66,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
 
     app.load_lines();
 
-    let entity = app.dialogue_runner_entity();
-    let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
-    let assets = app
-        .existing_dialogue_runner(entity)
-        .get_assets_for_id("line:99", loaded_untyped_handles);
+    let assets = app.dialogue_runner().get_assets_for_id("line:99");
     assert!(assets.is_empty());
     Ok(())
 }
@@ -98,11 +93,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
-    let entity = app.dialogue_runner_entity();
-    let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
-    let assets = app
-        .existing_dialogue_runner(entity)
-        .get_assets_for_id("line:9", loaded_untyped_handles);
+    let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
@@ -138,11 +129,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     app.world.spawn(dialogue_runner);
     app.load_lines();
 
-    let entity = app.dialogue_runner_entity();
-    let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
-    let assets = app
-        .existing_dialogue_runner(entity)
-        .get_assets_for_id("line:10", loaded_untyped_handles);
+    let assets = app.dialogue_runner().get_assets_for_id("line:10");
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
     let asset_server = app.world.resource::<AssetServer>();
@@ -205,11 +192,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
 
     app.load_lines();
 
-    let entity = app.dialogue_runner_entity();
-    let loaded_untyped_handles = app.world.resource::<Assets<LoadedUntypedAsset>>();
-    let assets = app
-        .existing_dialogue_runner(entity)
-        .get_assets_for_id("line:9", loaded_untyped_handles);
+    let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
     let asset: Option<Handle<YarnFile>> = assets.get_handle();
     assert!(asset.is_none());
@@ -217,22 +200,14 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
 }
 
 trait AssetProviderExt {
-    fn get_assets_for_id(
-        &self,
-        id: &str,
-        loaded_untyped_handles: &Assets<LoadedUntypedAsset>,
-    ) -> LineAssets;
+    fn get_assets_for_id(&self, id: &str) -> LineAssets;
 }
 
 impl<T> AssetProviderExt for T
 where
     T: AssetProvider + ?Sized,
 {
-    fn get_assets_for_id(
-        &self,
-        id: &str,
-        loaded_untyped_handles: &Assets<LoadedUntypedAsset>,
-    ) -> LineAssets {
+    fn get_assets_for_id(&self, id: &str) -> LineAssets {
         let line_id = LineId(id.to_owned());
         let yarn_line = UnderlyingYarnLine {
             id: line_id,
