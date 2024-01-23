@@ -91,12 +91,8 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
             panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
         };
         let path = localization.strings_file.as_path();
-        if self.asset_server.is_file(path) {
-            self.strings_file_handle
-                .replace(self.asset_server.load(path.to_owned()));
-        } else {
-            panic!("Set language to {language}, but the expected strings file at {path} does not exist.", path = path.display());
-        }
+        self.strings_file_handle
+            .replace(self.asset_server.load(path.to_owned()));
     }
 
     fn get_language(&self) -> Option<Language> {
