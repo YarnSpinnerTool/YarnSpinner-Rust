@@ -181,8 +181,7 @@ mod tests {
                 true.into(),
                 1.0.into(),
             ]))
-            .try_into()
-            .unwrap();
+            .into();
 
         assert!(result1);
         assert_eq!(result2, 3.0);

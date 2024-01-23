@@ -4,3 +4,10 @@ language = "en"
 multilingual = false
 src = "src"
 title = "Yarn Slinger Book"
+
+[output.html]
+git-repository-url = "https://github.com/yarn-slinger/yarn-slinger"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/{path}"
+site-url = "/yarn-slinger/"
+cname = "https://yarn-slinger.github.io"

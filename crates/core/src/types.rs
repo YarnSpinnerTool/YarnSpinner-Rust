@@ -2,7 +2,7 @@
 //! ## Implementation Notes
 //! - `IBridgeableType` is not implemented because it is not actually used anywhere.
 
-pub use {function::*, r#type::*, r#type::*, type_util::*};
+pub use {function::*, r#type::*, type_util::*};
 
 mod any;
 mod boolean;

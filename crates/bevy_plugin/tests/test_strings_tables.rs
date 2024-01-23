@@ -148,7 +148,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     let original_strings_path = project_root_path().join("assets/dialogue/de-CH.strings.csv");
     let strings_file_path = dir.path().join("dialogue/de-CH.strings.csv");
     fs::create_dir_all(strings_file_path.parent().unwrap())?;
-    fs::copy(&original_strings_path, &strings_file_path)?;
+    fs::copy(original_strings_path, &strings_file_path)?;
     let original_strings_file_source = fs::read_to_string(&strings_file_path)?;
     let original_strings_file_line_ids: Vec<_> = original_strings_file_source
         .lines()

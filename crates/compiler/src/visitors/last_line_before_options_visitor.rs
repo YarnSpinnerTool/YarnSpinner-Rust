@@ -82,7 +82,7 @@ impl LastLineBeforeOptionsVisitor {
             }
 
             let Some(shortcut_option_statement) = statement.shortcut_option_statement() else {
-            // we aren't an option, keep moving
+                // we aren't an option, keep moving
                 continue;
             };
             // we need to visit the option in case it has embedded statements

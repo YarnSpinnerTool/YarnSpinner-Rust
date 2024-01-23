@@ -88,7 +88,7 @@ fn select_option(
     let mut selection = None;
     let key_to_option: HashMap<_, _> = NUMBER_KEYS
         .into_iter()
-        .zip(NUMPAD_KEYS.into_iter())
+        .zip(NUMPAD_KEYS)
         .zip(option_selection.options.iter().map(|option| option.id))
         .collect();
     for ((num_key, numpad_key), option) in key_to_option {

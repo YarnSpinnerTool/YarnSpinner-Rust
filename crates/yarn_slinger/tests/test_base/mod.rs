@@ -34,6 +34,7 @@ pub use text_provider::SharedTextProvider;
 use yarn_slinger::log::{self, LevelFilter, SetLoggerError};
 
 pub mod prelude {
+    #[allow(unused_imports)] // False positive
     pub use crate::test_base::{extensions::*, paths::*, step::*, test_plan::*, *};
 }
 
@@ -151,9 +152,9 @@ impl TestBase {
                 match event {
                     DialogueEvent::Line(line) => {
                         println!("Line: {}", line.text);
-                        let Some(test_plan) =  self.test_plan.as_mut() else {
-                        continue;
-                    };
+                        let Some(test_plan) = self.test_plan.as_mut() else {
+                            continue;
+                        };
                         test_plan.next();
 
                         assert_eq!(
@@ -182,8 +183,8 @@ impl TestBase {
                             println!(" - {} (available: {})", option.line, option.enabled);
                         }
                         let Some(test_plan) = self.test_plan.as_mut() else {
-                        continue;
-                    };
+                            continue;
+                        };
 
                         test_plan.next();
                         assert_eq!(
@@ -210,8 +211,8 @@ impl TestBase {
                     DialogueEvent::Command(command) => {
                         println!("Command: {}", command.raw);
                         let Some(test_plan) = self.test_plan.as_mut() else {
-                        continue;
-                    };
+                            continue;
+                        };
                         test_plan.next();
                         assert_eq!(
                         ExpectedStepType::Command,
@@ -236,8 +237,8 @@ impl TestBase {
                     DialogueEvent::LineHints(_) => {}
                     DialogueEvent::DialogueComplete => {
                         let Some(test_plan) = self.test_plan.as_mut() else {
-                        continue;
-                    };
+                            continue;
+                        };
                         test_plan.next();
                         assert_eq!(
                         ExpectedStepType::Stop,

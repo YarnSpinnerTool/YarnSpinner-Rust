@@ -9,8 +9,8 @@ pub(crate) fn add_initial_value_registrations(
     // of the inputs, and create an initial value registration for
     // it.
     let Ok(compilation) = state.result.as_mut().unwrap().as_mut() else {
-            return state;
-        };
+        return state;
+    };
 
     let declarations = state
         .known_variable_declarations
@@ -19,14 +19,16 @@ pub(crate) fn add_initial_value_registrations(
 
     for declaration in declarations {
         let Some(default_value) = declaration.default_value.clone() else {
-                state.diagnostics.push(
-                    Diagnostic::from_message(
-                        format!("Variable declaration {} (type {}) has a null default value. This is not allowed.", declaration.name, declaration.r#type.format())));
-                continue;
-            };
+            state.diagnostics.push(Diagnostic::from_message(format!(
+                "Variable declaration {} (type {}) has a null default value. This is not allowed.",
+                declaration.name,
+                declaration.r#type.format()
+            )));
+            continue;
+        };
         if let Some(ref mut program) = compilation.program {
             let value = match &declaration.r#type {
-                    Type::String => Operand::from(String::try_from(default_value).unwrap()),
+                    Type::String => Operand::from(String::from(default_value)),
                     Type::Number => Operand::from(f32::try_from(default_value).unwrap()),
                     Type::Boolean => Operand::from(bool::try_from(default_value).unwrap()),
                     _ => panic!("Cannot create initial value registration for type {}. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new", declaration.r#type.format()),

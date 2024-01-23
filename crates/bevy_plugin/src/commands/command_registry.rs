@@ -151,7 +151,6 @@ macro_rules! yarn_commands {
 }
 
 use crate::commands::command_registry::wait::Wait;
-pub use yarn_commands;
 
 #[cfg(test)]
 mod tests {
