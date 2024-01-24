@@ -12,7 +12,7 @@ Run the following in your terminal to create a new crate with the required depen
 cargo new yarn_slinger_playground
 cd yarn_slinger_playground
 cargo add bevy --features filesystem_watcher
-cargo add bevy_yarn_slinger bevy_yarn_slinger_example_dialogue_view
+cargo add bevy_yarn_slinger bevy_yarn_slinger_example_dialogue_view --git "https://github.com/yarn-slinger/yarn-slinger"
 ```
 
 The line `cargo add bevy --features filesystem_watcher` ensures that we can use *hot reloading* in our project, which means that we can edit the Yarn files
