@@ -37,8 +37,11 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 
 ```
 
-TODO: Code does not work
-TODO: Mention default dialog view does not support this
-TODO: Where stuff is searched
-TODO: FileExtensionAssetProvider
-TODO: Own AssetProvider?
+## TODO
+- Mention default dialog view does not support this
+- Explain where stuff is searched
+- Mention `FileExtensionAssetProvider`
+- Mention you can write your own `AssetProvider`
+
+Feel free to [contribute](https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/src/bevy_plugin/assets.md)!
+

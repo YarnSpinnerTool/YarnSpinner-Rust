@@ -31,7 +31,7 @@ We call the command like this:
 title: Start
 ---
 Let's print the addition of 1 and 3 in the console:
-<<print_addition(1, 3)>>
+<<print_addition 1 3>>
 ===
 ```
 
@@ -51,14 +51,30 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     commands.spawn(dialogue_runner);
 }
 
-TODO 
-fn insert_resource(In(name): In<&str>) {
-    print!("{a} + {b} = {c}", c = a + b)
+#[derive(Resource)]
+struct Person {
+    name: String,
+    age: f32,
+}
+
+fn insert_resource(In((name, age)): In<(String, f32)>, mut commands: Commands) {
+    commands.insert_resource(Person { name, age });
 }
 ```
 
-TODO
+which we call like this:
 
-TODO mention return types
+```text
+title: Start
+---
+Let's insert a resource into the Bevy world:
+<<insert_resource "Bob" 42>>
+===
+```
+## TODO
 
-TODO mention that no params still needs In param
+- Mention return types
+  - Async or tasks 
+- Mention that we need an In param even if we don't populate it with any values
+
+Feel free to [contribute](https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/src/bevy_plugin/custom_commands.md)!
