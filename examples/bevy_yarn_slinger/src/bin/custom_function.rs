@@ -5,15 +5,17 @@ use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 // For comments about the setup, see hello_world.rs
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(YarnSlingerPlugin::new())
-        .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
-        .add_systems(Startup, setup_camera)
-        .add_systems(
-            Update,
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        )
-        .run();
+    app.add_plugins((
+        DefaultPlugins,
+        YarnSlingerPlugin::new(),
+        ExampleYarnSlingerDialogueViewPlugin::new(),
+    ))
+    .add_systems(Startup, setup_camera)
+    .add_systems(
+        Update,
+        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+    )
+    .run();
 }
 
 fn setup_camera(mut commands: Commands) {

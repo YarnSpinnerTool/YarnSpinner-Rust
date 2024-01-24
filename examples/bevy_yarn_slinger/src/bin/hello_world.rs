@@ -4,20 +4,22 @@ use bevy_yarn_slinger_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
+    app.add_plugins((
+        DefaultPlugins,
         // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder.
         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
-        // .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")))
-        .add_plugins(YarnSlingerPlugin::new())
+        // YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")),
+        YarnSlingerPlugin::new(),
         // Initialize the bundled example UI
-        .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
-        .add_systems(Startup, setup_camera)
-        .add_systems(
-            Update,
-            // Spawn the dialogue runner once the Yarn project has finished compiling
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-        )
-        .run();
+        ExampleYarnSlingerDialogueViewPlugin::new(),
+    ))
+    .add_systems(Startup, setup_camera)
+    .add_systems(
+        Update,
+        // Spawn the dialogue runner once the Yarn project has finished compiling
+        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+    )
+    .run();
 }
 
 fn setup_camera(mut commands: Commands) {
