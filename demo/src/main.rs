@@ -20,52 +20,48 @@ mod yarn_slinger_integration;
 fn main() {
     let mut app = App::new();
     app.insert_resource(AssetMetaCheck::Never)
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Yarn Slinger Story Demo".into(),
-                resolution: (800., 600.).into(),
-                present_mode: PresentMode::AutoVsync,
-                prevent_default_event_handling: false,
-                resizable: false,
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Yarn Slinger Story Demo".into(),
+                    resolution: (800., 600.).into(),
+                    present_mode: PresentMode::AutoVsync,
+                    prevent_default_event_handling: false,
+                    resizable: false,
+                    ..default()
+                }),
                 ..default()
             }),
-            ..default()
-        }))
-        .insert_resource(ClearColor(Color::CYAN));
-    #[cfg(feature = "editor")]
-    app.add_plugins(EditorPlugin::new());
-    app.add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn"))
-            .with_localizations(Localizations {
-                base_localization: "en-US".into(),
-                translations: vec!["de-CH".into()],
-            }),
-    )
-    .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new())
-    .add_plugins(Sprite3dPlugin)
-    .add_systems(Startup, setup)
-    .add_systems(
-        Update,
-        (
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-            adapt_materials.run_if(any_with_component::<SceneInstance>()),
-            spawn_sprites.run_if(sprites_have_loaded),
-        ),
-    )
-    .add_systems(
-        Update,
-        (
-            handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
-            move_camera.run_if(resource_exists::<CameraMovement>()),
-            change_speaker,
-            bob_speaker,
-            rotate_sprite,
-            ease_bang.run_if(any_with_component::<Bang>()),
+            YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
+            ExampleYarnSlingerDialogueViewPlugin::new(),
+            Sprite3dPlugin,
+            #[cfg(feature = "editor")]
+            EditorPlugin::new(),
+        ))
+        .insert_resource(ClearColor(Color::CYAN))
+        .add_systems(Startup, setup)
+        .add_systems(
+            Update,
+            (
+                spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+                adapt_materials.run_if(any_with_component::<SceneInstance>()),
+                spawn_sprites.run_if(sprites_have_loaded),
+            ),
         )
-            .chain()
-            .after(ExampleYarnSlingerDialogueViewSystemSet),
-    )
-    .run();
+        .add_systems(
+            Update,
+            (
+                handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
+                move_camera.run_if(resource_exists::<CameraMovement>()),
+                change_speaker,
+                bob_speaker,
+                rotate_sprite,
+                ease_bang.run_if(any_with_component::<Bang>()),
+            )
+                .chain()
+                .after(ExampleYarnSlingerDialogueViewSystemSet),
+        )
+        .run();
 }
 
 #[derive(Resource)]
