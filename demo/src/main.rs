@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
-use bevy::asset::LoadState;
+use bevy::asset::{AssetMetaCheck, LoadState};
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
@@ -19,18 +19,19 @@ mod yarn_slinger_integration;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: "Yarn Slinger Story Demo".into(),
-            resolution: (800., 600.).into(),
-            present_mode: PresentMode::AutoVsync,
-            prevent_default_event_handling: false,
-            resizable: false,
+    app.insert_resource(AssetMetaCheck::Never)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Yarn Slinger Story Demo".into(),
+                resolution: (800., 600.).into(),
+                present_mode: PresentMode::AutoVsync,
+                prevent_default_event_handling: false,
+                resizable: false,
+                ..default()
+            }),
             ..default()
-        }),
-        ..default()
-    }))
-    .insert_resource(ClearColor(Color::CYAN));
+        }))
+        .insert_resource(ClearColor(Color::CYAN));
     #[cfg(feature = "editor")]
     app.add_plugins(EditorPlugin::new());
     app.add_plugins(
