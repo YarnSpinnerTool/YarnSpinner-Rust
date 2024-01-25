@@ -1,7 +1,7 @@
 # Yarn Slinger
 
 The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. Read more in [The Book™](https://yarn-slinger.github.io/yarn-slinger/) or check out 
-the [live demo](https://janhohenheim.itch.io/yarn-slinger-demo)!.
+the [live demo](https://janhohenheim.itch.io/yarn-slinger-demo)!
 
 [![Yarn Slinger Demo](https://img.itch.zone/aW1hZ2UvMjExMjc5NC8xMjQ0MjEwNy5wbmc=/original/LpAOnR.png)](https://janhohenheim.itch.io/yarn-slinger-demo)
 
@@ -16,4 +16,4 @@ this project.
 
 A slinger is just a _blazingly fast_ spinner ;)
 
-[![Yarn Slinger Benchmark](https://mertindervish.com/static/8ccf11dc03e0e1deacf2141ee0677acf/80585/benchmark.webp)]
+![Yarn Slinger Benchmark](https://mertindervish.com/static/8ccf11dc03e0e1deacf2141ee0677acf/80585/benchmark.webp)
