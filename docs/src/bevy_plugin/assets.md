@@ -34,11 +34,11 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     dialogue_runner.start_node("Start");
     commands.spawn(dialogue_runner);
 }
-
 ```
 
+⚠️ **Note:** The bundled example dialog view does not play any audio files, so you will need to write your own [`dialog view`](./dialog_views.md) to make use of this feature.
+
 ## TODO
-- Mention default dialog view does not support this
 - Explain where stuff is searched
 - Mention `FileExtensionAssetProvider`
 - Mention you can write your own `AssetProvider`
