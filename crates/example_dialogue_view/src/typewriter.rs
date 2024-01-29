@@ -14,17 +14,22 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
+            send_finished_event.run_if(resource_exists::<Typewriter>()),
             despawn.run_if(on_event::<DialogueCompleteEvent>()),
             spawn.run_if(on_event::<DialogueStartEvent>()),
             write_text.run_if(resource_exists::<Typewriter>()),
-            show_continue.run_if(resource_exists_and_changed::<Typewriter>()),
+            show_continue.run_if(resource_exists::<Typewriter>()),
             bob_continue,
         )
             .chain()
             .after(YarnSlingerSystemSet)
             .in_set(ExampleYarnSlingerDialogueViewSystemSet),
-    );
+    )
+    .add_event::<TypewriterFinishedEvent>();
 }
+
+#[derive(Debug, Eq, PartialEq, Hash, Reflect, Event)]
+pub(crate) struct TypewriterFinishedEvent;
 
 #[derive(Debug, Clone, PartialEq, Resource)]
 pub(crate) struct Typewriter {
@@ -134,12 +139,13 @@ fn write_text(
 fn show_continue(
     typewriter: Res<Typewriter>,
     mut visibility: Query<&mut Visibility, With<DialogueContinueNode>>,
+    mut typewriter_finished_event: EventReader<TypewriterFinishedEvent>,
 ) {
-    let mut visibility = visibility.single_mut();
-    if typewriter.is_finished() && !typewriter.last_before_options {
-        *visibility = Visibility::Inherited;
-    } else {
-        *visibility = Visibility::Hidden;
+    for _event in typewriter_finished_event.read() {
+        if !typewriter.last_before_options {
+            let mut visibility = visibility.single_mut();
+            *visibility = Visibility::Inherited;
+        }
     }
 }
 
@@ -164,4 +170,17 @@ fn bob_continue(
     let pixels =
         (time.elapsed_seconds() * 3.0).sin().powi(2) * 5.0 + INITIAL_DIALOGUE_CONTINUE_BOTTOM;
     style.bottom = Val::Px(pixels);
+}
+
+fn send_finished_event(
+    mut events: EventWriter<TypewriterFinishedEvent>,
+    typewriter: Res<Typewriter>,
+    mut last_finished: Local<bool>,
+) {
+    if !typewriter.is_finished() {
+        *last_finished = false;
+    } else if !*last_finished {
+        events.send(TypewriterFinishedEvent);
+        *last_finished = true;
+    }
 }

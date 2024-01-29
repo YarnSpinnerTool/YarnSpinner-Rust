@@ -28,7 +28,7 @@
 //!
 //! ## Inputs
 //!
-//! - Advance the dialogue: press the space bar, left click or tap the screen after the text is done typing.
+//! - Advance the dialogue: press the space bar, enter key, left click or tap the screen after the text is done typing.
 //! - Type out the text faster: Same as above, but hold press before the text is done typing.
 //! - Select an option: press the number key corresponding to the option you want to select or click/tap the option.
 //!

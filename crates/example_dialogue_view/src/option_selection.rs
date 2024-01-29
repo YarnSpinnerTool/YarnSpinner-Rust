@@ -1,5 +1,5 @@
 use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
-use crate::typewriter::{self, Typewriter};
+use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
 use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -10,20 +10,22 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            show_options.run_if(
-                resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
-            ),
+            create_options.run_if(resource_added::<OptionSelection>()),
+            show_options,
             select_option
-                .run_if(
-                    resource_exists::<Typewriter>().and_then(resource_exists::<OptionSelection>()),
-                )
+                .run_if(resource_exists::<OptionSelection>())
                 .before(typewriter::despawn),
+            despawn_options,
         )
             .chain()
             .after(YarnSlingerSystemSet)
             .in_set(ExampleYarnSlingerDialogueViewSystemSet),
-    );
+    )
+    .add_event::<HasSelectedOptionEvent>();
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Event)]
+struct HasSelectedOptionEvent;
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]
 pub(crate) struct OptionSelection {
@@ -41,8 +43,7 @@ impl OptionSelection {
     }
 }
 
-fn show_options(
-    typewriter: Res<Typewriter>,
+fn create_options(
     option_selection: Res<OptionSelection>,
     mut commands: Commands,
     children: Query<&Children>,
@@ -51,11 +52,7 @@ fn show_options(
 ) {
     let (entity, mut style, mut visibility) = options_node.single_mut();
     style.display = Display::Flex;
-    if typewriter.is_finished() {
-        *visibility = Visibility::Inherited;
-    } else {
-        *visibility = Visibility::Hidden;
-    }
+    *visibility = Visibility::Hidden;
     if children.iter_descendants(entity).next().is_none() {
         *root_visibility.single_mut() = Visibility::Inherited;
         let mut entity_commands = commands.entity(entity);
@@ -63,22 +60,28 @@ fn show_options(
     }
 }
 
+fn show_options(
+    mut typewriter_finished_event: EventReader<TypewriterFinishedEvent>,
+    mut options_node: Query<&mut Visibility, With<OptionsNode>>,
+) {
+    for _event in typewriter_finished_event.read() {
+        let mut visibility = options_node.single_mut();
+        *visibility = Visibility::Inherited;
+    }
+}
+
 fn select_option(
-    dialogue_complete_events: EventReader<DialogueCompleteEvent>,
     keys: Res<Input<KeyCode>>,
     typewriter: Res<Typewriter>,
-    mut commands: Commands,
     mut buttons: Query<
         (&Interaction, &OptionButton, &Children),
         (With<Button>, Changed<Interaction>),
     >,
     mut dialogue_runners: Query<&mut DialogueRunner>,
-    mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
-    mut dialogue_node_text: Query<&mut Text, With<DialogueNode>>,
     mut text: Query<&mut Text, Without<DialogueNode>>,
     option_selection: Res<OptionSelection>,
-    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
+    mut selected_option_event: EventWriter<HasSelectedOptionEvent>,
 ) {
     if !typewriter.is_finished() {
         return;
@@ -117,16 +120,33 @@ fn select_option(
             dialogue_runner.select_option(id).unwrap();
         }
     }
-    let should_despawn = has_selected_id || !dialogue_complete_events.is_empty();
-    if should_despawn {
-        commands.remove_resource::<OptionSelection>();
-        let (entity, mut style, mut visibility) = options_node.single_mut();
-        commands.entity(entity).despawn_descendants();
-        style.display = Display::None;
-        *visibility = Visibility::Hidden;
-        *dialogue_node_text.single_mut() = Text::default();
-        *root_visibility.single_mut() = Visibility::Hidden;
+    if has_selected_id {
+        selected_option_event.send(HasSelectedOptionEvent);
     }
+}
+
+fn despawn_options(
+    mut has_selected_option_event: EventReader<HasSelectedOptionEvent>,
+    mut dialogue_complete_event: EventReader<DialogueCompleteEvent>,
+    mut commands: Commands,
+    mut options_node: Query<(Entity, &mut Style, &mut Visibility), With<OptionsNode>>,
+    mut dialogue_node_text: Query<&mut Text, With<DialogueNode>>,
+    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
+) {
+    let should_despawn =
+        !has_selected_option_event.is_empty() || !dialogue_complete_event.is_empty();
+    if !should_despawn {
+        return;
+    }
+    has_selected_option_event.clear();
+    dialogue_complete_event.clear();
+    commands.remove_resource::<OptionSelection>();
+    let (entity, mut style, mut visibility) = options_node.single_mut();
+    commands.entity(entity).despawn_descendants();
+    style.display = Display::None;
+    *visibility = Visibility::Hidden;
+    *dialogue_node_text.single_mut() = Text::default();
+    *root_visibility.single_mut() = Visibility::Hidden;
 }
 
 const NUMBER_KEYS: [KeyCode; 9] = [
