@@ -1,5 +1,5 @@
 use crate::option_selection::OptionSelection;
-use crate::setup::{DialogueNameNode, UiRootNode};
+use crate::setup::{DialogueContinueNode, DialogueNameNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
@@ -9,7 +9,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            hide_dialog.run_if(on_event::<DialogueCompleteEvent>()),
+            hide_dialog,
             show_dialog.run_if(on_event::<DialogueStartEvent>()),
             present_line
                 .run_if(resource_exists::<Typewriter>().and_then(on_event::<PresentLineEvent>())),
@@ -42,8 +42,14 @@ fn show_dialog(mut visibility: Query<&mut Visibility, With<UiRootNode>>) {
     *visibility.single_mut() = Visibility::Inherited;
 }
 
-fn hide_dialog(mut root_visibility: Query<&mut Visibility, With<UiRootNode>>) {
-    *root_visibility.single_mut() = Visibility::Hidden;
+fn hide_dialog(
+    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut dialogue_complete_events: EventReader<DialogueCompleteEvent>,
+) {
+    if !dialogue_complete_events.is_empty() {
+        *root_visibility.single_mut() = Visibility::Hidden;
+        dialogue_complete_events.clear();
+    }
 }
 
 fn present_line(
@@ -82,8 +88,13 @@ fn continue_dialogue(
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut continue_visibility: Query<
+        &mut Visibility,
+        (With<DialogueContinueNode>, Without<UiRootNode>),
+    >,
 ) {
     let explicit_continue = keys.just_pressed(KeyCode::Space)
+        || keys.just_pressed(KeyCode::Return)
         || mouse_buttons.just_pressed(MouseButton::Left)
         || touches.any_just_pressed();
     if explicit_continue && !typewriter.is_finished() {
@@ -95,6 +106,7 @@ fn continue_dialogue(
             if !dialogue_runner.is_waiting_for_option_selection() && dialogue_runner.is_running() {
                 dialogue_runner.continue_in_next_update();
                 *root_visibility.single_mut() = Visibility::Hidden;
+                *continue_visibility.single_mut() = Visibility::Hidden;
             }
         }
     }
