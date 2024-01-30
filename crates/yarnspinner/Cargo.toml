@@ -9,6 +9,7 @@ categories = ["game-development", "compilers"]
 authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 license = "MIT OR Apache-2.0"
 description = "The friendly tool for writing game dialogue"
+readme = "../readme.md"
 
 [features]
 default = []
