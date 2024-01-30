@@ -9,6 +9,7 @@ categories = ["game-development", "compilers"]
 authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 license = "MIT OR Apache-2.0"
 exclude = ["assets", "wasm"]
+description = "Bevy plugin for Yarn Spinner for Rust, friendly tool for writing game dialogue"
 
 [features]
 default = []
