@@ -1,6 +1,6 @@
 # Yarn Spinner for Rust
 [![Crates.io](https://img.shields.io/crates/v/bevy_yarnspinner.svg)](https://crates.io/crates/bevy_yarnspinner)
-[![Docs](https://docs.rs/bevy_yarnspinner/badge.svg)](https://docs.rs/bevy_yarnspinner/latest/bevy/)
+[![Docs](https://docs.rs/bevy_yarnspinner/badge.svg)](https://docs.rs/bevy_yarnspinner/latest/bevy_yarnspinner/)
 [![Discord](https://img.shields.io/discord/754171172693868585.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/yarnspinner)
 > **Note:**
 > Yarn Spinner for Rust is a work-in-progress project. We don't currently offer any official support for it. We encourage you to file [issues](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new) if you have them, and to join the official [Yarn Spinner Discord](https://discord.gg/yarnspinner) to discuss the project!
