@@ -1,4 +1,4 @@
-//! # Yarn Spinner
+//! # Yarn Spinner for Rust
 //! The friendly dialogue creation tool for Rust.
 //!
 //! This crate provides a compiler and runtime that can be used standalone, but will most likely be used by a crate providing the functionality
