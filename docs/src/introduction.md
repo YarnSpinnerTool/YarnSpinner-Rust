@@ -7,4 +7,4 @@ Please click on the link that describes your situation the best.
 
 - [I'm new to all of this](./yarn_files.md)
 - [I have used Yarn Spinner for Unity before](./bevy_plugin.md)
-- [I want to port Yarn Spinner to another language than Rust or another engine than Bevy](./working_without_bevy)
+- [I want to work without Bevy](./working_without_bevy)

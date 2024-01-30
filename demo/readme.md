@@ -1,6 +1,6 @@
-# Yarn Spinner Demo
+# Yarn Spinner for Rust Demo
 
-This crate is a complete example of a demo game showing off all kinds of features of Yarn Spinner.
+This crate is a complete example of a demo game showing off all kinds of features of Yarn Spinner for Rust.
 You can run it natively with
 ```bash
 cargo run --bin bevy_yarnspinner_demo
