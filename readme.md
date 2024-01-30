@@ -1,17 +1,13 @@
-[![Yarn Spinner](https://307131674-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MUzduXovTOfMmBpZ0Wi%2Fuploads%2FDUaJ7FssCLzkSZ8zPdrV%2FYarnSpinner-Logo-Colour-LightBG.png?alt=media&token=29fa2c7b-9052-4024-a085-904b1b27fa4e)
-
 # Yarn Spinner for Rust
 [![Crates.io](https://img.shields.io/crates/v/bevy_yarnspinner.svg)](https://crates.io/crates/bevy_yarnspinner)
-[![Downloads](https://img.shields.io/crates/d/bevy_yarnspinner.svg)](https://crates.io/crates/bevy_yarnspinner)
 [![Docs](https://docs.rs/bevy_yarnspinner/badge.svg)](https://docs.rs/bevy_yarnspinner/latest/bevy/)
-
+[![Discord](https://img.shields.io/discord/754171172693868585.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/yarnspinner)
 > **Note:**
 > Yarn Spinner for Rust is a work-in-progress project. We don't currently offer any official support for it. We encourage you to file [issues](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new) if you have them, and to join the official [Yarn Spinner Discord](https://discord.gg/yarnspinner) to discuss the project!
 
 The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. Read more in [The Book™](https://yarnspinnertool.github.io/YarnSpinner-Rust/) or check out 
 the [live demo](https://janhohenheim.itch.io/yarnspinner-rust-demo), which was written using the [Bevy engine](https://bevyengine.org/).
-
-This project has first class support for Bevy and assumes you are using it. If you are not, check out the [relevant section of the book](https://yarnspinnertool.github.io/YarnSpinner-Rust/working_without_bevy)
+This project offers first class support for Bevy and assumes you are using it. If you are not, check out the [relevant section of the book](https://yarnspinnertool.github.io/YarnSpinner-Rust/working_without_bevy)
 
 [![Yarn Spinner for Rust Demo](https://img.itch.zone/aW1hZ2UvMjExMjc5NC8xMjQ0MjEwNy5wbmc=/original/LpAOnR.png)](https://janhohenheim.itch.io/yarn-slinger-demo)
 
