@@ -1,7 +1,7 @@
 //! In an ideal world, this would just be a new thread doing `sleep`.
 //! Alas, Wasm forces us to do this
 
-use crate::prelude::YarnSlingerSystemSet;
+use crate::prelude::YarnSpinnerSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -10,7 +10,7 @@ use std::time::Duration;
 
 pub(crate) fn wait_command_plugin(app: &mut App) {
     app.init_resource::<Wait>()
-        .add_systems(Update, update_wait.in_set(YarnSlingerSystemSet));
+        .add_systems(Update, update_wait.in_set(YarnSpinnerSystemSet));
 }
 
 #[derive(Debug, Clone, Resource, Default)]

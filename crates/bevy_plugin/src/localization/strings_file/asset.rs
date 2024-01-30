@@ -79,7 +79,7 @@ impl StringsFile {
         if let Some(language) = self.language() {
             if language != other.language().unwrap() {
                 bail!("Cannot update contents of strings file with another strings file that contains a different language. \
-                Expected \"{:?}\", got \"{:?}\". This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new",
+                Expected \"{:?}\", got \"{:?}\". This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new",
                     self.language(), other.language())
             }
         }

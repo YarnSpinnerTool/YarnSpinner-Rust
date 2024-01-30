@@ -17,11 +17,11 @@ pub(crate) fn project_plugin(app: &mut App) {
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
 pub(crate) struct CompilationSystemSet;
 
-/// The compiled Yarn project built from the Yarn files passed to the [`YarnSlingerPlugin`], or, in the deferred loading case, the Yarn files passed to the [`LoadYarnProjectEvent`].
+/// The compiled Yarn project built from the Yarn files passed to the [`YarnSpinnerPlugin`], or, in the deferred loading case, the Yarn files passed to the [`LoadYarnProjectEvent`].
 /// This [`Resource`](bevy::prelude::Resource) is inserted into the world automatically for you once all files have been loaded and compiled. You can react to this by configuring a system like this:
 /// ```rust
 /// # use bevy::prelude::*;
-/// # use bevy_yarn_slinger::prelude::*;
+/// # use bevy_yarnspinner::prelude::*;
 /// # let mut app = App::new();
 /// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
 ///
@@ -54,7 +54,7 @@ impl Debug for YarnProject {
 }
 
 impl YarnProject {
-    /// Iterates over the [`YarnFile`]s that were used to compile this project. These will be the files passed to the [`YarnSlingerPlugin`] or the [`LoadYarnProjectEvent`].
+    /// Iterates over the [`YarnFile`]s that were used to compile this project. These will be the files passed to the [`YarnSpinnerPlugin`] or the [`LoadYarnProjectEvent`].
     pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
         self.yarn_files.iter()
     }
@@ -64,7 +64,7 @@ impl YarnProject {
         &self.compilation
     }
 
-    /// Returns the [`Localizations`] of this project, if any. These come from [`YarnSlingerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
+    /// Returns the [`Localizations`] of this project, if any. These come from [`YarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
     pub fn localizations(&self) -> Option<&Localizations> {
         self.localizations.as_ref()
     }
@@ -105,8 +105,8 @@ impl YarnProject {
     }
 }
 
-/// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSlingerPlugin::deferred`].
-/// If you know the Yarn files at the start of the game, you should use [`YarnSlingerPlugin::with_yarn_sources`] instead.
+/// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSpinnerPlugin::deferred`].
+/// If you know the Yarn files at the start of the game, you should use [`YarnSpinnerPlugin::with_yarn_sources`] instead.
 #[derive(Debug, Clone, PartialEq, Eq, Event)]
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
@@ -125,7 +125,7 @@ impl Default for LoadYarnProjectEvent {
 }
 
 impl LoadYarnProjectEvent {
-    /// See [`YarnSlingerPlugin::new`]. Shares the same limitations regarding platform support.
+    /// See [`YarnSpinnerPlugin::new`]. Shares the same limitations regarding platform support.
     #[must_use]
     pub fn new() -> Self {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
@@ -141,7 +141,7 @@ impl LoadYarnProjectEvent {
         }
     }
 
-    /// See [`YarnSlingerPlugin::with_yarn_sources`].
+    /// See [`YarnSpinnerPlugin::with_yarn_sources`].
     #[must_use]
     pub fn with_yarn_sources<T, U>(yarn_files: T) -> Self
     where
@@ -159,20 +159,20 @@ impl LoadYarnProjectEvent {
         }
     }
 
-    /// See [`YarnSlingerPlugin::with_yarn_source`].
+    /// See [`YarnSpinnerPlugin::with_yarn_source`].
     #[must_use]
     pub fn with_yarn_source(yarn_file_source: impl Into<YarnFileSource>) -> Self {
         Self::with_yarn_sources(iter::once(yarn_file_source))
     }
 
-    /// See [`YarnSlingerPlugin::add_yarn_source`].
+    /// See [`YarnSpinnerPlugin::add_yarn_source`].
     #[must_use]
     pub fn add_yarn_source(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.yarn_files.insert(yarn_file.into());
         self
     }
 
-    /// See [`YarnSlingerPlugin::add_yarn_sources`].
+    /// See [`YarnSpinnerPlugin::add_yarn_sources`].
     #[must_use]
     pub fn add_yarn_sources(
         mut self,
@@ -183,7 +183,7 @@ impl LoadYarnProjectEvent {
         self
     }
 
-    /// See [`YarnSlingerPlugin::with_localizations`].
+    /// See [`YarnSpinnerPlugin::with_localizations`].
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
@@ -191,7 +191,7 @@ impl LoadYarnProjectEvent {
         self
     }
 
-    /// See [`YarnSlingerPlugin::with_development_file_generation`].
+    /// See [`YarnSpinnerPlugin::with_development_file_generation`].
     #[must_use]
     pub fn with_development_file_generation(
         mut self,
@@ -200,7 +200,7 @@ impl LoadYarnProjectEvent {
         self.development_file_generation = development_file_generation;
         if cfg!(any(target_arch = "wasm32", target_os = "android")) {
             assert_eq!(self.development_file_generation, DevelopmentFileGeneration::None,
-                       "Failed to build Yarn Slinger plugin: On `DevelopmentFileGeneration::None` is supported on this platform.");
+                       "Failed to build Yarn Spinner plugin: On `DevelopmentFileGeneration::None` is supported on this platform.");
         }
         self
     }

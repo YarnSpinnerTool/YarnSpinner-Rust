@@ -1,7 +1,7 @@
 use crate::line_provider::LineAssets;
 use crate::prelude::*;
 use bevy::prelude::*;
-use yarn_slinger::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
+use yarnspinner::runtime::{CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY};
 
 pub(crate) fn localized_line_plugin(_app: &mut App) {}
 
@@ -35,7 +35,7 @@ impl LocalizedLine {
     /// When there is a name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Alice: Hello! How are you today?".to_owned(),
@@ -56,7 +56,7 @@ impl LocalizedLine {
     /// When there is no name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
@@ -72,7 +72,7 @@ impl LocalizedLine {
                 let MarkupValue::String(name) = name else {
                     panic!(
                         "Attribute \"character\" has a \"name\" property, but it is not a string. \
-                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"
+                         This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"
                     );
                 };
                 return Some(name.as_str());
@@ -88,7 +88,7 @@ impl LocalizedLine {
     /// When there is a name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Alice: Hello! How are you today?".to_owned(),
@@ -109,7 +109,7 @@ impl LocalizedLine {
     /// When there is no name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),

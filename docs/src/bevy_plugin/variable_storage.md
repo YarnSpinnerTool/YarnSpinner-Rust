@@ -1,3 +1,3 @@
 # Variable Storage
 
-TODO (Feel free to [contribute](https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/src/bevy_plugin/variable_storage.md)!)
+TODO (Feel free to [contribute](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/edit/main/docs/src/bevy_plugin/variable_storage.md)!)

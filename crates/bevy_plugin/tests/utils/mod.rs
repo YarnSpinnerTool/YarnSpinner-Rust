@@ -4,8 +4,8 @@ use bevy::asset::LoadedUntypedAsset;
 #[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger::UnderlyingYarnLine;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner::UnderlyingYarnLine;
 use std::path::{Path, PathBuf};
 
 pub mod assertion;

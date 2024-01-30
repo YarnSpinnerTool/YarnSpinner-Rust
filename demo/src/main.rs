@@ -1,7 +1,7 @@
 // Disable windows console in release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use self::{setup::*, visual_effects::*, yarn_slinger_integration::*};
+use self::{setup::*, visual_effects::*, yarnspinner_integration::*};
 use bevy::asset::{AssetMetaCheck, LoadState};
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
@@ -9,13 +9,13 @@ use bevy::window::PresentMode;
 #[cfg(feature = "editor")]
 use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner_example_dialogue_view::prelude::*;
 
 mod easing;
 mod setup;
 mod visual_effects;
-mod yarn_slinger_integration;
+mod yarnspinner_integration;
 
 fn main() {
     let mut app = App::new();
@@ -23,7 +23,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
-                    title: "Yarn Slinger Story Demo".into(),
+                    title: "Yarn Spinner Story Demo".into(),
                     resolution: (800., 600.).into(),
                     present_mode: PresentMode::AutoVsync,
                     prevent_default_event_handling: false,
@@ -32,8 +32,8 @@ fn main() {
                 }),
                 ..default()
             }),
-            YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
-            ExampleYarnSlingerDialogueViewPlugin::new(),
+            YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
+            ExampleYarnSpinnerDialogueViewPlugin::new(),
             Sprite3dPlugin,
             #[cfg(feature = "editor")]
             EditorPlugin::new(),
@@ -59,7 +59,7 @@ fn main() {
                 ease_bang.run_if(any_with_component::<Bang>()),
             )
                 .chain()
-                .after(ExampleYarnSlingerDialogueViewSystemSet),
+                .after(ExampleYarnSpinnerDialogueViewSystemSet),
         )
         .run();
 }

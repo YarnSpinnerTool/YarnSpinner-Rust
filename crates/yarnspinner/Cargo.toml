@@ -1,0 +1,30 @@
+[package]
+name = "yarnspinner"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[features]
+default = []
+
+serde = [
+    "yarnspinner_core/serde",
+    "yarnspinner_compiler/serde",
+    "yarnspinner_runtime/serde",
+]
+
+bevy = [
+    "yarnspinner_core/bevy",
+    "yarnspinner_compiler/bevy",
+    "yarnspinner_runtime/bevy",
+]
+
+[dependencies]
+yarnspinner_core = { path = "../core" }
+yarnspinner_compiler = { path = "../compiler" }
+yarnspinner_runtime = { path = "../runtime" }
+log = { version = "0.4", features = ["std"] }
+
+[dev-dependencies]
+regex = "1"
+anyhow = "1"

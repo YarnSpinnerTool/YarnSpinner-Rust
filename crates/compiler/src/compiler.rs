@@ -3,7 +3,7 @@
 
 use crate::prelude::*;
 use std::path::Path;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 mod add_tags_to_lines;
 pub(crate) mod antlr_rust_ext;

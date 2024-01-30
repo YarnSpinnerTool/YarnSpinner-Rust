@@ -21,7 +21,7 @@ use antlr_rust::{
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
 use std::rc::Rc;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 // To ensure we don't accidentally use the wrong lexer, this will produce errors on use.
 #[allow(dead_code)]

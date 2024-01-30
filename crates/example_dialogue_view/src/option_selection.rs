@@ -1,10 +1,10 @@
 use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
 use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
-use crate::ExampleYarnSlingerDialogueViewSystemSet;
+use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
-use bevy_yarn_slinger::{events::*, prelude::*};
+use bevy_yarnspinner::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(
@@ -18,8 +18,8 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             despawn_options,
         )
             .chain()
-            .after(YarnSlingerSystemSet)
-            .in_set(ExampleYarnSlingerDialogueViewSystemSet),
+            .after(YarnSpinnerSystemSet)
+            .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
     .add_event::<HasSelectedOptionEvent>();
 }

@@ -5,7 +5,7 @@ use crate::prelude::*;
 use log::error;
 use std::fmt::Debug;
 use thiserror::Error;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
 ///

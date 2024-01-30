@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarnspinner::prelude::*;
 use utils::prelude::*;
 
 mod utils;
@@ -9,7 +9,7 @@ fn loads_line_without_localization() {
     let mut app = App::new();
 
     app.setup_default_plugins()
-        .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+        .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
             "lines_with_ids.yarn",
         )));
 
@@ -26,7 +26,7 @@ fn fails_to_get_invalid_line() {
     let mut app = App::new();
 
     app.setup_default_plugins()
-        .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+        .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
             "lines_with_ids.yarn",
         )));
 
@@ -42,7 +42,7 @@ fn loads_line_from_base_language_without_explicit_language() {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -65,7 +65,7 @@ fn loads_line_from_base_language_with_explicit_language() {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -91,7 +91,7 @@ fn panics_when_loading_missing_language() {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -109,7 +109,7 @@ fn loads_line_from_fallback_on_missing_line() {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -134,7 +134,7 @@ fn loads_line_from_translated_language() {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],

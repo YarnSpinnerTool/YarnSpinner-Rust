@@ -6,7 +6,7 @@
 use crate::markup::normalize;
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
-use yarn_slinger_core::prelude::YarnValue;
+use yarnspinner_core::prelude::YarnValue;
 
 /// A custom command found in a Yarn file within the `<<` and `>>` characters.
 #[derive(Debug, Clone, PartialEq)]
@@ -42,13 +42,13 @@ impl Command {
     pub(crate) fn parse(input: String) -> Self {
         assert!(!input.trim().is_empty(), "Failed to parse the command \"{input}\" because it is composed entirely of whitespace. \
             Help: You might have passed an expression that evaluates to whitespace, e.g. `{{0}} {{\"  \"}}`. \
-            If you think this is a bug, please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+            If you think this is a bug, please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
 
         let mut components = split_command_text(&input);
         assert!(
             !components.is_empty(),
             "Parsing the command \"{}\" resulted in an empty list of components. \
-            This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new",
+            This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new",
             input
         );
         let name = components.remove(0);

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use bevy::prelude::*;
 use bevy::utils::Instant;
-use bevy_yarn_slinger::{events::*, prelude::*};
+use bevy_yarnspinner::{events::*, prelude::*};
 use std::thread::sleep;
 use utils::prelude::*;
 
@@ -122,7 +122,7 @@ impl CommandAppExt for App {
     fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
         let mut dialogue_runner = self
             .setup_default_plugins()
-            .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+            .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "commands.yarn",
             )))
             .dialogue_runner_mut();
@@ -142,7 +142,7 @@ impl CommandAppExt for App {
 
     fn setup_dialogue_runner_for_wait(&mut self) -> Mut<DialogueRunner> {
         self.setup_default_plugins()
-            .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+            .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "wait.yarn",
             )))
             .dialogue_runner_mut()

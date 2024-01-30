@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 pub(crate) fn panic_on_err(In(result): In<SystemResult>) {
     if let Err(e) = result {
-        panic!("Error in Yarn Slinger plugin: {e}");
+        panic!("Error in Yarn Spinner plugin: {e}");
     }
 }
 

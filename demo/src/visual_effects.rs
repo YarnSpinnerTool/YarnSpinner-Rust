@@ -1,6 +1,6 @@
 use crate::easing::EasedChange;
 use crate::setup::{MainCamera, StageCurtains};
-use crate::yarn_slinger_integration::Speaker;
+use crate::yarnspinner_integration::Speaker;
 use bevy::prelude::*;
 use std::fmt::Debug;
 use std::ops::DerefMut;

@@ -34,7 +34,7 @@ pub struct DialogueOption {
 
 impl DialogueOption {
     pub(crate) fn from_yarn_dialogue_option(
-        yarn_dialogue_option: yarn_slinger::prelude::DialogueOption,
+        yarn_dialogue_option: yarnspinner::prelude::DialogueOption,
         assets: LineAssets,
         metadata: Vec<String>,
     ) -> Self {

@@ -26,6 +26,6 @@ And everyone lived happily ever after.
 ===
 ```
 
-If you're running the example in Yarn Slinger, you can advance the dialogue
+If you're running the example in Yarn Spinner, you can advance the dialogue
 by pressing the space bar, enter key, clicking the mouse, or tapping the screen. Remember that you can
 change the Yarn file while the game is running, so no need to restart the program!

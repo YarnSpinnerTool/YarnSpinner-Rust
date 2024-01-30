@@ -1,17 +1,17 @@
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
     app.add_plugins((
         DefaultPlugins,
-        // Register the Yarn Slinger plugin using its default settings, which will look for Yarn files in the "dialogue" folder.
+        // Register the Yarn Spinner plugin using its default settings, which will look for Yarn files in the "dialogue" folder.
         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
-        // YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")),
-        YarnSlingerPlugin::new(),
+        // YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")),
+        YarnSpinnerPlugin::new(),
         // Initialize the bundled example UI
-        ExampleYarnSlingerDialogueViewPlugin::new(),
+        ExampleYarnSpinnerDialogueViewPlugin::new(),
     ))
     .add_systems(Startup, setup_camera)
     .add_systems(

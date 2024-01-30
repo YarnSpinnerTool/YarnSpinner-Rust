@@ -10,7 +10,7 @@ use bevy::pbr::NotShadowCaster;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams};
-use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+use bevy_yarnspinner_example_dialogue_view::prelude::*;
 use std::f32::consts::PI;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;

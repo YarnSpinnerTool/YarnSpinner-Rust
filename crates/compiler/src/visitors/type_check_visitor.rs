@@ -11,8 +11,8 @@ use antlr_rust::token::Token;
 use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
 use std::path::Path;
-use yarn_slinger_core::prelude::*;
-use yarn_slinger_core::types::*;
+use yarnspinner_core::prelude::*;
+use yarnspinner_core::types::*;
 
 mod check_operation;
 
@@ -273,7 +273,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Type::Function(mut function_type) = function_declaration.r#type.clone() else {
-                unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new")
+                unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new")
             };
 
             // we have an existing function but its undefined
@@ -537,7 +537,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 let operator = CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
-            _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new", op.get_text())
+            _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new", op.get_text())
         }
         if variable_type.is_none() && expression_type.is_none() {
             self.diagnostics.push(

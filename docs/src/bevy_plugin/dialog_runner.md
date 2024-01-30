@@ -49,7 +49,7 @@ nearly all users. The only reason you might have to create an own `TextProvider`
 translating text automatically through AI.
 
 Assets are provided by `AssetProvider`s. In contrast to the `TextProvider`, you might very well create your own `AssetProvider`. 
-For your convenience, Yarn Slinger already ships with an `AudioAssetProvider` that you can use for voice lines and a `FileExtensionAssetProvider` 
+For your convenience, Yarn Spinner already ships with an `AudioAssetProvider` that you can use for voice lines and a `FileExtensionAssetProvider` 
 that can load any asset based on naming conventions and file extensions. See the chapter [Assets](assets.md).
 
 Text and asset providers can be set through the builder API and accessed later with `DialogRunner::text_provider()` and `DialogRunner::asset_providers()`. If you know the exact type `T` of `AssetProvider` you

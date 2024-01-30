@@ -7,7 +7,7 @@ use antlr_rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 mod emit;
 use crate::parser::generated::yarnspinnerparser::{
@@ -17,7 +17,7 @@ use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::visitors::{CodeGenerationVisitor, KnownTypes};
 pub(crate) use emit::*;
-use yarn_slinger_core::prelude::OpCode;
+use yarnspinner_core::prelude::OpCode;
 
 pub(crate) struct CompilerListener<'input> {
     pub(crate) debug_infos: Rc<RefCell<Vec<DebugInfo>>>,

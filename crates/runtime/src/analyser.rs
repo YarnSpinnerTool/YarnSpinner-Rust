@@ -3,7 +3,7 @@
 pub(crate) use self::default_analysers::*;
 pub use self::{context::*, diagnosis::*};
 use std::fmt::Debug;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 mod context;
 pub(crate) mod default_analysers;

@@ -2,16 +2,16 @@
 
 If you only want to support a single language, you can safely ignore localization features.
 As soon as you want to support [assets](assets.md) or multiple languages however, you will need to use localization.
-Fortunately Yarn Slinger makes this quite easy!
+Fortunately Yarn Spinner makes this quite easy!
 
 Let's first look at how to use localization and then explain what's going on under the hood.
 
 ## Using Localization the Easy Way
 
-We specify our supported localizations when creating the [`YarnSlingerPlugin` (or using deferred compilation)](compiling_yarn_files.md):
+We specify our supported localizations when creating the [`YarnSpinnerPlugin` (or using deferred compilation)](compiling_yarn_files.md):
 
 ```rust
-YarnSlingerPlugin::new().with_localizations(Localizations {
+YarnSpinnerPlugin::new().with_localizations(Localizations {
     base_localization: "en-US".into(),
     translations: vec!["de-CH".into()],
 })
@@ -121,7 +121,7 @@ This allows you to support use cases such as showing the text in the player's na
 Since assets require using localization, they are searched for in folders named after the language they support. 
 For the example used throughout this chapter, the assets for the base localization would be searched for in `assets/dialog/en-US/`, while the assets for the `de-CH` 
 translation will be searched at `assets/dialog/de-CH/`. This is however more a convention than a rule, as a given `AssetProvider` is allowed to look for its assets wherever.
-The asset providers shipped by Yarn Slinger will additionally expect assets to be named after the line ID they belong to. For example, the `AudioAssetProvider` would look for the
+The asset providers shipped by Yarn Spinner will additionally expect assets to be named after the line ID they belong to. For example, the `AudioAssetProvider` would look for the
 voice line reading our "Hello World!" line at `assets/dialog/en-US/13032079.mp3` for the base localization.
 
 To read more about how to use assets, read the chapter [Assets](./assets.md).
@@ -145,7 +145,7 @@ Bottom line: if there's a translation, it will **never** be removed.
 Once you want to build your game for a release, you should disable the automatic file creation and editing.
 To do this, add the following line to the plugin creation:
 ```rust
-YarnSlingerPlugin::new()
+YarnSpinnerPlugin::new()
 // ...
 .with_development_file_generation(DevelopmentFileGeneration::None)
 ```
@@ -159,7 +159,7 @@ While you're on it, you might also want to disable Bevy's hot reloading.
 You may have wondered what the `.into()`s were for in the lines at the beginning of the chapter:
 
 ```rust
-YarnSlingerPlugin::new().with_localizations(Localizations {
+YarnSpinnerPlugin::new().with_localizations(Localizations {
     base_localization: "en-US".into(),
     translations: vec!["de-CH".into()],
 })

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 use thiserror::Error;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 #[allow(missing_docs)]
 pub type Result<T> = std::result::Result<T, VariableStorageError>;

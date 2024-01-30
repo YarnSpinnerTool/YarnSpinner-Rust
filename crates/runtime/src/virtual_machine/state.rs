@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 use std::fmt::Debug;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]

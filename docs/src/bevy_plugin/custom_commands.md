@@ -77,4 +77,4 @@ Let's insert a resource into the Bevy world:
   - Async or tasks 
 - Mention that we need an In param even if we don't populate it with any values
 
-Feel free to [contribute](https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/src/bevy_plugin/custom_commands.md)!
+Feel free to [contribute](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/edit/main/docs/src/bevy_plugin/custom_commands.md)!

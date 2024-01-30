@@ -2,7 +2,7 @@
 //! which was split into multiple files.
 
 use crate::prelude::*;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 /// A structure that holds several [`CompiledProgramAnalyser`]s which are used to analyse one or more compiled Yarn programs with [`Dialogue::analyse`].
 /// To get the analysis results, call [`Context::finish_analysis`] afterwards.

@@ -1,19 +1,19 @@
 [package]
-name = "yarn_slinger_compiler"
+name = "yarnspinner_compiler"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [features]
 default = []
-serde = ["dep:serde", "bevy?/serialize", "yarn_slinger_core/serde"]
-bevy = ["dep:bevy", "yarn_slinger_core/bevy"]
+serde = ["dep:serde", "bevy?/serialize", "yarnspinner_core/serde"]
+bevy = ["dep:bevy", "yarnspinner_core/bevy"]
 
 [dependencies]
 antlr-rust = "=0.3.0-beta"
 better_any = "=0.2.0"
 regex = "1"
-yarn_slinger_core = { path = "../core" }
+yarnspinner_core = { path = "../core" }
 thiserror = "1"
 strum = "0.25"
 strum_macros = "0.25"

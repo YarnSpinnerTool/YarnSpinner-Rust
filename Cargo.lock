@@ -1258,7 +1258,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_yarn_slinger"
+name = "bevy_yarnspinner"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1270,26 +1270,26 @@ dependencies = [
  "serde",
  "sha2",
  "tempfile",
- "yarn_slinger",
+ "yarnspinner",
 ]
 
 [[package]]
-name = "bevy_yarn_slinger_demo"
+name = "bevy_yarnspinner_demo"
 version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_editor_pls",
  "bevy_sprite3d",
- "bevy_yarn_slinger",
- "bevy_yarn_slinger_example_dialogue_view",
+ "bevy_yarnspinner",
+ "bevy_yarnspinner_example_dialogue_view",
 ]
 
 [[package]]
-name = "bevy_yarn_slinger_example_dialogue_view"
+name = "bevy_yarnspinner_example_dialogue_view"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_yarn_slinger",
+ "bevy_yarnspinner",
  "seldom_fn_plugin",
  "unicode-segmentation",
 ]
@@ -5041,19 +5041,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fcb9cbac069e033553e8bb871be2fbdffcab578eb25bd0f7c508cedc6dcd75a"
 
 [[package]]
-name = "yarn_slinger"
+name = "yarnspinner"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "log",
  "regex",
- "yarn_slinger_compiler",
- "yarn_slinger_core",
- "yarn_slinger_runtime",
+ "yarnspinner_compiler",
+ "yarnspinner_core",
+ "yarnspinner_runtime",
 ]
 
 [[package]]
-name = "yarn_slinger_codegen"
+name = "yarnspinner_codegen"
 version = "0.1.0"
 dependencies = [
  "prost",
@@ -5061,7 +5061,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "yarn_slinger_compiler"
+name = "yarnspinner_compiler"
 version = "0.1.0"
 dependencies = [
  "annotate-snippets",
@@ -5074,11 +5074,11 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror",
- "yarn_slinger_core",
+ "yarnspinner_core",
 ]
 
 [[package]]
-name = "yarn_slinger_core"
+name = "yarnspinner_core"
 version = "0.1.0"
 dependencies = [
  "bevy",
@@ -5089,20 +5089,20 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror",
- "yarn_slinger_macros",
+ "yarnspinner_macros",
 ]
 
 [[package]]
-name = "yarn_slinger_examples"
+name = "yarnspinner_examples"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_yarn_slinger",
- "bevy_yarn_slinger_example_dialogue_view",
+ "bevy_yarnspinner",
+ "bevy_yarnspinner_example_dialogue_view",
 ]
 
 [[package]]
-name = "yarn_slinger_macros"
+name = "yarnspinner_macros"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -5111,7 +5111,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "yarn_slinger_runtime"
+name = "yarnspinner_runtime"
 version = "0.1.0"
 dependencies = [
  "bevy",
@@ -5125,7 +5125,7 @@ dependencies = [
  "thiserror",
  "unicode-normalization",
  "unicode-segmentation",
- "yarn_slinger_core",
+ "yarnspinner_core",
 ]
 
 [[package]]

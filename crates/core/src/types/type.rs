@@ -278,6 +278,6 @@ impl From<&YarnValue> for Type {
 /// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
 #[allow(missing_docs)]
 pub enum InvalidDowncastError {
-    #[error("Cannot convert TypeId {:?} to a Yarn Slinger `Type`", .0)]
+    #[error("Cannot convert TypeId {:?} to a Yarn Spinner `Type`", .0)]
     InvalidTypeId(TypeId),
 }

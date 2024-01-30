@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use yarn_slinger::log::{self, Level, Metadata, Record};
+use yarnspinner::log::{self, Level, Metadata, Record};
 
 pub(crate) struct TestLogger {
     runtime_errors_cause_failure: Arc<AtomicBool>,

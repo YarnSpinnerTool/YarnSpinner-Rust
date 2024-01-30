@@ -3,7 +3,7 @@ use crate::prelude::Language;
 use log::error;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 /// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue). The default implementation is [`StringTableTextProvider`], which keeps the
 /// text for the base language, i.e. the language the Yarn files are written in, and the text for the currently selected translation in memory.

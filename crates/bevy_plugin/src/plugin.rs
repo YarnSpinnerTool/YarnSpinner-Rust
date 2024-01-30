@@ -6,11 +6,11 @@ pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
-/// The plugin that provides all Yarn Slinger functionality.
-/// In general, you'll want to create this by searching for Yarn files in "assets/dialogue", which [`YarnSlingerPlugin::new`] does under the hood.
-/// You can also provide a list of Yarn files to load via [`YarnSlingerPlugin::with_yarn_sources`].
+/// The plugin that provides all Yarn Spinner functionality.
+/// In general, you'll want to create this by searching for Yarn files in "assets/dialogue", which [`YarnSpinnerPlugin::new`] does under the hood.
+/// You can also provide a list of Yarn files to load via [`YarnSpinnerPlugin::with_yarn_sources`].
 /// If you however do not know the paths to any files nor have them in-memory at the start of the program,
-/// use [`YarnSlingerPlugin::deferred`] instead to later load the files by sending a [`LoadYarnProjectEvent`].
+/// use [`YarnSpinnerPlugin::deferred`] instead to later load the files by sending a [`LoadYarnProjectEvent`].
 ///
 /// Needs to be added after the [`AssetPlugin`] which is usually added as part of the [`DefaultPlugins`].
 ///
@@ -18,36 +18,36 @@ mod yarn_file_source;
 ///
 /// ```no_run
 /// use bevy::prelude::*;
-/// use bevy_yarn_slinger::prelude::*;
+/// use bevy_yarnspinner::prelude::*;
 ///
 /// App::new()
 ///     .add_plugins(DefaultPlugins)
 ///     // Load all Yarn files from the "assets/dialogue" folder by default.
-///     .add_plugins(YarnSlingerPlugin::new());
+///     .add_plugins(YarnSpinnerPlugin::new());
 /// ```
 ///
-/// Note that the above does not work on Wasm or Android, since Bevy cannot query folders on these platforms. See [`YarnSlingerPlugin::new`] for more information.
+/// Note that the above does not work on Wasm or Android, since Bevy cannot query folders on these platforms. See [`YarnSpinnerPlugin::new`] for more information.
 ///
 /// For more information on how this plugin interacts with the rest of the crate, see the crate-level documentation.
 #[derive(Debug, Default)]
-pub struct YarnSlingerPlugin {
+pub struct YarnSpinnerPlugin {
     project: LoadYarnProjectEvent,
 }
 
-/// The [`SystemSet`] containing all systems used by the [`YarnSlingerPlugin`].
+/// The [`SystemSet`] containing all systems used by the [`YarnSpinnerPlugin`].
 #[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
-pub struct YarnSlingerSystemSet;
+pub struct YarnSpinnerSystemSet;
 
-impl YarnSlingerPlugin {
+impl YarnSpinnerPlugin {
     /// Creates a new plugin that loads Yarn files from the folder "assets/dialogue" when not on Wasm or Android.
     /// Otherwise this panics since Bevy cannot query folders on these platforms.
-    /// Use [`YarnSlingerPlugin::with_yarn_source`] or [`YarnSlingerPlugin::with_yarn_sources`] there instead.
+    /// Use [`YarnSpinnerPlugin::with_yarn_source`] or [`YarnSpinnerPlugin::with_yarn_sources`] there instead.
     ///
     /// All Yarn files will be shared across [`DialogueRunner`]s.
     /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
     /// these Yarn files will be recompiled if they change during runtime.
     ///
-    /// Calling this is equivalent to calling [`YarnSlingerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
+    /// Calling this is equivalent to calling [`YarnSpinnerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
     #[must_use]
     pub fn new() -> Self {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
@@ -57,9 +57,9 @@ impl YarnSlingerPlugin {
         #[cfg(any(target_arch = "wasm32", target_os = "android"))]
         {
             panic!(
-                "YarnSlingerPlugin::new() is not supported on this platform because it tries to load files from the \"dialogue\" directory in the assets folder. \
+                "YarnSpinnerPlugin::new() is not supported on this platform because it tries to load files from the \"dialogue\" directory in the assets folder. \
                 However, this platform does not allow loading a file without naming it explicitly. \
-                Use `YarnSlingerPlugin::with_yarn_source` or `YarnSlingerPlugin::with_yarn_sources` instead.")
+                Use `YarnSpinnerPlugin::with_yarn_source` or `YarnSpinnerPlugin::with_yarn_sources` instead.")
         }
     }
 
@@ -73,8 +73,8 @@ impl YarnSlingerPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use bevy_yarn_slinger::prelude::*;
-    /// let plugin = YarnSlingerPlugin::with_yarn_sources([
+    /// use bevy_yarnspinner::prelude::*;
+    /// let plugin = YarnSpinnerPlugin::with_yarn_sources([
     ///    YarnFileSource::file("some_dialogue.yarn"),
     ///    YarnFileSource::file("some_other_dialogue.yarn"),
     /// ]);
@@ -97,13 +97,13 @@ impl YarnSlingerPlugin {
     ///
     /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.
     ///
-    /// Calling this with [`YarnFileSource::folder`] and passing `"dialogue"` is equivalent to calling [`YarnSlingerPlugin::new`].
+    /// Calling this with [`YarnFileSource::folder`] and passing `"dialogue"` is equivalent to calling [`YarnSpinnerPlugin::new`].
     ///
     /// # Example
     ///
     /// ```rust
-    /// use bevy_yarn_slinger::prelude::*;
-    /// let plugin = YarnSlingerPlugin::with_yarn_source(YarnFileSource::folder("yarn_files"));
+    /// use bevy_yarnspinner::prelude::*;
+    /// let plugin = YarnSpinnerPlugin::with_yarn_source(YarnFileSource::folder("yarn_files"));
     /// ```
     #[must_use]
     pub fn with_yarn_source(yarn_file_source: impl Into<YarnFileSource>) -> Self {
@@ -114,8 +114,8 @@ impl YarnSlingerPlugin {
 
     /// Creates a version of the plugin that does not load anything yet and instead waits until you have sent a [`LoadYarnProjectEvent`].
     #[must_use]
-    pub fn deferred() -> DeferredYarnSlingerPlugin {
-        DeferredYarnSlingerPlugin
+    pub fn deferred() -> DeferredYarnSpinnerPlugin {
+        DeferredYarnSpinnerPlugin
     }
 
     /// Adds a Yarn file source to the files that will be loaded and compiled.
@@ -143,7 +143,7 @@ impl YarnSlingerPlugin {
         self
     }
 
-    /// Sets the development file generation mode, which determines how aggressively Yarn Slinger will generate files that aid in development.
+    /// Sets the development file generation mode, which determines how aggressively Yarn Spinner will generate files that aid in development.
     /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
     #[must_use]
     pub fn with_development_file_generation(
@@ -157,25 +157,25 @@ impl YarnSlingerPlugin {
     }
 }
 
-impl Plugin for YarnSlingerPlugin {
+impl Plugin for YarnSpinnerPlugin {
     fn build(&self, app: &mut App) {
-        assert!(!self.project.yarn_files.is_empty(), "Cannot initialize Yarn Slinger plugin because no Yarn files were specified. \
-        Did you call `YarnSlingerPlugin::with_yarn_files()` without any Yarn file sources? \
-        If you really want to load no Yarn files right now and do that later, use `YarnSlingerPlugin::deferred()` instead.\
-        If you wanted to load from the default directory instead, use `YarnSlingerPlugin::default()`.");
+        assert!(!self.project.yarn_files.is_empty(), "Cannot initialize Yarn Spinner plugin because no Yarn files were specified. \
+        Did you call `YarnSpinnerPlugin::with_yarn_files()` without any Yarn file sources? \
+        If you really want to load no Yarn files right now and do that later, use `YarnSpinnerPlugin::deferred()` instead.\
+        If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::default()`.");
         app.add_plugins(Self::deferred())
             .world
             .send_event(self.project.clone());
     }
 }
 
-/// The deferred version of [`YarnSlingerPlugin`]. Created by [`YarnSlingerPlugin::deferred`].
+/// The deferred version of [`YarnSpinnerPlugin`]. Created by [`YarnSpinnerPlugin::deferred`].
 /// Will not load any Yarn files until a [`LoadYarnProjectEvent`] is sent.
 #[derive(Debug)]
 #[non_exhaustive]
-pub struct DeferredYarnSlingerPlugin;
+pub struct DeferredYarnSpinnerPlugin;
 
-impl Plugin for DeferredYarnSlingerPlugin {
+impl Plugin for DeferredYarnSpinnerPlugin {
     fn build(&self, app: &mut App) {
         app.register_yarn_types()
             .register_sub_plugins()
@@ -197,36 +197,36 @@ impl YarnApp for App {
             .register_type::<CompilationType>()
             .register_type::<Compilation>()
             .register_type::<CompilerError>()
-            .register_type::<yarn_slinger::compiler::Diagnostic>()
-            .register_type::<yarn_slinger::compiler::DiagnosticSeverity>()
-            .register_type::<yarn_slinger::compiler::DebugInfo>()
+            .register_type::<yarnspinner::compiler::Diagnostic>()
+            .register_type::<yarnspinner::compiler::DiagnosticSeverity>()
+            .register_type::<yarnspinner::compiler::DebugInfo>()
             .register_type::<LineInfo>()
-            .register_type::<yarn_slinger::compiler::Declaration>()
-            .register_type::<yarn_slinger::compiler::DeclarationSource>()
+            .register_type::<yarnspinner::compiler::Declaration>()
+            .register_type::<yarnspinner::compiler::DeclarationSource>()
             .register_type::<StringInfo>()
             .register_type::<LineId>()
-            .register_type::<yarn_slinger::core::Position>()
+            .register_type::<yarnspinner::core::Position>()
             .register_type::<YarnValue>()
-            .register_type::<yarn_slinger::core::InvalidOpCodeError>()
-            .register_type::<yarn_slinger::core::Program>()
-            .register_type::<yarn_slinger::core::Node>()
-            .register_type::<yarn_slinger::core::Header>()
-            .register_type::<yarn_slinger::core::Instruction>()
-            .register_type::<yarn_slinger::core::Type>()
-            .register_type::<yarn_slinger::runtime::Command>()
-            .register_type::<yarn_slinger::prelude::DialogueOption>()
+            .register_type::<yarnspinner::core::InvalidOpCodeError>()
+            .register_type::<yarnspinner::core::Program>()
+            .register_type::<yarnspinner::core::Node>()
+            .register_type::<yarnspinner::core::Header>()
+            .register_type::<yarnspinner::core::Instruction>()
+            .register_type::<yarnspinner::core::Type>()
+            .register_type::<yarnspinner::runtime::Command>()
+            .register_type::<yarnspinner::prelude::DialogueOption>()
             .register_type::<OptionId>()
             .register_type::<DialogueEvent>()
-            .register_type::<yarn_slinger::runtime::Line>()
-            .register_type::<yarn_slinger::runtime::Diagnosis>()
-            .register_type::<yarn_slinger::runtime::DiagnosisSeverity>()
-            .register_type::<yarn_slinger::runtime::MarkupParseError>()
+            .register_type::<yarnspinner::runtime::Line>()
+            .register_type::<yarnspinner::runtime::Diagnosis>()
+            .register_type::<yarnspinner::runtime::DiagnosisSeverity>()
+            .register_type::<yarnspinner::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
             .register_type::<MarkupValue>()
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
+        self.fn_plugin(crate::yarn_file_asset::yarnspinner_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
             .fn_plugin(crate::line_provider::line_provider_plugin)
@@ -256,8 +256,8 @@ impl YarnApp for App {
 
 fn get_asset_plugin(app: &App) -> &AssetPlugin {
     let asset_plugins: Vec<&AssetPlugin> = app.get_added_plugins();
-    asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
-    Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`")
+    asset_plugins.into_iter().next().expect("Yarn Spinner requires access to the Bevy asset plugin. \
+    Please add `YarnSpinnerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`")
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Resource)]

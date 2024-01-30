@@ -6,7 +6,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 mod debug_info;
 mod declaration;

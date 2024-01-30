@@ -29,8 +29,8 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// # use std::any::Any;
     /// # use bevy::asset::LoadedUntypedAsset;
     /// # use bevy::prelude::*;
-    /// # use bevy_yarn_slinger::prelude::*;
-    /// # use bevy_yarn_slinger::UnderlyingYarnLine;
+    /// # use bevy_yarnspinner::prelude::*;
+    /// # use bevy_yarnspinner::UnderlyingYarnLine;
     ///
     /// # #[derive(Debug)]
     /// # struct Foo;
@@ -79,8 +79,8 @@ pub trait AssetProvider: Debug + Send + Sync {
     /// # use std::any::Any;
     /// # use bevy::asset::LoadedUntypedAsset;
     /// # use bevy::prelude::*;
-    /// # use bevy_yarn_slinger::prelude::*;
-    /// # use bevy_yarn_slinger::UnderlyingYarnLine;
+    /// # use bevy_yarnspinner::prelude::*;
+    /// # use bevy_yarnspinner::UnderlyingYarnLine;
     /// # #[derive(Debug)]
     /// # struct Foo;
     /// # impl AssetProvider for Foo {

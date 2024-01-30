@@ -6,7 +6,7 @@
 //! - Additional newtypes were introduced for strings.
 
 use crate::prelude::*;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
@@ -30,7 +30,7 @@ pub enum DialogueEvent {
     /// A [`Command`] should be executed.
     ///
     /// It is not specified whether the command should be finished executing before calling [`Dialogue::continue_`] again or it is run in parallel.
-    /// A library wrapping Yarn Slinger for a game engine should specify this.
+    /// A library wrapping Yarn Spinner for a game engine should specify this.
     Command(Command),
     /// The node with the given name was completed.
     NodeComplete(String),

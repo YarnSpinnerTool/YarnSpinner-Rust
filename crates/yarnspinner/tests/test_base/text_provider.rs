@@ -1,6 +1,6 @@
 use std::sync::{Arc, RwLock};
-use yarn_slinger_core::prelude::*;
-use yarn_slinger_runtime::prelude::*;
+use yarnspinner_core::prelude::*;
+use yarnspinner_runtime::prelude::*;
 
 /// A [`TextProvider`] that wraps another [`TextProvider`] and is shallow cloned. It can thus be shared between users.
 #[derive(Debug, Clone)]
