@@ -2,9 +2,14 @@
 name = "yarnspinner_examples"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
+homepage = "https://docs.yarnspinner.dev/"
+keywords = ["gamedev", "dialog", "yarn", "bevy"]
+categories = ["game-development", "compilers"]
+authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 publish = false
 
 [dependencies]
 bevy = "0.12"
-bevy_yarnspinner = { path = "../../crates/bevy_plugin" }
-bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view" }
+bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.1" }
+bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.1" }

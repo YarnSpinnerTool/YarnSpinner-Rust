@@ -2,13 +2,18 @@
 name = "bevy_yarnspinner_example_dialogue_view"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
+homepage = "https://docs.yarnspinner.dev/"
+keywords = ["gamedev", "dialog", "yarn", "bevy"]
+categories = ["game-development", "compilers"]
+authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 license = "MIT OR Apache-2.0"
 exclude = ["assets", "wasm"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy_yarnspinner = { path = "../bevy_plugin" }
+bevy_yarnspinner = { path = "../bevy_plugin", version = "0.1" }
 unicode-segmentation = "1"
 seldom_fn_plugin = "0.5"
 

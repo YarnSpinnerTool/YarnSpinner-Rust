@@ -2,6 +2,11 @@
 name = "yarnspinner_core"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
+homepage = "https://docs.yarnspinner.dev/"
+keywords = ["gamedev", "dialog", "yarn", "bevy"]
+categories = ["game-development", "compilers"]
+authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 license = "MIT OR Apache-2.0"
 
 [features]
@@ -12,9 +17,9 @@ bevy = ["dep:bevy"]
 [dependencies]
 bytes = "1"
 paste = "1"
-yarnspinner_macros = { path = "../macros" }
-strum = "0.25"
-strum_macros = "0.25"
+yarnspinner_macros = { path = "../macros", version = "0.1" }
+strum = "0.26"
+strum_macros = "0.26"
 thiserror = "1"
 prost = "0.12"
 serde = { version = "1", features = ["derive"], optional = true }
