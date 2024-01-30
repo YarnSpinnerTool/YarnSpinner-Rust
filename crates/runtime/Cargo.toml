@@ -15,7 +15,7 @@ serde = [
 bevy = ["dep:bevy", "yarnspinner_core/bevy"]
 
 [dependencies]
-yarnspinner_core = { path = "../core" }
+yarnspinner_core = { path = "../core", version = "0.1" }
 unicode-normalization = "0.1"
 unicode-segmentation = "1"
 log = "0.4"

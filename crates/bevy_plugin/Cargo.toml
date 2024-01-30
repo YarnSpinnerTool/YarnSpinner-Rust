@@ -14,7 +14,7 @@ anyhow = "1"
 csv = "1"
 seldom_fn_plugin = "0.5"
 serde = { version = "1", features = ["derive"] }
-yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"] }
+yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"], version = "0.1" }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 

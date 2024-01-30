@@ -20,9 +20,9 @@ bevy = [
 ]
 
 [dependencies]
-yarnspinner_core = { path = "../core" }
-yarnspinner_compiler = { path = "../compiler" }
-yarnspinner_runtime = { path = "../runtime" }
+yarnspinner_core = { path = "../core", version = "0.1" }
+yarnspinner_compiler = { path = "../compiler", version = "0.1" }
+yarnspinner_runtime = { path = "../runtime", version = "0.1" }
 log = { version = "0.4", features = ["std"] }
 
 [dev-dependencies]

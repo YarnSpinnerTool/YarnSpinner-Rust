@@ -11,8 +11,8 @@ Run the following in your terminal to create a new crate with the required depen
 ```bash
 cargo new yarnspinner_playground
 cd yarnspinner_playground
-cargo add bevy --features filesystem_watcher
-cargo add bevy_yarnspinner bevy_yarnspinner_example_dialogue_view --git "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
+cargo add bevy --features file_watcher
+cargo add bevy_yarnspinner bevy_yarnspinner_example_dialogue_view
 ```
 
 The line `cargo add bevy --features filesystem_watcher` ensures that we can use *hot reloading* in our project, which means that we can edit the Yarn files

@@ -6,5 +6,5 @@ publish = false
 
 [dependencies]
 bevy = "0.12"
-bevy_yarnspinner = { path = "../../crates/bevy_plugin" }
-bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view" }
+bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.1" }
+bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.1" }
