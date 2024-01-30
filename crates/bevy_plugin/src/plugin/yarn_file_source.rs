@@ -110,7 +110,7 @@ impl YarnFileSource {
         let handles = handles?;
 
         if handles.is_empty() {
-            warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Slinger won't be able to do anything this run. \
+            warn!("No Yarn files found in the assets subdirectory {path}, so Yarn Spinner won't be able to do anything this run. \
                         Help: Add some Yarn files to get started.", path = path.display());
         }
         Ok(handles)

@@ -19,7 +19,7 @@ use bevy::{prelude::*, utils::HashMap};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;
-use yarn_slinger::core::Library;
+use yarnspinner::core::Library;
 
 mod builder;
 mod dialogue_option;
@@ -61,7 +61,7 @@ impl DialogueRunner {
     /// This method must be called by the dialogue view when the user clicks on a button to show the next line.
     ///
     /// Note that the actual advancement of the dialogue will be postponed until the following conditions are met:
-    /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`](yarn_slinger::prelude::TextProvider::are_lines_available) returning `true`.
+    /// - The text provider has finished loading its lines, indicated by [`TextProvider::are_lines_available`](yarnspinner::prelude::TextProvider::are_lines_available) returning `true`.
     /// - The asset providers have finished loading their assets, indicated by all [`AssetProvider::update_asset_availability`] calls returning `true`.
     /// - All previously called [`YarnCommand`]s are finished, indicated by their return type's [`TaskFinishedIndicator::is_finished`] returning `true`.
     pub fn continue_in_next_update(&mut self) -> &mut Self {

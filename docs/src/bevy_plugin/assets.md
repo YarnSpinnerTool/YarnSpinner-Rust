@@ -1,6 +1,6 @@
 # Assets
 
-While Bevy as a whole has assets, Yarn Slinger can associate specific assets with lines.
+While Bevy as a whole has assets, Yarn Spinner can associate specific assets with lines.
 These are always [localized](./localization.md), such as voiceovers. 
 
 ## Using Metadata Instead of Assets
@@ -43,5 +43,5 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 - Mention `FileExtensionAssetProvider`
 - Mention you can write your own `AssetProvider`
 
-Feel free to [contribute](https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/src/bevy_plugin/assets.md)!
+Feel free to [contribute](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/edit/main/docs/src/bevy_plugin/assets.md)!
 

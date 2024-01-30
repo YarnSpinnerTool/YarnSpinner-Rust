@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner_example_dialogue_view::prelude::*;
 
 // For comments about the setup, see hello_world.rs
 fn main() {

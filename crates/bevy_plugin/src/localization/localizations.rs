@@ -13,7 +13,7 @@ pub(crate) fn localization_config_plugin(_app: &mut App) {}
 ///
 /// ```rust
 /// use bevy::prelude::*;
-/// use bevy_yarn_slinger::prelude::*;
+/// use bevy_yarnspinner::prelude::*;
 ///
 /// let localizations = Localizations {
 ///     base_localization: "en-US".into(),
@@ -70,7 +70,7 @@ impl Localizations {
 /// You can create this type from types that implement [`Into<Language>`], like this:
 /// ```rust
 /// # use bevy::prelude::*;
-/// # use bevy_yarn_slinger::prelude::*;
+/// # use bevy_yarnspinner::prelude::*;
 /// let localization: Localization = "de-CH".into();
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -100,7 +100,7 @@ impl Localization {
     /// Can also be created from types that implement [`Into<Language>`], like this:
     /// ```rust
     /// # use bevy::prelude::*;
-    /// # use bevy_yarn_slinger::prelude::*;
+    /// # use bevy_yarnspinner::prelude::*;
     /// let localization: Localization = "de-CH".into();
     /// ```
     pub fn with_language(language: impl Into<Language>) -> Self {

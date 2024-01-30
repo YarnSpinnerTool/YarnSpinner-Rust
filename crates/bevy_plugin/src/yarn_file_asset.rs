@@ -7,7 +7,7 @@ use bevy::{
     utils::BoxedFuture,
 };
 use std::hash::Hash;
-use yarn_slinger::prelude::YarnFile as InnerYarnFile;
+use yarnspinner::prelude::YarnFile as InnerYarnFile;
 
 /// A Yarn file. These will mostly be created by loading them from disk with the [`AssetServer`].
 #[derive(Debug, Clone, Eq, PartialEq, Reflect, Asset, Serialize, Deserialize)]
@@ -67,7 +67,7 @@ impl Hash for YarnFile {
     }
 }
 
-pub(crate) fn yarn_slinger_asset_loader_plugin(app: &mut App) {
+pub(crate) fn yarnspinner_asset_loader_plugin(app: &mut App) {
     app.init_asset::<YarnFile>()
         .register_asset_reflect::<YarnFile>()
         .init_asset_loader::<YarnFileAssetLoader>();

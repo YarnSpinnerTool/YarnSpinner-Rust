@@ -9,8 +9,8 @@ use crate::prelude::*;
 use crate::Result;
 use log::*;
 use std::fmt::Debug;
-use yarn_slinger_core::prelude::OpCode;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::OpCode;
+use yarnspinner_core::prelude::*;
 
 mod execution_state;
 mod state;
@@ -607,7 +607,7 @@ fn assert_up_to_date_compiler(predicate: bool) {
     assert!(
         predicate,
         "The Yarn script provided was compiled using an older compiler. \
-        Please recompile it using the latest version of either Yarn Slinger or Yarn Spinner."
+        Please recompile it using the latest version of either Yarn Spinner or Yarn Spinner."
     )
 }
 

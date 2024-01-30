@@ -1,7 +1,7 @@
 //! Extension traits that make testing easier
 
 use crate::prelude::*;
-use yarn_slinger_compiler::prelude::*;
+use yarnspinner_compiler::prelude::*;
 
 pub trait TestCompiler {
     fn from_test_source(source: &str) -> Self;

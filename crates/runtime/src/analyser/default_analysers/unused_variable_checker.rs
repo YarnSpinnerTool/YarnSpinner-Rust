@@ -3,7 +3,7 @@
 
 use crate::prelude::*;
 use std::collections::HashSet;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Default)]
 pub(crate) struct UnusedVariableChecker {

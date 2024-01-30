@@ -1,6 +1,6 @@
 # Compiler API
 
-Rust code is generated via [`prost_build`](https://github.com/tokio-rs/prost/tree/master/prost-build) in the `generate_proto` binary of `yarn_slinger_codegen`.
+Rust code is generated via [`prost_build`](https://github.com/tokio-rs/prost/tree/master/prost-build) in the `generate_proto` binary of `yarnspinner_codegen`.
 Running this requires pulling in the submodules:
 
 ```bash

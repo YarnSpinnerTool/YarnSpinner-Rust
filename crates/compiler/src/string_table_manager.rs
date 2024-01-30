@@ -3,7 +3,7 @@
 use crate::output::StringInfo;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct StringTableManager(pub HashMap<LineId, StringInfo>);

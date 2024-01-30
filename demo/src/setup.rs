@@ -1,5 +1,5 @@
 use crate::visual_effects::RotationPhase;
-use crate::yarn_slinger_integration::{
+use crate::yarnspinner_integration::{
     change_sprite, fade_in, fade_out, move_camera_to_clippy, quit, rotate_character, show_bang,
     Speaker,
 };
@@ -11,7 +11,7 @@ use bevy::gltf::Gltf;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams};
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarnspinner::prelude::*;
 
 pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Unfortunately, MSAA and HDR are not supported simultaneously under WebGL.

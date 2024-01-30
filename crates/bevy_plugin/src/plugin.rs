@@ -6,7 +6,7 @@ pub use yarn_file_source::YarnFileSource;
 
 mod yarn_file_source;
 
-/// The plugin that provides all Yarn Slinger functionality.
+/// The plugin that provides all Yarn Spinner functionality.
 /// In general, you'll want to create this by searching for Yarn files in "assets/dialogue", which [`YarnSlingerPlugin::new`] does under the hood.
 /// You can also provide a list of Yarn files to load via [`YarnSlingerPlugin::with_yarn_sources`].
 /// If you however do not know the paths to any files nor have them in-memory at the start of the program,
@@ -18,7 +18,7 @@ mod yarn_file_source;
 ///
 /// ```no_run
 /// use bevy::prelude::*;
-/// use bevy_yarn_slinger::prelude::*;
+/// use bevy_yarnspinner::prelude::*;
 ///
 /// App::new()
 ///     .add_plugins(DefaultPlugins)
@@ -73,7 +73,7 @@ impl YarnSlingerPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use bevy_yarn_slinger::prelude::*;
+    /// use bevy_yarnspinner::prelude::*;
     /// let plugin = YarnSlingerPlugin::with_yarn_sources([
     ///    YarnFileSource::file("some_dialogue.yarn"),
     ///    YarnFileSource::file("some_other_dialogue.yarn"),
@@ -102,7 +102,7 @@ impl YarnSlingerPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use bevy_yarn_slinger::prelude::*;
+    /// use bevy_yarnspinner::prelude::*;
     /// let plugin = YarnSlingerPlugin::with_yarn_source(YarnFileSource::folder("yarn_files"));
     /// ```
     #[must_use]
@@ -143,7 +143,7 @@ impl YarnSlingerPlugin {
         self
     }
 
-    /// Sets the development file generation mode, which determines how aggressively Yarn Slinger will generate files that aid in development.
+    /// Sets the development file generation mode, which determines how aggressively Yarn Spinner will generate files that aid in development.
     /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
     #[must_use]
     pub fn with_development_file_generation(
@@ -159,7 +159,7 @@ impl YarnSlingerPlugin {
 
 impl Plugin for YarnSlingerPlugin {
     fn build(&self, app: &mut App) {
-        assert!(!self.project.yarn_files.is_empty(), "Cannot initialize Yarn Slinger plugin because no Yarn files were specified. \
+        assert!(!self.project.yarn_files.is_empty(), "Cannot initialize Yarn Spinner plugin because no Yarn files were specified. \
         Did you call `YarnSlingerPlugin::with_yarn_files()` without any Yarn file sources? \
         If you really want to load no Yarn files right now and do that later, use `YarnSlingerPlugin::deferred()` instead.\
         If you wanted to load from the default directory instead, use `YarnSlingerPlugin::default()`.");
@@ -197,36 +197,36 @@ impl YarnApp for App {
             .register_type::<CompilationType>()
             .register_type::<Compilation>()
             .register_type::<CompilerError>()
-            .register_type::<yarn_slinger::compiler::Diagnostic>()
-            .register_type::<yarn_slinger::compiler::DiagnosticSeverity>()
-            .register_type::<yarn_slinger::compiler::DebugInfo>()
+            .register_type::<yarnspinner::compiler::Diagnostic>()
+            .register_type::<yarnspinner::compiler::DiagnosticSeverity>()
+            .register_type::<yarnspinner::compiler::DebugInfo>()
             .register_type::<LineInfo>()
-            .register_type::<yarn_slinger::compiler::Declaration>()
-            .register_type::<yarn_slinger::compiler::DeclarationSource>()
+            .register_type::<yarnspinner::compiler::Declaration>()
+            .register_type::<yarnspinner::compiler::DeclarationSource>()
             .register_type::<StringInfo>()
             .register_type::<LineId>()
-            .register_type::<yarn_slinger::core::Position>()
+            .register_type::<yarnspinner::core::Position>()
             .register_type::<YarnValue>()
-            .register_type::<yarn_slinger::core::InvalidOpCodeError>()
-            .register_type::<yarn_slinger::core::Program>()
-            .register_type::<yarn_slinger::core::Node>()
-            .register_type::<yarn_slinger::core::Header>()
-            .register_type::<yarn_slinger::core::Instruction>()
-            .register_type::<yarn_slinger::core::Type>()
-            .register_type::<yarn_slinger::runtime::Command>()
-            .register_type::<yarn_slinger::prelude::DialogueOption>()
+            .register_type::<yarnspinner::core::InvalidOpCodeError>()
+            .register_type::<yarnspinner::core::Program>()
+            .register_type::<yarnspinner::core::Node>()
+            .register_type::<yarnspinner::core::Header>()
+            .register_type::<yarnspinner::core::Instruction>()
+            .register_type::<yarnspinner::core::Type>()
+            .register_type::<yarnspinner::runtime::Command>()
+            .register_type::<yarnspinner::prelude::DialogueOption>()
             .register_type::<OptionId>()
             .register_type::<DialogueEvent>()
-            .register_type::<yarn_slinger::runtime::Line>()
-            .register_type::<yarn_slinger::runtime::Diagnosis>()
-            .register_type::<yarn_slinger::runtime::DiagnosisSeverity>()
-            .register_type::<yarn_slinger::runtime::MarkupParseError>()
+            .register_type::<yarnspinner::runtime::Line>()
+            .register_type::<yarnspinner::runtime::Diagnosis>()
+            .register_type::<yarnspinner::runtime::DiagnosisSeverity>()
+            .register_type::<yarnspinner::runtime::MarkupParseError>()
             .register_type::<MarkupAttribute>()
             .register_type::<MarkupValue>()
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.fn_plugin(crate::yarn_file_asset::yarn_slinger_asset_loader_plugin)
+        self.fn_plugin(crate::yarn_file_asset::yarnspinner_asset_loader_plugin)
             .fn_plugin(crate::localization::localization_plugin)
             .fn_plugin(crate::dialogue_runner::dialogue_plugin)
             .fn_plugin(crate::line_provider::line_provider_plugin)
@@ -256,7 +256,7 @@ impl YarnApp for App {
 
 fn get_asset_plugin(app: &App) -> &AssetPlugin {
     let asset_plugins: Vec<&AssetPlugin> = app.get_added_plugins();
-    asset_plugins.into_iter().next().expect("Yarn Slinger requires access to the Bevy asset plugin. \
+    asset_plugins.into_iter().next().expect("Yarn Spinner requires access to the Bevy asset plugin. \
     Please add `YarnSlingerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`")
 }
 

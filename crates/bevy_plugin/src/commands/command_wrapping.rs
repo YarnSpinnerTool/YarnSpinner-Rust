@@ -7,7 +7,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
-use yarn_slinger::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
+use yarnspinner::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 
@@ -18,7 +18,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// Multiple parameters are supported as values wrapped in a tuple.
 /// For example, to register a command that is called from Yarn like `<<add_player "John" 42>>`, the first parameter must be of the type `In<(String, i32)>` and a call to `register_command` might look like this:
 /// ```rust
-/// # use bevy_yarn_slinger::prelude::*;
+/// # use bevy_yarnspinner::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut commands = YarnCommands::new();
 /// commands.add_command("add_player", add_player);
@@ -29,7 +29,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// ```
 /// The parameters following the `In` parameter are taken from the Bevy ECS as any other system would. For example, the following command would print the elapsed time since the game started:
 /// ```rust
-/// # use bevy_yarn_slinger::prelude::*;
+/// # use bevy_yarnspinner::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut commands = YarnCommands::new();
 /// commands.add_command("add_player", add_player);

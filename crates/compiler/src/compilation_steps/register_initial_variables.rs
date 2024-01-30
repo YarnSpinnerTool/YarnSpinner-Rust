@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 pub(crate) fn register_initial_variables(
     mut state: CompilationIntermediate,

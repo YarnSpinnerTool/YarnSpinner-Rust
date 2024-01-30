@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::any::TypeId;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
-use yarn_slinger_macros::all_tuples;
+use yarnspinner_macros::all_tuples;
 
 /// A function that can be registered into and called from Yarn.
 /// It must have the following properties:

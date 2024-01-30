@@ -10,8 +10,8 @@ use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use std::fmt::{Debug, Display};
 use std::ops::Range;
-use yarn_slinger_core::prelude::*;
-use yarn_slinger_core::types::Type;
+use yarnspinner_core::prelude::*;
+use yarnspinner_core::types::Type;
 
 /// Information about a declaration. Stored inside a declaration table,
 /// which is produced from the Compiler.

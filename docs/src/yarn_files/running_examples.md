@@ -1,7 +1,7 @@
 # Running Examples
 
 You can run Yarn files by copy-pasting them into [Try Yarn Spinner](https://try.yarnspinner.dev).
-This is nice because it runs directly in your browser and so doesn't require any setup. Since Yarn Slinger
+This is nice because it runs directly in your browser and so doesn't require any setup. Since Yarn Spinner
 and Yarn Spinner read Yarn files the same way, the behavior will be identical to how it would be in your game.
 The only thing to look out for is that Try Yarn Spinner will only start at a node named "Start".
 
@@ -11,10 +11,10 @@ setup a little example project. We will use screenshots from such a setup throug
 If you want to follow along this way setup the crate by running the following commands.
 
 ```bash
-cargo new yarn_slinger_playground
-cd yarn_slinger_playground
+cargo new yarnspinner_playground
+cd yarnspinner_playground
 cargo add bevy --features filesystem_watcher
-cargo add bevy_yarn_slinger bevy_yarn_slinger_example_dialogue_view
+cargo add bevy_yarnspinner bevy_yarnspinner_example_dialogue_view
 ```
 
 Then, in your `src/main.rs`, add the following code:
@@ -22,8 +22,8 @@ Then, in your `src/main.rs`, add the following code:
 ```rust
 // src/main.rs
 use bevy::{prelude::*, asset::ChangeWatcher, utils::Duration};
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();

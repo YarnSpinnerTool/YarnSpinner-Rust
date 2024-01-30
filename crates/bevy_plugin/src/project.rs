@@ -21,7 +21,7 @@ pub(crate) struct CompilationSystemSet;
 /// This [`Resource`](bevy::prelude::Resource) is inserted into the world automatically for you once all files have been loaded and compiled. You can react to this by configuring a system like this:
 /// ```rust
 /// # use bevy::prelude::*;
-/// # use bevy_yarn_slinger::prelude::*;
+/// # use bevy_yarnspinner::prelude::*;
 /// # let mut app = App::new();
 /// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
 ///
@@ -200,7 +200,7 @@ impl LoadYarnProjectEvent {
         self.development_file_generation = development_file_generation;
         if cfg!(any(target_arch = "wasm32", target_os = "android")) {
             assert_eq!(self.development_file_generation, DevelopmentFileGeneration::None,
-                       "Failed to build Yarn Slinger plugin: On `DevelopmentFileGeneration::None` is supported on this platform.");
+                       "Failed to build Yarn Spinner plugin: On `DevelopmentFileGeneration::None` is supported on this platform.");
         }
         self
     }

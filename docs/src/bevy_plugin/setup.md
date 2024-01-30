@@ -1,6 +1,6 @@
 # Setup
 
-We will now go through the steps to setup a new Bevy project running Yarn Slinger dialogs. 
+We will now go through the steps to setup a new Bevy project running Yarn Spinner dialogs. 
 This is the same setup as in the chapter [Running Examples](../yarn_files/running_examples.md), but with explanations this time.
 If you've followed along in the linked chapter already, you can just read this part without executing anything.
 
@@ -9,16 +9,16 @@ If you've followed along in the linked chapter already, you can just read this p
 Run the following in your terminal to create a new crate with the required dependencies:
 
 ```bash
-cargo new yarn_slinger_playground
-cd yarn_slinger_playground
+cargo new yarnspinner_playground
+cd yarnspinner_playground
 cargo add bevy --features filesystem_watcher
-cargo add bevy_yarn_slinger bevy_yarn_slinger_example_dialogue_view --git "https://github.com/yarn-slinger/yarn-slinger"
+cargo add bevy_yarnspinner bevy_yarnspinner_example_dialogue_view --git "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 ```
 
 The line `cargo add bevy --features filesystem_watcher` ensures that we can use *hot reloading* in our project, which means that we can edit the Yarn files
 while the game is running and it will reload them automatically on change.
 
-The dependency `bevy_yarn_slinger` is for the Yarn Slinger Bevy plugin proper, while `bevy_yarn_slinger_example_dialogue_view` 
+The dependency `bevy_yarnspinner` is for the Yarn Spinner Bevy plugin proper, while `bevy_yarnspinner_example_dialogue_view` 
 gives us a nice default [dialog view](dialog_views.md), so we can actually see the text we've written and have options to click on.
 
 ## Adding the Yarn Files
@@ -39,8 +39,8 @@ Add the following code to your `src/main.rs`.
 ```rust
 // src/main.rs
 use bevy::{prelude::*, asset::ChangeWatcher, utils::Duration};
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner_example_dialogue_view::prelude::*;
 
 fn main() {
     let mut app = App::new();
@@ -50,7 +50,7 @@ fn main() {
             watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
             ..default()
         }),
-        // Add the Yarn Slinger plugin. 
+        // Add the Yarn Spinner plugin. 
         // As soon as this plugin is built, a Yarn project will be compiled 
         // from all Yarn files found under assets/dialog/*.yarn
         YarnSlingerPlugin::new(),
@@ -100,14 +100,14 @@ YarnSlingerPlugin::new(),
 This self-explanatory line initializes the plugin. When using the standard constructor with no options, Yarn files will be searched for in the directory `<your game>/assets/dialog/`, where all 
 files ending in `.yarn` will be compiled as soon as the game starts.
 
-The plugin makes sure all components of Yarn Slinger work except for any actual graphics. You need to 
+The plugin makes sure all components of Yarn Spinner work except for any actual graphics. You need to 
 instantiate a [dialog view](dialog_views.md) for that:
 
 ```rust
 ExampleYarnSlingerDialogueViewPlugin::new(),
 ```
 
-Here we initialize the dialogue view shipped by the `bevy_yarn_slinger_example_dialogue_view` crate. It
+Here we initialize the dialogue view shipped by the `bevy_yarnspinner_example_dialogue_view` crate. It
 offers some sensible defaults which you can see in the screenshots used throughout this guide. You can of course skip this
 and use your own dialogue view instead.
 

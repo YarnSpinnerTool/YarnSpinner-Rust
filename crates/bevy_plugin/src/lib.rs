@@ -1,6 +1,6 @@
-//! # Bevy Yarn Slinger
+//! # Bevy Yarn Spinner
 //!
-//! This is the Bevy integration for Yarn Slinger, the friendly dialogue creation tool for Rust.
+//! This is the Bevy integration for Yarn Spinner, the friendly dialogue creation tool for Rust.
 //! It allows you to easily create dialogue systems in your game.
 //!
 //! ## Usage
@@ -14,8 +14,8 @@
 //! ## Dialogue Views
 //!
 //! The dialogue runner itself does not draw anything to the screen, it only tells you what content to present.
-//! Any plugin that handles the actual drawing is called a *dialogue view*. We provide an [example dialogue view](https://crates.io/crates/bevy_yarn_slinger_example_dialogue_view)
-//! that you can use to explore the features of Yarn Slinger and get started quickly.
+//! Any plugin that handles the actual drawing is called a *dialogue view*. We provide an [example dialogue view](https://crates.io/crates/bevy_yarnspinner_example_dialogue_view)
+//! that you can use to explore the features of Yarn Spinner and get started quickly.
 //!
 //! Specifically, a dialogue view is required to do the following things
 //! - Handle the [`PresentLineEvent`](crate::events::PresentLineEvent) and draw the line to the screen.
@@ -27,12 +27,12 @@
 //!
 //! Note that while [`DialogueRunner`]s are setup in such a way that you can have multiple instances running in parallel (such as for split-screen co-op),
 //! a general-purpose dialogue view is not required to support this use-case, as every game that does this will have it's own way of wanting to deal with this.
-//! In particular, the [example dialogue view](https://crates.io/crates/bevy_yarn_slinger_example_dialogue_view) only supports a single [`DialogueRunner`].
+//! In particular, the [example dialogue view](https://crates.io/crates/bevy_yarnspinner_example_dialogue_view) only supports a single [`DialogueRunner`].
 //!
 //! ## Demo
 //!
-//! You can play a the [Yarn Slinger Demo](https://janhohenheim.itch.io/yarn-slinger-demo) in your browser to see the aforementioned example dialogue view in action.
-//! Additionally, there are [many examples](https://github.com/yarn-slinger/yarn-slinger/tree/main/examples/bevy_yarn_slinger/src/bin) that you can check out.
+//! You can play a the [Yarn Spinner for Rust Demo](https://janhohenheim.itch.io/yarnspinner-rust-demo) in your browser to see the aforementioned example dialogue view in action.
+//! Additionally, there are [many examples](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/tree/main/examples/bevy_yarnspinner/src/bin) that you can check out.
 //!
 //! ## Example
 //!
@@ -41,7 +41,7 @@
 //! - When the [`YarnProject`] [`Resource`](bevy::prelude::Resource) is added, spawn a [`DialogueRunner`] from it.
 //! The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>())`.
 //!
-//! The following example is adapted from the [hello world example](https://github.com/yarn-slinger/yarn-slinger/blob/main/examples/bevy_yarn_slinger/src/bin/hello_world.rs).
+//! The following example is adapted from the [hello world example](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/blob/main/examples/bevy_yarnspinner/src/bin/hello_world.rs).
 //!
 //! ```text
 //! # assets/dialogue/hello_world.yarn
@@ -54,18 +54,18 @@
 //! ```no_run
 //! // src/main.rs
 //! use bevy::{prelude::*, utils::Duration};
-//! use bevy_yarn_slinger::prelude::*;
-//! // Use the example dialogue view to see the dialogue in action. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
-//! // use bevy_yarn_slinger_example_dialogue_view::prelude::*;
+//! use bevy_yarnspinner::prelude::*;
+//! // Use the example dialogue view to see the dialogue in action. Requires the `bevy_yarnspinner_example_dialogue_view` crate.
+//! // use bevy_yarnspinner_example_dialogue_view::prelude::*;
 //!
 //! fn main() {
 //!     let mut app = App::new();
 //!     app.add_plugins((
-//!         // Add the Yarn Slinger plugin.
+//!         // Add the Yarn Spinner plugin.
 //!         // As soon as this plugin is built, a Yarn project will be compiled
 //!         // from all Yarn files found under assets/dialog/*.yarn
 //!         YarnSlingerPlugin::new(),
-//!         // Initialize the bundled example UI. Requires the `bevy_yarn_slinger_example_dialogue_view` crate.
+//!         // Initialize the bundled example UI. Requires the `bevy_yarnspinner_example_dialogue_view` crate.
 //!         // ExampleYarnSlingerDialogueViewPlugin::new(),
 //!     ))
 //!     // Setup a 2D camera so we can see the text
@@ -109,13 +109,13 @@ mod yarn_file_asset;
 pub use anyhow::{Error, Result};
 
 pub mod default_impl {
-    //! Default implementations for Yarn Slinger traits.
+    //! Default implementations for Yarn Spinner traits.
     #[cfg(feature = "audio_assets")]
     pub use crate::line_provider::AudioAssetProvider;
     pub use crate::line_provider::{
         file_extensions, FileExtensionAssetProvider, StringsFileTextProvider,
     };
-    pub use yarn_slinger::runtime::{MemoryVariableStorage, StringTableTextProvider};
+    pub use yarnspinner::runtime::{MemoryVariableStorage, StringTableTextProvider};
 }
 
 pub mod events {
@@ -127,7 +127,7 @@ pub mod events {
 }
 
 pub mod prelude {
-    //! Everything you need to get starting using Yarn Slinger.
+    //! Everything you need to get starting using Yarn Spinner.
 
     #[cfg(feature = "audio_assets")]
     pub use crate::default_impl::AudioAssetProvider;
@@ -144,8 +144,8 @@ pub mod prelude {
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};
     pub(crate) use anyhow::{Context, Error, Result};
-    pub(crate) use yarn_slinger::prelude::*;
-    pub use yarn_slinger::prelude::{
+    pub(crate) use yarnspinner::prelude::*;
+    pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
         VariableStorage, YarnFn, YarnLibrary,
     };
@@ -156,8 +156,8 @@ pub mod prelude {
 
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};
 pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
-pub use yarn_slinger::core::{yarn_fn_type, UntypedYarnFn};
-pub use yarn_slinger::prelude::{
+pub use yarnspinner::core::{yarn_fn_type, UntypedYarnFn};
+pub use yarnspinner::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,
 };

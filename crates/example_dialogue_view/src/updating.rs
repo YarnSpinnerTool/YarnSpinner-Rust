@@ -3,7 +3,7 @@ use crate::setup::{DialogueContinueNode, DialogueNameNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
 use crate::ExampleYarnSlingerDialogueViewSystemSet;
 use bevy::prelude::*;
-use bevy_yarn_slinger::{events::*, prelude::*};
+use bevy_yarnspinner::{events::*, prelude::*};
 
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(

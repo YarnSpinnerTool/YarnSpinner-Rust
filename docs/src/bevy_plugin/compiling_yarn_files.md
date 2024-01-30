@@ -21,12 +21,12 @@ its settings. The first few deal with where our Yarn files are coming from.
 
 ### Yarn File Sources
 
-By default, Yarn Slinger will look
-in `<game directory>/assets/dialog`. Yarn Slinger can only read files from the `assets` directory 
+By default, Yarn Spinner will look
+in `<game directory>/assets/dialog`. Yarn Spinner can only read files from the `assets` directory 
 — or its equivalent, if you have changed this default in the `AssetPlugin` on platforms which support it—
 but you can change how the `assets` will be looked through.
 
-The way to specify this is via `YarnFileSource`s. This enum tells Yarn Slinger where one or more Yarn files
+The way to specify this is via `YarnFileSource`s. This enum tells Yarn Spinner where one or more Yarn files
 come from and can be added to an `AssetPlugin` with `AssetPlugin::add_yarn_source()`.
 The enum variants should be self explanatory, but the two most common use-cases come with their own convenience constructors:
 - `YarnFileSource::file()`: looks for a Yarn file at a path inside under the `assets` directory.
@@ -41,7 +41,7 @@ As you might have guessed by now, `YarnSlingerPlugin::new()` is simply a shortha
 
 ### Development File Generation
 
-`YarnSlingerPlugin::with_development_file_generation()` accepts a `DevelopmentFileGeneration`, which tells Yarn Slinger how aggressively to generate useful files on runtime.
+`YarnSlingerPlugin::with_development_file_generation()` accepts a `DevelopmentFileGeneration`, which tells Yarn Spinner how aggressively to generate useful files on runtime.
 "Useful" refers to the developer and not the user. The default is `DevelopmentFileGeneration::TRY_FULL`, which will be `DevelopmentFileGeneration::Full` on platforms which support filesystem access, 
 i.e. all except Wasm and Android. See the documentation for the full list of effects. Suffice it to say
 that this is not very important when developing without localization, but becomes vital otherwise. See the [Localization](localization.md) chapter for more.

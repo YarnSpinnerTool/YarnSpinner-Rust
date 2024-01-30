@@ -1,8 +1,8 @@
 use crate::listeners::CompilerListener;
 use crate::prelude::*;
 use antlr_rust::token::Token;
-use yarn_slinger_core::prelude::OpCode;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::OpCode;
+use yarnspinner_core::prelude::*;
 
 impl<'input> CompilerListener<'input> {
     /// Creates a new instruction, and appends it to a node in the [`Program`].

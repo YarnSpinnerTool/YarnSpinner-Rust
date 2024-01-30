@@ -19,9 +19,9 @@ use std::path::{Path, PathBuf};
 use std::result::Result;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use yarn_slinger::compiler::*;
-use yarn_slinger::core::*;
-use yarn_slinger::runtime::*;
+use yarnspinner::compiler::*;
+use yarnspinner::core::*;
+use yarnspinner::runtime::*;
 
 mod extensions;
 mod logger;
@@ -31,7 +31,7 @@ mod test_plan;
 mod text_provider;
 use logger::*;
 pub use text_provider::SharedTextProvider;
-use yarn_slinger::log::{self, LevelFilter, SetLoggerError};
+use yarnspinner::log::{self, LevelFilter, SetLoggerError};
 
 pub mod prelude {
     #[allow(unused_imports)] // False positive

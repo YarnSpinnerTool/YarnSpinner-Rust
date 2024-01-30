@@ -1,7 +1,7 @@
 use crate::assets::{font_handle, image_handle};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarnspinner::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
     app.add_systems(Startup, setup);
@@ -198,7 +198,7 @@ fn setup(mut commands: Commands) {
 }
 
 fn fmt_name(name: &str) -> Name {
-    Name::new(format!("Yarn Slinger example dialogue view {name} node"))
+    Name::new(format!("Yarn Spinner example dialogue view {name} node"))
 }
 
 pub(crate) const INITIAL_DIALOGUE_CONTINUE_BOTTOM: f32 = -5.0;

@@ -1,10 +1,10 @@
 use bevy::asset::LoadState;
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarnspinner::prelude::*;
 use std::fs;
 use tempfile::tempdir;
 use utils::prelude::*;
-use yarn_slinger::prelude::{CompilationType, YarnCompiler};
+use yarnspinner::prelude::{CompilationType, YarnCompiler};
 
 mod utils;
 

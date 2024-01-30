@@ -126,8 +126,8 @@ impl YarnCommands {
 ///
 /// ```rust
 /// # use bevy::prelude::*;
-/// # use bevy_yarn_slinger::prelude::*;
-/// # use bevy_yarn_slinger::yarn_commands;
+/// # use bevy_yarnspinner::prelude::*;
+/// # use bevy_yarnspinner::yarn_commands;
 ///
 /// let commands = yarn_commands! {
 ///    "add_player" => add_player,

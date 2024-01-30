@@ -3,11 +3,11 @@ authors = ["Jan Hohenheim"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Yarn Slinger Book"
+title = "Yarn Spinner for Rust Book"
 
 [output.html]
-git-repository-url = "https://github.com/yarn-slinger/yarn-slinger"
+git-repository-url = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/yarn-slinger/yarn-slinger/edit/main/docs/{path}"
-site-url = "/yarn-slinger/"
-cname = "https://yarn-slinger.github.io"
+edit-url-template = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust/edit/main/docs/{path}"
+site-url = "/YarnSpinner-Rust/"
+cname = "https://yarnspinnertool.github.io"

@@ -77,7 +77,7 @@ impl LineParser {
             .insert(attribute_name.clone(), processor);
         assert!(previous_value.is_none(),
                 "A marker processor for the attribute '{attribute_name}' has already been added. \
-                This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+                This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
         self
     }
 

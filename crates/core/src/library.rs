@@ -64,7 +64,7 @@ impl Library {
         format!("$Yarn.Internal.Visiting.{node_name}")
     }
 
-    /// Creates a [`Library`] with the standard functions that are included in Yarn Slinger.
+    /// Creates a [`Library`] with the standard functions that are included in Yarn Spinner.
     /// These are:
     /// - `string`: Converts a value to a string.
     /// - `number`: Converts a value to a number.
@@ -88,7 +88,7 @@ impl Library {
     /// Registering a function:
     ///
     /// ```
-    /// # use yarn_slinger_core::prelude::*;
+    /// # use yarnspinner_core::prelude::*;
     /// # let mut library = Library::default();
     /// library.add_function("string_length", string_length);
     ///
@@ -100,7 +100,7 @@ impl Library {
     /// Registering a function using a factory
     /// (the return type can be specified using the [`yarn_fn_type`] macro):
     /// ```
-    /// # use yarn_slinger_core::prelude::*;
+    /// # use yarnspinner_core::prelude::*;
     /// # let mut library = Library::default();
     /// library.add_function("length_times_two", string_length_multiplied(2));
     ///
@@ -164,8 +164,8 @@ impl Display for Library {
 /// ## Example
 ///
 /// ```rust
-/// # use yarn_slinger_core::yarn_library;
-/// # use yarn_slinger_core::prelude::*;
+/// # use yarnspinner_core::yarn_library;
+/// # use yarnspinner_core::prelude::*;
 ///
 /// let library = yarn_library! {
 ///    "pow" => pow,

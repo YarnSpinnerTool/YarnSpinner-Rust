@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_yarn_slinger::prelude::*;
+use bevy_yarnspinner::prelude::*;
 use utils::prelude::*;
 
 mod utils;

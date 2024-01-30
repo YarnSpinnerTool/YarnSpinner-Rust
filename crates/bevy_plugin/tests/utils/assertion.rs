@@ -1,6 +1,6 @@
 use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
-use bevy_yarn_slinger::events::*;
+use bevy_yarnspinner::events::*;
 
 #[derive(Debug, Default)]
 pub struct EventAsserter {

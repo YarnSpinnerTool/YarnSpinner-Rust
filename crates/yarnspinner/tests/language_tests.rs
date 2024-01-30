@@ -7,9 +7,9 @@
 
 use std::collections::HashMap;
 use test_base::prelude::*;
-use yarn_slinger::compiler::*;
-use yarn_slinger::core::*;
-use yarn_slinger::runtime::*;
+use yarnspinner::compiler::*;
+use yarnspinner::core::*;
+use yarnspinner::runtime::*;
 
 mod test_base;
 

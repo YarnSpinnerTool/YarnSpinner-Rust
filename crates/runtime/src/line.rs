@@ -54,9 +54,9 @@ impl Line {
     /// When there is a name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use yarn_slinger_core::prelude::*;
-    /// # use yarn_slinger_runtime::markup::*;
-    /// # use yarn_slinger_runtime::prelude::*;
+    /// # use yarnspinner_core::prelude::*;
+    /// # use yarnspinner_runtime::markup::*;
+    /// # use yarnspinner_runtime::prelude::*;
     /// # let line = Line {
     /// #    id: "line".into(),
     /// #    text: "Alice: Hello! How are you today?".to_owned(),
@@ -75,9 +75,9 @@ impl Line {
     /// When there is no name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use yarn_slinger_core::prelude::*;
-    /// # use yarn_slinger_runtime::markup::*;
-    /// # use yarn_slinger_runtime::prelude::*;
+    /// # use yarnspinner_core::prelude::*;
+    /// # use yarnspinner_runtime::markup::*;
+    /// # use yarnspinner_runtime::prelude::*;
     /// # let line = Line {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),
@@ -91,7 +91,7 @@ impl Line {
                 let MarkupValue::String(name) = name else {
                     panic!(
                         "Attribute \"character\" has a \"name\" property, but it is not a string. \
-                         This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new"
+                         This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"
                     );
                 };
                 return Some(name.as_str());
@@ -106,9 +106,9 @@ impl Line {
     /// When there is a name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use yarn_slinger_core::prelude::*;
-    /// # use yarn_slinger_runtime::markup::*;
-    /// # use yarn_slinger_runtime::prelude::*;
+    /// # use yarnspinner_core::prelude::*;
+    /// # use yarnspinner_runtime::markup::*;
+    /// # use yarnspinner_runtime::prelude::*;
     /// # let line = Line {
     /// #    id: "line".into(),
     /// #    text: "Alice: Hello! How are you today?".to_owned(),
@@ -127,9 +127,9 @@ impl Line {
     /// When there is no name:
     /// ```rust
     /// # use std::collections::HashMap;
-    /// # use yarn_slinger_core::prelude::*;
-    /// # use yarn_slinger_runtime::markup::*;
-    /// # use yarn_slinger_runtime::prelude::*;
+    /// # use yarnspinner_core::prelude::*;
+    /// # use yarnspinner_runtime::markup::*;
+    /// # use yarnspinner_runtime::prelude::*;
     /// # let line = Line {
     /// #    id: "line".into(),
     /// #    text: "Great, thanks".to_owned(),

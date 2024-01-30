@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use yarn_slinger_core::prelude::*;
-use yarn_slinger_core::types::Type;
+use yarnspinner_core::prelude::*;
+use yarnspinner_core::types::Type;
 
 pub(crate) fn add_tracking_declarations(
     mut state: CompilationIntermediate,

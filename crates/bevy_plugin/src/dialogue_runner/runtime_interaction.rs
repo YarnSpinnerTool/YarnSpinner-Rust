@@ -71,7 +71,7 @@ fn continue_runtime(
                     let options = last_options
                         .remove(&source)
                         .expect("Failed to get last presented options when trying to run selected option as line. \
-                                  This is a bug. Please report it at https://github.com/yarn-slinger/yarn_slinger/issues/new");
+                                  This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
                     let Some(option) = options.into_iter().find(|o| o.id == option) else {
                         let expected_options = last_options
                             .values()

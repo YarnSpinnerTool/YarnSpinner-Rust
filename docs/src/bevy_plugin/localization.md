@@ -2,7 +2,7 @@
 
 If you only want to support a single language, you can safely ignore localization features.
 As soon as you want to support [assets](assets.md) or multiple languages however, you will need to use localization.
-Fortunately Yarn Slinger makes this quite easy!
+Fortunately Yarn Spinner makes this quite easy!
 
 Let's first look at how to use localization and then explain what's going on under the hood.
 
@@ -121,7 +121,7 @@ This allows you to support use cases such as showing the text in the player's na
 Since assets require using localization, they are searched for in folders named after the language they support. 
 For the example used throughout this chapter, the assets for the base localization would be searched for in `assets/dialog/en-US/`, while the assets for the `de-CH` 
 translation will be searched at `assets/dialog/de-CH/`. This is however more a convention than a rule, as a given `AssetProvider` is allowed to look for its assets wherever.
-The asset providers shipped by Yarn Slinger will additionally expect assets to be named after the line ID they belong to. For example, the `AudioAssetProvider` would look for the
+The asset providers shipped by Yarn Spinner will additionally expect assets to be named after the line ID they belong to. For example, the `AudioAssetProvider` would look for the
 voice line reading our "Hello World!" line at `assets/dialog/en-US/13032079.mp3` for the base localization.
 
 To read more about how to use assets, read the chapter [Assets](./assets.md).

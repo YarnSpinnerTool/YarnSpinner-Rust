@@ -1,5 +1,5 @@
 [package]
-name = "yarn_slinger_runtime"
+name = "yarnspinner_runtime"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -9,13 +9,13 @@ default = []
 serde = [
   "dep:serde",
   "bevy?/serialize",
-  "yarn_slinger_core/serde",
+  "yarnspinner_core/serde",
   "icu_locid/serde",
 ]
-bevy = ["dep:bevy", "yarn_slinger_core/bevy"]
+bevy = ["dep:bevy", "yarnspinner_core/bevy"]
 
 [dependencies]
-yarn_slinger_core = { path = "../core" }
+yarnspinner_core = { path = "../core" }
 unicode-normalization = "0.1"
 unicode-segmentation = "1"
 log = "0.4"

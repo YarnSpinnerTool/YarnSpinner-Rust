@@ -4,14 +4,14 @@ resolver = "2"
 members = [
     "crates/example_dialogue_view",
     "crates/bevy_plugin",
-    "crates/yarn_slinger",
+    "crates/yarnspinner",
     "crates/runtime",
     "crates/compiler",
     "crates/core",
     "crates/macros",
     "crates/codegen",
     "demo",
-    "examples/bevy_yarn_slinger",
+    "examples/bevy_yarnspinner",
 ]
 
 # Source: https://github.com/bevyengine/bevy/blob/main/examples/README.md#1-tweak-your-cargotoml

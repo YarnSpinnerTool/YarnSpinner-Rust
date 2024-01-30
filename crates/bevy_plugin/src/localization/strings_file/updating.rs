@@ -145,7 +145,7 @@ fn lint_strings_file(
         warn!(
             "Strings file {source} contains the following strings for Yarn files were not found in the project: {superfluous_file_names}. \
             Either you forgot to add these files to the project or the strings belonged to files that were deleted. \
-            You may want to delete these entries from the strings file manually. Yarn Slinger will not do this for you because it may lead to loss of work.",
+            You may want to delete these entries from the strings file manually. Yarn Spinner will not do this for you because it may lead to loss of work.",
         );
     }
 }

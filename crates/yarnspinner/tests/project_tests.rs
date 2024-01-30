@@ -6,8 +6,8 @@
 use regex::Regex;
 use std::collections::HashSet;
 use test_base::prelude::*;
-use yarn_slinger::compiler::*;
-use yarn_slinger_core::prelude::*;
+use yarnspinner::compiler::*;
+use yarnspinner_core::prelude::*;
 
 mod test_base;
 

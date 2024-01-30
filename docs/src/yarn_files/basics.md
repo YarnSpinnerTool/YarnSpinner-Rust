@@ -1,6 +1,6 @@
 # Basics
 
-Yarn Slinger stores its dialogue in *Yarn files*. These look a bit like play scripts or movie scripts.
+Yarn Spinner stores its dialogue in *Yarn files*. These look a bit like play scripts or movie scripts.
 Here is an example that might be called `hello_world.yarn`:
 
 ```text

@@ -6,7 +6,7 @@ use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
 use std::fmt::{Display, Formatter};
 use std::ops::Range;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 /// A diagnostic message that describes an error, warning or informational
 /// message that the user can take action on.

@@ -12,7 +12,7 @@ Now we'll jump to another node!
 title: AnotherNode
 ---
 Now, a character will talk. Notice how the upper left corner of the dialogue will show their name.
-Hohenheim: Hi, I'm Jan Hohenheim, creator of Yarn Slinger. I hope you enjoy using it!
+Hohenheim: Hi, I'm Jan Hohenheim, creator of Yarn Spinner. I hope you enjoy using it!
 Let's set a condition. Do you prefer dogs or cats?
 -> Dogs
     <<set $animal = "dog">>
@@ -30,5 +30,5 @@ Cats! (Can't say I agree, but you do you)
 <<else>>
 Turtles! Solid choice.
 <<endif>>
-Et voilà! That was all. Thanks for checking out Yarn Slinger! Continuing from the last node will exit the dialogue.
+Et voilà! That was all. Thanks for checking out Yarn Spinner! Continuing from the last node will exit the dialogue.
 ===

@@ -16,7 +16,7 @@ pub fn path(path: ProjectPath) -> PathBuf {
     let crates_dir = current_dir.join("../..");
     let fragment = match path {
         ProjectPath::ThirdPersonYarnSpinner => "../third-party/YarnSpinner",
-        ProjectPath::MainCrate => "yarn_slinger",
+        ProjectPath::MainCrate => "yarnspinner",
         ProjectPath::Core => "core",
         ProjectPath::Codegen => "codegen",
         ProjectPath::Runtime => "runtime",

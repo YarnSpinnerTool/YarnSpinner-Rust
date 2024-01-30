@@ -2,8 +2,8 @@
 use anyhow::{bail, Result};
 use bevy::prelude::*;
 use bevy::utils::Instant;
-use bevy_yarn_slinger::prelude::*;
-use bevy_yarn_slinger::UnderlyingYarnLine;
+use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner::UnderlyingYarnLine;
 use utils::prelude::*;
 
 mod utils;

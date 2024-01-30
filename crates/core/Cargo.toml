@@ -1,5 +1,5 @@
 [package]
-name = "yarn_slinger_core"
+name = "yarnspinner_core"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -12,7 +12,7 @@ bevy = ["dep:bevy"]
 [dependencies]
 bytes = "1"
 paste = "1"
-yarn_slinger_macros = { path = "../macros" }
+yarnspinner_macros = { path = "../macros" }
 strum = "0.25"
 strum_macros = "0.25"
 thiserror = "1"

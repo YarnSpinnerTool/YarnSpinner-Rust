@@ -13,7 +13,7 @@ use antlr_rust::tree::ParseTreeListener;
 pub use diagnostic::*;
 use std::cell::RefCell;
 use std::rc::Rc;
-use yarn_slinger_core::prelude::*;
+use yarnspinner_core::prelude::*;
 
 mod diagnostic;
 pub(crate) struct LexerErrorListener {

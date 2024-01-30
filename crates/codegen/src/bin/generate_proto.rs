@@ -1,6 +1,6 @@
 use std::env;
 use std::io::Result;
-use yarn_slinger_codegen::*;
+use yarnspinner_codegen::*;
 
 fn main() -> Result<()> {
     let include_dir = path(ProjectPath::ThirdPersonYarnSpinner).join("YarnSpinner");
