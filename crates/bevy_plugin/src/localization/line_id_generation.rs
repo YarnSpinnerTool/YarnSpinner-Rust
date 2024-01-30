@@ -23,7 +23,7 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
         )
             .chain()
             .in_set(LineIdUpdateSystemSet)
-            .in_set(YarnSlingerSystemSet),
+            .in_set(YarnSpinnerSystemSet),
     );
 }
 

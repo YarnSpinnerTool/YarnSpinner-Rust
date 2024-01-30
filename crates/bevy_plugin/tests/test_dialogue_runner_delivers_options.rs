@@ -186,7 +186,7 @@ trait OptionTestAppExt {
 impl OptionTestAppExt for App {
     fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
         self.setup_default_plugins()
-            .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+            .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "options.yarn",
             )))
             .dialogue_runner_mut()
@@ -194,7 +194,7 @@ impl OptionTestAppExt for App {
 
     fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<DialogueRunner> {
         self.add_plugins(
-            YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
+            YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
                 .with_localizations(Localizations {
                     base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],

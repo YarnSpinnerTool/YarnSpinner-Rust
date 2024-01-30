@@ -4,7 +4,7 @@ use crate::setup::{
     INITIAL_DIALOGUE_CONTINUE_BOTTOM,
 };
 use crate::updating::SpeakerChangeEvent;
-use crate::ExampleYarnSlingerDialogueViewSystemSet;
+use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarnspinner::{events::*, prelude::*};
@@ -22,8 +22,8 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
             bob_continue,
         )
             .chain()
-            .after(YarnSlingerSystemSet)
-            .in_set(ExampleYarnSlingerDialogueViewSystemSet),
+            .after(YarnSpinnerSystemSet)
+            .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
     .add_event::<TypewriterFinishedEvent>();
 }

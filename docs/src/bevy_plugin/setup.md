@@ -53,9 +53,9 @@ fn main() {
         // Add the Yarn Spinner plugin. 
         // As soon as this plugin is built, a Yarn project will be compiled 
         // from all Yarn files found under assets/dialog/*.yarn
-        YarnSlingerPlugin::new(),
+        YarnSpinnerPlugin::new(),
         // Add the example dialogue view plugin
-        ExampleYarnSlingerDialogueViewPlugin::new(),
+        ExampleYarnSpinnerDialogueViewPlugin::new(),
     ))
     // Setup a 2D camera so we can see the text
     .add_systems(Startup, setup_camera)
@@ -94,7 +94,7 @@ see the effects instantaneously. We recommend using this workflow on all platfor
 
 
 ```rust
-YarnSlingerPlugin::new(),
+YarnSpinnerPlugin::new(),
 ```
 
 This self-explanatory line initializes the plugin. When using the standard constructor with no options, Yarn files will be searched for in the directory `<your game>/assets/dialog/`, where all 
@@ -104,7 +104,7 @@ The plugin makes sure all components of Yarn Spinner work except for any actual 
 instantiate a [dialog view](dialog_views.md) for that:
 
 ```rust
-ExampleYarnSlingerDialogueViewPlugin::new(),
+ExampleYarnSpinnerDialogueViewPlugin::new(),
 ```
 
 Here we initialize the dialogue view shipped by the `bevy_yarnspinner_example_dialogue_view` crate. It

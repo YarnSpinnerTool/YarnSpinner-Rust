@@ -7,8 +7,8 @@ fn main() {
     let mut app = App::new();
     app.add_plugins((
         DefaultPlugins,
-        YarnSlingerPlugin::new(),
-        ExampleYarnSlingerDialogueViewPlugin::new(),
+        YarnSpinnerPlugin::new(),
+        ExampleYarnSpinnerDialogueViewPlugin::new(),
     ))
     .add_systems(Startup, setup_camera)
     .add_systems(
@@ -34,7 +34,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
 }
 
 #[derive(Resource)]
-struct SomethingAddedByYarnSlinger {
+struct SomethingAddedByYarnSpinner {
     name: String,
     age: f32,
 }
@@ -43,12 +43,12 @@ struct SomethingAddedByYarnSlinger {
 // The `In` param will determine the Yarn signature. This function can thus be called like
 // `<<insert_resource "Bob" 42>>` in Yarn.
 fn insert_resource(In((name, age)): In<(String, f32)>, mut commands: Commands) {
-    commands.insert_resource(SomethingAddedByYarnSlinger { name, age });
+    commands.insert_resource(SomethingAddedByYarnSpinner { name, age });
 }
 
 // Commands with no inputs have the unit type (`()`) as their input.
 // This function can thus be called like `<<read_resource>>` in Yarn.
-fn read_resource(_: In<()>, previously_added_resource: Res<SomethingAddedByYarnSlinger>) {
+fn read_resource(_: In<()>, previously_added_resource: Res<SomethingAddedByYarnSpinner>) {
     println!(
         "{} is {} years old",
         previously_added_resource.name, previously_added_resource.age

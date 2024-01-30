@@ -17,7 +17,7 @@ pub(crate) fn text_provider_plugin(app: &mut App) {
             Update,
             fetch_resources
                 .in_set(LineProviderSystemSet)
-                .in_set(YarnSlingerSystemSet),
+                .in_set(YarnSpinnerSystemSet),
         );
 }
 

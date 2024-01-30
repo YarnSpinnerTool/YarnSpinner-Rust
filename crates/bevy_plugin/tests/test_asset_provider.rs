@@ -13,7 +13,7 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
 
     app.setup_default_plugins()
-        .add_plugins(YarnSlingerPlugin::with_yarn_source(YarnFileSource::file(
+        .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
             "lines_with_ids.yarn",
         )));
 
@@ -46,7 +46,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec![],
@@ -76,7 +76,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec![],
@@ -110,7 +110,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -146,7 +146,7 @@ fn panics_on_invalid_language() {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
@@ -171,7 +171,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
 
     app.setup_default_plugins().add_plugins(
-        YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec![],

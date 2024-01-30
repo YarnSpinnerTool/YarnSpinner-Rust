@@ -17,7 +17,7 @@ pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
 /// By default, the line asset subdirectory will be `"dialogue/<language>"`. So for the language "en-US" and the line ID "123", the provider will
 /// specifically look for "assets/dialogue/en-US/123.png" when calling [`FileExtensionAssetProvider::get_assets`].
 /// Because this requires knowledge of the current language, this provider will only fetch assets if you set up Yarn Spinner with [`Localizations`] using
-/// [`YarnSlingerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`](crate::deferred_loading::LoadYarnProjectEvent::with_localizations).
+/// [`YarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`](crate::deferred_loading::LoadYarnProjectEvent::with_localizations).
 ///
 /// You can use this provider in a [`DialogueRunner`] by calling [`DialogueRunnerBuilder::add_asset_provider`] with an instance of this type.
 ///

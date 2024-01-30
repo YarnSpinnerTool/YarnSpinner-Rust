@@ -34,28 +34,28 @@ The enum variants should be self explanatory, but the two most common use-cases 
 
 Since the Wasm and Android builds of Bevy have restrictions on their filesystem access,
 they cannot use `YarnFileSource::folder()` and must have all their Yarn files listed explicitly with `YarnFileSource::file()`.
-As such, the default behavior provided by `YarnSlingerPlugin::new()` is not suitable for these platforms.
+As such, the default behavior provided by `YarnSpinnerPlugin::new()` is not suitable for these platforms.
 To avoid it, use the `AssetPlugin::with_yarn_source()` constructor instead.
 
-As you might have guessed by now, `YarnSlingerPlugin::new()` is simply a shorthand for `AssetPlugin::with_yarn_source(YarnFileSource::folder("dialog"))`.
+As you might have guessed by now, `YarnSpinnerPlugin::new()` is simply a shorthand for `AssetPlugin::with_yarn_source(YarnFileSource::folder("dialog"))`.
 
 ### Development File Generation
 
-`YarnSlingerPlugin::with_development_file_generation()` accepts a `DevelopmentFileGeneration`, which tells Yarn Spinner how aggressively to generate useful files on runtime.
+`YarnSpinnerPlugin::with_development_file_generation()` accepts a `DevelopmentFileGeneration`, which tells Yarn Spinner how aggressively to generate useful files on runtime.
 "Useful" refers to the developer and not the user. The default is `DevelopmentFileGeneration::TRY_FULL`, which will be `DevelopmentFileGeneration::Full` on platforms which support filesystem access, 
 i.e. all except Wasm and Android. See the documentation for the full list of effects. Suffice it to say
 that this is not very important when developing without localization, but becomes vital otherwise. See the [Localization](localization.md) chapter for more.
 
-Since these settings are intended for development, you can use `YarnSlingerPlugin::with_development_file_generation(DevelopmentFileGeneration::None)` when shipping your game to optimize the runtime costs and
+Since these settings are intended for development, you can use `YarnSpinnerPlugin::with_development_file_generation(DevelopmentFileGeneration::None)` when shipping your game to optimize the runtime costs and
 avoid generating files that are useless to the player.
 
 ### Localization
 
-The settings accessed by `YarnSlingerPlugin::with_localizatons` are important enough to warrant their own chapter. See [Localization](localization.md).
+The settings accessed by `YarnSpinnerPlugin::with_localizatons` are important enough to warrant their own chapter. See [Localization](localization.md).
 
 ## After the Compilation
 
-Whether you used `YarnSlingerPlugin` or `LoadYarnProjectEvent`, as soon as the compilation finished, a `YarnProject` resource will be inserted into the Bevy world. 
+Whether you used `YarnSpinnerPlugin` or `LoadYarnProjectEvent`, as soon as the compilation finished, a `YarnProject` resource will be inserted into the Bevy world. 
 You can react to its creation by guarding your systems with `.run_if(resource_added::<YarnProject>())`, as seen in the [setup](setup.md).
 
 Once you have the `YarnProject`, you can use it to spawn a `DialogRunner` which in turn can, well, [run dialogs](dialog_runner.md)

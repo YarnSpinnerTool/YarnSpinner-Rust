@@ -21,7 +21,7 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
             .after(LineProviderSystemSet)
             .after(update_wait)
             .in_set(DialogueExecutionSystemSet)
-            .in_set(YarnSlingerSystemSet),
+            .in_set(YarnSpinnerSystemSet),
     );
 }
 

@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 pub(crate) fn localization_config_plugin(_app: &mut App) {}
 
-/// The localizations used by the [`YarnProject`]. Can be set with [`YarnSlingerPlugin::with_localizations`] or
+/// The localizations used by the [`YarnProject`]. Can be set with [`YarnSpinnerPlugin::with_localizations`] or
 /// [`LoadYarnProjectEvent::with_localizations`](crate::deferred_loading::LoadYarnProjectEvent::with_localizations).
 ///
 /// ## Example

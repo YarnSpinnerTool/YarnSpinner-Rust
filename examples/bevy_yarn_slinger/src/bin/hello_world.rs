@@ -8,10 +8,10 @@ fn main() {
         DefaultPlugins,
         // Register the Yarn Spinner plugin using its default settings, which will look for Yarn files in the "dialogue" folder.
         // If this app should support Wasm or Android, we cannot load files without specifying them, so use the following instead.
-        // YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")),
-        YarnSlingerPlugin::new(),
+        // YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/hello_world.yarn")),
+        YarnSpinnerPlugin::new(),
         // Initialize the bundled example UI
-        ExampleYarnSlingerDialogueViewPlugin::new(),
+        ExampleYarnSpinnerDialogueViewPlugin::new(),
     ))
     .add_systems(Startup, setup_camera)
     .add_systems(

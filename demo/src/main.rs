@@ -32,8 +32,8 @@ fn main() {
                 }),
                 ..default()
             }),
-            YarnSlingerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
-            ExampleYarnSlingerDialogueViewPlugin::new(),
+            YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
+            ExampleYarnSpinnerDialogueViewPlugin::new(),
             Sprite3dPlugin,
             #[cfg(feature = "editor")]
             EditorPlugin::new(),
@@ -59,7 +59,7 @@ fn main() {
                 ease_bang.run_if(any_with_component::<Bang>()),
             )
                 .chain()
-                .after(ExampleYarnSlingerDialogueViewSystemSet),
+                .after(ExampleYarnSpinnerDialogueViewSystemSet),
         )
         .run();
 }

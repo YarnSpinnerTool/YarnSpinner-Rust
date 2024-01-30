@@ -6,8 +6,8 @@
 //! ## Usage
 //!
 //! The three main types you will interact with are:
-//! - [`YarnSlingerPlugin`]: The plugin registering all systems and types.
-//! - [`YarnProject`]: A [`Resource`](bevy::prelude::Resource) for the compiled Yarn project, which is created for you when [`YarnSlingerPlugin`] is added.
+//! - [`YarnSpinnerPlugin`]: The plugin registering all systems and types.
+//! - [`YarnProject`]: A [`Resource`](bevy::prelude::Resource) for the compiled Yarn project, which is created for you when [`YarnSpinnerPlugin`] is added.
 //! - [`DialogueRunner`]: The [`Component`](bevy::prelude::Component) running through the Yarn files and sending events for things you should draw on the screen.
 //! Can be created from a [`YarnProject`].
 //!
@@ -37,7 +37,7 @@
 //! ## Example
 //!
 //! The main workflow is as follows:
-//! - Register the [`YarnSlingerPlugin`]
+//! - Register the [`YarnSpinnerPlugin`]
 //! - When the [`YarnProject`] [`Resource`](bevy::prelude::Resource) is added, spawn a [`DialogueRunner`] from it.
 //! The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>())`.
 //!
@@ -64,9 +64,9 @@
 //!         // Add the Yarn Spinner plugin.
 //!         // As soon as this plugin is built, a Yarn project will be compiled
 //!         // from all Yarn files found under assets/dialog/*.yarn
-//!         YarnSlingerPlugin::new(),
+//!         YarnSpinnerPlugin::new(),
 //!         // Initialize the bundled example UI. Requires the `bevy_yarnspinner_example_dialogue_view` crate.
-//!         // ExampleYarnSlingerDialogueViewPlugin::new(),
+//!         // ExampleYarnSpinnerDialogueViewPlugin::new(),
 //!     ))
 //!     // Setup a 2D camera so we can see the text
 //!     .add_systems(Startup, setup_camera)
@@ -92,7 +92,7 @@
 //!
 //! [`DialogueRunner`]: crate::prelude::DialogueRunner
 //! [`YarnProject`]: crate::prelude::YarnProject
-//! [`YarnSlingerPlugin`]: crate::prelude::YarnSlingerPlugin
+//! [`YarnSpinnerPlugin`]: crate::prelude::YarnSpinnerPlugin
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 #![warn(missing_docs, missing_debug_implementations)]
@@ -138,7 +138,7 @@ pub mod prelude {
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{Localization, Localizations},
-        plugin::{YarnFileSource, YarnSlingerPlugin, YarnSlingerSystemSet},
+        plugin::{YarnFileSource, YarnSpinnerPlugin, YarnSpinnerSystemSet},
         project::YarnProject,
         yarn_file_asset::YarnFile,
     };
@@ -164,6 +164,6 @@ pub use yarnspinner::prelude::{
 
 pub mod deferred_loading {
     //! Contains types needed for the deferred loading functionality, which is used when the list of Yarn files is not immediately available at startup.
-    pub use crate::plugin::DeferredYarnSlingerPlugin;
+    pub use crate::plugin::DeferredYarnSpinnerPlugin;
     pub use crate::project::LoadYarnProjectEvent;
 }

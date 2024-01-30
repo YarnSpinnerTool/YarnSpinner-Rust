@@ -8,10 +8,10 @@ Let's first look at how to use localization and then explain what's going on und
 
 ## Using Localization the Easy Way
 
-We specify our supported localizations when creating the [`YarnSlingerPlugin` (or using deferred compilation)](compiling_yarn_files.md):
+We specify our supported localizations when creating the [`YarnSpinnerPlugin` (or using deferred compilation)](compiling_yarn_files.md):
 
 ```rust
-YarnSlingerPlugin::new().with_localizations(Localizations {
+YarnSpinnerPlugin::new().with_localizations(Localizations {
     base_localization: "en-US".into(),
     translations: vec!["de-CH".into()],
 })
@@ -145,7 +145,7 @@ Bottom line: if there's a translation, it will **never** be removed.
 Once you want to build your game for a release, you should disable the automatic file creation and editing.
 To do this, add the following line to the plugin creation:
 ```rust
-YarnSlingerPlugin::new()
+YarnSpinnerPlugin::new()
 // ...
 .with_development_file_generation(DevelopmentFileGeneration::None)
 ```
@@ -159,7 +159,7 @@ While you're on it, you might also want to disable Bevy's hot reloading.
 You may have wondered what the `.into()`s were for in the lines at the beginning of the chapter:
 
 ```rust
-YarnSlingerPlugin::new().with_localizations(Localizations {
+YarnSpinnerPlugin::new().with_localizations(Localizations {
     base_localization: "en-US".into(),
     translations: vec!["de-CH".into()],
 })

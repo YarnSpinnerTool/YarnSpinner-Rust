@@ -10,7 +10,7 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
             (update_all_strings_files_for_string_table
                 .pipe(panic_on_err)
                 .after(LineIdUpdateSystemSet)
-                .in_set(YarnSlingerSystemSet)
+                .in_set(YarnSpinnerSystemSet)
                 .run_if(
                     in_development
                         .and_then(has_localizations)

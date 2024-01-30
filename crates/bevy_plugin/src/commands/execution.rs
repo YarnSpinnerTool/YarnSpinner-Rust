@@ -10,7 +10,7 @@ pub(crate) fn command_execution_plugin(app: &mut App) {
         Update,
         execute_commands
             .after(DialogueExecutionSystemSet)
-            .in_set(YarnSlingerSystemSet),
+            .in_set(YarnSpinnerSystemSet),
     );
 }
 

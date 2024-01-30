@@ -10,17 +10,17 @@
 //!
 //! ## Usage
 //!
-//! It's enough to simply register [`ExampleYarnSlingerDialogueViewPlugin`] alongside [`YarnSlingerPlugin`](bevy_yarnspinner::prelude::YarnSlingerPlugin):
+//! It's enough to simply register [`ExampleYarnSpinnerDialogueViewPlugin`] alongside [`YarnSpinnerPlugin`](bevy_yarnspinner::prelude::YarnSpinnerPlugin):
 //! ```no_run
 //! use bevy::prelude::*;
 //! use bevy_yarnspinner::*;
-//! use bevy_yarnspinner::prelude::YarnSlingerPlugin;
+//! use bevy_yarnspinner::prelude::YarnSpinnerPlugin;
 //! use bevy_yarnspinner_example_dialogue_view::prelude::*;
 //!
 //! App::new()
 //!    .add_plugins(DefaultPlugins)
-//!    .add_plugins(YarnSlingerPlugin::new())
-//!    .add_plugins(ExampleYarnSlingerDialogueViewPlugin::new());
+//!    .add_plugins(YarnSpinnerPlugin::new())
+//!    .add_plugins(ExampleYarnSpinnerDialogueViewPlugin::new());
 //! ```
 //!
 //! This crate also exposes the [`SpeakerChangeEvent`] which you can use to animate characters while they are speaking,
@@ -47,7 +47,7 @@ pub use updating::SpeakerChangeEvent;
 pub mod prelude {
     //! Everything you need to get starting using this example Yarn Spinner dialogue view.
     pub use crate::{
-        ExampleYarnSlingerDialogueViewPlugin, ExampleYarnSlingerDialogueViewSystemSet,
+        ExampleYarnSpinnerDialogueViewPlugin, ExampleYarnSpinnerDialogueViewSystemSet,
         SpeakerChangeEvent,
     };
 }
@@ -55,14 +55,14 @@ pub mod prelude {
 /// The plugin registering all systems of the dialogue view.
 #[derive(Debug, Default)]
 #[non_exhaustive]
-pub struct ExampleYarnSlingerDialogueViewPlugin;
+pub struct ExampleYarnSpinnerDialogueViewPlugin;
 
-/// The [`SystemSet`] containing all systems added by the [`ExampleYarnSlingerDialogueViewPlugin`].
-/// Is run after the [`YarnSlingerSystemSet`](bevy_yarnspinner::prelude::YarnSlingerSystemSet).
+/// The [`SystemSet`] containing all systems added by the [`ExampleYarnSpinnerDialogueViewPlugin`].
+/// Is run after the [`YarnSpinnerSystemSet`](bevy_yarnspinner::prelude::YarnSpinnerSystemSet).
 #[derive(Debug, Default, Clone, Copy, SystemSet, Eq, PartialEq, Hash)]
-pub struct ExampleYarnSlingerDialogueViewSystemSet;
+pub struct ExampleYarnSpinnerDialogueViewSystemSet;
 
-impl ExampleYarnSlingerDialogueViewPlugin {
+impl ExampleYarnSpinnerDialogueViewPlugin {
     /// Creates a new example dialogue view
     pub fn new() -> Self {
         Self::default()
@@ -75,7 +75,7 @@ mod setup;
 mod typewriter;
 mod updating;
 
-impl Plugin for ExampleYarnSlingerDialogueViewPlugin {
+impl Plugin for ExampleYarnSpinnerDialogueViewPlugin {
     fn build(&self, app: &mut App) {
         app.fn_plugin(assets::ui_assets_plugin)
             .fn_plugin(setup::ui_setup_plugin)

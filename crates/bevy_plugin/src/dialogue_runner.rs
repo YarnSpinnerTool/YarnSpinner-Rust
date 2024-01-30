@@ -255,7 +255,7 @@ impl DialogueRunner {
     fn assert_localizations_available_for_language(&self, language: &Language) {
         let localizations = self.localizations.as_ref().expect(
             "Tried to set language, but no localizations are available. \
-            Did you forget to call `YarnSlingerApp::with_localizations(..)` on the plugin setup?",
+            Did you forget to call `YarnSpinnerApp::with_localizations(..)` on the plugin setup?",
         );
         assert!(
             localizations.supports_language(language),

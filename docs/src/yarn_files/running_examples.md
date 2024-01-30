@@ -33,8 +33,8 @@ fn main() {
             watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
             ..default()
         }),
-        YarnSlingerPlugin::new(),
-        ExampleYarnSlingerDialogueViewPlugin::new(),
+        YarnSpinnerPlugin::new(),
+        ExampleYarnSpinnerDialogueViewPlugin::new(),
     ))
     .add_systems(Startup, setup_camera)
     .add_systems(
