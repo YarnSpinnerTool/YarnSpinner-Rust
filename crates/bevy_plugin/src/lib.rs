@@ -147,7 +147,7 @@ pub mod prelude {
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
-        VariableStorage, YarnFn, YarnLibrary,
+        VariableStorage, YarnFn, YarnLibrary, YarnValue,
     };
     pub(crate) type SystemResult = Result<()>;
     pub(crate) use seldom_fn_plugin::FnPluginExt;
