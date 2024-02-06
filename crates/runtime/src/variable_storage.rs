@@ -1,4 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -37,6 +38,12 @@ pub trait VariableStorage: Debug + Send + Sync {
     fn variables(&self) -> HashMap<String, YarnValue>;
     /// Clears all variables in this variable storage.
     fn clear(&mut self);
+    /// Gets the [`VariableStorage`] as a trait object.
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_ref` method available through the `Any` trait.
+    fn as_any(&self) -> &dyn Any;
+    /// Gets the [`VariableStorage`] as a mutable trait object.
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_mut` method available through the `Any` trait.
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl Extend<(String, YarnValue)> for Box<dyn VariableStorage> {
@@ -111,6 +118,14 @@ impl VariableStorage for MemoryVariableStorage {
 
     fn clear(&mut self) {
         self.0.write().unwrap().clear();
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 

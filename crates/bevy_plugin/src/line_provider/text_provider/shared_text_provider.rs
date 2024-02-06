@@ -65,4 +65,12 @@ impl UnderlyingTextProvider for SharedTextProvider {
     fn are_lines_available(&self) -> bool {
         self.0.read().unwrap().are_lines_available()
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }

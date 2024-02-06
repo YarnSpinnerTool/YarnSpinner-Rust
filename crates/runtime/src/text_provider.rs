@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 use crate::prelude::Language;
 use log::error;
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use yarnspinner_core::prelude::*;
@@ -22,6 +23,12 @@ pub trait TextProvider: Debug + Send + Sync {
     fn get_language(&self) -> Option<Language>;
     /// Returns whether the text for all lines announced by [`TextProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
     fn are_lines_available(&self) -> bool;
+    /// Gets the [`TextProvider`] as a trait object.
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_ref` method available through the `Any` trait.
+    fn as_any(&self) -> &dyn Any;
+    /// Gets the [`TextProvider`] as a mutable trait object.
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_mut` method available through the `Any` trait.
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 #[allow(missing_docs)]
@@ -103,5 +110,13 @@ impl TextProvider for StringTableTextProvider {
             .as_ref()
             .map(|(language, _)| language);
         translation_language == Some(language)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
