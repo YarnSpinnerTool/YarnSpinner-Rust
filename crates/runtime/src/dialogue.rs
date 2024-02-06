@@ -3,7 +3,6 @@
 use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
 use log::error;
-use std::any::Any;
 use std::fmt::Debug;
 use thiserror::Error;
 use yarnspinner_core::prelude::*;
