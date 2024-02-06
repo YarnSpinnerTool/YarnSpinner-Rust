@@ -105,6 +105,14 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         let has_fetched_translation = || self.translation_string_table.is_some();
         is_base_language || has_fetched_translation()
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
 
 impl StringsFileTextProvider {
