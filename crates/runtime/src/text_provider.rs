@@ -24,11 +24,10 @@ pub trait TextProvider: Debug + Send + Sync {
     /// Returns whether the text for all lines announced by [`TextProvider::accept_line_hints`] are available, i.e. have been loaded and are ready to be used.
     fn are_lines_available(&self) -> bool;
     /// Gets the [`TextProvider`] as a trait object.
-    ///
-    /// This allows retrieving the concrete type via [`Any::downcast_ref`].
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_ref` method available through the `Any` trait.
     fn as_any(&self) -> &dyn Any;
     /// Gets the [`TextProvider`] as a mutable trait object.
-    /// This allows retrieving the concrete type via [`Any::downcast_mut`].
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_mut` method available through the `Any` trait.
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 

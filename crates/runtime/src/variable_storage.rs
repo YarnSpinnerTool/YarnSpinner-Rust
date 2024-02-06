@@ -39,10 +39,10 @@ pub trait VariableStorage: Debug + Send + Sync {
     /// Clears all variables in this variable storage.
     fn clear(&mut self);
     /// Gets the [`VariableStorage`] as a trait object.
-    /// This allows retrieving the concrete type via [`Any::downcast_ref`].
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_ref` method available through the `Any` trait.
     fn as_any(&self) -> &dyn Any;
     /// Gets the [`VariableStorage`] as a mutable trait object.
-    /// This allows retrieving the concrete type via [`Any::downcast_mut`].
+    /// This allows retrieving the concrete type by downcasting, using the `downcast_mut` method available through the `Any` trait.
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
