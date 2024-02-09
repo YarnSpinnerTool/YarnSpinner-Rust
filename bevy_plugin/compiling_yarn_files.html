@@ -1,0 +1,277 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Compiling Yarn Files - Yarn Spinner for Rust Book</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../yarn_files.html"><strong aria-hidden="true">2.</strong> Yarn Files</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../yarn_files/basics.html"><strong aria-hidden="true">2.1.</strong> Basics</a></li><li class="chapter-item expanded "><a href="../yarn_files/running_examples.html"><strong aria-hidden="true">2.2.</strong> Running Examples</a></li><li class="chapter-item expanded "><a href="../yarn_files/lines.html"><strong aria-hidden="true">2.3.</strong> Lines</a></li><li class="chapter-item expanded "><a href="../yarn_files/variables.html"><strong aria-hidden="true">2.4.</strong> Variables</a></li><li class="chapter-item expanded "><a href="../yarn_files/options.html"><strong aria-hidden="true">2.5.</strong> Options</a></li><li class="chapter-item expanded "><a href="../yarn_files/nodes.html"><strong aria-hidden="true">2.6.</strong> Nodes</a></li><li class="chapter-item expanded "><a href="../yarn_files/markup.html"><strong aria-hidden="true">2.7.</strong> Markup</a></li><li class="chapter-item expanded "><a href="../yarn_files/functions.html"><strong aria-hidden="true">2.8.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../yarn_files/commands.html"><strong aria-hidden="true">2.9.</strong> Commands</a></li></ol></li><li class="chapter-item expanded "><a href="../bevy_plugin.html"><strong aria-hidden="true">3.</strong> Bevy Plugin</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../bevy_plugin/setup.html"><strong aria-hidden="true">3.1.</strong> Setup</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/compiling_yarn_files.html" class="active"><strong aria-hidden="true">3.2.</strong> Compiling Yarn Files</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/dialog_runner.html"><strong aria-hidden="true">3.3.</strong> DialogRunner and a High Level Overview</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/localization.html"><strong aria-hidden="true">3.4.</strong> Localization</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/assets.html"><strong aria-hidden="true">3.5.</strong> Assets</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/variable_storage.html"><strong aria-hidden="true">3.6.</strong> Variable Storage</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/custom_functions.html"><strong aria-hidden="true">3.7.</strong> Custom Functions</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/custom_commands.html"><strong aria-hidden="true">3.8.</strong> Custom Commands</a></li><li class="chapter-item expanded "><a href="../bevy_plugin/dialog_views.html"><strong aria-hidden="true">3.9.</strong> Dialog Views</a></li></ol></li><li class="chapter-item expanded "><a href="../working_without_bevy.html"><strong aria-hidden="true">4.</strong> Working without Bevy</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Yarn Spinner for Rust Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/YarnSpinnerTool/YarnSpinner-Rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/YarnSpinnerTool/YarnSpinner-Rust/edit/main/docs/src/bevy_plugin/compiling_yarn_files.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="compiling-yarn-files"><a class="header" href="#compiling-yarn-files">Compiling Yarn Files</a></h1>
+<p>The <code>YarnProject</code> resource represents the set of all compiled Yarn files of
+your game. You cannot construct it yourself. Instead, it is inserted into the Bevy world for
+you when the compilation is finished. You can however steer how and when this is done.</p>
+<h2 id="starting-the-compilation-process"><a class="header" href="#starting-the-compilation-process">Starting the Compilation Process</a></h2>
+<p>Generally, you'll want your game to compile the Yarn files as soon as possible. This
+is why the <a href="setup.html"><code>YarnSpinnerPlugin</code></a> will start doing so by default when it is added to the app.</p>
+<p>If for some reason you do not wish to start compilation right away, you can <em>defer</em> this process. To do this,
+construct the <code>YarnSpinnerPlugin</code> with <code>YarnSpinnerPlugin::deferred()</code> when adding it. Then, whenever you are ready
+to start the compilation, you can send a <code>LoadYarnProjectEvent</code>. Its construction methods are identical to the <code>YarnSpinnerPlugin</code>.
+In fact, when not running in deferred mode, the <code>YarnSpinnerPlugin</code> simply relays its setting to a <code>LoadYarnProjectEvent</code> and sends it.</p>
+<h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
+<p>If you look through the documentation of the [<code>YarnSpinnerPlugin</code>], you'll notice a few methods to modify
+its settings. The first few deal with where our Yarn files are coming from.</p>
+<h3 id="yarn-file-sources"><a class="header" href="#yarn-file-sources">Yarn File Sources</a></h3>
+<p>By default, Yarn Spinner will look
+in <code>&lt;game directory&gt;/assets/dialog</code>. Yarn Spinner can only read files from the <code>assets</code> directory
+— or its equivalent, if you have changed this default in the <code>AssetPlugin</code> on platforms which support it—
+but you can change how the <code>assets</code> will be looked through.</p>
+<p>The way to specify this is via <code>YarnFileSource</code>s. This enum tells Yarn Spinner where one or more Yarn files
+come from and can be added to an <code>AssetPlugin</code> with <code>AssetPlugin::add_yarn_source()</code>.
+The enum variants should be self explanatory, but the two most common use-cases come with their own convenience constructors:</p>
+<ul>
+<li><code>YarnFileSource::file()</code>: looks for a Yarn file at a path inside under the <code>assets</code> directory.</li>
+<li><code>YarnFileSource::folder()</code>: recursively looks through a given subdirectory for Yarn files.</li>
+</ul>
+<p>Since the Wasm and Android builds of Bevy have restrictions on their filesystem access,
+they cannot use <code>YarnFileSource::folder()</code> and must have all their Yarn files listed explicitly with <code>YarnFileSource::file()</code>.
+As such, the default behavior provided by <code>YarnSpinnerPlugin::new()</code> is not suitable for these platforms.
+To avoid it, use the <code>AssetPlugin::with_yarn_source()</code> constructor instead.</p>
+<p>As you might have guessed by now, <code>YarnSpinnerPlugin::new()</code> is simply a shorthand for <code>AssetPlugin::with_yarn_source(YarnFileSource::folder("dialog"))</code>.</p>
+<h3 id="development-file-generation"><a class="header" href="#development-file-generation">Development File Generation</a></h3>
+<p><code>YarnSpinnerPlugin::with_development_file_generation()</code> accepts a <code>DevelopmentFileGeneration</code>, which tells Yarn Spinner how aggressively to generate useful files on runtime.
+"Useful" refers to the developer and not the user. The default is <code>DevelopmentFileGeneration::TRY_FULL</code>, which will be <code>DevelopmentFileGeneration::Full</code> on platforms which support filesystem access,
+i.e. all except Wasm and Android. See the documentation for the full list of effects. Suffice it to say
+that this is not very important when developing without localization, but becomes vital otherwise. See the <a href="localization.html">Localization</a> chapter for more.</p>
+<p>Since these settings are intended for development, you can use <code>YarnSpinnerPlugin::with_development_file_generation(DevelopmentFileGeneration::None)</code> when shipping your game to optimize the runtime costs and
+avoid generating files that are useless to the player.</p>
+<h3 id="localization"><a class="header" href="#localization">Localization</a></h3>
+<p>The settings accessed by <code>YarnSpinnerPlugin::with_localizatons</code> are important enough to warrant their own chapter. See <a href="localization.html">Localization</a>.</p>
+<h2 id="after-the-compilation"><a class="header" href="#after-the-compilation">After the Compilation</a></h2>
+<p>Whether you used <code>YarnSpinnerPlugin</code> or <code>LoadYarnProjectEvent</code>, as soon as the compilation finished, a <code>YarnProject</code> resource will be inserted into the Bevy world.
+You can react to its creation by guarding your systems with <code>.run_if(resource_added::&lt;YarnProject&gt;())</code>, as seen in the <a href="setup.html">setup</a>.</p>
+<p>Once you have the <code>YarnProject</code>, you can use it to spawn a <code>DialogRunner</code> which in turn can, well, <a href="dialog_runner.html">run dialogs</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../bevy_plugin/setup.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../bevy_plugin/dialog_runner.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../bevy_plugin/setup.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../bevy_plugin/dialog_runner.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
