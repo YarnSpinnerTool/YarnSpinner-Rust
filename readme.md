@@ -5,7 +5,7 @@
 > **Note:**
 > Yarn Spinner for Rust is a work-in-progress project. We don't currently offer any official support for it. We encourage you to file [issues](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new) if you have them, and to join the official [Yarn Spinner Discord](https://discord.gg/yarnspinner) to discuss the project!
 
-The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. Read more in [The Book™](https://yarnspinnertool.github.io/YarnSpinner-Rust/) or check out 
+The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. Read more on [docs.yarnspinner.dev](https://docs.yarnspinner.dev/using-yarnspinner-with-rust/overview) or check out 
 the [live demo](https://janhohenheim.itch.io/yarnspinner-rust-demo), which was written using the [Bevy engine](https://bevyengine.org/).
 This project offers first class support for Bevy and assumes you are using it. If you are not, check out the [relevant section of the book](https://yarnspinnertool.github.io/YarnSpinner-Rust/working_without_bevy)
 
