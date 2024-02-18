@@ -20,4 +20,10 @@ unicode-segmentation = "1"
 [dependencies.bevy]
 version = "0.13"
 default-features = false
-features = ["bevy_ui", "bevy_text", "bevy_render", "png", "bevy_asset"]
+features = [
+    "bevy_ui",
+    "bevy_text",
+    "bevy_render",
+    "png",
+    "bevy_asset"
+]
