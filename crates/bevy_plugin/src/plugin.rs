@@ -236,13 +236,9 @@ impl YarnApp for App {
     }
 
     fn register_watching_for_changes(&mut self) -> &mut Self {
-        let on_by_default = cfg!(all(not(target_arch = "wasm32"), not(target_os = "android")));
+        let asset_server = self.world.get_resource::<AssetServer>().expect(ASSET_ERROR);
 
-        let asset_plugin = get_asset_plugin(self);
-        let watching_for_changes = asset_plugin
-            .watch_for_changes_override
-            .unwrap_or(on_by_default);
-
+        let watching_for_changes = asset_server.watching_for_changes();
         self.insert_resource(WatchingForChanges(watching_for_changes))
     }
 
@@ -256,9 +252,11 @@ impl YarnApp for App {
 
 fn get_asset_plugin(app: &App) -> &AssetPlugin {
     let asset_plugins: Vec<&AssetPlugin> = app.get_added_plugins();
-    asset_plugins.into_iter().next().expect("Yarn Spinner requires access to the Bevy asset plugin. \
-    Please add `YarnSpinnerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`")
+    asset_plugins.into_iter().next().expect(ASSET_ERROR)
 }
+
+const ASSET_ERROR: &str = "Yarn Spinner requires access to the Bevy asset plugin. \
+    Please add `YarnSpinnerPlugin` after `AssetPlugin`, which is commonly added as part of the `DefaultPlugins`";
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Resource)]
 pub(crate) struct AssetRoot(pub(crate) PathBuf);

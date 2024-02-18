@@ -25,10 +25,10 @@ sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 
 
-[target.'cfg(any(target_arch = "wasm32", target_os = "android"))'.dependencies.bevy]
+[dependencies.bevy]
 version = "0.13"
 default-features = false
-features = ["bevy_asset", "serialize"]
+features = ["bevy_asset", "multi-threaded"]
 
 [dev-dependencies]
 tempfile = "3"
@@ -38,18 +38,8 @@ version = "0.13.0"
 default-features = false
 features = [
   "bevy_core_pipeline",
-  "bevy_render",
-  "bevy_winit",
-  "file_watcher",
-  "x11",
   "bevy_audio",
-  "multi-threaded",
 ]
-
-[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies.bevy]
-version = "0.13"
-default-features = false
-features = ["bevy_asset", "serialize", "file_watcher",]
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies]
 glob = "0.3.1"
