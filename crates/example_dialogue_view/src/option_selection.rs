@@ -10,10 +10,10 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            create_options.run_if(resource_added::<OptionSelection>()),
+            create_options.run_if(resource_added::<OptionSelection>),
             show_options,
             select_option
-                .run_if(resource_exists::<OptionSelection>())
+                .run_if(resource_exists::<OptionSelection>)
                 .before(typewriter::despawn),
             despawn_options,
         )
@@ -71,7 +71,7 @@ fn show_options(
 }
 
 fn select_option(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     typewriter: Res<Typewriter>,
     mut buttons: Query<
         (&Interaction, &OptionButton, &Children),
@@ -106,7 +106,7 @@ fn select_option(
                 selection = Some(button.0);
                 (Color::TOMATO, CursorIcon::Default)
             }
-            Interaction::Hovered => (Color::WHITE, CursorIcon::Hand),
+            Interaction::Hovered => (Color::WHITE, CursorIcon::Pointer),
             _ => (Color::TOMATO, CursorIcon::Default),
         };
         window.cursor.icon = icon;
@@ -150,15 +150,15 @@ fn despawn_options(
 }
 
 const NUMBER_KEYS: [KeyCode; 9] = [
-    KeyCode::Key1,
-    KeyCode::Key2,
-    KeyCode::Key3,
-    KeyCode::Key4,
-    KeyCode::Key5,
-    KeyCode::Key6,
-    KeyCode::Key7,
-    KeyCode::Key8,
-    KeyCode::Key9,
+    KeyCode::Digit1,
+    KeyCode::Digit2,
+    KeyCode::Digit3,
+    KeyCode::Digit4,
+    KeyCode::Digit5,
+    KeyCode::Digit6,
+    KeyCode::Digit7,
+    KeyCode::Digit8,
+    KeyCode::Digit9,
 ];
 
 const NUMPAD_KEYS: [KeyCode; 9] = [

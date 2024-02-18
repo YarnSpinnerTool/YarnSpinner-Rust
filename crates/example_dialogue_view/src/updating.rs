@@ -12,9 +12,9 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
             hide_dialog,
             show_dialog.run_if(on_event::<DialogueStartEvent>()),
             present_line
-                .run_if(resource_exists::<Typewriter>().and_then(on_event::<PresentLineEvent>())),
+                .run_if(resource_exists::<Typewriter>.and_then(on_event::<PresentLineEvent>())),
             present_options.run_if(on_event::<PresentOptionsEvent>()),
-            continue_dialogue.run_if(resource_exists::<Typewriter>()),
+            continue_dialogue.run_if(resource_exists::<Typewriter>),
         )
             .chain()
             .after(YarnSpinnerSystemSet)
@@ -81,8 +81,8 @@ fn present_options(mut commands: Commands, mut events: EventReader<PresentOption
 }
 
 fn continue_dialogue(
-    keys: Res<Input<KeyCode>>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
     touches: Res<Touches>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut typewriter: ResMut<Typewriter>,
@@ -94,7 +94,7 @@ fn continue_dialogue(
     >,
 ) {
     let explicit_continue = keys.just_pressed(KeyCode::Space)
-        || keys.just_pressed(KeyCode::Return)
+        || keys.just_pressed(KeyCode::Enter)
         || mouse_buttons.just_pressed(MouseButton::Left)
         || touches.any_just_pressed();
     if explicit_continue && !typewriter.is_finished() {

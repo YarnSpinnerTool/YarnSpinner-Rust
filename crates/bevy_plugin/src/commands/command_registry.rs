@@ -9,7 +9,7 @@ use std::time::Duration;
 pub(crate) mod wait;
 
 pub(crate) fn command_registry_plugin(app: &mut App) {
-    app.fn_plugin(wait::wait_command_plugin);
+    app.add_plugins(wait::wait_command_plugin);
 }
 
 #[derive(Debug, PartialEq, Eq, Default)]

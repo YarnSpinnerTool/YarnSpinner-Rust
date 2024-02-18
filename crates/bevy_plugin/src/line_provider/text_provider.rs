@@ -11,8 +11,8 @@ mod shared_text_provider;
 mod strings_file_text_provider;
 
 pub(crate) fn text_provider_plugin(app: &mut App) {
-    app.fn_plugin(shared_text_provider::shared_text_provider_plugin)
-        .fn_plugin(strings_file_text_provider::strings_file_text_provider_plugin)
+    app.add_plugins(shared_text_provider::shared_text_provider_plugin)
+        .add_plugins(strings_file_text_provider::strings_file_text_provider_plugin)
         .add_systems(
             Update,
             fetch_resources

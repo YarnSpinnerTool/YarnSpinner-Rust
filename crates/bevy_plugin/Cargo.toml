@@ -1,6 +1,6 @@
 [package]
 name = "bevy_yarnspinner"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -19,15 +19,14 @@ audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 [dependencies]
 anyhow = "1"
 csv = "1"
-seldom_fn_plugin = "0.5"
 serde = { version = "1", features = ["derive"] }
-yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"], version = "0.1" }
+yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"], version = "0.2" }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 
 
 [target.'cfg(any(target_arch = "wasm32", target_os = "android"))'.dependencies.bevy]
-version = "0.12"
+version = "0.13"
 default-features = false
 features = ["bevy_asset", "serialize"]
 
@@ -48,7 +47,7 @@ features = [
 ]
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies.bevy]
-version = "0.12"
+version = "0.13"
 default-features = false
 features = ["bevy_asset", "serialize", "file_watcher",]
 

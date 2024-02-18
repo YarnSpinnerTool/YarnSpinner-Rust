@@ -14,10 +14,10 @@ mod audio_asset_provider_plugin;
 mod file_extension_asset_provider_plugin;
 
 pub(crate) fn asset_provider_plugin(app: &mut App) {
-    app.fn_plugin(file_extension_asset_provider_plugin::file_extension_asset_provider_plugin);
+    app.add_plugins(file_extension_asset_provider_plugin::file_extension_asset_provider_plugin);
 
     #[cfg(feature = "audio_assets")]
-    app.fn_plugin(audio_asset_provider_plugin::audio_asset_provider_plugin);
+    app.add_plugins(audio_asset_provider_plugin::audio_asset_provider_plugin);
 }
 
 /// Trait for providing assets for lines, e.g. audio files or character portraits.

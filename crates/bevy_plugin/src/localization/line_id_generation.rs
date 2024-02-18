@@ -17,7 +17,7 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
                 .pipe(panic_on_err)
                 .run_if(in_development.and_then(has_localizations)),
             handle_yarn_file_events_outside_development.run_if(
-                resource_exists::<YarnProject>()
+                resource_exists::<YarnProject>
                     .and_then(not(in_development.and_then(has_localizations))),
             ),
         )

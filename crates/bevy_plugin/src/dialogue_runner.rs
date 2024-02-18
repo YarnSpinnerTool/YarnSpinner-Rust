@@ -29,12 +29,12 @@ mod localized_line;
 mod runtime_interaction;
 
 pub(crate) fn dialogue_plugin(app: &mut App) {
-    app.fn_plugin(runtime_interaction::runtime_interaction_plugin)
-        .fn_plugin(localized_line::localized_line_plugin)
-        .fn_plugin(events::dialogue_runner_events_plugin)
-        .fn_plugin(dialogue_option::dialogue_option_plugin)
-        .fn_plugin(builder::dialogue_runner_builder_plugin)
-        .fn_plugin(inner::inner_dialogue_runner_plugin);
+    app.add_plugins(runtime_interaction::runtime_interaction_plugin)
+        .add_plugins(localized_line::localized_line_plugin)
+        .add_plugins(events::dialogue_runner_events_plugin)
+        .add_plugins(dialogue_option::dialogue_option_plugin)
+        .add_plugins(builder::dialogue_runner_builder_plugin)
+        .add_plugins(inner::inner_dialogue_runner_plugin);
 }
 
 /// The main type to interact with the dialogue system.

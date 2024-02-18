@@ -18,14 +18,14 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
                 load_project.pipe(panic_on_err),
                 add_yarn_files_to_load_queue
                     .pipe(panic_on_err)
-                    .run_if(resource_exists_and_changed::<YarnFilesToLoad>()),
+                    .run_if(resource_exists_and_changed::<YarnFilesToLoad>),
                 compile_loaded_yarn_files
                     .pipe(panic_on_err)
-                    .run_if(resource_exists::<YarnFilesToLoad>()),
+                    .run_if(resource_exists::<YarnFilesToLoad>),
                 recompile_loaded_yarn_files
                     .map(error)
                     .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
-                clear_temp_yarn_project.run_if(resource_added::<YarnProject>()),
+                clear_temp_yarn_project.run_if(resource_added::<YarnProject>),
             )
                 .chain()
                 .after(LineIdUpdateSystemSet)

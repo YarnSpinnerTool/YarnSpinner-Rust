@@ -1,6 +1,6 @@
 [package]
 name = "yarnspinner_core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -23,4 +23,4 @@ strum_macros = "0.26"
 thiserror = "1"
 prost = "0.12"
 serde = { version = "1", features = ["derive"], optional = true }
-bevy = { version = "0.12", default-features = false, optional = true }
+bevy = { version = "0.13", default-features = false, optional = true }

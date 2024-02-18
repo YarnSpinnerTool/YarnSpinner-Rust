@@ -13,7 +13,7 @@ fn main() {
     .add_systems(Startup, setup_camera)
     .add_systems(
         Update,
-        spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+        spawn_dialogue_runner.run_if(resource_added::<YarnProject>),
     )
     .run();
 }

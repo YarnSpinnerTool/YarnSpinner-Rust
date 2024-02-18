@@ -6,8 +6,6 @@ use bevy::asset::{AssetMetaCheck, LoadState};
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
-#[cfg(feature = "editor")]
-use bevy_editor_pls::EditorPlugin;
 use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
@@ -35,28 +33,26 @@ fn main() {
             YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
             ExampleYarnSpinnerDialogueViewPlugin::new(),
             Sprite3dPlugin,
-            #[cfg(feature = "editor")]
-            EditorPlugin::new(),
         ))
         .insert_resource(ClearColor(Color::CYAN))
         .add_systems(Startup, setup)
         .add_systems(
             Update,
             (
-                spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-                adapt_materials.run_if(any_with_component::<SceneInstance>()),
+                spawn_dialogue_runner.run_if(resource_added::<YarnProject>),
+                adapt_materials.run_if(any_with_component::<SceneInstance>),
                 spawn_sprites.run_if(sprites_have_loaded),
             ),
         )
         .add_systems(
             Update,
             (
-                handle_fade.run_if(resource_exists::<FadeCurtainAlpha>()),
-                move_camera.run_if(resource_exists::<CameraMovement>()),
+                handle_fade.run_if(resource_exists::<FadeCurtainAlpha>),
+                move_camera.run_if(resource_exists::<CameraMovement>),
                 change_speaker,
                 bob_speaker,
                 rotate_sprite,
-                ease_bang.run_if(any_with_component::<Bang>()),
+                ease_bang.run_if(any_with_component::<Bang>),
             )
                 .chain()
                 .after(ExampleYarnSpinnerDialogueViewSystemSet),

@@ -14,7 +14,7 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
         (
             continue_runtime
                 .pipe(panic_on_err)
-                .run_if(resource_exists::<YarnProject>()),
+                .run_if(resource_exists::<YarnProject>),
             accept_line_hints,
         )
             .chain()
