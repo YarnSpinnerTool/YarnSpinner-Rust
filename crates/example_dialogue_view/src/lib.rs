@@ -41,7 +41,6 @@
 #![warn(missing_docs, missing_debug_implementations)]
 
 use bevy::prelude::*;
-use seldom_fn_plugin::FnPluginExt;
 pub use updating::SpeakerChangeEvent;
 
 pub mod prelude {
@@ -77,10 +76,10 @@ mod updating;
 
 impl Plugin for ExampleYarnSpinnerDialogueViewPlugin {
     fn build(&self, app: &mut App) {
-        app.fn_plugin(assets::ui_assets_plugin)
-            .fn_plugin(setup::ui_setup_plugin)
-            .fn_plugin(updating::ui_updating_plugin)
-            .fn_plugin(typewriter::typewriter_plugin)
-            .fn_plugin(option_selection::option_selection_plugin);
+        app.add_plugins(assets::ui_assets_plugin)
+            .add_plugins(setup::ui_setup_plugin)
+            .add_plugins(updating::ui_updating_plugin)
+            .add_plugins(typewriter::typewriter_plugin)
+            .add_plugins(option_selection::option_selection_plugin);
     }
 }

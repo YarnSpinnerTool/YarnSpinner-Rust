@@ -14,11 +14,11 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            send_finished_event.run_if(resource_exists::<Typewriter>()),
+            send_finished_event.run_if(resource_exists::<Typewriter>),
             despawn.run_if(on_event::<DialogueCompleteEvent>()),
             spawn.run_if(on_event::<DialogueStartEvent>()),
-            write_text.run_if(resource_exists::<Typewriter>()),
-            show_continue.run_if(resource_exists::<Typewriter>()),
+            write_text.run_if(resource_exists::<Typewriter>),
+            show_continue.run_if(resource_exists::<Typewriter>),
             bob_continue,
         )
             .chain()

@@ -10,6 +10,7 @@ use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::gltf::Gltf;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
+use bevy::render::camera::Exposure;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams};
 use bevy_yarnspinner::prelude::*;
 
@@ -28,6 +29,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ..default()
             },
             tonemapping: Tonemapping::TonyMcMapface,
+            exposure: Exposure::INDOOR,
             ..default()
         },
         #[cfg(not(target_arch = "wasm32"))]
@@ -44,7 +46,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::BISQUE,
-            illuminance: 1_000.,
+            illuminance: light_consts::lux::OVERCAST_DAY,
             shadows_enabled: true,
             ..default()
         },
@@ -67,7 +69,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         commands.spawn(PointLightBundle {
             point_light: PointLight {
                 color: Color::rgb(1.0, 0.78, 0.45),
-                intensity: 80.,
+                intensity: 10_000.,
                 shadows_enabled: true,
                 ..default()
             },

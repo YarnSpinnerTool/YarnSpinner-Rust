@@ -14,8 +14,8 @@ fn main() {
     .add_systems(
         Update,
         (
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
-            print_yarn_variable.run_if(any_with_component::<DialogueRunner>()),
+            spawn_dialogue_runner.run_if(resource_added::<YarnProject>),
+            print_yarn_variable.run_if(any_with_component::<DialogueRunner>),
         ),
     )
     .run();

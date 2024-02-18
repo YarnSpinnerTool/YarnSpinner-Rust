@@ -39,7 +39,7 @@
 //! The main workflow is as follows:
 //! - Register the [`YarnSpinnerPlugin`]
 //! - When the [`YarnProject`] [`Resource`](bevy::prelude::Resource) is added, spawn a [`DialogueRunner`] from it.
-//! The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>())`.
+//! The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>)`.
 //!
 //! The following example is adapted from the [hello world example](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/blob/main/examples/bevy_yarnspinner/src/bin/hello_world.rs).
 //!
@@ -73,7 +73,7 @@
 //!     // Spawn the dialog as soon as the Yarn project finished compiling
 //!     .add_systems(
 //!         Update,
-//!         spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+//!         spawn_dialogue_runner.run_if(resource_added::<YarnProject>),
 //!     )
 //!     .run();
 //! }
@@ -144,14 +144,13 @@ pub mod prelude {
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};
     pub(crate) use anyhow::{Context, Error, Result};
+    pub(crate) use serde::{Deserialize, Serialize};
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
         VariableStorage, YarnFn, YarnLibrary, YarnValue,
     };
     pub(crate) type SystemResult = Result<()>;
-    pub(crate) use seldom_fn_plugin::FnPluginExt;
-    pub(crate) use serde::{Deserialize, Serialize};
 }
 
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};

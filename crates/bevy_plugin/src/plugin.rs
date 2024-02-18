@@ -226,13 +226,13 @@ impl YarnApp for App {
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.fn_plugin(crate::yarn_file_asset::yarnspinner_asset_loader_plugin)
-            .fn_plugin(crate::localization::localization_plugin)
-            .fn_plugin(crate::dialogue_runner::dialogue_plugin)
-            .fn_plugin(crate::line_provider::line_provider_plugin)
-            .fn_plugin(crate::project::project_plugin)
-            .fn_plugin(crate::commands::commands_plugin)
-            .fn_plugin(crate::development_file_generation::development_file_generation_plugin)
+        self.add_plugins(crate::yarn_file_asset::yarnspinner_asset_loader_plugin)
+            .add_plugins(crate::localization::localization_plugin)
+            .add_plugins(crate::dialogue_runner::dialogue_plugin)
+            .add_plugins(crate::line_provider::line_provider_plugin)
+            .add_plugins(crate::project::project_plugin)
+            .add_plugins(crate::commands::commands_plugin)
+            .add_plugins(crate::development_file_generation::development_file_generation_plugin)
     }
 
     fn register_watching_for_changes(&mut self) -> &mut Self {

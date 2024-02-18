@@ -10,7 +10,7 @@ use std::iter;
 mod compilation;
 
 pub(crate) fn project_plugin(app: &mut App) {
-    app.fn_plugin(compilation::project_compilation_plugin)
+    app.add_plugins(compilation::project_compilation_plugin)
         .add_event::<LoadYarnProjectEvent>();
 }
 
@@ -23,7 +23,7 @@ pub(crate) struct CompilationSystemSet;
 /// # use bevy::prelude::*;
 /// # use bevy_yarnspinner::prelude::*;
 /// # let mut app = App::new();
-/// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>()));
+/// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>));
 ///
 /// fn setup_dialogue_runners(mut commands: Commands, project: Res<YarnProject>) {
 ///    commands.spawn(project.create_dialogue_runner());
