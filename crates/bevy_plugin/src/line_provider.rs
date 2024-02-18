@@ -1,4 +1,3 @@
-use crate::prelude::*;
 #[cfg(feature = "audio_assets")]
 pub use asset_provider::AudioAssetProvider;
 pub use asset_provider::{file_extensions, AssetProvider, FileExtensionAssetProvider, LineAssets};
