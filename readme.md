@@ -100,4 +100,5 @@ Et voilà! That was all. Thanks for checking out Yarn Spinner for Rust! Continui
 
 | Bevy | Yarn Spinner for Rust | 
 |------|-----------------------|
+| 0.13 | 0.2                   |
 | 0.12 | 0.1                   |
