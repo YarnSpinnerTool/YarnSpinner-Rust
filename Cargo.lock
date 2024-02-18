@@ -1120,7 +1120,6 @@ dependencies = [
  "bevy_sprite3d",
  "bevy_yarnspinner",
  "bevy_yarnspinner_example_dialogue_view",
- "instant",
 ]
 
 [[package]]
@@ -4627,12 +4626,13 @@ dependencies = [
 
 [[package]]
 name = "yarnspinner_compiler"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "annotate-snippets",
  "antlr-rust",
  "better_any",
  "bevy",
+ "instant",
  "rand",
  "regex",
  "serde",

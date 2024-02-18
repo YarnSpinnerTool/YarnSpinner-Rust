@@ -1,6 +1,6 @@
 [package]
 name = "yarnspinner_compiler"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -26,3 +26,6 @@ annotate-snippets = "0.10"
 serde = { version = "1", features = ["derive"], optional = true }
 bevy = { version = "0.13", default-features = false, optional = true }
 rand = { version = "0.8", features = ["small_rng"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+instant = { version = "0.1.12", features = ["wasm-bindgen"] } # see https://github.com/Amanieu/parking_lot/issues/269, pulled in by (unmaintained) anltr-rust

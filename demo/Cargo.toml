@@ -15,7 +15,3 @@ bevy = "0.13"
 bevy_yarnspinner = { path = "../crates/bevy_plugin", version = "0.2" }
 bevy_yarnspinner_example_dialogue_view = { path = "../crates/example_dialogue_view", version = "0.2" }
 bevy_sprite3d = { git = "https://github.com/vertesians/bevy_sprite3d", branch = "main" } # waiting for https://github.com/FraserLee/bevy_sprite3d/pull/15 to be merged
-
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-instant = { version = "0.1.12", features = ["wasm-bindgen"] } # see https://github.com/rustwasm/wasm-bindgen/discussions/3500#discussioncomment-6334669
