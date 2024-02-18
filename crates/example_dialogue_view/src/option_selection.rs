@@ -13,7 +13,10 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             create_options.run_if(resource_added::<OptionSelection>),
             show_options,
             select_option
-                .run_if(resource_exists::<OptionSelection>)
+                .run_if(
+                    resource_exists::<OptionSelection>
+                        .and_then(any_with_component::<PrimaryWindow>),
+                )
                 .before(typewriter::despawn),
             despawn_options,
         )
