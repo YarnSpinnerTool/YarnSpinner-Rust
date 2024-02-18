@@ -12,7 +12,7 @@ rustup target add wasm32-unknown-unknown
 cargo build --bin bevy_yarnspinner_demo --target wasm32-unknown-unknown
 
 # Keep this in sync with the version in `Cargo.lock`.
-cargo install wasm-bindgen-cli --version 0.2.90 || true
+cargo install wasm-bindgen-cli --version 0.2.91 || true
 wasm-bindgen --no-typescript --out-name bevy_yarnspinner_demo --out-dir demo/wasm --target web target/wasm32-unknown-unknown/debug/bevy_yarnspinner_demo.wasm
 
 cargo install basic-http-server || true
