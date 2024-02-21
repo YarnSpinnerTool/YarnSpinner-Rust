@@ -555,7 +555,9 @@ impl VirtualMachine {
             }
         })?;
         let substituted_text = expand_substitutions(&line_text, substitutions);
-        let markup = self.parse_markup(&substituted_text).unwrap();
+        let markup = self
+            .parse_markup(&substituted_text)
+            .map_err(DialogueError::MarkupParseError)?;
         let line = Line {
             id: string_id,
             text: markup.text,
