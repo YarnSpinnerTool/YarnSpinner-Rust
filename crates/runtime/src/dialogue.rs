@@ -45,6 +45,11 @@ pub enum DialogueError {
     InvalidNode { node_name: String },
     #[error(transparent)]
     VariableStorageError(#[from] VariableStorageError),
+    #[error("Function \"{function_name}\" not found in library: {library}")]
+    FunctionNotFound {
+        function_name: String,
+        library: Library,
+    },
 }
 
 impl Dialogue {

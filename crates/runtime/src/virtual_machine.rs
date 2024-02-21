@@ -452,12 +452,13 @@ impl VirtualMachine {
 
                 // Call a function, whose parameters are expected to be on the stack. Pushes the function's return value, if it returns one.
                 let function_name: String = instruction.read_operand(0);
-                let function = self.library.get(&function_name).unwrap_or_else(|| {
-                    panic!(
-                        "Function \"{}\" not found in library: {}",
-                        function_name, self.library
-                    )
-                });
+                let function =
+                    self.library
+                        .get(&function_name)
+                        .ok_or(DialogueError::FunctionNotFound {
+                            function_name: function_name.to_string(),
+                            library: self.library.clone(),
+                        })?;
 
                 // Expect the compiler to have placed the number of parameters
                 // actually passed at the top of the stack.
