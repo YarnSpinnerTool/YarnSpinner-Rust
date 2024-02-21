@@ -41,6 +41,8 @@ pub enum DialogueError {
     ContinueOnOptionSelectionError,
     #[error("Cannot continue running dialogue. No node has been selected.")]
     NoNodeSelectedOnContinue,
+    #[error("No program has been loaded. Cannot continue running dialogue.")]
+    NoProgramLoaded,
     #[error("No node named \"{node_name}\" has been loaded.")]
     InvalidNode { node_name: String },
     #[error(transparent)]

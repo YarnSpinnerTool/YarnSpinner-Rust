@@ -111,9 +111,7 @@ impl VirtualMachine {
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
         let node_name = node_name.into();
         debug!("Loading node \"{node_name}\"");
-        let Some(current_node) = self.get_node_from_name(&node_name) else {
-            return Err(DialogueError::InvalidNode { node_name });
-        };
+        let current_node = self.get_node_from_name(&node_name)?;
         self.current_node = Some(current_node.clone());
 
         self.reset_state();
@@ -173,16 +171,22 @@ impl VirtualMachine {
         }
     }
 
-    fn get_node_from_name(&self, node_name: &str) -> Option<&Node> {
-        let program = self.program.as_ref().unwrap_or_else(|| {
-            panic!("Cannot load node \"{node_name}\": No program has been loaded.")
-        });
+    fn get_node_from_name(&self, node_name: &str) -> Result<&Node> {
+        let program = self
+            .program
+            .as_ref()
+            .ok_or_else(|| DialogueError::NoProgramLoaded)?;
         assert!(
             !program.nodes.is_empty(),
             "Cannot load node \"{node_name}\": No nodes have been loaded.",
         );
 
-        program.nodes.get(node_name)
+        program
+            .nodes
+            .get(node_name)
+            .ok_or_else(|| DialogueError::InvalidNode {
+                node_name: node_name.to_owned(),
+            })
     }
 
     /// Resumes execution.
