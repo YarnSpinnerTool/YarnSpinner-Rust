@@ -1,0 +1,16 @@
+[package]
+name = "yarnspinner_without_bevy_examples"
+version = "0.1.0"
+edition = "2021"
+repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
+homepage = "https://docs.yarnspinner.dev/"
+keywords = ["gamedev", "dialog", "yarn", "bevy"]
+categories = ["game-development", "compilers"]
+authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
+publish = false
+
+[dependencies]
+crossterm = "0.27"
+ratatui = "0.26"
+anyhow = "1.0"
+yarnspinner = { path = "../../crates/yarnspinner", version = "0.2" }

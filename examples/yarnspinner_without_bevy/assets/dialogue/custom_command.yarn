@@ -1,0 +1,8 @@
+title: CustomCommand
+---
+When a command is encountered, a 'Command' DialogueEvent will be triggered.
+You can handle this in your game code to do anything you'd like.
+For example, here's a command that changes the background of the terminal!
+<<set_background "cyan">>
+Ooh, pretty.
+===
