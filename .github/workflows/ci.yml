@@ -24,8 +24,6 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - name: Cache Cargo build files
-        uses: Leafwing-Studios/cargo-cache@v1
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo clippy
@@ -47,8 +45,6 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
-      - name: Cache Cargo build files
-        uses: Leafwing-Studios/cargo-cache@v1
       - name: Run cargo fmt
         run: cargo fmt --check --all
 
@@ -64,8 +60,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-      - name: Cache Cargo build files
-        uses: Leafwing-Studios/cargo-cache@v1
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo doc
@@ -80,8 +74,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-      - name: Cache Cargo build files
-        uses: Leafwing-Studios/cargo-cache@v1
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo test
