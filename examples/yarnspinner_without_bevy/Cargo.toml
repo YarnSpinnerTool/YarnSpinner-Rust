@@ -6,7 +6,7 @@ repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
 keywords = ["gamedev", "dialog", "yarn", "bevy"]
 categories = ["game-development", "compilers"]
-authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
+authors = ["Joe Clay <27cupsofcoffee@gmail.com>"]
 publish = false
 
 [dependencies]

@@ -1,3 +1,6 @@
+//! This module is here for using ratatui to interact with the terminal and 
+//! crossterm to listen to input. It does not contain any code specific to yarnspinner
+
 use std::io::Stdout;
 
 use crossterm::event::{Event, KeyCode, KeyEventKind};

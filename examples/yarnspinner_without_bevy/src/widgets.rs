@@ -1,3 +1,6 @@
+//! This module is here for using ratatui to interact with the terminal and 
+//! does not contain any code specific to yarnspinner
+
 use ratatui::prelude::{Buffer, Rect};
 use ratatui::style::{Modifier, Style, Styled};
 use ratatui::widgets::{Block, Borders, List, ListState, Paragraph, StatefulWidget, Widget, Wrap};

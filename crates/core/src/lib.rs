@@ -19,7 +19,7 @@ mod yarn_value;
 
 pub mod prelude {
     //! Types and functions used all throughout the runtime and compiler.
-    #[cfg(all(feature = "bevy", feature = "serde"))]
+    #[cfg(any(feature = "bevy", feature = "serde"))]
     pub use crate::feature_gates::*;
 
     pub use crate::{
