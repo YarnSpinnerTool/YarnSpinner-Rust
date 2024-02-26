@@ -44,7 +44,7 @@ impl YarnSpinnerPlugin {
     /// Use [`YarnSpinnerPlugin::with_yarn_source`] or [`YarnSpinnerPlugin::with_yarn_sources`] there instead.
     ///
     /// All Yarn files will be shared across [`DialogueRunner`]s.
-    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
+    /// If hot reloading is turned on via the \"file_watcher\" feature of Bevy,
     /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// Calling this is equivalent to calling [`YarnSpinnerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
@@ -65,7 +65,7 @@ impl YarnSpinnerPlugin {
 
     /// Creates a new plugin that loads Yarn files from the given sources.
     /// All Yarn files will be shared across [`DialogueRunner`]s.
-    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
+    /// If hot reloading is turned on via the \"file_watcher\" feature of Bevy,
     /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.
@@ -92,7 +92,7 @@ impl YarnSpinnerPlugin {
 
     /// Creates a new plugin that loads Yarn files from the given source.
     /// All Yarn files will be shared across [`DialogueRunner`]s.
-    /// If [hot reloading](https://bevy-cheatbook.github.io/assets/hot-reload.html) is turned on,
+    /// If hot reloading is turned on via the \"file_watcher\" feature of Bevy,
     /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// See [`YarnFileSource`] for more information on where Yarn files can be loaded from.

@@ -7,8 +7,9 @@ pub(crate) fn ui_setup_plugin(app: &mut App) {
     app.add_systems(Startup, setup);
 }
 
+/// Marker for the [`Node`] that is the root of the UI
 #[derive(Debug, Default, Component)]
-pub(crate) struct UiRootNode;
+pub struct UiRootNode;
 
 #[derive(Debug, Default, Component)]
 pub(crate) struct DialogueNode;

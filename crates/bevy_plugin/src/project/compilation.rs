@@ -67,9 +67,7 @@ fn load_project(
             && !is_watching_for_changes.0
         {
             warn!("Development file generation mode is set to `Full`, but hot reloading is not turned on. \
-                For an optimal development experience, we recommend turning on hot reloading by setting the `watch_for_changes` field of the `AssetPlugin` to `Some`, \
-                e.g. via `watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200))`. \
-                You can see an example of how to do this in at <https://github.com/bevyengine/bevy/blob/v0.11.0/examples/asset/hot_asset_reloading.rs>");
+                For an optimal development experience, we recommend turning on hot reloading by activating the \"file_watcher\" feature of Bevy");
         }
 
         commands.insert_resource(YarnProjectConfigToLoad {
