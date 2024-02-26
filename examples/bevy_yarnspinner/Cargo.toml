@@ -13,3 +13,19 @@ publish = false
 bevy = "0.13"
 bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.2" }
 bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.2" }
+
+[[bin]]
+name = "access_variables"
+doc = false
+
+[[bin]]
+name = "custom_command"
+doc = false
+
+[[bin]]
+name = "custom_function"
+doc = false
+
+[[bin]]
+name = "hello_world"
+doc = false

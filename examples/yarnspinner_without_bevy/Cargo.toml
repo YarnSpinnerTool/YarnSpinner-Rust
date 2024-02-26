@@ -14,3 +14,19 @@ crossterm = "0.27"
 ratatui = "0.26"
 anyhow = "1.0"
 yarnspinner = { path = "../../crates/yarnspinner", version = "0.2" }
+
+[[bin]]
+name = "access_variables"
+doc = false
+
+[[bin]]
+name = "custom_command"
+doc = false
+
+[[bin]]
+name = "custom_function"
+doc = false
+
+[[bin]]
+name = "hello_world"
+doc = false
