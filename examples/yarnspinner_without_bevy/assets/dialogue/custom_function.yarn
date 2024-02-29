@@ -1,0 +1,6 @@
+title: CustomFunction
+---
+Rust functions can be registered into your dialogue's library to make them runnable via Yarn.
+Let's take a look at a custom function now!
+pow(2,3) = {pow(2,3)}
+===

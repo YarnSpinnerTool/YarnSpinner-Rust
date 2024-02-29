@@ -19,8 +19,10 @@ mod yarn_value;
 
 pub mod prelude {
     //! Types and functions used all throughout the runtime and compiler.
+    #[cfg(any(feature = "bevy", feature = "serde"))]
+    pub use crate::feature_gates::*;
+
     pub use crate::{
-        feature_gates::*,
         generated::{
             instruction::OpCode, operand::Value as OperandValue, Header, Instruction,
             InvalidOpCodeError, Node, Operand, Program,
