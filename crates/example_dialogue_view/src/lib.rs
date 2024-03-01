@@ -10,7 +10,7 @@
 //!
 //! ## Usage
 //!
-//! It's enough to simply register [`ExampleYarnSpinnerDialogueViewPlugin`] alongside [`YarnSpinnerPlugin`](bevy_yarnspinner::prelude::YarnSpinnerPlugin):
+//! It's enough to simply register [`ExampleYarnSpinnerDialogueViewPlugin`] alongside [`YarnSpinnerPlugin`]:
 //! ```no_run
 //! use bevy::prelude::*;
 //! use bevy_yarnspinner::*;
