@@ -509,10 +509,10 @@ impl VirtualMachine {
                                 .get(&variable_name)
                                 .unwrap_or_else(|| panic!("The loaded program does not contain an initial value for the variable {variable_name}"))
                                 .clone();
-            
+
                             // Store the initial value in the variable_storage
                             self.variable_storage.set(variable_name.clone(), initial_value.clone().into())?;
-            
+
                             Ok(initial_value.into())
                         } else {
                             Err(e)
