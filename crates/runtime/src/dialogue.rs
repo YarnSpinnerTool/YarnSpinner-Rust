@@ -219,10 +219,27 @@ impl Dialogue {
         self.vm.continue_()
     }
 
+    fn extend_variable_storage_from(&mut self, program: &Program) {
+        let initial: HashMap<String, YarnValue> = program
+            .initial_values
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone().into()))
+            .collect();
+
+        // Extend the VariableStorage with the initial values from the program
+        if let Err(e) = self.variable_storage_mut().extend(initial) {
+            error!(
+                "Failed to populate VariableStorage with initial values: {}",
+                e
+            );
+        }
+    }
+
     /// Sets or replaces the [`Dialogue`]'s current [`Program`]. The program is replaced, all current state is reset.
     pub fn replace_program(&mut self, program: Program) -> &mut Self {
-        self.vm.program.replace(program);
+        self.vm.program.replace(program.clone());
         self.vm.reset_state();
+        self.extend_variable_storage_from(&program);
         self
     }
 
@@ -231,8 +248,9 @@ impl Dialogue {
         if let Some(existing_program) = self.vm.program.as_mut() {
             *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
         } else {
-            self.vm.program.replace(program);
+            self.vm.program.replace(program.clone());
             self.vm.reset_state();
+            self.extend_variable_storage_from(&program);
         }
 
         self
