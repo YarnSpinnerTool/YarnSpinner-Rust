@@ -246,12 +246,13 @@ impl Dialogue {
     /// Merges the currently set [`Program`] with the given one. If there is no program set, the given one is set.
     pub fn add_program(&mut self, program: Program) -> &mut Self {
         if let Some(existing_program) = self.vm.program.as_mut() {
-            *existing_program = Program::combine(vec![existing_program.clone(), program]).unwrap();
+            *existing_program =
+                Program::combine(vec![existing_program.clone(), program.clone()]).unwrap();
         } else {
             self.vm.program.replace(program.clone());
             self.vm.reset_state();
-            self.extend_variable_storage_from(&program);
         }
+        self.extend_variable_storage_from(&program);
 
         self
     }
