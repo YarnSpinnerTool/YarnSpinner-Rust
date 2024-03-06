@@ -3,10 +3,10 @@
 //! ## Implementation notes
 //! `TestDumpingCode` was not ported because `GetByteCode` is not used by a user directly and thus was not implemented at all.
 
+use std::collections::HashMap;
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
 use yarnspinner::runtime::*;
-use yarnspinner_core::prelude::Header;
 
 mod test_base;
 
@@ -175,27 +175,13 @@ fn test_getting_headers() {
 
     let headers = dialogue.get_headers_for_node("LearnMore").unwrap();
 
-    assert_eq!(
-        headers,
-        vec![
-            Header {
-                key: "title".to_string(),
-                value: "LearnMore".to_string()
-            },
-            Header {
-                key: "tags".to_string(),
-                value: "rawText".to_string()
-            },
-            Header {
-                key: "colorID".to_string(),
-                value: "0".to_string()
-            },
-            Header {
-                key: "position".to_string(),
-                value: "763,472".to_string()
-            }
-        ]
-    );
+    let mut expected_headers = HashMap::new();
+    expected_headers.insert("title".to_string(), "LearnMore".to_string());
+    expected_headers.insert("tags".to_string(), "rawText".to_string());
+    expected_headers.insert("colorID".to_string(), "0".to_string());
+    expected_headers.insert("position".to_string(), "763,472".to_string());
+
+    assert_eq!(headers, expected_headers);
 }
 
 /// ## Implementation note
