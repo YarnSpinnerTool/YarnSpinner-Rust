@@ -3,6 +3,7 @@
 use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
 use log::error;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use thiserror::Error;
 use yarnspinner_core::prelude::*;
@@ -310,6 +311,22 @@ impl Dialogue {
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
         self.get_node_logging_errors(node_name)
             .map(|node| node.tags)
+    }
+
+    /// Returns the headers for the node `node_name`.
+    ///
+    /// The headers are all the key-value pairs defined in the node's source code
+    /// including the `tags` and `title` headers.
+    ///
+    /// Returns [`None`] if the node is not present in the program.
+    #[must_use]
+    pub fn get_headers_for_node(&self, node_name: &str) -> Option<HashMap<String, String>> {
+        self.get_node_logging_errors(node_name).map(|node| {
+            node.headers
+                .iter()
+                .map(|header| (header.key.clone(), header.value.clone()))
+                .collect()
+        })
     }
 
     /// Gets a value indicating whether a specified node exists in the [`Program`].
