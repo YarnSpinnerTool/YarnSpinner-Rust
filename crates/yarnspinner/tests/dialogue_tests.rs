@@ -6,6 +6,7 @@
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
 use yarnspinner::runtime::*;
+use yarnspinner_core::prelude::Header;
 
 mod test_base;
 
@@ -160,6 +161,41 @@ fn test_getting_tags() {
     let tags = dialogue.get_tags_for_node("LearnMore").unwrap();
 
     assert_eq!(tags, vec!["rawText"]);
+}
+
+#[test]
+fn test_getting_headers() {
+    let path = test_data_path().join("Example.yarn");
+    let mut test_base = TestBase::new();
+
+    let result = Compiler::new().read_file(path).compile().unwrap();
+
+    test_base = test_base.with_program(result.program.unwrap());
+    let dialogue = &test_base.dialogue;
+
+    let headers = dialogue.get_headers_for_node("LearnMore").unwrap();
+
+    assert_eq!(
+        headers,
+        vec![
+            Header {
+                key: "title".to_string(),
+                value: "LearnMore".to_string()
+            },
+            Header {
+                key: "tags".to_string(),
+                value: "rawText".to_string()
+            },
+            Header {
+                key: "colorID".to_string(),
+                value: "0".to_string()
+            },
+            Header {
+                key: "position".to_string(),
+                value: "763,472".to_string()
+            }
+        ]
+    );
 }
 
 /// ## Implementation note

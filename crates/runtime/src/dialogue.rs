@@ -312,6 +312,18 @@ impl Dialogue {
             .map(|node| node.tags)
     }
 
+    /// Returns the headers for the node `node_name`.
+    ///
+    /// The headers are all the key-value pairs defined in the node's source code
+    /// including the `tags` and `title` headers.
+    ///
+    /// Returns [`None`] if the node is not present in the program.
+    #[must_use]
+    pub fn get_headers_for_node(&self, node_name: &str) -> Option<Vec<Header>> {
+        self.get_node_logging_errors(node_name)
+            .map(|node| node.headers)
+    }
+
     /// Gets a value indicating whether a specified node exists in the [`Program`].
     #[must_use]
     pub fn node_exists(&self, node_name: &str) -> bool {
