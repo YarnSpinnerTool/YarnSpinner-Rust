@@ -437,12 +437,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     }
 
     fn visit_set_statement(&mut self, ctx: &Set_statementContext<'input>) -> Self::Return {
-        let Some(variable_context) = ctx.variable() else {
-            return None;
-        };
-        let Some(expression_context) = ctx.expression() else {
-            return None;
-        };
+        let variable_context = ctx.variable()?;
+        let expression_context = ctx.expression()?;
         let variable_type = self.visit(variable_context.as_ref());
         if let Some(variable_type) = variable_type.as_ref() {
             // giving the expression a hint just in case it is needed to help resolve any ambiguity on the expression
