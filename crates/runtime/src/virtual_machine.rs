@@ -15,7 +15,7 @@ use yarnspinner_core::prelude::*;
 mod execution_state;
 mod state;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct VirtualMachine {
     pub(crate) library: Library,
     pub(crate) program: Option<Program>,

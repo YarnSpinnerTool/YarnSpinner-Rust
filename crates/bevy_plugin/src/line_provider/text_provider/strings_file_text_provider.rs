@@ -41,6 +41,10 @@ impl Debug for StringsFileTextProvider {
 }
 
 impl UnderlyingTextProvider for StringsFileTextProvider {
+    fn clone_shallow(&self) -> Box<dyn UnderlyingTextProvider> {
+        Box::new(self.clone())
+    }
+
     fn accept_line_hints(&mut self, _line_ids: &[LineId]) {
         // no-op
     }
