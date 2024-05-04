@@ -14,7 +14,7 @@ use yarnspinner_core::prelude::*;
 /// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
     /// Creates a shallow clone of this text provider, i.e. a clone that
-    /// shares the same underlying storage and will thus be perfectly in sync
+    /// shares the same underlying provider and will thus be perfectly in sync
     /// with the original instance.
     fn clone_shallow(&self) -> Box<dyn TextProvider>;
     /// Passes the [`LineId`]s that this [`TextProvider`] should soon provide text for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
