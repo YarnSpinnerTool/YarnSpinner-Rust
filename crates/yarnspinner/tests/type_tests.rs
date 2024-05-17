@@ -413,8 +413,10 @@ fn test_initial_values() -> anyhow::Result<()> {
         .declare_variable(
             Declaration::new("$external_str", Type::String).with_default_value("Hello"),
         )
-        .declare_variable(Declaration::new("$external_int", Type::Boolean).with_default_value(true))
-        .declare_variable(Declaration::new("$external_bool", Type::Number).with_default_value(42))
+        .declare_variable(Declaration::new("$external_int", Type::Number).with_default_value(42))
+        .declare_variable(
+            Declaration::new("$external_bool", Type::Boolean).with_default_value(true),
+        )
         .compile()?;
 
     let mut variable_storage = test_base.variable_storage.clone_shallow();
@@ -424,6 +426,37 @@ fn test_initial_values() -> anyhow::Result<()> {
 
     test_base.with_compilation(result).run_standard_testcase();
     Ok(())
+}
+
+#[test]
+fn test_variable_storage_extended_with_program_initial_values() {
+    let source = "
+        <<declare $int = 42>>
+        <<declare $str = \"Hello\">>
+        <<declare $bool = true>>
+    ";
+
+    let result = Compiler::from_test_source(source).compile().unwrap();
+
+    let mut dialogue = Dialogue::new(
+        Box::new(MemoryVariableStorage::new()),
+        Box::new(StringTableTextProvider::new()),
+    );
+    dialogue.replace_program(result.program.unwrap());
+
+    let variable_storage = dialogue.variable_storage();
+    assert_eq!(
+        variable_storage.get("$int").unwrap(),
+        YarnValue::Number(42.0)
+    );
+    assert_eq!(
+        variable_storage.get("$str").unwrap(),
+        YarnValue::String("Hello".to_string())
+    );
+    assert_eq!(
+        variable_storage.get("$bool").unwrap(),
+        YarnValue::Boolean(true)
+    );
 }
 
 #[test]
