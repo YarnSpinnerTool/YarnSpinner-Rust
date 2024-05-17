@@ -402,25 +402,25 @@ fn test_initial_values() -> anyhow::Result<()> {
             // so this would be "True" instead.
             .expect_line("true")
             // external decls
-            .expect_line("42")
-            .expect_line("Hello")
+            .expect_line("0")
+            .expect_line("Bye")
             // ## Implementation note: See above
-            .expect_line("true"),
+            .expect_line("false"),
     );
 
     let result = Compiler::from_test_source(source)
         .extend_library(test_base.dialogue.library().clone())
+        .declare_variable(Declaration::new("$external_str", Type::String).with_default_value("Bye"))
+        .declare_variable(Declaration::new("$external_int", Type::Number).with_default_value(0))
         .declare_variable(
-            Declaration::new("$external_str", Type::String).with_default_value("Hello"),
+            Declaration::new("$external_bool", Type::Boolean).with_default_value(false),
         )
-        .declare_variable(Declaration::new("$external_int", Type::Boolean).with_default_value(true))
-        .declare_variable(Declaration::new("$external_bool", Type::Number).with_default_value(42))
         .compile()?;
 
     let mut variable_storage = test_base.variable_storage.clone_shallow();
-    variable_storage.set("$external_str".to_string(), "Hello".into())?;
-    variable_storage.set("$external_int".to_string(), 42.into())?;
-    variable_storage.set("$external_bool".to_string(), true.into())?;
+    variable_storage.set("$external_str".to_string(), "Bye".into())?;
+    variable_storage.set("$external_int".to_string(), 0.into())?;
+    variable_storage.set("$external_bool".to_string(), false.into())?;
 
     test_base.with_compilation(result).run_standard_testcase();
     Ok(())
