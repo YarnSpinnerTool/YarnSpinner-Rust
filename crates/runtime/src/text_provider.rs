@@ -13,6 +13,10 @@ use yarnspinner_core::prelude::*;
 ///
 /// By injecting this, we don't need to expose `Dialogue.ExpandSubstitutions` and `Dialogue.ParseMarkup`, since we can apply them internally.
 pub trait TextProvider: Debug + Send + Sync {
+    /// Creates a shallow clone of this text provider, i.e. a clone that
+    /// shares the same underlying provider and will thus be perfectly in sync
+    /// with the original instance.
+    fn clone_shallow(&self) -> Box<dyn TextProvider>;
     /// Passes the [`LineId`]s that this [`TextProvider`] should soon provide text for. These are the [`LineId`]s that are contained in the current node and are not required to be actually reached.
     fn accept_line_hints(&mut self, line_ids: &[LineId]);
     /// Returns the text for the given [`LineId`]. Will only be called if [`TextProvider::are_lines_available`] returns `true`.
@@ -29,6 +33,12 @@ pub trait TextProvider: Debug + Send + Sync {
     /// Gets the [`TextProvider`] as a mutable trait object.
     /// This allows retrieving the concrete type by downcasting, using the `downcast_mut` method available through the `Any` trait.
     fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+impl Clone for Box<dyn TextProvider> {
+    fn clone(&self) -> Self {
+        self.clone_shallow()
+    }
 }
 
 #[allow(missing_docs)]
@@ -73,6 +83,10 @@ impl StringTableTextProvider {
 }
 
 impl TextProvider for StringTableTextProvider {
+    fn clone_shallow(&self) -> Box<dyn TextProvider> {
+        Box::new(self.clone())
+    }
+
     fn accept_line_hints(&mut self, _line_ids: &[LineId]) {
         // no-op
     }

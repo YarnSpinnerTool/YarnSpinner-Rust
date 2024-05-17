@@ -46,6 +46,10 @@ impl TextProvider for SharedTextProvider {
 }
 
 impl UnderlyingTextProvider for SharedTextProvider {
+    fn clone_shallow(&self) -> Box<dyn UnderlyingTextProvider> {
+        Box::new(self.clone())
+    }
+
     fn accept_line_hints(&mut self, line_ids: &[LineId]) {
         self.0.write().unwrap().accept_line_hints(line_ids)
     }

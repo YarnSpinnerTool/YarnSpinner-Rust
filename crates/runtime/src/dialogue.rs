@@ -11,7 +11,7 @@ use yarnspinner_core::prelude::*;
 /// Co-ordinates the execution of Yarn programs.
 ///
 /// The main functions of interest are [`Dialogue::continue_`] and [`Dialogue::set_selected_option`].
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Dialogue {
     vm: VirtualMachine,
     language_code: Option<Language>,
