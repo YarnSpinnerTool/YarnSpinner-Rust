@@ -39,8 +39,6 @@ pub(crate) fn add_initial_value_registrations(
         }
     }
 
-    compilation
-        .declarations
-        .clone_from(&state.derived_variable_declarations);
+    compilation.declarations = state.derived_variable_declarations.clone();
     state
 }

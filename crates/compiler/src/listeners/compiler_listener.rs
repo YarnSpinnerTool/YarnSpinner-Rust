@@ -99,10 +99,8 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
                 // Duplicate node name! We'll have caught this during the
                 // declarations pass, so no need to issue an error here.
             }
-            self.current_debug_info.node_name.clone_from(name);
-            self.current_debug_info
-                .file_name
-                .clone_from(&self.file.name);
+            self.current_debug_info.node_name = name.clone();
+            self.current_debug_info.file_name = self.file.name.clone();
             self.debug_infos
                 .borrow_mut()
                 .push(self.current_debug_info.clone());
@@ -132,7 +130,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         match header_key {
             "title" => {
                 // Set the name of the node
-                current_node.name.clone_from(&header_value);
+                current_node.name = header_value.clone();
             }
             "tags" => {
                 // Split the list of tags by spaces, and use that

@@ -82,7 +82,7 @@ impl VirtualMachine {
 
     pub(crate) fn set_language_code(&mut self, language_code: impl Into<Option<Language>>) {
         let language_code = language_code.into();
-        self.language_code.clone_from(&language_code);
+        self.language_code = language_code.clone();
         self.line_parser.set_language_code(language_code.clone());
         self.text_provider.set_language(language_code);
     }

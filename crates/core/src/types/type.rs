@@ -209,6 +209,18 @@ impl_type! {
     Type::Boolean => [bool,],
 }
 
+// The macro has problems with the following expansions
+
+trait StrRefExt {
+    fn r#type() -> Type;
+}
+
+impl StrRefExt for &str {
+    fn r#type() -> Type {
+        Type::String
+    }
+}
+
 impl From<&str> for Type {
     fn from(_value: &str) -> Self {
         Type::String

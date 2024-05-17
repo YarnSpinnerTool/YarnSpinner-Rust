@@ -361,7 +361,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 let Type::Function(function_type) = &mut declaration.r#type else {
                     unreachable!();
                 };
-                function_type.parameters[i].clone_from(&supplied_type);
+                function_type.parameters[i] = supplied_type.clone();
                 expected_type = &supplied_type;
             }
             if !supplied_type.is_sub_type_of(expected_type) {

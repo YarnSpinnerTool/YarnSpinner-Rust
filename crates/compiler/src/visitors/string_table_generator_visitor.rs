@@ -51,12 +51,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         for header in ctx.header_all() {
             let header_key = header.header_key.as_ref().unwrap().get_text();
             if header_key == "title" {
-                header
-                    .header_value
-                    .as_ref()
-                    .unwrap()
-                    .get_text()
-                    .clone_into(&mut self.current_node_name)
+                self.current_node_name =
+                    header.header_value.as_ref().unwrap().get_text().to_owned();
             } else if header_key == "tags" {
                 let header_value = header
                     .header_value

@@ -3,6 +3,7 @@ use anyhow::{bail, Result};
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use bevy_yarnspinner::prelude::*;
+use bevy_yarnspinner::UnderlyingYarnLine;
 use utils::prelude::*;
 
 mod utils;
@@ -196,4 +197,23 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let asset: Option<Handle<YarnFile>> = assets.get_handle();
     assert!(asset.is_none());
     Ok(())
+}
+
+trait AssetProviderExt {
+    fn get_assets_for_id(&self, id: &str) -> LineAssets;
+}
+
+impl<T> AssetProviderExt for T
+where
+    T: AssetProvider + ?Sized,
+{
+    fn get_assets_for_id(&self, id: &str) -> LineAssets {
+        let line_id = LineId(id.to_owned());
+        let yarn_line = UnderlyingYarnLine {
+            id: line_id,
+            text: String::new(),
+            attributes: vec![],
+        };
+        T::get_assets(self, &yarn_line)
+    }
 }
