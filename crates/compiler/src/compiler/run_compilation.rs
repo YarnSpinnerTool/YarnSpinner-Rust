@@ -28,7 +28,16 @@ pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {
     let chars: Vec<Vec<u32>> = compiler
         .files
         .iter()
-        .map(|file| file.source.chars().map(|c| c as u32).collect())
+        .map(|file| {
+            // Strip the BOM from the source string if it is present before compiling.
+            // Rust does not do this by default
+            // https://github.com/rust-lang/rfcs/issues/2428
+            let source = match file.source.strip_prefix('\u{feff}') {
+                None => file.source.as_str(),
+                Some(sanitized_string) => sanitized_string,
+            };
+            source.chars().map(|c| c as u32).collect()
+        })
         .collect();
     let chars: Vec<_> = chars.iter().map(|c| c.as_slice()).collect();
     let initial = CompilationIntermediate::from_job(compiler, chars);
