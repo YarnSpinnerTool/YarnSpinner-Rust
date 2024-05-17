@@ -34,7 +34,7 @@ pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {
             // https://github.com/rust-lang/rfcs/issues/2428
             let source = match file.source.strip_prefix("\u{feff}") {
                 None => file.source.as_str(),
-                Some(sanitized_string) => sanitized_string
+                Some(sanitized_string) => sanitized_string,
             };
             source.chars().map(|c| c as u32).collect()
         })
