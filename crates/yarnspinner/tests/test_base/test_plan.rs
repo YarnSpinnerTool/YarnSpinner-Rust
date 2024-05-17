@@ -66,7 +66,7 @@ impl TestPlan {
                 });
             } else {
                 self.next_expected_step = current_step.expected_step_type;
-                self.next_step_value = current_step.value.clone();
+                self.next_step_value.clone_from(&current_step.value);
                 return;
             }
         }
