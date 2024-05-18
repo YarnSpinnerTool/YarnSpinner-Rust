@@ -9,7 +9,7 @@ use std::{fmt::Formatter, rc::Rc};
 /// it provides access to the parse tree, and the stream of tokens used to
 /// produce that parse tree.
 #[derive(Clone)]
-pub(crate) struct FileParseResult<'input> {
+pub struct FileParseResult<'input> {
     pub name: String,
 
     pub tree: Rc<DialogueContextAll<'input>>,

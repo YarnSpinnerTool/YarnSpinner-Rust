@@ -11,7 +11,11 @@ use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
 use yarnspinner_compiler::compilation_steps::*;
+use yarnspinner_compiler::parser::generated::yarnspinnerparser::ValueStringContext;
+use yarnspinner_compiler::parser::generated::yarnspinnerparser::YarnSpinnerParserContextType;
+use yarnspinner_compiler::parser::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use yarnspinner_compiler::run_compilation::CompilationIntermediate;
+use yarnspinner_compiler::ParseTreeVisitorCompat;
 
 mod test_base;
 
@@ -271,7 +275,7 @@ fn test_compile_with_custom_steps() {
         .compile_with_custom_steps(custom_steps)
         .unwrap();
 
-    // Check that the custom line is present in the string table
+    // Check if our line is present in the string table
     assert!(result.string_table.contains_key(&"custom_line_id".into()));
     assert_eq!(
         result.string_table.get(&"custom_line_id".into()).unwrap(),
@@ -284,4 +288,44 @@ fn test_compile_with_custom_steps() {
             metadata: vec![],
         }
     );
+}
+
+struct StringLiteralCounter {
+    pub count: usize,
+    _dummy: (),
+}
+
+impl StringLiteralCounter {
+    pub fn new() -> Self {
+        Self {
+            count: 0,
+            _dummy: (),
+        }
+    }
+}
+
+impl<'input> ParseTreeVisitorCompat<'input> for StringLiteralCounter {
+    type Node = YarnSpinnerParserContextType;
+    type Return = ();
+
+    fn temp_result(&mut self) -> &mut Self::Return {
+        &mut self._dummy
+    }
+}
+
+impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringLiteralCounter {
+    fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
+        self.count += 1;
+    }
+}
+
+pub fn count_string_literals(mut state: CompilationIntermediate) -> CompilationIntermediate {
+    let mut string_literal_count = 0;
+    for file in &state.parsed_files {
+        let mut visitor = StringLiteralCounter::new();
+        visitor.visit(file.tree.as_ref());
+        string_literal_count += visitor.count;
+    }
+    // state.count = string_literal_count; // Won't work until we traitify CompilationIntermediate
+    state
 }
