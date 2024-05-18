@@ -9,7 +9,7 @@
 #![warn(missing_docs, missing_debug_implementations)]
 
 mod collections;
-pub(crate) mod compilation_steps;
+pub mod compilation_steps;
 pub(crate) mod compiler;
 pub(crate) mod error_strategy;
 mod file_parse_result;
@@ -21,6 +21,7 @@ mod string_table_manager;
 pub(crate) mod token_ext;
 pub(crate) mod visitors;
 
+pub use crate::compiler::run_compilation;
 pub use crate::compiler::Result;
 
 pub mod prelude {

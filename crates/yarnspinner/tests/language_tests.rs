@@ -10,6 +10,8 @@ use test_base::prelude::*;
 use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
+use yarnspinner_compiler::compilation_steps::*;
+use yarnspinner_compiler::run_compilation::CompilationIntermediate;
 
 mod test_base;
 
@@ -219,4 +221,67 @@ fn crashes_on_command_expression_evaluating_whitespace() {
     TestBase::new()
         .with_compilation(result)
         .run_standard_testcase();
+}
+
+#[test]
+fn test_compile_with_custom_steps() {
+    let source = "
+        <<declare $int = 42>>
+        <<declare $str = \"Hello\">>
+        <<declare $bool = true>>
+    ";
+
+    let custom_steps: Vec<&dyn Fn(CompilationIntermediate) -> CompilationIntermediate> = vec![
+        &register_initial_variables,
+        &parse_files,
+        &register_strings,
+        &|state| {
+            // Custom step: Update the string table
+            let mut string_table = state.string_table;
+            string_table.insert(
+                "custom_line_id".into(),
+                StringInfo {
+                    text: "Custom line".to_string(),
+                    node_name: "Start".to_string(),
+                    line_number: 1,
+                    file_name: "<input>".to_string(),
+                    is_implicit_tag: false,
+                    metadata: vec![],
+                },
+            );
+            CompilationIntermediate {
+                string_table,
+                ..state
+            }
+        },
+        &validate_unique_node_names,
+        &break_on_job_with_only_strings,
+        &get_declarations,
+        &check_types,
+        &find_tracking_nodes,
+        &create_declarations_for_tracking_nodes,
+        &add_tracking_declarations,
+        &resolve_deferred_type_diagnostic,
+        &break_on_job_with_only_declarations,
+        &generate_code,
+        &add_initial_value_registrations,
+    ];
+
+    let result = Compiler::from_test_source(source)
+        .compile_with_custom_steps(custom_steps)
+        .unwrap();
+
+    // Check that the custom line is present in the string table
+    assert!(result.string_table.contains_key(&"custom_line_id".into()));
+    assert_eq!(
+        result.string_table.get(&"custom_line_id".into()).unwrap(),
+        &StringInfo {
+            text: "Custom line".to_string(),
+            node_name: "Start".to_string(),
+            line_number: 1,
+            file_name: "<input>".to_string(),
+            is_implicit_tag: false,
+            metadata: vec![],
+        }
+    );
 }
