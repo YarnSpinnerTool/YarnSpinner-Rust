@@ -21,10 +21,10 @@ pub(crate) fn generate_code(mut state: CompilationIntermediate) -> CompilationIn
         state
             .parsed_files
             .iter()
-            .map(|file| {
+            .map(|(file, known_types)| {
                 generate_code_for_file(
                     &mut state.tracking_nodes,
-                    state.known_types.clone(),
+                    known_types.clone(),
                     template.clone(),
                     file,
                 )
