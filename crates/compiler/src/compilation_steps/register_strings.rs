@@ -5,7 +5,7 @@ use antlr_rust::tree::ParseTreeVisitorCompat;
 pub(crate) fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // First pass: parse all files, generate their syntax trees,
     // and figure out what variables they've declared
-    for file in &state.parsed_files {
+    for (file, _) in &state.parsed_files {
         // ok now we will add in our lastline tags
         // we do this BEFORE we build our strings table otherwise the tags will get missed
         // this should probably be a flag instead of every time though

@@ -9,7 +9,7 @@ pub(crate) fn find_tracking_nodes(mut state: CompilationIntermediate) -> Compila
     // so that any tracking variables are included in the compiled declarations
     let mut tracking_nodes = HashSet::new();
     let mut ignore_nodes = HashSet::new();
-    for file in &state.parsed_files {
+    for (file, _) in &state.parsed_files {
         let mut visitor = NodeTrackingVisitor::new();
         visitor.visit(file.tree.as_ref());
         tracking_nodes.extend(visitor.tracking_nodes);

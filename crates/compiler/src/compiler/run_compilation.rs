@@ -66,12 +66,11 @@ pub(crate) struct CompilationIntermediate<'input> {
     /// All variable declarations that we've encountered during this compilation job
     pub(crate) derived_variable_declarations: Vec<Declaration>,
     pub(crate) potential_issues: Vec<DeferredTypeDiagnostic>,
-    pub(crate) parsed_files: Vec<FileParseResult<'input>>,
+    pub(crate) parsed_files: Vec<(FileParseResult<'input>, KnownTypes)>,
     pub(crate) tracking_nodes: HashSet<String>,
     pub(crate) string_table: StringTableManager,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) file_tags: HashMap<String, Vec<String>>,
-    pub(crate) known_types: KnownTypes,
     pub(crate) early_break: bool,
 }
 
@@ -89,7 +88,6 @@ impl<'input> CompilationIntermediate<'input> {
             string_table: Default::default(),
             diagnostics: Default::default(),
             file_tags: Default::default(),
-            known_types: Default::default(),
             early_break: Default::default(),
         }
     }

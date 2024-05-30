@@ -9,7 +9,7 @@ pub(crate) fn validate_unique_node_names(
     // Ensure that all nodes names in this compilation are unique. Node
     // name uniqueness is important for several processes, so we do this
     // check here.
-    let all_nodes = state.parsed_files.iter().flat_map(|file| {
+    let all_nodes = state.parsed_files.iter().flat_map(|(file, _)| {
         file.tree
             .node_all()
             .iter()
