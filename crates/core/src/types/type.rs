@@ -4,10 +4,9 @@ use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
 use crate::types::*;
-use paste::paste;
 use std::any::TypeId;
+use std::error::Error;
 use std::fmt::{Debug, Display};
-use thiserror::Error;
 
 /// All types in the virtual machine, both built-in, i.e. usable in Yarn scripts, and internal.
 ///
@@ -169,33 +168,30 @@ impl TypeProperties {
 // on [`Type`] results in more compile-time safety.
 
 macro_rules! impl_type {
-    ($($yarn_type:pat => [$($base_type:path,)*] ,)*) => {
+    ($($yarn_type:expr => [$($ext:ident for $base_type:path,)*] ,)*) => {
         $(
             $(
-
-                paste! {
-                    /// Convenience trait for getting a [`Type`] out of a base type.
-                    #[allow(non_camel_case_types)]
-                    pub trait [<$base_type Ext>] {
-                        /// Get the corresponding [`Type`]
-                        fn r#type() -> Type;
+                /// Convenience trait for getting a [`Type`] out of a base type.
+                #[allow(non_camel_case_types)]
+                pub trait $ext {
+                    /// Get the corresponding [`Type`]
+                    fn r#type() -> Type;
+                }
+                impl $ext for $base_type {
+                    fn r#type() -> Type {
+                        $yarn_type
                     }
-                    impl [<$base_type Ext>] for $base_type {
-                        fn r#type() -> Type {
-                            $yarn_type
-                        }
-                    }
+                }
 
-                    impl From<&$base_type> for Type {
-                        fn from(_value: &$base_type) -> Self {
-                            $yarn_type
-                        }
+                impl From<&$base_type> for Type {
+                    fn from(_value: &$base_type) -> Self {
+                        $yarn_type
                     }
+                }
 
-                    impl From<$base_type> for Type {
-                        fn from(_value: $base_type) -> Self {
-                            $yarn_type
-                        }
+                impl From<$base_type> for Type {
+                    fn from(_value: $base_type) -> Self {
+                        $yarn_type
                     }
                 }
             )*
@@ -204,9 +200,24 @@ macro_rules! impl_type {
 }
 
 impl_type! {
-    Type::Number => [f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,],
-    Type::String => [String,],
-    Type::Boolean => [bool,],
+    Type::Number => [
+        f32Ext for f32,
+        f64Ext for f64,
+        i8Ext for i8,
+        i16Ext for i16,
+        i32Ext for i32,
+        i64Ext for i64,
+        i128Ext for i128,
+        u8Ext for u8,
+        u16Ext for u16,
+        u32Ext for u32,
+        u64Ext for u64,
+        u128Ext for u128,
+        usizeExt for usize,
+        isizeExt for isize,
+    ],
+    Type::String => [StringExt for String,],
+    Type::Boolean => [boolExt for bool,],
 }
 
 impl From<&str> for Type {
@@ -262,10 +273,21 @@ impl From<&YarnValue> for Type {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 /// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
 #[allow(missing_docs)]
 pub enum InvalidDowncastError {
-    #[error("Cannot convert TypeId {:?} to a Yarn Spinner `Type`", .0)]
     InvalidTypeId(TypeId),
+}
+
+impl Error for InvalidDowncastError {}
+
+impl Display for InvalidDowncastError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InvalidDowncastError::InvalidTypeId(id) => {
+                write!(f, "Cannot convert TypeId {id:?} to a Yarn Spinner `Type`")
+            }
+        }
+    }
 }

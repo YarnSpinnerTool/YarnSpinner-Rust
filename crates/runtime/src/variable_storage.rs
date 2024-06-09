@@ -1,9 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 use std::any::Any;
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::error::Error;
+use std::fmt::{self, Debug, Display};
 use std::sync::{Arc, RwLock};
-use thiserror::Error;
 use yarnspinner_core::prelude::*;
 
 #[allow(missing_docs)]
@@ -55,16 +55,24 @@ impl Extend<(String, YarnValue)> for Box<dyn VariableStorage> {
 }
 
 #[allow(missing_docs)]
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum VariableStorageError {
-    #[error("{name} is not a valid variable name: Variable names must start with a '$'. (Did you mean to use '${name}'?)")]
     InvalidVariableName { name: String },
-    #[error("Variable name {name} is not defined")]
     VariableNotFound { name: String },
-    #[error("Internal variable storage error: {error}")]
-    InternalError {
-        error: Box<dyn std::error::Error + Send + Sync>,
-    },
+    InternalError { error: Box<dyn Error + Send + Sync> },
+}
+
+impl Error for VariableStorageError {}
+
+impl Display for VariableStorageError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use VariableStorageError::*;
+        match self {
+            InvalidVariableName { name } => write!(f, "{name} is not a valid variable name: Variable names must start with a \'$\'. (Did you mean to use \'${name}\'?)"),
+            VariableNotFound { name } => write!(f, "Variable name {name} is not defined"),
+            InternalError { error } => write!(f, "Internal variable storage error: {error}"),
+        }
+    }
 }
 
 impl Clone for Box<dyn VariableStorage> {

@@ -1,9 +1,10 @@
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
+use core::fmt;
 use std::borrow::Cow;
 
 /// The available operators that can be used with Yarn values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, strum_macros::Display)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
@@ -81,6 +82,29 @@ pub enum Operator {
     /// A binary operator that represents the remainder
     /// operation.
     Modulo,
+}
+
+impl fmt::Display for Operator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Operator::EqualTo => f.write_str("EqualTo"),
+            Operator::GreaterThan => f.write_str("GreaterThan"),
+            Operator::GreaterThanOrEqualTo => f.write_str("GreaterThanOrEqualTo"),
+            Operator::LessThan => f.write_str("LessThan"),
+            Operator::LessThanOrEqualTo => f.write_str("LessThanOrEqualTo"),
+            Operator::NotEqualTo => f.write_str("NotEqualTo"),
+            Operator::Or => f.write_str("Or"),
+            Operator::And => f.write_str("And"),
+            Operator::Xor => f.write_str("Xor"),
+            Operator::Not => f.write_str("Not"),
+            Operator::UnarySubtract => f.write_str("UnarySubtract"),
+            Operator::Add => f.write_str("Add"),
+            Operator::Subtract => f.write_str("Subtract"),
+            Operator::Multiply => f.write_str("Multiply"),
+            Operator::Divide => f.write_str("Divide"),
+            Operator::Modulo => f.write_str("Modulo"),
+        }
+    }
 }
 
 /// Implementing this is probably bad practice, but this greatly reduces boilerplate when used with `yarn_fn_registry!`
