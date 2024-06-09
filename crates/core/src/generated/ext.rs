@@ -1,8 +1,8 @@
 //! Contains extensions to generated types that in the original implementation are sprinkled around the repo via partial classes
 
 use crate::prelude::*;
+use std::error::Error;
 use std::fmt::{Debug, Display};
-use thiserror::Error;
 
 impl From<String> for Operand {
     fn from(s: String) -> Self {
@@ -94,7 +94,7 @@ impl From<Operand> for YarnValue {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
@@ -103,6 +103,8 @@ impl From<Operand> for YarnValue {
     reflect(Serialize, Deserialize)
 )]
 pub struct InvalidOpCodeError(pub i32);
+
+impl Error for InvalidOpCodeError {}
 
 impl Display for InvalidOpCodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

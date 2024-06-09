@@ -4,6 +4,7 @@ use annotate_snippets::{Annotation, AnnotationType, Renderer, Slice, Snippet, So
 use antlr_rust::rule_context::CustomRuleContext;
 use antlr_rust::token::Token;
 use antlr_rust::token_factory::TokenFactory;
+use core::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::Range;
 use yarnspinner_core::prelude::*;
@@ -184,7 +185,7 @@ impl DiagnosticVec for Vec<Diagnostic> {
 /// ## Implementation notes
 ///
 /// The `Info` variant was not implemented because it was unused.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, strum_macros::Display)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default, Hash))]
@@ -205,4 +206,13 @@ pub enum DiagnosticSeverity {
     /// Warnings represent possible problems that the user should fix,
     /// but do not cause the compilation process to fail.
     Warning,
+}
+
+impl fmt::Display for DiagnosticSeverity {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            DiagnosticSeverity::Error => f.write_str("Error"),
+            DiagnosticSeverity::Warning => f.write_str("Warning"),
+        }
+    }
 }

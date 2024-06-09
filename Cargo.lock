@@ -4874,9 +4874,6 @@ dependencies = [
  "rand",
  "regex",
  "serde",
- "strum",
- "strum_macros",
- "thiserror",
  "yarnspinner_core",
 ]
 
@@ -4885,13 +4882,8 @@ name = "yarnspinner_core"
 version = "0.2.0"
 dependencies = [
  "bevy",
- "bytes",
- "paste",
  "prost",
  "serde",
- "strum",
- "strum_macros",
- "thiserror",
  "yarnspinner_macros",
 ]
 
@@ -4925,7 +4917,6 @@ dependencies = [
  "once_cell",
  "regex",
  "serde",
- "thiserror",
  "unicode-normalization",
  "unicode-segmentation",
  "yarnspinner_core",

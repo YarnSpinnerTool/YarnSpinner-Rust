@@ -4,8 +4,8 @@ use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
 use log::error;
 use std::collections::HashMap;
-use std::fmt::Debug;
-use thiserror::Error;
+use std::error::Error;
+use std::fmt::{self, Debug, Display};
 use yarnspinner_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -21,38 +21,70 @@ pub struct Dialogue {
 pub type Result<T> = std::result::Result<T, DialogueError>;
 
 #[allow(missing_docs)]
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum DialogueError {
-    #[error(transparent)]
-    MarkupParseError(#[from] MarkupParseError),
-    #[error("Line ID \"{id}\" not found in line provider with language code {language_code:?}")]
+    MarkupParseError(MarkupParseError),
     LineProviderError {
         id: LineId,
         language_code: Option<Language>,
     },
-    #[error("{selected_option_id:?} is not a valid option ID (expected a number between 0 and {max_id}.")]
     InvalidOptionIdError {
         selected_option_id: OptionId,
         max_id: usize,
     },
-    #[error("An option was selected, but the dialogue wasn't waiting for a selection. \
-            This method should only be called after the Dialogue is waiting for the user to select an option.")]
     UnexpectedOptionSelectionError,
-    #[error("Dialogue was asked to continue running, but it is waiting for the user to select an option first.")]
     ContinueOnOptionSelectionError,
-    #[error("Cannot continue running dialogue. No node has been selected.")]
     NoNodeSelectedOnContinue,
-    #[error("No program has been loaded. Cannot continue running dialogue.")]
     NoProgramLoaded,
-    #[error("No node named \"{node_name}\" has been loaded.")]
-    InvalidNode { node_name: String },
-    #[error(transparent)]
-    VariableStorageError(#[from] VariableStorageError),
-    #[error("Function \"{function_name}\" not found in library: {library}")]
+    InvalidNode {
+        node_name: String,
+    },
+    VariableStorageError(VariableStorageError),
     FunctionNotFound {
         function_name: String,
         library: Library,
     },
+}
+
+impl Error for DialogueError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        use DialogueError::*;
+        match self {
+            MarkupParseError(e) => e.source(),
+            VariableStorageError(e) => e.source(),
+            _ => None,
+        }
+    }
+}
+
+impl Display for DialogueError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use DialogueError::*;
+        match self {
+            MarkupParseError(e) => Display::fmt(e, f),
+            LineProviderError { id, language_code } => write!(f, "Line ID \"{id}\" not found in line provider with language code {language_code:?}"),
+            InvalidOptionIdError { selected_option_id, max_id } => write!(f, "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {max_id}."),
+            UnexpectedOptionSelectionError => f.write_str("An option was selected, but the dialogue wasn't waiting for a selection. This method should only be called after the Dialogue is waiting for the user to select an option."),
+            ContinueOnOptionSelectionError => f.write_str("Dialogue was asked to continue running, but it is waiting for the user to select an option first."),
+            NoNodeSelectedOnContinue => f.write_str("Cannot continue running dialogue. No node has been selected."),
+            NoProgramLoaded => f.write_str("No program has been loaded. Cannot continue running dialogue."),
+            InvalidNode { node_name } => write!(f, "No node named \"{node_name}\" has been loaded."),
+            VariableStorageError(e) => Display::fmt(e, f),
+            FunctionNotFound { function_name, library } => write!(f, "Function \"{function_name}\" not found in library: {library}"),
+        }
+    }
+}
+
+impl From<MarkupParseError> for DialogueError {
+    fn from(source: MarkupParseError) -> Self {
+        DialogueError::MarkupParseError(source)
+    }
+}
+
+impl From<VariableStorageError> for DialogueError {
+    fn from(source: VariableStorageError) -> Self {
+        DialogueError::VariableStorageError(source)
+    }
 }
 
 impl Dialogue {

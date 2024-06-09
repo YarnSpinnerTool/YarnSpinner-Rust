@@ -1,8 +1,8 @@
 //! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
-use thiserror::Error;
 
 /// Represents a Yarn value. The chosen variant corresponds to the last assignment of the value,
 /// with the type being inferred from the type checker.
@@ -205,15 +205,50 @@ impl IntoYarnValueFromNonYarnValue for bool {
 }
 
 /// Represents a failure to convert one variant of [`YarnValue`] to a base type.
-#[derive(Error, Debug)]
+#[derive(Debug)]
 #[allow(missing_docs)]
 pub enum YarnValueCastError {
-    #[error(transparent)]
-    ParseFloatError(#[from] std::num::ParseFloatError),
-    #[error(transparent)]
-    ParseIntError(#[from] std::num::ParseIntError),
-    #[error(transparent)]
-    ParseBoolError(#[from] std::str::ParseBoolError),
+    ParseFloatError(std::num::ParseFloatError),
+    ParseIntError(std::num::ParseIntError),
+    ParseBoolError(std::str::ParseBoolError),
+}
+
+impl Error for YarnValueCastError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            YarnValueCastError::ParseFloatError(e) => Some(e),
+            YarnValueCastError::ParseIntError(e) => Some(e),
+            YarnValueCastError::ParseBoolError(e) => Some(e),
+        }
+    }
+}
+
+impl Display for YarnValueCastError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            YarnValueCastError::ParseFloatError(e) => Display::fmt(e, f),
+            YarnValueCastError::ParseIntError(e) => Display::fmt(e, f),
+            YarnValueCastError::ParseBoolError(e) => Display::fmt(e, f),
+        }
+    }
+}
+
+impl From<std::num::ParseFloatError> for YarnValueCastError {
+    fn from(value: std::num::ParseFloatError) -> Self {
+        Self::ParseFloatError(value)
+    }
+}
+
+impl From<std::num::ParseIntError> for YarnValueCastError {
+    fn from(value: std::num::ParseIntError) -> Self {
+        Self::ParseIntError(value)
+    }
+}
+
+impl From<std::str::ParseBoolError> for YarnValueCastError {
+    fn from(value: std::str::ParseBoolError) -> Self {
+        Self::ParseBoolError(value)
+    }
 }
 
 impl Display for YarnValue {
