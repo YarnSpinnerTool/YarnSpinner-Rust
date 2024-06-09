@@ -17,7 +17,7 @@ jobs:
       # Handle cargo check and cargo clippy warnings as errors
       RUSTFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
@@ -38,7 +38,7 @@ jobs:
     env:
       RUSTFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
@@ -54,7 +54,7 @@ jobs:
       RUSTFLAGS: "-D warnings"
       RUSTDOCFLAGS: '--deny warnings'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
@@ -68,7 +68,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - uses: dtolnay/rust-toolchain@master
