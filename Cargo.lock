@@ -4882,8 +4882,6 @@ name = "yarnspinner_core"
 version = "0.2.0"
 dependencies = [
  "bevy",
- "bytes",
- "paste",
  "prost",
  "serde",
  "yarnspinner_macros",
