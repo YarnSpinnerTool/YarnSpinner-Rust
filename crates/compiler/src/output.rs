@@ -4,8 +4,8 @@ use crate::listeners::*;
 pub use crate::output::{debug_info::*, declaration::*, string_info::*};
 use crate::prelude::*;
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::{Debug, Display};
-use thiserror::Error;
 use yarnspinner_core::prelude::*;
 
 mod debug_info;
@@ -123,7 +123,7 @@ impl Compilation {
 
 /// A collection of [`Diagnostic`] objects that describe problems that occurred during compilation.
 /// At least one of these diagnostics will have a severity of [`DiagnosticSeverity::Error`].
-#[derive(Error, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Hash))]
@@ -132,6 +132,8 @@ impl Compilation {
     reflect(Serialize, Deserialize)
 )]
 pub struct CompilerError(pub Vec<Diagnostic>);
+
+impl Error for CompilerError {}
 
 impl Debug for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

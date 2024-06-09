@@ -4874,7 +4874,6 @@ dependencies = [
  "rand",
  "regex",
  "serde",
- "thiserror",
  "yarnspinner_core",
 ]
 
@@ -4887,7 +4886,6 @@ dependencies = [
  "paste",
  "prost",
  "serde",
- "thiserror",
  "yarnspinner_macros",
 ]
 
@@ -4921,7 +4919,6 @@ dependencies = [
  "once_cell",
  "regex",
  "serde",
- "thiserror",
  "unicode-normalization",
  "unicode-segmentation",
  "yarnspinner_core",

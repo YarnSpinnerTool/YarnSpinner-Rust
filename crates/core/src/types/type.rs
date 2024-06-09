@@ -6,8 +6,8 @@ use crate::types::string::string_type_properties;
 use crate::types::*;
 use paste::paste;
 use std::any::TypeId;
+use std::error::Error;
 use std::fmt::{Debug, Display};
-use thiserror::Error;
 
 /// All types in the virtual machine, both built-in, i.e. usable in Yarn scripts, and internal.
 ///
@@ -262,10 +262,21 @@ impl From<&YarnValue> for Type {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 /// Represents a failure to dynamically convert a [`TypeId`] to a [`Type`].
 #[allow(missing_docs)]
 pub enum InvalidDowncastError {
-    #[error("Cannot convert TypeId {:?} to a Yarn Spinner `Type`", .0)]
     InvalidTypeId(TypeId),
+}
+
+impl Error for InvalidDowncastError {}
+
+impl Display for InvalidDowncastError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InvalidDowncastError::InvalidTypeId(id) => {
+                write!(f, "Cannot convert TypeId {id:?} to a Yarn Spinner `Type`")
+            }
+        }
+    }
 }
