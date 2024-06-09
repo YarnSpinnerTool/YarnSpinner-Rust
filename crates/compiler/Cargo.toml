@@ -20,8 +20,6 @@ better_any = "=0.2.0"
 regex = "1"
 yarnspinner_core = { path = "../core", version = "0.2" }
 thiserror = "1"
-strum = "0.26"
-strum_macros = "0.26"
 annotate-snippets = "0.10"
 serde = { version = "1", features = ["derive"], optional = true }
 bevy = { version = "0.13", default-features = false, optional = true }

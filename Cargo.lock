@@ -4874,8 +4874,6 @@ dependencies = [
  "rand",
  "regex",
  "serde",
- "strum",
- "strum_macros",
  "thiserror",
  "yarnspinner_core",
 ]
@@ -4889,8 +4887,6 @@ dependencies = [
  "paste",
  "prost",
  "serde",
- "strum",
- "strum_macros",
  "thiserror",
  "yarnspinner_macros",
 ]
