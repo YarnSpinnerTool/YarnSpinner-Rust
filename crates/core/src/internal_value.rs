@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Value.cs>
 
 use crate::prelude::*;
-use crate::types::Type;
+use crate::types::{Type, TypedValue as _};
 
 /// A value as it appears to the compiler. It has additional type checker information
 /// and may represent values not constructable by the user, like functions.
@@ -32,7 +32,7 @@ macro_rules! impl_from {
             impl From<$from_type> for InternalValue {
                 fn from(value: $from_type) -> Self {
                     Self {
-                        r#type: (&value).into(),
+                        r#type: value.r#type(),
                         raw_value: value.into(),
                     }
                 }
@@ -67,7 +67,7 @@ impl_from![bool, f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usi
 impl From<&str> for InternalValue {
     fn from(value: &str) -> Self {
         Self {
-            r#type: value.into(),
+            r#type: value.r#type(),
             raw_value: value.into(),
         }
     }
@@ -76,7 +76,7 @@ impl From<&str> for InternalValue {
 impl From<String> for InternalValue {
     fn from(value: String) -> Self {
         Self {
-            r#type: (&value).into(),
+            r#type: value.r#type(),
             raw_value: value.into(),
         }
     }
@@ -91,7 +91,7 @@ impl From<InternalValue> for String {
 impl From<YarnValue> for InternalValue {
     fn from(value: YarnValue) -> Self {
         Self {
-            r#type: (&value).into(),
+            r#type: value.r#type(),
             raw_value: value,
         }
     }
