@@ -100,6 +100,7 @@
 mod commands;
 mod development_file_generation;
 mod dialogue_runner;
+mod fmt_utils;
 mod line_provider;
 mod localization;
 mod plugin;

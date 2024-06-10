@@ -1,3 +1,4 @@
+use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
@@ -29,28 +30,15 @@ pub(crate) struct CompilationSystemSet;
 ///    commands.spawn(project.create_dialogue_runner());
 /// }
 /// ```
-#[derive(Resource)]
+#[derive(Resource, Debug)]
 pub struct YarnProject {
     pub(crate) yarn_files: HashSet<Handle<YarnFile>>,
     pub(crate) compilation: Compilation,
     pub(crate) localizations: Option<Localizations>,
-    pub(crate) asset_server: AssetServer,
+    pub(crate) asset_server: SkipDebug<AssetServer>,
     pub(crate) metadata: HashMap<LineId, Vec<String>>,
     pub(crate) watching_for_changes: bool,
     pub(crate) development_file_generation: DevelopmentFileGeneration,
-}
-
-impl Debug for YarnProject {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("YarnProject")
-            .field("yarn_files", &self.yarn_files)
-            .field("compilation", &self.compilation)
-            .field("localizations", &self.localizations)
-            .field("asset_server", &())
-            .field("metadata", &self.metadata)
-            .field("watching_for_changes", &self.watching_for_changes)
-            .finish()
-    }
 }
 
 impl YarnProject {

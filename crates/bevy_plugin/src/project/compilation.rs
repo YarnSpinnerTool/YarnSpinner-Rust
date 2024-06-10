@@ -1,3 +1,4 @@
+use crate::fmt_utils::SkipDebug;
 use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
@@ -237,7 +238,7 @@ fn compile_loaded_yarn_files(
         yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
         compilation,
         localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
-        asset_server: asset_server.clone(),
+        asset_server: SkipDebug(asset_server.clone()),
         watching_for_changes: yarn_project_config_to_load.watching_for_changes,
         development_file_generation,
         metadata,
