@@ -1,3 +1,4 @@
+use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 
@@ -5,7 +6,6 @@ use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
 pub(crate) fn strings_file_text_provider_plugin(_app: &mut App) {}
@@ -15,29 +15,15 @@ pub(crate) fn strings_file_text_provider_plugin(_app: &mut App) {}
 /// this will send the lines as they appear in the Yarn file. If [`DialogueRunner::set_language`] or [`DialogueRunner::set_text_language`] were used to
 /// set the language to a language supported by a translation in the [`Localizations`], this loads the strings file for that translation from the disk at the
 /// specified path. If this fails, the base language is used as a fallback.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StringsFileTextProvider {
-    asset_server: AssetServer,
+    asset_server: SkipDebug<AssetServer>,
     localizations: Option<Localizations>,
     language: Option<Language>,
     base_string_table: HashMap<LineId, StringInfo>,
     strings_file_handle: Option<Handle<StringsFile>>,
     translation_string_table: Option<HashMap<LineId, String>>,
     event_reader: Arc<RwLock<ManualEventReader<AssetEvent<StringsFile>>>>,
-}
-
-impl Debug for StringsFileTextProvider {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("StringsTableTextProvider")
-            .field("asset_server", &())
-            .field("localizations", &self.localizations)
-            .field("language", &self.language)
-            .field("base_string_table", &self.base_string_table)
-            .field("strings_file_handle", &self.strings_file_handle)
-            .field("translation_string_table", &self.translation_string_table)
-            .field("event_reader", &self.event_reader)
-            .finish()
-    }
 }
 
 impl UnderlyingTextProvider for StringsFileTextProvider {

@@ -1,3 +1,4 @@
+use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::{LoadState, LoadedUntypedAsset};
@@ -23,11 +24,11 @@ pub(crate) fn file_extension_asset_provider_plugin(_app: &mut App) {}
 ///
 /// If you want to load audio assets, the feature `audio_assets` will provide you with an [`AudioAssetProvider`] that is a wrapper around this type
 /// configured in such a way.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct FileExtensionAssetProvider {
     language: Option<Language>,
     localizations: Option<Localizations>,
-    asset_server: Option<AssetServer>,
+    asset_server: SkipDebug<Option<AssetServer>>,
     loading_handles: HashMap<PathBuf, Handle<LoadedUntypedAsset>>,
     loaded_handles: HashMap<PathBuf, UntypedHandle>,
     line_ids: HashSet<LineId>,
@@ -230,17 +231,5 @@ impl FileExtensionAssetProvider {
                 }
             }
         }
-    }
-}
-
-impl Debug for FileExtensionAssetProvider {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AudioAssetProvider")
-            .field("language", &self.language)
-            .field("localizations", &self.localizations)
-            .field("asset_server", &())
-            .field("handles", &self.loading_handles)
-            .field("line_ids", &self.line_ids)
-            .finish()
     }
 }

@@ -1,16 +1,17 @@
 use crate::default_impl::{MemoryVariableStorage, StringsFileTextProvider};
+use crate::fmt_utils::SkipDebug;
 use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::any::{Any, TypeId};
-use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
 pub(crate) fn dialogue_runner_builder_plugin(_app: &mut App) {}
 
 /// A builder for [`DialogueRunner`]. This is instantiated for you by calling [`YarnProject::build_dialogue_runner`].
+#[derive(Debug)]
 pub struct DialogueRunnerBuilder {
     variable_storage: Box<dyn VariableStorage>,
     text_provider: SharedTextProvider,
@@ -19,22 +20,7 @@ pub struct DialogueRunnerBuilder {
     commands: YarnCommands,
     compilation: Compilation,
     localizations: Option<Localizations>,
-    asset_server: AssetServer,
-}
-
-impl Debug for DialogueRunnerBuilder {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DialogueRunnerBuilder")
-            .field("variable_storage", &self.variable_storage)
-            .field("text_provider", &self.text_provider)
-            .field("asset_providers", &self.asset_providers)
-            .field("library", &self.library)
-            .field("commands", &self.commands)
-            .field("compilation", &self.compilation)
-            .field("localizations", &self.localizations)
-            .field("asset_server", &())
-            .finish()
-    }
+    asset_server: SkipDebug<AssetServer>,
 }
 
 impl DialogueRunnerBuilder {
@@ -99,7 +85,7 @@ impl DialogueRunnerBuilder {
                 asset_provider.set_localizations(localizations.clone());
             }
 
-            asset_provider.set_asset_server(self.asset_server.clone());
+            asset_provider.set_asset_server(self.asset_server.0.clone());
         }
 
         let popped_line_hints = dialogue.pop_line_hints();
