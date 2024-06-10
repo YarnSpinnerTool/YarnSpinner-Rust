@@ -167,30 +167,18 @@ impl TypeProperties {
 // The following is implemented on [`Types`] in the original implementation, but implementing it
 // on [`Type`] results in more compile-time safety.
 
-macro_rules! impl_type {
-    ($($yarn_type:expr => [$($ext:ident for $base_type:path,)*] ,)*) => {
+/// A trait that assigns Rust values a Yarn [`Type`].
+pub trait TypedValue {
+    #[allow(missing_docs)]
+    fn r#type(&self) -> Type;
+}
+
+macro_rules! impl_typed_value {
+    ($([$($rust_type:ty),* $(,)?] => $yarn_type:expr), *$(,)?) => {
         $(
             $(
-                /// Convenience trait for getting a [`Type`] out of a base type.
-                #[allow(non_camel_case_types)]
-                pub trait $ext {
-                    /// Get the corresponding [`Type`]
-                    fn r#type() -> Type;
-                }
-                impl $ext for $base_type {
-                    fn r#type() -> Type {
-                        $yarn_type
-                    }
-                }
-
-                impl From<&$base_type> for Type {
-                    fn from(_value: &$base_type) -> Self {
-                        $yarn_type
-                    }
-                }
-
-                impl From<$base_type> for Type {
-                    fn from(_value: $base_type) -> Self {
+                impl TypedValue for $rust_type {
+                    fn r#type(&self) -> Type {
                         $yarn_type
                     }
                 }
@@ -199,31 +187,10 @@ macro_rules! impl_type {
     };
 }
 
-impl_type! {
-    Type::Number => [
-        f32Ext for f32,
-        f64Ext for f64,
-        i8Ext for i8,
-        i16Ext for i16,
-        i32Ext for i32,
-        i64Ext for i64,
-        i128Ext for i128,
-        u8Ext for u8,
-        u16Ext for u16,
-        u32Ext for u32,
-        u64Ext for u64,
-        u128Ext for u128,
-        usizeExt for usize,
-        isizeExt for isize,
-    ],
-    Type::String => [StringExt for String,],
-    Type::Boolean => [boolExt for bool,],
-}
-
-impl From<&str> for Type {
-    fn from(_value: &str) -> Self {
-        Type::String
-    }
+impl_typed_value! {
+    [f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize] => Type::Number,
+    [String, str] => Type::String,
+    [bool] => Type::Boolean,
 }
 
 macro_rules! type_ids {
@@ -257,15 +224,9 @@ impl TryFrom<TypeId> for Type {
     }
 }
 
-impl From<YarnValue> for Type {
-    fn from(value: YarnValue) -> Self {
-        Self::from(&value)
-    }
-}
-
-impl From<&YarnValue> for Type {
-    fn from(value: &YarnValue) -> Self {
-        match value {
+impl TypedValue for YarnValue {
+    fn r#type(&self) -> Type {
+        match self {
             YarnValue::Number(_) => Type::Number,
             YarnValue::String(_) => Type::String,
             YarnValue::Boolean(_) => Type::Boolean,
