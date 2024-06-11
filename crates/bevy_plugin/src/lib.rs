@@ -167,3 +167,7 @@ pub mod deferred_loading {
     pub use crate::plugin::DeferredYarnSpinnerPlugin;
     pub use crate::project::LoadYarnProjectEvent;
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../../../readme.md")]
+mod test_readme {}

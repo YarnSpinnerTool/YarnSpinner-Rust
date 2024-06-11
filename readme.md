@@ -5,7 +5,8 @@
 [![Discord](https://img.shields.io/discord/754171172693868585.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/yarnspinner)
 > **Note:**
 > Yarn Spinner for Rust is a work-in-progress project. We don't currently offer any official support for it. We encourage you to
-> file [issues](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new) if you have them, and to join the official [Yarn Spinner Discord](https://discord.gg/yarnspinner) to discuss the project!
+> file [issues](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new) if you have them, and to join the official [Yarn Spinner Discord](https://discord.gg/yarnspinner) to discuss the
+> project!
 
 The Rust port of Yarn Spinner, the friendly tool for writing game dialogue. Read more on [docs.yarnspinner.dev](https://docs.yarnspinner.dev/using-yarnspinner-with-rust/overview) or check out
 the [live demo](https://janhohenheim.itch.io/yarnspinner-rust-demo), which was written using the [Bevy engine](https://bevyengine.org/).
@@ -26,7 +27,7 @@ cargo add bevy bevy_yarnspinner bevy_yarnspinner_example_dialogue_view
 
 Now, the `main.rs`:
 
-```rust
+```rust,no_run
 use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
