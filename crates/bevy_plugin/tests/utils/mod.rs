@@ -134,25 +134,6 @@ impl AppExt for App {
     }
 }
 
-pub trait WorldExt {
-    #[must_use]
-    fn try_dialogue_runner(&self) -> Option<&DialogueRunner>;
-    #[must_use]
-    fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>>;
-}
-
-impl WorldExt for World {
-    fn try_dialogue_runner(&self) -> Option<&DialogueRunner> {
-        self.iter_entities()
-            .filter_map(|e| self.get::<DialogueRunner>(e.id()))
-            .next()
-    }
-
-    fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>> {
-        self.query::<&mut DialogueRunner>().iter_mut(self).next()
-    }
-}
-
 pub fn project_root_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
