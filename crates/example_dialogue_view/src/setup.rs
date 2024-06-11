@@ -126,48 +126,35 @@ fn setup(mut commands: Commands) {
                     ));
                 });
 
-            parent
-                .spawn((
-                    fmt_name("continue indicator container"),
-                    NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            flex_direction: FlexDirection::Column,
+            parent.spawn((
+                fmt_name("continue indicator"),
+                ImageBundle {
+                    image: UiImage {
+                        // 27 x 27 pixels
+                        texture: image_handle::CONTINUE_INDICATOR,
+                        ..default()
+                    },
+                    style: Style {
+                        justify_self: JustifySelf::Center,
+                        align_self: AlignSelf::Center,
+                        margin: UiRect {
+                            top: Val::Px(-18.),
+                            bottom: Val::Px(25.),
                             ..default()
                         },
                         ..default()
                     },
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("continue indicator image"),
-                        ImageBundle {
-                            image: UiImage {
-                                // 27 x 27 pixels
-                                texture: image_handle::CONTINUE_INDICATOR,
-                                ..default()
-                            },
-                            style: Style {
-                                margin: UiRect {
-                                    top: Val::Px(-18.),
-                                    bottom: Val::Px(25.),
-                                    ..default()
-                                },
-                                ..default()
-                            },
-                            z_index: ZIndex::Local(1),
-                            visibility: Visibility::Hidden,
-                            ..default()
-                        },
-                        DialogueContinueNode,
-                    ));
-                });
+                    z_index: ZIndex::Local(1),
+                    visibility: Visibility::Hidden,
+                    ..default()
+                },
+                DialogueContinueNode,
+            ));
         });
 }
 
 fn fmt_name(name: &str) -> Name {
-    Name::new(format!("Yarn Spinner example dialogue view {name} node"))
+    Name::new(format!("Yarn Spinner example dialogue view node: {name}"))
 }
 
 pub(crate) fn create_dialog_text(text: impl Into<String>, invisible: impl Into<String>) -> Text {
