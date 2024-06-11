@@ -1,6 +1,7 @@
 use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
 use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
@@ -107,10 +108,10 @@ fn select_option(
         let (color, icon) = match *interaction {
             Interaction::Pressed if selection.is_none() => {
                 selection = Some(button.0);
-                (Color::TOMATO, CursorIcon::Default)
+                (css::TOMATO.into(), CursorIcon::Default)
             }
             Interaction::Hovered => (Color::WHITE, CursorIcon::Pointer),
-            _ => (Color::TOMATO, CursorIcon::Default),
+            _ => (css::TOMATO.into(), CursorIcon::Default),
         };
         window.cursor.icon = icon;
         let text_entity = children.iter().find(|&e| text.contains(*e)).unwrap();

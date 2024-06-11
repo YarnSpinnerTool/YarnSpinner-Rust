@@ -32,10 +32,6 @@ pub trait AppExt {
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
     fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner>;
-    #[must_use]
-    fn try_dialogue_runner(&self) -> Option<&DialogueRunner>;
-    #[must_use]
-    fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>>;
     fn setup_default_plugins(&mut self) -> &mut App;
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App;
 
@@ -45,17 +41,17 @@ pub trait AppExt {
 
 impl AppExt for App {
     fn load_project(&mut self) -> &YarnProject {
-        while !self.world.contains_resource::<YarnProject>() {
+        while !self.world().contains_resource::<YarnProject>() {
             self.update();
         }
-        self.world.resource::<YarnProject>()
+        self.world().resource::<YarnProject>()
     }
 
     fn load_project_mut(&mut self) -> Mut<YarnProject> {
-        while !self.world.contains_resource::<YarnProject>() {
+        while !self.world().contains_resource::<YarnProject>() {
             self.update();
         }
-        self.world.resource_mut::<YarnProject>()
+        self.world_mut().resource_mut::<YarnProject>()
     }
 
     fn load_lines(&mut self) -> &mut App {
@@ -84,9 +80,9 @@ impl AppExt for App {
 
     fn dialogue_runner_entity(&mut self) -> Entity {
         let existing_entity = self
-            .world
+            .world()
             .iter_entities()
-            .filter(|e| self.world.get::<DialogueRunner>(e.id()).is_some())
+            .filter(|e| self.world().get::<DialogueRunner>(e.id()).is_some())
             .map(|e| e.id())
             .next();
         if let Some(entity) = existing_entity {
@@ -94,32 +90,18 @@ impl AppExt for App {
         } else {
             let project = self.load_project();
             let dialogue_runner = project.create_dialogue_runner();
-            self.world.spawn(dialogue_runner).id()
+            self.world_mut().spawn(dialogue_runner).id()
         }
     }
 
     fn dialogue_runner(&mut self) -> &DialogueRunner {
         let entity = self.dialogue_runner_entity();
-        self.world.get::<DialogueRunner>(entity).unwrap()
+        self.world().get::<DialogueRunner>(entity).unwrap()
     }
 
     fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner> {
         let entity = self.dialogue_runner_entity();
-        self.world.get_mut::<DialogueRunner>(entity).unwrap()
-    }
-
-    fn try_dialogue_runner(&self) -> Option<&DialogueRunner> {
-        self.world
-            .iter_entities()
-            .filter_map(|e| self.world.get::<DialogueRunner>(e.id()))
-            .next()
-    }
-
-    fn try_dialogue_runner_mut(&mut self) -> Option<Mut<DialogueRunner>> {
-        self.world
-            .query::<&mut DialogueRunner>()
-            .iter_mut(&mut self.world)
-            .next()
+        self.world_mut().get_mut::<DialogueRunner>(entity).unwrap()
     }
 
     fn setup_default_plugins(&mut self) -> &mut App {
@@ -139,7 +121,7 @@ impl AppExt for App {
     }
 
     fn clone_loaded_untyped_assets(&self) -> Assets<LoadedUntypedAsset> {
-        self.world
+        self.world()
             .resource::<Assets<LoadedUntypedAsset>>()
             .iter()
             .map(|(_handle, asset)| LoadedUntypedAsset {

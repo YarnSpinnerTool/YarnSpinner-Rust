@@ -145,7 +145,10 @@ impl AssetProvider for FileExtensionAssetProvider {
         };
 
         self.loading_handles.retain(|_path, handle| {
-            asset_server.get_load_state(handle.id()) != Some(LoadState::Failed)
+            !matches!(
+                asset_server.get_load_state(handle.id()),
+                Some(LoadState::Failed(..))
+            )
         });
         let newly_loaded: HashMap<_, _> = self
             .loading_handles

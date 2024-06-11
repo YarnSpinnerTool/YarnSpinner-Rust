@@ -33,12 +33,21 @@ fn setup(mut commands: Commands) {
             fmt_name("root"),
             NodeBundle {
                 style: Style {
+                    display: Display::Grid,
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    justify_content: JustifyContent::FlexEnd,
-                    align_items: AlignItems::Center,
-                    padding: UiRect::bottom(Val::Px(30.0)),
-                    flex_direction: FlexDirection::Column,
+                    align_content: AlignContent::End,
+                    justify_content: JustifyContent::SpaceAround,
+                    grid_auto_flow: GridAutoFlow::Row,
+                    grid_template_columns: vec![RepeatedGridTrack::minmax(
+                        1,
+                        MinTrackSizingFunction::Auto,
+                        MaxTrackSizingFunction::Px(DIALOG_WIDTH),
+                    )],
+                    // In the web, `GridTrack::auto()` should already work like this,
+                    // but it seems like Bevy disagrees?
+                    // If you remove this line in the future and everything looks the same, go ahead!
+                    grid_auto_rows: vec![GridTrack::min_content()],
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -47,69 +56,43 @@ fn setup(mut commands: Commands) {
             UiRootNode,
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    fmt_name("top"),
-                    NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            flex_direction: FlexDirection::Column,
+            parent.spawn((
+                fmt_name("name"),
+                TextBundle {
+                    text: Text::from_section(String::new(), text_style::name()),
+                    style: Style {
+                        margin: UiRect {
+                            left: Val::Px(TEXT_BORDER_HORIZONTAL / 2.0),
+                            bottom: Val::Px(-8.0),
                             ..default()
                         },
                         ..default()
                     },
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("top edge image"),
-                        ImageBundle {
-                            image: UiImage {
-                                // 29 pixels high
-                                texture: image_handle::EDGE,
-                                ..default()
-                            },
-                            style: Style {
-                                width: Val::Px(DIALOG_WIDTH),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                    ));
-                })
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("name"),
-                        TextBundle {
-                            text: Text::from_section(String::new(), text_style::name()),
-                            style: Style {
-                                position_type: PositionType::Absolute,
-                                left: Val::Px(TEXT_BORDER / 2.0),
-                                top: Val::Px(-8.0),
-                                ..default()
-                            },
-                            z_index: ZIndex::Local(1),
-                            ..default()
-                        },
-                        DialogueNameNode,
-                        Label,
-                    ));
-                });
+                    z_index: ZIndex::Local(1),
+                    ..default()
+                },
+                DialogueNameNode,
+                Label,
+            ));
 
             parent
                 .spawn((
                     fmt_name("dialogue"),
                     NodeBundle {
                         style: Style {
-                            width: Val::Px(DIALOG_WIDTH),
-                            min_height: Val::Px(50.0),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
-                            padding: UiRect::horizontal(Val::Px(TEXT_BORDER)),
+                            padding: UiRect {
+                                top: Val::Px(TEXT_BORDER_TOP),
+                                bottom: Val::Px(TEXT_BORDER_BOTTOM),
+                                left: Val::Px(TEXT_BORDER_HORIZONTAL),
+                                right: Val::Px(TEXT_BORDER_HORIZONTAL),
+                            },
                             ..default()
                         },
-                        background_color: Color::BLACK.with_a(0.8).into(),
+                        background_color: Color::BLACK.with_alpha(0.8).into(),
+                        border_radius: BorderRadius::all(Val::Px(20.0)),
                         ..default()
                     },
                 ))
@@ -143,66 +126,36 @@ fn setup(mut commands: Commands) {
                     ));
                 });
 
-            parent
-                .spawn((
-                    fmt_name("bottom"),
-                    NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            flex_direction: FlexDirection::Column,
+            parent.spawn((
+                fmt_name("continue indicator"),
+                ImageBundle {
+                    image: UiImage {
+                        // 27 x 27 pixels
+                        texture: image_handle::CONTINUE_INDICATOR,
+                        ..default()
+                    },
+                    style: Style {
+                        justify_self: JustifySelf::Center,
+                        align_self: AlignSelf::Center,
+                        margin: UiRect {
+                            top: Val::Px(-18.),
+                            bottom: Val::Px(25.),
                             ..default()
                         },
                         ..default()
                     },
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("bottom edge image"),
-                        ImageBundle {
-                            image: UiImage {
-                                // 29 pixels high
-                                texture: image_handle::EDGE,
-                                flip_y: true,
-                                ..default()
-                            },
-                            style: Style {
-                                width: Val::Px(DIALOG_WIDTH),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                    ));
-                })
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("continue indicator image"),
-                        ImageBundle {
-                            image: UiImage {
-                                // 27 x 27 pixels
-                                texture: image_handle::CONTINUE_INDICATOR,
-                                ..default()
-                            },
-                            style: Style {
-                                position_type: PositionType::Absolute,
-                                bottom: Val::Px(INITIAL_DIALOGUE_CONTINUE_BOTTOM),
-                                ..default()
-                            },
-                            z_index: ZIndex::Local(1),
-                            visibility: Visibility::Hidden,
-                            ..default()
-                        },
-                        DialogueContinueNode,
-                    ));
-                });
+                    z_index: ZIndex::Local(1),
+                    visibility: Visibility::Hidden,
+                    ..default()
+                },
+                DialogueContinueNode,
+            ));
         });
 }
 
 fn fmt_name(name: &str) -> Name {
-    Name::new(format!("Yarn Spinner example dialogue view {name} node"))
+    Name::new(format!("Yarn Spinner example dialogue view node: {name}"))
 }
-
-pub(crate) const INITIAL_DIALOGUE_CONTINUE_BOTTOM: f32 = -5.0;
 
 pub(crate) fn create_dialog_text(text: impl Into<String>, invisible: impl Into<String>) -> Text {
     Text::from_sections([
@@ -235,7 +188,7 @@ where
                             justify_content: JustifyContent::FlexStart,
                             ..default()
                         },
-                        background_color: Color::NONE.into(),
+                        image: UiImage::default().with_color(Color::NONE),
                         ..default()
                     },
                     OptionButton(option.id),
@@ -263,21 +216,23 @@ where
 }
 
 const DIALOG_WIDTH: f32 = 800.0 * 0.8;
-const TEXT_BORDER: f32 = 120.0;
+const TEXT_BORDER_HORIZONTAL: f32 = 120.0;
+const TEXT_BORDER_TOP: f32 = 30.0;
+const TEXT_BORDER_BOTTOM: f32 = TEXT_BORDER_TOP + 10.0;
 
 mod style {
     use super::*;
     pub(crate) fn standard() -> Style {
         Style {
-            max_width: Val::Px(DIALOG_WIDTH - 2.0 * TEXT_BORDER),
+            max_width: Val::Px(DIALOG_WIDTH - 2.0 * TEXT_BORDER_HORIZONTAL),
             ..default()
         }
     }
     pub(crate) fn options() -> Style {
         const INDENT_MODIFIER: f32 = 1.0;
         Style {
-            margin: UiRect::horizontal(Val::Px((INDENT_MODIFIER - 1.0) * TEXT_BORDER)),
-            max_width: Val::Px(DIALOG_WIDTH - 2.0 * INDENT_MODIFIER * TEXT_BORDER),
+            margin: UiRect::horizontal(Val::Px((INDENT_MODIFIER - 1.0) * TEXT_BORDER_HORIZONTAL)),
+            max_width: Val::Px(DIALOG_WIDTH - 2.0 * INDENT_MODIFIER * TEXT_BORDER_HORIZONTAL),
             ..default()
         }
     }
@@ -285,6 +240,7 @@ mod style {
 
 mod text_style {
     use super::*;
+    use bevy::color::palettes::css;
     pub(crate) fn standard() -> TextStyle {
         TextStyle {
             font: font_handle::MEDIUM,
@@ -303,7 +259,7 @@ mod text_style {
     pub(crate) fn option_id() -> TextStyle {
         TextStyle {
             font: font_handle::MEDIUM,
-            color: Color::ALICE_BLUE,
+            color: css::ALICE_BLUE.into(),
             ..option_text()
         }
     }
@@ -311,7 +267,7 @@ mod text_style {
     pub(crate) fn option_text() -> TextStyle {
         TextStyle {
             font_size: 18.0,
-            color: Color::TOMATO,
+            color: css::TOMATO.into(),
             ..standard()
         }
     }

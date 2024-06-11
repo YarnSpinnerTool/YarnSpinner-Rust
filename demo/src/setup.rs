@@ -4,6 +4,7 @@ use crate::yarnspinner_integration::{
     Speaker,
 };
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
+use bevy::color::palettes::css;
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::core_pipeline::tonemapping::Tonemapping;
@@ -45,7 +46,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            color: Color::BISQUE,
+            color: css::BISQUE.into(),
             illuminance: light_consts::lux::OVERCAST_DAY,
             shadows_enabled: true,
             ..default()
@@ -68,7 +69,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ] {
         commands.spawn(PointLightBundle {
             point_light: PointLight {
-                color: Color::rgb(1.0, 0.78, 0.45),
+                color: Color::srgb(1.0, 0.78, 0.45),
                 intensity: 10_000.,
                 shadows_enabled: true,
                 ..default()
@@ -94,7 +95,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         StageCurtains,
     ));
     commands.insert_resource(AmbientLight {
-        color: Color::rgb(1., 0.75, 0.7),
+        color: Color::srgb(1., 0.75, 0.7),
         brightness: 0.25,
     });
     commands.insert_resource(Sprites {

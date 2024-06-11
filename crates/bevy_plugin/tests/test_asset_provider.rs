@@ -22,7 +22,7 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner.start_node("Start");
-    app.world.spawn(dialogue_runner);
+    app.world_mut().spawn(dialogue_runner);
 
     app.load_project();
     let start = Instant::now();
@@ -61,7 +61,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
     dialogue_runner
         .set_asset_language("en-US")
         .start_node("Start");
-    app.world.spawn(dialogue_runner);
+    app.world_mut().spawn(dialogue_runner);
 
     app.load_lines();
 
@@ -89,14 +89,14 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner.start_node("Start");
-    app.world.spawn(dialogue_runner);
+    app.world_mut().spawn(dialogue_runner);
     app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:9");
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
-    let asset_server = app.world.resource::<AssetServer>();
-    let path = asset_server.get_path(asset).unwrap();
+    let asset_server = app.world().resource::<AssetServer>();
+    let path = asset_server.get_path(asset.id()).unwrap();
 
     // Note that this does not contain backslashes on Windows
     assert_eq!("dialogue/en-US/9.ogg", path.path().to_str().unwrap());
@@ -125,14 +125,14 @@ fn loads_asset_from_translated_localization() -> Result<()> {
     dialogue_runner
         .set_asset_language("de-CH")
         .start_node("Start");
-    app.world.spawn(dialogue_runner);
+    app.world_mut().spawn(dialogue_runner);
     app.load_lines();
 
     let assets = app.dialogue_runner().get_assets_for_id("line:10");
     assert_eq!(1, assets.len());
     let asset: Handle<AudioSource> = assets.get_handle().unwrap();
-    let asset_server = app.world.resource::<AssetServer>();
-    let path = asset_server.get_path(asset).unwrap();
+    let asset_server = app.world().resource::<AssetServer>();
+    let path = asset_server.get_path(asset.id()).unwrap();
 
     // Note that this does not contains backslashes on Windows
     assert_eq!("dialogue/de-CH/10.ogg", path.path().to_str().unwrap());
@@ -161,7 +161,7 @@ fn panics_on_invalid_language() {
     dialogue_runner
         .set_asset_language("fr-FR")
         .start_node("Start");
-    app.world.spawn(dialogue_runner);
+    app.world_mut().spawn(dialogue_runner);
     app.load_lines();
 }
 
@@ -187,7 +187,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
     dialogue_runner
         .set_asset_language("en-US")
         .start_node("Start");
-    app.world.spawn(dialogue_runner);
+    app.world_mut().spawn(dialogue_runner);
 
     app.load_lines();
 

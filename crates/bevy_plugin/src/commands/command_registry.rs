@@ -179,7 +179,7 @@ mod tests {
         methods.add_command("test", |_: In<()>| panic!("It works!"));
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
-        method.call(vec![], &mut app.world);
+        method.call(vec![], app.world_mut());
     }
 
     #[test]
@@ -189,7 +189,7 @@ mod tests {
         methods.add_command("test", |In(a): In<f32>| assert_eq!(1.0, a));
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
-        method.call(to_method_params([1.0]), &mut app.world);
+        method.call(to_method_params([1.0]), app.world_mut());
     }
 
     #[test]
@@ -209,10 +209,10 @@ mod tests {
         let mut app = App::new();
         {
             let method1 = methods.get_mut("test1").unwrap();
-            method1.call(vec![], &mut app.world);
+            method1.call(vec![], app.world_mut());
         }
         let method2 = methods.get_mut("test2").unwrap();
-        method2.call(to_method_params([1.0]), &mut app.world);
+        method2.call(to_method_params([1.0]), app.world_mut());
     }
 
     #[test]
@@ -228,8 +228,8 @@ mod tests {
         let method = methods.get_mut("test").unwrap();
 
         let mut app = App::new();
-        method.call(to_method_params([1.0]), &mut app.world);
-        let data = app.world.resource::<Data>();
+        method.call(to_method_params([1.0]), app.world_mut());
+        let data = app.world().resource::<Data>();
         assert_eq!(data.0, 1.0);
     }
 
@@ -247,7 +247,7 @@ mod tests {
         let method = methods.get_mut("test").unwrap();
 
         let mut app = App::new();
-        let task = method.call(vec![], &mut app.world);
+        let task = method.call(vec![], app.world_mut());
         assert!(!task.is_finished());
         sleep(Duration::from_millis(600));
         assert!(task.is_finished());

@@ -70,7 +70,7 @@ pub(crate) fn handle_fade(
     mut color: Query<&mut BackgroundColor, With<StageCurtains>>,
 ) {
     if fade.0.is_done() {
-        color.single_mut().0.set_a(fade.0.to);
+        color.single_mut().0.set_alpha(fade.0.to);
         commands.remove_resource::<FadeCurtainAlpha>();
         fade.0.set_done();
     } else {
@@ -81,7 +81,7 @@ pub(crate) fn handle_fade(
             fade.0.smooth_end()
         };
         let alpha = fade.0.from + (fade.0.to - fade.0.from) * output;
-        color.single_mut().0.set_a(alpha);
+        color.single_mut().0.set_alpha(alpha);
     }
 }
 
@@ -127,7 +127,7 @@ pub(crate) fn ease_bang(
         let material = standard_materials.get_mut(material).unwrap();
         if bang.0.start_time.elapsed().as_secs_f32() >= bang.0.duration * 3.0 {
             commands.entity(entity).despawn_recursive();
-            material.base_color.set_a(0.0);
+            material.base_color.set_alpha(0.0);
             continue;
         }
         let input = bang.0.input();
@@ -147,6 +147,6 @@ pub(crate) fn ease_bang(
         } else {
             final_alpha
         };
-        material.base_color.set_a(alpha);
+        material.base_color.set_alpha(alpha);
     }
 }

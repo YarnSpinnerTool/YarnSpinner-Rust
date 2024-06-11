@@ -89,3 +89,7 @@ impl Plugin for ExampleYarnSpinnerDialogueViewPlugin {
             .add_plugins(option_selection::option_selection_plugin);
     }
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../../../readme.md")]
+mod test_readme {}

@@ -164,7 +164,7 @@ impl Plugin for YarnSpinnerPlugin {
         If you really want to load no Yarn files right now and do that later, use `YarnSpinnerPlugin::deferred()` instead.\
         If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::default()`.");
         app.add_plugins(Self::deferred())
-            .world
+            .world_mut()
             .send_event(self.project.clone());
     }
 }
@@ -236,7 +236,10 @@ impl YarnApp for App {
     }
 
     fn register_watching_for_changes(&mut self) -> &mut Self {
-        let asset_server = self.world.get_resource::<AssetServer>().expect(ASSET_ERROR);
+        let asset_server = self
+            .world()
+            .get_resource::<AssetServer>()
+            .expect(ASSET_ERROR);
 
         let watching_for_changes = asset_server.watching_for_changes();
         self.insert_resource(WatchingForChanges(watching_for_changes))
