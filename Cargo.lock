@@ -1175,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_yarnspinner"
-version = "0.2.0"
+version = "0.3.0-rc"
 dependencies = [
  "anyhow",
  "bevy",
@@ -1200,7 +1200,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_yarnspinner_example_dialogue_view"
-version = "0.2.1"
+version = "0.3.0-rc"
 dependencies = [
  "bevy",
  "bevy_yarnspinner",
@@ -4980,7 +4980,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "yarnspinner"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "log",
@@ -5000,7 +5000,7 @@ dependencies = [
 
 [[package]]
 name = "yarnspinner_compiler"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "annotate-snippets",
  "antlr-rust",
@@ -5015,7 +5015,7 @@ dependencies = [
 
 [[package]]
 name = "yarnspinner_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "prost",
@@ -5043,7 +5043,7 @@ dependencies = [
 
 [[package]]
 name = "yarnspinner_runtime"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "fixed_decimal",
