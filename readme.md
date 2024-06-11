@@ -47,7 +47,7 @@ fn main() {
         .add_systems(
             Update,
             // Spawn the dialogue runner once the Yarn project has finished compiling
-            spawn_dialogue_runner.run_if(resource_added::<YarnProject>()),
+            spawn_dialogue_runner.run_if(resource_added::<YarnProject>),
         )
         .run();
 }
