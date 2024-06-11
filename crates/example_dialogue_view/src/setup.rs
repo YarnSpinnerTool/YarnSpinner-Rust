@@ -36,16 +36,15 @@ fn setup(mut commands: Commands) {
                     display: Display::Grid,
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    justify_content: JustifyContent::End,
-                    grid_template_columns: vec![
-                        RepeatedGridTrack::fr(1, 1.0),
-                        RepeatedGridTrack::minmax(
-                            1,
-                            MinTrackSizingFunction::Px(DIALOG_WIDTH),
-                            MaxTrackSizingFunction::Percent(100.0),
-                        ),
-                        RepeatedGridTrack::fr(1, 1.0),
-                    ],
+                    align_content: AlignContent::End,
+                    justify_content: JustifyContent::SpaceAround,
+                    grid_auto_flow: GridAutoFlow::Row,
+                    grid_template_columns: vec![RepeatedGridTrack::minmax(
+                        1,
+                        MinTrackSizingFunction::Auto,
+                        MaxTrackSizingFunction::Px(DIALOG_WIDTH),
+                    )],
+                    grid_auto_rows: vec![GridTrack::min_content()],
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -59,7 +58,11 @@ fn setup(mut commands: Commands) {
                 TextBundle {
                     text: Text::from_section(String::new(), text_style::name()),
                     style: Style {
-                        grid_column: GridPlacement::start(2),
+                        margin: UiRect {
+                            left: Val::Px(TEXT_BORDER_HORIZONTAL / 2.0),
+                            bottom: Val::Px(-8.0),
+                            ..default()
+                        },
                         ..default()
                     },
                     z_index: ZIndex::Local(1),
@@ -75,13 +78,12 @@ fn setup(mut commands: Commands) {
                     NodeBundle {
                         style: Style {
                             min_height: Val::Px(50.0 + TEXT_BORDER_VERTICAL * 2.0),
-                            grid_column: GridPlacement::start(2),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
                             padding: UiRect {
                                 top: Val::Px(TEXT_BORDER_VERTICAL),
-                                bottom: Val::Px(TEXT_BORDER_VERTICAL),
+                                bottom: Val::Px(TEXT_BORDER_VERTICAL + 10.),
                                 left: Val::Px(TEXT_BORDER_HORIZONTAL),
                                 right: Val::Px(TEXT_BORDER_HORIZONTAL),
                             },
@@ -145,8 +147,11 @@ fn setup(mut commands: Commands) {
                                 ..default()
                             },
                             style: Style {
-                                position_type: PositionType::Absolute,
-                                bottom: Val::Px(INITIAL_DIALOGUE_CONTINUE_BOTTOM),
+                                margin: UiRect {
+                                    top: Val::Px(-20.),
+                                    bottom: Val::Px(25.),
+                                    ..default()
+                                },
                                 ..default()
                             },
                             z_index: ZIndex::Local(1),
