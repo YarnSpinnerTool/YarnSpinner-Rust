@@ -33,12 +33,19 @@ fn setup(mut commands: Commands) {
             fmt_name("root"),
             NodeBundle {
                 style: Style {
+                    display: Display::Grid,
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    justify_content: JustifyContent::FlexEnd,
-                    align_items: AlignItems::Center,
-                    padding: UiRect::bottom(Val::Px(30.0)),
-                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::End,
+                    grid_template_columns: vec![
+                        RepeatedGridTrack::fr(1, 1.0),
+                        RepeatedGridTrack::minmax(
+                            1,
+                            MinTrackSizingFunction::Px(DIALOG_WIDTH),
+                            MaxTrackSizingFunction::Percent(100.0),
+                        ),
+                        RepeatedGridTrack::fr(1, 1.0),
+                    ],
                     ..default()
                 },
                 visibility: Visibility::Hidden,
@@ -47,69 +54,41 @@ fn setup(mut commands: Commands) {
             UiRootNode,
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    fmt_name("top"),
-                    NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            flex_direction: FlexDirection::Column,
-                            ..default()
-                        },
+            parent.spawn((
+                fmt_name("name"),
+                TextBundle {
+                    text: Text::from_section(String::new(), text_style::name()),
+                    style: Style {
+                        grid_column: GridPlacement::start(2),
                         ..default()
                     },
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("top edge image"),
-                        ImageBundle {
-                            image: UiImage {
-                                // 29 pixels high
-                                texture: image_handle::EDGE,
-                                ..default()
-                            },
-                            style: Style {
-                                width: Val::Px(DIALOG_WIDTH),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                    ));
-                })
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("name"),
-                        TextBundle {
-                            text: Text::from_section(String::new(), text_style::name()),
-                            style: Style {
-                                position_type: PositionType::Absolute,
-                                left: Val::Px(TEXT_BORDER / 2.0),
-                                top: Val::Px(-8.0),
-                                ..default()
-                            },
-                            z_index: ZIndex::Local(1),
-                            ..default()
-                        },
-                        DialogueNameNode,
-                        Label,
-                    ));
-                });
+                    z_index: ZIndex::Local(1),
+                    ..default()
+                },
+                DialogueNameNode,
+                Label,
+            ));
 
             parent
                 .spawn((
                     fmt_name("dialogue"),
                     NodeBundle {
                         style: Style {
-                            width: Val::Px(DIALOG_WIDTH),
-                            min_height: Val::Px(50.0),
+                            min_height: Val::Px(50.0 + TEXT_BORDER_VERTICAL * 2.0),
+                            grid_column: GridPlacement::start(2),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
-                            padding: UiRect::horizontal(Val::Px(TEXT_BORDER)),
+                            padding: UiRect {
+                                top: Val::Px(TEXT_BORDER_VERTICAL),
+                                bottom: Val::Px(TEXT_BORDER_VERTICAL),
+                                left: Val::Px(TEXT_BORDER_HORIZONTAL),
+                                right: Val::Px(TEXT_BORDER_HORIZONTAL),
+                            },
                             ..default()
                         },
                         background_color: Color::BLACK.with_alpha(0.8).into(),
+                        border_radius: BorderRadius::all(Val::Px(20.0)),
                         ..default()
                     },
                 ))
@@ -156,24 +135,6 @@ fn setup(mut commands: Commands) {
                         ..default()
                     },
                 ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        fmt_name("bottom edge image"),
-                        ImageBundle {
-                            image: UiImage {
-                                // 29 pixels high
-                                texture: image_handle::EDGE,
-                                flip_y: true,
-                                ..default()
-                            },
-                            style: Style {
-                                width: Val::Px(DIALOG_WIDTH),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                    ));
-                })
                 .with_children(|parent| {
                     parent.spawn((
                         fmt_name("continue indicator image"),
@@ -263,21 +224,22 @@ where
 }
 
 const DIALOG_WIDTH: f32 = 800.0 * 0.8;
-const TEXT_BORDER: f32 = 120.0;
+const TEXT_BORDER_HORIZONTAL: f32 = 120.0;
+const TEXT_BORDER_VERTICAL: f32 = 30.0;
 
 mod style {
     use super::*;
     pub(crate) fn standard() -> Style {
         Style {
-            max_width: Val::Px(DIALOG_WIDTH - 2.0 * TEXT_BORDER),
+            max_width: Val::Px(DIALOG_WIDTH - 2.0 * TEXT_BORDER_HORIZONTAL),
             ..default()
         }
     }
     pub(crate) fn options() -> Style {
         const INDENT_MODIFIER: f32 = 1.0;
         Style {
-            margin: UiRect::horizontal(Val::Px((INDENT_MODIFIER - 1.0) * TEXT_BORDER)),
-            max_width: Val::Px(DIALOG_WIDTH - 2.0 * INDENT_MODIFIER * TEXT_BORDER),
+            margin: UiRect::horizontal(Val::Px((INDENT_MODIFIER - 1.0) * TEXT_BORDER_HORIZONTAL)),
+            max_width: Val::Px(DIALOG_WIDTH - 2.0 * INDENT_MODIFIER * TEXT_BORDER_HORIZONTAL),
             ..default()
         }
     }
