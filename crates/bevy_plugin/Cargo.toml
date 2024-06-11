@@ -28,7 +28,12 @@ rand = { version = "0.8", features = ["small_rng"] }
 [dependencies.bevy]
 version = "0.14.0-rc.2"
 default-features = false
-features = ["bevy_asset", "multi_threaded"]
+features = [
+    "bevy_asset",
+    "multi_threaded",
+    # Needed since 0.14.0-rc.2, not sure if bug
+    "bevy_scene",
+]
 
 [dev-dependencies]
 tempfile = "3"
