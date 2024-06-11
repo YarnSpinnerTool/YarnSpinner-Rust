@@ -29,7 +29,7 @@ fn execute_commands(world: &mut World, mut reader: Local<ManualEventReader<Execu
 }
 
 fn clone_events(
-    world: &mut World,
+    world: &World,
     reader: &mut ManualEventReader<ExecuteCommandEvent>,
 ) -> Vec<ExecuteCommandEvent> {
     let events = world.resource::<Events<ExecuteCommandEvent>>();

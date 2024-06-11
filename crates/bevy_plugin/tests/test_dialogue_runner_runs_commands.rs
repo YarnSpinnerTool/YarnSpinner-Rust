@@ -68,7 +68,7 @@ fn executes_commands_and_fns() -> Result<()> {
     ]);
 
     app.continue_dialogue_and_update();
-    let resource = app.world.resource::<Data>().0.as_str();
+    let resource = app.world().resource::<Data>().0.as_str();
     assert_eq!("foo", resource);
     assert_events!(asserter, app contains [
         PresentLineEvent (n = 0),

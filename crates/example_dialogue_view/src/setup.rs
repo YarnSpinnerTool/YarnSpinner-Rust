@@ -109,7 +109,7 @@ fn setup(mut commands: Commands) {
                             padding: UiRect::horizontal(Val::Px(TEXT_BORDER)),
                             ..default()
                         },
-                        background_color: Color::BLACK.with_a(0.8).into(),
+                        background_color: Color::BLACK.with_alpha(0.8).into(),
                         ..default()
                     },
                 ))
@@ -235,7 +235,7 @@ where
                             justify_content: JustifyContent::FlexStart,
                             ..default()
                         },
-                        background_color: Color::NONE.into(),
+                        image: UiImage::default().with_color(Color::NONE),
                         ..default()
                     },
                     OptionButton(option.id),
@@ -285,6 +285,7 @@ mod style {
 
 mod text_style {
     use super::*;
+    use bevy::color::palettes::css;
     pub(crate) fn standard() -> TextStyle {
         TextStyle {
             font: font_handle::MEDIUM,
@@ -303,7 +304,7 @@ mod text_style {
     pub(crate) fn option_id() -> TextStyle {
         TextStyle {
             font: font_handle::MEDIUM,
-            color: Color::ALICE_BLUE,
+            color: css::ALICE_BLUE.into(),
             ..option_text()
         }
     }
@@ -311,7 +312,7 @@ mod text_style {
     pub(crate) fn option_text() -> TextStyle {
         TextStyle {
             font_size: 18.0,
-            color: Color::TOMATO,
+            color: css::TOMATO.into(),
             ..standard()
         }
     }

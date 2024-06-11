@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 use anyhow::{anyhow, bail};
-use bevy::asset::{io::Reader, AssetLoader, AsyncReadExt, BoxedFuture, LoadContext};
+use bevy::asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext};
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
 use bevy::utils::HashMap;
@@ -23,20 +23,18 @@ impl AssetLoader for StringsFileAssetLoader {
     type Asset = StringsFile;
     type Settings = ();
     type Error = anyhow::Error;
-    fn load<'a>(
+    async fn load<'a>(
         &'a self,
-        reader: &'a mut Reader,
+        reader: &'a mut Reader<'_>,
         _settings: &'a (),
-        _load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-        Box::pin(async move {
-            let mut bytes = Vec::new();
-            reader.read_to_end(&mut bytes).await?;
-            let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
-            let records: csv::Result<Vec<_>> = csv_reader.deserialize().collect();
-            let strings_file = StringsFile::new_with_single_language(records?)?;
-            Ok(strings_file)
-        })
+        _load_context: &'a mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+        let mut csv_reader = csv::Reader::from_reader(bytes.as_slice());
+        let records: csv::Result<Vec<_>> = csv_reader.deserialize().collect();
+        let strings_file = StringsFile::new_with_single_language(records?)?;
+        Ok(strings_file)
     }
 
     fn extensions(&self) -> &[&str] {

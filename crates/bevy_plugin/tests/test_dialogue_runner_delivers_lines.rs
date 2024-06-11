@@ -289,10 +289,10 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
             dialogue_runner_builder.add_asset_provider(AudioAssetProvider::new());
     }
     let dialogue_runner = dialogue_runner_builder.build();
-    app.world.spawn(dialogue_runner);
-    app.world
+    app.world_mut().spawn(dialogue_runner);
+    app.world_mut()
         .query::<&mut DialogueRunner>()
-        .single_mut(&mut app.world)
+        .single_mut(app.world_mut())
 }
 
 fn english_lines() -> Vec<String> {

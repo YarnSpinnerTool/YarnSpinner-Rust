@@ -21,21 +21,21 @@ impl EventAsserter {
 
     pub fn clear_events(&mut self, app: &mut App) {
         self.present_line_reader
-            .clear(app.world.resource::<Events<PresentLineEvent>>());
+            .clear(app.world().resource::<Events<PresentLineEvent>>());
         self.present_options_reader
-            .clear(app.world.resource::<Events<PresentOptionsEvent>>());
+            .clear(app.world().resource::<Events<PresentOptionsEvent>>());
         self.dialogue_start_reader
-            .clear(app.world.resource::<Events<DialogueStartEvent>>());
+            .clear(app.world().resource::<Events<DialogueStartEvent>>());
         self.dialogue_complete_reader
-            .clear(app.world.resource::<Events<DialogueCompleteEvent>>());
+            .clear(app.world().resource::<Events<DialogueCompleteEvent>>());
         self.node_start_reader
-            .clear(app.world.resource::<Events<NodeStartEvent>>());
+            .clear(app.world().resource::<Events<NodeStartEvent>>());
         self.node_complete_reader
-            .clear(app.world.resource::<Events<NodeCompleteEvent>>());
+            .clear(app.world().resource::<Events<NodeCompleteEvent>>());
         self.line_hints_reader
-            .clear(app.world.resource::<Events<LineHintsEvent>>());
+            .clear(app.world().resource::<Events<LineHintsEvent>>());
         self.execute_command_reader
-            .clear(app.world.resource::<Events<ExecuteCommandEvent>>());
+            .clear(app.world().resource::<Events<ExecuteCommandEvent>>());
     }
 }
 
@@ -78,7 +78,7 @@ macro_rules! assert_events {
         assert_events!($asserter, $app contains $event (n = 1) $(with $pred)?);
     };
     ($asserter:ident, $app:ident contains $event:ident (n = $num:expr) $(with $pred:expr)?) => {
-        let events = $app.world.resource::<bevy::prelude::Events<$event>>();
+        let events = $app.world().resource::<bevy::prelude::Events<$event>>();
         let reader = $crate::get_reader!($asserter, $event);
         let events: Vec<&$event> = reader.read(&events).collect();
         assert_eq!($num, events.len(), "Expected {} events of type {}, but found {}: {events:#?}", stringify!($num), stringify!($event), events.len());

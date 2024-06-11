@@ -104,7 +104,7 @@ pub(crate) fn fade_in(
     mut commands: Commands,
     color: Query<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let change = EasedChange::new(color.single().0.a(), 0.0, seconds);
+    let change = EasedChange::new(color.single().0.alpha(), 0.0, seconds);
     let done = change.done.clone();
 
     commands.insert_resource(FadeCurtainAlpha(change));
@@ -116,7 +116,7 @@ pub(crate) fn fade_out(
     mut commands: Commands,
     color: Query<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let change = EasedChange::new(color.single().0.a(), 1.0, seconds);
+    let change = EasedChange::new(color.single().0.alpha(), 1.0, seconds);
     let done = change.done.clone();
 
     commands.insert_resource(FadeCurtainAlpha(change));
@@ -124,7 +124,7 @@ pub(crate) fn fade_out(
 }
 
 pub(crate) fn quit(_: In<()>, mut app_exit_events: EventWriter<AppExit>) {
-    app_exit_events.send(AppExit);
+    app_exit_events.send(AppExit::Success);
 }
 
 pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<AtomicBool> {

@@ -20,7 +20,7 @@ fn loads_yarn_assets() {
     let yarn_files: Vec<_> = app.load_project().yarn_files().cloned().collect();
     assert_eq!(1, yarn_files.len());
 
-    let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
+    let yarn_file_assets = app.world().get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file = yarn_file_assets.get(&yarn_files[0]).unwrap();
 
     let expected_source = include_str!("../assets/lines.yarn");
@@ -65,7 +65,7 @@ fn generates_line_ids() -> anyhow::Result<()> {
 
     let yarn_file = app.load_project().yarn_files().next().unwrap().clone();
 
-    let yarn_file_assets = app.world.get_resource::<Assets<YarnFile>>().unwrap();
+    let yarn_file_assets = app.world().get_resource::<Assets<YarnFile>>().unwrap();
     let yarn_file_in_app = yarn_file_assets.get(&yarn_file).unwrap();
     let yarn_file_on_disk = fs::read_to_string(&yarn_path)?;
 
@@ -169,10 +169,15 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
 
     app.load_project();
     let handle = app
-        .world
+        .world()
         .resource::<AssetServer>()
         .load_untyped("dialogue/de-CH.strings.csv");
-    while app.world.resource::<AssetServer>().get_load_state(&handle) != Some(LoadState::Loaded) {
+    while app
+        .world()
+        .resource::<AssetServer>()
+        .get_load_state(&handle)
+        != Some(LoadState::Loaded)
+    {
         app.update();
     }
 
@@ -224,10 +229,13 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     let strings_file_path = dir.path().join("dialogue/de-CH.strings.csv");
     {
-        let project = app.world.resource::<YarnProject>();
+        let project = app.world().resource::<YarnProject>();
         let handle = project.yarn_files().next().unwrap().clone();
 
-        let mut yarn_file_assets = app.world.get_resource_mut::<Assets<YarnFile>>().unwrap();
+        let mut yarn_file_assets = app
+            .world_mut()
+            .get_resource_mut::<Assets<YarnFile>>()
+            .unwrap();
         let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
 
         let strings_file_source =
@@ -243,7 +251,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
     }
 
     while !app
-        .world
+        .world()
         .resource::<Events<AssetEvent<YarnFile>>>()
         .is_empty()
     {
