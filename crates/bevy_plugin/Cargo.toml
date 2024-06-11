@@ -31,7 +31,7 @@ default-features = false
 features = [
     "bevy_asset",
     "multi_threaded",
-    # Needed since 0.14.0-rc.2, not sure if bug
+    # Remove when https://github.com/bevyengine/bevy/pull/13740 lands
     "bevy_scene",
 ]
 
