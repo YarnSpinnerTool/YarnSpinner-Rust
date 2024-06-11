@@ -77,13 +77,12 @@ fn setup(mut commands: Commands) {
                     fmt_name("dialogue"),
                     NodeBundle {
                         style: Style {
-                            min_height: Val::Px(50.0 + TEXT_BORDER_VERTICAL * 2.0),
                             flex_direction: FlexDirection::Column,
                             justify_content: JustifyContent::SpaceAround,
                             align_items: AlignItems::FlexStart,
                             padding: UiRect {
-                                top: Val::Px(TEXT_BORDER_VERTICAL),
-                                bottom: Val::Px(TEXT_BORDER_VERTICAL + 10.),
+                                top: Val::Px(TEXT_BORDER_TOP),
+                                bottom: Val::Px(TEXT_BORDER_BOTTOM),
                                 left: Val::Px(TEXT_BORDER_HORIZONTAL),
                                 right: Val::Px(TEXT_BORDER_HORIZONTAL),
                             },
@@ -126,7 +125,7 @@ fn setup(mut commands: Commands) {
 
             parent
                 .spawn((
-                    fmt_name("bottom"),
+                    fmt_name("continue indicator container"),
                     NodeBundle {
                         style: Style {
                             justify_content: JustifyContent::Center,
@@ -228,7 +227,8 @@ where
 
 const DIALOG_WIDTH: f32 = 800.0 * 0.8;
 const TEXT_BORDER_HORIZONTAL: f32 = 120.0;
-const TEXT_BORDER_VERTICAL: f32 = 30.0;
+const TEXT_BORDER_TOP: f32 = 30.0;
+const TEXT_BORDER_BOTTOM: f32 = TEXT_BORDER_TOP + 10.0;
 
 mod style {
     use super::*;
