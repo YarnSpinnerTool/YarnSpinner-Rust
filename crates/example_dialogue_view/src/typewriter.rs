@@ -1,8 +1,5 @@
 use crate::option_selection::OptionSelection;
-use crate::setup::{
-    create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode,
-    INITIAL_DIALOGUE_CONTINUE_BOTTOM,
-};
+use crate::setup::{create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode};
 use crate::updating::SpeakerChangeEvent;
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::prelude::*;
@@ -167,8 +164,7 @@ fn bob_continue(
         return;
     }
     let mut style = style.single_mut();
-    let pixels =
-        (time.elapsed_seconds() * 3.0).sin().powi(2) * 5.0 + INITIAL_DIALOGUE_CONTINUE_BOTTOM;
+    let pixels = (time.elapsed_seconds() * 3.0).sin().powi(2) * 5.0;
     style.bottom = Val::Px(pixels);
 }
 

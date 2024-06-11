@@ -148,7 +148,7 @@ fn setup(mut commands: Commands) {
                             },
                             style: Style {
                                 margin: UiRect {
-                                    top: Val::Px(-20.),
+                                    top: Val::Px(-18.),
                                     bottom: Val::Px(25.),
                                     ..default()
                                 },
@@ -167,8 +167,6 @@ fn setup(mut commands: Commands) {
 fn fmt_name(name: &str) -> Name {
     Name::new(format!("Yarn Spinner example dialogue view {name} node"))
 }
-
-pub(crate) const INITIAL_DIALOGUE_CONTINUE_BOTTOM: f32 = -5.0;
 
 pub(crate) fn create_dialog_text(text: impl Into<String>, invisible: impl Into<String>) -> Text {
     Text::from_sections([
