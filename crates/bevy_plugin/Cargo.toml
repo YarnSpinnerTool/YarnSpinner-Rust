@@ -20,7 +20,7 @@ audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 anyhow = "1"
 csv = "1"
 serde = { version = "1", features = ["derive"] }
-yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"], version = "0.3" }
+yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"], version = "0.3.0-rc" }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 
