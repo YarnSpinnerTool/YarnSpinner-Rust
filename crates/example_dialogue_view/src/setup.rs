@@ -44,6 +44,8 @@ fn setup(mut commands: Commands) {
                         MinTrackSizingFunction::Auto,
                         MaxTrackSizingFunction::Px(DIALOG_WIDTH),
                     )],
+                    // In the web, `GridTrack::auto()` should already work like this,
+                    // but it seems like Bevy disagrees?
                     grid_auto_rows: vec![GridTrack::min_content()],
                     ..default()
                 },
