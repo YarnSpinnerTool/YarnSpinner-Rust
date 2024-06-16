@@ -177,7 +177,7 @@ where
         let mut system_state: SystemState<T::Param> = SystemState::new(world);
         let param = system_state.get_mut(world);
         let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
-        let mut iter = input.iter_mut();
+        let mut iter = input.iter_mut().peekable();
         let input = T::In::retrieve(&mut iter);
         assert!(
             iter.next().is_none(),

@@ -19,7 +19,7 @@ pub struct YarnValueWrapper {
 }
 
 #[doc(hidden)]
-pub type YarnValueWrapperIter<'a> = IterMut<'a, YarnValueWrapper>;
+pub type YarnValueWrapperIter<'a> = Peekable<IterMut<'a, YarnValueWrapper>>;
 
 impl From<YarnValue> for YarnValueWrapper {
     fn from(value: YarnValue) -> Self {
@@ -61,6 +61,17 @@ pub trait YarnFnParam {
 
 /// Shorthand way of accessing the associated type [`YarnFnParam::Item`] for a given [`YarnFnParam`].
 pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
+
+impl<T: YarnFnParam> YarnFnParam for Option<T> {
+    type Item<'new> = Option<T::Item<'new>>;
+
+    fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
+        match iter.peek() {
+            Some(_) => Some(T::retrieve(iter)),
+            None => None,
+        }
+    }
+}
 
 macro_rules! impl_yarn_fn_param_tuple {
     ($($param: ident),*) => {

@@ -186,7 +186,7 @@ macro_rules! impl_yarn_fn_tuple {
                     let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
                     #[allow(unused_variables, unused_mut)] // for n = 0 tuples
-                    let mut iter = params.iter_mut();
+                    let mut iter = params.iter_mut().peekable();
 
                     // $param is the type implementing YarnFnParam
                     let input = (
