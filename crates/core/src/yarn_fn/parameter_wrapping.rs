@@ -6,6 +6,7 @@ use crate::prelude::*;
 use std::any::Any;
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display};
+use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::slice::IterMut;
 use yarnspinner_macros::all_tuples;
