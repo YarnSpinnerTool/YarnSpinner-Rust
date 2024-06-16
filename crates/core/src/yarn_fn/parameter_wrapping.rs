@@ -67,10 +67,7 @@ impl<T: YarnFnParam> YarnFnParam for Option<T> {
     type Item<'new> = Option<T::Item<'new>>;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
-        match iter.peek() {
-            Some(_) => Some(T::retrieve(iter)),
-            None => None,
-        }
+        iter.peek().map(|_| T::retrieve(iter))
     }
 }
 
