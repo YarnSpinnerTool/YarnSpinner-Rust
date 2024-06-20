@@ -276,6 +276,22 @@ mod tests {
     }
 
     #[test]
+    fn accepts_optional_value() {
+        fn f(_: Option<String>) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_optional_value_ref() {
+        fn (f_: &Option<YarnValue>) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
     fn accepts_multiple_strings() {
         fn f(s: String, _: String, _: &str, _: String, _: &str) -> String {
             s

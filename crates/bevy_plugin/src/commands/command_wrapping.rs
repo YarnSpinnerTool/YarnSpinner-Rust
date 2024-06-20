@@ -286,6 +286,12 @@ pub mod tests {
     }
 
     #[test]
+    fn accepts_function_with_optional_in_param() {
+        fn f(_: In<Option<usize>>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
     fn accepts_function_with_tuple_in_param() {
         fn f(_: In<(usize, isize, (String, &str))>) {}
         accepts_yarn_command(f);
