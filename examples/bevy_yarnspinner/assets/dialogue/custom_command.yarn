@@ -3,6 +3,9 @@ title: CustomCommand
 Inserting a resource after you continue this line.
 <<insert_resource "Bob" 42>>
 
+Update the name in the resource after you continue this line.
+<<update_resource "Ivan">>
+
 Reading the inserted resource after you continue this line. The output will be printed to the console.
 <<read_resource>>
 ===

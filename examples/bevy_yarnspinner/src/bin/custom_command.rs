@@ -28,6 +28,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     dialogue_runner
         .commands_mut()
         .add_command("insert_resource", insert_resource)
+        .add_command("update_resource", update_resource)
         .add_command("read_resource", read_resource);
     dialogue_runner.start_node("CustomCommand");
     commands.spawn(dialogue_runner);
@@ -53,4 +54,19 @@ fn read_resource(_: In<()>, previously_added_resource: Res<SomethingAddedByYarnS
         "{} is {} years old",
         previously_added_resource.name, previously_added_resource.age
     );
+}
+
+// Commands may also take arguments as `Option<_>` which allows commands with optional arguments.
+// This function can be called either like:
+//     `<<update_resource "Bob">>`
+// or
+//     `<<update_resource "Bob" 42>>`
+fn upate_resource(
+    In((name, age)): In<(String, Option<f32>)>,
+    mut resource: ResMut<SomethingAddedByYarnSpinner>)
+{
+    resource.name = name;
+    if let Some(age) = age {
+        resource.age = age;
+    }
 }
