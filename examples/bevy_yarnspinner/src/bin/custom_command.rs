@@ -61,7 +61,7 @@ fn read_resource(_: In<()>, previously_added_resource: Res<SomethingAddedByYarnS
 //     `<<update_resource "Bob">>`
 // or
 //     `<<update_resource "Bob" 42>>`
-fn upate_resource(
+fn update_resource(
     In((name, age)): In<(String, Option<f32>)>,
     mut resource: ResMut<SomethingAddedByYarnSpinner>,
 ) {
