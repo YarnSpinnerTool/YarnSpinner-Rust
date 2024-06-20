@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn accepts_optional_value_ref() {
-        fn (f_: &Option<YarnValue>) -> bool {
+        fn f(_: &Option<YarnValue>) -> bool {
             true
         }
         accept_yarn_fn(f);

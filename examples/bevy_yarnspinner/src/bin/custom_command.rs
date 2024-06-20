@@ -63,8 +63,8 @@ fn read_resource(_: In<()>, previously_added_resource: Res<SomethingAddedByYarnS
 //     `<<update_resource "Bob" 42>>`
 fn upate_resource(
     In((name, age)): In<(String, Option<f32>)>,
-    mut resource: ResMut<SomethingAddedByYarnSpinner>)
-{
+    mut resource: ResMut<SomethingAddedByYarnSpinner>,
+) {
     resource.name = name;
     if let Some(age) = age {
         resource.age = age;
