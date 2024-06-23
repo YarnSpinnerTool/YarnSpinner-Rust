@@ -2,10 +2,7 @@ use crate::prelude::*;
 use bevy::asset::{io::Reader, AsyncReadExt};
 use bevy::prelude::*;
 
-use bevy::{
-    asset::{AssetLoader, LoadContext},
-    utils::BoxedFuture,
-};
+use bevy::asset::{AssetLoader, LoadContext};
 use std::hash::Hash;
 use yarnspinner::prelude::YarnFile as InnerYarnFile;
 
@@ -80,18 +77,16 @@ impl AssetLoader for YarnFileAssetLoader {
     type Asset = YarnFile;
     type Settings = ();
     type Error = anyhow::Error;
-    fn load<'a>(
+    async fn load<'a>(
         &'a self,
-        reader: &'a mut Reader,
+        reader: &'a mut Reader<'_>,
         _settings: &'a (),
-        load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-        Box::pin(async move {
-            let mut bytes = Vec::new();
-            reader.read_to_end(&mut bytes).await?;
-            let yarn_file = read_yarn_file(bytes, load_context)?;
-            Ok(yarn_file)
-        })
+        load_context: &'a mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+        let yarn_file = read_yarn_file(bytes, load_context)?;
+        Ok(yarn_file)
     }
 
     fn extensions(&self) -> &[&str] {
