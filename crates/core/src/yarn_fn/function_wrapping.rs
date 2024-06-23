@@ -186,7 +186,7 @@ macro_rules! impl_yarn_fn_tuple {
                     let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
                     #[allow(unused_variables, unused_mut)] // for n = 0 tuples
-                    let mut iter = params.iter_mut();
+                    let mut iter = params.iter_mut().peekable();
 
                     // $param is the type implementing YarnFnParam
                     let input = (
@@ -270,6 +270,22 @@ mod tests {
     #[test]
     fn accepts_yarn_value_ref() {
         fn f(_: &YarnValue) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_optional_value() {
+        fn f(_: Option<String>) -> bool {
+            true
+        }
+        accept_yarn_fn(f);
+    }
+
+    #[test]
+    fn accepts_optional_value_ref() {
+        fn f(_: Option<&YarnValue>) -> bool {
             true
         }
         accept_yarn_fn(f);

@@ -177,7 +177,7 @@ where
         let mut system_state: SystemState<T::Param> = SystemState::new(world);
         let param = system_state.get_mut(world);
         let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
-        let mut iter = input.iter_mut();
+        let mut iter = input.iter_mut().peekable();
         let input = T::In::retrieve(&mut iter);
         assert!(
             iter.next().is_none(),
@@ -282,6 +282,12 @@ pub mod tests {
     #[test]
     fn accepts_function_with_simple_in_param() {
         fn f(_: In<usize>) {}
+        accepts_yarn_command(f);
+    }
+
+    #[test]
+    fn accepts_function_with_optional_in_param() {
+        fn f(_: In<Option<usize>>) {}
         accepts_yarn_command(f);
     }
 
