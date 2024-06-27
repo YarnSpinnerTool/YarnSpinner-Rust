@@ -19,3 +19,6 @@ yarnspinner_macros = { path = "../macros", version = "0.1" }
 prost = "0.12"
 serde = { version = "1", features = ["derive"], optional = true }
 bevy = { version = "0.14.0-rc.2", default-features = false, optional = true }
+
+[dev-dependencies]
+static_assertions = "1.1.0"

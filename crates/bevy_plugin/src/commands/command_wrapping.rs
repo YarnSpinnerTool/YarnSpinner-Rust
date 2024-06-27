@@ -334,5 +334,20 @@ pub mod tests {
         accepts_yarn_command(f);
     }
 
+    macro_rules! assert_is_yarn_command {
+        (($($param:ty),*) -> $ret:ty) => {
+            static_assertions::assert_impl_all!(fn($($param),*) -> $ret: YarnCommand<fn($($param),*) -> $ret>);
+        };
+    }
+
+    macro_rules! assert_is_not_yarn_command {
+        (($($param:ty),*) -> $ret:ty) => {
+            static_assertions::assert_not_impl_any!(fn($($param),*) -> $ret: YarnCommand<fn($($param),*) -> $ret>);
+        };
+    }
+
+    assert_is_yarn_command! { (In<((), Option<()>)>) -> bool }
+    assert_is_not_yarn_command! { (In<(Option<()>, ())>) -> bool }
+
     fn accepts_yarn_command<Marker>(_: impl YarnCommand<Marker>) {}
 }
