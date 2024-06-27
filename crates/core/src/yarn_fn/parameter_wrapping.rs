@@ -57,6 +57,9 @@ pub trait YarnFnParam {
     /// You could think of `YarnFnParam::Item<'new>` as being an operation that changes the lifetime bound to `Self`.
     type Item<'new>;
 
+    /// Tracks if this parameter is optional or required.
+    /// This information is used to disallow required parameters to follow optional ones.
+    /// See the [`AllowedOptionalityChain`] trait for details.
     #[doc(hidden)]
     type Optionality: Optionality;
 
