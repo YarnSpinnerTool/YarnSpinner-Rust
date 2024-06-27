@@ -2,6 +2,7 @@
 //!
 //! Inspired by <https://promethia-27.github.io/dependency_injection_like_bevy_from_scratch/chapter2/passing_references.html>
 
+use super::optionality::{AllowedOptionalityChain, Optional, Optionality, Required};
 use crate::prelude::*;
 use std::any::Any;
 use std::borrow::Borrow;
@@ -54,7 +55,13 @@ impl YarnValueWrapper {
 pub trait YarnFnParam {
     /// The item type returned when constructing this [`YarnFn`] param. The value of this associated type should be `Self`, instantiated with a new lifetime.
     /// You could think of `YarnFnParam::Item<'new>` as being an operation that changes the lifetime bound to `Self`.
-    type Item<'new>: YarnFnParam;
+    type Item<'new>;
+
+    /// Tracks if this parameter is optional or required.
+    /// This information is used to disallow required parameters to follow optional ones.
+    /// See the [`AllowedOptionalityChain`] trait for details.
+    #[doc(hidden)]
+    type Optionality: Optionality;
 
     #[doc(hidden)]
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
@@ -65,6 +72,7 @@ pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
 
 impl<T: YarnFnParam> YarnFnParam for Option<T> {
     type Item<'new> = Option<T::Item<'new>>;
+    type Optionality = Optional;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
         if iter.peek().is_some() {
@@ -79,8 +87,11 @@ macro_rules! impl_yarn_fn_param_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
         impl<$($param,)*> YarnFnParam for ($($param,)*)
-        where $($param: YarnFnParam,)* {
+            where $($param: YarnFnParam,)*
+                  ($(<$param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain
+        {
             type Item<'new> = ($($param::Item<'new>,)*);
+            type Optionality = <($(<$param as YarnFnParam>::Optionality,)*) as AllowedOptionalityChain>::Last;
 
             #[allow(unused_variables, clippy::unused_unit)] // for n = 0 tuples
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
@@ -107,6 +118,7 @@ where
     <T as TryFrom<YarnValue>>::Error: Display,
 {
     type Item<'new> = ResRef<'new, T>;
+    type Optionality = Required;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
         let value = iter.next().expect("Passed too few arguments to YarnFn");
@@ -141,6 +153,7 @@ where
     U: ?Sized + 'static,
 {
     type Item<'new> = ResRefBorrow<'new, T, U>;
+    type Optionality = Required;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
         let value = iter.next().expect("Passed too few arguments to YarnFn");
@@ -168,6 +181,7 @@ where
     <T as TryFrom<YarnValue>>::Error: Display,
 {
     type Item<'new> = ResOwned<T>;
+    type Optionality = Required;
 
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
         let value = iter.next().expect("Passed too few arguments to YarnFn");
@@ -192,6 +206,7 @@ macro_rules! impl_yarn_fn_param_inner {
     ($referenced:ty: YarnFnParam) => {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
+            type Optionality = Required;
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResRef::<$referenced>::retrieve(iter).value
@@ -200,6 +215,7 @@ macro_rules! impl_yarn_fn_param_inner {
 
         impl YarnFnParam for $referenced {
             type Item<'new> = $referenced;
+            type Optionality = Required;
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResOwned::<$referenced>::retrieve(iter).value
@@ -209,6 +225,7 @@ macro_rules! impl_yarn_fn_param_inner {
     ($referenced:ty => $owned:ty: YarnFnParam) => {
         impl YarnFnParam for &$referenced {
             type Item<'new> = &'new $referenced;
+            type Optionality = Required;
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResRefBorrow::<$owned, $referenced>::retrieve(iter).value
@@ -217,6 +234,7 @@ macro_rules! impl_yarn_fn_param_inner {
 
         impl YarnFnParam for &$owned {
             type Item<'new> = &'new $owned;
+            type Optionality = Required;
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResRef::<$owned>::retrieve(iter).value
@@ -225,6 +243,7 @@ macro_rules! impl_yarn_fn_param_inner {
 
         impl YarnFnParam for $owned {
             type Item<'new> = $owned;
+            type Optionality = Required;
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResOwned::<$owned>::retrieve(iter).value

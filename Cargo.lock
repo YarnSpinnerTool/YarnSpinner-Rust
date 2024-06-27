@@ -1184,6 +1184,7 @@ dependencies = [
  "rand",
  "serde",
  "sha2",
+ "static_assertions",
  "tempfile",
  "yarnspinner",
 ]
@@ -5020,6 +5021,7 @@ dependencies = [
  "bevy",
  "prost",
  "serde",
+ "static_assertions",
  "yarnspinner_macros",
 ]
 

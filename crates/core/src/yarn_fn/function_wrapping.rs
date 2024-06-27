@@ -1,3 +1,4 @@
+use super::optionality::AllowedOptionalityChain;
 use crate::prelude::*;
 use std::any::TypeId;
 use std::fmt::{Debug, Display, Formatter};
@@ -179,6 +180,7 @@ macro_rules! impl_yarn_fn_tuple {
                 Fn($(<$param as YarnFnParam>::Item<'a>,)*) -> O,
             O: IntoYarnValueFromNonYarnValue + 'static,
             $($param: YarnFnParam + 'static,)*
+            ($(<$param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain,
             {
                 type Out = O;
                 #[allow(non_snake_case)]
@@ -361,5 +363,36 @@ mod tests {
         T: YarnFn<Marker>,
     {
         f.call(input)
+    }
+
+    mod optionality {
+        use super::*;
+
+        macro_rules! assert_is_yarn_fn {
+            (($($param:ty),*) -> $ret:ty) => {
+                static_assertions::assert_impl_all!(fn($($param),*) -> $ret: YarnFn<fn($($param),*) -> $ret>);
+            };
+        }
+
+        macro_rules! assert_is_not_yarn_fn {
+            (($($param:ty),*) -> $ret:ty) => {
+                static_assertions::assert_not_impl_any!(fn($($param),*) -> $ret: YarnFn<fn($($param),*) -> $ret>);
+            };
+        }
+
+        assert_is_yarn_fn! { (()) -> bool }
+        assert_is_yarn_fn! { (Option<()>) -> bool }
+
+        assert_is_yarn_fn! { ((), ()) -> bool }
+        assert_is_yarn_fn! { ((), Option<()>) -> bool }
+        assert_is_yarn_fn! { (Option<()>, Option<()>) -> bool }
+        assert_is_not_yarn_fn! { (Option<()>, ()) -> bool }
+
+        assert_is_yarn_fn! { (Option<()>, Option<()>, Option<()>, Option<()>) -> bool }
+        assert_is_not_yarn_fn! { (Option<()>, Option<()>, Option<()>, ()) -> bool }
+
+        assert_is_yarn_fn! { (((), (), ()), ((), Option<()>), (Option<()>, Option<()>)) -> bool }
+        assert_is_yarn_fn! { ((), ((), ((), ((), Option<()>)))) -> bool }
+        assert_is_not_yarn_fn! { ((), ((), ((), ((), Option<()>))), ()) -> bool }
     }
 }
