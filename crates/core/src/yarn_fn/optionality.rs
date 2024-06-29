@@ -5,17 +5,19 @@
 use yarnspinner_macros::all_tuples;
 
 /// Marker trait for valid optionality hints.
-pub trait Optionality {}
+pub trait Optionality: private::Sealed {}
 
 /// An optional parameter or a tuple where
 /// the last element is optional.
 pub struct Optional;
 
+impl private::Sealed for Optional {}
 impl Optionality for Optional {}
 
 /// A parameter that is required.
 pub struct Required;
 
+impl private::Sealed for Required {}
 impl Optionality for Required {}
 
 mod private {
