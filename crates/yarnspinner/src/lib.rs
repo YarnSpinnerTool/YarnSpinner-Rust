@@ -28,10 +28,10 @@ pub mod prelude {
 pub mod core {
     //! Core types and traits that are used by both the compiler and runtime.
     pub use yarnspinner_core::prelude::{
-        yarn_fn_type, yarn_library, Header, Instruction, IntoYarnValueFromNonYarnValue,
-        InvalidOpCodeError, Library, LineId, Node, Position, Program, Type, UntypedYarnFn, YarnFn,
-        YarnFnParam, YarnFnParamItem, YarnValue, YarnValueCastError, YarnValueWrapper,
-        YarnValueWrapperIter,
+        optionality, yarn_fn_type, yarn_library, Header, Instruction,
+        IntoYarnValueFromNonYarnValue, InvalidOpCodeError, Library, LineId, Node, Position,
+        Program, Type, UntypedYarnFn, YarnFn, YarnFnParam, YarnFnParamItem, YarnValue,
+        YarnValueCastError, YarnValueWrapper, YarnValueWrapperIter,
     };
 }
 pub mod compiler {

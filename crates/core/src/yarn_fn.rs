@@ -4,7 +4,7 @@
 
 mod function_registry;
 mod function_wrapping;
-mod optionality;
+pub mod optionality;
 mod parameter_wrapping;
 
 pub(crate) use function_registry::*;

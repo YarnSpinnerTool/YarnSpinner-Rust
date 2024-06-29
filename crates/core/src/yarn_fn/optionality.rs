@@ -1,3 +1,5 @@
+//! Marker traits for [`super::YarnFnParam`] to determine if the type is [`Required`] or
+//! [`Optional`].
 #![allow(missing_debug_implementations)]
 
 use yarnspinner_macros::all_tuples;
@@ -16,26 +18,36 @@ pub struct Required;
 
 impl Optionality for Required {}
 
+mod private {
+    /// Used to seal [`AllowedOptionalityChain`] so the type can be exported,
+    /// but not implemented.
+    pub trait Sealed {}
+}
+
 /// A valid chain of optionality hints
 /// i.e. a chain where no optional element follows
 /// a required element.
-pub trait AllowedOptionalityChain {
+pub trait AllowedOptionalityChain: private::Sealed {
     /// The optionality hint of the last element in the chain.
     type Last: Optionality;
 }
 
+impl private::Sealed for () {}
 impl AllowedOptionalityChain for () {
     type Last = Required;
 }
 
+impl<O: Optionality> private::Sealed for (O,) {}
 impl<O: Optionality> AllowedOptionalityChain for (O,) {
     type Last = O;
 }
 
+impl<O: Optionality> private::Sealed for (Required, O) {}
 impl<O: Optionality> AllowedOptionalityChain for (Required, O) {
     type Last = O;
 }
 
+impl private::Sealed for (Optional, Optional) {}
 impl AllowedOptionalityChain for (Optional, Optional) {
     type Last = Optional;
 }
@@ -61,6 +73,7 @@ macro_rules! impl_chain {
         impl_chain!(@pairwise [$($param),*] [$($tt)* ($a, $b): AllowedOptionalityChain,] $b, $($tail,)*);
     };
     (@emit [$($param: ident),*] [$($tt:tt)*] $last:ident,) => {
+        impl<$($param: Optionality),*> private::Sealed for ($($param),*) where $($tt)* {}
         impl<$($param: Optionality),*> AllowedOptionalityChain for ($($param),*) where $($tt)* {
             type Last = $last;
         }
