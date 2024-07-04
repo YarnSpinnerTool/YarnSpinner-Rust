@@ -114,8 +114,8 @@ impl YarnCommands {
             .add_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
                 wait.add(Duration::from_secs_f32(duration))
             })
-            .add_command("stop", |_: In<()>| {
-                unreachable!("The stop command is a compiler builtin and is thus not callable")
+            .add_command("stop", |_: In<()>| -> () {
+                unreachable!("The stop command is a compiler builtin and is thus not callable");
             });
         commands
     }
