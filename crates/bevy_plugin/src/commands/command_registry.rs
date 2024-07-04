@@ -110,13 +110,16 @@ impl YarnCommands {
     /// - `wait`: Waits for the given amount of seconds before continuing the dialogue. Note that this does not block and that Bevy will continue updating as normal in the meantime.
     pub fn builtin_commands() -> Self {
         let mut commands = Self::default();
-        commands
-            .add_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
-                wait.add(Duration::from_secs_f32(duration))
-            })
-            .add_command("stop", |_: In<()>| -> () {
-                unreachable!("The stop command is a compiler builtin and is thus not callable");
-            });
+
+        commands.add_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
+            wait.add(Duration::from_secs_f32(duration))
+        });
+
+        #[allow(clippy::unused_unit)] // Needed for 2024 edition
+        commands.add_command("stop", |_: In<()>| -> () {
+            unreachable!("The stop command is a compiler builtin and is thus not callable");
+        });
+
         commands
     }
 }
