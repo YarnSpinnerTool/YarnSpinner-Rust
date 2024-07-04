@@ -14,5 +14,5 @@ license = "MIT OR Apache-2.0"
 bevy = { version = "0.14.0" }
 bevy_yarnspinner = { path = "../crates/bevy_plugin", version = "0.3.0" }
 bevy_yarnspinner_example_dialogue_view = { path = "../crates/example_dialogue_view", version = "0.3.0" }
-# waiting for https://github.com/FraserLee/bevy_sprite3d/pull/21 to be merged
+# waiting for https://github.com/FraserLee/bevy_sprite3d/pull/22 to be merged
 bevy_sprite3d = { git = "https://github.com/janhohenheim/bevy_sprite3d", branch = "bevy-0.14" }
