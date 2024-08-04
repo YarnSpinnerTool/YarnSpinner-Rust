@@ -14,7 +14,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// A method that can be registered as a command for Yarn files via [`YarnCommands::add_command`].
 ///
 /// The signature of the method must adhere to the following rules:
-/// - The first parameter must be of the type `In<T>`, where `T` can be converted into a [`YarnFnParam`]. This stands for the parameters passed to the command from Yarn.
+/// The first parameter must be of the type `In<T>`, where `T` can be converted into a [`YarnFnParam`]. This stands for the parameters passed to the command from Yarn.
 /// Multiple parameters are supported as values wrapped in a tuple.
 /// For example, to register a command that is called from Yarn like `<<add_player "John" 42>>`, the first parameter must be of the type `In<(String, i32)>` and a call to `register_command` might look like this:
 /// ```rust
@@ -27,6 +27,7 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 ///     println!("Adding player {name} with age {age}");
 /// }
 /// ```
+///
 /// The parameters following the `In` parameter are taken from the Bevy ECS as any other system would. For example, the following command would print the elapsed time since the game started:
 /// ```rust
 /// # use bevy_yarnspinner::prelude::*;

@@ -624,7 +624,7 @@ fn assert_up_to_date_compiler(predicate: bool) {
 /// Replaces all substitution markers in a text with the given substitution list.
 ///
 /// This method replaces substitution markers
-/// -  for example, `{0}` - with the corresponding entry in `substitutions`.
+/// (for example, `{0}`) with the corresponding entry in `substitutions`.
 /// If `test` contains a substitution marker whose
 /// index is not present in `substitutions`, it is
 /// ignored.

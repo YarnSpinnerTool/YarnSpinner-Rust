@@ -355,7 +355,7 @@ mod tests {
             line_parser.set_language_code(Language::from(locale));
             let markup = line_parser.parse_markup(&line).unwrap();
 
-            assert_eq!(expected, markup.text);
+            assert_eq!(expected, markup.text, "locale: {locale}");
         }
     }
 
