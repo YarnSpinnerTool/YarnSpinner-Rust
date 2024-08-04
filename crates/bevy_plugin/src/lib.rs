@@ -9,7 +9,7 @@
 //! - [`YarnSpinnerPlugin`]: The plugin registering all systems and types.
 //! - [`YarnProject`]: A [`Resource`](bevy::prelude::Resource) for the compiled Yarn project, which is created for you when [`YarnSpinnerPlugin`] is added.
 //! - [`DialogueRunner`]: The [`Component`](bevy::prelude::Component) running through the Yarn files and sending events for things you should draw on the screen.
-//! Can be created from a [`YarnProject`].
+//!     Can be created from a [`YarnProject`].
 //!
 //! ## Dialogue Views
 //!
@@ -39,7 +39,7 @@
 //! The main workflow is as follows:
 //! - Register the [`YarnSpinnerPlugin`]
 //! - When the [`YarnProject`] [`Resource`](bevy::prelude::Resource) is added, spawn a [`DialogueRunner`] from it.
-//! The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>)`.
+//!     The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>)`.
 //!
 //! The following example is adapted from the [hello world example](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/blob/main/examples/bevy_yarnspinner/src/bin/hello_world.rs).
 //!
