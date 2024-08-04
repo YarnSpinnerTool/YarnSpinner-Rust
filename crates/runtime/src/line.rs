@@ -148,7 +148,7 @@ impl Line {
     /// Returns the substring of [`Line::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
         assert!(
-            self.text.len() <= attribute.position + attribute.length,
+            self.text.len() >= attribute.position + attribute.length,
             "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
         Does this MarkupAttribute belong to this MarkupParseResult?",
             self.text
