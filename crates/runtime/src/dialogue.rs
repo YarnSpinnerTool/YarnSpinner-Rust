@@ -234,9 +234,9 @@ impl Dialogue {
     /// Calling this method returns a batch of [`DialogueEvent`]s that should be handled by the caller before calling [`Dialogue::continue_`] again.
     /// Some events can be ignored, however this method will error if the following events are not properly handled:
     /// - [`DialogueEvent::Options`] indicates that the program is waiting for the user to select an option.
-    /// The user's selection must be passed to [`Dialogue::set_selected_option`] before calling [`Dialogue::continue_`] again.
+    ///     The user's selection must be passed to [`Dialogue::set_selected_option`] before calling [`Dialogue::continue_`] again.
     /// - [`DialogueEvent::DialogueComplete`] means that the program reached its end.
-    /// When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
+    ///     When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
     ///
     /// See the documentation of [`DialogueEvent`] for more information on how to handle each event.
     ///
