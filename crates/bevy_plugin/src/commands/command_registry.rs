@@ -179,7 +179,7 @@ mod tests {
     fn can_call_fn_with_no_args() {
         let mut methods = YarnCommands::default();
 
-        methods.add_command("test", |_: In<()>| panic!("It works!"));
+        methods.add_command("test", |_: In<()>| -> () { panic!("It works!") });
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
         method.call(vec![], app.world_mut());
