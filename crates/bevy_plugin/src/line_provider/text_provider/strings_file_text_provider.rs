@@ -2,7 +2,7 @@ use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 
-use bevy::ecs::event::ManualEventReader;
+use bevy::ecs::event::EventCursor;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ pub struct StringsFileTextProvider {
     base_string_table: HashMap<LineId, StringInfo>,
     strings_file_handle: Option<Handle<StringsFile>>,
     translation_string_table: Option<HashMap<LineId, String>>,
-    event_reader: Arc<RwLock<ManualEventReader<AssetEvent<StringsFile>>>>,
+    event_reader: Arc<RwLock<EventCursor<AssetEvent<StringsFile>>>>,
 }
 
 impl UnderlyingTextProvider for StringsFileTextProvider {

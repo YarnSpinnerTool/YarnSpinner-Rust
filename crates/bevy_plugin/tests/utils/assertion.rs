@@ -1,17 +1,17 @@
-use bevy::ecs::event::ManualEventReader;
+use bevy::ecs::event::EventCursor;
 use bevy::prelude::*;
 use bevy_yarnspinner::events::*;
 
 #[derive(Debug, Default)]
 pub struct EventAsserter {
-    pub present_line_reader: ManualEventReader<PresentLineEvent>,
-    pub present_options_reader: ManualEventReader<PresentOptionsEvent>,
-    pub dialogue_start_reader: ManualEventReader<DialogueStartEvent>,
-    pub dialogue_complete_reader: ManualEventReader<DialogueCompleteEvent>,
-    pub node_start_reader: ManualEventReader<NodeStartEvent>,
-    pub node_complete_reader: ManualEventReader<NodeCompleteEvent>,
-    pub line_hints_reader: ManualEventReader<LineHintsEvent>,
-    pub execute_command_reader: ManualEventReader<ExecuteCommandEvent>,
+    pub present_line_reader: EventCursor<PresentLineEvent>,
+    pub present_options_reader: EventCursor<PresentOptionsEvent>,
+    pub dialogue_start_reader: EventCursor<DialogueStartEvent>,
+    pub dialogue_complete_reader: EventCursor<DialogueCompleteEvent>,
+    pub node_start_reader: EventCursor<NodeStartEvent>,
+    pub node_complete_reader: EventCursor<NodeCompleteEvent>,
+    pub line_hints_reader: EventCursor<LineHintsEvent>,
+    pub execute_command_reader: EventCursor<ExecuteCommandEvent>,
 }
 
 impl EventAsserter {

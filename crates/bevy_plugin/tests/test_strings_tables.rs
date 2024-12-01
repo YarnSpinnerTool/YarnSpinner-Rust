@@ -175,8 +175,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     while app
         .world()
         .resource::<AssetServer>()
-        .get_load_state(&handle)
-        != Some(LoadState::Loaded)
+        .get_load_state(&handle).is_some_and(|state| state.is_loaded())
     {
         app.update();
     }
