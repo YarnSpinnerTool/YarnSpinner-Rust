@@ -972,6 +972,7 @@ dependencies = [
  "bevy_math 0.15.0",
  "bevy_reflect 0.15.0",
  "bevy_render 0.15.0",
+ "bevy_sprite 0.15.0",
  "bevy_time 0.15.0",
  "bevy_transform 0.15.0",
  "bevy_utils 0.15.0",
@@ -1161,6 +1162,7 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4237e6e9b03902321032f00f931f18a4a211093bd9a7cf81276a0228a2a4417"
 dependencies = [
+ "bevy_a11y 0.15.0",
  "bevy_app 0.15.0",
  "bevy_asset 0.15.0",
  "bevy_audio 0.15.0",
@@ -1172,15 +1174,18 @@ dependencies = [
  "bevy_ecs 0.15.0",
  "bevy_gizmos 0.15.0",
  "bevy_hierarchy 0.15.0",
+ "bevy_image",
  "bevy_input 0.15.0",
  "bevy_log 0.15.0",
  "bevy_math 0.15.0",
+ "bevy_picking",
  "bevy_ptr 0.15.0",
  "bevy_reflect 0.15.0",
  "bevy_render 0.15.0",
  "bevy_scene 0.15.0",
  "bevy_sprite 0.15.0",
  "bevy_tasks 0.15.0",
+ "bevy_text 0.15.0",
  "bevy_time 0.15.0",
  "bevy_transform 0.15.0",
  "bevy_ui 0.15.0",
@@ -1340,6 +1345,28 @@ dependencies = [
  "radsort",
  "smallvec",
  "static_assertions",
+]
+
+[[package]]
+name = "bevy_picking"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97a137ed706574dc4a01cac527eb2c44a0b0e477d5bce3afc892a9ee95ee0078"
+dependencies = [
+ "bevy_app 0.15.0",
+ "bevy_asset 0.15.0",
+ "bevy_derive 0.15.0",
+ "bevy_ecs 0.15.0",
+ "bevy_hierarchy 0.15.0",
+ "bevy_input 0.15.0",
+ "bevy_math 0.15.0",
+ "bevy_reflect 0.15.0",
+ "bevy_render 0.15.0",
+ "bevy_time 0.15.0",
+ "bevy_transform 0.15.0",
+ "bevy_utils 0.15.0",
+ "bevy_window 0.15.0",
+ "uuid 1.11.0",
 ]
 
 [[package]]
@@ -1619,10 +1646,12 @@ dependencies = [
  "bevy_ecs 0.15.0",
  "bevy_image",
  "bevy_math 0.15.0",
+ "bevy_picking",
  "bevy_reflect 0.15.0",
  "bevy_render 0.15.0",
  "bevy_transform 0.15.0",
  "bevy_utils 0.15.0",
+ "bevy_window 0.15.0",
  "bitflags 2.6.0",
  "bytemuck",
  "derive_more",
@@ -1853,6 +1882,7 @@ dependencies = [
  "bevy_image",
  "bevy_input 0.15.0",
  "bevy_math 0.15.0",
+ "bevy_picking",
  "bevy_reflect 0.15.0",
  "bevy_render 0.15.0",
  "bevy_sprite 0.15.0",
@@ -2043,7 +2073,7 @@ dependencies = [
 name = "bevy_yarnspinner_example_dialogue_view"
 version = "0.3.0"
 dependencies = [
- "bevy 0.14.2",
+ "bevy 0.15.0",
  "bevy_yarnspinner",
  "unicode-segmentation",
 ]
