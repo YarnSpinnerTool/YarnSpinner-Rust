@@ -10,7 +10,7 @@ authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 publish = false
 
 [dependencies]
-bevy = { version = "0.14.0", features = ["file_watcher"] }
+bevy = { version = "0.15.0", features = ["file_watcher"] }
 bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.3.0" }
 bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.3.0" }
 
