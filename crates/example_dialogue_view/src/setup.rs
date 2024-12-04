@@ -144,7 +144,10 @@ fn fmt_name(name: &str) -> Name {
     Name::new(format!("Yarn Spinner example dialogue view node: {name}"))
 }
 
-pub(crate) fn create_dialog_text(text: impl Into<String>, invisible: impl Into<String>) -> [(TextSpan, TextFont, TextColor);2] {
+pub(crate) fn create_dialog_text(
+    text: impl Into<String>,
+    invisible: impl Into<String>,
+) -> [(TextSpan, TextFont, TextColor); 2] {
     [
         (
             TextSpan(text.into()),
@@ -152,10 +155,10 @@ pub(crate) fn create_dialog_text(text: impl Into<String>, invisible: impl Into<S
             text_style::standard().1,
         ),
         (
-            TextSpan( invisible.into()),
+            TextSpan(invisible.into()),
             text_style::standard().0,
             TextColor(Color::NONE),
-        )
+        ),
     ]
 }
 
@@ -180,18 +183,23 @@ where
                 .with_children(|parent| {
                     let spans = [
                         (TextSpan(format!("{}: ", i + 1)), text_style::option_id()),
-                        (TextSpan(option.line.text.clone()), text_style::option_text()),
+                        (
+                            TextSpan(option.line.text.clone()),
+                            text_style::option_text(),
+                        ),
                     ];
 
-                    parent.spawn((
-                        fmt_name("option text"),
-                        Text(String::new()),
-                        style::options(),
-                        Label,
-                    )).with_children(|parent| {
-                        parent.spawn(spans[0].clone());
-                        parent.spawn(spans[1].clone());
-                    });
+                    parent
+                        .spawn((
+                            fmt_name("option text"),
+                            Text(String::new()),
+                            style::options(),
+                            Label,
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn(spans[0].clone());
+                            parent.spawn(spans[1].clone());
+                        });
                 });
         }
     });
@@ -230,7 +238,7 @@ mod text_style {
                 font_size: 20.0,
                 ..default()
             },
-            TextColor(Color::WHITE)
+            TextColor(Color::WHITE),
         )
     }
     pub(crate) fn name() -> (TextFont, TextColor) {
@@ -240,7 +248,7 @@ mod text_style {
                 font_size: 18.0,
                 ..standard().0
             },
-            standard().1
+            standard().1,
         )
     }
 
@@ -250,7 +258,7 @@ mod text_style {
                 font: font_handle::MEDIUM,
                 ..option_text().0
             },
-            TextColor(css::ALICE_BLUE.into())
+            TextColor(css::ALICE_BLUE.into()),
         )
     }
 
@@ -260,7 +268,7 @@ mod text_style {
                 font_size: 18.0,
                 ..standard().0
             },
-            TextColor(css::TOMATO.into())
+            TextColor(css::TOMATO.into()),
         )
     }
 }

@@ -15,10 +15,7 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             create_options.run_if(resource_added::<OptionSelection>),
             show_options,
             select_option
-                .run_if(
-                    resource_exists::<OptionSelection>
-                        .and(any_with_component::<PrimaryWindow>),
-                )
+                .run_if(resource_exists::<OptionSelection>.and(any_with_component::<PrimaryWindow>))
                 .before(typewriter::despawn),
             despawn_options,
         )
@@ -116,8 +113,13 @@ fn select_option(
             Interaction::Hovered => (Color::WHITE, SystemCursorIcon::Pointer),
             _ => (css::TOMATO.into(), SystemCursorIcon::Default),
         };
-        commands.entity(windows.single()).insert(CursorIcon::System(icon));
-        let text_entity = children.iter().find(|&e| text_entities.contains(*e)).unwrap();
+        commands
+            .entity(windows.single())
+            .insert(CursorIcon::System(icon));
+        let text_entity = children
+            .iter()
+            .find(|&e| text_entities.contains(*e))
+            .unwrap();
         *text_writer.color(*text_entity, 2) = TextColor(color);
     }
     let has_selected_id = selection.is_some();

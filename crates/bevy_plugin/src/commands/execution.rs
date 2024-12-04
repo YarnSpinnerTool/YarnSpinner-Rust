@@ -2,7 +2,7 @@ use crate::commands::UntypedYarnCommand;
 use crate::dialogue_runner::DialogueExecutionSystemSet;
 use crate::events::ExecuteCommandEvent;
 use crate::prelude::*;
-use bevy::ecs::event::{EventCursor};
+use bevy::ecs::event::EventCursor;
 use bevy::prelude::*;
 
 pub(crate) fn command_execution_plugin(app: &mut App) {

@@ -11,8 +11,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
         (
             hide_dialog,
             show_dialog.run_if(on_event::<DialogueStartEvent>),
-            present_line
-                .run_if(resource_exists::<Typewriter>.and(on_event::<PresentLineEvent>)),
+            present_line.run_if(resource_exists::<Typewriter>.and(on_event::<PresentLineEvent>)),
             present_options.run_if(on_event::<PresentOptionsEvent>),
             continue_dialogue.run_if(resource_exists::<Typewriter>),
         )
