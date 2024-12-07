@@ -55,7 +55,7 @@ fn setup(mut commands: Commands) {
         .with_children(|parent| {
             parent.spawn((
                 fmt_name("name"),
-                Text::new(String::new()),
+                Text::default(),
                 text_style::name(),
                 Node {
                     margin: UiRect {
@@ -92,7 +92,7 @@ fn setup(mut commands: Commands) {
                     // Dialog itself
                     parent.spawn((
                         fmt_name("text"),
-                        Text(String::new()),
+                        Text::default(),
                         text_style::standard(),
                         style::standard(),
                         DialogueNode,
@@ -192,7 +192,7 @@ where
                     parent
                         .spawn((
                             fmt_name("option text"),
-                            Text(String::new()),
+                            Text::default(),
                             style::options(),
                             Label,
                         ))

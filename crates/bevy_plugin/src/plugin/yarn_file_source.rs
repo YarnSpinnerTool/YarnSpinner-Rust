@@ -2,7 +2,7 @@ use crate::plugin::AssetRoot;
 use crate::prelude::*;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 use anyhow::ensure;
-use bevy::{prelude::*, reflect::TypePath};
+use bevy::prelude::*;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 use glob::glob;
 use std::path::PathBuf;

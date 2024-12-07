@@ -52,8 +52,8 @@ fn create_options(
     mut options_node: Query<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
     mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
-    let (entity, mut style, mut visibility) = options_node.single_mut();
-    style.display = Display::Flex;
+    let (entity, mut node, mut visibility) = options_node.single_mut();
+    node.display = Display::Flex;
     *visibility = Visibility::Hidden;
     if children.iter_descendants(entity).next().is_none() {
         *root_visibility.single_mut() = Visibility::Inherited;
@@ -149,9 +149,9 @@ fn despawn_options(
     has_selected_option_event.clear();
     dialogue_complete_event.clear();
     commands.remove_resource::<OptionSelection>();
-    let (entity, mut style, mut visibility) = options_node.single_mut();
+    let (entity, mut node, mut visibility) = options_node.single_mut();
     commands.entity(entity).despawn_descendants();
-    style.display = Display::None;
+    node.display = Display::None;
     *visibility = Visibility::Hidden;
     *dialogue_node_text.single_mut() = Text::default();
     *root_visibility.single_mut() = Visibility::Hidden;

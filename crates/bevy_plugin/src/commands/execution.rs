@@ -14,8 +14,8 @@ pub(crate) fn command_execution_plugin(app: &mut App) {
     );
 }
 
-fn execute_commands(world: &mut World, mut reader: Local<EventCursor<ExecuteCommandEvent>>) {
-    let events = clone_events(world, &mut reader);
+fn execute_commands(world: &mut World, mut cursor: Local<EventCursor<ExecuteCommandEvent>>) {
+    let events = clone_events(world, &mut cursor);
     for event in events {
         let Some(mut command) = clone_command(world, &event) else {
             continue;
@@ -30,10 +30,10 @@ fn execute_commands(world: &mut World, mut reader: Local<EventCursor<ExecuteComm
 
 fn clone_events(
     world: &World,
-    reader: &mut EventCursor<ExecuteCommandEvent>,
+    cursor: &mut EventCursor<ExecuteCommandEvent>,
 ) -> Vec<ExecuteCommandEvent> {
     let events = world.resource::<Events<ExecuteCommandEvent>>();
-    reader.read(events).cloned().collect()
+    cursor.read(events).cloned().collect()
 }
 
 fn clone_command(

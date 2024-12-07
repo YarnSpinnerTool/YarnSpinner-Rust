@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::asset::{io::Reader, AsyncReadExt};
+use bevy::asset::io::Reader;
 use bevy::prelude::*;
 
 use bevy::asset::{AssetLoader, LoadContext};
