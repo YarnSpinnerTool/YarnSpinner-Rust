@@ -101,7 +101,7 @@ impl Typewriter {
 
 fn write_text(
     mut commands: Commands,
-    mut text: Query<Entity, (With<DialogueNode>, With<Text>)>, //TODO are both filters needed
+    mut text: Query<Entity, With<DialogueNode>>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
@@ -109,7 +109,7 @@ fn write_text(
 ) {
     let mut text_entity = commands.entity(text.single_mut());
     if typewriter.last_before_options && option_selection.is_none() {
-        text_entity.clear_children();
+        text_entity.despawn_descendants();
         return;
     }
     if typewriter.is_finished() {
@@ -132,7 +132,7 @@ fn write_text(
     let current_text = &typewriter.current_text;
     let rest = typewriter.graphemes_left.join("");
     let spans = create_dialog_text(current_text, rest);
-    text_entity.clear_children().with_children(|parent| {
+    text_entity.despawn_descendants().with_children(|parent| {
         parent.spawn(spans[0].clone());
         parent.spawn(spans[1].clone());
     });
