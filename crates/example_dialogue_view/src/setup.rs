@@ -178,14 +178,6 @@ where
                     },
                 ))
                 .with_children(|parent| {
-                    let spans = [
-                        (TextSpan(format!("{}: ", i + 1)), text_style::option_id()),
-                        (
-                            TextSpan(option.line.text.clone()),
-                            text_style::option_text(),
-                        ),
-                    ];
-
                     parent
                         .spawn((
                             fmt_name("option text"),
@@ -197,8 +189,12 @@ where
                             Label,
                         ))
                         .with_children(|parent| {
-                            parent.spawn(spans[0].clone());
-                            parent.spawn(spans[1].clone());
+                            parent
+                                .spawn((TextSpan(format!("{}: ", i + 1)), text_style::option_id()));
+                            parent.spawn((
+                                TextSpan(option.line.text.clone()),
+                                text_style::option_text(),
+                            ));
                         });
                 });
         }
