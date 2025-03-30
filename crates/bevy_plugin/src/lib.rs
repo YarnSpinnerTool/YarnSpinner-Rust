@@ -53,7 +53,7 @@
 //!
 //! ```no_run
 //! // src/main.rs
-//! use bevy::{prelude::*, utils::Duration};
+//! use bevy::prelude::*;
 //! use bevy_yarnspinner::prelude::*;
 //! // Use the example dialogue view to see the dialogue in action. Requires the `bevy_yarnspinner_example_dialogue_view` crate.
 //! // use bevy_yarnspinner_example_dialogue_view::prelude::*;
@@ -79,7 +79,7 @@
 //! }
 //!
 //! fn setup_camera(mut commands: Commands) {
-//!     commands.spawn(Camera2dBundle::default());
+//!     commands.spawn(Camera2d::default());
 //! }
 //!
 //! fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
