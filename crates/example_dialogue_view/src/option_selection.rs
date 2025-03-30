@@ -126,7 +126,7 @@ fn select_option(
         }
     }
     if has_selected_id {
-        selected_option_event.send(HasSelectedOptionEvent);
+        selected_option_event.write(HasSelectedOptionEvent);
     }
 }
 

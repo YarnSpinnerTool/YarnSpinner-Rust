@@ -60,7 +60,7 @@ fn present_line(
 ) {
     for event in line_events.read() {
         let name = if let Some(name) = event.line.character_name() {
-            speaker_change_events.send(SpeakerChangeEvent {
+            speaker_change_events.write(SpeakerChangeEvent {
                 character_name: name.to_string(),
                 speaking: true,
             });

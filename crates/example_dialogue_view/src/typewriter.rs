@@ -122,7 +122,7 @@ fn write_text(
     typewriter.update_current_text();
     if typewriter.is_finished() {
         if let Some(name) = typewriter.character_name.as_deref() {
-            speaker_change_events.send(SpeakerChangeEvent {
+            speaker_change_events.write(SpeakerChangeEvent {
                 character_name: name.to_string(),
                 speaking: false,
             });
@@ -180,7 +180,7 @@ fn send_finished_event(
     if !typewriter.is_finished() {
         *last_finished = false;
     } else if !*last_finished {
-        events.send(TypewriterFinishedEvent);
+        events.write(TypewriterFinishedEvent);
         *last_finished = true;
     }
 }

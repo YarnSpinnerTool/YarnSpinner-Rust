@@ -123,7 +123,7 @@ pub(crate) fn fade_out(
 }
 
 pub(crate) fn quit(_: In<()>, mut app_exit_events: EventWriter<AppExit>) {
-    app_exit_events.send(AppExit::Success);
+    app_exit_events.write(AppExit::Success);
 }
 
 pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<AtomicBool> {

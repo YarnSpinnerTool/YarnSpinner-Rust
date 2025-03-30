@@ -5,8 +5,8 @@ use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::asset::LoadedUntypedAsset;
-use bevy::prelude::*;
 use bevy::platform_support::collections::HashMap;
+use bevy::prelude::*;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(
@@ -46,7 +46,7 @@ fn continue_runtime(
         let is_sending_missed_events = !dialogue_runner.unsent_events.is_empty();
         if !is_sending_missed_events {
             if dialogue_runner.just_started {
-                dialogue_start_events.send(DialogueStartEvent { source });
+                dialogue_start_events.write(DialogueStartEvent { source });
                 dialogue_runner.just_started = false;
             }
             if !dialogue_runner.is_running {
@@ -55,7 +55,7 @@ fn continue_runtime(
             }
 
             if let Some(line_ids) = std::mem::take(&mut dialogue_runner.popped_line_hints) {
-                line_hints_events.send(LineHintsEvent { line_ids, source });
+                line_hints_events.write(LineHintsEvent { line_ids, source });
             }
 
             if !(dialogue_runner.will_continue_in_next_update
@@ -80,7 +80,7 @@ fn continue_runtime(
                             .join(", ");
                         bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
                     };
-                    present_line_events.send(PresentLineEvent {
+                    present_line_events.write(PresentLineEvent {
                         line: option.line,
                         source,
                     });
@@ -99,7 +99,7 @@ fn continue_runtime(
                 DialogueEvent::Line(line) => {
                     let assets = dialogue_runner.get_assets(&line);
                     let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
-                    present_line_events.send(PresentLineEvent {
+                    present_line_events.write(PresentLineEvent {
                         line: LocalizedLine::from_yarn_line(line, assets, metadata),
                         source,
                     });
@@ -117,26 +117,26 @@ fn continue_runtime(
                         })
                         .collect();
                     last_options.insert(source, options.clone());
-                    present_options_events.send(PresentOptionsEvent { options, source });
+                    present_options_events.write(PresentOptionsEvent { options, source });
                 }
                 DialogueEvent::Command(command) => {
-                    execute_command_events.send(ExecuteCommandEvent { command, source });
+                    execute_command_events.write(ExecuteCommandEvent { command, source });
                     dialogue_runner.continue_in_next_update();
                 }
                 DialogueEvent::NodeComplete(node_name) => {
-                    node_complete_events.send(NodeCompleteEvent { node_name, source });
+                    node_complete_events.write(NodeCompleteEvent { node_name, source });
                 }
                 DialogueEvent::NodeStart(node_name) => {
-                    node_start_events.send(NodeStartEvent { node_name, source });
+                    node_start_events.write(NodeStartEvent { node_name, source });
                 }
                 DialogueEvent::LineHints(line_ids) => {
-                    line_hints_events.send(LineHintsEvent { line_ids, source });
+                    line_hints_events.write(LineHintsEvent { line_ids, source });
                 }
                 DialogueEvent::DialogueComplete => {
                     if !is_sending_missed_events {
                         dialogue_runner.is_running = false;
                     }
-                    dialogue_complete_events.send(DialogueCompleteEvent { source });
+                    dialogue_complete_events.write(DialogueCompleteEvent { source });
                 }
             }
         }

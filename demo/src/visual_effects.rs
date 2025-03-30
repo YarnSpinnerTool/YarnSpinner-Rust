@@ -130,7 +130,7 @@ pub(crate) fn ease_bang(
     for (entity, bang, mut transform, material) in bangs.iter_mut() {
         let material = standard_materials.get_mut(material).unwrap();
         if bang.0.start_time.elapsed().as_secs_f32() >= bang.0.duration * 3.0 {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
             material.base_color.set_alpha(0.0);
             continue;
         }

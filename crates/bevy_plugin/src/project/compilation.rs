@@ -207,7 +207,7 @@ fn compile_loaded_yarn_files(
 
     if development_file_generation == DevelopmentFileGeneration::Full {
         if let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap() {
-            update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
+            update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
                 compilation.string_table.clone(),
             ));
             for localization in &localizations.translations {
