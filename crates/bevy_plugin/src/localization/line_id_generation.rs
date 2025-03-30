@@ -58,7 +58,7 @@ fn handle_yarn_file_events(
     asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
-    let mut already_handled = HashSet::new();
+    let mut already_handled: HashSet<Handle<YarnFile>> = HashSet::default();
     for event in events.read() {
         let (AssetEvent::LoadedWithDependencies { id } | AssetEvent::Modified { id }) = event
         else {

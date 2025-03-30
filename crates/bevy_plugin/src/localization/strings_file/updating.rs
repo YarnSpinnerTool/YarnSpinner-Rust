@@ -1,7 +1,7 @@
 use crate::plugin::AssetRoot;
 use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
-use bevy::prelude::*;
 use bevy::platform_support::collections::{HashMap, HashSet};
+use bevy::prelude::*;
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_event::<UpdateAllStringsFilesForStringTableEvent>()
@@ -69,7 +69,7 @@ fn update_all_strings_files_for_string_table(
         );
     }
 
-    let mut dirty_paths = HashSet::new();
+    let mut dirty_paths: HashSet<(Handle<StringsFile>, &std::path::Path)> = HashSet::default();
     for string_table in events.drain().map(|e| e.0) {
         let file_names: HashSet<_> = string_table
             .values()
