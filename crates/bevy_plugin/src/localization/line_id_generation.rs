@@ -2,8 +2,8 @@ use crate::localization::UpdateAllStringsFilesForStringTableEvent;
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
+use bevy::platform_support::collections::HashSet;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 use std::hash::Hash;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
@@ -40,7 +40,7 @@ fn handle_yarn_file_events_outside_development(
         if !(yarn_files_being_loaded.0.contains(&handle) || project.yarn_files.contains(&handle)) {
             continue;
         }
-        recompile_events.send(RecompileLoadedYarnFilesEvent);
+        recompile_events.write(RecompileLoadedYarnFilesEvent);
     }
 }
 
@@ -58,7 +58,7 @@ fn handle_yarn_file_events(
     asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
-    let mut already_handled = HashSet::new();
+    let mut already_handled: HashSet<Handle<YarnFile>> = HashSet::default();
     for event in events.read() {
         let (AssetEvent::LoadedWithDependencies { id } | AssetEvent::Modified { id }) = event
         else {
@@ -80,7 +80,7 @@ fn handle_yarn_file_events(
         }
         let yarn_file = assets.get(&handle).unwrap();
 
-        update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
+        update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
             yarn_file.string_table.clone(),
         ));
 
@@ -143,7 +143,7 @@ fn handle_yarn_file_events(
     }
 
     if recompilation_needed && project.is_some() {
-        recompile_events.send(RecompileLoadedYarnFilesEvent);
+        recompile_events.write(RecompileLoadedYarnFilesEvent);
     }
     Ok(())
 }

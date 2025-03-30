@@ -3,9 +3,9 @@ use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringT
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
-use anyhow::bail;
+use anyhow::{anyhow, bail, Result};
+use bevy::platform_support::collections::HashSet;
 use bevy::prelude::*;
-use bevy::utils::{error, HashSet};
 use std::fmt::Debug;
 
 pub(crate) fn project_compilation_plugin(app: &mut App) {
@@ -24,7 +24,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
                     .pipe(panic_on_err)
                     .run_if(resource_exists::<YarnFilesToLoad>),
                 recompile_loaded_yarn_files
-                    .map(error)
+                    .pipe(log_error)
                     .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
                 clear_temp_yarn_project.run_if(resource_added::<YarnProject>),
             )
@@ -95,7 +95,11 @@ fn add_yarn_files_to_load_queue(
     let handles: Result<Vec<_>> = yarn_files_to_load
         .0
         .drain()
-        .map(|source| source.load(&asset_server, &mut assets, &asset_root))
+        .map(|source| {
+            source
+                .load(&asset_server, &mut assets, &asset_root)
+                .map_err(|e| anyhow!("Error loading Yarn file: {e}"))
+        })
         .collect();
     let handles = handles?;
     let handles = handles.iter().flat_map(|handles| handles.iter()).cloned();
@@ -203,7 +207,7 @@ fn compile_loaded_yarn_files(
 
     if development_file_generation == DevelopmentFileGeneration::Full {
         if let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap() {
-            update_strings_files_writer.send(UpdateAllStringsFilesForStringTableEvent(
+            update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
                 compilation.string_table.clone(),
             ));
             for localization in &localizations.translations {

@@ -238,7 +238,7 @@ impl LineParser {
                 return Ok(MarkupAttributeMarker {
                     tag_type: TagType::CloseAll,
                     name: None,
-                    properties: HashMap::new(),
+                    properties: HashMap::default(),
                     position: self.position,
                     source_position: source_position_at_marker_start,
                 });
@@ -249,7 +249,7 @@ impl LineParser {
             return Ok(MarkupAttributeMarker {
                 tag_type: TagType::Close,
                 name: Some(tag_name),
-                properties: HashMap::new(),
+                properties: HashMap::default(),
                 position: self.position,
                 source_position: source_position_at_marker_start,
             });
@@ -265,7 +265,7 @@ impl LineParser {
         // the attribute.
         let attribute_name = self.parse_id()?;
 
-        let mut properties = HashMap::new();
+        let mut properties = HashMap::default();
 
         // If the ID was immediately followed by an '=', this was the
         // first property (its value is also used as the attribute
@@ -554,13 +554,13 @@ impl LineParser {
     /// - Integers
     /// - Floating-point numbers
     /// - Strings (delimited by double quotes). (Strings may contain
-    ///     escaped quotes with a backslash.)
+    ///   escaped quotes with a backslash.)
     /// - The words `true` or `false`
     /// - Runs of alphanumeric characters, up to but not including a
-    ///     whitespace or the end of a tag; these are interpreted as a string
-    ///     (e.g. `[mood=happy]` is interpreted the same as `[mood="happy"]`
+    ///   whitespace or the end of a tag; these are interpreted as a string
+    ///   (e.g. `[mood=happy]` is interpreted the same as `[mood="happy"]`
     /// - Expressions (delimited by curly braces), which are processed
-    ///     as inline expressions.
+    ///   as inline expressions.
     fn parse_value(&mut self) -> Result<MarkupValue> {
         // parse integers or floats:
         if self.peek_numeric()? {

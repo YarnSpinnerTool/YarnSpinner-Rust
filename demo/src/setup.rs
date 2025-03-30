@@ -88,6 +88,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(AmbientLight {
         color: Color::srgb(1., 0.75, 0.7),
         brightness: 0.25,
+        ..default()
     });
     commands.insert_resource(Sprites {
         ferris_neutral: asset_server.load("sprites/ferris_neutral.png"),

@@ -2,7 +2,7 @@
 //!
 //! You probably don't want to use this crate directly.
 //! - If you're a game developer, you'll want to use a crate that is already designed for your game engine of choice,
-//!     such as [`bevy_yarnspinner`](https://crates.io/crates/bevy_yarnspinner) for the [Bevy engine](https://bevyengine.org/).
+//!   such as [`bevy_yarnspinner`](https://crates.io/crates/bevy_yarnspinner) for the [Bevy engine](https://bevyengine.org/).
 //! - If you wish to write an adapter crate for an engine yourself, use the [`yarnspinner`](https://crates.io/crates/yarnspinner) crate.
 
 #![warn(missing_docs, missing_debug_implementations)]

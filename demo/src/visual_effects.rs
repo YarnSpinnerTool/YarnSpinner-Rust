@@ -67,10 +67,10 @@ pub(crate) struct FadeCurtainAlpha(pub(crate) EasedChange<f32>);
 pub(crate) fn handle_fade(
     mut commands: Commands,
     mut fade: ResMut<FadeCurtainAlpha>,
-    mut color: Query<&mut BackgroundColor, With<StageCurtains>>,
+    mut color: Single<&mut BackgroundColor, With<StageCurtains>>,
 ) {
     if fade.0.is_done() {
-        color.single_mut().0.set_alpha(fade.0.to);
+        color.0.set_alpha(fade.0.to);
         commands.remove_resource::<FadeCurtainAlpha>();
         fade.0.set_done();
     } else {
@@ -81,7 +81,7 @@ pub(crate) fn handle_fade(
             fade.0.smooth_end()
         };
         let alpha = fade.0.from + (fade.0.to - fade.0.from) * output;
-        color.single_mut().0.set_alpha(alpha);
+        color.0.set_alpha(alpha);
     }
 }
 
@@ -91,16 +91,15 @@ pub(crate) struct CameraMovement(pub(crate) EasedChange<Transform>);
 pub(crate) fn move_camera(
     mut commands: Commands,
     mut camera_movement: ResMut<CameraMovement>,
-    mut transform: Query<&mut Transform, With<MainCamera>>,
+    mut transform: Single<&mut Transform, With<MainCamera>>,
 ) {
     if camera_movement.0.is_done() {
         commands.remove_resource::<CameraMovement>();
         camera_movement.0.set_done();
-        *transform.single_mut() = camera_movement.0.to;
+        **transform = camera_movement.0.to;
     } else {
         let translation_output = camera_movement.0.elastic(1.0);
         let rotation_output = camera_movement.0.elastic(1.0);
-        let mut transform = transform.single_mut();
         transform.translation = camera_movement
             .0
             .from
@@ -125,20 +124,19 @@ pub(crate) fn ease_bang(
         &MeshMaterial3d<StandardMaterial>,
     )>,
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    camera: Query<&Transform, (With<MainCamera>, Without<Bang>)>,
+    camera_transform: Single<&Transform, (With<MainCamera>, Without<Bang>)>,
     mut commands: Commands,
 ) {
     for (entity, bang, mut transform, material) in bangs.iter_mut() {
         let material = standard_materials.get_mut(material).unwrap();
         if bang.0.start_time.elapsed().as_secs_f32() >= bang.0.duration * 3.0 {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
             material.base_color.set_alpha(0.0);
             continue;
         }
         let input = bang.0.input();
         let (initial_translation, initial_alpha) = bang.0.from;
         let (final_translation, final_alpha) = bang.0.to;
-        let camera_transform = camera.single();
         transform.translation = if input <= 1.0 {
             let translation_output = bang.0.elastic(1.0);
             initial_translation.lerp(final_translation, translation_output)

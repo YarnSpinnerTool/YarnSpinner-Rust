@@ -293,6 +293,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
     app.world_mut()
         .query::<&mut DialogueRunner>()
         .single_mut(app.world_mut())
+        .unwrap()
 }
 
 fn english_lines() -> Vec<String> {

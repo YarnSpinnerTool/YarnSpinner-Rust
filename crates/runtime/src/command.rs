@@ -70,11 +70,11 @@ impl Command {
 ///
 /// - Text that appears inside a pair of double-quote characters will not be split.
 /// - Text that appears after a double-quote character and
-///     before the end of the input will not be split (that is, an
-///     unterminated double-quoted string will be treated as though it
-///     had been terminated at the end of the input.)
+///   before the end of the input will not be split (that is, an
+///   unterminated double-quoted string will be treated as though it
+///   had been terminated at the end of the input.)
 /// - When inside a pair of double-quote characters, the string
-///     `\\` will be converted to `\`, and the string `\"` will be converted to `"`.
+///   `\\` will be converted to `\`, and the string `\"` will be converted to `"`.
 fn split_command_text(input: &str) -> Vec<String> {
     let input = normalize(input);
     let mut chars = input.chars().peekable();

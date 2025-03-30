@@ -35,7 +35,7 @@ pub(crate) fn validate_unique_node_names(
     });
 
     let nodes_by_name = nodes_with_names.fold(
-        HashMap::new(),
+        HashMap::default(),
         |mut map: HashMap<_, Vec<_>>, (name, header_context, file)| {
             map.entry(name).or_default().push((header_context, file));
             map

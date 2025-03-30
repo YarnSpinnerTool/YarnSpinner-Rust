@@ -1,6 +1,6 @@
 [package]
 name = "bevy_yarnspinner"
-version = "0.4.0"
+version = "0.5.0-rc.1"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -20,30 +20,28 @@ audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 anyhow = "1"
 csv = "1"
 serde = { version = "1", features = ["derive"] }
-yarnspinner = { path = "../yarnspinner", features = ["bevy", "serde"], version = "0.4.0" }
+yarnspinner = { path = "../yarnspinner", features = [
+    "bevy",
+    "serde",
+], version = "0.5.0-rc" }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
+variadics_please = "1"
 
 
 [dependencies.bevy]
-version = "0.15.0"
+version = "0.16.0-rc"
 default-features = false
-features = [
-    "bevy_asset",
-    "multi_threaded",
-]
+features = ["bevy_asset", "multi_threaded"]
 
 [dev-dependencies]
 tempfile = "3"
 static_assertions = "1.1.0"
 
 [dev-dependencies.bevy]
-version = "0.15.0"
+version = "0.16.0-rc"
 default-features = false
-features = [
-    "bevy_core_pipeline",
-    "bevy_audio",
-]
+features = ["bevy_core_pipeline", "bevy_audio"]
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies]
 glob = "0.3.1"

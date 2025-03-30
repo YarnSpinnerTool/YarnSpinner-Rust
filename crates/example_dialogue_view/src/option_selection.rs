@@ -2,8 +2,8 @@ use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRoo
 use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::color::palettes::css;
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 use bevy::window::{PrimaryWindow, SystemCursorIcon};
 use bevy::winit::cursor::CursorIcon;
 use bevy_yarnspinner::{events::*, prelude::*};
@@ -49,14 +49,14 @@ fn create_options(
     option_selection: Res<OptionSelection>,
     mut commands: Commands,
     children: Query<&Children>,
-    mut options_node: Query<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
-    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
+    options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
+    mut root_visibility: Single<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
-    let (entity, mut node, mut visibility) = options_node.single_mut();
+    let (entity, mut node, mut visibility) = options_node.into_inner();
     node.display = Display::Flex;
     *visibility = Visibility::Hidden;
     if children.iter_descendants(entity).next().is_none() {
-        *root_visibility.single_mut() = Visibility::Inherited;
+        **root_visibility = Visibility::Inherited;
         let mut entity_commands = commands.entity(entity);
         spawn_options(&mut entity_commands, &option_selection.options);
     }
@@ -64,11 +64,10 @@ fn create_options(
 
 fn show_options(
     mut typewriter_finished_event: EventReader<TypewriterFinishedEvent>,
-    mut options_node: Query<&mut Visibility, With<OptionsNode>>,
+    mut options_node: Single<&mut Visibility, With<OptionsNode>>,
 ) {
     for _event in typewriter_finished_event.read() {
-        let mut visibility = options_node.single_mut();
-        *visibility = Visibility::Inherited;
+        **options_node = Visibility::Inherited;
     }
 }
 
@@ -76,15 +75,11 @@ fn select_option(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
     typewriter: Res<Typewriter>,
-    mut buttons: Query<
-        (&Interaction, &OptionButton, &Children),
-        (With<Button>, Changed<Interaction>),
-    >,
+    mut buttons: Query<(Entity, &Interaction, &OptionButton), (With<Button>, Changed<Interaction>)>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
-    text_entities: Query<Entity, (With<Text>, Without<DialogueNode>)>,
     mut text_writer: TextUiWriter,
     option_selection: Res<OptionSelection>,
-    windows: Query<Entity, With<PrimaryWindow>>,
+    window: Single<Entity, With<PrimaryWindow>>,
     mut selected_option_event: EventWriter<HasSelectedOptionEvent>,
 ) {
     if !typewriter.is_finished() {
@@ -104,7 +99,7 @@ fn select_option(
         }
     }
 
-    for (interaction, button, children) in buttons.iter_mut() {
+    for (entity, interaction, button) in buttons.iter_mut() {
         let (color, icon) = match *interaction {
             Interaction::Pressed if selection.is_none() => {
                 selection = Some(button.0);
@@ -113,14 +108,8 @@ fn select_option(
             Interaction::Hovered => (Color::WHITE, SystemCursorIcon::Pointer),
             _ => (css::TOMATO.into(), SystemCursorIcon::Default),
         };
-        commands
-            .entity(windows.single())
-            .insert(CursorIcon::System(icon));
-        let text_entity = children
-            .iter()
-            .find(|&e| text_entities.contains(*e))
-            .unwrap();
-        *text_writer.color(*text_entity, 2) = TextColor(color);
+        commands.entity(*window).insert(CursorIcon::System(icon));
+        *text_writer.color(entity, 2) = TextColor(color);
     }
     let has_selected_id = selection.is_some();
     if let Some(id) = selection {
@@ -129,7 +118,7 @@ fn select_option(
         }
     }
     if has_selected_id {
-        selected_option_event.send(HasSelectedOptionEvent);
+        selected_option_event.write(HasSelectedOptionEvent);
     }
 }
 
@@ -137,9 +126,9 @@ fn despawn_options(
     mut has_selected_option_event: EventReader<HasSelectedOptionEvent>,
     mut dialogue_complete_event: EventReader<DialogueCompleteEvent>,
     mut commands: Commands,
-    mut options_node: Query<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
-    mut dialogue_node_text: Query<&mut Text, With<DialogueNode>>,
-    mut root_visibility: Query<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
+    options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
+    mut dialogue_node_text: Single<&mut Text, With<DialogueNode>>,
+    mut root_visibility: Single<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
     let should_despawn =
         !has_selected_option_event.is_empty() || !dialogue_complete_event.is_empty();
@@ -149,12 +138,12 @@ fn despawn_options(
     has_selected_option_event.clear();
     dialogue_complete_event.clear();
     commands.remove_resource::<OptionSelection>();
-    let (entity, mut node, mut visibility) = options_node.single_mut();
-    commands.entity(entity).despawn_descendants();
+    let (entity, mut node, mut visibility) = options_node.into_inner();
+    commands.entity(entity).despawn_related::<Children>();
     node.display = Display::None;
     *visibility = Visibility::Hidden;
-    *dialogue_node_text.single_mut() = Text::default();
-    *root_visibility.single_mut() = Visibility::Hidden;
+    **dialogue_node_text = Text::default();
+    **root_visibility = Visibility::Hidden;
 }
 
 const NUMBER_KEYS: [KeyCode; 9] = [

@@ -3,8 +3,8 @@ use crate::UnderlyingYarnLine;
 #[cfg(feature = "audio_assets")]
 pub use audio_asset_provider_plugin::AudioAssetProvider;
 use bevy::asset::{Asset, LoadedUntypedAsset};
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 pub use file_extension_asset_provider_plugin::{file_extensions, FileExtensionAssetProvider};
 use std::any::Any;
 use std::fmt::Debug;
@@ -157,7 +157,7 @@ pub struct LineAssets(HashMap<&'static str, UntypedHandle>);
 impl LineAssets {
     /// Creates a new empty [`LineAssets`] struct.
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(HashMap::default())
     }
 
     /// Creates a new [`LineAssets`] struct from an iterator of untyped [`Handle`]s and the [`TypePath::type_path`] of the [`Asset`] they reference.

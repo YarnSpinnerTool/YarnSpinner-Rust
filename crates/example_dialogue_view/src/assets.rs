@@ -37,14 +37,14 @@ fn load_image(bytes: &[u8], _path: String) -> Image {
 }
 
 pub(crate) mod font_handle {
-    use bevy::prelude::*;
+    use bevy::{asset::weak_handle, prelude::*};
 
-    pub(crate) const MEDIUM: Handle<Font> = Handle::weak_from_u128(2263821398159872327);
+    pub(crate) const MEDIUM: Handle<Font> = weak_handle!("ee287b36-89c9-4130-914d-571038c43009");
 }
 
 pub(crate) mod image_handle {
-    use bevy::prelude::*;
+    use bevy::{asset::weak_handle, prelude::*};
 
     pub(crate) const CONTINUE_INDICATOR: Handle<Image> =
-        Handle::weak_from_u128(5464879846123416874);
+        weak_handle!("b45deb7a-170c-45af-be78-fd36af674355");
 }

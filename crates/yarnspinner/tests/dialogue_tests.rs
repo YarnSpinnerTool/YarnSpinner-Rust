@@ -125,7 +125,7 @@ fn test_getting_current_node_name() {
     let stop_events = dialogue.stop();
     assert_eq!(
         Some(DialogueEvent::DialogueComplete),
-        stop_events.into_iter().last()
+        stop_events.into_iter().next_back()
     );
 
     // Current node should now be none
@@ -175,7 +175,7 @@ fn test_getting_headers() {
 
     let headers = dialogue.get_headers_for_node("LearnMore").unwrap();
 
-    let mut expected_headers = HashMap::new();
+    let mut expected_headers = HashMap::default();
     expected_headers.insert("title".to_string(), "LearnMore".to_string());
     expected_headers.insert("tags".to_string(), "rawText".to_string());
     expected_headers.insert("colorID".to_string(), "0".to_string());

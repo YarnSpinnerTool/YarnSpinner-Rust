@@ -53,8 +53,8 @@ impl TuiDialogueRunner {
 
         // One of the outputs of compiling is a string table, containing all of the
         // text (and associated metadata) for our dialogue.
-        let mut base_language_string_table = HashMap::new();
-        let mut metadata = HashMap::new();
+        let mut base_language_string_table = HashMap::default();
+        let mut metadata = HashMap::default();
 
         for (k, v) in compilation.string_table {
             base_language_string_table.insert(k.clone(), v.text);

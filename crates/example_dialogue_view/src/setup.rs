@@ -43,10 +43,6 @@ fn setup(mut commands: Commands) {
                     MinTrackSizingFunction::Auto,
                     MaxTrackSizingFunction::Px(DIALOG_WIDTH),
                 )],
-                // In the web, `GridTrack::auto()` should already work like this,
-                // but it seems like Bevy disagrees?
-                // If you remove this line in the future and everything looks the same, go ahead!
-                grid_auto_rows: vec![GridTrack::min_content()],
                 ..default()
             },
             Visibility::Hidden,
@@ -176,29 +172,25 @@ where
                         justify_content: JustifyContent::FlexStart,
                         ..default()
                     },
-                    ImageNode::default().with_color(Color::NONE),
-                    Button,
-                    OptionButton(option.id),
                 ))
                 .with_children(|parent| {
-                    let spans = [
-                        (TextSpan(format!("{}: ", i + 1)), text_style::option_id()),
-                        (
-                            TextSpan(option.line.text.clone()),
-                            text_style::option_text(),
-                        ),
-                    ];
-
                     parent
                         .spawn((
                             fmt_name("option text"),
+                            Button,
                             Text::default(),
                             style::options(),
+                            ImageNode::default().with_color(Color::NONE),
+                            OptionButton(option.id),
                             Label,
                         ))
                         .with_children(|parent| {
-                            parent.spawn(spans[0].clone());
-                            parent.spawn(spans[1].clone());
+                            parent
+                                .spawn((TextSpan(format!("{}: ", i + 1)), text_style::option_id()));
+                            parent.spawn((
+                                TextSpan(option.line.text.clone()),
+                                text_style::option_text(),
+                            ));
                         });
                 });
         }

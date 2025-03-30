@@ -9,7 +9,7 @@
 //! - [`YarnSpinnerPlugin`]: The plugin registering all systems and types.
 //! - [`YarnProject`]: A [`Resource`](bevy::prelude::Resource) for the compiled Yarn project, which is created for you when [`YarnSpinnerPlugin`] is added.
 //! - [`DialogueRunner`]: The [`Component`](bevy::prelude::Component) running through the Yarn files and sending events for things you should draw on the screen.
-//!     Can be created from a [`YarnProject`].
+//!   Can be created from a [`YarnProject`].
 //!
 //! ## Dialogue Views
 //!
@@ -39,7 +39,7 @@
 //! The main workflow is as follows:
 //! - Register the [`YarnSpinnerPlugin`]
 //! - When the [`YarnProject`] [`Resource`](bevy::prelude::Resource) is added, spawn a [`DialogueRunner`] from it.
-//!     The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>)`.
+//!   The latter can nicely be done with `my_system.run_if(resource_added::<YarnProject>)`.
 //!
 //! The following example is adapted from the [hello world example](https://github.com/YarnSpinnerTool/YarnSpinner-Rust/blob/main/examples/bevy_yarnspinner/src/bin/hello_world.rs).
 //!
@@ -53,7 +53,7 @@
 //!
 //! ```no_run
 //! // src/main.rs
-//! use bevy::{prelude::*, utils::Duration};
+//! use bevy::prelude::*;
 //! use bevy_yarnspinner::prelude::*;
 //! // Use the example dialogue view to see the dialogue in action. Requires the `bevy_yarnspinner_example_dialogue_view` crate.
 //! // use bevy_yarnspinner_example_dialogue_view::prelude::*;
@@ -79,7 +79,7 @@
 //! }
 //!
 //! fn setup_camera(mut commands: Commands) {
-//!     commands.spawn(Camera2dBundle::default());
+//!     commands.spawn(Camera2d::default());
 //! }
 //!
 //! fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
@@ -144,14 +144,14 @@ pub mod prelude {
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};
-    pub(crate) use anyhow::{Context, Error, Result};
+    pub(crate) use anyhow::{Context, Error};
     pub(crate) use serde::{Deserialize, Serialize};
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
         VariableStorage, YarnFn, YarnLibrary, YarnValue,
     };
-    pub(crate) type SystemResult = Result<()>;
+    pub(crate) type SystemResult = anyhow::Result<()>;
 }
 
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};

@@ -8,6 +8,12 @@ pub(crate) fn panic_on_err(In(result): In<SystemResult>) {
     }
 }
 
+pub(crate) fn log_error(In(result): In<SystemResult>) {
+    if let Err(e) = result {
+        error!("Error in Yarn Spinner plugin: {e}");
+    }
+}
+
 pub(crate) fn in_development(
     project: Option<Res<YarnProject>>,
     project_to_load: Option<Res<YarnProjectConfigToLoad>>,

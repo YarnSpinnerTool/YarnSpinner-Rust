@@ -1,7 +1,7 @@
 use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
+use bevy::platform_support::collections::{HashMap, HashSet};
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet};
 pub(crate) use compilation::{
     RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
 };
@@ -83,7 +83,7 @@ impl YarnProject {
             .get(node_name)?
             .headers
             .iter()
-            .fold(HashMap::new(), |mut map: HashMap<_, Vec<_>>, header| {
+            .fold(HashMap::default(), |mut map: HashMap<_, Vec<_>>, header| {
                 map.entry(header.key.as_str())
                     .or_default()
                     .push(header.value.as_str());
@@ -106,7 +106,7 @@ impl Default for LoadYarnProjectEvent {
     fn default() -> Self {
         Self {
             localizations: None,
-            yarn_files: HashSet::from([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
+            yarn_files: HashSet::from_iter([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
             development_file_generation: default(),
         }
     }

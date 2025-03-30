@@ -31,8 +31,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     commands.spawn(dialogue_runner);
 }
 
-fn print_yarn_variable(dialogue_runner: Query<&DialogueRunner>) {
-    let dialogue_runner = dialogue_runner.single();
+fn print_yarn_variable(dialogue_runner: Single<&DialogueRunner>) {
     let value = dialogue_runner.variable_storage().get("$foo");
     if let Ok(value) = value {
         println!("foo: {value}");
