@@ -3,7 +3,6 @@ use crate::UnderlyingYarnLine;
 #[cfg(feature = "audio_assets")]
 pub use audio_asset_provider_plugin::AudioAssetProvider;
 use bevy::asset::{Asset, LoadedUntypedAsset};
-use bevy::platform_support::hash::FixedHasher;
 use bevy::prelude::*;
 use bevy::platform_support::collections::HashMap;
 pub use file_extension_asset_provider_plugin::{file_extensions, FileExtensionAssetProvider};

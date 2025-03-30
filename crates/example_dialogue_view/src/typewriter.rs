@@ -101,7 +101,7 @@ impl Typewriter {
 
 fn write_text(
     mut commands: Commands,
-    mut text: Single<Entity, With<DialogueNode>>,
+    text: Single<Entity, With<DialogueNode>>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,

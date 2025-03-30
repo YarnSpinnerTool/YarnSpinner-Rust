@@ -70,7 +70,7 @@ pub(crate) fn handle_fade(
     mut color: Single<&mut BackgroundColor, With<StageCurtains>>,
 ) {
     if fade.0.is_done() {
-        (*color).0.set_alpha(fade.0.to);
+        color.0.set_alpha(fade.0.to);
         commands.remove_resource::<FadeCurtainAlpha>();
         fade.0.set_done();
     } else {
@@ -81,7 +81,7 @@ pub(crate) fn handle_fade(
             fade.0.smooth_end()
         };
         let alpha = fade.0.from + (fade.0.to - fade.0.from) * output;
-        (*color).0.set_alpha(alpha);
+        color.0.set_alpha(alpha);
     }
 }
 

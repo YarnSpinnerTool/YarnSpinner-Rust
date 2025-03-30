@@ -103,7 +103,7 @@ pub(crate) fn fade_in(
     mut commands: Commands,
     color: Single<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let change = EasedChange::new((*color).0.alpha(), 0.0, seconds);
+    let change = EasedChange::new(color.0.alpha(), 0.0, seconds);
     let done = change.done.clone();
 
     commands.insert_resource(FadeCurtainAlpha(change));
@@ -115,7 +115,7 @@ pub(crate) fn fade_out(
     mut commands: Commands,
     color: Single<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let change = EasedChange::new((*color).0.alpha(), 1.0, seconds);
+    let change = EasedChange::new(color.0.alpha(), 1.0, seconds);
     let done = change.done.clone();
 
     commands.insert_resource(FadeCurtainAlpha(change));

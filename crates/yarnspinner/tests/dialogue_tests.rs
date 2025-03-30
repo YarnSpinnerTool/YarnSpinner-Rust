@@ -125,7 +125,7 @@ fn test_getting_current_node_name() {
     let stop_events = dialogue.stop();
     assert_eq!(
         Some(DialogueEvent::DialogueComplete),
-        stop_events.into_iter().last()
+        stop_events.into_iter().next_back()
     );
 
     // Current node should now be none

@@ -134,7 +134,7 @@ fn despawn_options(
     mut has_selected_option_event: EventReader<HasSelectedOptionEvent>,
     mut dialogue_complete_event: EventReader<DialogueCompleteEvent>,
     mut commands: Commands,
-    mut options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
+    options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
     mut dialogue_node_text: Single<&mut Text, With<DialogueNode>>,
     mut root_visibility: Single<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
