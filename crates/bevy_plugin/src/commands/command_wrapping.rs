@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
 use bevy::prelude::*;
 use bevy::tasks::Task;
-use bevy::utils::all_tuples;
+use variadics_please::all_tuples;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};

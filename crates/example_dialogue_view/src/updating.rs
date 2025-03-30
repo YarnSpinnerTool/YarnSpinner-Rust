@@ -37,16 +37,16 @@ pub struct SpeakerChangeEvent {
     pub speaking: bool,
 }
 
-fn show_dialog(mut visibility: Query<&mut Visibility, With<UiRootNode>>) {
-    *visibility.single_mut() = Visibility::Inherited;
+fn show_dialog(mut visibility: Single<&mut Visibility, With<UiRootNode>>) {
+    **visibility = Visibility::Inherited;
 }
 
 fn hide_dialog(
-    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
     mut dialogue_complete_events: EventReader<DialogueCompleteEvent>,
 ) {
     if !dialogue_complete_events.is_empty() {
-        *root_visibility.single_mut() = Visibility::Hidden;
+        **root_visibility = Visibility::Hidden;
         dialogue_complete_events.clear();
     }
 }
@@ -55,7 +55,7 @@ fn present_line(
     mut line_events: EventReader<PresentLineEvent>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
     mut typewriter: ResMut<Typewriter>,
-    mut name_node: Query<Entity, With<DialogueNameNode>>,
+    name_node: Single<Entity, With<DialogueNameNode>>,
     mut text_writer: TextUiWriter,
 ) {
     for event in line_events.read() {
@@ -68,7 +68,7 @@ fn present_line(
         } else {
             String::new()
         };
-        *text_writer.text(name_node.single_mut(), 0) = name;
+        *text_writer.text(*name_node, 0) = name;
         typewriter.set_line(&event.line);
     }
 }
@@ -87,8 +87,8 @@ fn continue_dialogue(
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
-    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
-    mut continue_visibility: Query<
+    mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
+    mut continue_visibility: Single<
         &mut Visibility,
         (With<DialogueContinueNode>, Without<UiRootNode>),
     >,
@@ -105,8 +105,8 @@ fn continue_dialogue(
         for mut dialogue_runner in dialogue_runners.iter_mut() {
             if !dialogue_runner.is_waiting_for_option_selection() && dialogue_runner.is_running() {
                 dialogue_runner.continue_in_next_update();
-                *root_visibility.single_mut() = Visibility::Hidden;
-                *continue_visibility.single_mut() = Visibility::Hidden;
+                **root_visibility = Visibility::Hidden;
+                **continue_visibility = Visibility::Hidden;
             }
         }
     }

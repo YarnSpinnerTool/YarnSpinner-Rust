@@ -3,7 +3,7 @@
 
 use crate::prelude::YarnSpinnerSystemSet;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;

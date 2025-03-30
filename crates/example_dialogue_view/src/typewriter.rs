@@ -2,8 +2,8 @@ use crate::option_selection::OptionSelection;
 use crate::setup::{create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode};
 use crate::updating::SpeakerChangeEvent;
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
+use bevy::platform_support::time::Instant;
 use bevy::prelude::*;
-use bevy::utils::Instant;
 use bevy_yarnspinner::{events::*, prelude::*};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -101,22 +101,22 @@ impl Typewriter {
 
 fn write_text(
     mut commands: Commands,
-    mut text: Query<Entity, With<DialogueNode>>,
+    mut text: Single<Entity, With<DialogueNode>>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
     mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
-    mut root_visibility: Query<&mut Visibility, With<UiRootNode>>,
+    mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
 ) {
-    let mut text_entity = commands.entity(text.single_mut());
+    let mut text_entity = commands.entity(*text);
     if typewriter.last_before_options && option_selection.is_none() {
-        text_entity.despawn_descendants();
+        text_entity.despawn_related::<Children>();
         return;
     }
     if typewriter.is_finished() {
         return;
     }
     if !typewriter.last_before_options {
-        *root_visibility.single_mut() = Visibility::Inherited;
+        **root_visibility = Visibility::Inherited;
         // If this is last before options, the `OptionSelection` will make the visibility inherited as soon as it's ready instead
     }
     typewriter.update_current_text();
@@ -132,21 +132,22 @@ fn write_text(
     let current_text = &typewriter.current_text;
     let rest = typewriter.graphemes_left.join("");
     let spans = create_dialog_text(current_text, rest);
-    text_entity.despawn_descendants().with_children(|parent| {
-        parent.spawn(spans[0].clone());
-        parent.spawn(spans[1].clone());
-    });
+    text_entity
+        .despawn_related::<Children>()
+        .with_children(|parent| {
+            parent.spawn(spans[0].clone());
+            parent.spawn(spans[1].clone());
+        });
 }
 
 fn show_continue(
     typewriter: Res<Typewriter>,
-    mut visibility: Query<&mut Visibility, With<DialogueContinueNode>>,
+    mut visibility: Single<&mut Visibility, With<DialogueContinueNode>>,
     mut typewriter_finished_event: EventReader<TypewriterFinishedEvent>,
 ) {
     for _event in typewriter_finished_event.read() {
         if !typewriter.last_before_options {
-            let mut visibility = visibility.single_mut();
-            *visibility = Visibility::Inherited;
+            **visibility = Visibility::Inherited;
         }
     }
 }
@@ -161,14 +162,12 @@ pub(crate) fn spawn(mut commands: Commands) {
 
 fn bob_continue(
     time: Res<Time>,
-    visibility: Query<&Visibility, With<DialogueContinueNode>>,
-    mut style: Query<&mut Node, With<DialogueContinueNode>>,
+    visibility: Single<&Visibility, With<DialogueContinueNode>>,
+    mut style: Single<&mut Node, With<DialogueContinueNode>>,
 ) {
-    let visibility = visibility.single();
     if *visibility == Visibility::Hidden {
         return;
     }
-    let mut style = style.single_mut();
     let pixels = (time.elapsed_secs() * 3.0).sin().powi(2) * 5.0;
     style.bottom = Val::Px(pixels);
 }

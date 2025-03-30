@@ -7,8 +7,8 @@ use crate::{
 };
 use bevy::app::AppExit;
 use bevy::pbr::NotShadowCaster;
+use bevy::platform_support::time::Instant;
 use bevy::prelude::*;
-use bevy::utils::Instant;
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
 use std::f32::consts::PI;
@@ -59,7 +59,7 @@ pub(crate) fn change_speaker(
 pub(crate) fn change_sprite(
     In((character, sprite)): In<(&str, &str)>,
     mut speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
-    camera: Query<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
+    camera_transform: Single<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
     sprites: Res<Sprites>,
 ) {
     let (.., transform, mut rotator) = speakers
@@ -73,7 +73,6 @@ pub(crate) fn change_sprite(
         "" => None,
         _ => panic!("Unknown sprite {sprite}"),
     };
-    let camera_transform = camera.single();
 
     // Not using the current rotation because we might be mid-rotation from the last sprite change.
     let original_rotation = transform
@@ -93,7 +92,7 @@ pub(crate) fn change_sprite(
 pub(crate) fn rotate_character(
     In(character): In<&str>,
     speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
-    camera: Query<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
+    camera: Single<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
     sprites: Res<Sprites>,
 ) {
     change_sprite(In((character, "")), speakers, camera, sprites);
@@ -102,9 +101,9 @@ pub(crate) fn rotate_character(
 pub(crate) fn fade_in(
     In(seconds): In<f32>,
     mut commands: Commands,
-    color: Query<&BackgroundColor, With<StageCurtains>>,
+    color: Single<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let change = EasedChange::new(color.single().0.alpha(), 0.0, seconds);
+    let change = EasedChange::new((*color).0.alpha(), 0.0, seconds);
     let done = change.done.clone();
 
     commands.insert_resource(FadeCurtainAlpha(change));
@@ -114,9 +113,9 @@ pub(crate) fn fade_in(
 pub(crate) fn fade_out(
     In(seconds): In<f32>,
     mut commands: Commands,
-    color: Query<&BackgroundColor, With<StageCurtains>>,
+    color: Single<&BackgroundColor, With<StageCurtains>>,
 ) -> Arc<AtomicBool> {
-    let change = EasedChange::new(color.single().0.alpha(), 1.0, seconds);
+    let change = EasedChange::new((*color).0.alpha(), 1.0, seconds);
     let done = change.done.clone();
 
     commands.insert_resource(FadeCurtainAlpha(change));
@@ -147,14 +146,13 @@ pub(crate) fn show_bang(
     speakers: Query<&Speaker>,
     mut commands: Commands,
     mut sprite_params: Sprite3dParams,
-    camera: Query<&Transform, With<MainCamera>>,
+    camera_transform: Single<&Transform, With<MainCamera>>,
     sprites: Res<Sprites>,
 ) {
     let speaker = speakers
         .iter()
         .find(|speaker| speaker.name.to_lowercase() == character.to_lowercase())
         .unwrap();
-    let camera_transform = camera.single();
     let speaker_back =
         (speaker.initial_translation - camera_transform.translation).normalize() * 0.1;
     let change = EasedChange::new(

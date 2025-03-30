@@ -6,7 +6,7 @@ use crate::prelude::*;
 use anyhow::bail;
 use bevy::asset::LoadedUntypedAsset;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(

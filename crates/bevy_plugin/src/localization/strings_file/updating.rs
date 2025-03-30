@@ -1,7 +1,7 @@
 use crate::plugin::AssetRoot;
 use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet};
+use bevy::platform_support::collections::{HashMap, HashSet};
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
     app.add_event::<UpdateAllStringsFilesForStringTableEvent>()

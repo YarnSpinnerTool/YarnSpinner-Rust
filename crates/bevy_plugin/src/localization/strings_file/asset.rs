@@ -1,11 +1,11 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Runtime/StringTableEntry.cs>
 
 use crate::prelude::*;
-use anyhow::{anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::fs::File;
@@ -140,7 +140,7 @@ impl StringsFile {
         string_table: impl IntoIterator<Item = (LineId, StringInfo)>,
     ) -> Result<Self> {
         let language = language.into();
-        let mut records = HashMap::new();
+        let mut records = HashMap::default();
         for (id, string_info) in string_table {
             if string_info.is_implicit_tag {
                 bail!(

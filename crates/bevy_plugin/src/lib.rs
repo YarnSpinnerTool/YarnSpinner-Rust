@@ -144,14 +144,14 @@ pub mod prelude {
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};
-    pub(crate) use anyhow::{Context, Error, Result};
+    pub(crate) use anyhow::{Context, Error};
     pub(crate) use serde::{Deserialize, Serialize};
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
         VariableStorage, YarnFn, YarnLibrary, YarnValue,
     };
-    pub(crate) type SystemResult = Result<()>;
+    pub(crate) type SystemResult = anyhow::Result<()>;
 }
 
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};

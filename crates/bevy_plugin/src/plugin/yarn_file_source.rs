@@ -1,7 +1,7 @@
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-use anyhow::ensure;
+use anyhow::{ensure, Result};
 use bevy::prelude::*;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 use glob::glob;

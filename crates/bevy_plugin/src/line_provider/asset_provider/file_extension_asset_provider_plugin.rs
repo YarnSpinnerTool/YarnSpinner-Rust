@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::{LoadState, LoadedUntypedAsset};
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet};
+use bevy::platform_support::collections::{HashMap, HashSet};
 use std::any::Any;
 use std::fmt::Debug;
 use std::path::PathBuf;

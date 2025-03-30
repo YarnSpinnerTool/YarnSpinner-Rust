@@ -3,7 +3,7 @@ use crate::fmt_utils::SkipDebug;
 use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::any::{Any, TypeId};
 use std::fmt::Debug;
@@ -31,7 +31,7 @@ impl DialogueRunnerBuilder {
             text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
                 yarn_project,
             )),
-            asset_providers: HashMap::new(),
+            asset_providers: HashMap::default(),
             library: create_extended_standard_library(),
             commands: YarnCommands::builtin_commands(),
             compilation: yarn_project.compilation().clone(),

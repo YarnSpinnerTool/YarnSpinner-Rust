@@ -96,9 +96,9 @@ impl Compilation {
     ) -> Self {
         let mut programs = Vec::new();
         let mut declarations = Vec::new();
-        let mut tags = HashMap::new();
+        let mut tags = HashMap::default();
         let mut diagnostics = Vec::new();
-        let mut node_debug_infos = HashMap::new();
+        let mut node_debug_infos = HashMap::default();
 
         for compilation in compilations {
             programs.push(compilation.program.unwrap());

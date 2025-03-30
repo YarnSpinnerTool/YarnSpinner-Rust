@@ -3,7 +3,7 @@ use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::platform_support::collections::HashSet;
 use std::hash::Hash;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]

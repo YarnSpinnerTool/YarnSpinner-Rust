@@ -238,7 +238,7 @@ impl LineParser {
                 return Ok(MarkupAttributeMarker {
                     tag_type: TagType::CloseAll,
                     name: None,
-                    properties: HashMap::new(),
+                    properties: HashMap::default(),
                     position: self.position,
                     source_position: source_position_at_marker_start,
                 });
@@ -249,7 +249,7 @@ impl LineParser {
             return Ok(MarkupAttributeMarker {
                 tag_type: TagType::Close,
                 name: Some(tag_name),
-                properties: HashMap::new(),
+                properties: HashMap::default(),
                 position: self.position,
                 source_position: source_position_at_marker_start,
             });
@@ -265,7 +265,7 @@ impl LineParser {
         // the attribute.
         let attribute_name = self.parse_id()?;
 
-        let mut properties = HashMap::new();
+        let mut properties = HashMap::default();
 
         // If the ID was immediately followed by an '=', this was the
         // first property (its value is also used as the attribute

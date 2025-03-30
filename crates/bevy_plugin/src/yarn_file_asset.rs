@@ -2,6 +2,7 @@ use crate::prelude::*;
 use bevy::asset::io::Reader;
 use bevy::prelude::*;
 
+use anyhow::Result;
 use bevy::asset::{AssetLoader, LoadContext};
 use std::hash::Hash;
 use yarnspinner::prelude::YarnFile as InnerYarnFile;

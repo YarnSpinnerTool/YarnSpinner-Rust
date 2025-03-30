@@ -1,5 +1,5 @@
+use bevy::platform_support::time::Instant;
 use bevy::prelude::*;
-use bevy::utils::Instant;
 use std::f32::consts::PI;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
