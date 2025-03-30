@@ -32,7 +32,7 @@ variadics_please = "1"
 [dependencies.bevy]
 version = "0.16.0-rc"
 default-features = false
-features = ["bevy_asset", "multi_threaded"]
+features = ["bevy_asset", "multi_threaded", "bevy_log"]
 
 [dev-dependencies]
 tempfile = "3"
