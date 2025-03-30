@@ -2,8 +2,8 @@
 //! Alas, Wasm forces us to do this
 
 use crate::prelude::YarnSpinnerSystemSet;
-use bevy::prelude::*;
 use bevy::platform_support::collections::HashMap;
+use bevy::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;

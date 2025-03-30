@@ -3,9 +3,9 @@
 use crate::prelude::*;
 use anyhow::{anyhow, bail, Result};
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
-use bevy::platform_support::collections::HashMap;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::fs::File;
