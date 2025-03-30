@@ -31,7 +31,7 @@ impl DebugInfo {
     /// # Arguments
     ///
     /// * `instruction_number`: The index of the instruction to retrieve
-    ///     information for.
+    ///   information for.
     ///
     /// # Returns
     ///

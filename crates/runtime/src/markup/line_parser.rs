@@ -554,13 +554,13 @@ impl LineParser {
     /// - Integers
     /// - Floating-point numbers
     /// - Strings (delimited by double quotes). (Strings may contain
-    ///     escaped quotes with a backslash.)
+    ///   escaped quotes with a backslash.)
     /// - The words `true` or `false`
     /// - Runs of alphanumeric characters, up to but not including a
-    ///     whitespace or the end of a tag; these are interpreted as a string
-    ///     (e.g. `[mood=happy]` is interpreted the same as `[mood="happy"]`
+    ///   whitespace or the end of a tag; these are interpreted as a string
+    ///   (e.g. `[mood=happy]` is interpreted the same as `[mood="happy"]`
     /// - Expressions (delimited by curly braces), which are processed
-    ///     as inline expressions.
+    ///   as inline expressions.
     fn parse_value(&mut self) -> Result<MarkupValue> {
         // parse integers or floats:
         if self.peek_numeric()? {
