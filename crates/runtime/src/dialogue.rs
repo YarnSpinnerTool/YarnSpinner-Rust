@@ -142,7 +142,6 @@ impl Iterator for Dialogue {
     type Item = Vec<DialogueEvent>;
 
     /// Panicking version of [`Dialogue::continue_`].
-    #[must_use = "All dialogue events that are returned by the dialogue must be handled or explicitly ignored"]
     fn next(&mut self) -> Option<Self::Item> {
         self.vm.next()
     }
