@@ -75,12 +75,8 @@ fn select_option(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
     typewriter: Res<Typewriter>,
-    mut buttons: Query<
-        (&Interaction, &OptionButton, &Children),
-        (With<Button>, Changed<Interaction>),
-    >,
+    mut buttons: Query<(Entity, &Interaction, &OptionButton), (With<Button>, Changed<Interaction>)>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
-    text_entities: Query<Entity, (With<Text>, Without<DialogueNode>)>,
     mut text_writer: TextUiWriter,
     option_selection: Res<OptionSelection>,
     window: Single<Entity, With<PrimaryWindow>>,
@@ -103,7 +99,7 @@ fn select_option(
         }
     }
 
-    for (interaction, button, children) in buttons.iter_mut() {
+    for (entity, interaction, button) in buttons.iter_mut() {
         let (color, icon) = match *interaction {
             Interaction::Pressed if selection.is_none() => {
                 selection = Some(button.0);
@@ -113,11 +109,7 @@ fn select_option(
             _ => (css::TOMATO.into(), SystemCursorIcon::Default),
         };
         commands.entity(*window).insert(CursorIcon::System(icon));
-        let text_entity = children
-            .iter()
-            .find(|&e| text_entities.contains(e))
-            .unwrap();
-        *text_writer.color(text_entity, 2) = TextColor(color);
+        *text_writer.color(entity, 2) = TextColor(color);
     }
     let has_selected_id = selection.is_some();
     if let Some(id) = selection {

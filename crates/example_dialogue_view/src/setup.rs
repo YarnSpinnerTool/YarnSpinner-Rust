@@ -176,9 +176,6 @@ where
                         justify_content: JustifyContent::FlexStart,
                         ..default()
                     },
-                    ImageNode::default().with_color(Color::NONE),
-                    Button,
-                    OptionButton(option.id),
                 ))
                 .with_children(|parent| {
                     let spans = [
@@ -192,8 +189,11 @@ where
                     parent
                         .spawn((
                             fmt_name("option text"),
+                            Button,
                             Text::default(),
                             style::options(),
+                            ImageNode::default().with_color(Color::NONE),
+                            OptionButton(option.id),
                             Label,
                         ))
                         .with_children(|parent| {
