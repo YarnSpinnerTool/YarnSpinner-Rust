@@ -7,6 +7,8 @@ pub(crate) use self::{execution_state::*, state::*};
 use crate::markup::{LineParser, ParsedMarkup};
 use crate::prelude::*;
 use crate::Result;
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use log::*;
 use std::fmt::Debug;
 use yarnspinner_core::prelude::OpCode;
@@ -31,6 +33,7 @@ pub(crate) struct VirtualMachine {
     language_code: Option<Language>,
 }
 
+/*
 impl Iterator for VirtualMachine {
     type Item = Vec<DialogueEvent>;
 
@@ -40,6 +43,7 @@ impl Iterator for VirtualMachine {
             .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
     }
 }
+*/
 
 impl VirtualMachine {
     pub(crate) fn new(
@@ -194,13 +198,19 @@ impl VirtualMachine {
     /// ## Implementation note
     /// Exposed via the more idiomatic [`Iterator::next`] implementation.
     ///
-    pub(crate) fn continue_(&mut self) -> crate::Result<Vec<DialogueEvent>> {
+    pub(crate) fn continue_(
+        &mut self,
+        #[cfg(feature = "bevy")] world: &mut World,
+    ) -> crate::Result<Vec<DialogueEvent>> {
         self.assert_can_continue()?;
         self.set_execution_state(ExecutionState::Running);
 
         while self.execution_state == ExecutionState::Running {
             let current_node = self.current_node.clone().unwrap();
             let current_instruction = &current_node.instructions[self.state.program_counter];
+            #[cfg(feature = "bevy")]
+            self.run_instruction(current_instruction, world)?;
+            #[cfg(not(feature = "bevy"))]
             self.run_instruction(current_instruction)?;
             // ## Implementation note
             // The original increments the program counter here, but that leads to intentional underflow on [`OpCode::RunNode`],
@@ -282,7 +292,11 @@ impl VirtualMachine {
     /// ## Implementation note
     ///
     /// Increments the program counter here instead of in `continue_` for cleaner code
-    fn run_instruction(&mut self, instruction: &Instruction) -> crate::Result<()> {
+    fn run_instruction(
+        &mut self,
+        instruction: &Instruction,
+        #[cfg(feature = "bevy")] world: &mut World,
+    ) -> crate::Result<()> {
         let opcode: OpCode = instruction.opcode.try_into().unwrap();
         match opcode {
             OpCode::JumpTo => {
@@ -474,6 +488,9 @@ impl VirtualMachine {
                 );
 
                 // Invoke the function
+                #[cfg(feature = "bevy")]
+                let return_value = function.call(parameters, world);
+                #[cfg(not(feature = "bevy"))]
                 let return_value = function.call(parameters);
                 let return_type = function
                     .return_type()

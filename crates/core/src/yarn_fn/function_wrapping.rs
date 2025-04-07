@@ -1,5 +1,9 @@
 use super::optionality::AllowedOptionalityChain;
 use crate::prelude::*;
+#[cfg(feature = "bevy")]
+use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
+#[cfg(feature = "bevy")]
+use bevy::prelude::*;
 use std::any::TypeId;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
@@ -36,8 +40,14 @@ use yarnspinner_macros::all_tuples;
 /// ```
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     /// The type of the value returned by this function. See [`YarnFn`] for more information about what is allowed.
+    type In: YarnFnParam;
+    #[cfg(feature = "bevy")]
+    type Param: SystemParam;
     type Out: IntoYarnValueFromNonYarnValue + 'static;
     #[doc(hidden)]
+    #[cfg(feature = "bevy")]
+    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out;
+    #[cfg(not(feature = "bevy"))]
     fn call(&self, input: Vec<YarnValue>) -> Self::Out;
     /// The [`TypeId`]s of the parameters of this function.
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -51,6 +61,9 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
     #[doc(hidden)]
+    #[cfg(feature = "bevy")]
+    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> YarnValue;
+    #[cfg(not(feature = "bevy"))]
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
     #[doc(hidden)]
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
@@ -72,7 +85,10 @@ where
     F: YarnFn<Marker> + 'static + Clone,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<YarnValue>) -> YarnValue {
+    fn call(&self, input: Vec<YarnValue>, #[cfg(feature = "bevy")] world: &mut World) -> YarnValue {
+        #[cfg(feature = "bevy")]
+        let output = self.function.call(input, world);
+        #[cfg(not(feature = "bevy"))]
         let output = self.function.call(input);
         output.into_yarn_value()
     }
@@ -170,6 +186,74 @@ macro_rules! yarn_fn_type {
 pub use yarn_fn_type;
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
+#[cfg(feature = "bevy")]
+macro_rules! impl_yarn_fn_tuple_bevy {
+    ($($param: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<F, Input: YarnFnParam, Output, $($param: SystemParam),*> YarnFn<fn(In<Input>, $($param,)*) -> Output> for F
+        where
+            Output: IntoYarnValueFromNonYarnValue + 'static,
+            $($param: YarnFnParam + 'static,)*
+            ($(<$param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain,
+            for <'a> F:
+                Send + Sync + Clone +
+                Fn(In<Input>, $($param), *) -> Output +
+                Fn(In<Input>, $(SystemParamItem<$param>),*) -> Output +
+                Fn(In<YarnFnParamItem<Input>>, $($param), *) -> Output +
+                Fn(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Output
+            {
+                type In = Input;
+                type Out = Output;
+                #[cfg(feature = "bevy")]
+                type Param = ($($param,)*);
+                #[allow(non_snake_case)]
+                fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+                    let mut system_state: SystemState<Self::Param> = SystemState::new(world);
+                    let out = {
+                        let param = system_state.get_mut(world);
+                        let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
+                        let mut iter = input.iter_mut().peekable();
+                        let input = Self::In::retrieve(&mut iter);
+                        assert!(
+                         iter.next().is_none(),
+                         "Passed too many arguments to Command"
+                        );
+                        let ($($param,)*) = param;
+                        self(In(input), $($param,)*)
+                    };
+                    system_state.apply(world);
+                    out
+                    /*
+                    let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
+
+                    #[allow(unused_variables, unused_mut)] // for n = 0 tuples
+                    let mut iter = params.iter_mut().peekable();
+
+                    // $param is the type implementing YarnFnParam
+                    let input = (
+                        $($param::retrieve(&mut iter),)*
+                    );
+                    assert!(iter.next().is_none(), "Passed too many arguments to YarnFn");
+
+                    #[allow(clippy::too_many_arguments)]
+                    fn call_inner<Input: YarnFnParam, Output, $($param,)*>(
+                         mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*) -> Output,
+                         input: In<YarnFnParamItem<Input>>,
+                         $($param: $param,)*
+                    ) -> Output {
+                         f(input, $($param,)*)
+                    }
+                    call_inner(self, In(input), $($param),*)
+                        */
+                    }
+
+                fn parameter_types(&self) -> Vec<TypeId> {
+                    vec![$(TypeId::of::<$param>()),*]
+                }
+            }
+    };
+}
+
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
@@ -183,9 +267,16 @@ macro_rules! impl_yarn_fn_tuple {
             $($param: YarnFnParam + 'static,)*
             ($(<$param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain,
             {
+                type In = ();
+                #[cfg(feature = "bevy")]
+                type Param = ();
                 type Out = O;
                 #[allow(non_snake_case)]
-                fn call(&self, input: Vec<YarnValue>) -> Self::Out {
+                fn call(
+                    &self, input: Vec<YarnValue>,
+                    #[cfg(feature = "bevy")]
+                    _world: &mut World
+                ) -> Self::Out {
                     let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
                     #[allow(unused_variables, unused_mut)] // for n = 0 tuples
@@ -209,6 +300,8 @@ macro_rules! impl_yarn_fn_tuple {
 }
 
 all_tuples!(impl_yarn_fn_tuple, 0, 16, P);
+#[cfg(feature = "bevy")]
+all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16, P);
 
 #[cfg(test)]
 mod tests {
@@ -216,7 +309,7 @@ mod tests {
 
     #[test]
     fn accepts_no_params() {
-        fn f() -> bool {
+        fn f(_: In<()>) -> bool {
             true
         }
         accept_yarn_fn(f);
@@ -363,7 +456,7 @@ mod tests {
     where
         T: YarnFn<Marker>,
     {
-        f.call(input)
+        f.call(input, &mut World::default())
     }
 
     mod optionality {

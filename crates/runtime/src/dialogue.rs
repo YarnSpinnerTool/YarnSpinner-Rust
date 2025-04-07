@@ -2,6 +2,8 @@
 
 use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use log::error;
 use std::collections::HashMap;
 use std::error::Error;
@@ -138,6 +140,7 @@ fn visited_count(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(S
     }
 }
 
+/*
 impl Iterator for Dialogue {
     type Item = Vec<DialogueEvent>;
 
@@ -146,6 +149,7 @@ impl Iterator for Dialogue {
         self.vm.next()
     }
 }
+*/
 
 // Accessors
 impl Dialogue {
@@ -246,6 +250,11 @@ impl Dialogue {
     /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
     /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
     /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
+    #[cfg(feature = "bevy")]
+    pub fn continue_(&mut self, world: &mut World) -> Result<Vec<DialogueEvent>> {
+        self.vm.continue_(world)
+    }
+    #[cfg(not(feature = "bevy"))]
     pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_()
     }

@@ -1,4 +1,6 @@
 use crate::prelude::*;
+#[cfg(feature = "bevy")]
+use bevy::prelude::*;
 use std::borrow::Cow;
 use std::collections::HashMap;
 
@@ -104,7 +106,10 @@ mod tests {
 
         functions.register_function("test", || true);
         let function = functions.get("test").unwrap();
-        let result: bool = function.call(vec![]).try_into().unwrap();
+        let result: bool = function
+            .call(vec![], &mut World::default())
+            .try_into()
+            .unwrap();
 
         assert!(result);
     }
@@ -115,7 +120,10 @@ mod tests {
 
         functions.register_function("test", |a: f32| a);
         let function = functions.get("test").unwrap();
-        let result: f32 = function.call(to_function_params([1.0])).try_into().unwrap();
+        let result: f32 = function
+            .call(to_function_params([1.0]), &mut World::default())
+            .try_into()
+            .unwrap();
 
         assert_eq!(result, 1.0);
     }
@@ -137,9 +145,11 @@ mod tests {
         let function1 = functions.get("test1").unwrap();
         let function2 = functions.get("test2").unwrap();
 
-        let result1: bool = function1.call(vec![]).try_into().unwrap();
+        let mut world = World::default();
+
+        let result1: bool = function1.call(vec![], &mut world).try_into().unwrap();
         let result2: f32 = function2
-            .call(to_function_params([1.0]))
+            .call(to_function_params([1.0]), &mut world)
             .try_into()
             .unwrap();
 
@@ -164,23 +174,28 @@ mod tests {
         let function3 = functions.get("test3").unwrap();
         let function4 = functions.get("test4").unwrap();
 
-        let result1: bool = function1.call(vec![]).try_into().unwrap();
+        let mut world = World::default();
+
+        let result1: bool = function1.call(vec![], &mut world).try_into().unwrap();
         let result2: f32 = function2
-            .call(to_function_params([1.0, 2.0]))
+            .call(to_function_params([1.0, 2.0]), &mut world)
             .try_into()
             .unwrap();
         let result3: f32 = function3
-            .call(to_function_params([1.0, 2.0, 3.0]))
+            .call(to_function_params([1.0, 2.0, 3.0]), &mut world)
             .try_into()
             .unwrap();
         let result4: String = function4
-            .call(to_function_params([
-                YarnValue::from("a"),
-                "b".into(),
-                "c".into(),
-                true.into(),
-                1.0.into(),
-            ]))
+            .call(
+                to_function_params([
+                    YarnValue::from("a"),
+                    "b".into(),
+                    "c".into(),
+                    true.into(),
+                    1.0.into(),
+                ]),
+                &mut world,
+            )
             .into();
 
         assert!(result1);
