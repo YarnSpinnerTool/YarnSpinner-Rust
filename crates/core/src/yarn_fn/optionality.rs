@@ -2,7 +2,7 @@
 //! [`Optional`].
 #![allow(missing_debug_implementations)]
 
-use yarnspinner_macros::all_tuples;
+use variadics_please::all_tuples;
 
 /// Marker trait for valid optionality hints.
 pub trait Optionality: private::Sealed {}

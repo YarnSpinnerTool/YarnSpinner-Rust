@@ -8,7 +8,6 @@ members = [
     "crates/runtime",
     "crates/compiler",
     "crates/core",
-    "crates/macros",
     "crates/codegen",
     "demo",
     "examples/bevy_yarnspinner",
