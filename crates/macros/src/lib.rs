@@ -50,9 +50,14 @@ pub fn product_all_tuples(input: TokenStream) -> TokenStream {
     let invocations = (input.start..=input.end).flat_map(|i| {
         (input.start..=input.end).map(move |j| {
             let ident_a_tuples = &ident_a_tuples_ref[..i];
+            let ident_a_tuples_quoted = if ident_a_tuples.is_empty() {
+                quote! { () }
+            } else {
+                quote! { (#(#ident_a_tuples),*) }
+            };
             let ident_b_tuples = &ident_b_tuples_ref[..j];
             quote! {
-                #macro_ident!((#(#ident_a_tuples),*); (#(#ident_b_tuples),*));
+                #macro_ident!(#ident_a_tuples_quoted; (#(#ident_b_tuples),*));
             }
         })
     });

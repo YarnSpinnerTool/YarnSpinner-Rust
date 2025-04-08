@@ -201,8 +201,8 @@ macro_rules! impl_yarn_fn_tuple_bevy {
                 Send + Sync + Clone +
                 Fn(In<($($yarn_param,)*)>, $($system_param), *) -> Output +
                 Fn(In<($($yarn_param,)*)>, $(SystemParamItem<$system_param>),*) -> Output +
-                Fn(In<YarnFnParamItem<($($yarn_param,)*)>>, $($system_param), *) -> Output +
-                Fn(In<YarnFnParamItem<($($yarn_param,)*)>>, $(SystemParamItem<$system_param>),*) -> Output
+                Fn(In<($(<$yarn_param as YarnFnParam>::Item<'a>,)*)>, $($system_param), *) -> Output +
+                Fn(In<($(<$yarn_param as YarnFnParam>::Item<'a>,)*)>, $(SystemParamItem<$system_param>),*) -> Output
             {
                 type In = ($($yarn_param,)*);
                 type Out = Output;
@@ -234,7 +234,7 @@ macro_rules! impl_yarn_fn_tuple_bevy {
 }
 
 #[cfg(feature = "bevy")]
-product_all_tuples!(impl_yarn_fn_tuple_bevy, 1, 2);
+product_all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16);
 
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {

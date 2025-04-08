@@ -39,6 +39,7 @@ fn pow(base: f32, exponent: f32) -> f32 {
     base.powf(exponent)
 }
 
-fn get_counter(In((n,_)): In<(u32, u32)>, counter: Res<Counter>) -> u32 {
+fn get_counter(_: In<()>, mut counter: ResMut<Counter>) -> u32 {
+    counter.0 += 1;
     counter.0
 }
