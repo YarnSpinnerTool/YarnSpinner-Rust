@@ -10,7 +10,7 @@ use std::fmt::{Debug, Display};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::slice::IterMut;
-use yarnspinner_macros::all_tuples;
+use variadics_please::all_tuples;
 
 /// Helper class for implementing something like [`YarnFn`] yourself.
 /// You probably don't want to use this directly as a consumer unless you're doing some wizardry.
