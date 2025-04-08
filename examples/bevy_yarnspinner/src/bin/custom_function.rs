@@ -30,7 +30,9 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     let mut dialogue_runner = project.create_dialogue_runner();
     // Add our custom function to the dialogue runner
     dialogue_runner.library_mut().add_function("pow", pow);
-    dialogue_runner.library_mut().add_function("get_counter", get_counter);
+    dialogue_runner
+        .library_mut()
+        .add_function("get_counter", get_counter);
     dialogue_runner.start_node("CustomFunction");
     commands.spawn(dialogue_runner);
 }
