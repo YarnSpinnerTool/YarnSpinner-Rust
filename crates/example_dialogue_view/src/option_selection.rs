@@ -51,10 +51,13 @@ fn create_options(
     children: Query<&Children>,
     options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
     mut root_visibility: Single<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
+    typewriter: Res<Typewriter>,
 ) {
     let (entity, mut node, mut visibility) = options_node.into_inner();
     node.display = Display::Flex;
-    *visibility = Visibility::Hidden;
+    if !typewriter.is_finished() {
+        *visibility = Visibility::Hidden;
+    }
     if children.iter_descendants(entity).next().is_none() {
         **root_visibility = Visibility::Inherited;
         let mut entity_commands = commands.entity(entity);
