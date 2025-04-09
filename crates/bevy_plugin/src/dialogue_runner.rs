@@ -85,7 +85,8 @@ impl DialogueRunner {
         if !self.is_running {
             bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
         }
-        self.inner_mut().0
+        self.inner_mut()
+            .0
             .set_selected_option(option)
             .map_err(Error::from)?;
         self.last_selected_option.replace(option);
@@ -156,7 +157,8 @@ impl DialogueRunner {
         }
         self.is_running = true;
         self.just_started = true;
-        self.inner_mut().0
+        self.inner_mut()
+            .0
             .set_node(node_name)
             .map_err(|e| anyhow!("Can't start dialogue from node {node_name}: {e}"))?;
         self.popped_line_hints = self.inner_mut().0.pop_line_hints();

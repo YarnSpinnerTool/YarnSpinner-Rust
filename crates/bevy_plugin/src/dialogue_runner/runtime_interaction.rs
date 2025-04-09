@@ -5,8 +5,8 @@ use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::asset::LoadedUntypedAsset;
-use bevy::platform_support::{hash::FixedHasher, collections::HashMap};
 use bevy::ecs::system::SystemState;
+use bevy::platform_support::{collections::HashMap, hash::FixedHasher};
 use bevy::prelude::*;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
@@ -29,9 +29,7 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
 pub(crate) struct DialogueExecutionSystemSet;
 
-fn continue_runtime(
-    world: &mut World,
-) -> SystemResult {
+fn continue_runtime(world: &mut World) -> SystemResult {
     let mut system_state: SystemState<(
         Query<(Entity, &mut DialogueRunner)>,
         EventWriter<PresentLineEvent>,
@@ -50,7 +48,7 @@ fn continue_runtime(
         loaded_untyped_assets,
     ) = system_state.get_mut(world);
 
-    let mut dialogues:HashMap<_, _, FixedHasher> = HashMap::default();
+    let mut dialogues: HashMap<_, _, FixedHasher> = HashMap::default();
 
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         let is_sending_missed_events = !dialogue_runner.unsent_events.is_empty();
@@ -104,7 +102,15 @@ fn continue_runtime(
         } else {
             None
         };
-        dialogues.insert(source, (dialogue_runner.dialogue.take().unwrap(), is_sending_missed_events, unsent_events, None::<Vec<DialogueEvent>>));
+        dialogues.insert(
+            source,
+            (
+                dialogue_runner.dialogue.take().unwrap(),
+                is_sending_missed_events,
+                unsent_events,
+                None::<Vec<DialogueEvent>>,
+            ),
+        );
     }
 
     for (dialogue, _, unsent_events, events) in dialogues.values_mut() {
@@ -143,7 +149,9 @@ fn continue_runtime(
     ) = system_state.get_mut(world);
 
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
-        if let Some((dialogue, is_sending_missed_events, _, Some(events))) = dialogues.remove(&source) {
+        if let Some((dialogue, is_sending_missed_events, _, Some(events))) =
+            dialogues.remove(&source)
+        {
             dialogue_runner.dialogue.replace(dialogue);
             for event in events {
                 match event {

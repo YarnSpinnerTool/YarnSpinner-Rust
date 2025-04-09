@@ -140,7 +140,10 @@ fn recompile_loaded_yarn_files(
     let program = yarn_project.compilation.program.clone().unwrap();
     for mut dialogue_runner in dialogue_runners.iter_mut() {
         let current_node = dialogue_runner.current_node();
-        dialogue_runner.inner_mut().0.replace_program(program.clone());
+        dialogue_runner
+            .inner_mut()
+            .0
+            .replace_program(program.clone());
         dialogue_runner
             .text_provider
             .set_base_string_table(yarn_project.compilation.string_table.clone());

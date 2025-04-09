@@ -183,10 +183,10 @@ pub use yarn_fn_type;
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 #[cfg(feature = "bevy")]
 mod bevy_functions {
-    use bevy::prelude::*;
-    use bevy::ecs::system::SystemId;
-    use std::collections::VecDeque;
     use super::*;
+    use bevy::ecs::system::SystemId;
+    use bevy::prelude::*;
+    use std::collections::VecDeque;
 
     macro_rules! impl_yarn_fn_tuple_bevy {
         ($($yarn_param: ident),*) => {
