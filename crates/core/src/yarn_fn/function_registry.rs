@@ -107,7 +107,11 @@ mod tests {
         functions.register_function("test", || true);
         let function = functions.get("test").unwrap();
         let result: bool = function
-            .call(vec![], &mut World::default())
+            .call(
+                vec![],
+                #[cfg(feature = "bevy")]
+                &mut World::default()
+            )
             .try_into()
             .unwrap();
 
@@ -121,7 +125,11 @@ mod tests {
         functions.register_function("test", |a: f32| a);
         let function = functions.get("test").unwrap();
         let result: f32 = function
-            .call(to_function_params([1.0]), &mut World::default())
+            .call(
+                to_function_params([1.0]),
+                #[cfg(feature = "bevy")]
+                &mut World::default()
+            )
             .try_into()
             .unwrap();
 
@@ -145,11 +153,20 @@ mod tests {
         let function1 = functions.get("test1").unwrap();
         let function2 = functions.get("test2").unwrap();
 
+        #[cfg(feature = "bevy")]
         let mut world = World::default();
 
-        let result1: bool = function1.call(vec![], &mut world).try_into().unwrap();
+        let result1: bool = function1.call(
+            vec![],
+            #[cfg(feature = "bevy")]
+            &mut world
+        ).try_into().unwrap();
         let result2: f32 = function2
-            .call(to_function_params([1.0]), &mut world)
+            .call(
+                to_function_params([1.0]),
+                #[cfg(feature = "bevy")]
+                &mut world
+            )
             .try_into()
             .unwrap();
 
@@ -174,15 +191,28 @@ mod tests {
         let function3 = functions.get("test3").unwrap();
         let function4 = functions.get("test4").unwrap();
 
+        #[cfg(feature = "bevy")]
         let mut world = World::default();
 
-        let result1: bool = function1.call(vec![], &mut world).try_into().unwrap();
+        let result1: bool = function1.call(
+            vec![],
+            #[cfg(feature = "bevy")]
+            &mut world
+        ).try_into().unwrap();
         let result2: f32 = function2
-            .call(to_function_params([1.0, 2.0]), &mut world)
+            .call(to_function_params(
+                [1.0, 2.0]),
+                #[cfg(feature = "bevy")]
+                &mut world
+            )
             .try_into()
             .unwrap();
         let result3: f32 = function3
-            .call(to_function_params([1.0, 2.0, 3.0]), &mut world)
+            .call(to_function_params(
+                [1.0, 2.0, 3.0]),
+                #[cfg(feature = "bevy")]
+                &mut world
+            )
             .try_into()
             .unwrap();
         let result4: String = function4
@@ -194,6 +224,7 @@ mod tests {
                     true.into(),
                     1.0.into(),
                 ]),
+                #[cfg(feature = "bevy")]
                 &mut world,
             )
             .into();

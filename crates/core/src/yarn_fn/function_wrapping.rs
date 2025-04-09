@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn accepts_no_params() {
-        fn f(_: In<()>) -> bool {
+        fn f() -> bool {
             true
         }
         accept_yarn_fn(f);
@@ -413,7 +413,11 @@ mod tests {
     where
         T: YarnFn<Marker>,
     {
-        f.call(input, &mut World::default())
+        #[cfg(feature = "bevy")]
+        let out = f.call(input, &mut World::default());
+        #[cfg(not(feature = "bevy"))]
+        let out = f.call(input);
+        out
     }
 
     mod optionality {
