@@ -15,7 +15,6 @@ serde = ["dep:serde", "bevy?/serialize"]
 bevy = ["dep:bevy"]
 
 [dependencies]
-yarnspinner_macros = { path = "../macros", version = "0.1" }
 prost = "0.12"
 serde = { version = "1", features = ["derive"], optional = true }
 bevy = { version = "0.16.0-rc", default-features = false, optional = true }

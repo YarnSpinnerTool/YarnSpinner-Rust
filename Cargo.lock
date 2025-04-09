@@ -5680,7 +5680,6 @@ dependencies = [
  "serde",
  "static_assertions",
  "variadics_please",
- "yarnspinner_macros",
 ]
 
 [[package]]
@@ -5690,15 +5689,6 @@ dependencies = [
  "bevy",
  "bevy_yarnspinner",
  "bevy_yarnspinner_example_dialogue_view",
-]
-
-[[package]]
-name = "yarnspinner_macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

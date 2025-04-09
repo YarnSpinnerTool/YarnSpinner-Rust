@@ -5,8 +5,6 @@ use bevy::prelude::World;
 use std::any::TypeId;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
-use std::collections::VecDeque;
-use yarnspinner_macros::product_all_tuples;
 use variadics_please::all_tuples;
 
 /// A function that can be registered into and called from Yarn.
@@ -187,6 +185,7 @@ pub use yarn_fn_type;
 mod bevy_functions {
     use bevy::prelude::*;
     use bevy::ecs::system::SystemId;
+    use std::collections::VecDeque;
     use super::*;
 
     macro_rules! impl_yarn_fn_tuple_bevy {
