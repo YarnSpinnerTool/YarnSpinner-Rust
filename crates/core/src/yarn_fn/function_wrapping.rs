@@ -1,12 +1,11 @@
 use super::optionality::AllowedOptionalityChain;
 use crate::prelude::*;
 #[cfg(feature = "bevy")]
-use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
-#[cfg(feature = "bevy")]
-use bevy::prelude::*;
+use bevy::prelude::World;
 use std::any::TypeId;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
+use std::collections::VecDeque;
 use yarnspinner_macros::product_all_tuples;
 use variadics_please::all_tuples;
 
@@ -41,9 +40,6 @@ use variadics_please::all_tuples;
 /// ```
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     /// The type of the value returned by this function. See [`YarnFn`] for more information about what is allowed.
-    type In: YarnFnParam;
-    #[cfg(feature = "bevy")]
-    type Param: SystemParam;
     type Out: IntoYarnValueFromNonYarnValue + 'static;
     #[doc(hidden)]
     #[cfg(feature = "bevy")]
@@ -188,53 +184,38 @@ pub use yarn_fn_type;
 
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 #[cfg(feature = "bevy")]
-macro_rules! impl_yarn_fn_tuple_bevy {
-    (($($yarn_param: ident),*); ($($system_param: ident),*)) => {
-        #[allow(non_snake_case)]
-        impl<F, Output, $($yarn_param: YarnFnParam,)* $($system_param: SystemParam),*> YarnFn<fn(In<($($yarn_param,)*)>, $($system_param,)*) -> Output> for F
-        where
-            Output: IntoYarnValueFromNonYarnValue + 'static,
-            $($yarn_param: YarnFnParam + 'static,)*
-            $($system_param: SystemParam + 'static,)*
-            ($(<$yarn_param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain,
-            for <'a> F:
-                Send + Sync + Clone +
-                Fn(In<($($yarn_param,)*)>, $($system_param), *) -> Output +
-                Fn(In<($($yarn_param,)*)>, $(SystemParamItem<$system_param>),*) -> Output +
-                Fn(In<($(<$yarn_param as YarnFnParam>::Item<'a>,)*)>, $($system_param), *) -> Output +
-                Fn(In<($(<$yarn_param as YarnFnParam>::Item<'a>,)*)>, $(SystemParamItem<$system_param>),*) -> Output
-            {
-                type In = ($($yarn_param,)*);
-                type Out = Output;
-                type Param = ($($system_param,)*);
-                #[allow(non_snake_case)]
-                fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
-                    let mut system_state: SystemState<Self::Param> = SystemState::new(world);
-                    let out = {
-                        let param = system_state.get_mut(world);
-                        let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
-                        let mut iter = input.iter_mut().peekable();
-                        let input = Self::In::retrieve(&mut iter);
-                        assert!(
-                         iter.next().is_none(),
-                         "Passed too many arguments to Command"
-                        );
-                        let ($($system_param,)*) = param;
-                        self(In(input), $($system_param,)*)
-                    };
-                    system_state.apply(world);
-                    out
+mod bevy_functions {
+    use bevy::prelude::*;
+    use bevy::ecs::system::SystemId;
+    use super::*;
+
+    macro_rules! impl_yarn_fn_tuple_bevy {
+        ($($yarn_param: ident),*) => {
+            #[allow(non_snake_case)]
+            impl<'a, Output, $($yarn_param),*> YarnFn<(($($yarn_param,)*), Output)> for SystemId<In<($($yarn_param),*)>, Output>
+            where
+                $($yarn_param: TryFrom<YarnValue> + 'static,)*
+                Output: IntoYarnValueFromNonYarnValue + 'static,
+                {
+                    type Out = Output;
+                    #[allow(non_snake_case)]
+                    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+                        let mut input = VecDeque::from(input);
+                        $(
+                            assert!(!input.is_empty(), "Passed too few arguments to Function");
+                            let $yarn_param:$yarn_param = $yarn_param::try_from(input.pop_front().unwrap()).ok().expect("Invalid argument type");
+                        )*
+                        world.run_system_with(*self, ($($yarn_param),*)).unwrap()
                     }
 
-                fn parameter_types(&self) -> Vec<TypeId> {
-                    vec![$(TypeId::of::<$yarn_param>()),*]
+                    fn parameter_types(&self) -> Vec<TypeId> {
+                        vec![$(TypeId::of::<$yarn_param>()),*]
+                    }
                 }
-            }
-        };
+            };
+    }
+    all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16, P);
 }
-
-#[cfg(feature = "bevy")]
-product_all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16);
 
 macro_rules! impl_yarn_fn_tuple {
     ($($param: ident),*) => {
@@ -249,9 +230,6 @@ macro_rules! impl_yarn_fn_tuple {
             $($param: YarnFnParam + 'static,)*
             ($(<$param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain,
             {
-                type In = ();
-                #[cfg(feature = "bevy")]
-                type Param = ();
                 type Out = O;
                 #[allow(non_snake_case)]
                 fn call(
