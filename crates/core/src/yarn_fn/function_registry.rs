@@ -136,6 +136,32 @@ mod tests {
         assert_eq!(result, 1.0);
     }
 
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn can_access_bevy_world() {
+        let mut functions = YarnFnRegistry::default();
+        let mut world = World::default();
+
+        let entity = world.spawn(Name::new("test_entity")).id();
+
+        functions.register_function(
+            "test1",
+            world.register_system(move |query: Query<(Entity, &Name)>| {
+                let mut did_find = false;
+                for (found_entity, found_name) in &query {
+                    assert_eq!(found_entity, entity);
+                    assert_eq!(found_name.as_str(), "test_entity");
+                    did_find = true;
+                }
+                did_find
+            }),
+        );
+
+        let function1 = functions.get("test1").unwrap();
+        let result1: bool = function1.call(vec![], &mut world).try_into().unwrap();
+        assert!(result1);
+    }
+
     #[test]
     fn can_add_multiple_fns() {
         let mut functions = YarnFnRegistry::default();

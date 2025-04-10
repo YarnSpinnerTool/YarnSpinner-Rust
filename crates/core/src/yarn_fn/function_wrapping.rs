@@ -190,7 +190,7 @@ mod bevy_functions {
 
     macro_rules! impl_yarn_fn_tuple_bevy {
         ($($yarn_param: ident),*) => {
-            #[allow(non_snake_case)]
+            #[allow(non_snake_case, unused_parens)]
             impl<'a, Output, $($yarn_param),*> YarnFn<(($($yarn_param,)*), Output)> for SystemId<In<($($yarn_param),*)>, Output>
             where
                 $($yarn_param: TryFrom<YarnValue> + 'static,)*
@@ -199,6 +199,7 @@ mod bevy_functions {
                     type Out = Output;
                     #[allow(non_snake_case)]
                     fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+                        #[allow(unused)]
                         let mut input = VecDeque::from(input);
                         $(
                             assert!(!input.is_empty(), "Passed too few arguments to Function");
@@ -218,17 +219,17 @@ mod bevy_functions {
     impl<'a, Output> YarnFn<Output> for SystemId<(), Output>
     where
         Output: IntoYarnValueFromNonYarnValue + 'static,
-        {
-            type Out = Output;
-            #[allow(non_snake_case)]
-            fn call(&self, _input: Vec<YarnValue>, world: &mut World) -> Self::Out {
-                world.run_system(*self).unwrap()
-            }
-
-            fn parameter_types(&self) -> Vec<TypeId> {
-                vec![]
-            }
+    {
+        type Out = Output;
+        #[allow(non_snake_case)]
+        fn call(&self, _input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+            world.run_system(*self).unwrap()
         }
+
+        fn parameter_types(&self) -> Vec<TypeId> {
+            vec![]
+        }
+    }
 }
 
 macro_rules! impl_yarn_fn_tuple {
@@ -373,14 +374,18 @@ mod tests {
     #[test]
     fn accepts_system() {
         let mut world = World::default();
-        fn f(_: In<u32>, _: Query<Entity>) -> u32 { 0 }
+        fn f(_: In<u32>, _: Query<Entity>) -> u32 {
+            0
+        }
         accept_yarn_fn(world.register_system(f));
     }
     #[cfg(feature = "bevy")]
     #[test]
     fn accepts_systemparam_only_system() {
         let mut world = World::default();
-        fn f(_: Query<Entity>) -> u32 { 0 }
+        fn f(_: Query<Entity>) -> u32 {
+            0
+        }
         accept_yarn_fn(world.register_system(f));
     }
 
@@ -388,7 +393,9 @@ mod tests {
     #[test]
     fn accepts_degenerate_system() {
         let mut world = World::default();
-        fn f() -> u32 { 0 }
+        fn f() -> u32 {
+            0
+        }
         accept_yarn_fn(world.register_system(f));
     }
 
