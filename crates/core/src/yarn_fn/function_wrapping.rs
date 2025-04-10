@@ -214,6 +214,21 @@ mod bevy_functions {
             };
     }
     all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16, P);
+
+    impl<'a, Output> YarnFn<Output> for SystemId<(), Output>
+    where
+        Output: IntoYarnValueFromNonYarnValue + 'static,
+        {
+            type Out = Output;
+            #[allow(non_snake_case)]
+            fn call(&self, _input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+                world.run_system(*self).unwrap()
+            }
+
+            fn parameter_types(&self) -> Vec<TypeId> {
+                vec![]
+            }
+        }
 }
 
 macro_rules! impl_yarn_fn_tuple {
@@ -263,6 +278,8 @@ all_tuples!(impl_yarn_fn_tuple, 0, 16, P);
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "bevy")]
+    use bevy::prelude::*;
 
     #[test]
     fn accepts_no_params() {
@@ -350,6 +367,29 @@ mod tests {
             s
         }
         accept_yarn_fn(f);
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn accepts_system() {
+        let mut world = World::default();
+        fn f(_: In<u32>, _: Query<Entity>) -> u32 { 0 }
+        accept_yarn_fn(world.register_system(f));
+    }
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn accepts_systemparam_only_system() {
+        let mut world = World::default();
+        fn f(_: Query<Entity>) -> u32 { 0 }
+        accept_yarn_fn(world.register_system(f));
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn accepts_degenerate_system() {
+        let mut world = World::default();
+        fn f() -> u32 { 0 }
+        accept_yarn_fn(world.register_system(f));
     }
 
     #[test]

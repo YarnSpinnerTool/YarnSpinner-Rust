@@ -33,7 +33,7 @@ fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     dialogue_runner.library_mut().add_function("pow", pow);
     dialogue_runner
         .library_mut()
-        .add_function("get_counter", get_counter);
+        .add_function("get_counter", commands.register_system(get_counter));
     dialogue_runner
         .library_mut()
         .add_function("incr_counter", commands.register_system(incr_counter));
@@ -45,7 +45,7 @@ fn pow(base: f32, exponent: f32) -> f32 {
     base.powf(exponent)
 }
 
-fn get_counter(_: In<()>, counter: Res<Counter>) -> u32 {
+fn get_counter(counter: Res<Counter>) -> u32 {
     counter.0
 }
 fn incr_counter(In(n): In<u32>, mut counter: ResMut<Counter>) -> u32 {
