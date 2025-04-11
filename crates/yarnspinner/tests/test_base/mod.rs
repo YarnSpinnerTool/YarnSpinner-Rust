@@ -19,6 +19,8 @@ use std::path::{Path, PathBuf};
 use std::result::Result;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
@@ -147,7 +149,10 @@ impl TestBase {
     pub fn run_standard_testcase(&mut self) -> &mut Self {
         self.dialogue.set_node("Start").unwrap();
 
-        while let Some(events) = self.dialogue.next() {
+        #[cfg(feature = "bevy")]
+        let mut world = World::default();
+
+        while let Some(events) = self.dialogue.next(#[cfg(feature = "bevy")] world) {
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {

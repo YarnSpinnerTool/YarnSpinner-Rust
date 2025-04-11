@@ -116,6 +116,14 @@ impl Dialogue {
             language_code: Default::default(),
         }
     }
+
+    pub fn next(
+        &mut self,
+        #[cfg(feature = "bevy")]
+        world: &mut World,
+    ) -> Option<Vec<DialogueEvent>> {
+        self.vm.next(#[cfg(feature = "bevy")] world)
+    }
 }
 
 fn visited(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> bool } {
@@ -139,17 +147,6 @@ fn visited_count(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(S
         }
     }
 }
-
-/*
-impl Iterator for Dialogue {
-    type Item = Vec<DialogueEvent>;
-
-    /// Panicking version of [`Dialogue::continue_`].
-    fn next(&mut self) -> Option<Self::Item> {
-        self.vm.next()
-    }
-}
-*/
 
 // Accessors
 impl Dialogue {

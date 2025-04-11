@@ -33,18 +33,6 @@ pub(crate) struct VirtualMachine {
     language_code: Option<Language>,
 }
 
-/*
-impl Iterator for VirtualMachine {
-    type Item = Vec<DialogueEvent>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.assert_can_continue().is_ok().then(||
-            self.continue_()
-            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
-    }
-}
-*/
-
 impl VirtualMachine {
     pub(crate) fn new(
         library: Library,
@@ -110,6 +98,12 @@ impl VirtualMachine {
         self.set_execution_state(ExecutionState::Stopped);
         self.batched_events.push(DialogueEvent::DialogueComplete);
         std::mem::take(&mut self.batched_events)
+    }
+
+    pub fn next(&mut self, #[cfg(feature = "bevy")] world: &mut World) -> Option<Vec<DialogueEvent>> {
+        self.assert_can_continue().is_ok().then(||
+            self.continue_(#[cfg(feature = "bevy")] world)
+            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
     }
 
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
@@ -653,4 +647,20 @@ fn expand_substitutions(text: &str, substitutions: &[String]) -> String {
         .fold(text.to_owned(), |text, (i, substitution)| {
             text.replace(&format!("{{{i}}}",), substitution)
         })
+}
+
+struct RunToCompletionIterator<'a> {
+    vm: &'a mut VirtualMachine,
+    #[cfg(feature = "bevy")]
+    world: &'a mut World,
+}
+
+impl <'a>Iterator for RunToCompletionIterator<'a> {
+    type Item = Vec<DialogueEvent>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.vm.assert_can_continue().is_ok().then(||
+            self.vm.continue_(#[cfg(feature = "bevy")] self.world)
+            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
+    }
 }
