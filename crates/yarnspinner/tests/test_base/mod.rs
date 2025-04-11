@@ -12,6 +12,8 @@
 #![allow(dead_code)]
 
 use crate::prelude::*;
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
@@ -19,8 +21,6 @@ use std::path::{Path, PathBuf};
 use std::result::Result;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-#[cfg(feature = "bevy")]
-use bevy::prelude::World;
 use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
@@ -152,7 +152,10 @@ impl TestBase {
         #[cfg(feature = "bevy")]
         let mut world = World::default();
 
-        while let Some(events) = self.dialogue.next(#[cfg(feature = "bevy")] world) {
+        while let Some(events) = self.dialogue.next(
+            #[cfg(feature = "bevy")]
+            world,
+        ) {
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {

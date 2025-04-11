@@ -84,7 +84,10 @@ fn test_end_of_notes_with_options_not_added() {
     let mut world = World::default();
 
     let mut has_options = false;
-    'outer: while let Some(events) = dialogue.next(#[cfg(feature = "bevy")] world) {
+    'outer: while let Some(events) = dialogue.next(
+        #[cfg(feature = "bevy")]
+        world,
+    ) {
         for event in events {
             if matches!(event, DialogueEvent::Options(_)) {
                 has_options = true;

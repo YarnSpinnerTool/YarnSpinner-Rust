@@ -648,19 +648,3 @@ fn expand_substitutions(text: &str, substitutions: &[String]) -> String {
             text.replace(&format!("{{{i}}}",), substitution)
         })
 }
-
-struct RunToCompletionIterator<'a> {
-    vm: &'a mut VirtualMachine,
-    #[cfg(feature = "bevy")]
-    world: &'a mut World,
-}
-
-impl <'a>Iterator for RunToCompletionIterator<'a> {
-    type Item = Vec<DialogueEvent>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.vm.assert_can_continue().is_ok().then(||
-            self.vm.continue_(#[cfg(feature = "bevy")] self.world)
-            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
-    }
-}
