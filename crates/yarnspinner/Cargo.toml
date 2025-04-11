@@ -24,6 +24,7 @@ bevy = [
     "yarnspinner_core/bevy",
     "yarnspinner_compiler/bevy",
     "yarnspinner_runtime/bevy",
+    "dep:bevy",
 ]
 
 [dependencies]
@@ -31,6 +32,7 @@ yarnspinner_core = { path = "../core", version = "0.5.0-rc" }
 yarnspinner_compiler = { path = "../compiler", version = "0.5.0-rc" }
 yarnspinner_runtime = { path = "../runtime", version = "0.5.0-rc" }
 log = { version = "0.4", features = ["std"] }
+bevy = { version = "0.16.0-rc", default-features = false, optional = true }
 
 [dev-dependencies]
 regex = "1"

@@ -2,6 +2,8 @@
 
 use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use log::error;
 use std::collections::HashMap;
 use std::error::Error;
@@ -138,15 +140,6 @@ fn visited_count(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(S
     }
 }
 
-impl Iterator for Dialogue {
-    type Item = Vec<DialogueEvent>;
-
-    /// Panicking version of [`Dialogue::continue_`].
-    fn next(&mut self) -> Option<Self::Item> {
-        self.vm.next()
-    }
-}
-
 // Accessors
 impl Dialogue {
     /// The [`Dialogue`]'s locale, as an IETF BCP 47 code.
@@ -246,8 +239,18 @@ impl Dialogue {
     /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
     /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
     /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
+    #[cfg(feature = "bevy")]
+    pub fn continue_(&mut self, world: &mut World) -> Result<Vec<DialogueEvent>> {
+        self.vm.continue_(world)
+    }
+    #[cfg(not(feature = "bevy"))]
     pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_()
+    }
+
+    /// Returns true if the [`Dialogue`] is in a state where [`Dialogue::r#continue_`] can be called.
+    pub fn can_continue(&self) -> bool {
+        self.vm.assert_can_continue().is_ok()
     }
 
     fn extend_variable_storage_from(&mut self, program: &Program) {

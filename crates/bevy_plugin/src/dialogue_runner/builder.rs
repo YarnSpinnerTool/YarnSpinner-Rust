@@ -97,7 +97,7 @@ impl DialogueRunnerBuilder {
             .cloned();
 
         let mut dialogue_runner = DialogueRunner {
-            dialogue,
+            dialogue: Some(dialogue),
             text_provider,
             popped_line_hints,
             run_selected_options_as_lines: false,
