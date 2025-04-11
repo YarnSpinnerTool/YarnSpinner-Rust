@@ -5641,6 +5641,7 @@ name = "yarnspinner"
 version = "0.5.0-rc.1"
 dependencies = [
  "anyhow",
+ "bevy",
  "log",
  "regex",
  "yarnspinner_compiler",

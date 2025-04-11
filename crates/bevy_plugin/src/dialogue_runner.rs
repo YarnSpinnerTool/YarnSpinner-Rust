@@ -37,7 +37,7 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
         .add_plugins(inner::inner_dialogue_runner_plugin);
 }
 
-const DIALOGUE_MISSING_MESSAGE: &'static str = "Dialogue missing from DialogueRunner. \
+const DIALOGUE_MISSING_MESSAGE: &str = "Dialogue missing from DialogueRunner. \
                                   This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new";
 /// The main type to interact with the dialogue system.
 /// Created by calling either [`YarnProject::create_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].

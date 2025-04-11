@@ -5,6 +5,8 @@
 //! Because Rust has no concept of a current global culture setting, the test `TestCompilationShouldNotBeCultureDependent` was omitted.
 //! The test `TestNumberPlurals` was moved to a unit test in the `runtime` crate because it fits better there.
 
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use std::collections::HashMap;
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
@@ -88,7 +90,7 @@ fn test_end_of_notes_with_options_not_added() {
         let events = dialogue
             .continue_(
                 #[cfg(feature = "bevy")]
-                world,
+                &mut world,
             )
             .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
         for event in events {

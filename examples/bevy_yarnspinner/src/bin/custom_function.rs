@@ -1,4 +1,3 @@
-use bevy::ecs::world::WorldId;
 use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;

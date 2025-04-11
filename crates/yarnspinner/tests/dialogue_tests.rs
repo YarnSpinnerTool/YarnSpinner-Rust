@@ -3,6 +3,8 @@
 //! ## Implementation notes
 //! `TestDumpingCode` was not ported because `GetByteCode` is not used by a user directly and thus was not implemented at all.
 
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use std::collections::HashMap;
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
@@ -289,12 +291,15 @@ fn test_selecting_option_from_inside_option_callback() {
         .with_compilation(result);
     test_base.dialogue.set_node("Start").unwrap();
 
+    #[cfg(feature = "bevy")]
+    let mut world = World::default();
+
     while test_base.dialogue.can_continue() {
         let events = test_base
             .dialogue
             .continue_(
                 #[cfg(feature = "bevy")]
-                world,
+                &mut world,
             )
             .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
         for event in events {

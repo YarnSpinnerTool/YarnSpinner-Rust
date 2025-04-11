@@ -157,7 +157,7 @@ impl TestBase {
                 .dialogue
                 .continue_(
                     #[cfg(feature = "bevy")]
-                    world,
+                    &mut world,
                 )
                 .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
             for event in events {
