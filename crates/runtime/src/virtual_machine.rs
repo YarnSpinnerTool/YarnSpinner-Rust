@@ -100,12 +100,6 @@ impl VirtualMachine {
         std::mem::take(&mut self.batched_events)
     }
 
-    pub fn next(&mut self, #[cfg(feature = "bevy")] world: &mut World) -> Option<Vec<DialogueEvent>> {
-        self.assert_can_continue().is_ok().then(||
-            self.continue_(#[cfg(feature = "bevy")] world)
-            .unwrap_or_else(|e| panic!("Encountered error while running dialogue through its `Iterator` implementation: {e}")))
-    }
-
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
         let node_name = node_name.into();
         debug!("Loading node \"{node_name}\"");
@@ -189,9 +183,6 @@ impl VirtualMachine {
 
     /// Resumes execution.
     ///
-    /// ## Implementation note
-    /// Exposed via the more idiomatic [`Iterator::next`] implementation.
-    ///
     pub(crate) fn continue_(
         &mut self,
         #[cfg(feature = "bevy")] world: &mut World,
@@ -228,7 +219,7 @@ impl VirtualMachine {
     }
 
     /// Runs a series of tests to see if the [`VirtualMachine`] is in a state where [`VirtualMachine::r#continue`] can be called. Panics if it can't.
-    fn assert_can_continue(&self) -> crate::Result<()> {
+    pub(crate) fn assert_can_continue(&self) -> crate::Result<()> {
         if self.current_node.is_none() || self.current_node_name.is_none() {
             Err(DialogueError::NoNodeSelectedOnContinue)
         } else if self.execution_state == ExecutionState::WaitingOnOptionSelection {

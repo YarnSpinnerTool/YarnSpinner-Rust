@@ -216,7 +216,7 @@ mod bevy_functions {
     }
     all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16, P);
 
-    impl<'a, Output> YarnFn<Output> for SystemId<(), Output>
+    impl<Output> YarnFn<Output> for SystemId<(), Output>
     where
         Output: IntoYarnValueFromNonYarnValue + 'static,
     {

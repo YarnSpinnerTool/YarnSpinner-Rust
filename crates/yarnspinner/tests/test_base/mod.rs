@@ -152,10 +152,14 @@ impl TestBase {
         #[cfg(feature = "bevy")]
         let mut world = World::default();
 
-        while let Some(events) = self.dialogue.next(
-            #[cfg(feature = "bevy")]
-            world,
-        ) {
+        while self.dialogue.can_continue() {
+            let events = self
+                .dialogue
+                .continue_(
+                    #[cfg(feature = "bevy")]
+                    world,
+                )
+                .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {

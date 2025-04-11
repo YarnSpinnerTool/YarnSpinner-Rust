@@ -116,14 +116,6 @@ impl Dialogue {
             language_code: Default::default(),
         }
     }
-
-    pub fn next(
-        &mut self,
-        #[cfg(feature = "bevy")]
-        world: &mut World,
-    ) -> Option<Vec<DialogueEvent>> {
-        self.vm.next(#[cfg(feature = "bevy")] world)
-    }
 }
 
 fn visited(storage: Box<dyn VariableStorage>) -> yarn_fn_type! { impl Fn(String) -> bool } {
@@ -254,6 +246,11 @@ impl Dialogue {
     #[cfg(not(feature = "bevy"))]
     pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_()
+    }
+
+    /// Returns true if the [`Dialogue`] is in a state where [`Dialogue::r#continue_`] can be called.
+    pub fn can_continue(&self) -> bool {
+        self.vm.assert_can_continue().is_ok()
     }
 
     fn extend_variable_storage_from(&mut self, program: &Program) {
