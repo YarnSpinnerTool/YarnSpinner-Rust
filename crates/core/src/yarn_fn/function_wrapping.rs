@@ -39,10 +39,11 @@ use variadics_please::all_tuples;
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     /// The type of the value returned by this function. See [`YarnFn`] for more information about what is allowed.
     type Out: IntoYarnValueFromNonYarnValue + 'static;
-    #[doc(hidden)]
     #[cfg(feature = "bevy")]
+    #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out;
     #[cfg(not(feature = "bevy"))]
+    #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>) -> Self::Out;
     /// The [`TypeId`]s of the parameters of this function.
     fn parameter_types(&self) -> Vec<TypeId>;
@@ -55,10 +56,11 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
-    #[doc(hidden)]
     #[cfg(feature = "bevy")]
+    #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>, world: &mut World) -> YarnValue;
     #[cfg(not(feature = "bevy"))]
+    #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
     #[doc(hidden)]
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
