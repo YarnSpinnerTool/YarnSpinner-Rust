@@ -83,10 +83,13 @@ jobs:
       - name: Run cargo test
         run: cargo test
         working-directory: crates/yarnspinner
-      - name: Run cargo test
+      - name: Run cargo test non-bevy
         run: cargo test
         working-directory: examples/yarnspinner_without_bevy
       - name: Run cargo test
         run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
       - name: Run doc tests
-        run: cargo test --workspace --doc
+        run: cargo test --workspace --doc --exclude yarnspinner_without_bevy_examples
+      - name: Run doc tests non-bevy
+        run: cargo test --doc
+        working-directory: examples/yarnspinner_without_bevy
