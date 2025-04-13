@@ -184,14 +184,14 @@ impl Dialogue {
         &mut self.vm.library
     }
 
-    /// Gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
+    /// Gets whether [`Dialogue::continue_`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
     #[must_use]
     pub fn line_hints_enabled(&self) -> bool {
         self.vm.line_hints_enabled
     }
 
-    /// Mutable gets whether [`Dialogue::next`] is able able to return [`DialogueEvent::LineHints`] events.
+    /// Mutable gets whether [`Dialogue::continue_`] is able able to return [`DialogueEvent::LineHints`] events.
     /// The default is `false`.
     pub fn set_line_hints_enabled(&mut self, enabled: bool) -> &mut Self {
         self.vm.line_hints_enabled = enabled;
@@ -232,8 +232,6 @@ impl Dialogue {
     ///
     /// See the documentation of [`DialogueEvent`] for more information on how to handle each event.
     ///
-    /// The [`Iterator`] implementation of [`Dialogue`] is a convenient way to call [`Dialogue::next`] repeatedly, although it panics if an error occurs.
-    ///
     /// ## Implementation Notes
     ///
     /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
@@ -248,7 +246,7 @@ impl Dialogue {
         self.vm.continue_()
     }
 
-    /// Returns true if the [`Dialogue`] is in a state where [`Dialogue::r#continue_`] can be called.
+    /// Returns true if the [`Dialogue`] is in a state where [`Dialogue::continue_`] can be called.
     pub fn can_continue(&self) -> bool {
         self.vm.assert_can_continue().is_ok()
     }
@@ -293,9 +291,9 @@ impl Dialogue {
 
     /// Prepares the [`Dialogue`] that the user intends to start running a node.
     ///
-    /// After this method is called, you call [`Dialogue::next`] to start executing it.
+    /// After this method is called, you call [`Dialogue::continue_`] to start executing it.
     ///
-    /// If [`Dialogue::line_hints_enabled`] has been set, the next [`Dialogue::next`] call will return a [`DialogueEvent::LineHints`],
+    /// If [`Dialogue::line_hints_enabled`] has been set, the next [`Dialogue::continue_`] call will return a [`DialogueEvent::LineHints`],
     /// as the Dialogue determines which lines may be delivered during the `node_name` node's execution.
     ///
     /// ## Errors
@@ -396,7 +394,7 @@ impl Dialogue {
 
     /// Gets the name of the node that this Dialogue is currently executing.
     ///
-    /// If [`Dialogue::next`] has never been called, this value will be [`None`].
+    /// If [`Dialogue::continue_`] has never been called, this value will be [`None`].
     #[must_use]
     pub fn current_node(&self) -> Option<String> {
         self.vm.current_node()
@@ -432,7 +430,7 @@ impl Dialogue {
 
     /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
     ///
-    /// After the Dialogue emitted a [`DialogueEvent::Options`] in [`Dialogue::continue_`], this method must be called before [`Dialogue::next`] is called.
+    /// After the Dialogue emitted a [`DialogueEvent::Options`] in [`Dialogue::continue_`], this method must be called before [`Dialogue::continue_`] is called.
     ///
     /// The ID number that should be passed as the parameter to this method should be the [`OptionId`]
     /// field in the [`DialogueOption`] that represents the user's selection.
@@ -456,7 +454,6 @@ impl Dialogue {
 
     /// Returns `true` if the last call to [`Dialogue::continue_`] returned [`DialogueEvent::Options`] and the dialogue is therefore
     /// waiting for the user to select an option via [`Dialogue::set_selected_option`]. If this is `true`, calling [`Dialogue::continue_`] will error
-    /// and [`Dialogue::next`] will panic.
     pub fn is_waiting_for_option_selection(&self) -> bool {
         self.vm.is_waiting_for_option_selection()
     }

@@ -51,7 +51,6 @@ macro_rules! file_extensions {
     ($($type:ty: $ext:expr),* $(,)?) => {
         {
             bevy::platform_support::collections::HashMap::from([
-            [
                 $(
                     (<$type as bevy::reflect::TypePath>::type_path(), $ext),
                 )*

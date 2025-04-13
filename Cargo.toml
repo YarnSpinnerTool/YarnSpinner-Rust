@@ -9,7 +9,7 @@ members = [
     "crates/compiler",
     "crates/core",
     "crates/codegen",
-    "demo",
+    #"demo",
     "examples/bevy_yarnspinner",
     "examples/yarnspinner_without_bevy",
 ]
