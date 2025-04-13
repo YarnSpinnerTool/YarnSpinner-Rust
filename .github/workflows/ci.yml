@@ -29,10 +29,9 @@ jobs:
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples --exclude yarnspinner_without_bevy_examples
       - name: Run cargo clippy for serde
-        run: cargo clippy --workspace --tests --features serde --exclude yarnspinner_without_bevy
-_examples
+        run: cargo clippy --workspace --tests --features serde --exclude yarnspinner_without_bevy_examples
       - name: Run cargo clippy for bevy
-        run: cargo clippy --workspace --tests --features bevy
+        run: cargo clippy --workspace --tests --features bevy --exclude yarnspinner_without_bevy_examples
       - name: Run cargo clippy for non-bevy
         run: cargo clippy --tests
         working-directory: examples/yarnspinner_without_bevy
