@@ -241,6 +241,22 @@ impl Dialogue {
     pub fn continue_(&mut self, world: &mut World) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_(world)
     }
+    /// Starts, or continues, execution of the current program.
+    ///
+    /// Calling this method returns a batch of [`DialogueEvent`]s that should be handled by the caller before calling [`Dialogue::continue_`] again.
+    /// Some events can be ignored, however this method will error if the following events are not properly handled:
+    /// - [`DialogueEvent::Options`] indicates that the program is waiting for the user to select an option.
+    ///   The user's selection must be passed to [`Dialogue::set_selected_option`] before calling [`Dialogue::continue_`] again.
+    /// - [`DialogueEvent::DialogueComplete`] means that the program reached its end.
+    ///   When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_`] is called again.
+    ///
+    /// See the documentation of [`DialogueEvent`] for more information on how to handle each event.
+    ///
+    /// ## Implementation Notes
+    ///
+    /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
+    /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
+    /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
     #[cfg(not(feature = "bevy"))]
     pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         self.vm.continue_()
