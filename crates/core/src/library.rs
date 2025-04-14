@@ -87,6 +87,27 @@ impl Library {
     /// ## Examples
     /// Registering a function:
     ///
+    /// When the `bevy` feature is set it is possible to register Bevy systems as functions.
+    /// ```
+    /// # use yarnspinner_core::prelude::*;
+    /// # let mut library = Library::default();
+    /// # use bevy::prelude::*;
+    /// # let mut world = World::default();
+    /// library.add_function("string_length", world.register_system(how_many_things));
+    ///
+    /// fn how_many_things(In(thing_type): In<String>, things: Query<&Name>) -> u32 {
+    ///     let mut count = 0;
+    ///     for name in &things {
+    ///         if name.as_str() == thing_type {
+    ///             count += 1;
+    ///         }
+    ///     }
+    ///     count
+    /// }
+    /// ```
+    ///
+    /// Usage without Bevy:
+    ///
     /// ```
     /// # use yarnspinner_core::prelude::*;
     /// # let mut library = Library::default();
@@ -109,24 +130,6 @@ impl Library {
     /// }
     /// ```
     ///
-    /// When the `bevy` feature is set it is possible to register bevy systems as functions.
-    /// ```
-    /// # use yarnspinner_core::prelude::*;
-    /// # let mut library = Library::default();
-    /// # use bevy::prelude::World;
-    /// # let mut world = World::default();
-    /// library.add_function("string_length", string_length);
-    ///
-    /// fn how_many_things(In(thing_type): In<String>, things: Query<&Name>) -> u32 {
-    ///     let count = 0;
-    ///     for name in &things {
-    ///         if name.as_str() == thing_type {
-    ///             count += 1;
-    ///         }
-    ///     }
-    ///     count
-    /// }
-    /// ```
     pub fn add_function<Marker, F>(
         &mut self,
         name: impl Into<Cow<'static, str>>,

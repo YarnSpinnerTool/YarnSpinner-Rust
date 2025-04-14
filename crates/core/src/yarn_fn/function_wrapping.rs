@@ -182,6 +182,14 @@ macro_rules! yarn_fn_type {
 }
 pub use yarn_fn_type;
 
+macro_rules! replace_expr {
+($_t:tt $sub:expr) => {$sub};
+}
+
+macro_rules! count_tts {
+    ($($tts:tt)*) => {<[()]>::len(&[$(replace_expr!($tts ())),*])};
+}
+
 /// Adapted from <https://github.com/bevyengine/bevy/blob/fe852fd0adbce6856f5886d66d20d62cfc936287/crates/bevy_ecs/src/system/system_param.rs#L1370>
 #[cfg(feature = "bevy")]
 mod bevy_functions {
@@ -189,6 +197,7 @@ mod bevy_functions {
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
     use std::collections::VecDeque;
+
 
     macro_rules! impl_yarn_fn_tuple_bevy {
         ($($yarn_param: ident),*) => {
@@ -203,8 +212,11 @@ mod bevy_functions {
                     fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
                         #[allow(unused)]
                         let mut input = VecDeque::from(input);
+                        #[allow(unused)]
+                        let input_len  = input.len();
+                        let expected_len = count_tts!($($yarn_param),*);
+                        assert!(input_len != expected_len, "YarnFn expected {expected_len} arguments but recieved {input_len}");
                         $(
-                            assert!(!input.is_empty(), "Passed too few arguments to Function");
                             let $yarn_param:$yarn_param = $yarn_param::try_from(input.pop_front().unwrap()).ok().expect("Invalid argument type");
                         )*
                         world.run_system_with(*self, ($($yarn_param),*)).unwrap()
@@ -254,6 +266,7 @@ macro_rules! impl_yarn_fn_tuple {
                     #[cfg(feature = "bevy")]
                     _world: &mut World
                 ) -> Self::Out {
+                    let input_len = input.len();
                     let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
                     #[allow(unused_variables, unused_mut)] // for n = 0 tuples
@@ -263,7 +276,7 @@ macro_rules! impl_yarn_fn_tuple {
                     let input = (
                         $($param::retrieve(&mut iter),)*
                     );
-                    assert!(iter.next().is_none(), "Passed too many arguments to YarnFn");
+                    assert!(iter.next().is_none(), "YarnFn expected {} arguments but recieved {}", count_tts!($($param),*), input_len);
 
                     let ($($param,)*) = input;
                     self($($param,)*)
