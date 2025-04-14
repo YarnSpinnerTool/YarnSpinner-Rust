@@ -183,7 +183,9 @@ macro_rules! yarn_fn_type {
 pub use yarn_fn_type;
 
 macro_rules! replace_expr {
-($_t:tt $sub:expr) => {$sub};
+    ($_t:tt $sub:expr) => {
+        $sub
+    };
 }
 
 macro_rules! count_tts {
@@ -197,7 +199,6 @@ mod bevy_functions {
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
     use std::collections::VecDeque;
-
 
     macro_rules! impl_yarn_fn_tuple_bevy {
         ($($yarn_param: ident),*) => {
