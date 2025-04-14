@@ -86,18 +86,19 @@ fn test_end_of_notes_with_options_not_added() {
     let mut world = World::default();
 
     let mut has_options = false;
-    'outer: while dialogue.can_continue() {
+    while dialogue.can_continue() {
         let events = dialogue
             .continue_(
                 #[cfg(feature = "bevy")]
                 &mut world,
             )
             .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
-        for event in events {
-            if matches!(event, DialogueEvent::Options(_)) {
-                has_options = true;
-                break 'outer;
-            }
+        if events
+            .iter()
+            .any(|event| matches!(event, DialogueEvent::Options(_)))
+        {
+            has_options = true;
+            break;
         }
     }
     assert!(!has_options);
