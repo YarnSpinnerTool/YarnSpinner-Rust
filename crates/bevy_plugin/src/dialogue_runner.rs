@@ -242,7 +242,7 @@ impl DialogueRunner {
     pub fn set_text_language(&mut self, language: impl Into<Language>) -> &mut Self {
         let language = language.into();
         self.assert_localizations_available_for_language(&language);
-        self.inner_mut().set_language_code(language);
+        self.inner_mut().0.set_language_code(language);
         self
     }
 
