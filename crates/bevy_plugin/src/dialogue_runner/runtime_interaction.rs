@@ -29,13 +29,15 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
 pub(crate) struct DialogueExecutionSystemSet;
 
-fn continue_runtime(world: &mut World) -> SystemResult {
+fn continue_runtime(
+    world: &mut World,
+    mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
+) -> SystemResult {
     let mut system_state: SystemState<(
         Query<(Entity, &mut DialogueRunner)>,
         EventWriter<PresentLineEvent>,
         EventWriter<LineHintsEvent>,
         EventWriter<DialogueStartEvent>,
-        Local<HashMap<Entity, Vec<DialogueOption>>>,
         Res<Assets<LoadedUntypedAsset>>,
     )> = SystemState::new(world);
 
@@ -44,7 +46,6 @@ fn continue_runtime(world: &mut World) -> SystemResult {
         mut present_line_events,
         mut line_hints_events,
         mut dialogue_start_events,
-        mut last_options,
         loaded_untyped_assets,
     ) = system_state.get_mut(world);
 
@@ -131,7 +132,6 @@ fn continue_runtime(world: &mut World) -> SystemResult {
         EventWriter<NodeStartEvent>,
         EventWriter<LineHintsEvent>,
         EventWriter<DialogueCompleteEvent>,
-        Local<HashMap<Entity, Vec<DialogueOption>>>,
         Res<YarnProject>,
     )> = SystemState::new(world);
 
@@ -144,7 +144,6 @@ fn continue_runtime(world: &mut World) -> SystemResult {
         mut node_start_events,
         mut line_hints_events,
         mut dialogue_complete_events,
-        mut last_options,
         project,
     ) = system_state.get_mut(world);
 
