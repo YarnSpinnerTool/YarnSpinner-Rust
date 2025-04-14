@@ -277,7 +277,7 @@ macro_rules! impl_yarn_fn_tuple {
                     let input = (
                         $($param::retrieve(&mut iter),)*
                     );
-                    assert!(iter.next().is_none(), "YarnFn expected {} arguments but recieved {}", count_tts!($($param),*), input_len);
+                    assert!(iter.next().is_none(), "YarnFn expected {} arguments but received {}", count_tts!($($param),*), input_len);
 
                     let ($($param,)*) = input;
                     self($($param,)*)
