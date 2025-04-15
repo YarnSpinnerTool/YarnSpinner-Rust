@@ -23,8 +23,8 @@ use variadics_please::all_tuples;
 ///   - [`String`]
 ///
 /// If the `bevy` feature is active then it is also possible to register a Bevy `System` and call it from Yarn. The `System` will receive the parameters passed to the yarn
-/// as it's input. The `System`'s input must adhere to the same rules as given above for regular function parameters. `System`s cannot currently take tuples of values in
-/// their input but that limitation will be fixed soon. The `System`'s output must adhere to the rules for a regular function's return type listed above.
+/// as it's input. The `System`'s input must adhere to the same rules as given above for regular function parameters with the exception that System functions cannot accept
+/// tuples as parameters. The `System`'s output must adhere to the rules for a regular function's return type listed above.
 /// The `System` may take any `SystemParam`.
 ///
 /// Note that in particular, no references can be returned.
@@ -40,6 +40,28 @@ use variadics_please::all_tuples;
 /// <<set $age to 42>>
 /// <<set $is_cool to true>>
 /// Narrator: {give_summary($name, $age, $is_cool)}
+/// ```
+///
+/// A bevy system:
+/// ```rust
+/// # use bevy::prelude::*;
+/// #[derive(Component)]
+/// struct Age(u32);
+/// fn give_summary_from_bevy(In(name): In<&str>, ages: Query<(&Name, &Age)>) -> String {
+///     for (found_name, age) in &ages {
+///         if name == found_name.as_str() {
+///             return format!("{name} is {} years old", age.0)
+///         }
+///     }
+///    format!("{name} is ageless")
+/// }
+/// # // assert the example is actually a valid system
+/// # World::default().register_system(give_summary_from_bevy);
+/// ```
+/// Which may be called from Yarn as follows:
+/// ```text
+/// <<set $name to "Bob">>
+/// Narrator: {give_summary_from_bevy($name)}
 /// ```
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     /// The type of the value returned by this function. See [`YarnFn`] for more information about what is allowed.
