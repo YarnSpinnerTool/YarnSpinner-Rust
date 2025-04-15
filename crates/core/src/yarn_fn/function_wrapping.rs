@@ -22,6 +22,11 @@ use variadics_please::all_tuples;
 ///   - A numeric type, i.e. one of [`f32`], [`f64`], [`i8`], [`i16`], [`i32`], [`i64`], [`i128`], [`u8`], [`u16`], [`u32`], [`u64`], [`u128`], [`usize`], [`isize`]
 ///   - [`String`]
 ///
+/// If the `bevy` feature is active then it is also possible to register a Bevy `System` and call it from Yarn. The `System` will receive the parameters passed to the yarn
+/// as it's input. The `System`'s input must adhere to the same rules as given above for regular function parameters. `System`s cannot currently take tuples of values in
+/// their input but that limitation will be fixed soon. The `System`'s output must adhere to the rules for a regular function's return type listed above.
+/// The `System` may take any `SystemParam`.
+///
 /// Note that in particular, no references can be returned.
 /// ## Examples
 /// ```rust
