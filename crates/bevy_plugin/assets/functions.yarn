@@ -1,0 +1,6 @@
+title: Start
+---
+Data = {swap_data("After Swap")}
+New Data = {swap_data("After Second Swap")}
+Picky, picky: {picky_function()}
+===

@@ -243,7 +243,7 @@ mod bevy_functions {
                         #[allow(unused)]
                         let input_len  = input.len();
                         let expected_len = count_tts!($($yarn_param),*);
-                        assert!(input_len != expected_len, "YarnFn expected {expected_len} arguments but received {input_len}");
+                        assert!(input_len == expected_len, "YarnFn expected {expected_len} arguments but received {input_len}");
                         $(
                             let $yarn_param:$yarn_param = $yarn_param::try_from(input.pop_front().unwrap()).ok().expect("Invalid argument type");
                         )*
