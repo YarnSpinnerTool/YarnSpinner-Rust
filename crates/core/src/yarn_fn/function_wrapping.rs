@@ -242,7 +242,7 @@ mod bevy_functions {
                         let mut input = VecDeque::from(input);
                         #[allow(unused)]
                         let input_len  = input.len();
-                        let expected_len = count_tts!($($yarn_param),*);
+                        let expected_len = count_tts!($($yarn_param) *);
                         assert!(input_len == expected_len, "YarnFn expected {expected_len} arguments but received {input_len}");
                         $(
                             let $yarn_param:$yarn_param = $yarn_param::try_from(input.pop_front().unwrap()).ok().expect("Invalid argument type");
@@ -440,6 +440,42 @@ mod tests {
             0
         }
         accept_yarn_fn(world.register_system(f));
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn can_call_degenerate_system() {
+        let mut world = World::default();
+        fn f() -> u32 {
+            42
+        }
+        let id = world.register_system(f);
+        let out = id.call(vec![], &mut world);
+        assert_eq!(out, 42);
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn can_call_system_with_input() {
+        let mut world = World::default();
+        fn f(In(num): In<u32>) -> u32 {
+            num
+        }
+        let id = world.register_system(f);
+        let out = id.call(vec![YarnValue::from(42)], &mut world);
+        assert_eq!(out, 42);
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn can_call_system_with_multiple_inputs() {
+        let mut world = World::default();
+        fn f(In((a, b)): In<(u32, u32)>, _: Query<Entity>) -> u32 {
+            a + b
+        }
+        let id = world.register_system(f);
+        let out = id.call(vec![YarnValue::from(40), YarnValue::from(2)], &mut world);
+        assert_eq!(out, 42);
     }
 
     #[test]
