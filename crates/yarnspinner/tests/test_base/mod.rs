@@ -12,6 +12,8 @@
 #![allow(dead_code)]
 
 use crate::prelude::*;
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
@@ -147,7 +149,17 @@ impl TestBase {
     pub fn run_standard_testcase(&mut self) -> &mut Self {
         self.dialogue.set_node("Start").unwrap();
 
-        while let Some(events) = self.dialogue.next() {
+        #[cfg(feature = "bevy")]
+        let mut world = World::default();
+
+        while self.dialogue.can_continue() {
+            let events = self
+                .dialogue
+                .continue_(
+                    #[cfg(feature = "bevy")]
+                    &mut world,
+                )
+                .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
             for event in events {
                 match event {
                     DialogueEvent::Line(line) => {

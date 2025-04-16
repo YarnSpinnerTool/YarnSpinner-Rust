@@ -37,11 +37,13 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
         .add_plugins(inner::inner_dialogue_runner_plugin);
 }
 
+const DIALOGUE_MISSING_MESSAGE: &str = "Dialogue missing from DialogueRunner. \
+                                  This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new";
 /// The main type to interact with the dialogue system.
 /// Created by calling either [`YarnProject::create_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
 #[derive(Debug, Component)]
 pub struct DialogueRunner {
-    pub(crate) dialogue: Dialogue,
+    pub(crate) dialogue: Option<Dialogue>,
     pub(crate) text_provider: Box<dyn TextProvider>,
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     pub(crate) will_continue_in_next_update: bool,
@@ -85,7 +87,8 @@ impl DialogueRunner {
         if !self.is_running {
             bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
         }
-        self.dialogue
+        self.inner_mut()
+            .0
             .set_selected_option(option)
             .map_err(Error::from)?;
         self.last_selected_option.replace(option);
@@ -107,7 +110,7 @@ impl DialogueRunner {
     /// Calling [`DialogueRunner::continue_in_next_update`] will panic in this case.
     #[must_use]
     pub fn is_waiting_for_option_selection(&self) -> bool {
-        self.dialogue.is_waiting_for_option_selection()
+        self.inner().0.is_waiting_for_option_selection()
     }
 
     /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
@@ -133,7 +136,7 @@ impl DialogueRunner {
         self.popped_line_hints = None;
         self.will_continue_in_next_update = false;
         self.just_started = false;
-        let stop_events = self.dialogue.stop();
+        let stop_events = self.inner_mut().0.stop();
         self.unsent_events.extend(stop_events);
         self
     }
@@ -156,10 +159,11 @@ impl DialogueRunner {
         }
         self.is_running = true;
         self.just_started = true;
-        self.dialogue
+        self.inner_mut()
+            .0
             .set_node(node_name)
             .map_err(|e| anyhow!("Can't start dialogue from node {node_name}: {e}"))?;
-        self.popped_line_hints = self.dialogue.pop_line_hints();
+        self.popped_line_hints = self.inner_mut().0.pop_line_hints();
         self.continue_in_next_update();
         Ok(self)
     }
@@ -172,32 +176,32 @@ impl DialogueRunner {
     /// Returns [`None`] if the node is not present in the program.
     #[must_use]
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
-        self.dialogue.get_tags_for_node(node_name)
+        self.inner().0.get_tags_for_node(node_name)
     }
 
     /// Gets a value indicating whether a specified node exists in the Yarn files.
     #[must_use]
     pub fn node_exists(&self, node_name: &str) -> bool {
-        self.dialogue.node_exists(node_name)
+        self.inner().0.node_exists(node_name)
     }
 
     /// Gets the name of the node that this Dialogue is currently executing.
     /// This is [`None`] if [`DialogueRunner::is_running`] is `false`.
     #[must_use]
     pub fn current_node(&self) -> Option<String> {
-        self.dialogue.current_node()
+        self.inner().0.current_node()
     }
 
     /// Returns a shallow clone of the registered [`VariableStorage`]. The storage used can be overridden by calling [`DialogueRunnerBuilder::with_variable_storage`].
     #[must_use]
     pub fn variable_storage(&self) -> &dyn VariableStorage {
-        self.dialogue.variable_storage()
+        self.inner().0.variable_storage()
     }
 
     /// Returns a shallow mutable clone of the registered [`VariableStorage`]. The storage used can be overridden by calling [`DialogueRunnerBuilder::with_variable_storage`].
     #[must_use]
     pub fn variable_storage_mut(&mut self) -> &mut dyn VariableStorage {
-        self.dialogue.variable_storage_mut()
+        self.inner_mut().0.variable_storage_mut()
     }
 
     /// Returns whether both the text and asset providers have loaded all their lines.
@@ -238,7 +242,7 @@ impl DialogueRunner {
     pub fn set_text_language(&mut self, language: impl Into<Language>) -> &mut Self {
         let language = language.into();
         self.assert_localizations_available_for_language(&language);
-        self.dialogue.set_language_code(language);
+        self.inner_mut().0.set_language_code(language);
         self
     }
 
@@ -266,13 +270,13 @@ impl DialogueRunner {
     /// Returns the library of functions that can be called from Yarn files.
     #[must_use]
     pub fn library(&self) -> &Library {
-        self.dialogue.library()
+        self.inner().0.library()
     }
 
     /// Mutably returns the library of functions that can be called from Yarn files.
     #[must_use]
     pub fn library_mut(&mut self) -> &mut Library {
-        self.dialogue.library_mut()
+        self.inner_mut().0.library_mut()
     }
 
     /// Returns the command registrations that can be called from Yarn files.
@@ -290,7 +294,7 @@ impl DialogueRunner {
     /// Returns the language used by the [`TextProvider`]. If there are no [`Localizations`] available, this will return [`None`].
     #[must_use]
     pub fn text_language(&self) -> Option<Language> {
-        self.dialogue.language_code().cloned()
+        self.inner().0.language_code().cloned()
     }
 
     /// Returns the language used by the [`AssetProvider`]s. If there are no [`Localizations`] available, this will return [`None`].
@@ -312,13 +316,13 @@ impl DialogueRunner {
     /// Returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
     pub fn inner(&self) -> InnerDialogue {
-        InnerDialogue(&self.dialogue)
+        InnerDialogue(self.dialogue.as_ref().expect(DIALOGUE_MISSING_MESSAGE))
     }
 
     /// Mutably returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
     pub fn inner_mut(&mut self) -> InnerDialogueMut {
-        InnerDialogueMut(&mut self.dialogue)
+        InnerDialogueMut(self.dialogue.as_mut().expect(DIALOGUE_MISSING_MESSAGE))
     }
 
     /// Returns the registered [`TextProvider`]. By default, this is a [`StringsFileTextProvider`](crate::default_impl::StringsFileTextProvider).

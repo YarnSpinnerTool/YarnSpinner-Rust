@@ -3,6 +3,8 @@
 //! ## Implementation notes
 //! `TestDumpingCode` was not ported because `GetByteCode` is not used by a user directly and thus was not implemented at all.
 
+#[cfg(feature = "bevy")]
+use bevy::prelude::World;
 use std::collections::HashMap;
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
@@ -200,7 +202,12 @@ fn test_line_hints() {
 
     let mut line_hints_were_sent = false;
 
-    let events = dialogue.next().unwrap();
+    let events = dialogue
+        .continue_(
+            #[cfg(feature = "bevy")]
+            &mut World::default(),
+        )
+        .unwrap();
     for event in events {
         if let DialogueEvent::LineHints(lines) = event {
             // When the Dialogue realises it's about to run the Start
@@ -284,7 +291,17 @@ fn test_selecting_option_from_inside_option_callback() {
         .with_compilation(result);
     test_base.dialogue.set_node("Start").unwrap();
 
-    while let Some(events) = test_base.dialogue.next() {
+    #[cfg(feature = "bevy")]
+    let mut world = World::default();
+
+    while test_base.dialogue.can_continue() {
+        let events = test_base
+            .dialogue
+            .continue_(
+                #[cfg(feature = "bevy")]
+                &mut world,
+            )
+            .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
         for event in events {
             match event {
                 DialogueEvent::Line(line) => {

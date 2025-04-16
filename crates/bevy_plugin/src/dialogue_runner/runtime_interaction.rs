@@ -5,7 +5,8 @@ use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
 use anyhow::bail;
 use bevy::asset::LoadedUntypedAsset;
-use bevy::platform_support::collections::HashMap;
+use bevy::ecs::system::SystemState;
+use bevy::platform_support::{collections::HashMap, hash::FixedHasher};
 use bevy::prelude::*;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
@@ -29,19 +30,27 @@ pub(crate) fn runtime_interaction_plugin(app: &mut App) {
 pub(crate) struct DialogueExecutionSystemSet;
 
 fn continue_runtime(
-    mut dialogue_runners: Query<(Entity, &mut DialogueRunner)>,
-    mut present_line_events: EventWriter<PresentLineEvent>,
-    mut present_options_events: EventWriter<PresentOptionsEvent>,
-    mut execute_command_events: EventWriter<ExecuteCommandEvent>,
-    mut node_complete_events: EventWriter<NodeCompleteEvent>,
-    mut node_start_events: EventWriter<NodeStartEvent>,
-    mut line_hints_events: EventWriter<LineHintsEvent>,
-    mut dialogue_complete_events: EventWriter<DialogueCompleteEvent>,
-    mut dialogue_start_events: EventWriter<DialogueStartEvent>,
+    world: &mut World,
     mut last_options: Local<HashMap<Entity, Vec<DialogueOption>>>,
-    loaded_untyped_assets: Res<Assets<LoadedUntypedAsset>>,
-    project: Res<YarnProject>,
 ) -> SystemResult {
+    let mut system_state: SystemState<(
+        Query<(Entity, &mut DialogueRunner)>,
+        EventWriter<PresentLineEvent>,
+        EventWriter<LineHintsEvent>,
+        EventWriter<DialogueStartEvent>,
+        Res<Assets<LoadedUntypedAsset>>,
+    )> = SystemState::new(world);
+
+    let (
+        mut dialogue_runners,
+        mut present_line_events,
+        mut line_hints_events,
+        mut dialogue_start_events,
+        loaded_untyped_assets,
+    ) = system_state.get_mut(world);
+
+    let mut dialogues: HashMap<_, _, FixedHasher> = HashMap::default();
+
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         let is_sending_missed_events = !dialogue_runner.unsent_events.is_empty();
         if !is_sending_missed_events {
@@ -88,55 +97,105 @@ fn continue_runtime(
                 }
             }
         }
-        let events = if is_sending_missed_events {
-            std::mem::take(&mut dialogue_runner.unsent_events)
-        } else {
-            dialogue_runner.dialogue.continue_()?
-        };
 
-        for event in events {
-            match event {
-                DialogueEvent::Line(line) => {
-                    let assets = dialogue_runner.get_assets(&line);
-                    let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
-                    present_line_events.write(PresentLineEvent {
-                        line: LocalizedLine::from_yarn_line(line, assets, metadata),
-                        source,
-                    });
-                }
-                DialogueEvent::Options(options) => {
-                    let options: Vec<DialogueOption> = options
-                        .into_iter()
-                        .map(|option| {
-                            let assets = dialogue_runner.get_assets(&option.line);
-                            let metadata = project
-                                .line_metadata(&option.line.id)
-                                .unwrap_or_default()
-                                .to_vec();
-                            DialogueOption::from_yarn_dialogue_option(option, assets, metadata)
-                        })
-                        .collect();
-                    last_options.insert(source, options.clone());
-                    present_options_events.write(PresentOptionsEvent { options, source });
-                }
-                DialogueEvent::Command(command) => {
-                    execute_command_events.write(ExecuteCommandEvent { command, source });
-                    dialogue_runner.continue_in_next_update();
-                }
-                DialogueEvent::NodeComplete(node_name) => {
-                    node_complete_events.write(NodeCompleteEvent { node_name, source });
-                }
-                DialogueEvent::NodeStart(node_name) => {
-                    node_start_events.write(NodeStartEvent { node_name, source });
-                }
-                DialogueEvent::LineHints(line_ids) => {
-                    line_hints_events.write(LineHintsEvent { line_ids, source });
-                }
-                DialogueEvent::DialogueComplete => {
-                    if !is_sending_missed_events {
-                        dialogue_runner.is_running = false;
+        let unsent_events = if is_sending_missed_events {
+            Some(std::mem::take(&mut dialogue_runner.unsent_events))
+        } else {
+            None
+        };
+        dialogues.insert(
+            source,
+            (
+                dialogue_runner.dialogue.take().unwrap(),
+                is_sending_missed_events,
+                unsent_events,
+                None::<Vec<DialogueEvent>>,
+            ),
+        );
+    }
+
+    for (dialogue, _, unsent_events, events) in dialogues.values_mut() {
+        let new_events = if let Some(unsent_events) = unsent_events.take() {
+            unsent_events
+        } else {
+            dialogue.continue_(world)?
+        };
+        events.replace(new_events);
+    }
+
+    let mut system_state: SystemState<(
+        Query<(Entity, &mut DialogueRunner)>,
+        EventWriter<PresentLineEvent>,
+        EventWriter<PresentOptionsEvent>,
+        EventWriter<ExecuteCommandEvent>,
+        EventWriter<NodeCompleteEvent>,
+        EventWriter<NodeStartEvent>,
+        EventWriter<LineHintsEvent>,
+        EventWriter<DialogueCompleteEvent>,
+        Res<YarnProject>,
+    )> = SystemState::new(world);
+
+    let (
+        mut dialogue_runners,
+        mut present_line_events,
+        mut present_options_events,
+        mut execute_command_events,
+        mut node_complete_events,
+        mut node_start_events,
+        mut line_hints_events,
+        mut dialogue_complete_events,
+        project,
+    ) = system_state.get_mut(world);
+
+    for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
+        if let Some((dialogue, is_sending_missed_events, _, Some(events))) =
+            dialogues.remove(&source)
+        {
+            dialogue_runner.dialogue.replace(dialogue);
+            for event in events {
+                match event {
+                    DialogueEvent::Line(line) => {
+                        let assets = dialogue_runner.get_assets(&line);
+                        let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
+                        present_line_events.write(PresentLineEvent {
+                            line: LocalizedLine::from_yarn_line(line, assets, metadata),
+                            source,
+                        });
                     }
-                    dialogue_complete_events.write(DialogueCompleteEvent { source });
+                    DialogueEvent::Options(options) => {
+                        let options: Vec<DialogueOption> = options
+                            .into_iter()
+                            .map(|option| {
+                                let assets = dialogue_runner.get_assets(&option.line);
+                                let metadata = project
+                                    .line_metadata(&option.line.id)
+                                    .unwrap_or_default()
+                                    .to_vec();
+                                DialogueOption::from_yarn_dialogue_option(option, assets, metadata)
+                            })
+                            .collect();
+                        last_options.insert(source, options.clone());
+                        present_options_events.write(PresentOptionsEvent { options, source });
+                    }
+                    DialogueEvent::Command(command) => {
+                        execute_command_events.write(ExecuteCommandEvent { command, source });
+                        dialogue_runner.continue_in_next_update();
+                    }
+                    DialogueEvent::NodeComplete(node_name) => {
+                        node_complete_events.write(NodeCompleteEvent { node_name, source });
+                    }
+                    DialogueEvent::NodeStart(node_name) => {
+                        node_start_events.write(NodeStartEvent { node_name, source });
+                    }
+                    DialogueEvent::LineHints(line_ids) => {
+                        line_hints_events.write(LineHintsEvent { line_ids, source });
+                    }
+                    DialogueEvent::DialogueComplete => {
+                        if !is_sending_missed_events {
+                            dialogue_runner.is_running = false;
+                        }
+                        dialogue_complete_events.write(DialogueCompleteEvent { source });
+                    }
                 }
             }
         }
