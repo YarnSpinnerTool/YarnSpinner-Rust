@@ -223,41 +223,31 @@ macro_rules! count_tts {
 #[cfg(feature = "bevy")]
 mod bevy_functions {
     use super::*;
-    use alloc::collections::VecDeque;
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
 
-    macro_rules! impl_yarn_fn_tuple_bevy {
-        ($($yarn_param: ident),*) => {
-            #[allow(non_snake_case, unused_parens)]
-            impl<'a, Output, $($yarn_param),*> YarnFn<(($($yarn_param,)*), Output)> for SystemId<In<($($yarn_param),*)>, Output>
-            where
-                $($yarn_param: TryFrom<YarnValue> + 'static,)*
-                Output: IntoYarnValueFromNonYarnValue + 'static,
-                {
-                    type Out = Output;
-                    #[allow(non_snake_case)]
-                    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
-                        #[allow(unused)]
-                        let mut input = VecDeque::from(input);
-                        #[allow(unused)]
-                        let input_len  = input.len();
-                        let expected_len = count_tts!($($yarn_param) *);
+    impl<Output, P> YarnFn<(P, Output)> for SystemId<In<P>, Output>
+    where
+        Output: IntoYarnValueFromNonYarnValue + 'static,
+        P: YarnFnParam + 'static,
+        for<'a> P: YarnFnParam<Item<'a> = P>,
+    {
+        type Out = Output;
+        #[allow(non_snake_case)]
+        fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+            let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
-                        assert!(input_len == expected_len, "YarnFn expected {expected_len} arguments but received {input_len}");
-                        $(
-                            let $yarn_param:$yarn_param = $yarn_param::try_from(input.pop_front().unwrap()).ok().expect("Invalid argument type");
-                        )*
-                        world.run_system_with(*self, ($($yarn_param),*)).unwrap()
-                    }
+            #[allow(unused_variables, unused_mut)] // for n = 0 tuples
+            let mut iter = params.iter_mut().peekable();
 
-                    fn parameter_types(&self) -> Vec<TypeId> {
-                        vec![$(TypeId::of::<$yarn_param>()),*]
-                    }
-                }
-            };
+            let input = P::retrieve(&mut iter);
+            world.run_system_with(*self, input).unwrap()
+        }
+
+        fn parameter_types(&self) -> Vec<TypeId> {
+            P::parameter_types()
+        }
     }
-    all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16, P);
 
     impl<Output> YarnFn<Output> for SystemId<(), Output>
     where
@@ -423,6 +413,7 @@ mod tests {
         }
         accept_yarn_fn(world.register_system(f));
     }
+
     #[cfg(feature = "bevy")]
     #[test]
     fn accepts_systemparam_only_system() {
@@ -438,6 +429,28 @@ mod tests {
     fn accepts_degenerate_system() {
         let mut world = World::default();
         fn f() -> u32 {
+            0
+        }
+        accept_yarn_fn(world.register_system(f));
+    }
+
+    /*
+        #[cfg(feature = "bevy")]
+        #[test]
+        fn accepts_system_with_str_ref_input() {
+            let mut world = World::default();
+            fn f(_: In<&str>) -> u32 {
+                0
+            }
+            accept_yarn_fn(world.register_system(f));
+        }
+    */
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn accepts_system_with_complex_inputs() {
+        let mut world = World::default();
+        fn f(_: In<((u32, i32), Option<String>)>, _: Query<Entity>) -> u32 {
             0
         }
         accept_yarn_fn(world.register_system(f));
@@ -475,7 +488,24 @@ mod tests {
             a + b
         }
         let id = world.register_system(f);
-        let out = id.call(vec![YarnValue::from(40), YarnValue::from(2)], &mut world);
+        let out: u32 = id.call(vec![YarnValue::from(40), YarnValue::from(2)], &mut world);
+        assert_eq!(out, 42);
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn can_call_system_with_complex_inputs() {
+        let mut world = World::default();
+        fn f(In(((a, b), maybe_c)): In<((u32, u32), Option<u32>)>) -> u32 {
+            a + b + maybe_c.unwrap_or(0)
+        }
+        let id = world.register_system(f);
+        let out: u32 = id.call(vec![YarnValue::from(40), YarnValue::from(1)], &mut world);
+        assert_eq!(out, 41);
+        let out: u32 = id.call(
+            vec![YarnValue::from(40), YarnValue::from(1), YarnValue::from(1)],
+            &mut world,
+        );
         assert_eq!(out, 42);
     }
 
