@@ -1,8 +1,6 @@
 use anyhow::Result;
-use bevy::platform_support::time::Instant;
 use bevy::prelude::*;
 use bevy_yarnspinner::{events::*, prelude::*};
-use std::thread::sleep;
 use utils::prelude::*;
 
 mod utils;

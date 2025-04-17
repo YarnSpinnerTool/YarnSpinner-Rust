@@ -5,6 +5,7 @@
 use super::optionality::{AllowedOptionalityChain, Optional, Optionality, Required};
 use crate::prelude::*;
 use std::any::Any;
+use std::any::TypeId;
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display};
 use std::iter::Peekable;
@@ -65,12 +66,15 @@ pub trait YarnFnParam {
 
     #[doc(hidden)]
     fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a>;
+
+    #[doc(hidden)]
+    fn parameter_types() -> Vec<TypeId>;
 }
 
 /// Shorthand way of accessing the associated type [`YarnFnParam::Item`] for a given [`YarnFnParam`].
 pub type YarnFnParamItem<'a, P> = <P as YarnFnParam>::Item<'a>;
 
-impl<T: YarnFnParam> YarnFnParam for Option<T> {
+impl<T: YarnFnParam + 'static> YarnFnParam for Option<T> {
     type Item<'new> = Option<T::Item<'new>>;
     type Optionality = Optional;
 
@@ -81,13 +85,17 @@ impl<T: YarnFnParam> YarnFnParam for Option<T> {
             None
         }
     }
+
+    fn parameter_types() -> Vec<TypeId> {
+        vec![TypeId::of::<Option<T>>()]
+    }
 }
 
 macro_rules! impl_yarn_fn_param_tuple {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
         impl<$($param,)*> YarnFnParam for ($($param,)*)
-            where $($param: YarnFnParam,)*
+            where $($param: YarnFnParam + 'static,)*
                   ($(<$param as YarnFnParam>::Optionality,)*): AllowedOptionalityChain
         {
             type Item<'new> = ($($param::Item<'new>,)*);
@@ -96,6 +104,10 @@ macro_rules! impl_yarn_fn_param_tuple {
             #[allow(unused_variables, clippy::unused_unit)] // for n = 0 tuples
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                ($($param::retrieve(iter),)*)
+            }
+
+            fn parameter_types() -> Vec<TypeId> {
+                vec![$(TypeId::of::<$param>()),*]
             }
         }
     };
@@ -129,6 +141,10 @@ where
             value,
             phantom_data: PhantomData,
         }
+    }
+
+    fn parameter_types() -> Vec<TypeId> {
+        vec![TypeId::of::<&T>()]
     }
 }
 
@@ -165,6 +181,10 @@ where
             phantom_data: PhantomData,
         }
     }
+
+    fn parameter_types() -> Vec<TypeId> {
+        vec![TypeId::of::<&U>()]
+    }
 }
 
 struct ResOwned<T>
@@ -190,6 +210,10 @@ where
         let value = *converted.downcast::<T>().unwrap();
         ResOwned { value }
     }
+
+    fn parameter_types() -> Vec<TypeId> {
+        vec![TypeId::of::<T>()]
+    }
 }
 
 macro_rules! impl_yarn_fn_param {
@@ -211,6 +235,10 @@ macro_rules! impl_yarn_fn_param_inner {
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResRef::<$referenced>::retrieve(iter).value
             }
+
+            fn parameter_types() -> Vec<TypeId> {
+                vec![TypeId::of::<&$referenced>()]
+            }
         }
 
         impl YarnFnParam for $referenced {
@@ -219,6 +247,10 @@ macro_rules! impl_yarn_fn_param_inner {
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResOwned::<$referenced>::retrieve(iter).value
+            }
+
+            fn parameter_types() -> Vec<TypeId> {
+                vec![TypeId::of::<$referenced>()]
             }
         }
     };
@@ -230,6 +262,10 @@ macro_rules! impl_yarn_fn_param_inner {
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResRefBorrow::<$owned, $referenced>::retrieve(iter).value
             }
+
+            fn parameter_types() -> Vec<TypeId> {
+                vec![TypeId::of::<&$referenced>()]
+            }
         }
 
         impl YarnFnParam for &$owned {
@@ -239,6 +275,10 @@ macro_rules! impl_yarn_fn_param_inner {
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResRef::<$owned>::retrieve(iter).value
             }
+
+            fn parameter_types() -> Vec<TypeId> {
+                vec![TypeId::of::<&$owned>()]
+            }
         }
 
         impl YarnFnParam for $owned {
@@ -247,6 +287,10 @@ macro_rules! impl_yarn_fn_param_inner {
 
             fn retrieve<'a>(iter: &mut YarnValueWrapperIter<'a>) -> Self::Item<'a> {
                 ResOwned::<$owned>::retrieve(iter).value
+            }
+
+            fn parameter_types() -> Vec<TypeId> {
+                vec![TypeId::of::<$owned>()]
             }
         }
     };
