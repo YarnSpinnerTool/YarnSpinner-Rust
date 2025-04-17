@@ -3,6 +3,7 @@
 use bevy::asset::LoadedUntypedAsset;
 #[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
+use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner::UnderlyingYarnLine;
@@ -21,6 +22,8 @@ pub trait AppExt {
     fn load_project_mut(&mut self) -> Mut<YarnProject>;
 
     fn load_lines(&mut self) -> &mut App;
+
+    fn load_project_and_get_dialogue_builder(&mut self) -> DialogueRunnerBuilder;
 
     fn continue_dialogue_and_update(&mut self) -> &mut App;
     fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
@@ -66,6 +69,16 @@ impl AppExt for App {
         self
     }
 
+    fn load_project_and_get_dialogue_builder(&mut self) -> DialogueRunnerBuilder {
+        while !self.world().contains_resource::<YarnProject>() {
+            self.update();
+        }
+        let mut system_state: SystemState<(Commands, Res<YarnProject>)> =
+            SystemState::new(self.world_mut());
+        let (mut commands, yarn_project) = system_state.get_mut(self.world_mut());
+        yarn_project.build_dialogue_runner(&mut commands)
+    }
+
     fn continue_dialogue_and_update(&mut self) -> &mut App {
         self.continue_dialogue_and_update_n_times(1)
     }
@@ -88,8 +101,11 @@ impl AppExt for App {
         if let Some(entity) = existing_entity {
             entity
         } else {
-            let project = self.load_project();
-            let dialogue_runner = project.create_dialogue_runner();
+            self.load_project();
+            let mut system_state: SystemState<(Commands, Res<YarnProject>)> =
+                SystemState::new(self.world_mut());
+            let (mut commands, yarn_project) = system_state.get_mut(self.world_mut());
+            let dialogue_runner = yarn_project.create_dialogue_runner(&mut commands);
             self.world_mut().spawn(dialogue_runner).id()
         }
     }

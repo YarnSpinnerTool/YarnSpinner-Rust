@@ -27,7 +27,7 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.create_dialogue_runner();
+    let mut dialogue_runner = project.create_dialogue_runner(&mut commands);
     // Add our custom function to the dialogue runner
     dialogue_runner.library_mut().add_function("pow", pow);
     dialogue_runner
