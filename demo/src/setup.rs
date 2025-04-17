@@ -99,16 +99,16 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.create_dialogue_runner();
+    let mut dialogue_runner = project.create_dialogue_runner(&mut commands);
     dialogue_runner
         .commands_mut()
-        .add_command("change_sprite", change_sprite)
-        .add_command("fade_in", fade_in)
-        .add_command("fade_out", fade_out)
-        .add_command("quit", quit)
-        .add_command("rotate", rotate_character)
-        .add_command("move_camera_to_clippy", move_camera_to_clippy)
-        .add_command("show_bang", show_bang);
+        .add_command("change_sprite", commands.register_system(change_sprite))
+        .add_command("fade_in", commands.register_system(fade_in))
+        .add_command("fade_out", commands.register_system(fade_out))
+        .add_command("quit", commands.register_system(quit))
+        .add_command("rotate", commands.register_system(rotate_character))
+        .add_command("move_camera_to_clippy", commands.register_system(move_camera_to_clippy))
+        .add_command("show_bang", commands.register_system(show_bang));
     // Immediately start showing the dialogue
     dialogue_runner.start_node("Start");
     commands.spawn(dialogue_runner);

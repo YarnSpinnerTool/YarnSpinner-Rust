@@ -23,13 +23,13 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    let mut dialogue_runner = project.create_dialogue_runner();
+    let mut dialogue_runner = project.create_dialogue_runner(&mut commands);
     // Add our custom commands to the dialogue runner
     dialogue_runner
         .commands_mut()
-        .add_command("insert_resource", insert_resource)
-        .add_command("update_resource", update_resource)
-        .add_command("read_resource", read_resource);
+        .add_command("insert_resource", commands.register_system(insert_resource))
+        .add_command("update_resource", commands.register_system(update_resource))
+        .add_command("read_resource", commands.register_system(read_resource));
     dialogue_runner.start_node("CustomCommand");
     commands.spawn(dialogue_runner);
 }

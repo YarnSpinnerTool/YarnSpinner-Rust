@@ -280,8 +280,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<DialogueRunner
                 })
                 .with_development_file_generation(DevelopmentFileGeneration::None),
         )
-        .load_project()
-        .build_dialogue_runner();
+        .load_project_and_get_dialogue_bulider();
 
     #[cfg(feature = "audio_assets")]
     {

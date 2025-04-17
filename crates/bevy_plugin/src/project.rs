@@ -59,13 +59,13 @@ impl YarnProject {
 
     /// Constructs a [`DialogueRunner`] from this project using all defaults of [`DialogueRunnerBuilder`] .
     /// This is a convenience method for calling [`DialogueRunnerBuilder::build`] on an unconfigured builder returned by [`YarnProject::build_dialogue_runner`].
-    pub fn create_dialogue_runner(&self) -> DialogueRunner {
-        self.build_dialogue_runner().build()
+    pub fn create_dialogue_runner(&self, commands: &mut Commands) -> DialogueRunner {
+        self.build_dialogue_runner(commands).build()
     }
 
     /// Constructs a [`DialogueRunnerBuilder`] that can be used to customize the construction of a [`DialogueRunner`] from this project.
-    pub fn build_dialogue_runner(&self) -> DialogueRunnerBuilder {
-        DialogueRunnerBuilder::from_yarn_project(self)
+    pub fn build_dialogue_runner(&self, commands: &mut Commands) -> DialogueRunnerBuilder {
+        DialogueRunnerBuilder::from_yarn_project(self, commands)
     }
 
     /// Returns the metadata associated with the given [`LineId`], if any. This can also be accessed on a given [`LocalizedLine`] via its `metadata` field.

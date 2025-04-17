@@ -10,6 +10,7 @@ mod utils;
 #[test]
 fn does_not_load_asset_without_localizations() -> Result<()> {
     let mut app = App::new();
+    let mut world = World::default();
 
     app.setup_default_plugins()
         .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
@@ -18,7 +19,7 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 
     let project = app.load_project();
     let mut dialogue_runner = project
-        .build_dialogue_runner()
+        .build_dialogue_runner(&mut world.commands())
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner.start_node("Start");
@@ -43,6 +44,7 @@ fn does_not_load_asset_without_localizations() -> Result<()> {
 #[test]
 fn does_not_load_invalid_asset_id() -> Result<()> {
     let mut app = App::new();
+    let mut world = World::default();
 
     app.setup_default_plugins().add_plugins(
         YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
@@ -55,7 +57,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
 
     let project = app.load_project();
     let mut dialogue_runner = project
-        .build_dialogue_runner()
+        .build_dialogue_runner(&mut world.commands())
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner
@@ -73,6 +75,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
 #[test]
 fn loads_asset_from_base_language_localization() -> Result<()> {
     let mut app = App::new();
+    let mut world = World::default();
 
     app.setup_default_plugins().add_plugins(
         YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
@@ -85,7 +88,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
 
     let project = app.load_project();
     let mut dialogue_runner = project
-        .build_dialogue_runner()
+        .build_dialogue_runner(&mut world.commands())
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner.start_node("Start");
@@ -107,6 +110,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
 #[test]
 fn loads_asset_from_translated_localization() -> Result<()> {
     let mut app = App::new();
+    let mut world = World::default();
 
     app.setup_default_plugins().add_plugins(
         YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
@@ -119,7 +123,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
 
     let project = app.load_project();
     let mut dialogue_runner = project
-        .build_dialogue_runner()
+        .build_dialogue_runner(&mut world.commands())
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner
@@ -143,6 +147,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
 #[should_panic]
 fn panics_on_invalid_language() {
     let mut app = App::new();
+    let mut world = World::default();
 
     app.setup_default_plugins().add_plugins(
         YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
@@ -155,7 +160,7 @@ fn panics_on_invalid_language() {
 
     let project = app.load_project();
     let mut dialogue_runner = project
-        .build_dialogue_runner()
+        .build_dialogue_runner(&mut world.commands())
         .add_asset_provider(AudioAssetProvider::new())
         .build();
     dialogue_runner
@@ -168,6 +173,7 @@ fn panics_on_invalid_language() {
 #[test]
 fn does_not_load_asset_with_invalid_type() -> Result<()> {
     let mut app = App::new();
+    let mut world = World::default();
 
     app.setup_default_plugins().add_plugins(
         YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
@@ -180,7 +186,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
 
     let project = app.load_project();
     let mut dialogue_runner = project
-        .build_dialogue_runner()
+        .build_dialogue_runner(&mut world.commands())
         .add_asset_provider(AudioAssetProvider::new())
         .build();
 

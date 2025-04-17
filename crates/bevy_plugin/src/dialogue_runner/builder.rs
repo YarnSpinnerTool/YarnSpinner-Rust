@@ -25,7 +25,7 @@ pub struct DialogueRunnerBuilder {
 
 impl DialogueRunnerBuilder {
     #[must_use]
-    pub(crate) fn from_yarn_project(yarn_project: &YarnProject) -> Self {
+    pub(crate) fn from_yarn_project(yarn_project: &YarnProject, commands: &mut Commands) -> Self {
         Self {
             variable_storage: Box::new(MemoryVariableStorage::new()),
             text_provider: SharedTextProvider::new(StringsFileTextProvider::from_yarn_project(
@@ -33,7 +33,7 @@ impl DialogueRunnerBuilder {
             )),
             asset_providers: HashMap::default(),
             library: create_extended_standard_library(),
-            commands: YarnCommands::builtin_commands(),
+            commands: YarnCommands::builtin_commands(commands),
             compilation: yarn_project.compilation().clone(),
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),

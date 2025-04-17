@@ -108,17 +108,23 @@ impl YarnCommands {
     /// Constructs an instance of [`YarnCommands`] with the builtin commands `wait` and `stop`.
     /// - `stop`: Stops the execution of the dialogue.
     /// - `wait`: Waits for the given amount of seconds before continuing the dialogue. Note that this does not block and that Bevy will continue updating as normal in the meantime.
-    pub fn builtin_commands() -> Self {
+    pub fn builtin_commands(bevy_commands: &mut Commands) -> Self {
         let mut commands = Self::default();
 
-        commands.add_command("wait", |In(duration): In<f32>, mut wait: ResMut<Wait>| {
-            wait.add(Duration::from_secs_f32(duration))
-        });
+        commands.add_command(
+            "wait",
+            bevy_commands.register_system(|In(duration): In<f32>, mut wait: ResMut<Wait>| {
+                wait.add(Duration::from_secs_f32(duration))
+            }),
+        );
 
         #[allow(clippy::unused_unit)] // Needed for 2024 edition
-        commands.add_command("stop", |_: In<()>| -> () {
-            unreachable!("The stop command is a compiler builtin and is thus not callable");
-        });
+        commands.add_command(
+            "stop",
+            bevy_commands.register_system(|_: In<()>| -> () {
+                unreachable!("The stop command is a compiler builtin and is thus not callable");
+            }),
+        );
 
         commands
     }
@@ -165,22 +171,28 @@ mod tests {
     #[test]
     fn can_add_fn_with_empty_tuple_in_args() {
         let mut methods = YarnCommands::default();
-        methods.add_command("test", |_: In<()>| {});
+        let mut world = World::default();
+        methods.add_command("test", world.register_system(|_: In<()>| {}));
     }
 
     #[test]
     fn can_add_fn_with_one_in_arg() {
         let mut methods = YarnCommands::default();
-        methods.add_command("test", |_: In<f32>| {});
+        let mut world = World::default();
+        methods.add_command("test", world.register_system(|_: In<f32>| {}));
     }
 
     #[test]
     #[should_panic = "It works!"]
     fn can_call_fn_with_no_args() {
         let mut methods = YarnCommands::default();
+        let mut world = World::default();
 
         #[allow(clippy::unused_unit)] // Needed for 2024 edition
-        methods.add_command("test", |_: In<()>| -> () { panic!("It works!") });
+        methods.add_command(
+            "test",
+            world.register_system(|_: In<()>| -> () { panic!("It works!") }),
+        );
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
         method.call(vec![], app.world_mut());
@@ -189,8 +201,12 @@ mod tests {
     #[test]
     fn can_call_fn_with_one_arg() {
         let mut methods = YarnCommands::default();
+        let mut world = World::default();
 
-        methods.add_command("test", |In(a): In<f32>| assert_eq!(1.0, a));
+        methods.add_command(
+            "test",
+            world.register_system(|In(a): In<f32>| assert_eq!(1.0, a)),
+        );
         let method = methods.get_mut("test").unwrap();
         let mut app = App::new();
         method.call(to_method_params([1.0]), app.world_mut());
@@ -199,16 +215,22 @@ mod tests {
     #[test]
     fn can_add_multiple_fns() {
         let mut methods = YarnCommands::default();
+        let mut world = World::default();
 
-        methods.add_command("test1", |_: In<()>| {});
-        methods.add_command("test2", |_: In<f32>| {});
+        methods.add_command("test1", world.register_system(|_: In<()>| {}));
+        methods.add_command("test2", world.register_system(|_: In<f32>| {}));
     }
 
     #[test]
     fn can_call_multiple_fns() {
         let mut methods = YarnCommands::default();
-        methods.add_command("test1", |_: In<()>| {});
-        methods.add_command("test2", |In(a): In<f32>| assert_eq!(1.0, a));
+        let mut world = World::default();
+
+        methods.add_command("test1", world.register_system(|_: In<()>| {}));
+        methods.add_command(
+            "test2",
+            world.register_system(|In(a): In<f32>| assert_eq!(1.0, a)),
+        );
 
         let mut app = App::new();
         {
@@ -222,9 +244,14 @@ mod tests {
     #[test]
     fn can_mutate_world() {
         let mut methods = YarnCommands::default();
-        methods.add_command("test", |In(a): In<f32>, mut commands: Commands| {
-            commands.insert_resource(Data(a))
-        });
+        let mut world = World::default();
+
+        methods.add_command(
+            "test",
+            world.register_system(|In(a): In<f32>, mut commands: Commands| {
+                commands.insert_resource(Data(a))
+            }),
+        );
 
         #[derive(Resource)]
         struct Data(f32);
@@ -244,10 +271,15 @@ mod tests {
     #[test]
     fn executes_task() {
         let mut methods = YarnCommands::default();
-        methods.add_command("test", |_: In<()>| -> Task<()> {
-            let thread_pool = AsyncComputeTaskPool::get_or_init(TaskPool::new);
-            thread_pool.spawn(async move { sleep(Duration::from_millis(500)) })
-        });
+        let mut world = World::default();
+
+        methods.add_command(
+            "test",
+            world.register_system(|_: In<()>| -> Task<()> {
+                let thread_pool = AsyncComputeTaskPool::get_or_init(TaskPool::new);
+                thread_pool.spawn(async move { sleep(Duration::from_millis(500)) })
+            }),
+        );
         let method = methods.get_mut("test").unwrap();
 
         let mut app = App::new();
@@ -261,7 +293,9 @@ mod tests {
     fn debug_prints_signature() {
         let mut methods = YarnCommands::default();
 
-        methods.add_command("test", |_: In<(f32, f32)>| {});
+        let mut world = World::default();
+
+        methods.add_command("test", world.register_system(|_: In<(f32, f32)>| {}));
         let debug_string = format!("{:?}", methods);
 
         let element_start = debug_string.find('{').unwrap();

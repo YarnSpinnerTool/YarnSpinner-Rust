@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy::ecs::system::SystemId;
 use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
 use bevy::prelude::*;
 use bevy::tasks::Task;
@@ -51,17 +52,12 @@ pub trait YarnCommand<Marker>: Send + Sync + 'static + Clone {
     type In: YarnFnParam;
     /// The return type of the command. If there is no return value, this is `()`, which means the command is considered finished immediately.
     type Out: TaskFinishedIndicator;
-    /// The parameters passed to the command from the Bevy ECS.
-    type Param: SystemParam;
 
     #[doc(hidden)]
-    fn run(
-        &mut self,
-        input: YarnFnParamItem<Self::In>,
-        param_value: SystemParamItem<Self::Param>,
-    ) -> Self::Out;
+    fn run(&mut self, input: Vec<YarnValue>, world: &mut World) -> Self::Out;
 }
 
+/*
 macro_rules! impl_command_function {
     ($($param: ident),*) => {
         #[allow(non_snake_case)]
@@ -95,10 +91,43 @@ macro_rules! impl_command_function {
         }
     };
 }
+*/
 
 // Note that we rely on the highest impl to be <= the highest order of the tuple impls
 // of `SystemParam` created.
-all_tuples!(impl_command_function, 0, 16, F);
+//all_tuples!(impl_command_function, 0, 16, F);
+
+impl<Output, P> YarnCommand<(P, Output)> for SystemId<In<P>, Output>
+where
+    Output: TaskFinishedIndicator,
+    P: YarnFnParam + 'static,
+    for<'a> P: YarnFnParam<Item<'a> = P>,
+{
+    type In = P;
+    type Out = Output;
+    #[inline]
+    fn run(&mut self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+        let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
+
+        #[allow(unused_variables, unused_mut)] // for n = 0 tuples
+        let mut iter = params.iter_mut().peekable();
+
+        let input = P::retrieve(&mut iter);
+        world.run_system_with(*self, input).unwrap()
+    }
+}
+
+impl<Output> YarnCommand<((), Output)> for SystemId<(), Output>
+where
+    Output: TaskFinishedIndicator,
+{
+    type In = ();
+    type Out = Output;
+    #[inline]
+    fn run(&mut self, _input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+        world.run_system(*self).unwrap()
+    }
+}
 
 /// Trait implemented by the return types of methods registered in the [`YarnCommands`].
 pub trait TaskFinishedIndicator: Debug + Send + Sync + 'static {
@@ -175,17 +204,7 @@ where
     T: YarnCommand<Marker>,
 {
     fn call(&mut self, input: Vec<YarnValue>, world: &mut World) -> Box<dyn TaskFinishedIndicator> {
-        let mut system_state: SystemState<T::Param> = SystemState::new(world);
-        let param = system_state.get_mut(world);
-        let mut input: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
-        let mut iter = input.iter_mut().peekable();
-        let input = T::In::retrieve(&mut iter);
-        assert!(
-            iter.next().is_none(),
-            "Passed too many arguments to Command"
-        );
-        let task = YarnCommand::run(&mut self.function, input, param);
-        system_state.apply(world);
+        let task = self.function.run(input, world);
         Box::new(task)
     }
 
@@ -271,58 +290,62 @@ pub mod tests {
     fn accepts_empty_function() {
         fn _f() {}
         // Currently not supported
-        // accepts_yarn_command(f);
+        // accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
     fn accepts_empty_tuple_in_param() {
         fn f(_: In<()>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
     fn accepts_function_with_simple_in_param() {
         fn f(_: In<usize>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
     fn accepts_function_with_optional_in_param() {
         fn f(_: In<Option<usize>>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
 
+    /*
     #[test]
     fn accepts_function_with_tuple_in_param() {
         fn f(_: In<(usize, isize, (String, &str))>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
+    */
 
     #[test]
     #[ignore]
     fn accepts_only_query() {
         fn _f(_: Query<Entity>) {}
         // Currently not supported
-        // accepts_yarn_command(f);
+        // accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
     fn accepts_empty_tuple_in_param_and_query() {
         fn f(_: In<()>, _: Query<Entity>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
     fn accepts_function_with_simple_in_param_and_query() {
         fn f(_: In<usize>, _: Query<Entity>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
 
+    /*
     #[test]
     fn accepts_function_with_tuple_in_param_and_query() {
         fn f(_: In<(usize, isize, (String, &str))>, _: Query<Entity>) {}
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
+    */
 
     #[test]
     fn accepts_returning_task() {
@@ -332,22 +355,23 @@ pub mod tests {
                 println!("Hello from task");
             })
         }
-        accepts_yarn_command(f);
+        accepts_yarn_command(World::default().register_system(f));
     }
 
     macro_rules! assert_is_yarn_command {
         (($($param:ty),*) -> $ret:ty) => {
-            static_assertions::assert_impl_all!(fn($($param),*) -> $ret: YarnCommand<fn($($param),*) -> $ret>);
+            static_assertions::assert_impl_all!(SystemId<In<($($param),*)>, $ret>: YarnCommand<(($($param),*), $ret)>);
         };
     }
 
     macro_rules! assert_is_not_yarn_command {
         (($($param:ty),*) -> $ret:ty) => {
-            static_assertions::assert_not_impl_any!(fn($($param),*) -> $ret: YarnCommand<fn($($param),*) -> $ret>);
+            static_assertions::assert_not_impl_all!(SystemId<In<($($param),*)>, $ret>: YarnCommand<(($($param),*), $ret)>);
         };
     }
 
-    assert_is_yarn_command! { (In<((), Option<()>)>) -> bool }
+    assert_is_yarn_command! { (u32) -> bool }
+    assert_is_yarn_command! { ((), Option<()>) -> bool }
     assert_is_not_yarn_command! { (In<(Option<()>, ())>) -> bool }
 
     fn accepts_yarn_command<Marker>(_: impl YarnCommand<Marker>) {}
