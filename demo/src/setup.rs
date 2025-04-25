@@ -107,7 +107,10 @@ pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnPro
         .add_command("fade_out", commands.register_system(fade_out))
         .add_command("quit", commands.register_system(quit))
         .add_command("rotate", commands.register_system(rotate_character))
-        .add_command("move_camera_to_clippy", commands.register_system(move_camera_to_clippy))
+        .add_command(
+            "move_camera_to_clippy",
+            commands.register_system(move_camera_to_clippy),
+        )
         .add_command("show_bang", commands.register_system(show_bang));
     // Immediately start showing the dialogue
     dialogue_runner.start_node("Start");

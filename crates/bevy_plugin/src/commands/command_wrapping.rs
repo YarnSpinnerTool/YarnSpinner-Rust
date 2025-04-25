@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use bevy::ecs::system::SystemId;
-use bevy::ecs::system::{SystemParam, SystemParamItem, SystemState};
 use bevy::prelude::*;
 use bevy::tasks::Task;
 use std::fmt::{Debug, Display, Formatter};
@@ -22,7 +21,8 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// # use bevy_yarnspinner::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut commands = YarnCommands::new();
-/// commands.add_command("add_player", add_player);
+/// # let mut world = bevy::prelude::World::default();
+/// commands.add_command("add_player", world.register_system(add_player));
 ///
 /// fn add_player(In((name, age)): In<(String, f32)>) {
 ///     println!("Adding player {name} with age {age}");
@@ -34,7 +34,8 @@ pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 /// # use bevy_yarnspinner::prelude::*;
 /// # use bevy::prelude::*;
 /// # let mut commands = YarnCommands::new();
-/// commands.add_command("add_player", add_player);
+/// # let mut world = bevy::prelude::World::default();
+/// commands.add_command("add_player", world.register_system(add_player));
 ///
 /// fn add_player(_: In<()>, time: Res<Time>) {
 ///    println!("Time since game start: {}", time.elapsed_secs());
@@ -56,46 +57,6 @@ pub trait YarnCommand<Marker>: Send + Sync + 'static + Clone {
     #[doc(hidden)]
     fn run(&mut self, input: Vec<YarnValue>, world: &mut World) -> Self::Out;
 }
-
-/*
-macro_rules! impl_command_function {
-    ($($param: ident),*) => {
-        #[allow(non_snake_case)]
-        impl<Input, Func: Send + Sync + 'static, Output, $($param: SystemParam),*> YarnCommand<fn(In<Input>, $($param,)*) -> Output> for Func
-        where
-            Input: YarnFnParam,
-            Output: TaskFinishedIndicator,
-            Func: Clone,
-        for <'a> &'a mut Func:
-            FnMut(In<Input>, $($param), *) -> Output +
-            FnMut(In<Input>, $(SystemParamItem<$param>),*) -> Output +
-            FnMut(In<YarnFnParamItem<Input>>, $($param), *) -> Output +
-            FnMut(In<YarnFnParamItem<Input>>, $(SystemParamItem<$param>),*) -> Output
-        {
-            type In = Input;
-            type Out = Output;
-            type Param = ($($param,)*);
-            #[inline]
-            fn run(&mut self, input: YarnFnParamItem<Input>, param_value: SystemParamItem< ($($param,)*)>) -> Self::Out {
-                #[allow(clippy::too_many_arguments)]
-                fn call_inner<Input: YarnFnParam, Output: TaskFinishedIndicator, $($param,)*>(
-                    mut f: impl FnMut(In<YarnFnParamItem<Input>>, $($param,)*) -> Output,
-                    input: In<YarnFnParamItem<Input>>,
-                    $($param: $param,)*
-                ) -> Output {
-                    f(input, $($param,)*)
-                }
-                let ($($param,)*) = param_value;
-                call_inner(self, In(input), $($param),*)
-            }
-        }
-    };
-}
-*/
-
-// Note that we rely on the highest impl to be <= the highest order of the tuple impls
-// of `SystemParam` created.
-//all_tuples!(impl_command_function, 0, 16, F);
 
 impl<Output, P> YarnCommand<(P, Output)> for SystemId<In<P>, Output>
 where
@@ -288,9 +249,8 @@ pub mod tests {
     #[test]
     #[ignore]
     fn accepts_empty_function() {
-        fn _f() {}
-        // Currently not supported
-        // accepts_yarn_command(World::default().register_system(f));
+        fn f() {}
+        accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
@@ -311,20 +271,17 @@ pub mod tests {
         accepts_yarn_command(World::default().register_system(f));
     }
 
-    /*
     #[test]
     fn accepts_function_with_tuple_in_param() {
-        fn f(_: In<(usize, isize, (String, &str))>) {}
+        fn f(_: In<(usize, isize, (String, u32))>) {}
         accepts_yarn_command(World::default().register_system(f));
     }
-    */
 
     #[test]
     #[ignore]
     fn accepts_only_query() {
-        fn _f(_: Query<Entity>) {}
-        // Currently not supported
-        // accepts_yarn_command(World::default().register_system(f));
+        fn f(_: Query<Entity>) {}
+        accepts_yarn_command(World::default().register_system(f));
     }
 
     #[test]
@@ -339,13 +296,11 @@ pub mod tests {
         accepts_yarn_command(World::default().register_system(f));
     }
 
-    /*
     #[test]
     fn accepts_function_with_tuple_in_param_and_query() {
-        fn f(_: In<(usize, isize, (String, &str))>, _: Query<Entity>) {}
+        fn f(_: In<(usize, isize, (String, u32))>, _: Query<Entity>) {}
         accepts_yarn_command(World::default().register_system(f));
     }
-    */
 
     #[test]
     fn accepts_returning_task() {

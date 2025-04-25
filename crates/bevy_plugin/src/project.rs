@@ -27,7 +27,8 @@ pub(crate) struct CompilationSystemSet;
 /// app.add_systems(Update, setup_dialogue_runners.run_if(resource_added::<YarnProject>));
 ///
 /// fn setup_dialogue_runners(mut commands: Commands, project: Res<YarnProject>) {
-///    commands.spawn(project.create_dialogue_runner());
+///    let dialogue_runner = project.create_dialogue_runner(&mut commands);
+///    commands.spawn(dialogue_runner);
 /// }
 /// ```
 #[derive(Resource, Debug)]
