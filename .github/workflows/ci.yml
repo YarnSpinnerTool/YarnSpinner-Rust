@@ -24,6 +24,10 @@ jobs:
         with:
           toolchain: stable
           components: clippy
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo clippy
@@ -59,6 +63,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo doc
@@ -66,7 +74,7 @@ jobs:
       - name: Run cargo doc for non-bevy
         run: cargo doc --no-default-features --no-deps -p yarnspinner -p yarnspinner_without_bevy_examples
 
-  test:
+  test-bevy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -75,13 +83,33 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo test
         run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
       - name: Run doc tests
         run: cargo test --workspace --all-features --doc --exclude yarnspinner_without_bevy_examples
+
+  test-without-bevy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo test for non-bevy
         run: cargo test --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
-      - name: Run doc tests non-bevy
+      - name: Run doc tests for non-bevy
         run: cargo test --doc --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
