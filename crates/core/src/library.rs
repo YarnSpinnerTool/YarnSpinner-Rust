@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Library.cs>
 
 use crate::prelude::*;
+use alloc::borrow::Cow;
 use core::fmt::Display;
-use std::borrow::Cow;
 use std::collections::hash_map;
 
 /// A collection of functions that can be called from Yarn scripts.
