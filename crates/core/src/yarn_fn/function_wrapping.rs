@@ -225,7 +225,7 @@ mod bevy_functions {
     use super::*;
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
-    use std::collections::VecDeque;
+    use alloc::collections::VecDeque;
 
     macro_rules! impl_yarn_fn_tuple_bevy {
         ($($yarn_param: ident),*) => {
