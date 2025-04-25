@@ -1,6 +1,6 @@
 [package]
 name = "bevy_yarnspinner"
-version = "0.5.0-rc.1"
+version = "0.5.0"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -23,14 +23,14 @@ serde = { version = "1", features = ["derive"] }
 yarnspinner = { path = "../yarnspinner", features = [
     "bevy",
     "serde",
-], version = "0.5.0-rc" }
+], version = "0.5.0" }
 sha2 = "0.10"
 rand = { version = "0.8", features = ["small_rng"] }
 variadics_please = "1"
 
 
 [dependencies.bevy]
-version = "0.16.0-rc"
+version = "0.16.0"
 default-features = false
 features = ["bevy_asset", "multi_threaded", "bevy_log"]
 
@@ -39,7 +39,7 @@ tempfile = "3"
 static_assertions = "1.1.0"
 
 [dev-dependencies.bevy]
-version = "0.16.0-rc"
+version = "0.16.0"
 default-features = false
 features = ["bevy_core_pipeline", "bevy_audio"]
 

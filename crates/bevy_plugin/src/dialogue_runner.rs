@@ -14,8 +14,10 @@ use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use anyhow::{anyhow, bail, Result};
 use bevy::asset::LoadedUntypedAsset;
-use bevy::platform_support::collections::HashSet;
-use bevy::{platform_support::collections::HashMap, prelude::*};
+use bevy::{
+    platform::collections::{HashMap, HashSet},
+    prelude::*,
+};
 pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;

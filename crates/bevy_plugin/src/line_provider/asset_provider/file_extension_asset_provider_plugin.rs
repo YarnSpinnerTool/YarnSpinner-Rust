@@ -2,7 +2,7 @@ use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use crate::UnderlyingYarnLine;
 use bevy::asset::{LoadState, LoadedUntypedAsset};
-use bevy::platform_support::collections::{HashMap, HashSet};
+use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
@@ -50,7 +50,7 @@ pub struct FileExtensionAssetProvider {
 macro_rules! file_extensions {
     ($($type:ty: $ext:expr),* $(,)?) => {
         {
-            bevy::platform_support::collections::HashMap::from([
+            bevy::platform::collections::HashMap::from([
                 $(
                     (<$type as bevy::reflect::TypePath>::type_path(), $ext),
                 )*

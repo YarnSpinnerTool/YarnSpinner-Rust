@@ -7,7 +7,7 @@ use crate::{
 };
 use bevy::app::AppExit;
 use bevy::pbr::NotShadowCaster;
-use bevy::platform_support::time::Instant;
+use bevy::platform::time::Instant;
 use bevy::prelude::*;
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 use bevy_yarnspinner_example_dialogue_view::prelude::*;

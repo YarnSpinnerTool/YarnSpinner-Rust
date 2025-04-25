@@ -4,7 +4,7 @@ use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::{anyhow, bail, Result};
-use bevy::platform_support::collections::HashSet;
+use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::fmt::Debug;
 

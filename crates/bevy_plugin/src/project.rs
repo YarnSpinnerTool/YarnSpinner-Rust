@@ -1,6 +1,6 @@
 use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
-use bevy::platform_support::collections::{HashMap, HashSet};
+use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 pub(crate) use compilation::{
     RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
