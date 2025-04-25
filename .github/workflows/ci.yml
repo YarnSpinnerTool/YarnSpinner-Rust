@@ -79,9 +79,9 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo test
         run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
+      - name: Run doc tests
+        run: cargo test --workspace --all-features --doc --exclude yarnspinner_without_bevy_examples
       - name: Run cargo test for non-bevy
         run: cargo test --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
-      - name: Run doc tests
-        run: cargo test --workspace --doc --exclude yarnspinner_without_bevy_examples
       - name: Run doc tests non-bevy
         run: cargo test --doc --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
