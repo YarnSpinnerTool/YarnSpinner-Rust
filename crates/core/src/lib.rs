@@ -17,6 +17,8 @@ pub mod types;
 mod yarn_fn;
 mod yarn_value;
 
+extern crate alloc;
+
 pub mod prelude {
     //! Types and functions used all throughout the runtime and compiler.
     #[cfg(any(feature = "bevy", feature = "serde"))]

@@ -24,3 +24,8 @@ variadics_please = "1.1.0"
 
 [dev-dependencies]
 static_assertions = "1.1.0"
+
+[lints.clippy]
+std_instead_of_core = "warn"
+std_instead_of_alloc = "warn"
+alloc_instead_of_core = "warn"

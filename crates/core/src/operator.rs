@@ -1,7 +1,7 @@
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
+use alloc::borrow::Cow;
 use core::fmt;
-use std::borrow::Cow;
 
 /// The available operators that can be used with Yarn values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
