@@ -1,21 +1,21 @@
 name: CI
 
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
-  # Sparse cargo registry for faster updates
-  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  RUSTFLAGS: --deny warnings
+  RUSTDOCFLAGS: --deny warnings
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
-    env:
-      # Handle cargo check and cargo clippy warnings as errors
-      RUSTFLAGS: "-D warnings"
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,23 +24,22 @@ jobs:
         with:
           toolchain: stable
           components: clippy
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo clippy
-        run: cargo clippy --workspace --all-features --tests --examples --exclude yarnspinner_without_bevy_examples
-      - name: Run cargo clippy for serde
-        run: cargo clippy --workspace --tests --features serde --exclude yarnspinner_without_bevy_examples
-      - name: Run cargo clippy for bevy
-        run: cargo clippy --workspace --tests --features bevy --exclude yarnspinner_without_bevy_examples
+        run: cargo clippy --workspace --all-features --tests --examples --exclude yarnspinner_without_bevy_examples -- --deny warnings
       - name: Run cargo clippy for non-bevy
-        run: cargo clippy --tests
-        working-directory: examples/yarnspinner_without_bevy
+        run: cargo clippy --no-default-features --tests -p yarnspinner -p yarnspinner_without_bevy_examples -- --deny warnings
 
 
   format:
+    name: Format
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-D warnings"
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,13 +49,12 @@ jobs:
           toolchain: stable
           components: rustfmt
       - name: Run cargo fmt
-        run: cargo fmt --check --all
+        run: cargo fmt --all -- --check
 
   doc:
+    name: Docs
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-D warnings"
-      RUSTDOCFLAGS: '--deny warnings'
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,13 +62,21 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo doc
-        run: cargo doc --no-deps --workspace --all-features
+        run: cargo doc --no-deps --workspace --all-features --exclude yarnspinner_without_bevy_examples
+      - name: Run cargo doc for non-bevy
+        run: cargo doc --no-default-features --no-deps -p yarnspinner -p yarnspinner_without_bevy_examples
 
-  test:
+  test-bevy:
+    name: Test with Bevy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,18 +84,35 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo test
-        run: cargo test
-        working-directory: crates/yarnspinner
-      - name: Run cargo test non-bevy
-        run: cargo test
-        working-directory: examples/yarnspinner_without_bevy
-      - name: Run cargo test
         run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
       - name: Run doc tests
-        run: cargo test --workspace --doc --exclude yarnspinner_without_bevy_examples
-      - name: Run doc tests non-bevy
-        run: cargo test --doc
-        working-directory: examples/yarnspinner_without_bevy
+        run: LD_LIBRARY_PATH="$(rustc --print target-libdir)" cargo test --workspace --all-features --doc --exclude yarnspinner_without_bevy_examples
+
+  test-without-bevy:
+    name: Test without Bevy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Populate target directory from cache
+        uses: Leafwing-Studios/cargo-cache@v2
+        with:
+          sweep-cache: true
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+      - name: Run cargo test for non-bevy
+        run: cargo test --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
+      - name: Run doc tests for non-bevy
+        run: LD_LIBRARY_PATH="$(rustc --print target-libdir)" cargo test --doc --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
