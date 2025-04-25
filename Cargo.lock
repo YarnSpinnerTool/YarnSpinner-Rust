@@ -1143,7 +1143,7 @@ dependencies = [
 [[package]]
 name = "bevy_sprite3d"
 version = "5.0.0-rc.1"
-source = "git+https://github.com/FraserLee/bevy_sprite3d.git#d50b70a5a70a8786e86f98bcbac4ce5ed5a4f588"
+source = "git+https://github.com/extrawurst/bevy_sprite3d.git?branch=bevy-0.16#e8e03a4c079e9180f971c5dbc23dce19e76dc9df"
 dependencies = [
  "bevy",
 ]
