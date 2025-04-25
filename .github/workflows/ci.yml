@@ -62,7 +62,7 @@ jobs:
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo doc
-        run: cargo doc --no-deps --workspace --all-features
+        run: cargo doc --no-deps --workspace --all-features --exclude yarnspinner_without_bevy_examples
       - name: Run cargo doc for non-bevy
         run: cargo doc --no-default-features --no-deps -p yarnspinner -p yarnspinner_without_bevy_examples
 
