@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use variadics_please::all_tuples;
-use yarnspinner::core::{YarnFnParam, YarnFnParamItem, YarnValueWrapper};
+use yarnspinner::core::{YarnFnParam, YarnValueWrapper};
 
 pub(crate) fn command_wrapping_plugin(_app: &mut App) {}
 

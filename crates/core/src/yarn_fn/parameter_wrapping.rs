@@ -4,13 +4,13 @@
 
 use super::optionality::{AllowedOptionalityChain, Optional, Optionality, Required};
 use crate::prelude::*;
-use std::any::Any;
-use std::any::TypeId;
-use std::borrow::Borrow;
-use std::fmt::{Debug, Display};
-use std::iter::Peekable;
-use std::marker::PhantomData;
-use std::slice::IterMut;
+use core::any::Any;
+use core::any::TypeId;
+use core::borrow::Borrow;
+use core::fmt::{Debug, Display};
+use core::iter::Peekable;
+use core::marker::PhantomData;
+use core::slice::IterMut;
 use variadics_please::all_tuples;
 
 /// Helper class for implementing something like [`YarnFn`] yourself.
