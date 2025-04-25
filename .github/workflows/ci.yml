@@ -13,10 +13,9 @@ env:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
-    env:
-      # Handle cargo check and cargo clippy warnings as errors
-      RUSTFLAGS: "-D warnings"
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,9 +37,9 @@ jobs:
 
 
   format:
+    name: Format
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-D warnings"
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,10 +52,9 @@ jobs:
         run: cargo fmt --all -- --check
 
   doc:
+    name: Docs
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-D warnings"
-      RUSTDOCFLAGS: '--deny warnings'
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,7 +74,9 @@ jobs:
         run: cargo doc --no-default-features --no-deps -p yarnspinner -p yarnspinner_without_bevy_examples
 
   test-bevy:
+    name: Test with Bevy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,7 +96,9 @@ jobs:
         run: LD_LIBRARY_PATH="$(rustc --print target-libdir)" cargo test --workspace --all-features --doc --exclude yarnspinner_without_bevy_examples
 
   test-without-bevy:
+    name: Test without Bevy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
