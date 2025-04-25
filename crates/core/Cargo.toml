@@ -10,17 +10,21 @@ license = "MIT OR Apache-2.0"
 description = "Core concepts for Yarn Spinner for Rust, the friendly tool for writing game dialogue"
 
 [features]
-default = []
-serde = ["dep:serde", "bevy?/serialize"]
+default = ["std"]
+std = ["prost/std"]
+serde = ["dep:serde", "bevy?/serialize", "hashbrown/serde"]
 bevy = ["dep:bevy"]
 
 [dependencies]
-prost = "0.12"
+prost = { version = "0.12", default-features = false, features = [
+    "prost-derive",
+] }
 serde = { version = "1", features = ["derive"], optional = true }
 bevy = { version = "0.16.0", default-features = false, optional = true, features = [
     "std",
 ] }
 variadics_please = "1.1.0"
+hashbrown = "0.15.2"
 
 [dev-dependencies]
 static_assertions = "1.1.0"

@@ -6,6 +6,13 @@
 //! - If you wish to write an adapter crate for an engine yourself, use the [`yarnspinner`](https://crates.io/crates/yarnspinner) crate.
 
 #![warn(missing_docs, missing_debug_implementations)]
+#![no_std]
+
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
+
 mod feature_gates;
 mod generated;
 mod internal_value;
@@ -17,12 +24,20 @@ pub mod types;
 mod yarn_fn;
 mod yarn_value;
 
-extern crate alloc;
-
 pub mod prelude {
     //! Types and functions used all throughout the runtime and compiler.
     #[cfg(any(feature = "bevy", feature = "serde"))]
     pub use crate::feature_gates::*;
+
+    // Re-export alloc types for internal use only
+    pub(crate) use crate::{
+        alloc::borrow::ToOwned,
+        alloc::boxed::Box,
+        alloc::format,
+        alloc::string::{String, ToString},
+        alloc::vec,
+        alloc::vec::Vec,
+    };
 
     pub use crate::{
         generated::{
