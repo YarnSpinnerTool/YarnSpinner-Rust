@@ -1,15 +1,15 @@
-//! This helper code allows us to pass params to YarnFns by value (e.g. `usize`), by reference (e.g. (`&usize`) or by [`std::borrow::Borrow`] (e.g. `String` -> `&str`)
+//! This helper code allows us to pass params to YarnFns by value (e.g. `usize`), by reference (e.g. (`&usize`) or by [`core::borrow::Borrow`] (e.g. `String` -> `&str`)
 //!
 //! Inspired by <https://promethia-27.github.io/dependency_injection_like_bevy_from_scratch/chapter2/passing_references.html>
 
 use super::optionality::{AllowedOptionalityChain, Optional, Optionality, Required};
 use crate::prelude::*;
-use std::any::Any;
-use std::borrow::Borrow;
-use std::fmt::{Debug, Display};
-use std::iter::Peekable;
-use std::marker::PhantomData;
-use std::slice::IterMut;
+use core::any::Any;
+use core::borrow::Borrow;
+use core::fmt::{Debug, Display};
+use core::iter::Peekable;
+use core::marker::PhantomData;
+use core::slice::IterMut;
 use variadics_please::all_tuples;
 
 /// Helper class for implementing something like [`YarnFn`] yourself.
@@ -38,7 +38,7 @@ impl YarnValueWrapper {
         T: TryFrom<YarnValue> + 'static,
         <T as TryFrom<YarnValue>>::Error: Display,
     {
-        let raw = std::mem::take(&mut self.raw).unwrap();
+        let raw = core::mem::take(&mut self.raw).unwrap();
         let converted: T = raw
             .try_into()
             .unwrap_or_else(|e| panic!("Parameter passed to Yarn has invalid type: {e}"));

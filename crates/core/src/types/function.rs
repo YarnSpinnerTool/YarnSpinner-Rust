@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use crate::types::TypeProperties;
 use crate::types::{Type, TypeFormat};
-use std::fmt::Display;
+use core::fmt::Display;
 
 pub(crate) fn function_type_properties(function_type: &FunctionType) -> TypeProperties {
     TypeProperties::from_name("Function").with_description(function_type.to_string())
@@ -57,7 +57,7 @@ impl FunctionType {
 }
 
 impl Display for FunctionType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let parameters = self
             .parameters
             .iter()

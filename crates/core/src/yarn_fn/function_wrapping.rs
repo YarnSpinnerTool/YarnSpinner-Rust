@@ -2,9 +2,9 @@ use super::optionality::AllowedOptionalityChain;
 use crate::prelude::*;
 #[cfg(feature = "bevy")]
 use bevy::prelude::World;
-use std::any::TypeId;
-use std::fmt::{Debug, Display, Formatter};
-use std::marker::PhantomData;
+use core::any::TypeId;
+use core::fmt::{Debug, Display, Formatter};
+use core::marker::PhantomData;
 use variadics_please::all_tuples;
 
 /// A function that can be registered into and called from Yarn.
@@ -168,9 +168,9 @@ impl<Marker, F> Debug for YarnFnWrapper<Marker, F>
 where
     F: YarnFn<Marker>,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let signature = std::any::type_name::<Marker>();
-        let function_path = std::any::type_name::<F>();
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        let signature = core::any::type_name::<Marker>();
+        let function_path = core::any::type_name::<F>();
         let debug_message = format!("{signature} {{{function_path}}}");
         f.debug_struct(&debug_message).finish()
     }
@@ -180,8 +180,8 @@ impl<Marker, F> Display for YarnFnWrapper<Marker, F>
 where
     F: YarnFn<Marker>,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let signature = std::any::type_name::<Marker>();
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        let signature = core::any::type_name::<Marker>();
         f.write_str(signature)
     }
 }

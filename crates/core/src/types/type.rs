@@ -4,9 +4,9 @@ use crate::types::boolean::boolean_type_properties;
 use crate::types::number::number_type_properties;
 use crate::types::string::string_type_properties;
 use crate::types::*;
-use std::any::TypeId;
-use std::error::Error;
-use std::fmt::{Debug, Display};
+use core::any::TypeId;
+use core::error::Error;
+use core::fmt::{Debug, Display};
 
 /// All types in the virtual machine, both built-in, i.e. usable in Yarn scripts, and internal.
 ///
@@ -45,7 +45,7 @@ pub enum Type {
 }
 
 impl Display for Type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let name = self.name();
         match self {
             Type::Function(function) => Display::fmt(function, f),
@@ -244,7 +244,7 @@ pub enum InvalidDowncastError {
 impl Error for InvalidDowncastError {}
 
 impl Display for InvalidDowncastError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             InvalidDowncastError::InvalidTypeId(id) => {
                 write!(f, "Cannot convert TypeId {id:?} to a Yarn Spinner `Type`")

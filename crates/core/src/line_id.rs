@@ -1,6 +1,6 @@
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
-use std::fmt::Display;
+use core::fmt::Display;
 
 /// The unique ID of a line in a Yarn script. In a Yarn script, line IDs look like this:
 /// ```text
@@ -33,7 +33,7 @@ impl AsRef<str> for LineId {
 }
 
 impl Display for LineId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.0.fmt(f)
     }
 }
