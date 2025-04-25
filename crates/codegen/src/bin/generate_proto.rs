@@ -9,11 +9,12 @@ fn main() -> Result<()> {
     env::set_var("OUT_DIR", output_dir);
 
     let mut config = prost_build::Config::new();
-    
+
     // Use BTreeMap instead of HashMap for no-std compatibility
-    config.btree_map(&["."]);
-    
-    config.type_attribute(
+    config.btree_map(["."]);
+
+    config
+        .type_attribute(
             ".",
             "use crate::prelude::*;\
              #[cfg_attr(feature = \"serde\", derive(Serialize, Deserialize))]\n\
