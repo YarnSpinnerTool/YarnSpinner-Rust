@@ -2,7 +2,7 @@ use crate::default_impl::{MemoryVariableStorage, StringsFileTextProvider};
 use crate::fmt_utils::SkipDebug;
 use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::any::{Any, TypeId};

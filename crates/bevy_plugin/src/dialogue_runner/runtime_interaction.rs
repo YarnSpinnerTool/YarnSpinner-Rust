@@ -6,7 +6,7 @@ use crate::prelude::*;
 use anyhow::bail;
 use bevy::asset::LoadedUntypedAsset;
 use bevy::ecs::system::SystemState;
-use bevy::platform_support::{collections::HashMap, hash::FixedHasher};
+use bevy::platform::{collections::HashMap, hash::FixedHasher};
 use bevy::prelude::*;
 
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {

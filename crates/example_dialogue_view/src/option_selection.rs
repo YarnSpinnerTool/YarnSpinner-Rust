@@ -2,7 +2,7 @@ use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRoo
 use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::color::palettes::css;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, SystemCursorIcon};
 use bevy::winit::cursor::CursorIcon;

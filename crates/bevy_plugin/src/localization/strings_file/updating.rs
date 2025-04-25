@@ -1,6 +1,6 @@
 use crate::plugin::AssetRoot;
 use crate::{localization::line_id_generation::LineIdUpdateSystemSet, prelude::*};
-use bevy::platform_support::collections::{HashMap, HashSet};
+use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {

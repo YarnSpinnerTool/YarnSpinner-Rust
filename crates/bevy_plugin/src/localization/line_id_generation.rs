@@ -2,7 +2,7 @@ use crate::localization::UpdateAllStringsFilesForStringTableEvent;
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
-use bevy::platform_support::collections::HashSet;
+use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::hash::Hash;
 

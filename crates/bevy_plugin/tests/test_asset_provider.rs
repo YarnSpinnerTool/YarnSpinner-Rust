@@ -1,6 +1,6 @@
 #![cfg(feature = "audio_assets")]
 use anyhow::{bail, Result};
-use bevy::platform_support::time::Instant;
+use bevy::platform::time::Instant;
 use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use utils::prelude::*;

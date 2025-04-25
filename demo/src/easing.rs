@@ -1,4 +1,4 @@
-use bevy::platform_support::time::Instant;
+use bevy::platform::time::Instant;
 use bevy::prelude::*;
 use std::f32::consts::PI;
 use std::fmt::Debug;

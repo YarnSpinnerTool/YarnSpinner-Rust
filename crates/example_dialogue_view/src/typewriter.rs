@@ -2,7 +2,7 @@ use crate::option_selection::OptionSelection;
 use crate::setup::{create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode};
 use crate::updating::SpeakerChangeEvent;
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
-use bevy::platform_support::time::Instant;
+use bevy::platform::time::Instant;
 use bevy::prelude::*;
 use bevy_yarnspinner::{events::*, prelude::*};
 use unicode_segmentation::UnicodeSegmentation;
