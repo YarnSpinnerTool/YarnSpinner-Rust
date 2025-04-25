@@ -33,8 +33,7 @@ jobs:
       - name: Run cargo clippy for bevy
         run: cargo clippy --workspace --tests --features bevy --exclude yarnspinner_without_bevy_examples
       - name: Run cargo clippy for non-bevy
-        run: cargo clippy --tests
-        working-directory: examples/yarnspinner_without_bevy
+        run: cargo clippy --no-default-features --tests -p yarnspinner -p yarnspinner_without_bevy_examples
 
 
   format:
@@ -68,6 +67,8 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run cargo doc
         run: cargo doc --no-deps --workspace --all-features
+      - name: Run cargo doc for non-bevy
+        run: cargo doc --no-default-features --no-deps -p yarnspinner -p yarnspinner_without_bevy_examples
 
   test:
     runs-on: ubuntu-latest
@@ -84,12 +85,11 @@ jobs:
         run: cargo test
         working-directory: crates/yarnspinner
       - name: Run cargo test non-bevy
-        run: cargo test
+        run: cargo test --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
         working-directory: examples/yarnspinner_without_bevy
       - name: Run cargo test
         run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
       - name: Run doc tests
         run: cargo test --workspace --doc --exclude yarnspinner_without_bevy_examples
       - name: Run doc tests non-bevy
-        run: cargo test --doc
-        working-directory: examples/yarnspinner_without_bevy
+        run: cargo test --doc --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
