@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 use crate::types::TypeProperties;
-use std::ops::*;
+use core::ops::*;
 
 /// A type that bridges to [`f32`]
 pub(crate) fn number_type_properties() -> TypeProperties {

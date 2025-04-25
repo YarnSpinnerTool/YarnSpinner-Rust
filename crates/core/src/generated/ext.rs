@@ -1,8 +1,8 @@
 //! Contains extensions to generated types that in the original implementation are sprinkled around the repo via partial classes
 
 use crate::prelude::*;
-use std::error::Error;
-use std::fmt::{Debug, Display};
+use core::error::Error;
+use core::fmt::{Debug, Display};
 
 impl From<String> for Operand {
     fn from(s: String) -> Self {
@@ -107,7 +107,7 @@ pub struct InvalidOpCodeError(pub i32);
 impl Error for InvalidOpCodeError {}
 
 impl Display for InvalidOpCodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?} is not a valid OpCode", self.0)
     }
 }
