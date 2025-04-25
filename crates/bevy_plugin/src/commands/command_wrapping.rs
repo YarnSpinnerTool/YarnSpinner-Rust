@@ -315,12 +315,14 @@ pub mod tests {
 
     macro_rules! assert_is_yarn_command {
         (($($param:ty),*) -> $ret:ty) => {
+            #[allow(unused_parens)]
             static_assertions::assert_impl_all!(SystemId<In<($($param),*)>, $ret>: YarnCommand<(($($param),*), $ret)>);
         };
     }
 
     macro_rules! assert_is_not_yarn_command {
         (($($param:ty),*) -> $ret:ty) => {
+            #[allow(unused_parens)]
             static_assertions::assert_not_impl_all!(SystemId<In<($($param),*)>, $ret>: YarnCommand<(($($param),*), $ret)>);
         };
     }
