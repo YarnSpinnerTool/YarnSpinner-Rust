@@ -223,9 +223,9 @@ macro_rules! count_tts {
 #[cfg(feature = "bevy")]
 mod bevy_functions {
     use super::*;
+    use alloc::collections::VecDeque;
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
-    use alloc::collections::VecDeque;
 
     macro_rules! impl_yarn_fn_tuple_bevy {
         ($($yarn_param: ident),*) => {
