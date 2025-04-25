@@ -83,7 +83,7 @@
 //! }
 //!
 //! fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-//!     let mut dialogue_runner = project.create_dialogue_runner();
+//!     let mut dialogue_runner = project.create_dialogue_runner(&mut commands);
 //!     // Start the dialog at the node with the title "Start"
 //!     dialogue_runner.start_node("Start");
 //!     commands.spawn(dialogue_runner);

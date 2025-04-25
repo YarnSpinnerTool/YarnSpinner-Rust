@@ -137,9 +137,10 @@ impl YarnCommands {
 /// # use bevy::prelude::*;
 /// # use bevy_yarnspinner::prelude::*;
 /// # use bevy_yarnspinner::yarn_commands;
+/// # let mut world = World::default();
 ///
 /// let commands = yarn_commands! {
-///    "add_player" => add_player,
+///    "add_player" => world.register_system(add_player),
 /// };
 ///
 /// fn add_player(In((name, age)): In<(String, f32)>) {
@@ -194,8 +195,7 @@ mod tests {
             world.register_system(|_: In<()>| -> () { panic!("It works!") }),
         );
         let method = methods.get_mut("test").unwrap();
-        let mut app = App::new();
-        method.call(vec![], app.world_mut());
+        method.call(vec![], &mut world);
     }
 
     #[test]
@@ -208,8 +208,7 @@ mod tests {
             world.register_system(|In(a): In<f32>| assert_eq!(1.0, a)),
         );
         let method = methods.get_mut("test").unwrap();
-        let mut app = App::new();
-        method.call(to_method_params([1.0]), app.world_mut());
+        method.call(to_method_params([1.0]), &mut world);
     }
 
     #[test]
@@ -232,13 +231,12 @@ mod tests {
             world.register_system(|In(a): In<f32>| assert_eq!(1.0, a)),
         );
 
-        let mut app = App::new();
         {
             let method1 = methods.get_mut("test1").unwrap();
-            method1.call(vec![], app.world_mut());
+            method1.call(vec![], &mut world);
         }
         let method2 = methods.get_mut("test2").unwrap();
-        method2.call(to_method_params([1.0]), app.world_mut());
+        method2.call(to_method_params([1.0]), &mut world);
     }
 
     #[test]
@@ -258,9 +256,8 @@ mod tests {
 
         let method = methods.get_mut("test").unwrap();
 
-        let mut app = App::new();
-        method.call(to_method_params([1.0]), app.world_mut());
-        let data = app.world().resource::<Data>();
+        method.call(to_method_params([1.0]), &mut world);
+        let data = world.resource::<Data>();
         assert_eq!(data.0, 1.0);
     }
 
@@ -282,8 +279,7 @@ mod tests {
         );
         let method = methods.get_mut("test").unwrap();
 
-        let mut app = App::new();
-        let task = method.call(vec![], app.world_mut());
+        let task = method.call(vec![], &mut world);
         assert!(!task.is_finished());
         sleep(Duration::from_millis(600));
         assert!(task.is_finished());
@@ -305,9 +301,6 @@ mod tests {
         let element = &debug_string[element_start..element_end];
 
         // Not testing the part after because its stability is not guaranteed.
-        assert_eq!(
-            element,
-            "{\"test\": fn(bevy_ecs::system::input::In<(f32, f32)>)"
-        );
+        assert_eq!(element, "{\"test\": ((f32, f32), ())");
     }
 }
