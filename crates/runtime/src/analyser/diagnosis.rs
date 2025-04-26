@@ -4,7 +4,7 @@
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use core::fmt::{Display, Formatter};
-use std::iter;
+use core::iter;
 
 /// A result of analysing a compiled Yarn program with [`Dialogue::analyse`]. Created by the [`CompiledProgramAnalyser`]s used in the given [`Context`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

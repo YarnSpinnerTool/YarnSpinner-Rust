@@ -54,7 +54,7 @@ impl MarkupAttribute {
 }
 
 impl Display for MarkupAttribute {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let properties = (!self.properties.is_empty())
             .then(|| format!(", {} properties", self.properties.len()))
             .unwrap_or_default();

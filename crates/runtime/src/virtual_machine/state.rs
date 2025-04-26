@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/VirtualMachine.cs>, which we split into multiple files
 
 use crate::prelude::*;
-use std::fmt::Debug;
+use core::fmt::Debug;
 use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Default)]
