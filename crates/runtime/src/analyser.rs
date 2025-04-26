@@ -2,7 +2,7 @@
 
 pub(crate) use self::default_analysers::*;
 pub use self::{context::*, diagnosis::*};
-use std::fmt::Debug;
+use core::fmt::Debug;
 use yarnspinner_core::prelude::*;
 
 mod context;

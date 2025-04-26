@@ -9,8 +9,8 @@ use crate::prelude::*;
 use crate::Result;
 #[cfg(feature = "bevy")]
 use bevy::prelude::World;
+use core::fmt::Debug;
 use log::*;
-use std::fmt::Debug;
 use yarnspinner_core::prelude::OpCode;
 use yarnspinner_core::prelude::*;
 
@@ -97,7 +97,7 @@ impl VirtualMachine {
     pub(crate) fn stop(&mut self) -> Vec<DialogueEvent> {
         self.set_execution_state(ExecutionState::Stopped);
         self.batched_events.push(DialogueEvent::DialogueComplete);
-        std::mem::take(&mut self.batched_events)
+        core::mem::take(&mut self.batched_events)
     }
 
     pub(crate) fn set_node(&mut self, node_name: impl Into<String>) -> Result<()> {
@@ -211,7 +211,7 @@ impl VirtualMachine {
             self.batched_events.push(DialogueEvent::DialogueComplete);
             debug!("Run complete.");
         }
-        Ok(std::mem::take(&mut self.batched_events))
+        Ok(core::mem::take(&mut self.batched_events))
     }
 
     pub(crate) fn parse_markup(&mut self, line: &str) -> crate::markup::Result<ParsedMarkup> {

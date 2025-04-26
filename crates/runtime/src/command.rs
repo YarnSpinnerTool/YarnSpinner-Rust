@@ -87,7 +87,7 @@ fn split_command_text(input: &str) -> Vec<String> {
                     // We've reached the end of a run of visible
                     // characters. Add this run to the result list and
                     // prepare for the next one.
-                    results.push(std::mem::take(&mut current_component));
+                    results.push(core::mem::take(&mut current_component));
                 } else {
                     // We encountered a whitespace character, but
                     // didn't have any characters queued up. Skip this
@@ -133,7 +133,7 @@ fn split_command_text(input: &str) -> Vec<String> {
                         }
                     }
                 }
-                results.push(std::mem::take(&mut current_component));
+                results.push(core::mem::take(&mut current_component));
             }
             _ => {
                 current_component.push(char);

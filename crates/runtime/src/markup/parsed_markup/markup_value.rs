@@ -41,7 +41,7 @@ impl MarkupValue {
 }
 
 impl Display for MarkupValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             MarkupValue::Integer(i) => write!(f, "{i}"),
             MarkupValue::Float(fl) => write!(f, "{fl}"),

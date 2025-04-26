@@ -1,13 +1,13 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
-use std::any::Any;
+use core::any::Any;
+use core::error::Error;
+use core::fmt::{self, Debug, Display};
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt::{self, Debug, Display};
 use std::sync::{Arc, RwLock};
 use yarnspinner_core::prelude::*;
 
 #[allow(missing_docs)]
-pub type Result<T> = std::result::Result<T, VariableStorageError>;
+pub type Result<T> = core::result::Result<T, VariableStorageError>;
 
 /// Provides a mechanism for storing and retrieving instances
 /// of the [`YarnValue`] type.

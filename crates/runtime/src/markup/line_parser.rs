@@ -12,7 +12,7 @@ use std::collections::{HashMap, VecDeque};
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 
-pub type Result<T> = std::result::Result<T, MarkupParseError>;
+pub type Result<T> = core::result::Result<T, MarkupParseError>;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]

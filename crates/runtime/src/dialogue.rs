@@ -4,10 +4,10 @@ use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
 #[cfg(feature = "bevy")]
 use bevy::prelude::World;
+use core::error::Error;
+use core::fmt::{self, Debug, Display};
 use log::error;
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt::{self, Debug, Display};
 use yarnspinner_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.
@@ -20,7 +20,7 @@ pub struct Dialogue {
 }
 
 #[allow(missing_docs)]
-pub type Result<T> = std::result::Result<T, DialogueError>;
+pub type Result<T> = core::result::Result<T, DialogueError>;
 
 #[allow(missing_docs)]
 #[derive(Debug)]
@@ -166,7 +166,7 @@ impl Dialogue {
     ) -> Option<Language> {
         let language_code = language_code.into();
         self.vm.set_language_code(language_code.clone());
-        std::mem::replace(&mut self.language_code, language_code)
+        core::mem::replace(&mut self.language_code, language_code)
     }
 
     /// Gets the [`Library`] that this Dialogue uses to locate functions.

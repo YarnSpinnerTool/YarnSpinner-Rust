@@ -1,8 +1,8 @@
 use crate::markup::TRIM_WHITESPACE_PROPERTY;
 #[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
-use std::error::Error;
-use std::fmt;
+use core::error::Error;
+use core::fmt;
 
 #[allow(missing_docs)]
 #[derive(Debug, PartialEq, Eq, Hash)]
