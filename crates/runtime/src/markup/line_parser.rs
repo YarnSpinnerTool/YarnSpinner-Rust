@@ -1,14 +1,16 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/YarnSpinner.Markup/LineParser.cs>
 
+use std::collections::VecDeque;
+
 use crate::markup::parsed_markup::ParsedMarkup;
 use crate::markup::{
     AttributeMarkerProcessor, MarkupAttribute, MarkupAttributeMarker, MarkupParseError,
     MarkupValue, NoMarkupTextProcessor, TagType,
 };
 use crate::prelude::*;
+use bevy_platform::collections::HashMap;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::collections::{HashMap, VecDeque};
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 

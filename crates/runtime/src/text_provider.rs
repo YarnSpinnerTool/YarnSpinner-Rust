@@ -1,9 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
 use crate::prelude::Language;
+use bevy_platform::collections::HashMap;
 use core::any::Any;
 use core::fmt::Debug;
 use log::error;
-use std::collections::HashMap;
 use yarnspinner_core::prelude::*;
 
 /// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue). The default implementation is [`StringTableTextProvider`], which keeps the

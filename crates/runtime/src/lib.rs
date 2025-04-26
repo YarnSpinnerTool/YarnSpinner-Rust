@@ -6,6 +6,9 @@
 //! - If you wish to write an adapter crate for an engine yourself, use the [`yarnspinner`](https://crates.io/crates/yarnspinner) crate.
 
 #![warn(missing_docs, missing_debug_implementations)]
+
+extern crate alloc;
+
 mod analyser;
 mod command;
 mod dialogue;

@@ -2,7 +2,7 @@
 //! which was split into multiple files.
 
 use crate::prelude::*;
-use std::collections::HashSet;
+use bevy_platform::collections::HashSet;
 use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Default)]

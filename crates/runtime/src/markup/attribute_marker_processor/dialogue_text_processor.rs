@@ -2,8 +2,8 @@
 
 use crate::markup::AttributeMarkerProcessor;
 use crate::prelude::*;
+use bevy_platform::collections::HashSet;
 use icu_plurals::PluralCategory;
-use std::collections::HashSet;
 
 #[derive(Default, Debug, Clone)]
 pub(crate) struct DialogueTextProcessor {
