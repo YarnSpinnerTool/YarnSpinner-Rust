@@ -2,7 +2,6 @@
 //! which was split into multiple files.
 
 use crate::markup::{MarkupAttributeMarker, MarkupValue};
-#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use bevy_platform::collections::HashMap;
 use core::fmt::Display;

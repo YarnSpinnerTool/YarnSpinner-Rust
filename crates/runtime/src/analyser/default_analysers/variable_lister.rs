@@ -3,7 +3,6 @@
 
 use crate::prelude::*;
 use bevy_platform::collections::HashSet;
-use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Default)]
 pub(crate) struct VariableLister {

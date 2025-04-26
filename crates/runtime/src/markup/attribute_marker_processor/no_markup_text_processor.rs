@@ -3,7 +3,7 @@
 use crate::markup::{
     AttributeMarkerProcessor, MarkupAttributeMarker, MarkupValue, REPLACEMENT_MARKER_CONTENTS,
 };
-use crate::prelude::Language;
+use crate::prelude::*;
 
 /// A markup text processor that implements the `[nomarkup]` attribute's behaviour.
 #[derive(Default, Debug, Clone)]

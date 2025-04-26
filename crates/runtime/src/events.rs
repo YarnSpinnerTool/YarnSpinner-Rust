@@ -6,7 +6,6 @@
 //! - Additional newtypes were introduced for strings.
 
 use crate::prelude::*;
-use yarnspinner_core::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]

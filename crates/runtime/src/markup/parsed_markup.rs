@@ -2,6 +2,7 @@
 
 pub use self::{markup_attribute::*, markup_value::*};
 pub(crate) use self::{markup_attribute_marker::*, tag_type::*};
+use crate::prelude::*;
 use core::fmt::Debug;
 
 mod markup_attribute;

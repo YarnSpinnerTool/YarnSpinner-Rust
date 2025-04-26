@@ -11,8 +11,6 @@ use crate::Result;
 use bevy::prelude::World;
 use core::fmt::Debug;
 use log::*;
-use yarnspinner_core::prelude::OpCode;
-use yarnspinner_core::prelude::*;
 
 mod execution_state;
 mod state;

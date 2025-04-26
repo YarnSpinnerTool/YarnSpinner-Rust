@@ -1,8 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/VirtualMachine.cs>, which we split into multiple files
 
-#[cfg(any(feature = "bevy", feature = "serde"))]
-use crate::prelude::*;
-
 /// ## Implementation notes
 /// Does not contain `DeliveringContent` since that that state would be used to indicate
 /// that a handler is currently running, which we don't have.

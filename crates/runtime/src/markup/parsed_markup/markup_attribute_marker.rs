@@ -2,6 +2,7 @@
 //! which was split into multiple files.
 
 use crate::markup::{MarkupValue, TagType};
+use crate::prelude::*;
 use bevy_platform::collections::HashMap;
 
 /// Represents a marker (e.g. `[a]`) in line of marked up text.
