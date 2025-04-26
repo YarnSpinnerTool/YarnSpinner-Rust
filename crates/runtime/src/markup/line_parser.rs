@@ -14,7 +14,7 @@ use regex::Regex;
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 
-/// A result type for the [`LineParser`]
+/// A result type for the line parser
 pub type Result<T> = core::result::Result<T, MarkupParseError>;
 
 #[derive(Debug, Clone)]
