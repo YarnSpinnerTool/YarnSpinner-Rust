@@ -3,7 +3,8 @@
 use crate::prelude::*;
 use alloc::borrow::Cow;
 use core::fmt::Display;
-use std::collections::hash_map;
+
+use hashbrown::hash_map;
 
 /// A collection of functions that can be called from Yarn scripts.
 ///

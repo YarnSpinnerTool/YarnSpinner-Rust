@@ -1,5 +1,4 @@
 //! Implements a subset of dotnet's [`Convert`](https://learn.microsoft.com/en-us/dotnet/api/system.convert?view=net-8.0) type.
-#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use core::error::Error;
 use core::fmt::{Display, Formatter};

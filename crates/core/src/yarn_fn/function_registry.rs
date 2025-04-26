@@ -2,7 +2,8 @@ use crate::prelude::*;
 use alloc::borrow::Cow;
 #[cfg(feature = "bevy")]
 use bevy::prelude::*;
-use std::collections::HashMap;
+
+use hashbrown::HashMap;
 
 /// A registry of functions that can be called from Yarn after they have been added via [`YarnFnRegistry::register_function`].
 ///

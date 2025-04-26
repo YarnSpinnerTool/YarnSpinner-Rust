@@ -8,7 +8,12 @@ fn main() -> Result<()> {
     let output_dir = path(ProjectPath::Core).join("src/generated");
     env::set_var("OUT_DIR", output_dir);
 
-    prost_build::Config::new()
+    let mut config = prost_build::Config::new();
+
+    // Use BTreeMap instead of HashMap for no-std compatibility
+    config.btree_map(["."]);
+
+    config
         .type_attribute(
             ".",
             "use crate::prelude::*;\
