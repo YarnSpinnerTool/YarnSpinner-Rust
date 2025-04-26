@@ -11,7 +11,7 @@ mod markup_parse_error;
 mod parsed_markup;
 
 pub use self::line_parser::{
-    CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY, TRIM_WHITESPACE_PROPERTY,
+    Result, CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY, TRIM_WHITESPACE_PROPERTY,
 };
 pub(crate) use self::{attribute_marker_processor::*, line_parser::*};
 pub use self::{markup_parse_error::*, parsed_markup::*};
@@ -20,7 +20,7 @@ pub use self::{markup_parse_error::*, parsed_markup::*};
 mod tests {
     //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Tests/MarkupTests.cs>
     use super::*;
-    use crate::prelude::{Language, Line};
+    use crate::prelude::*;
 
     #[test]
     fn test_markup_parsing() {

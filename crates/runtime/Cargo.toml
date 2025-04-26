@@ -23,6 +23,7 @@ serde = [
     "bevy?/serialize",
     "yarnspinner_core/serde",
     "icu_locid/serde",
+    "bevy_platform/serialize",
 ]
 bevy = ["dep:bevy", "yarnspinner_core/bevy"]
 

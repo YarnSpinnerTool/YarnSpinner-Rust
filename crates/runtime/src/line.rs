@@ -54,7 +54,7 @@ impl Line {
     /// ## Examples
     /// When there is a name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy_platform::collections::HashMap;
     /// # use yarnspinner_core::prelude::*;
     /// # use yarnspinner_runtime::markup::*;
     /// # use yarnspinner_runtime::prelude::*;
@@ -75,7 +75,7 @@ impl Line {
     ///
     /// When there is no name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy_platform::collections::HashMap;
     /// # use yarnspinner_core::prelude::*;
     /// # use yarnspinner_runtime::markup::*;
     /// # use yarnspinner_runtime::prelude::*;
@@ -106,7 +106,7 @@ impl Line {
     /// ## Examples
     /// When there is a name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy_platform::collections::HashMap;
     /// # use yarnspinner_core::prelude::*;
     /// # use yarnspinner_runtime::markup::*;
     /// # use yarnspinner_runtime::prelude::*;
@@ -127,7 +127,7 @@ impl Line {
     ///
     /// When there is no name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy_platform::collections::HashMap;
     /// # use yarnspinner_core::prelude::*;
     /// # use yarnspinner_runtime::markup::*;
     /// # use yarnspinner_runtime::prelude::*;
