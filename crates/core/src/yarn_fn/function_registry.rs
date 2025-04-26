@@ -3,10 +3,7 @@ use alloc::borrow::Cow;
 #[cfg(feature = "bevy")]
 use bevy::prelude::*;
 
-#[cfg(not(feature = "std"))]
 use hashbrown::HashMap;
-#[cfg(feature = "std")]
-use std::collections::HashMap;
 
 /// A registry of functions that can be called from Yarn after they have been added via [`YarnFnRegistry::register_function`].
 ///

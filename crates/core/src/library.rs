@@ -4,10 +4,7 @@ use crate::prelude::*;
 use alloc::borrow::Cow;
 use core::fmt::Display;
 
-#[cfg(not(feature = "std"))]
 use hashbrown::hash_map;
-#[cfg(feature = "std")]
-use std::collections::hash_map;
 
 /// A collection of functions that can be called from Yarn scripts.
 ///
