@@ -87,12 +87,12 @@ fn test_end_of_notes_with_options_not_added() {
 
     let mut has_options = false;
     while dialogue.can_continue() {
-        let events = dialogue
-            .continue_(
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
+        #[cfg(feature = "bevy")]
+        let events = dialogue.continue_with_world(&mut world);
+        #[cfg(not(feature = "bevy"))]
+        let events = dialogue.continue_();
+        let events =
+            events.unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
         if events
             .iter()
             .any(|event| matches!(event, DialogueEvent::Options(_)))

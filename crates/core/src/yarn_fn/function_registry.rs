@@ -107,14 +107,12 @@ mod tests {
 
         functions.register_function("test", || true);
         let function = functions.get("test").unwrap();
-        let result: bool = function
-            .call(
-                vec![],
-                #[cfg(feature = "bevy")]
-                &mut World::default(),
-            )
-            .try_into()
-            .unwrap();
+        let params = vec![];
+        #[cfg(feature = "bevy")]
+        let result = function.call_with_world(params, &mut World::default());
+        #[cfg(not(feature = "bevy"))]
+        let result = function.call(params);
+        let result: bool = result.try_into().unwrap();
 
         assert!(result);
     }
@@ -125,14 +123,12 @@ mod tests {
 
         functions.register_function("test", |a: f32| a);
         let function = functions.get("test").unwrap();
-        let result: f32 = function
-            .call(
-                to_function_params([1.0]),
-                #[cfg(feature = "bevy")]
-                &mut World::default(),
-            )
-            .try_into()
-            .unwrap();
+        let params = to_function_params([1.0]);
+        #[cfg(feature = "bevy")]
+        let result = function.call_with_world(params, &mut World::default());
+        #[cfg(not(feature = "bevy"))]
+        let result = function.call(params);
+        let result: f32 = result.try_into().unwrap();
 
         assert_eq!(result, 1.0);
     }
@@ -159,8 +155,13 @@ mod tests {
         );
 
         let function1 = functions.get("test1").unwrap();
-        let result1: bool = function1.call(vec![], &mut world).try_into().unwrap();
-        assert!(result1);
+        let params = vec![];
+        #[cfg(feature = "bevy")]
+        let result = function1.call_with_world(params, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result = function1.call(params);
+        let result: bool = result.try_into().unwrap();
+        assert!(result);
     }
 
     #[test]
@@ -183,22 +184,18 @@ mod tests {
         #[cfg(feature = "bevy")]
         let mut world = World::default();
 
-        let result1: bool = function1
-            .call(
-                vec![],
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .try_into()
-            .unwrap();
-        let result2: f32 = function2
-            .call(
-                to_function_params([1.0]),
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .try_into()
-            .unwrap();
+        let params1 = vec![];
+        let params2 = to_function_params([1.0]);
+        #[cfg(feature = "bevy")]
+        let result1 = function1.call_with_world(params1, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result1 = function1.call(params1);
+        let result1: bool = result1.try_into().unwrap();
+        #[cfg(feature = "bevy")]
+        let result2 = function2.call_with_world(params2, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result2 = function2.call(params2);
+        let result2: f32 = result2.try_into().unwrap();
 
         assert!(result1);
         assert_eq!(result2, 1.0);
@@ -224,43 +221,36 @@ mod tests {
         #[cfg(feature = "bevy")]
         let mut world = World::default();
 
-        let result1: bool = function1
-            .call(
-                vec![],
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .try_into()
-            .unwrap();
-        let result2: f32 = function2
-            .call(
-                to_function_params([1.0, 2.0]),
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .try_into()
-            .unwrap();
-        let result3: f32 = function3
-            .call(
-                to_function_params([1.0, 2.0, 3.0]),
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .try_into()
-            .unwrap();
-        let result4: String = function4
-            .call(
-                to_function_params([
-                    YarnValue::from("a"),
-                    "b".into(),
-                    "c".into(),
-                    true.into(),
-                    1.0.into(),
-                ]),
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .into();
+        let params1 = vec![];
+        let params2 = to_function_params([1.0, 2.0]);
+        let params3 = to_function_params([1.0, 2.0, 3.0]);
+        let params4 = to_function_params([
+            YarnValue::from("a"),
+            "b".into(),
+            "c".into(),
+            true.into(),
+            1.0.into(),
+        ]);
+        #[cfg(feature = "bevy")]
+        let result1 = function1.call_with_world(params1, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result1 = function1.call(params1);
+        let result1: bool = result1.try_into().unwrap();
+        #[cfg(feature = "bevy")]
+        let result2 = function2.call_with_world(params2, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result2 = function2.call(params2);
+        let result2: f32 = result2.try_into().unwrap();
+        #[cfg(feature = "bevy")]
+        let result3 = function3.call_with_world(params3, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result3 = function3.call(params3);
+        let result3: f32 = result3.try_into().unwrap();
+        #[cfg(feature = "bevy")]
+        let result4 = function4.call_with_world(params4, &mut world);
+        #[cfg(not(feature = "bevy"))]
+        let result4 = function4.call(params4);
+        let result4: String = result4.into();
 
         assert!(result1);
         assert_eq!(result2, 3.0);

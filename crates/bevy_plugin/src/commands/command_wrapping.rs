@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
+#[cfg(not(target_arch = "wasm32"))]
 use bevy::tasks::Task;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
@@ -126,9 +127,21 @@ impl<T: TaskFinishedIndicator> TaskFinishedIndicator for Vec<T> {
     }
 }
 
-impl TaskFinishedIndicator for Task<()> {
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Debug + Send + Sync + 'static> TaskFinishedIndicator for Task<T> {
     fn is_finished(&self) -> bool {
-        self.is_finished()
+        // Little hack because calling Task::is_finished() would not resolve to the correct function,
+        // resulting in a recursive call to TaskFinishedIndicator::is_finished().
+        task_finished_name_change::is_finished_(self)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+mod task_finished_name_change {
+    pub(super) fn is_finished_<T: std::fmt::Debug + Send + Sync + 'static>(
+        task: &bevy::tasks::Task<T>,
+    ) -> bool {
+        bevy::tasks::Task::is_finished(task)
     }
 }
 
