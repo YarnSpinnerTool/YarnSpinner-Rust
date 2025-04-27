@@ -120,18 +120,20 @@ trait CommandAppExt {
 
 impl CommandAppExt for App {
     fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
+        let set_data =
+            self.world_mut()
+                .register_system(|In(param): In<String>, mut commands: Commands| {
+                    commands.insert_resource(Data(param));
+                });
         let mut dialogue_runner = self
             .setup_default_plugins()
             .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "commands.yarn",
             )))
             .dialogue_runner_mut();
-        dialogue_runner.commands_mut().add_command(
-            "set_data",
-            |In(param): In<String>, mut commands: Commands| {
-                commands.insert_resource(Data(param));
-            },
-        );
+        dialogue_runner
+            .commands_mut()
+            .add_command("set_data", set_data);
         dialogue_runner
             .library_mut()
             .add_function("triplicate_data", |data: &str| {
