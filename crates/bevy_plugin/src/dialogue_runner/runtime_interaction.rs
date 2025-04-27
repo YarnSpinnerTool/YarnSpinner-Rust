@@ -118,7 +118,7 @@ fn continue_runtime(
         let new_events = if let Some(unsent_events) = unsent_events.take() {
             unsent_events
         } else {
-            dialogue.continue_(world)?
+            dialogue.continue_with_world(world)?
         };
         events.replace(new_events);
     }
