@@ -143,4 +143,5 @@ jobs:
 
     - name: Build for web
       run: |
-        bevy build --locked --workspace --all-targets --yes -p bevy_yarnspinner_demo web
+        cd demo
+        bevy build --locked --all-targets --yes -p bevy_yarnspinner_demo web

@@ -16,17 +16,17 @@ use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 use bevy_yarnspinner::prelude::*;
 
 pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // Unfortunately, MSAA and HDR are not supported simultaneously under WebGL.
-    // Since this example uses HDR, we must disable MSAA for WASM builds, at least
-    // until WebGPU is ready and no longer behind a feature flag in Web browsers.
-    #[cfg(target_arch = "wasm32")]
-    commands.insert_resource(Msaa::Off);
     commands.spawn((
         Camera3d::default(),
         Camera {
             hdr: true,
             ..default()
         },
+        // Unfortunately, MSAA and HDR are not supported simultaneously under WebGL.
+        // Since this example uses HDR, we must disable MSAA for WASM builds, at least
+        // until WebGPU is ready and no longer behind a feature flag in Web browsers.
+        #[cfg(target_arch = "wasm32")]
+        Msaa::Off,
         Tonemapping::TonyMcMapface,
         Exposure::INDOOR,
         Transform::from_translation(CAMERA_TRANSLATION).looking_at(FERRIS_TRANSLATION, Vec3::Y),
