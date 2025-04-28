@@ -58,7 +58,7 @@ fn setup_camera(mut commands: Commands) {
 
 fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
     // Create a dialogue runner from the project.
-    let mut dialogue_runner = project.create_dialogue_runner();
+    let mut dialogue_runner = project.create_dialogue_runner(&mut commands);
     // Immediately start showing the dialogue to the player
     dialogue_runner.start_node("HelloWorld");
     commands.spawn(dialogue_runner);
@@ -104,12 +104,41 @@ Et voilà! That was all. Thanks for checking out Yarn Spinner for Rust! Continui
 ===
 ```
 
+## Examples
+
+To run the examples, switch to the correct dir:
+
+```sh
+# For Bevy examples:
+cd examples/bevy_yarnspinner
+# Or, for non-Bevy examples:
+cd examples/yarnspinner_without_bevy
+```
+
+then list the available examples with
+```sh
+cargo run --bin
+```
+
+finally, pick something from the list, e.g.
+
+```sh
+cargo run --bin hello_world
+```
+
+The Bevy demo game is in `demo` and can be run by using
+
+```sh
+cd demo
+cargo run
+```
+
 ## Version Table
 
-| Bevy        | Yarn Spinner for Rust                | 
-|-------------|------------------------------------- |
-| 0.16        | 0.5 (unreleased, but there's an RC)  |
-| 0.15        | 0.4                                  |
-| 0.14        | 0.3                                  |
-| 0.13        | 0.2                                  |
-| 0.12        | 0.1                                  |
+| Bevy        | Yarn Spinner for Rust | 
+|-------------|---------------------- |
+| 0.16        | 0.5                   |
+| 0.15        | 0.4                   |
+| 0.14        | 0.3                   |
+| 0.13        | 0.2                   |
+| 0.12        | 0.1                   |

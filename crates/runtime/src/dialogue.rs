@@ -223,6 +223,8 @@ impl Dialogue {
 impl Dialogue {
     /// Starts, or continues, execution of the current program.
     ///
+    /// Note that when compiling with the `bevy` feature, you should use [`Dialogue::continue_with_world`] instead.
+    ///
     /// Calling this method returns a batch of [`DialogueEvent`]s that should be handled by the caller before calling [`Dialogue::continue_`] again.
     /// Some events can be ignored, however this method will error if the following events are not properly handled:
     /// - [`DialogueEvent::Options`] indicates that the program is waiting for the user to select an option.
@@ -237,15 +239,41 @@ impl Dialogue {
     /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
     /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
     /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
-    pub fn continue_(
-        &mut self,
-        #[cfg(feature = "bevy")] world: &mut World,
-    ) -> Result<Vec<DialogueEvent>> {
+    pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         #[cfg(feature = "bevy")]
-        let result = self.vm.continue_(world);
-        #[cfg(not(feature = "bevy"))]
-        let result = self.vm.continue_();
-        result
+        bevy::prelude::warn!("Called `continue_` on a dialogue that was compiled with the `bevy` feature. Did you mean to call `continue_with_world` instead?");
+
+        self.vm.continue_(|vm, instruction| {
+            vm.run_instruction(instruction, |function, parameters| {
+                function.call(parameters)
+            })
+        })
+    }
+
+    #[cfg(feature = "bevy")]
+    /// The Bevy version of [`Dialogue::continue_`].
+    /// Starts, or continues, execution of the current program.
+    ///
+    /// Calling this method returns a batch of [`DialogueEvent`]s that should be handled by the caller before calling [`Dialogue::continue_`] again.
+    /// Some events can be ignored, however this method will error if the following events are not properly handled:
+    /// - [`DialogueEvent::Options`] indicates that the program is waiting for the user to select an option.
+    ///   The user's selection must be passed to [`Dialogue::set_selected_option`] before calling [`Dialogue::continue_with_world`] again.
+    /// - [`DialogueEvent::DialogueComplete`] means that the program reached its end.
+    ///   When this occurs, [`Dialogue::set_node`] must be called before [`Dialogue::continue_with_world`] is called again.
+    ///
+    /// See the documentation of [`DialogueEvent`] for more information on how to handle each event.
+    ///
+    /// ## Implementation Notes
+    ///
+    /// All handlers in the original were converted to [`DialogueEvent`]s because registration of complex callbacks is very unidiomatic in Rust.
+    /// Specifically, we cannot guarantee [`Send`] and [`Sync`] properly without a lot of [`std::sync::RwLock`] boilerplate. The original implementation
+    /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
+    pub fn continue_with_world(&mut self, world: &mut World) -> Result<Vec<DialogueEvent>> {
+        self.vm.continue_(move |vm, instruction| {
+            vm.run_instruction(instruction, |function, parameters| {
+                function.call_with_world(parameters, world)
+            })
+        })
     }
 
     /// Returns true if the [`Dialogue`] is in a state where [`Dialogue::continue_`] can be called.

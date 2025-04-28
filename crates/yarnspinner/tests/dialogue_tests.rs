@@ -209,12 +209,11 @@ fn test_line_hints() {
 
     let mut line_hints_were_sent = false;
 
-    let events = dialogue
-        .continue_(
-            #[cfg(feature = "bevy")]
-            &mut World::default(),
-        )
-        .unwrap();
+    #[cfg(feature = "bevy")]
+    let events = dialogue.continue_with_world(&mut World::default());
+    #[cfg(not(feature = "bevy"))]
+    let events = dialogue.continue_();
+    let events = events.unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
     for event in events {
         if let DialogueEvent::LineHints(lines) = event {
             // When the Dialogue realises it's about to run the Start
@@ -302,13 +301,12 @@ fn test_selecting_option_from_inside_option_callback() {
     let mut world = World::default();
 
     while test_base.dialogue.can_continue() {
-        let events = test_base
-            .dialogue
-            .continue_(
-                #[cfg(feature = "bevy")]
-                &mut world,
-            )
-            .unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
+        #[cfg(feature = "bevy")]
+        let events = test_base.dialogue.continue_with_world(&mut world);
+        #[cfg(not(feature = "bevy"))]
+        let events = test_base.dialogue.continue_();
+        let events =
+            events.unwrap_or_else(|e| panic!("Encountered error while running dialogue: {e}"));
         for event in events {
             match event {
                 DialogueEvent::Line(line) => {

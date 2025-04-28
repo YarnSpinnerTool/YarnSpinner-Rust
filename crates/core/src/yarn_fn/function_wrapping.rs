@@ -66,12 +66,11 @@ use variadics_please::all_tuples;
 pub trait YarnFn<Marker>: Clone + Send + Sync {
     /// The type of the value returned by this function. See [`YarnFn`] for more information about what is allowed.
     type Out: IntoYarnValueFromNonYarnValue + 'static;
-    #[cfg(feature = "bevy")]
-    #[doc(hidden)]
-    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out;
-    #[cfg(not(feature = "bevy"))]
     #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>) -> Self::Out;
+    #[cfg(feature = "bevy")]
+    #[doc(hidden)]
+    fn call_with_world(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out;
     /// The [`TypeId`]s of the parameters of this function.
     fn parameter_types(&self) -> Vec<TypeId>;
     /// The [`TypeId`] of the return type of this function.
@@ -83,12 +82,11 @@ pub trait YarnFn<Marker>: Clone + Send + Sync {
 /// A [`YarnFn`] with the `Marker` type parameter erased.
 /// See its documentation for more information about what kind of functions are allowed.
 pub trait UntypedYarnFn: Debug + Display + Send + Sync {
-    #[cfg(feature = "bevy")]
-    #[doc(hidden)]
-    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> YarnValue;
-    #[cfg(not(feature = "bevy"))]
     #[doc(hidden)]
     fn call(&self, input: Vec<YarnValue>) -> YarnValue;
+    #[cfg(feature = "bevy")]
+    #[doc(hidden)]
+    fn call_with_world(&self, input: Vec<YarnValue>, world: &mut World) -> YarnValue;
     #[doc(hidden)]
     fn clone_box(&self) -> Box<dyn UntypedYarnFn>;
     /// The [`TypeId`]s of the parameters of this function.
@@ -109,12 +107,15 @@ where
     F: YarnFn<Marker> + 'static + Clone,
     F::Out: IntoYarnValueFromNonYarnValue + 'static + Clone,
 {
-    fn call(&self, input: Vec<YarnValue>, #[cfg(feature = "bevy")] world: &mut World) -> YarnValue {
-        #[cfg(feature = "bevy")]
-        let output = self.function.call(input, world);
-        #[cfg(not(feature = "bevy"))]
-        let output = self.function.call(input);
-        output.into_yarn_value()
+    fn call(&self, input: Vec<YarnValue>) -> YarnValue {
+        self.function.call(input).into_yarn_value()
+    }
+
+    #[cfg(feature = "bevy")]
+    fn call_with_world(&self, input: Vec<YarnValue>, world: &mut World) -> YarnValue {
+        self.function
+            .call_with_world(input, world)
+            .into_yarn_value()
     }
 
     fn clone_box(&self) -> Box<dyn UntypedYarnFn> {
@@ -223,41 +224,35 @@ macro_rules! count_tts {
 #[cfg(feature = "bevy")]
 mod bevy_functions {
     use super::*;
-    use alloc::collections::VecDeque;
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
 
-    macro_rules! impl_yarn_fn_tuple_bevy {
-        ($($yarn_param: ident),*) => {
-            #[allow(non_snake_case, unused_parens)]
-            impl<'a, Output, $($yarn_param),*> YarnFn<(($($yarn_param,)*), Output)> for SystemId<In<($($yarn_param),*)>, Output>
-            where
-                $($yarn_param: TryFrom<YarnValue> + 'static,)*
-                Output: IntoYarnValueFromNonYarnValue + 'static,
-                {
-                    type Out = Output;
-                    #[allow(non_snake_case)]
-                    fn call(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
-                        #[allow(unused)]
-                        let mut input = VecDeque::from(input);
-                        #[allow(unused)]
-                        let input_len  = input.len();
-                        let expected_len = count_tts!($($yarn_param) *);
+    impl<Output, P> YarnFn<(P, Output)> for SystemId<In<P>, Output>
+    where
+        Output: IntoYarnValueFromNonYarnValue + 'static,
+        P: YarnFnParam + 'static,
+        for<'a> P: YarnFnParam<Item<'a> = P>,
+    {
+        fn call(&self, _input: Vec<YarnValue>) -> Self::Out {
+            panic!("Called `call` instead of `call_with_world` on a Bevy system with inputs. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+        }
 
-                        assert!(input_len == expected_len, "YarnFn expected {expected_len} arguments but received {input_len}");
-                        $(
-                            let $yarn_param:$yarn_param = $yarn_param::try_from(input.pop_front().unwrap()).ok().expect("Invalid argument type");
-                        )*
-                        world.run_system_with(*self, ($($yarn_param),*)).unwrap()
-                    }
+        type Out = Output;
+        #[allow(non_snake_case)]
+        fn call_with_world(&self, input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+            let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
 
-                    fn parameter_types(&self) -> Vec<TypeId> {
-                        vec![$(TypeId::of::<$yarn_param>()),*]
-                    }
-                }
-            };
+            #[allow(unused_variables, unused_mut)] // for n = 0 tuples
+            let mut iter = params.iter_mut().peekable();
+
+            let input = P::retrieve(&mut iter);
+            world.run_system_with(*self, input).unwrap()
+        }
+
+        fn parameter_types(&self) -> Vec<TypeId> {
+            P::parameter_types()
+        }
     }
-    all_tuples!(impl_yarn_fn_tuple_bevy, 0, 16, P);
 
     impl<Output> YarnFn<Output> for SystemId<(), Output>
     where
@@ -265,7 +260,13 @@ mod bevy_functions {
     {
         type Out = Output;
         #[allow(non_snake_case)]
-        fn call(&self, _input: Vec<YarnValue>, world: &mut World) -> Self::Out {
+        fn call(&self, _input: Vec<YarnValue>) -> Self::Out {
+            panic!("Called `call` instead of `call_with_world` on a Bevy system without inputs. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+        }
+
+        #[cfg(feature = "bevy")]
+        #[allow(non_snake_case)]
+        fn call_with_world(&self, _input: Vec<YarnValue>, world: &mut World) -> Self::Out {
             world.run_system(*self).unwrap()
         }
 
@@ -292,7 +293,28 @@ macro_rules! impl_yarn_fn_tuple {
                 #[allow(non_snake_case)]
                 fn call(
                     &self, input: Vec<YarnValue>,
-                    #[cfg(feature = "bevy")]
+                ) -> Self::Out {
+                    let input_len = input.len();
+                    let mut params: Vec<_> = input.into_iter().map(YarnValueWrapper::from).collect();
+
+                    #[allow(unused_variables, unused_mut)] // for n = 0 tuples
+                    let mut iter = params.iter_mut().peekable();
+
+                    // $param is the type implementing YarnFnParam
+                    let input = (
+                        $($param::retrieve(&mut iter),)*
+                    );
+                    assert!(iter.next().is_none(), "YarnFn expected {} arguments but received {}", count_tts!($($param),*), input_len);
+
+                    let ($($param,)*) = input;
+                    self($($param,)*)
+                }
+
+
+                #[cfg(feature = "bevy")]
+                #[allow(non_snake_case)]
+                fn call_with_world(
+                    &self, input: Vec<YarnValue>,
                     _world: &mut World
                 ) -> Self::Out {
                     let input_len = input.len();
@@ -423,6 +445,7 @@ mod tests {
         }
         accept_yarn_fn(world.register_system(f));
     }
+
     #[cfg(feature = "bevy")]
     #[test]
     fn accepts_systemparam_only_system() {
@@ -443,6 +466,28 @@ mod tests {
         accept_yarn_fn(world.register_system(f));
     }
 
+    /*
+        #[cfg(feature = "bevy")]
+        #[test]
+        fn accepts_system_with_str_ref_input() {
+            let mut world = World::default();
+            fn f(_: In<&str>) -> u32 {
+                0
+            }
+            accept_yarn_fn(world.register_system(f));
+        }
+    */
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn accepts_system_with_complex_inputs() {
+        let mut world = World::default();
+        fn f(_: In<((u32, i32), Option<String>)>, _: Query<Entity>) -> u32 {
+            0
+        }
+        accept_yarn_fn(world.register_system(f));
+    }
+
     #[cfg(feature = "bevy")]
     #[test]
     fn can_call_degenerate_system() {
@@ -451,7 +496,7 @@ mod tests {
             42
         }
         let id = world.register_system(f);
-        let out = id.call(vec![], &mut world);
+        let out = id.call_with_world(vec![], &mut world);
         assert_eq!(out, 42);
     }
 
@@ -463,7 +508,7 @@ mod tests {
             num
         }
         let id = world.register_system(f);
-        let out = id.call(vec![YarnValue::from(42)], &mut world);
+        let out = id.call_with_world(vec![YarnValue::from(42)], &mut world);
         assert_eq!(out, 42);
     }
 
@@ -475,7 +520,26 @@ mod tests {
             a + b
         }
         let id = world.register_system(f);
-        let out = id.call(vec![YarnValue::from(40), YarnValue::from(2)], &mut world);
+        let out: u32 =
+            id.call_with_world(vec![YarnValue::from(40), YarnValue::from(2)], &mut world);
+        assert_eq!(out, 42);
+    }
+
+    #[cfg(feature = "bevy")]
+    #[test]
+    fn can_call_system_with_complex_inputs() {
+        let mut world = World::default();
+        fn f(In(((a, b), maybe_c)): In<((u32, u32), Option<u32>)>) -> u32 {
+            a + b + maybe_c.unwrap_or(0)
+        }
+        let id = world.register_system(f);
+        let out: u32 =
+            id.call_with_world(vec![YarnValue::from(40), YarnValue::from(1)], &mut world);
+        assert_eq!(out, 41);
+        let out: u32 = id.call_with_world(
+            vec![YarnValue::from(40), YarnValue::from(1), YarnValue::from(1)],
+            &mut world,
+        );
         assert_eq!(out, 42);
     }
 
@@ -541,7 +605,7 @@ mod tests {
         T: YarnFn<Marker>,
     {
         #[cfg(feature = "bevy")]
-        let out = f.call(input, &mut World::default());
+        let out = f.call_with_world(input, &mut World::default());
         #[cfg(not(feature = "bevy"))]
         let out = f.call(input);
         out

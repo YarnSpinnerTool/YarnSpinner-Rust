@@ -116,3 +116,32 @@ jobs:
         run: cargo test --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
       - name: Run doc tests for non-bevy
         run: LD_LIBRARY_PATH="$(rustc --print target-libdir)" cargo test --doc --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
+
+  build-web:
+    name: Build demo for web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+
+    - name: Install dependencies
+      run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+
+    - name: Populate target directory from cache
+      uses: Leafwing-Studios/cargo-cache@v2
+      with:
+        sweep-cache: true
+
+    - name: Install Bevy CLI
+      run: cargo install --git=https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli
+
+    - name: Build for web
+      run: |
+        cd demo
+        bevy build --locked --all-targets --yes -p bevy_yarnspinner_demo web

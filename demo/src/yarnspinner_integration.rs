@@ -57,7 +57,7 @@ pub(crate) fn change_speaker(
 }
 
 pub(crate) fn change_sprite(
-    In((character, sprite)): In<(&str, &str)>,
+    In((character, sprite)): In<(String, String)>,
     mut speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
     camera_transform: Single<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
     sprites: Res<Sprites>,
@@ -66,7 +66,7 @@ pub(crate) fn change_sprite(
         .iter_mut()
         .find(|(speaker, ..)| speaker.name.to_lowercase() == character.to_lowercase())
         .unwrap();
-    let new_sprite = match sprite {
+    let new_sprite = match sprite.as_str() {
         "ferris_neutral" => Some(sprites.ferris_neutral.clone()),
         "ferris_happy" => Some(sprites.ferris_happy.clone()),
         "clippy" => Some(sprites.clippy.clone()),
@@ -90,12 +90,12 @@ pub(crate) fn change_sprite(
 }
 
 pub(crate) fn rotate_character(
-    In(character): In<&str>,
+    In(character): In<String>,
     speakers: Query<(&Speaker, &Transform, &mut RotationPhase)>,
     camera: Single<&Transform, (With<MainCamera>, Without<RotationPhase>)>,
     sprites: Res<Sprites>,
 ) {
-    change_sprite(In((character, "")), speakers, camera, sprites);
+    change_sprite(In((character, "".to_string())), speakers, camera, sprites);
 }
 
 pub(crate) fn fade_in(
@@ -142,7 +142,7 @@ pub(crate) fn move_camera_to_clippy(_: In<()>, mut commands: Commands) -> Arc<At
 }
 
 pub(crate) fn show_bang(
-    In((character, duration)): In<(&str, f32)>,
+    In((character, duration)): In<(String, f32)>,
     speakers: Query<&Speaker>,
     mut commands: Commands,
     mut sprite_params: Sprite3dParams,
