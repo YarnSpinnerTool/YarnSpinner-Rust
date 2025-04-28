@@ -1142,8 +1142,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_sprite3d"
-version = "5.0.0-rc.1"
-source = "git+https://github.com/extrawurst/bevy_sprite3d.git?branch=bevy-0.16#e8e03a4c079e9180f971c5dbc23dce19e76dc9df"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aab6a643739da6d576c28d7e20f78aa4dc00406eefcf92f1a5e1f30fad367079"
 dependencies = [
  "bevy",
 ]

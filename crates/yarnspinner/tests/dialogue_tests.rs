@@ -5,7 +5,6 @@
 
 #[cfg(feature = "bevy")]
 use bevy::prelude::World;
-use std::collections::HashMap;
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
 use yarnspinner::runtime::*;
@@ -175,15 +174,23 @@ fn test_getting_headers() {
     test_base = test_base.with_program(result.program.unwrap());
     let dialogue = &test_base.dialogue;
 
-    let headers = dialogue.get_headers_for_node("LearnMore").unwrap();
+    let mut headers = dialogue
+        .get_headers_for_node("LearnMore")
+        .unwrap()
+        .into_iter()
+        .collect::<Vec<_>>();
 
-    let mut expected_headers = HashMap::default();
-    expected_headers.insert("title".to_string(), "LearnMore".to_string());
-    expected_headers.insert("tags".to_string(), "rawText".to_string());
-    expected_headers.insert("colorID".to_string(), "0".to_string());
-    expected_headers.insert("position".to_string(), "763,472".to_string());
+    headers.sort();
 
-    assert_eq!(headers, expected_headers);
+    let expected_headers = [
+        ("title", "LearnMore"),
+        ("tags", "rawText"),
+        ("colorID", "0"),
+        ("position", "763,472"),
+    ]
+    .map(|(k, v)| (k.to_string(), v.to_string()));
+
+    assert_eq!(&headers, &expected_headers);
 }
 
 /// ## Implementation note
