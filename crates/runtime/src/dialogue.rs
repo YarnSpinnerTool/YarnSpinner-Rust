@@ -4,10 +4,10 @@ use crate::markup::{DialogueTextProcessor, LineParser, MarkupParseError};
 use crate::prelude::*;
 #[cfg(feature = "bevy")]
 use bevy::prelude::World;
+use bevy_platform::collections::HashMap;
 use core::error::Error;
 use core::fmt::{self, Debug, Display};
 use log::error;
-use std::collections::HashMap;
 use yarnspinner_core::prelude::*;
 
 /// Co-ordinates the execution of Yarn programs.

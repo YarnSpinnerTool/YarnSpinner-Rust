@@ -2,7 +2,7 @@
 
 pub(crate) use self::{dialogue_text_processor::*, no_markup_text_processor::*};
 use crate::markup::MarkupAttributeMarker;
-use crate::prelude::Language;
+use crate::prelude::*;
 use core::fmt::Debug;
 
 mod dialogue_text_processor;

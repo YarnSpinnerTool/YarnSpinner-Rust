@@ -1,6 +1,6 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/VirtualMachine.cs>, which we split into multiple files
 
-#[cfg(any(feature = "bevy", feature = "serde"))]
+#[allow(unused_imports)] // Used in the case of no default, `serde` only feature
 use crate::prelude::*;
 
 /// ## Implementation notes

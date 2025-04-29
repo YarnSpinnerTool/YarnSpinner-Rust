@@ -9,8 +9,6 @@ use crate::prelude::*;
 use crate::Result;
 use core::fmt::Debug;
 use log::*;
-use yarnspinner_core::prelude::OpCode;
-use yarnspinner_core::prelude::*;
 
 mod execution_state;
 mod state;

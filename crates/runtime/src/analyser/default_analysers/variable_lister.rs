@@ -2,8 +2,7 @@
 //! which was split into multiple files.
 
 use crate::prelude::*;
-use std::collections::HashSet;
-use yarnspinner_core::prelude::*;
+use bevy_platform::collections::HashSet;
 
 #[derive(Debug, Default)]
 pub(crate) struct VariableLister {

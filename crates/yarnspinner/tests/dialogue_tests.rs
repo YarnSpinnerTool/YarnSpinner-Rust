@@ -5,7 +5,7 @@
 
 #[cfg(feature = "bevy")]
 use bevy::prelude::World;
-use std::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use test_base::prelude::*;
 use yarnspinner::compiler::*;
 use yarnspinner::runtime::*;

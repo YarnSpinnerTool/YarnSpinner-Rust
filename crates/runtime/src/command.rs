@@ -4,9 +4,7 @@
 //! The original delegates command parsing to the Unity plugin, but we think it's foundational enough to do it directly in the runtime.
 
 use crate::markup::normalize;
-#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
-use yarnspinner_core::prelude::YarnValue;
 
 /// A custom command found in a Yarn file within the `<<` and `>>` characters.
 #[derive(Debug, Clone, PartialEq)]

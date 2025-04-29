@@ -5761,6 +5761,7 @@ version = "0.5.0"
 dependencies = [
  "anyhow",
  "bevy",
+ "bevy_platform",
  "log",
  "regex",
  "yarnspinner_compiler",
@@ -5817,6 +5818,7 @@ name = "yarnspinner_runtime"
 version = "0.5.0"
 dependencies = [
  "bevy",
+ "bevy_platform",
  "fixed_decimal",
  "icu_locid",
  "icu_plurals",

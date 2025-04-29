@@ -11,7 +11,7 @@ pub struct Context(Vec<Box<dyn CompiledProgramAnalyser>>);
 
 impl IntoIterator for Context {
     type Item = Box<dyn CompiledProgramAnalyser>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

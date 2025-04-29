@@ -1,5 +1,4 @@
 use crate::markup::TRIM_WHITESPACE_PROPERTY;
-#[cfg(any(feature = "bevy", feature = "serde"))]
 use crate::prelude::*;
 use core::error::Error;
 use core::fmt;

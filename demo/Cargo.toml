@@ -14,4 +14,4 @@ license = "MIT OR Apache-2.0"
 bevy = { version = "0.16.0" }
 bevy_yarnspinner = { path = "../crates/bevy_plugin", version = "0.5.0" }
 bevy_yarnspinner_example_dialogue_view = { path = "../crates/example_dialogue_view", version = "0.5.0" }
-bevy_sprite3d = "5.0.0"
+bevy_sprite3d = { version = "5.0.0" }

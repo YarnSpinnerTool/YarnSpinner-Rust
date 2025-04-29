@@ -1,10 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner/Dialogue.cs>, which we split off into multiple files
-use crate::prelude::Language;
+use crate::prelude::*;
+use bevy_platform::collections::HashMap;
 use core::any::Any;
 use core::fmt::Debug;
 use log::error;
-use std::collections::HashMap;
-use yarnspinner_core::prelude::*;
 
 /// A trait for providing text to a [`Dialogue`](crate::prelude::Dialogue). The default implementation is [`StringTableTextProvider`], which keeps the
 /// text for the base language, i.e. the language the Yarn files are written in, and the text for the currently selected translation in memory.
@@ -61,16 +60,21 @@ impl StringTableTextProvider {
     }
 
     /// Adds strings for the base language, i.e. the language that the Yarn files are written in.
-    pub fn extend_base_language(&mut self, string_table: HashMap<LineId, String>) {
+    pub fn extend_base_language<T>(&mut self, string_table: impl IntoIterator<Item = T>)
+    where
+        StringTable: Extend<T>,
+    {
         self.base_language_table.extend(string_table);
     }
 
     /// Adds strings for the a specific language. If this is not the language used selected by [`TextProvider::set_language`], the strings will be ignored.
-    pub fn extend_translation(
+    pub fn extend_translation<T>(
         &mut self,
         language: impl Into<Language>,
-        string_table: HashMap<LineId, String>,
-    ) {
+        string_table: impl IntoIterator<Item = T>,
+    ) where
+        StringTable: Extend<T>,
+    {
         let language = language.into();
         if let Some((current_language, translation_table)) = self.translation_table.as_mut() {
             if language == *current_language {
@@ -78,7 +82,16 @@ impl StringTableTextProvider {
                 return;
             }
         }
-        self.translation_table.replace((language, string_table));
+
+        let (language, mut table) = self
+            .translation_table
+            .take()
+            .unwrap_or_else(|| (language, StringTable::new()));
+
+        table.clear();
+        table.extend(string_table);
+
+        self.translation_table = Some((language, table));
     }
 }
 

@@ -6,6 +6,13 @@
 //! - If you wish to write an adapter crate for an engine yourself, use the [`yarnspinner`](https://crates.io/crates/yarnspinner) crate.
 
 #![warn(missing_docs, missing_debug_implementations)]
+#![no_std]
+
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
+
 mod analyser;
 mod command;
 mod dialogue;
@@ -21,8 +28,18 @@ mod virtual_machine;
 
 pub use dialogue::Result;
 
+/// Everything you need to get starting using the Yarn Spinner runtime.
 pub mod prelude {
-    //! Everything you need to get starting using the Yarn Spinner runtime.
+    // Re-export alloc types for internal use only
+    pub(crate) use alloc::{
+        borrow::ToOwned,
+        boxed::Box,
+        format,
+        string::{String, ToString},
+        vec,
+        vec::Vec,
+    };
+
     pub use crate::{
         analyser::*,
         command::*,
