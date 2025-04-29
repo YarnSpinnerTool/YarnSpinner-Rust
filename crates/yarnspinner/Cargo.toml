@@ -37,3 +37,4 @@ bevy = { version = "0.16.0", default-features = false, optional = true }
 [dev-dependencies]
 regex = "1"
 anyhow = "1"
+bevy_platform = "0.16.0"
