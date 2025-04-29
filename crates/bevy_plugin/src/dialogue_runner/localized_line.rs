@@ -34,7 +34,7 @@ impl LocalizedLine {
     /// ## Examples
     /// When there is a name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy::platform::collections::HashMap;
     /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
@@ -55,7 +55,7 @@ impl LocalizedLine {
     ///
     /// When there is no name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy::platform::collections::HashMap;
     /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
@@ -87,7 +87,7 @@ impl LocalizedLine {
     /// ## Examples
     /// When there is a name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy::platform::collections::HashMap;
     /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
@@ -108,7 +108,7 @@ impl LocalizedLine {
     ///
     /// When there is no name:
     /// ```rust
-    /// # use std::collections::HashMap;
+    /// # use bevy::platform::collections::HashMap;
     /// # use bevy_yarnspinner::prelude::*;
     /// # let line = LocalizedLine {
     /// #    id: "line".into(),
