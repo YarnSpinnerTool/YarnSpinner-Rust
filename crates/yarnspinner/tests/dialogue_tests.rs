@@ -175,9 +175,7 @@ fn test_getting_headers() {
     test_base = test_base.with_program(result.program.unwrap());
     let dialogue = &test_base.dialogue;
 
-    let headers = dialogue
-        .get_headers_for_node("LearnMore")
-        .unwrap();
+    let headers = dialogue.get_headers_for_node("LearnMore").unwrap();
 
     let mut expected_headers = HashMap::default();
     expected_headers.insert("title".to_string(), "LearnMore".to_string());
