@@ -290,10 +290,7 @@ impl Dialogue {
 
         // Extend the VariableStorage with the initial values from the program
         if let Err(e) = self.variable_storage_mut().extend(initial) {
-            error!(
-                "Failed to populate VariableStorage with initial values: {}",
-                e
-            );
+            error!("Failed to populate VariableStorage with initial values: {e}");
         }
     }
 

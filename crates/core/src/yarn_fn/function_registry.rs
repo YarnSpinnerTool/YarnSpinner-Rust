@@ -210,7 +210,7 @@ mod tests {
         functions.register_function("test3", |a: f32, b: f32, c: f32| a + b * c);
         functions.register_function(
             "test4",
-            |a: String, b: String, c: String, d: bool, e: f32| format!("{}{}{}{}{}", a, b, c, d, e),
+            |a: String, b: String, c: String, d: bool, e: f32| format!("{a}{b}{c}{d}{e}"),
         );
 
         let function1 = functions.get("test1").unwrap();
@@ -269,7 +269,7 @@ mod tests {
         let mut functions = YarnFnRegistry::default();
 
         functions.register_function("test", |a: f32, b: f32| a + b);
-        let debug_string = format!("{:?}", functions);
+        let debug_string = format!("{functions:?}");
 
         let element_start = debug_string.find('{').unwrap();
         // This looks like an off-by-one error on closer inspection,

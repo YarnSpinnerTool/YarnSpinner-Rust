@@ -133,7 +133,7 @@ impl Display for Diagnostic {
         };
         let renderer = Renderer::styled();
         let annotations = renderer.render(snippet);
-        writeln!(f, "{}", annotations)?;
+        writeln!(f, "{annotations}")?;
 
         Ok(())
     }

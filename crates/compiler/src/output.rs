@@ -154,7 +154,7 @@ impl CompilerError {
 impl Display for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for diagnostic in &self.0 {
-            writeln!(f, "{}", diagnostic)?;
+            writeln!(f, "{diagnostic}")?;
         }
         Ok(())
     }

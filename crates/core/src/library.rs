@@ -175,7 +175,7 @@ impl Display for Library {
         functions.sort_by_key(|(name, _)| name.to_string());
         writeln!(f, "{{")?;
         for (name, function) in functions {
-            writeln!(f, "    {}: {}", name, function)?;
+            writeln!(f, "    {name}: {function}")?;
         }
         writeln!(f, "}}")?;
         Ok(())

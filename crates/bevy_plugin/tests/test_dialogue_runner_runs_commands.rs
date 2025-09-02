@@ -137,7 +137,7 @@ impl CommandAppExt for App {
         dialogue_runner
             .library_mut()
             .add_function("triplicate_data", |data: &str| {
-                format!("{data}{data}{data}", data = data)
+                format!("{data}{data}{data}")
             });
         dialogue_runner
     }

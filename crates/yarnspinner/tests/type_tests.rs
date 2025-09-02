@@ -150,7 +150,7 @@ fn test_variable_declarations_disallow_duplicates() {
     .compile()
     .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result
         .0
         .iter()
@@ -168,7 +168,7 @@ fn test_expressions_disallow_mismatched_types() {
     .compile()
     .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result
         .0
         .iter()
@@ -224,15 +224,21 @@ fn test_expressions_require_compatible_types() {
 
            <<set $bool = (1 + 1) > 2>>
            ",
-            declare
-                .then_some("<<declare $int = 0>>")
-                .unwrap_or_default(),
-            declare
-                .then_some("<<declare $bool = false>>")
-                .unwrap_or_default(),
-            declare
-                .then_some("<<declare $str = \"\">>")
-                .unwrap_or_default()
+            if declare {
+                "<<declare $int = 0>>"
+            } else {
+                Default::default()
+            },
+            if declare {
+                "<<declare $bool = false>>"
+            } else {
+                Default::default()
+            },
+            if declare {
+                "<<declare $str = \"\">>"
+            } else {
+                Default::default()
+            }
         );
 
         let result = Compiler::from_test_source(&source).compile().unwrap();
@@ -258,7 +264,7 @@ fn test_null_not_allowed() {
         .compile()
         .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result
         .0
         .iter()
@@ -306,9 +312,11 @@ fn test_operators_are_type_checked() {
         for declared in [true, false] {
             let source = format!(
                 "{}\n<<set $var {operation}>>",
-                declared
-                    .then_some("<<declare $var = 0>>")
-                    .unwrap_or_default(),
+                if declared {
+                    "<<declare $var = 0>>"
+                } else {
+                    Default::default()
+                },
             );
 
             let result = Compiler::from_test_source(&source)
@@ -363,7 +371,7 @@ fn test_failing_function_signatures() {
             .extend_library(test_base.dialogue.library().clone())
             .compile()
             .unwrap_err();
-        println!("{}", result);
+        println!("{result}");
 
         let diagnostic_messages = result
             .0
@@ -722,7 +730,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_count_fail() {
     .compile()
     .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
 
     assert_eq!(
         "Function \"func\" expects 1 parameter, but received 2",
@@ -741,7 +749,7 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
     .compile()
     .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
 
     assert!(result
         .0
@@ -768,7 +776,7 @@ fn test_if_statement_expressions_must_be_boolean() {
     .compile()
     .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
 
     assert!(result.0.iter().any(|d| d
         .message

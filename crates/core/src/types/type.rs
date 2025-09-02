@@ -49,7 +49,7 @@ impl Display for Type {
         let name = self.name();
         match self {
             Type::Function(function) => Display::fmt(function, f),
-            _ => write!(f, "{}", name),
+            _ => write!(f, "{name}"),
         }
     }
 }
