@@ -54,7 +54,7 @@ fn get_dialogue_runner(world: &mut World, entity: Entity) -> &DialogueRunner {
     dialogue_runner
 }
 
-fn get_dialogue_runner_mut(world: &mut World, entity: Entity) -> Mut<DialogueRunner> {
+fn get_dialogue_runner_mut(world: &mut World, entity: Entity) -> Mut<'_, DialogueRunner> {
     let mut dialogue_runners = world.query::<&mut DialogueRunner>();
     let dialogue_runner = dialogue_runners.get_mut(world, entity).unwrap();
     dialogue_runner

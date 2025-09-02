@@ -31,11 +31,11 @@ fn basic_functions() -> Result<()> {
 struct Data(String);
 
 trait FunctionAppExt {
-    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner>;
+    fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner>;
 }
 
 impl FunctionAppExt for App {
-    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
+    fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner> {
         self.insert_resource(Data("Initial".to_string()));
 
         let swap_data =

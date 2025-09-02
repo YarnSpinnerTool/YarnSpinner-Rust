@@ -19,7 +19,7 @@ pub mod prelude {
 pub trait AppExt {
     fn load_project(&mut self) -> &YarnProject;
     #[must_use]
-    fn load_project_mut(&mut self) -> Mut<YarnProject>;
+    fn load_project_mut(&mut self) -> Mut<'_, YarnProject>;
 
     fn load_lines(&mut self) -> &mut App;
 
@@ -34,7 +34,7 @@ pub trait AppExt {
     #[must_use]
     fn dialogue_runner(&mut self) -> &DialogueRunner;
     #[must_use]
-    fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner>;
+    fn dialogue_runner_mut(&mut self) -> Mut<'_, DialogueRunner>;
     fn setup_default_plugins(&mut self) -> &mut App;
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App;
 
@@ -50,7 +50,7 @@ impl AppExt for App {
         self.world().resource::<YarnProject>()
     }
 
-    fn load_project_mut(&mut self) -> Mut<YarnProject> {
+    fn load_project_mut(&mut self) -> Mut<'_, YarnProject> {
         while !self.world().contains_resource::<YarnProject>() {
             self.update();
         }
@@ -116,7 +116,7 @@ impl AppExt for App {
         self.world().get::<DialogueRunner>(entity).unwrap()
     }
 
-    fn dialogue_runner_mut(&mut self) -> Mut<DialogueRunner> {
+    fn dialogue_runner_mut(&mut self) -> Mut<'_, DialogueRunner> {
         let entity = self.dialogue_runner_entity();
         self.world_mut().get_mut::<DialogueRunner>(entity).unwrap()
     }

@@ -179,12 +179,12 @@ fn generates_files_in_dev_mode() -> Result<()> {
 }
 
 trait OptionTestAppExt {
-    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner>;
-    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<DialogueRunner>;
+    fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner>;
+    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<'_, DialogueRunner>;
 }
 
 impl OptionTestAppExt for App {
-    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
+    fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner> {
         self.setup_default_plugins()
             .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "options.yarn",
@@ -192,7 +192,7 @@ impl OptionTestAppExt for App {
             .dialogue_runner_mut()
     }
 
-    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<DialogueRunner> {
+    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<'_, DialogueRunner> {
         self.add_plugins(
             YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
                 .with_localizations(Localizations {

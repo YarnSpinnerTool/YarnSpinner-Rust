@@ -114,12 +114,12 @@ fn executes_commands_and_fns() -> Result<()> {
 struct Data(String);
 
 trait CommandAppExt {
-    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner>;
-    fn setup_dialogue_runner_for_wait(&mut self) -> Mut<DialogueRunner>;
+    fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner>;
+    fn setup_dialogue_runner_for_wait(&mut self) -> Mut<'_, DialogueRunner>;
 }
 
 impl CommandAppExt for App {
-    fn setup_dialogue_runner(&mut self) -> Mut<DialogueRunner> {
+    fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner> {
         let set_data =
             self.world_mut()
                 .register_system(|In(param): In<String>, mut commands: Commands| {
@@ -142,7 +142,7 @@ impl CommandAppExt for App {
         dialogue_runner
     }
 
-    fn setup_dialogue_runner_for_wait(&mut self) -> Mut<DialogueRunner> {
+    fn setup_dialogue_runner_for_wait(&mut self) -> Mut<'_, DialogueRunner> {
         self.setup_default_plugins()
             .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "wait.yarn",
