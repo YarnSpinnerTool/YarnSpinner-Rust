@@ -1,4 +1,9 @@
-use anyhow::Result;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
+use anyhow::{ensure, Result};
 use bevy::prelude::*;
 use bevy_yarnspinner::{events::*, prelude::*};
 use utils::prelude::*;
@@ -142,6 +147,43 @@ fn panics_on_continue_after_all_lines() {
         app.continue_dialogue_and_update();
     }
     app.dialogue_runner_mut().continue_in_next_update();
+}
+
+#[test]
+#[ignore]
+fn completion_event_sent_on_dialogue_reach_end() -> Result<()> {
+    let mut app = App::new();
+    app.setup_default_plugins()
+        .add_plugins(YarnSpinnerPlugin::with_yarn_source(
+            YarnFileSource::InMemory(
+                // this yarn file should reach the end of dialogue right away
+                YarnFile::new("empty.yarn", "title: Start\n---\n===\n"),
+            ),
+        ));
+
+    let received_completion_event = Arc::new(AtomicBool::new(false));
+
+    app.add_systems(
+        Update,
+        {
+            let received_completion_event = received_completion_event.clone();
+            move |events: EventReader<DialogueCompleteEvent>| {
+                if !events.is_empty() {
+                    received_completion_event.store(true, Ordering::SeqCst);
+                }
+            }
+        }
+        .after(YarnSpinnerSystemSet),
+    );
+
+    app.update();
+    app.update();
+    app.update();
+
+    let received_completion_event = received_completion_event.load(Ordering::SeqCst);
+    ensure!(received_completion_event);
+
+    Ok(())
 }
 
 #[test]
