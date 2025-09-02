@@ -716,7 +716,7 @@ mod tests {
             "Expected diagnostics:\n{}\nto contain:\n- {:?}",
             diagnostics
                 .iter()
-                .map(|d| format!("- {:?}", d))
+                .map(|d| format!("- {d:?}"))
                 .collect::<Vec<_>>()
                 .join("\n"),
             expected

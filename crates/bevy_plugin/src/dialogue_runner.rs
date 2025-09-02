@@ -317,13 +317,13 @@ impl DialogueRunner {
 
     /// Returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
-    pub fn inner(&self) -> InnerDialogue {
+    pub fn inner(&self) -> InnerDialogue<'_> {
         InnerDialogue(self.dialogue.as_ref().expect(DIALOGUE_MISSING_MESSAGE))
     }
 
     /// Mutably returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
-    pub fn inner_mut(&mut self) -> InnerDialogueMut {
+    pub fn inner_mut(&mut self) -> InnerDialogueMut<'_> {
         InnerDialogueMut(self.dialogue.as_mut().expect(DIALOGUE_MISSING_MESSAGE))
     }
 

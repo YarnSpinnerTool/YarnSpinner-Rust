@@ -220,7 +220,7 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
         .iter()
         .map(|(tag, line)| (tag.map(|s| LineId(s.to_string())), line.to_string()))
     {
-        println!("checking tag: {:#?} line: {:#?}", tag, line);
+        println!("checking tag: {tag:#?} line: {line:#?}");
         if let Some(tag) = tag {
             assert_eq!(line, compilation.string_table.get(&tag).unwrap().text);
             // flagging this ID as having been visited
@@ -234,7 +234,7 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
                         .filter(|(k, _)| **k == tag)
                         .collect::<Vec<_>>()
                 );
-                panic!("Duplicate line tag: {}", tag);
+                panic!("Duplicate line tag: {tag}");
             }
         } else {
             // Implementation note: this branch looks different from the original because the C# version depends on the order of the string table, which is not guaranteed.
@@ -268,7 +268,7 @@ before 🧑🏾‍❤️‍💋‍🧑🏻after #line:abc130 // with a comment
         .iter()
         .filter(|(k, _)| !visited_ids.contains(k))
         .collect::<Vec<_>>();
-    println!("{:#?}", in_string_table_but_not_visited);
+    println!("{in_string_table_but_not_visited:#?}");
     assert_eq!(visited_ids.len(), compilation.string_table.len());
 }
 

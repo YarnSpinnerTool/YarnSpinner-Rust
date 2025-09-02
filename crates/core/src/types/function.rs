@@ -64,6 +64,6 @@ impl Display for FunctionType {
             .collect::<Vec<_>>()
             .join(", ");
         let return_type = self.return_type.as_ref().format();
-        write!(f, "Fn({}) -> {}", parameters, return_type)
+        write!(f, "Fn({parameters}) -> {return_type}")
     }
 }

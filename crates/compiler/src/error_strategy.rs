@@ -175,7 +175,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
         } else {
             "a"
         };
-        format!("{} {}", article, friendly_name)
+        format!("{article} {friendly_name}")
     }
 }
 

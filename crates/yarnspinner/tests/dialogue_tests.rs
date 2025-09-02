@@ -212,7 +212,7 @@ fn test_line_hints() {
             // When the Dialogue realises it's about to run the Start
             // node, it will tell us that it's about to run these two line IDs
             assert_eq!(lines.len(), 2);
-            println!("{:?}", lines);
+            println!("{lines:?}");
             assert!(lines.contains(&"line:test1".into()));
             assert!(lines.contains(&"line:test2".into()));
 

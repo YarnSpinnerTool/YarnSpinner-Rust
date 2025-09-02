@@ -215,7 +215,7 @@ impl TestBase {
 
                         if let Some(StepValue::Number(selection)) = test_plan.next_step_value {
                             let selection = selection - 1; // 1-indexed for test plan, 0-indexed in the code
-                            println!("[Selecting option {}]", selection);
+                            println!("[Selecting option {selection}]");
                             self.dialogue
                                 .set_selected_option(OptionId(selection))
                                 .unwrap();

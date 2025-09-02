@@ -12,7 +12,7 @@ fn test_malformed_if_statement() {
         .compile()
         .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result.0.iter().any(|d| d
         .message
         .contains("Expected an <<endif>> to match the <<if>> statement on line 3")));
@@ -32,7 +32,7 @@ fn test_extraneous_else() {
     .compile()
     .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result.0.iter().any(|d| d
         .message
         .contains("More than one <<else>> statement in an <<if>> statement isn't allowed")));
@@ -46,7 +46,7 @@ fn test_empty_command() {
     let result = Compiler::from_test_source("\n<<>>\n")
         .compile()
         .unwrap_err();
-    println!("{}", result);
+    println!("{result}");
 
     assert!(result
         .0
@@ -60,7 +60,7 @@ fn test_invalid_variable_name_in_set_or_declare() {
         .compile()
         .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result
         .0
         .iter()
@@ -70,7 +70,7 @@ fn test_invalid_variable_name_in_set_or_declare() {
         .compile()
         .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result
         .0
         .iter()
@@ -83,7 +83,7 @@ fn test_invalid_function_call() {
         .compile()
         .unwrap_err();
 
-    println!("{}", result);
+    println!("{result}");
     assert!(result.0.iter().any(|d| d
         .message
         .contains("Unexpected \">>\" while reading a function call")));

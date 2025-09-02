@@ -38,7 +38,7 @@ impl CompiledProgramAnalyser for VariableLister {
             .map(|variable| {
                 Diagnosis::new(
                     DiagnosisSeverity::Note,
-                    format!("Script uses variable {}", variable),
+                    format!("Script uses variable {variable}"),
                 )
             })
             .collect()

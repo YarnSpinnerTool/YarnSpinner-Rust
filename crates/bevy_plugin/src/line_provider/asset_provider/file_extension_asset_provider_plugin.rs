@@ -190,7 +190,7 @@ impl AssetProvider for FileExtensionAssetProvider {
                         .iter()
                         .filter_map(|(type_id, exts)| {
                             exts.iter().find_map(|ext| {
-                                let file_name = format!("{}.{}", file_name_without_extension, ext);
+                                let file_name = format!("{file_name_without_extension}.{ext}");
                                 let path = dir.join(file_name);
                                 self.loaded_handles
                                     .get(&path)

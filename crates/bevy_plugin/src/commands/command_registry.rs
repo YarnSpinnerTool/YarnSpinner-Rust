@@ -292,7 +292,7 @@ mod tests {
         let mut world = World::default();
 
         methods.add_command("test", world.register_system(|_: In<(f32, f32)>| {}));
-        let debug_string = format!("{:?}", methods);
+        let debug_string = format!("{methods:?}");
 
         let element_start = debug_string.find('{').unwrap();
         // This looks like an off-by-one error on closer inspection,

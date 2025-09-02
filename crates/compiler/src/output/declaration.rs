@@ -233,7 +233,7 @@ impl Display for DeclarationSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::External => write!(f, "(External)"),
-            Self::File(file_name) => write!(f, "{}", file_name),
+            Self::File(file_name) => write!(f, "{file_name}"),
         }
     }
 }
