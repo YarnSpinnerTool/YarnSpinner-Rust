@@ -130,13 +130,13 @@ impl LocalizedLine {
     // Documentation taken from `YarnLine`
     /// Returns the substring of [`YarnLine::text`] covered by the passed `attribute`s [`MarkupAttribute::position`] and [`MarkupAttribute::length`] fields.
     pub fn text_for_attribute(&self, attribute: &MarkupAttribute) -> &str {
-        assert!(
-            self.text.len() <= attribute.position + attribute.length,
-            "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
-        Does this MarkupAttribute belong to this MarkupParseResult?",
-            self.text
-        );
-        &self.text[attribute.position..attribute.position + attribute.length]
+        self.text
+            .get(attribute.position..attribute.position + attribute.length)
+            .unwrap_or_else(|| panic!(
+                "Attribute \"{attribute}\" represents a range not representable by this text: \"{}\". \
+                Does this MarkupAttribute belong to this MarkupParseResult?",
+                self.text
+            ))
     }
 
     // Documentation taken from `YarnLine`
