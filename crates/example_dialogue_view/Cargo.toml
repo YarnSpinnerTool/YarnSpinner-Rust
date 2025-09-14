@@ -1,6 +1,6 @@
 [package]
 name = "bevy_yarnspinner_example_dialogue_view"
-version = "0.6.0-rc"
+version = "0.6.0-rc.1"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -27,5 +27,4 @@ features = [
     "png",
     "bevy_asset",
     "bevy_window",
-    "bevy_winit",
 ]
