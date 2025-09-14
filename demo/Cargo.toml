@@ -9,6 +9,7 @@ categories = ["games"]
 authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 description = "A demo for Bevy Yarn Spinner for Rust, the friendly tool for writing game dialogue"
 license = "MIT OR Apache-2.0"
+publish = false
 
 [dependencies]
 bevy = { version = "0.17.0-rc" }
