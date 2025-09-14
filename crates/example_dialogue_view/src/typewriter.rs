@@ -25,7 +25,7 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
     .add_event::<TypewriterFinishedEvent>();
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Reflect, Event)]
+#[derive(Debug, Eq, PartialEq, Hash, Reflect, Message)]
 pub(crate) struct TypewriterFinishedEvent;
 
 #[derive(Debug, Clone, PartialEq, Resource)]

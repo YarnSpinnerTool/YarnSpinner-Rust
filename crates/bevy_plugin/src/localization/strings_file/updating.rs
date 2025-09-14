@@ -21,14 +21,14 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
         );
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Event)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Message)]
 #[reflect(Debug, Default, PartialEq)]
 pub(crate) struct UpdateAllStringsFilesForStringTableEvent(
     pub(crate) std::collections::HashMap<LineId, StringInfo>,
 );
 
 fn update_all_strings_files_for_string_table(
-    mut events: ResMut<Events<UpdateAllStringsFilesForStringTableEvent>>,
+    mut events: ResMut<Messages<UpdateAllStringsFilesForStringTableEvent>>,
     mut strings_files: ResMut<Assets<StringsFile>>,
     asset_server: Res<AssetServer>,
     project: Res<YarnProject>,

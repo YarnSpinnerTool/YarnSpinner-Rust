@@ -4,24 +4,22 @@ use crate::yarnspinner_integration::{
     Speaker,
 };
 use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
+use bevy::camera::Exposure;
 use bevy::color::palettes::css;
-#[cfg(not(target_arch = "wasm32"))]
-use bevy::core_pipeline::bloom::Bloom;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::gltf::Gltf;
-use bevy::pbr::CascadeShadowConfigBuilder;
+use bevy::light::CascadeShadowConfigBuilder;
+#[cfg(not(target_arch = "wasm32"))]
+use bevy::post_process::bloom::Bloom;
 use bevy::prelude::*;
-use bevy::render::camera::Exposure;
-use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
+use bevy::render::view::Hdr;
+use bevy_sprite3d::prelude::*;
 use bevy_yarnspinner::prelude::*;
 
 pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Camera3d::default(),
-        Camera {
-            hdr: true,
-            ..default()
-        },
+        Hdr,
         // Unfortunately, MSAA and HDR are not supported simultaneously under WebGL.
         // Since this example uses HDR, we must disable MSAA for WASM builds, at least
         // until WebGPU is ready and no longer behind a feature flag in Web browsers.
@@ -143,24 +141,21 @@ pub(crate) fn adapt_materials(
     *done = true;
 }
 
-pub(crate) fn spawn_sprites(
-    mut commands: Commands,
-    sprites: Res<Sprites>,
-    mut sprite_params: Sprite3dParams,
-    mut done: Local<bool>,
-) {
+pub(crate) fn spawn_sprites(mut commands: Commands, sprites: Res<Sprites>, mut done: Local<bool>) {
     if *done {
         return;
     }
     commands.spawn((
-        Sprite3dBuilder {
-            image: sprites.ferris_neutral.clone(),
+        Sprite3d {
             pixels_per_metre: 600.,
             alpha_mode: AlphaMode::Blend,
             unlit: true,
             ..default()
-        }
-        .bundle(&mut sprite_params),
+        },
+        Sprite {
+            image: sprites.ferris_neutral.clone(),
+            ..default()
+        },
         Transform::from_translation(FERRIS_TRANSLATION).looking_at(CAMERA_TRANSLATION, Vec3::Y),
         Speaker {
             name: "Ferris".into(),
@@ -170,14 +165,16 @@ pub(crate) fn spawn_sprites(
         RotationPhase::default(),
     ));
     commands.spawn((
-        Sprite3dBuilder {
-            image: sprites.clippy.clone(),
+        Sprite3d {
             pixels_per_metre: 350.,
             alpha_mode: AlphaMode::Blend,
             unlit: true,
             ..default()
-        }
-        .bundle(&mut sprite_params),
+        },
+        Sprite {
+            image: sprites.clippy.clone(),
+            ..default()
+        },
         Transform::from_translation(CLIPPY_TRANSLATION).looking_at(CAMERA_TRANSLATION, Vec3::Y),
         Speaker {
             name: "Clippy".into(),

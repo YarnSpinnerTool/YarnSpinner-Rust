@@ -23,7 +23,7 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Yarn Spinner Story Demo".into(),
-                    resolution: (800., 600.).into(),
+                    resolution: (800, 600).into(),
                     present_mode: PresentMode::AutoVsync,
                     prevent_default_event_handling: false,
                     resizable: false,

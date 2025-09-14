@@ -96,7 +96,7 @@ impl YarnProject {
 
 /// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSpinnerPlugin::deferred`].
 /// If you know the Yarn files at the start of the game, you should use [`YarnSpinnerPlugin::with_yarn_sources`] instead.
-#[derive(Debug, Clone, PartialEq, Eq, Event)]
+#[derive(Debug, Clone, PartialEq, Eq, Message)]
 pub struct LoadYarnProjectEvent {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,

@@ -4,8 +4,7 @@ use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::color::palettes::css;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use bevy::window::{PrimaryWindow, SystemCursorIcon};
-use bevy::winit::cursor::CursorIcon;
+use bevy::window::{CursorIcon, PrimaryWindow, SystemCursorIcon};
 use bevy_yarnspinner::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
@@ -26,7 +25,7 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
     .add_event::<HasSelectedOptionEvent>();
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Event)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Message)]
 struct HasSelectedOptionEvent;
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]

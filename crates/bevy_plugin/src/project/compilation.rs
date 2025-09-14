@@ -108,7 +108,7 @@ fn add_yarn_files_to_load_queue(
     Ok(())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Event)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Message)]
 #[reflect(Debug, Default, PartialEq)]
 pub(crate) struct RecompileLoadedYarnFilesEvent;
 
