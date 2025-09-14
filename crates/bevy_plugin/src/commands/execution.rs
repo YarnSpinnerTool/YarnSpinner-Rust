@@ -2,7 +2,7 @@ use crate::commands::UntypedYarnCommand;
 use crate::dialogue_runner::DialogueExecutionSystemSet;
 use crate::events::ExecuteCommandEvent;
 use crate::prelude::*;
-use bevy::ecs::event::EventCursor;
+use bevy::ecs::message::MessageCursor;
 use bevy::prelude::*;
 
 pub(crate) fn command_execution_plugin(app: &mut App) {
@@ -14,7 +14,7 @@ pub(crate) fn command_execution_plugin(app: &mut App) {
     );
 }
 
-fn execute_commands(world: &mut World, mut cursor: Local<EventCursor<ExecuteCommandEvent>>) {
+fn execute_commands(world: &mut World, mut cursor: Local<MessageCursor<ExecuteCommandEvent>>) {
     let events = clone_events(world, &mut cursor);
     for event in events {
         let Some(mut command) = clone_command(world, &event) else {
@@ -30,9 +30,9 @@ fn execute_commands(world: &mut World, mut cursor: Local<EventCursor<ExecuteComm
 
 fn clone_events(
     world: &World,
-    cursor: &mut EventCursor<ExecuteCommandEvent>,
+    cursor: &mut MessageCursor<ExecuteCommandEvent>,
 ) -> Vec<ExecuteCommandEvent> {
-    let events = world.resource::<Events<ExecuteCommandEvent>>();
+    let events = world.resource::<Messages<ExecuteCommandEvent>>();
     cursor.read(events).cloned().collect()
 }
 

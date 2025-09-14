@@ -48,12 +48,12 @@ impl Library {
     }
 
     /// Iterates over the names and functions in the library.
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &dyn UntypedYarnFn)> {
         self.0.iter()
     }
 
     /// Gets a function by name.
-    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
+    pub fn get(&self, name: &str) -> Option<&dyn UntypedYarnFn> {
         self.0.get(name)
     }
 
@@ -156,7 +156,7 @@ impl Library {
     }
 
     /// Iterates over all functions in the library.
-    pub fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
+    pub fn functions(&self) -> impl Iterator<Item = &dyn UntypedYarnFn> {
         self.0.functions()
     }
 

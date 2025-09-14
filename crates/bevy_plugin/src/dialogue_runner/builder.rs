@@ -123,20 +123,20 @@ impl DialogueRunnerBuilder {
 fn create_extended_standard_library() -> YarnLibrary {
     let mut library = YarnLibrary::standard_library();
     library
-        .add_function("random", || SmallRng::from_entropy().gen_range(0.0..1.0))
+        .add_function("random", || SmallRng::from_os_rng().random_range(0.0..1.0))
         .add_function("random_range", |min: f32, max: f32| {
             if let Some(min) = min.as_int() {
                 if let Some(max_inclusive) = max.as_int() {
-                    return SmallRng::from_entropy().gen_range(min..=max_inclusive) as f32;
+                    return SmallRng::from_os_rng().random_range(min..=max_inclusive) as f32;
                 }
             }
-            SmallRng::from_entropy().gen_range(min..max)
+            SmallRng::from_os_rng().random_range(min..max)
         })
         .add_function("dice", |sides: u32| {
             if sides == 0 {
                 return 1;
             }
-            SmallRng::from_entropy().gen_range(1..=sides)
+            SmallRng::from_os_rng().random_range(1..=sides)
         })
         .add_function("round", |num: f32| num.round() as i32)
         .add_function("round_places", |num: f32, places: u32| {

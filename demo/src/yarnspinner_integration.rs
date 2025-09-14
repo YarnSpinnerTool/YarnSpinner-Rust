@@ -6,10 +6,10 @@ use crate::{
     SECOND_ACT_CAMERA_TRANSLATION,
 };
 use bevy::app::AppExit;
-use bevy::pbr::NotShadowCaster;
+use bevy::light::NotShadowCaster;
 use bevy::platform::time::Instant;
 use bevy::prelude::*;
-use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
+use bevy_sprite3d::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
 use std::f32::consts::PI;
 use std::sync::atomic::AtomicBool;
@@ -35,7 +35,7 @@ impl Default for Speaker {
 }
 
 pub(crate) fn change_speaker(
-    mut speaker_change_events: EventReader<SpeakerChangeEvent>,
+    mut speaker_change_events: MessageReader<SpeakerChangeEvent>,
     mut speakers: Query<&mut Speaker>,
 ) {
     for event in speaker_change_events.read() {
@@ -122,7 +122,7 @@ pub(crate) fn fade_out(
     done
 }
 
-pub(crate) fn quit(_: In<()>, mut app_exit_events: EventWriter<AppExit>) {
+pub(crate) fn quit(_: In<()>, mut app_exit_events: MessageWriter<AppExit>) {
     app_exit_events.write(AppExit::Success);
 }
 
@@ -145,7 +145,6 @@ pub(crate) fn show_bang(
     In((character, duration)): In<(String, f32)>,
     speakers: Query<&Speaker>,
     mut commands: Commands,
-    mut sprite_params: Sprite3dParams,
     camera_transform: Single<&Transform, With<MainCamera>>,
     sprites: Res<Sprites>,
 ) {
@@ -165,14 +164,16 @@ pub(crate) fn show_bang(
         duration / 3.0,
     );
     commands.spawn((
-        Sprite3dBuilder {
-            image: sprites.bang.clone(),
+        Sprite3d {
             pixels_per_metre: 900.,
             alpha_mode: AlphaMode::Blend,
             unlit: true,
             ..default()
-        }
-        .bundle(&mut sprite_params),
+        },
+        Sprite {
+            image: sprites.bang.clone(),
+            ..default()
+        },
         Transform::from_translation(speaker.initial_translation + speaker_back)
             .looking_at(CAMERA_TRANSLATION, Vec3::Y),
         NotShadowCaster,

@@ -4,8 +4,7 @@ use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::color::palettes::css;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use bevy::window::{PrimaryWindow, SystemCursorIcon};
-use bevy::winit::cursor::CursorIcon;
+use bevy::window::{CursorIcon, PrimaryWindow, SystemCursorIcon};
 use bevy_yarnspinner::{events::*, prelude::*};
 
 pub(crate) fn option_selection_plugin(app: &mut App) {
@@ -23,10 +22,10 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             .after(YarnSpinnerSystemSet)
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
-    .add_event::<HasSelectedOptionEvent>();
+    .add_message::<HasSelectedOptionEvent>();
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Event)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Message)]
 struct HasSelectedOptionEvent;
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]
@@ -66,7 +65,7 @@ fn create_options(
 }
 
 fn show_options(
-    mut typewriter_finished_event: EventReader<TypewriterFinishedEvent>,
+    mut typewriter_finished_event: MessageReader<TypewriterFinishedEvent>,
     mut options_node: Single<&mut Visibility, With<OptionsNode>>,
 ) {
     for _event in typewriter_finished_event.read() {
@@ -83,7 +82,7 @@ fn select_option(
     mut text_writer: TextUiWriter,
     option_selection: Res<OptionSelection>,
     window: Single<Entity, With<PrimaryWindow>>,
-    mut selected_option_event: EventWriter<HasSelectedOptionEvent>,
+    mut selected_option_event: MessageWriter<HasSelectedOptionEvent>,
 ) {
     if !typewriter.is_finished() {
         return;
@@ -126,8 +125,8 @@ fn select_option(
 }
 
 fn despawn_options(
-    mut has_selected_option_event: EventReader<HasSelectedOptionEvent>,
-    mut dialogue_complete_event: EventReader<DialogueCompleteEvent>,
+    mut has_selected_option_event: MessageReader<HasSelectedOptionEvent>,
+    mut dialogue_complete_event: MessageReader<DialogueCompleteEvent>,
     mut commands: Commands,
     options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
     mut dialogue_node_text: Single<&mut Text, With<DialogueNode>>,

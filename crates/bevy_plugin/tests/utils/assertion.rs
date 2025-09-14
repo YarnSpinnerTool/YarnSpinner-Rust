@@ -1,17 +1,17 @@
-use bevy::ecs::event::EventCursor;
+use bevy::ecs::message::MessageCursor;
 use bevy::prelude::*;
 use bevy_yarnspinner::events::*;
 
 #[derive(Debug, Default)]
 pub struct EventAsserter {
-    pub present_line_cursor: EventCursor<PresentLineEvent>,
-    pub present_options_cursor: EventCursor<PresentOptionsEvent>,
-    pub dialogue_start_cursor: EventCursor<DialogueStartEvent>,
-    pub dialogue_complete_cursor: EventCursor<DialogueCompleteEvent>,
-    pub node_start_cursor: EventCursor<NodeStartEvent>,
-    pub node_complete_cursor: EventCursor<NodeCompleteEvent>,
-    pub line_hints_cursor: EventCursor<LineHintsEvent>,
-    pub execute_command_cursor: EventCursor<ExecuteCommandEvent>,
+    pub present_line_cursor: MessageCursor<PresentLineEvent>,
+    pub present_options_cursor: MessageCursor<PresentOptionsEvent>,
+    pub dialogue_start_cursor: MessageCursor<DialogueStartEvent>,
+    pub dialogue_complete_cursor: MessageCursor<DialogueCompleteEvent>,
+    pub node_start_cursor: MessageCursor<NodeStartEvent>,
+    pub node_complete_cursor: MessageCursor<NodeCompleteEvent>,
+    pub line_hints_cursor: MessageCursor<LineHintsEvent>,
+    pub execute_command_cursor: MessageCursor<ExecuteCommandEvent>,
 }
 
 impl EventAsserter {
@@ -21,21 +21,21 @@ impl EventAsserter {
 
     pub fn clear_events(&mut self, app: &mut App) {
         self.present_line_cursor
-            .clear(app.world().resource::<Events<PresentLineEvent>>());
+            .clear(app.world().resource::<Messages<PresentLineEvent>>());
         self.present_options_cursor
-            .clear(app.world().resource::<Events<PresentOptionsEvent>>());
+            .clear(app.world().resource::<Messages<PresentOptionsEvent>>());
         self.dialogue_start_cursor
-            .clear(app.world().resource::<Events<DialogueStartEvent>>());
+            .clear(app.world().resource::<Messages<DialogueStartEvent>>());
         self.dialogue_complete_cursor
-            .clear(app.world().resource::<Events<DialogueCompleteEvent>>());
+            .clear(app.world().resource::<Messages<DialogueCompleteEvent>>());
         self.node_start_cursor
-            .clear(app.world().resource::<Events<NodeStartEvent>>());
+            .clear(app.world().resource::<Messages<NodeStartEvent>>());
         self.node_complete_cursor
-            .clear(app.world().resource::<Events<NodeCompleteEvent>>());
+            .clear(app.world().resource::<Messages<NodeCompleteEvent>>());
         self.line_hints_cursor
-            .clear(app.world().resource::<Events<LineHintsEvent>>());
+            .clear(app.world().resource::<Messages<LineHintsEvent>>());
         self.execute_command_cursor
-            .clear(app.world().resource::<Events<ExecuteCommandEvent>>());
+            .clear(app.world().resource::<Messages<ExecuteCommandEvent>>());
     }
 }
 
@@ -78,7 +78,7 @@ macro_rules! assert_events {
         assert_events!($asserter, $app contains $event (n = 1) $(with $pred)?);
     };
     ($asserter:ident, $app:ident contains $event:ident (n = $num:expr) $(with $pred:expr)?) => {
-        let events = $app.world().resource::<bevy::prelude::Events<$event>>();
+        let events = $app.world().resource::<bevy::prelude::Messages<$event>>();
         let cursor = $crate::get_cursor!($asserter, $event);
         let events: Vec<&$event> = cursor.read(&events).collect();
         assert_eq!($num, events.len(), "Expected {} events of type {}, but found {}: {events:#?}", stringify!($num), stringify!($event), events.len());

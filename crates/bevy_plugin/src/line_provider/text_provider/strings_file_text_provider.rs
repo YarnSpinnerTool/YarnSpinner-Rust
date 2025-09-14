@@ -2,7 +2,7 @@ use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use crate::UnderlyingTextProvider;
 
-use bevy::ecs::event::EventCursor;
+use bevy::ecs::message::MessageCursor;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ pub struct StringsFileTextProvider {
     base_string_table: HashMap<LineId, StringInfo>,
     strings_file_handle: Option<Handle<StringsFile>>,
     translation_string_table: Option<HashMap<LineId, String>>,
-    event_cursor: Arc<RwLock<EventCursor<AssetEvent<StringsFile>>>>,
+    event_cursor: Arc<RwLock<MessageCursor<AssetEvent<StringsFile>>>>,
 }
 
 impl UnderlyingTextProvider for StringsFileTextProvider {
@@ -156,7 +156,7 @@ impl TextProvider for StringsFileTextProvider {
         if !self.asset_server.is_loaded_with_dependencies(handle) {
             return None;
         }
-        let asset_events = world.resource::<Events<AssetEvent<StringsFile>>>();
+        let asset_events = world.resource::<Messages<AssetEvent<StringsFile>>>();
         let strings_file_has_changed = || {
             let mut cursor = self.event_cursor.write().unwrap();
             cursor.read(asset_events).any(|event| match event {

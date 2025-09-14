@@ -20,7 +20,7 @@ prost = { version = "0.12", default-features = false, features = [
     "prost-derive",
 ] }
 serde = { version = "1", features = ["derive"], optional = true }
-bevy = { version = "0.16.0", default-features = false, optional = true, features = [
+bevy = { version = "0.17.0-rc", default-features = false, optional = true, features = [
     "std",
 ] }
 variadics_please = "1.1.0"

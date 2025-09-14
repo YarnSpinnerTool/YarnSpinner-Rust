@@ -51,7 +51,7 @@ impl YarnFnRegistry {
     }
 
     /// Iterates over all functions in the registry.
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnFn))> {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, &dyn UntypedYarnFn)> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
@@ -72,7 +72,7 @@ impl YarnFnRegistry {
         self.get(name).is_some()
     }
 
-    pub(crate) fn get(&self, name: &str) -> Option<&(dyn UntypedYarnFn)> {
+    pub(crate) fn get(&self, name: &str) -> Option<&dyn UntypedYarnFn> {
         self.0.get(name).map(|f| f.as_ref())
     }
 
@@ -80,7 +80,7 @@ impl YarnFnRegistry {
         self.0.keys().map(|key| key.as_ref())
     }
 
-    pub(crate) fn functions(&self) -> impl Iterator<Item = &(dyn UntypedYarnFn)> {
+    pub(crate) fn functions(&self) -> impl Iterator<Item = &dyn UntypedYarnFn> {
         self.0.values().map(|value| value.as_ref())
     }
 }

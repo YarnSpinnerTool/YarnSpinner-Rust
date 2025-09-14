@@ -19,8 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
-          
+          submodules: "true"
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -32,12 +32,11 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install alsa and udev
-        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-features --tests --examples --exclude yarnspinner_without_bevy_examples -- --deny warnings
       - name: Run cargo clippy for non-bevy
         run: cargo clippy --no-default-features --tests -p yarnspinner -p yarnspinner_without_bevy_examples -- --deny warnings
-
 
   format:
     name: Format
@@ -46,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          submodules: "true"
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -61,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          submodules: "true"
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -73,7 +72,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install alsa and udev
-        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo doc
         run: cargo doc --no-deps --workspace --all-features --exclude yarnspinner_without_bevy_examples
       - name: Run cargo doc for non-bevy
@@ -86,7 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          submodules: "true"
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -98,9 +97,30 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install alsa and udev
-        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo test
-        run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
+        run: cargo test --workspace --lib --bins --tests --examples --exclude yarnspinner_without_bevy_examples
+
+  test-bevy-docs:
+    name: Test Docs with Bevy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Populate target directory from cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install alsa and udev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run doc tests
         run: LD_LIBRARY_PATH="$(rustc --print target-libdir)" cargo test --workspace --all-features --doc --exclude yarnspinner_without_bevy_examples
 
@@ -111,7 +131,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          submodules: "true"
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -123,7 +143,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install alsa and udev
-        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo test for non-bevy
         run: cargo test --no-default-features -p yarnspinner -p yarnspinner_without_bevy_examples
       - name: Run doc tests for non-bevy
@@ -134,26 +154,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
-    - name: Install dependencies
-      run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install dependencies
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
 
-    - name: Populate target directory from cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Populate target directory from cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
-    - name: Install Bevy CLI
-      run: cargo install --git=https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli
+      - name: Install Bevy CLI
+        run: cargo install --git=https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli
 
-    - name: Build for web
-      run: |
-        cd demo
-        bevy build --locked --all-targets --yes -p bevy_yarnspinner_demo web
+      - name: Build for web
+        run: |
+          cd demo
+          bevy build --locked --all-targets --yes -p bevy_yarnspinner_demo web

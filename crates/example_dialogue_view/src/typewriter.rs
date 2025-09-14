@@ -12,8 +12,8 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
         Update,
         (
             send_finished_event.run_if(resource_exists::<Typewriter>),
-            despawn.run_if(on_event::<DialogueCompleteEvent>),
-            spawn.run_if(on_event::<DialogueStartEvent>),
+            despawn.run_if(on_message::<DialogueCompleteEvent>),
+            spawn.run_if(on_message::<DialogueStartEvent>),
             write_text.run_if(resource_exists::<Typewriter>),
             show_continue.run_if(resource_exists::<Typewriter>),
             bob_continue,
@@ -22,10 +22,10 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
             .after(YarnSpinnerSystemSet)
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
-    .add_event::<TypewriterFinishedEvent>();
+    .add_message::<TypewriterFinishedEvent>();
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Reflect, Event)]
+#[derive(Debug, Eq, PartialEq, Hash, Reflect, Message)]
 pub(crate) struct TypewriterFinishedEvent;
 
 #[derive(Debug, Clone, PartialEq, Resource)]
@@ -104,7 +104,7 @@ fn write_text(
     text: Single<Entity, With<DialogueNode>>,
     mut typewriter: ResMut<Typewriter>,
     option_selection: Option<Res<OptionSelection>>,
-    mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
+    mut speaker_change_events: MessageWriter<SpeakerChangeEvent>,
     mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
 ) {
     let mut text_entity = commands.entity(*text);
@@ -143,7 +143,7 @@ fn write_text(
 fn show_continue(
     typewriter: Res<Typewriter>,
     mut visibility: Single<&mut Visibility, With<DialogueContinueNode>>,
-    mut typewriter_finished_event: EventReader<TypewriterFinishedEvent>,
+    mut typewriter_finished_event: MessageReader<TypewriterFinishedEvent>,
 ) {
     for _event in typewriter_finished_event.read() {
         if !typewriter.last_before_options {
@@ -173,7 +173,7 @@ fn bob_continue(
 }
 
 fn send_finished_event(
-    mut events: EventWriter<TypewriterFinishedEvent>,
+    mut events: MessageWriter<TypewriterFinishedEvent>,
     typewriter: Res<Typewriter>,
     mut last_finished: Local<bool>,
 ) {

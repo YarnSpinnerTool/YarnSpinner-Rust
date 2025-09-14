@@ -1,6 +1,6 @@
 [package]
 name = "yarnspinner_compiler"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -21,8 +21,8 @@ regex = "1"
 yarnspinner_core = { path = "../core", version = "0.5.0" }
 annotate-snippets = "0.10"
 serde = { version = "1", features = ["derive"], optional = true }
-bevy = { version = "0.16.0", default-features = false, optional = true }
-rand = { version = "0.8", features = ["small_rng"] }
+bevy = { version = "0.17.0-rc", default-features = false, optional = true }
+rand = { version = "0.9", features = ["small_rng"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 instant = { version = "0.1.12", features = [

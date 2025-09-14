@@ -27,17 +27,21 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
 }
 
 fn handle_yarn_file_events_outside_development(
-    mut events: EventReader<AssetEvent<YarnFile>>,
+    mut events: MessageReader<AssetEvent<YarnFile>>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Res<YarnProject>,
-    mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
+    mut recompile_events: MessageWriter<RecompileLoadedYarnFilesEvent>,
 ) {
     for event in events.read() {
         let AssetEvent::Modified { id } = event else {
             continue;
         };
-        let handle = Handle::Weak(*id);
-        if !(yarn_files_being_loaded.0.contains(&handle) || project.yarn_files.contains(&handle)) {
+        if !(yarn_files_being_loaded
+            .0
+            .iter()
+            .any(|handle| handle.id() == *id)
+            || project.yarn_files.iter().any(|handle| handle.id() == *id))
+        {
             continue;
         }
         recompile_events.write(RecompileLoadedYarnFilesEvent);
@@ -45,40 +49,42 @@ fn handle_yarn_file_events_outside_development(
 }
 
 fn handle_yarn_file_events(
-    mut events: EventReader<AssetEvent<YarnFile>>,
+    mut events: MessageReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
-    mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
+    mut recompile_events: MessageWriter<RecompileLoadedYarnFilesEvent>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Option<Res<YarnProject>>,
-    mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_strings_files_writer: MessageWriter<UpdateAllStringsFilesForStringTableEvent>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
-    mut added_tags: Local<HashSet<Handle<YarnFile>>>,
+    mut added_tags: Local<HashSet<AssetId<YarnFile>>>,
     mut last_recompiled_yarn_file: Local<Option<YarnFile>>,
     asset_root: Res<AssetRoot>,
 ) -> SystemResult {
     let mut recompilation_needed = false;
-    let mut already_handled: HashSet<Handle<YarnFile>> = HashSet::default();
+    let mut already_handled: HashSet<AssetId<YarnFile>> = HashSet::default();
     for event in events.read() {
         let (AssetEvent::LoadedWithDependencies { id } | AssetEvent::Modified { id }) = event
         else {
             continue;
         };
 
-        let handle = Handle::Weak(*id);
-        if already_handled.contains(&handle) {
+        if already_handled.contains(id) {
             continue;
         }
-        already_handled.insert(handle.clone());
-        if !yarn_files_being_loaded.0.contains(&handle)
+        already_handled.insert(*id);
+        if !yarn_files_being_loaded
+            .0
+            .iter()
+            .any(|handle| handle.id() == *id)
             && !project
                 .as_ref()
-                .map(|p| p.yarn_files.contains(&handle))
+                .map(|p| p.yarn_files.iter().any(|handle| handle.id() == *id))
                 .unwrap_or_default()
         {
             continue;
         }
-        let yarn_file = assets.get(&handle).unwrap();
+        let yarn_file = assets.get(*id).unwrap();
 
         update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
             yarn_file.string_table.clone(),
@@ -98,16 +104,16 @@ fn handle_yarn_file_events(
                     .text_provider
                     .extend_base_string_table(yarn_file.string_table.clone());
             }
-            added_tags.remove(&handle);
+            added_tags.remove(id);
             recompilation_needed = true;
             continue;
         };
 
-        if added_tags.contains(&handle) {
+        if added_tags.contains(id) {
             continue;
         }
         let asset_path = asset_server
-            .get_path(handle.id())
+            .get_path(*id)
             .with_context(|| format!("Failed to overwrite Yarn file \"{}\" with new IDs because it was not found on disk",
                                      yarn_file.file_name()))?;
         let path = asset_root.0.join(asset_path.path());
@@ -127,9 +133,9 @@ fn handle_yarn_file_events(
             .map(|p| p.watching_for_changes)
             .unwrap_or_default();
         if is_watching {
-            added_tags.insert(handle.clone_weak());
+            added_tags.insert(*id);
         } else {
-            let yarn_file = assets.get_mut(&handle).unwrap();
+            let yarn_file = assets.get_mut(*id).unwrap();
             yarn_file.file.source = source_with_added_ids;
 
             let string_table = YarnCompiler::new()

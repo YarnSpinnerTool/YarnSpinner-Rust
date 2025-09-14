@@ -64,7 +64,7 @@ impl YarnCommands {
     }
 
     /// Iterates over all registered commands.
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &(dyn UntypedYarnCommand))> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &dyn UntypedYarnCommand)> {
         self.0
             .iter()
             .map(|(key, value)| (key.as_ref(), value.as_ref()))
@@ -76,12 +76,12 @@ impl YarnCommands {
     }
 
     /// Returns a reference to the command with the given name, if it exists.
-    pub fn get(&self, name: &str) -> Option<&(dyn UntypedYarnCommand)> {
+    pub fn get(&self, name: &str) -> Option<&dyn UntypedYarnCommand> {
         self.0.get(name).map(|f| f.as_ref())
     }
 
     /// Returns a mutable reference to the command with the given name, if it exists.
-    pub fn get_mut(&mut self, name: &str) -> Option<&mut (dyn UntypedYarnCommand)> {
+    pub fn get_mut(&mut self, name: &str) -> Option<&mut dyn UntypedYarnCommand> {
         self.0.get_mut(name).map(|f| f.as_mut())
     }
 
@@ -91,7 +91,7 @@ impl YarnCommands {
     }
 
     /// Iterates over all registered commands.
-    pub fn commands(&self) -> impl Iterator<Item = &(dyn UntypedYarnCommand)> {
+    pub fn commands(&self) -> impl Iterator<Item = &dyn UntypedYarnCommand> {
         self.0.values().map(|value| value.as_ref())
     }
 

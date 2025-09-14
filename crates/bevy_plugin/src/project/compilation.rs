@@ -12,7 +12,7 @@ pub(crate) fn project_compilation_plugin(app: &mut App) {
     app.register_type::<YarnFilesToLoad>()
         .init_resource::<YarnFilesToLoad>()
         .init_resource::<YarnFilesBeingLoaded>()
-        .add_event::<RecompileLoadedYarnFilesEvent>()
+        .add_message::<RecompileLoadedYarnFilesEvent>()
         .add_systems(
             Update,
             (
@@ -52,7 +52,7 @@ pub(crate) struct YarnFilesBeingLoaded(pub(crate) HashSet<Handle<YarnFile>>);
 
 fn load_project(
     mut commands: Commands,
-    mut events: ResMut<Events<LoadYarnProjectEvent>>,
+    mut events: ResMut<Messages<LoadYarnProjectEvent>>,
     is_watching_for_changes: Res<WatchingForChanges>,
     mut already_loaded: Local<bool>,
 ) -> SystemResult {
@@ -108,7 +108,7 @@ fn add_yarn_files_to_load_queue(
     Ok(())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Event)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Reflect, Message)]
 #[reflect(Debug, Default, PartialEq)]
 pub(crate) struct RecompileLoadedYarnFilesEvent;
 
@@ -116,7 +116,7 @@ fn recompile_loaded_yarn_files(
     yarn_files: Res<Assets<YarnFile>>,
     yarn_project: Option<ResMut<YarnProject>>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
-    mut events: ResMut<Events<RecompileLoadedYarnFilesEvent>>,
+    mut events: ResMut<Messages<RecompileLoadedYarnFilesEvent>>,
 ) -> SystemResult {
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
@@ -167,7 +167,7 @@ fn compile_loaded_yarn_files(
     mut commands: Commands,
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
     yarn_files: Res<Assets<YarnFile>>,
-    mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_strings_files_writer: MessageWriter<UpdateAllStringsFilesForStringTableEvent>,
     mut dirty: Local<bool>,
     yarn_project_config_to_load: Option<Res<YarnProjectConfigToLoad>>,
     asset_server: Res<AssetServer>,

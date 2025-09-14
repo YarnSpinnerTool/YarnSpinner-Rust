@@ -42,9 +42,9 @@ impl<'input> UntaggedLineListener<'input> {
 
     /// Generates a new unique line tag that is not present in `existing_line_tags`.
     fn generate_string(&self) -> LineId {
-        let mut rng = SmallRng::from_entropy();
+        let mut rng = SmallRng::from_os_rng();
         loop {
-            let line: usize = rng.gen_range(0..0x1000000);
+            let line: usize = rng.random_range(0..0x1000000);
             let tag = LineId(format!("line:{line}"));
             if !self.existing_line_tags.contains(&tag) {
                 return tag;

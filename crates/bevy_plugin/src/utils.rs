@@ -40,6 +40,6 @@ pub(crate) fn has_localizations(
     false
 }
 
-pub(crate) fn events_in_queue<T: Event>() -> impl FnMut(EventReader<T>) -> bool + Clone {
-    move |reader: EventReader<T>| !reader.is_empty()
+pub(crate) fn events_in_queue<T: Message>() -> impl FnMut(MessageReader<T>) -> bool + Clone {
+    move |reader: MessageReader<T>| !reader.is_empty()
 }

@@ -10,9 +10,9 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
         Update,
         (
             hide_dialog,
-            show_dialog.run_if(on_event::<DialogueStartEvent>),
-            present_line.run_if(resource_exists::<Typewriter>.and(on_event::<PresentLineEvent>)),
-            present_options.run_if(on_event::<PresentOptionsEvent>),
+            show_dialog.run_if(on_message::<DialogueStartEvent>),
+            present_line.run_if(resource_exists::<Typewriter>.and(on_message::<PresentLineEvent>)),
+            present_options.run_if(on_message::<PresentOptionsEvent>),
             continue_dialogue.run_if(resource_exists::<Typewriter>),
         )
             .chain()
@@ -20,14 +20,14 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
             .after(typewriter::spawn)
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
-    .add_event::<SpeakerChangeEvent>()
+    .add_message::<SpeakerChangeEvent>()
     .register_type::<SpeakerChangeEvent>();
 }
 
 /// Signals that a speaker has changed.
 /// A speaker starts speaking when a new line is presented with a [`PresentLineEvent`] which has a character name.
 /// A speaker stops speaking when the line is fully displayed on the screen, which happens over the course of a few seconds
-#[derive(Debug, Eq, PartialEq, Hash, Reflect, Event)]
+#[derive(Debug, Eq, PartialEq, Hash, Reflect, Message)]
 #[reflect(Debug, PartialEq, Hash)]
 #[non_exhaustive]
 pub struct SpeakerChangeEvent {
@@ -43,7 +43,7 @@ fn show_dialog(mut visibility: Single<&mut Visibility, With<UiRootNode>>) {
 
 fn hide_dialog(
     mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
-    mut dialogue_complete_events: EventReader<DialogueCompleteEvent>,
+    mut dialogue_complete_events: MessageReader<DialogueCompleteEvent>,
 ) {
     if !dialogue_complete_events.is_empty() {
         **root_visibility = Visibility::Hidden;
@@ -52,8 +52,8 @@ fn hide_dialog(
 }
 
 fn present_line(
-    mut line_events: EventReader<PresentLineEvent>,
-    mut speaker_change_events: EventWriter<SpeakerChangeEvent>,
+    mut line_events: MessageReader<PresentLineEvent>,
+    mut speaker_change_events: MessageWriter<SpeakerChangeEvent>,
     mut typewriter: ResMut<Typewriter>,
     name_node: Single<Entity, With<DialogueNameNode>>,
     mut text_writer: TextUiWriter,
@@ -73,7 +73,7 @@ fn present_line(
     }
 }
 
-fn present_options(mut commands: Commands, mut events: EventReader<PresentOptionsEvent>) {
+fn present_options(mut commands: Commands, mut events: MessageReader<PresentOptionsEvent>) {
     for event in events.read() {
         let option_selection = OptionSelection::from_option_set(&event.options);
         commands.insert_resource(option_selection);
