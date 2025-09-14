@@ -3,14 +3,14 @@ use crate::UnderlyingYarnCommand;
 use bevy::prelude::*;
 
 pub(crate) fn dialogue_runner_events_plugin(app: &mut App) {
-    app.add_event::<PresentLineEvent>()
-        .add_event::<PresentOptionsEvent>()
-        .add_event::<ExecuteCommandEvent>()
-        .add_event::<NodeCompleteEvent>()
-        .add_event::<NodeStartEvent>()
-        .add_event::<LineHintsEvent>()
-        .add_event::<DialogueCompleteEvent>()
-        .add_event::<DialogueStartEvent>();
+    app.add_message::<PresentLineEvent>()
+        .add_message::<PresentOptionsEvent>()
+        .add_message::<ExecuteCommandEvent>()
+        .add_message::<NodeCompleteEvent>()
+        .add_message::<NodeStartEvent>()
+        .add_message::<LineHintsEvent>()
+        .add_message::<DialogueCompleteEvent>()
+        .add_message::<DialogueStartEvent>();
 }
 
 /// An event that is fired after a dialogue advances and wishes to present a line to the user.

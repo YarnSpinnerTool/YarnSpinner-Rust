@@ -251,7 +251,7 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
 
     while !app
         .world()
-        .resource::<Events<AssetEvent<YarnFile>>>()
+        .resource::<Messages<AssetEvent<YarnFile>>>()
         .is_empty()
     {
         app.update();

@@ -165,7 +165,7 @@ impl Plugin for YarnSpinnerPlugin {
         If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::default()`.");
         app.add_plugins(Self::deferred())
             .world_mut()
-            .send_event(self.project.clone());
+            .write_message(self.project.clone());
     }
 }
 

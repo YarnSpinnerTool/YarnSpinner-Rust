@@ -44,10 +44,10 @@ pub trait TextProvider: UnderlyingTextProvider {
 
 pub(crate) fn fetch_resources(world: &mut World) {
     let dialogue_runner_entities: Vec<_> = world
-        .iter_entities()
-        .map(|entity| entity.id())
-        .filter(|entity| world.get::<DialogueRunner>(*entity).is_some())
+        .query_filtered::<Entity, With<DialogueRunner>>()
+        .iter(world)
         .collect();
+
     for entity in dialogue_runner_entities {
         let assets = {
             let dialogue_runner = world.get::<DialogueRunner>(entity).unwrap();

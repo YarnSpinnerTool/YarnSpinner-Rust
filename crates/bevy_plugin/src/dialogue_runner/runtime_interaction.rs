@@ -35,9 +35,9 @@ fn continue_runtime(
 ) -> SystemResult {
     let mut system_state: SystemState<(
         Query<(Entity, &mut DialogueRunner)>,
-        EventWriter<PresentLineEvent>,
-        EventWriter<LineHintsEvent>,
-        EventWriter<DialogueStartEvent>,
+        MessageWriter<PresentLineEvent>,
+        MessageWriter<LineHintsEvent>,
+        MessageWriter<DialogueStartEvent>,
         Res<Assets<LoadedUntypedAsset>>,
     )> = SystemState::new(world);
 
@@ -125,13 +125,13 @@ fn continue_runtime(
 
     let mut system_state: SystemState<(
         Query<(Entity, &mut DialogueRunner)>,
-        EventWriter<PresentLineEvent>,
-        EventWriter<PresentOptionsEvent>,
-        EventWriter<ExecuteCommandEvent>,
-        EventWriter<NodeCompleteEvent>,
-        EventWriter<NodeStartEvent>,
-        EventWriter<LineHintsEvent>,
-        EventWriter<DialogueCompleteEvent>,
+        MessageWriter<PresentLineEvent>,
+        MessageWriter<PresentOptionsEvent>,
+        MessageWriter<ExecuteCommandEvent>,
+        MessageWriter<NodeCompleteEvent>,
+        MessageWriter<NodeStartEvent>,
+        MessageWriter<LineHintsEvent>,
+        MessageWriter<DialogueCompleteEvent>,
         Res<YarnProject>,
     )> = SystemState::new(world);
 
@@ -204,7 +204,7 @@ fn continue_runtime(
 }
 
 fn accept_line_hints(
-    mut events: EventReader<LineHintsEvent>,
+    mut events: MessageReader<LineHintsEvent>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
 ) {
     for event in events.read() {

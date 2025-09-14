@@ -93,10 +93,9 @@ impl AppExt for App {
 
     fn dialogue_runner_entity(&mut self) -> Entity {
         let existing_entity = self
-            .world()
-            .iter_entities()
-            .filter(|e| self.world().get::<DialogueRunner>(e.id()).is_some())
-            .map(|e| e.id())
+            .world_mut()
+            .query_filtered::<Entity, With<DialogueRunner>>()
+            .iter(self.world())
             .next();
         if let Some(entity) = existing_entity {
             entity

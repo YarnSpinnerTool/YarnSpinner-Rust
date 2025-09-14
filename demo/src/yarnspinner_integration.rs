@@ -35,7 +35,7 @@ impl Default for Speaker {
 }
 
 pub(crate) fn change_speaker(
-    mut speaker_change_events: EventReader<SpeakerChangeEvent>,
+    mut speaker_change_events: MessageReader<SpeakerChangeEvent>,
     mut speakers: Query<&mut Speaker>,
 ) {
     for event in speaker_change_events.read() {
@@ -122,7 +122,7 @@ pub(crate) fn fade_out(
     done
 }
 
-pub(crate) fn quit(_: In<()>, mut app_exit_events: EventWriter<AppExit>) {
+pub(crate) fn quit(_: In<()>, mut app_exit_events: MessageWriter<AppExit>) {
     app_exit_events.write(AppExit::Success);
 }
 

@@ -12,7 +12,7 @@ mod compilation;
 
 pub(crate) fn project_plugin(app: &mut App) {
     app.add_plugins(compilation::project_compilation_plugin)
-        .add_event::<LoadYarnProjectEvent>();
+        .add_message::<LoadYarnProjectEvent>();
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]

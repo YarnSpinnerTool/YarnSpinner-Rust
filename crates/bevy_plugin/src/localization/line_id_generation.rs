@@ -2,7 +2,6 @@ use crate::localization::UpdateAllStringsFilesForStringTableEvent;
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded};
-use bevy::asset::StrongHandle;
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::hash::Hash;
@@ -28,10 +27,10 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
 }
 
 fn handle_yarn_file_events_outside_development(
-    mut events: EventReader<AssetEvent<YarnFile>>,
+    mut events: MessageReader<AssetEvent<YarnFile>>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Res<YarnProject>,
-    mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
+    mut recompile_events: MessageWriter<RecompileLoadedYarnFilesEvent>,
 ) {
     for event in events.read() {
         let AssetEvent::Modified { id } = event else {
@@ -50,13 +49,13 @@ fn handle_yarn_file_events_outside_development(
 }
 
 fn handle_yarn_file_events(
-    mut events: EventReader<AssetEvent<YarnFile>>,
+    mut events: MessageReader<AssetEvent<YarnFile>>,
     mut assets: ResMut<Assets<YarnFile>>,
     asset_server: Res<AssetServer>,
-    mut recompile_events: EventWriter<RecompileLoadedYarnFilesEvent>,
+    mut recompile_events: MessageWriter<RecompileLoadedYarnFilesEvent>,
     yarn_files_being_loaded: Res<YarnFilesBeingLoaded>,
     project: Option<Res<YarnProject>>,
-    mut update_strings_files_writer: EventWriter<UpdateAllStringsFilesForStringTableEvent>,
+    mut update_strings_files_writer: MessageWriter<UpdateAllStringsFilesForStringTableEvent>,
     mut dialogue_runners: Query<&mut DialogueRunner>,
     mut added_tags: Local<HashSet<AssetId<YarnFile>>>,
     mut last_recompiled_yarn_file: Local<Option<YarnFile>>,
@@ -73,7 +72,7 @@ fn handle_yarn_file_events(
         if already_handled.contains(id) {
             continue;
         }
-        already_handled.insert(id.clone());
+        already_handled.insert(*id);
         if !yarn_files_being_loaded
             .0
             .iter()
@@ -134,7 +133,7 @@ fn handle_yarn_file_events(
             .map(|p| p.watching_for_changes)
             .unwrap_or_default();
         if is_watching {
-            added_tags.insert(id.clone());
+            added_tags.insert(*id);
         } else {
             let yarn_file = assets.get_mut(*id).unwrap();
             yarn_file.file.source = source_with_added_ids;

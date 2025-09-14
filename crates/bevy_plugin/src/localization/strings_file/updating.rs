@@ -4,7 +4,7 @@ use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 
 pub(crate) fn strings_file_updating_plugin(app: &mut App) {
-    app.add_event::<UpdateAllStringsFilesForStringTableEvent>()
+    app.add_message::<UpdateAllStringsFilesForStringTableEvent>()
         .add_systems(
             Update,
             (update_all_strings_files_for_string_table
