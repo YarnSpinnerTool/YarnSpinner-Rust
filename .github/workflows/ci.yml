@@ -99,7 +99,7 @@ jobs:
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo test
-        run: cargo test --workspace --all-features --exclude yarnspinner_without_bevy_examples
+        run: cargo test --workspace --lib --bins --tests --examples --exclude yarnspinner_without_bevy_examples
 
   test-bevy-docs:
     name: Test Docs with Bevy
