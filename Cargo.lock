@@ -1604,6 +1604,7 @@ dependencies = [
  "bevy_sprite3d",
  "bevy_yarnspinner",
  "bevy_yarnspinner_example_dialogue_view",
+ "getrandom",
 ]
 
 [[package]]
