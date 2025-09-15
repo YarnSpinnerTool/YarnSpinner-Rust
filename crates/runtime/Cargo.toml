@@ -28,6 +28,7 @@ serde = [
 bevy = ["dep:bevy", "yarnspinner_core/bevy"]
 
 [dependencies]
+yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
 yarnspinner_core = { path = "../core", version = "0.6.0" }
 unicode-normalization = { version = "0.1", default-features = false }
 unicode-segmentation = "1"

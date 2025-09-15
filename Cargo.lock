@@ -1594,6 +1594,7 @@ dependencies = [
  "tempfile",
  "variadics_please",
  "yarnspinner",
+ "yarnspinner_internal_shared",
 ]
 
 [[package]]
@@ -6457,6 +6458,7 @@ dependencies = [
  "regex",
  "serde",
  "yarnspinner_core",
+ "yarnspinner_internal_shared",
 ]
 
 [[package]]
@@ -6481,6 +6483,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "yarnspinner_internal_shared"
+version = "0.1.0"
+
+[[package]]
 name = "yarnspinner_runtime"
 version = "0.6.1"
 dependencies = [
@@ -6496,6 +6502,7 @@ dependencies = [
  "unicode-normalization",
  "unicode-segmentation",
  "yarnspinner_core",
+ "yarnspinner_internal_shared",
 ]
 
 [[package]]

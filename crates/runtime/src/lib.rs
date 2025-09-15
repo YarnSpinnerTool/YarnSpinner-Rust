@@ -54,4 +54,5 @@ pub mod prelude {
     };
     pub(crate) use crate::{pluralization::*, virtual_machine::*};
     pub(crate) use yarnspinner_core::prelude::*;
+    pub(crate) use yarnspinner_internal_shared::prelude::*;
 }

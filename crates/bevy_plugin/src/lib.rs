@@ -152,6 +152,7 @@ pub mod prelude {
         VariableStorage, YarnFn, YarnLibrary, YarnValue,
     };
     pub(crate) type SystemResult = anyhow::Result<()>;
+    pub(crate) use yarnspinner_internal_shared::prelude::*;
 }
 
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};

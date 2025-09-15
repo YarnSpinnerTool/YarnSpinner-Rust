@@ -51,9 +51,9 @@ impl AttributeMarkerProcessor for DialogueTextProcessor {
             .expect("Dialogue locale code is not set. 'plural' and 'ordinal' markers cannot be called unless one is set.");
 
         // Attempt to parse the value as a float, so we can determine its plural class
-        let value_as_float = value
-            .parse::<f32>()
-            .unwrap_or_else(|_| panic!("Error while pluralising line: '{value}' is not a number"));
+        let value_as_float = value.parse::<f32>().unwrap_or_else(|_| {
+            panic!("Error while pluralising {LINE_ID_PREFIX} '{value}' is not a number")
+        });
 
         // Implementation note: no need to fiddle with locales here because ICU already does fallbacks for us.
 

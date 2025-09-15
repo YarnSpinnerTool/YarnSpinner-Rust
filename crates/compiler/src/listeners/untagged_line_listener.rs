@@ -45,7 +45,7 @@ impl<'input> UntaggedLineListener<'input> {
         let mut rng = SmallRng::from_os_rng();
         loop {
             let line: usize = rng.random_range(0..0x1000000);
-            let tag = LineId(format!("line:{line}"));
+            let tag = LineId(format!("{LINE_ID_PREFIX}{line}"));
             if !self.existing_line_tags.contains(&tag) {
                 return tag;
             }
@@ -70,7 +70,7 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
         let texts = get_hashtag_texts(&hashtags);
 
         // And then look for a line ID hashtag.
-        if texts.iter().any(|tag| tag.starts_with("line:")) {
+        if texts.iter().any(|tag| tag.starts_with(LINE_ID_PREFIX)) {
             return;
         }
 
