@@ -53,6 +53,7 @@ pub mod prelude {
         variable_storage::*,
     };
     pub(crate) use crate::{pluralization::*, virtual_machine::*};
+    pub(crate) use yarnspinner_internal_shared::prelude::*;
     pub(crate) use yarnspinner_core::prelude::*;
     pub(crate) use yarnspinner_internal_shared::prelude::*;
 }

@@ -35,6 +35,7 @@ pub mod prelude {
         listeners::{Diagnostic, DiagnosticSeverity, DiagnosticVec},
         output::*,
     };
+    pub(crate) use yarnspinner_internal_shared::prelude::*;
     pub(crate) use yarnspinner_core::prelude::*;
     pub(crate) use yarnspinner_internal_shared::prelude::*;
 }
