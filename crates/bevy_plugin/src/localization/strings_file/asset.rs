@@ -310,7 +310,7 @@ fn read_comments(metadata: impl IntoIterator<Item = String>) -> String {
     // Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Importers/YarnProjectImporter.cs#L652>
     let cleaned_metadata: Vec<_> = metadata
         .into_iter()
-        .filter(|metadata| !metadata.starts_with("line:"))
+        .filter(|metadata| !metadata.starts_with(LINE_ID_PREFIX))
         .collect();
     if cleaned_metadata.is_empty() {
         String::new()

@@ -184,7 +184,7 @@ impl AssetProvider for FileExtensionAssetProvider {
             if let Some(localizations) = self.localizations.as_ref() {
                 if let Some(localization) = localizations.supported_localization(language) {
                     let dir = localization.assets_sub_folder.as_path();
-                    let file_name_without_extension = line.id.0.trim_start_matches("line:");
+                    let file_name_without_extension = line.id.0.trim_start_matches(LINE_ID_PREFIX);
                     let assets = self
                         .file_extensions
                         .iter()
@@ -221,8 +221,10 @@ impl FileExtensionAssetProvider {
                     };
                     for line_id in self.line_ids.iter() {
                         for extension in self.file_extensions.values().flatten() {
-                            let file_name =
-                                format!("{}.{extension}", line_id.0.trim_start_matches("line:"));
+                            let file_name = format!(
+                                "{}.{extension}",
+                                line_id.0.trim_start_matches(LINE_ID_PREFIX)
+                            );
                             let path = dir.join(file_name);
                             let asset_path = path.to_string_lossy().replace('\\', "/");
                             let handle = asset_server.load_untyped(asset_path);

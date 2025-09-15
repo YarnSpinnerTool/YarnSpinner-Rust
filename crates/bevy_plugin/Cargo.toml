@@ -20,6 +20,7 @@ audio_assets = ["bevy/bevy_audio", "bevy/vorbis"]
 anyhow = "1"
 csv = "1"
 serde = { version = "1", features = ["derive"] }
+yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
 yarnspinner = { path = "../yarnspinner", features = [
     "bevy",
     "serde",

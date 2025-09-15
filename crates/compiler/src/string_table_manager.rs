@@ -1,6 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableManager.cs>
 
 use crate::output::StringInfo;
+use crate::prelude::*;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use yarnspinner_core::prelude::*;
@@ -33,7 +34,7 @@ impl StringTableManager {
             (line_id, string_info)
         } else {
             let line_id = format!(
-                "line:{}-{}-{}",
+                "{LINE_ID_PREFIX}{}-{}-{}",
                 string_info.file_name,
                 string_info.node_name,
                 self.len()

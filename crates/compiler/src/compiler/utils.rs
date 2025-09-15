@@ -26,7 +26,7 @@ pub(crate) fn get_line_id_tag<'a>(
                 .as_ref()
                 .expect("Hashtag held no text")
                 .get_text();
-            hashtag_text.starts_with("line:")
+            hashtag_text.starts_with(LINE_ID_PREFIX)
         })
         .cloned()
 }
@@ -74,7 +74,7 @@ pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
 }
 
 pub(crate) fn get_line_id_for_node_name(name: &str) -> LineId {
-    format!("line:{name}").into()
+    format!("{LINE_ID_PREFIX}{name}").into()
 }
 
 /// Gets the text of the documentation comments that either immediately

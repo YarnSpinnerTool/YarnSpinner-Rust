@@ -376,7 +376,7 @@ impl Dialogue {
     #[must_use]
     pub fn get_line_id_for_node(&self, node_name: &str) -> Option<LineId> {
         self.get_node_logging_errors(node_name)
-            .map(|_| format!("line:{node_name}").into())
+            .map(|_| format!("{LINE_ID_PREFIX}{node_name}").into())
     }
 
     /// Returns the tags for the node `node_name`.

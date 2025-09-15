@@ -18,6 +18,7 @@ bevy = ["dep:bevy", "yarnspinner_core/bevy"]
 antlr-rust = "=0.3.0-beta"
 better_any = "=0.2.0"
 regex = "1"
+yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
 yarnspinner_core = { path = "../core", version = "0.6.0" }
 annotate-snippets = "0.10"
 serde = { version = "1", features = ["derive"], optional = true }
