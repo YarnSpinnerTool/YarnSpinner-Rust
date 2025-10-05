@@ -10,7 +10,7 @@ members = [
     "crates/core",
     "crates/codegen",
     "crates/internal_shared",
-    "demo",
+    # "demo",
     "examples/bevy_yarnspinner",
     "examples/yarnspinner_without_bevy",
 ]
