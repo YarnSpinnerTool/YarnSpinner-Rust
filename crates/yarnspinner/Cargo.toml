@@ -32,9 +32,9 @@ yarnspinner_core = { path = "../core", version = "0.6.0" }
 yarnspinner_compiler = { path = "../compiler", version = "0.6.0" }
 yarnspinner_runtime = { path = "../runtime", version = "0.6.0" }
 log = { version = "0.4", features = ["std"] }
-bevy = { version = "0.17.0-rc", default-features = false, optional = true }
+bevy = { version = "0.17", default-features = false, optional = true }
 
 [dev-dependencies]
 regex = "1"
 anyhow = "1"
-bevy_platform = "0.17.0-rc"
+bevy_platform = "0.17"

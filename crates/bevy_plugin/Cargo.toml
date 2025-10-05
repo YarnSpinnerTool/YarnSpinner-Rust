@@ -31,7 +31,7 @@ variadics_please = "1"
 
 
 [dependencies.bevy]
-version = "0.17.0-rc"
+version = "0.17"
 default-features = false
 features = ["bevy_asset", "multi_threaded", "bevy_log"]
 
@@ -40,7 +40,7 @@ tempfile = "3"
 static_assertions = "1.1.0"
 
 [dev-dependencies.bevy]
-version = "0.17.0-rc"
+version = "0.17"
 default-features = false
 features = ["bevy_core_pipeline", "bevy_audio"]
 

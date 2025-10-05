@@ -18,7 +18,7 @@ bevy_yarnspinner = { path = "../bevy_plugin", version = "0.6.0-rc" }
 unicode-segmentation = "1"
 
 [dependencies.bevy]
-version = "0.17.0-rc"
+version = "0.17"
 default-features = false
 features = [
     "bevy_ui",
