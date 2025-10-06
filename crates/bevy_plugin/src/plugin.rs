@@ -29,7 +29,11 @@ mod yarn_file_source;
 /// Note that the above does not work on Wasm or Android, since Bevy cannot query folders on these platforms. See [`YarnSpinnerPlugin::new`] for more information.
 ///
 /// For more information on how this plugin interacts with the rest of the crate, see the crate-level documentation.
-#[derive(Debug, Default)]
+#[derive(Debug)]
+#[cfg_attr(
+    not(any(target_arch = "wasm32", target_os = "android")),
+    derive(Default)
+)]
 pub struct YarnSpinnerPlugin {
     project: LoadYarnProjectEvent,
 }
@@ -48,19 +52,10 @@ impl YarnSpinnerPlugin {
     /// these Yarn files will be recompiled if they change during runtime.
     ///
     /// Calling this is equivalent to calling [`YarnSpinnerPlugin::with_yarn_source`] with a [`YarnFileSource::folder`] of `"dialogue"`.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn new() -> Self {
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-        {
-            Self::default()
-        }
-        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
-        {
-            panic!(
-                "YarnSpinnerPlugin::new() is not supported on this platform because it tries to load files from the \"dialogue\" directory in the assets folder. \
-                However, this platform does not allow loading a file without naming it explicitly. \
-                Use `YarnSpinnerPlugin::with_yarn_source` or `YarnSpinnerPlugin::with_yarn_sources` instead.")
-        }
+        Self::default()
     }
 
     /// Creates a new plugin that loads Yarn files from the given sources.
@@ -145,6 +140,7 @@ impl YarnSpinnerPlugin {
 
     /// Sets the development file generation mode, which determines how aggressively Yarn Spinner will generate files that aid in development.
     /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn with_development_file_generation(
         mut self,

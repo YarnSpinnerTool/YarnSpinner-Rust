@@ -103,6 +103,7 @@ pub struct LoadYarnProjectEvent {
     pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 impl Default for LoadYarnProjectEvent {
     fn default() -> Self {
         Self {
@@ -115,19 +116,10 @@ impl Default for LoadYarnProjectEvent {
 
 impl LoadYarnProjectEvent {
     /// See [`YarnSpinnerPlugin::new`]. Shares the same limitations regarding platform support.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn new() -> Self {
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-        {
-            Self::default()
-        }
-        #[cfg(any(target_arch = "wasm32", target_os = "android"))]
-        {
-            panic!(
-                "LoadYarnProjectEvent::new() is not supported on this platform because it tries to load files from the \"dialogue\" directory in the assets folder. \
-                However, this platform does not allow loading a file without naming it explicitly. \
-                Use `LoadYarnProjectEvent::with_yarn_source` or `LoadYarnProjectEvent::with_yarn_sources` instead.")
-        }
+        Self::default()
     }
 
     /// See [`YarnSpinnerPlugin::with_yarn_sources`].
@@ -181,16 +173,13 @@ impl LoadYarnProjectEvent {
     }
 
     /// See [`YarnSpinnerPlugin::with_development_file_generation`].
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn with_development_file_generation(
         mut self,
         development_file_generation: DevelopmentFileGeneration,
     ) -> Self {
         self.development_file_generation = development_file_generation;
-        if cfg!(any(target_arch = "wasm32", target_os = "android")) {
-            assert_eq!(self.development_file_generation, DevelopmentFileGeneration::None,
-                       "Failed to build Yarn Spinner plugin: On `DevelopmentFileGeneration::None` is supported on this platform.");
-        }
         self
     }
 }
