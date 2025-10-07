@@ -22,8 +22,8 @@ impl AttributeMarkerProcessor for NoMarkupTextProcessor {
             // this is only possible when this marker is self-closing (i.e.
             // it's '[nomarkup/]'), in which case there's no text to
             // provide, so we'll provide the empty string here
-            None => "".to_string(),
-            _ => unreachable!("A NoMarkup marker contained something else then a string. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"),
+            None => String::new(),
+            _ => bug!("A NoMarkup marker contained something else then a string."),
         }
     }
 

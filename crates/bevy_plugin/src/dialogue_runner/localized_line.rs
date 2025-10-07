@@ -70,9 +70,8 @@ impl LocalizedLine {
         if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
             if let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY) {
                 let MarkupValue::String(name) = name else {
-                    panic!(
-                        "Attribute \"character\" has a \"name\" property, but it is not a string. \
-                         This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"
+                    bug!(
+                        "Attribute \"character\" has a \"name\" property, but it is not a string."
                     );
                 };
                 return Some(name.as_str());

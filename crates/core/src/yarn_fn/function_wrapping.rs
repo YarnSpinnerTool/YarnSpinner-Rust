@@ -226,6 +226,7 @@ mod bevy_functions {
     use super::*;
     use bevy::ecs::system::SystemId;
     use bevy::prelude::*;
+    use yarnspinner_internal_shared::prelude::*;
 
     impl<Output, P> YarnFn<(P, Output)> for SystemId<In<P>, Output>
     where
@@ -234,7 +235,7 @@ mod bevy_functions {
         for<'a> P: YarnFnParam<Item<'a> = P>,
     {
         fn call(&self, _input: Vec<YarnValue>) -> Self::Out {
-            panic!("Called `call` instead of `call_with_world` on a Bevy system with inputs. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+            bug!("Called `call` instead of `call_with_world` on a Bevy system with inputs.");
         }
 
         type Out = Output;
@@ -261,7 +262,7 @@ mod bevy_functions {
         type Out = Output;
         #[allow(non_snake_case)]
         fn call(&self, _input: Vec<YarnValue>) -> Self::Out {
-            panic!("Called `call` instead of `call_with_world` on a Bevy system without inputs. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+            bug!("Called `call` instead of `call_with_world` on a Bevy system without inputs.");
         }
 
         #[cfg(feature = "bevy")]
