@@ -99,7 +99,11 @@ jobs:
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo test
-        run: cargo test --workspace --lib --bins --tests --examples --exclude yarnspinner_without_bevy_examples
+        run: |
+          LD_LIBRARY_PATH="$(rustc --print target-libdir)" \
+          cargo test --workspace --features=bevy/dynamic_linking \
+            --lib --bins --tests --examples \
+            --exclude yarnspinner_without_bevy_examples
 
   test-bevy-docs:
     name: Test Docs with Bevy
@@ -122,7 +126,11 @@ jobs:
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run doc tests
-        run: LD_LIBRARY_PATH="$(rustc --print target-libdir)" cargo test --workspace --all-features --doc --exclude yarnspinner_without_bevy_examples
+        run: |
+          LD_LIBRARY_PATH="$(rustc --print target-libdir)" \
+          cargo test --workspace --all-features --doc \
+            --features=bevy/dynamic_linking \
+            --exclude yarnspinner_without_bevy_examples
 
   test-without-bevy:
     name: Test without Bevy
