@@ -120,9 +120,9 @@ impl<'input> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'input> {
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input> {
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
         for header in ctx.header_all() {
-            let key = header.header_key.as_ref().unwrap().get_text();
+            let key = header.header_key.as_ref().unwrap_or_bug().get_text();
             if key == "title" {
-                let value = header.header_value.as_ref().unwrap().get_text();
+                let value = header.header_value.as_ref().unwrap_or_bug().get_text();
                 self.current_node_name = Some(value.to_owned());
             }
         }
@@ -134,14 +134,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
     fn visit_expParens(&mut self, ctx: &ExpParensContext<'input>) -> Self::Return {
         // Parens expressions have the type of their inner expression
-        let r#type = self.visit(ctx.expression().unwrap().as_ref());
+        let r#type = self.visit(ctx.expression().unwrap_or_bug().as_ref());
         self.known_types.insert(ctx, r#type.clone());
         r#type
     }
 
     fn visit_expMultDivMod(&mut self, ctx: &ExpMultDivModContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
+        let op = ctx.op.as_ref().unwrap_or_bug();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // *, /, % all support numbers only
         // ## Implementation notes
@@ -154,7 +154,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
     fn visit_expComparison(&mut self, ctx: &ExpComparisonContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
+        let op = ctx.op.as_ref().unwrap_or_bug();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type);
@@ -163,8 +163,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     }
 
     fn visit_expNegative(&mut self, ctx: &ExpNegativeContext<'input>) -> Self::Return {
-        let expressions = &[ctx.expression().unwrap().into()];
-        let op = ctx.op.as_ref().unwrap();
+        let expressions = &[ctx.expression().unwrap_or_bug().into()];
+        let op = ctx.op.as_ref().unwrap_or_bug();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type.clone());
@@ -173,9 +173,9 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
     fn visit_expAndOrXor(&mut self, ctx: &ExpAndOrXorContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(Term::from).collect();
-        let operator_context = ctx.op.as_ref().unwrap();
+        let operator_context = ctx.op.as_ref().unwrap_or_bug();
         let operator =
-            CodeGenerationVisitor::token_to_operator(operator_context.token_type).unwrap();
+            CodeGenerationVisitor::token_to_operator(operator_context.token_type).unwrap_or_bug();
         let description = operator_context.get_text();
         let r#type = self.check_operation(ctx, &expressions, operator, description, &[]);
         self.known_types.insert(ctx, r#type.clone());
@@ -184,7 +184,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
     fn visit_expAddSub(&mut self, ctx: &ExpAddSubContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
+        let op = ctx.op.as_ref().unwrap_or_bug();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         let r#type = self.check_operation(ctx, &expressions, operator, op.get_text(), &[]);
         self.known_types.insert(ctx, r#type.clone());
@@ -192,8 +192,8 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     }
 
     fn visit_expNot(&mut self, ctx: &ExpNotContext<'input>) -> Self::Return {
-        let expressions = &[ctx.expression().unwrap().into()];
-        let op = ctx.op.as_ref().unwrap();
+        let expressions = &[ctx.expression().unwrap_or_bug().into()];
+        let op = ctx.op.as_ref().unwrap_or_bug();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // ! supports only bool types
         // ## Implementation notes
@@ -207,7 +207,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
         // passing the hint from the expression down into the values within
         let hint = self.hints.get(ctx).cloned();
-        let value = ctx.value().unwrap();
+        let value = ctx.value().unwrap_or_bug();
         self.hints.insert(value.as_ref(), hint);
         // Value expressions have the type of their inner value
         let r#type = self.visit(value.as_ref());
@@ -217,7 +217,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
     fn visit_expEquality(&mut self, ctx: &ExpEqualityContext<'input>) -> Self::Return {
         let expressions: Vec<_> = ctx.expression_all().into_iter().map(|e| e.into()).collect();
-        let op = ctx.op.as_ref().unwrap();
+        let op = ctx.op.as_ref().unwrap_or_bug();
         let operator = CodeGenerationVisitor::token_to_operator(op.token_type);
         // == and != support any defined type, as long as terms are the
         // same type
@@ -240,7 +240,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     }
 
     fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
-        let variable = ctx.variable().unwrap();
+        let variable = ctx.variable().unwrap_or_bug();
         self.visit_variable(&variable)
     }
 
@@ -261,9 +261,9 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
         let function_name = ctx
             .function_call()
-            .unwrap()
+            .unwrap_or_bug()
             .get_token(yarnspinnerlexer::FUNC_ID, 0)
-            .unwrap()
+            .unwrap_or_bug()
             .get_text();
 
         let function_declaration = self
@@ -273,7 +273,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
         let hint = self.hints.get(ctx).cloned();
         let function_type = if let Some(function_declaration) = function_declaration {
             let Type::Function(mut function_type) = function_declaration.r#type.clone() else {
-                unreachable!("Internal error: function declaration is not of type Function. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new")
+                bug!("Internal error: function declaration is not of type Function.")
             };
 
             // we have an existing function but its undefined
@@ -300,7 +300,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             // Create the array of parameters for this function based
             // on how many we've seen in this call. Set them all to be
             // undefined; we'll bind their type shortly.
-            let expressions = ctx.function_call().unwrap().expression_all();
+            let expressions = ctx.function_call().unwrap_or_bug().expression_all();
             let parameter_types = expressions.iter().map(|_| None);
             for parameter_type in parameter_types {
                 function_type.add_parameter(parameter_type);
@@ -320,7 +320,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             function_type
         };
         // Check each parameter of the function
-        let supplied_parameters = ctx.function_call().unwrap().expression_all();
+        let supplied_parameters = ctx.function_call().unwrap_or_bug().expression_all();
         let expected_parameter_types = function_type.parameters;
 
         if supplied_parameters.len() != expected_parameter_types.len() {
@@ -357,7 +357,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                 let declaration = self
                     .declarations_mut()
                     .find(|decl| decl.name == function_name)
-                    .unwrap(); // Guaranteed to be Some
+                    .unwrap_or_bug(); // Guaranteed to be Some
                 let Type::Function(function_type) = &mut declaration.r#type else {
                     unreachable!();
                 };
@@ -425,14 +425,14 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
     fn visit_if_clause(&mut self, ctx: &If_clauseContext<'input>) -> Self::Return {
         ParseTreeVisitorCompat::visit_children(self, ctx);
         // If clauses are required to be boolean
-        let expressions = &[ctx.expression().unwrap().into()];
+        let expressions = &[ctx.expression().unwrap_or_bug().into()];
         self.check_operation(ctx, expressions, None, "if statement", &[Type::Boolean])
     }
 
     fn visit_else_if_clause(&mut self, ctx: &Else_if_clauseContext<'input>) -> Self::Return {
         ParseTreeVisitorCompat::visit_children(self, ctx);
         // Else if clauses are required to be boolean
-        let expressions = &[ctx.expression().unwrap().into()];
+        let expressions = &[ctx.expression().unwrap_or_bug().into()];
         self.check_operation(ctx, expressions, None, "elseif statement", &[Type::Boolean])
     }
 
@@ -453,7 +453,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             expression_context.clone().into(),
         ];
 
-        let op = ctx.op.as_ref().unwrap();
+        let op = ctx.op.as_ref().unwrap_or_bug();
         match op.token_type {
             yarnspinnerlexer::OPERATOR_ASSIGNMENT => {
                 // Straight assignment supports any assignment, as long
@@ -484,7 +484,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
                                 .with_description(format!(
                                     "Implicitly declared in {}, node {}",
                                     get_filename(&self.file.name),
-                                    self.current_node_name.as_ref().unwrap()
+                                    self.current_node_name.as_ref().unwrap_or_bug()
                                 ))
                                 .with_default_value(default_value)
                                 .with_source_file_name(self.file.name.clone())
@@ -509,31 +509,45 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
             }
             yarnspinnerlexer::OPERATOR_MATHS_ADDITION_EQUALS => {
                 // += supports strings and numbers
-                let operator =
-                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_ADDITION).unwrap();
+                let operator = CodeGenerationVisitor::token_to_operator(
+                    yarnspinnerlexer::OPERATOR_MATHS_ADDITION,
+                )
+                .unwrap_or_bug();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION_EQUALS => {
                 // -=, *=, /=, %= supports only numbers
-                let operator =
-                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION).unwrap();
+                let operator = CodeGenerationVisitor::token_to_operator(
+                    yarnspinnerlexer::OPERATOR_MATHS_SUBTRACTION,
+                )
+                .unwrap_or_bug();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION_EQUALS => {
-                let operator =
-                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION).unwrap();
+                let operator = CodeGenerationVisitor::token_to_operator(
+                    yarnspinnerlexer::OPERATOR_MATHS_MULTIPLICATION,
+                )
+                .unwrap_or_bug();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_DIVISION_EQUALS => {
-                let operator =
-                    CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_DIVISION).unwrap();
+                let operator = CodeGenerationVisitor::token_to_operator(
+                    yarnspinnerlexer::OPERATOR_MATHS_DIVISION,
+                )
+                .unwrap_or_bug();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
             yarnspinnerlexer::OPERATOR_MATHS_MODULUS_EQUALS => {
-                let operator = CodeGenerationVisitor::token_to_operator(yarnspinnerlexer::OPERATOR_MATHS_MODULUS).unwrap();
+                let operator = CodeGenerationVisitor::token_to_operator(
+                    yarnspinnerlexer::OPERATOR_MATHS_MODULUS,
+                )
+                .unwrap_or_bug();
                 expression_type = self.check_operation(ctx, terms, operator, op.get_text(), &[]);
             }
-            _ => panic!("Internal error: `visit_set_statement` got unexpected operand {}. This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new", op.get_text())
+            _ => bug!(
+                "Internal error: `visit_set_statement` got unexpected operand {}.",
+                op.get_text()
+            ),
         }
         if variable_type.is_none() && expression_type.is_none() {
             self.diagnostics.push(

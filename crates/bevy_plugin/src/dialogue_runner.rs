@@ -39,8 +39,8 @@ pub(crate) fn dialogue_plugin(app: &mut App) {
         .add_plugins(inner::inner_dialogue_runner_plugin);
 }
 
-const DIALOGUE_MISSING_MESSAGE: &str = "Dialogue missing from DialogueRunner. \
-                                  This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new";
+const DIALOGUE_MISSING_MESSAGE: &str = "Dialogue missing from DialogueRunner";
+
 /// The main type to interact with the dialogue system.
 /// Created by calling either [`YarnProject::create_dialogue_runner`] or [`YarnProject::build_dialogue_runner`].
 #[derive(Debug, Component)]
@@ -318,13 +318,21 @@ impl DialogueRunner {
     /// Returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
     pub fn inner(&self) -> InnerDialogue<'_> {
-        InnerDialogue(self.dialogue.as_ref().expect(DIALOGUE_MISSING_MESSAGE))
+        InnerDialogue(
+            self.dialogue
+                .as_ref()
+                .expect_or_bug(DIALOGUE_MISSING_MESSAGE),
+        )
     }
 
     /// Mutably returns a struct that can be used to access a portion of the underlying [`Dialogue`]. This is advanced functionality.
     #[must_use]
     pub fn inner_mut(&mut self) -> InnerDialogueMut<'_> {
-        InnerDialogueMut(self.dialogue.as_mut().expect(DIALOGUE_MISSING_MESSAGE))
+        InnerDialogueMut(
+            self.dialogue
+                .as_mut()
+                .expect_or_bug(DIALOGUE_MISSING_MESSAGE),
+        )
     }
 
     /// Returns the registered [`TextProvider`]. By default, this is a [`StringsFileTextProvider`](crate::default_impl::StringsFileTextProvider).
