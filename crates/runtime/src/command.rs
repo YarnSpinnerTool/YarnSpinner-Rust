@@ -43,10 +43,9 @@ impl Command {
             If you think this is a bug, please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
 
         let mut components = split_command_text(&input);
-        assert!(
+        assert_or_bug!(
             !components.is_empty(),
-            "Parsing the command \"{input}\" resulted in an empty list of components. \
-            This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"
+            "Parsing the command \"{input}\" resulted in an empty list of components."
         );
         let name = components.remove(0);
         let parameters = components.into_iter().map(YarnValue::from).collect();

@@ -6431,6 +6431,7 @@ dependencies = [
  "serde",
  "static_assertions",
  "variadics_please",
+ "yarnspinner_internal_shared",
 ]
 
 [[package]]

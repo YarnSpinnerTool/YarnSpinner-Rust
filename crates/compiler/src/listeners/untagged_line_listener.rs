@@ -87,8 +87,7 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
             // No token was found before this newline. This is an
             // internal error - there must be at least one symbol
             // besides the terminating newline.
-            panic!("Internal error: failed to find any tokens before the newline in line statement on line {line_index}. \
-                   This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+            bug!("Internal error: failed to find any tokens before the newline in line statement on line {line_index}.");
         });
         // Get the token at this index. We'll put our tag after it.
         let previous_token = tokens.get(previous_token_index);
@@ -106,9 +105,9 @@ impl<'input> YarnSpinnerParserListener<'input> for UntaggedLineListener<'input> 
             .char_indices()
             .map(|(byte_pos, _char)| byte_pos)
             .nth(previous_token.get_column_as_usize())
-            .unwrap_or_else(||
-                panic!("Internal error: failed to convert char pos to byte pos for insertion index on line {line_index}. \
-                        This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"))
+            .expect_or_bug_with(
+                format_args!("Internal error: failed to convert char pos to byte pos for insertion index on line {line_index}.")
+            )
             + previous_token.get_text().len();
         line.insert_str(insertion_index, &format!(" #{new_line_id} "));
         self.rewrote_anything

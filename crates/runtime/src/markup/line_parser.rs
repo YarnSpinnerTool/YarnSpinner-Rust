@@ -78,9 +78,10 @@ impl LineParser {
         let previous_value = self
             .marker_processors
             .insert(attribute_name.clone(), processor);
-        assert!(previous_value.is_none(),
-                "A marker processor for the attribute '{attribute_name}' has already been added. \
-                This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+        assert_or_bug!(
+            previous_value.is_none(),
+            "A marker processor for the attribute '{attribute_name}' has already been added."
+        );
         self
     }
 

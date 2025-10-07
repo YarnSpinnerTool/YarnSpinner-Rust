@@ -69,15 +69,15 @@ impl StringsFile {
         self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
-    pub(crate) fn update_file(&mut self, mut other: Self) -> Result<bool> {
+    pub(crate) fn update_file(&mut self, mut other: Self) -> bool {
         let mut removed_lines = Vec::new();
         let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {
-            return Ok(false);
+            return false;
         };
         if let Some(language) = self.language() {
-            if language != other.language().unwrap() {
-                bail!("Cannot update contents of strings file with another strings file that contains a different language. \
-                Expected \"{:?}\", got \"{:?}\". This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new",
+            if language != other.language().unwrap_or_bug() {
+                bug!("Cannot update contents of strings file with another strings file that contains a different language. \
+                Expected \"{:?}\", got \"{:?}\".",
                     self.language(), other.language())
             }
         }
@@ -132,7 +132,7 @@ impl StringsFile {
             changed = true;
             self.0.extend(other.0);
         }
-        Ok(changed)
+        changed
     }
 
     pub(crate) fn from_string_table(
