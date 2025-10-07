@@ -105,7 +105,7 @@ fn update_all_strings_files_for_string_table(
                     continue;
                 }
             };
-            if strings_file.update_file(new_strings_file)? {
+            if strings_file.update_file(new_strings_file) {
                 dirty_paths.insert((strings_file_handle, strings_file_path));
 
                 info!(
