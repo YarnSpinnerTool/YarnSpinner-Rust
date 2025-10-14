@@ -14,8 +14,8 @@ pub mod prelude {
         LineInfo, Result as YarnCompilerResult, StringInfo,
     };
     pub use crate::core::{
-        yarn_library, IntoYarnValueFromNonYarnValue, Library as YarnLibrary, LineId,
-        Program as YarnProgram, YarnFn, YarnValue,
+        IntoYarnValueFromNonYarnValue, Library as YarnLibrary, LineId, Program as YarnProgram,
+        YarnFn, YarnValue, yarn_library,
     };
     pub use crate::runtime::{
         Command as YarnCommand, CompiledProgramAnalyser as YarnAnalyser,
@@ -28,24 +28,24 @@ pub mod prelude {
 pub mod core {
     //! Core types and traits that are used by both the compiler and runtime.
     pub use yarnspinner_core::prelude::{
-        optionality, yarn_fn_type, yarn_library, Header, Instruction,
-        IntoYarnValueFromNonYarnValue, InvalidOpCodeError, Library, LineId, Node, Position,
-        Program, Type, UntypedYarnFn, YarnFn, YarnFnParam, YarnFnParamItem, YarnValue,
-        YarnValueCastError, YarnValueWrapper, YarnValueWrapperIter,
+        Header, Instruction, IntoYarnValueFromNonYarnValue, InvalidOpCodeError, Library, LineId,
+        Node, Position, Program, Type, UntypedYarnFn, YarnFn, YarnFnParam, YarnFnParamItem,
+        YarnValue, YarnValueCastError, YarnValueWrapper, YarnValueWrapperIter, optionality,
+        yarn_fn_type, yarn_library,
     };
 }
 pub mod compiler {
     //! Types and traits used by the compiler, in particular the [`Compiler`] struct.
-    pub use yarnspinner_compiler::prelude::*;
     pub use yarnspinner_compiler::Result;
+    pub use yarnspinner_compiler::prelude::*;
 }
 
 pub mod runtime {
     //! Types and traits used by the runtime, in particular the [`Dialogue`] struct.
+    pub use yarnspinner_runtime::Result;
     pub use yarnspinner_runtime::markup::{
-        MarkupAttribute, MarkupParseError, MarkupValue, CHARACTER_ATTRIBUTE,
-        CHARACTER_ATTRIBUTE_NAME_PROPERTY, TRIM_WHITESPACE_PROPERTY,
+        CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY, MarkupAttribute, MarkupParseError,
+        MarkupValue, TRIM_WHITESPACE_PROPERTY,
     };
     pub use yarnspinner_runtime::prelude::*;
-    pub use yarnspinner_runtime::Result;
 }

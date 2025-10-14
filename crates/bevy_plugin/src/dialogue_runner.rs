@@ -8,11 +8,11 @@ pub use self::{
     inner::{InnerDialogue, InnerDialogueMut},
     localized_line::LocalizedLine,
 };
+use crate::UnderlyingYarnLine;
 use crate::commands::TaskFinishedIndicator;
 use crate::line_provider::LineAssets;
 use crate::prelude::*;
-use crate::UnderlyingYarnLine;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use bevy::asset::LoadedUntypedAsset;
 use bevy::{
     platform::collections::{HashMap, HashSet},
@@ -70,7 +70,9 @@ impl DialogueRunner {
     /// - All previously called [`YarnCommand`]s are finished, indicated by their return type's [`TaskFinishedIndicator::is_finished`] returning `true`.
     pub fn continue_in_next_update(&mut self) -> &mut Self {
         if !self.is_running {
-            panic!("Can't continue dialogue that isn't running. Please call `DialogueRunner::start_node()` before calling `DialogueRunner::continue_in_next_update()`.");
+            panic!(
+                "Can't continue dialogue that isn't running. Please call `DialogueRunner::start_node()` before calling `DialogueRunner::continue_in_next_update()`."
+            );
         }
         self.will_continue_in_next_update = true;
         self
@@ -87,7 +89,9 @@ impl DialogueRunner {
     /// Implies [`DialogueRunner::continue_in_next_update`].
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
         if !self.is_running {
-            bail!("Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`.")
+            bail!(
+                "Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`."
+            )
         }
         self.inner_mut()
             .0
@@ -157,7 +161,9 @@ impl DialogueRunner {
     pub fn try_start_node(&mut self, node_name: impl AsRef<str>) -> Result<&mut Self> {
         let node_name = node_name.as_ref();
         if self.is_running {
-            bail!("Can't start dialogue from node {node_name}: the dialogue is currently in the middle of running. Stop the dialogue first.");
+            bail!(
+                "Can't start dialogue from node {node_name}: the dialogue is currently in the middle of running. Stop the dialogue first."
+            );
         }
         self.is_running = true;
         self.just_started = true;

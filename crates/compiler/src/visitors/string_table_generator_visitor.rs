@@ -98,22 +98,21 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for StringTableGeneratorVisi
         let line_id_tag = get_line_id_tag(&hashtags);
         let line_id = line_id_tag.as_ref().and_then(|t| t.text.as_ref());
 
-        if let Some(line_id) = line_id {
-            if self
+        if let Some(line_id) = line_id
+            && self
                 .string_table_manager
                 .contains_key(&line_id.get_text().into())
-            {
-                // The original has a fallback for when this is `null` / `None`,
-                // but this can logically not be the case in this scope.
-                let diagnostic_context = line_id_tag.clone().unwrap();
-                let line_id = line_id.get_text();
-                self.diagnostics.push(
-                    Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
-                        .with_parser_context(diagnostic_context.as_ref(), self.file.tokens())
-                        .with_file_name(&self.file.name),
-                );
-                return;
-            }
+        {
+            // The original has a fallback for when this is `null` / `None`,
+            // but this can logically not be the case in this scope.
+            let diagnostic_context = line_id_tag.clone().unwrap();
+            let line_id = line_id.get_text();
+            self.diagnostics.push(
+                Diagnostic::from_message(format!("Duplicate line ID {line_id}"))
+                    .with_parser_context(diagnostic_context.as_ref(), self.file.tokens())
+                    .with_file_name(&self.file.name),
+            );
+            return;
         };
 
         let line_number = ctx.start().get_line_as_usize();
@@ -184,8 +183,8 @@ pub(crate) fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use antlr_rust::common_token_stream::CommonTokenStream;
     use antlr_rust::InputStream;
+    use antlr_rust::common_token_stream::CommonTokenStream;
     use yarnspinner_core::prelude::Position;
 
     #[test]

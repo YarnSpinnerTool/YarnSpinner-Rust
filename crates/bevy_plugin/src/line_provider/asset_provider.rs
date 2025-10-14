@@ -1,11 +1,11 @@
-use crate::prelude::*;
 use crate::UnderlyingYarnLine;
+use crate::prelude::*;
 #[cfg(feature = "audio_assets")]
 pub use audio_asset_provider_plugin::AudioAssetProvider;
 use bevy::asset::{Asset, LoadedUntypedAsset};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-pub use file_extension_asset_provider_plugin::{file_extensions, FileExtensionAssetProvider};
+pub use file_extension_asset_provider_plugin::{FileExtensionAssetProvider, file_extensions};
 use std::any::Any;
 use std::fmt::Debug;
 

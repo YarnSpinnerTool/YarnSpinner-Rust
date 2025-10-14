@@ -1,6 +1,6 @@
-use crate::setup::{spawn_options, DialogueNode, OptionButton, OptionsNode, UiRootNode};
-use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
+use crate::setup::{DialogueNode, OptionButton, OptionsNode, UiRootNode, spawn_options};
+use crate::typewriter::{self, Typewriter, TypewriterFinishedEvent};
 use bevy::color::palettes::css;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;

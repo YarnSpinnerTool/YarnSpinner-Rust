@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use crossterm::event::KeyCode;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::{Color, Stylize};
@@ -226,7 +226,10 @@ impl TuiDialogueRunner {
                             }
 
                             _ => {
-                                return Err(anyhow!("invalid parameters: {:?}", command.parameters))
+                                return Err(anyhow!(
+                                    "invalid parameters: {:?}",
+                                    command.parameters
+                                ));
                             }
                         },
 

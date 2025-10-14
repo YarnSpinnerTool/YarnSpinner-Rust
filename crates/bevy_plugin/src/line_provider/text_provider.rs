@@ -1,6 +1,6 @@
+use crate::UnderlyingTextProvider;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
-use crate::UnderlyingTextProvider;
 use bevy::prelude::*;
 pub(crate) use shared_text_provider::SharedTextProvider;
 use std::any::Any;

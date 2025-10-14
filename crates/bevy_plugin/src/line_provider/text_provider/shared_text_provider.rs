@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::UnderlyingTextProvider;
+use crate::prelude::*;
 use bevy::prelude::*;
 use std::any::Any;
 use std::collections::HashMap;

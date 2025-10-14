@@ -46,11 +46,9 @@ pub(crate) fn rotate_sprite(
         let output = change.elastic(1.3);
 
         let rotation_half_way_done = output >= 0.5;
-        if rotation_half_way_done {
-            if let Some(new_sprite) = sprite.take() {
-                let material = materials.get_mut(material).unwrap();
-                material.base_color_texture.replace(new_sprite);
-            }
+        if rotation_half_way_done && let Some(new_sprite) = sprite.take() {
+            let material = materials.get_mut(material).unwrap();
+            material.base_color_texture.replace(new_sprite);
         }
         if change.is_done() {
             transform.rotation = change.to;

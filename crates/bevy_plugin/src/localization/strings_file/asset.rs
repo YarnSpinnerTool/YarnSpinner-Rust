@@ -1,8 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Runtime/StringTableEntry.cs>
 
 use crate::prelude::*;
-use anyhow::{anyhow, bail, Result};
-use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use anyhow::{Result, anyhow, bail};
+use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
@@ -51,10 +51,12 @@ impl StringsFile {
         if let Some(language) = records.first().map(|record| &record.language) {
             for record in records.iter().skip(1) {
                 if record.language != *language {
-                    bail!("Loaded strings file with mixed languages records must have the same language. Expected \"{}\", got \"{}\" in record: {:#?}",
-                    language,
-                    record.language,
-                    record)
+                    bail!(
+                        "Loaded strings file with mixed languages records must have the same language. Expected \"{}\", got \"{}\" in record: {:#?}",
+                        language,
+                        record.language,
+                        record
+                    )
                 }
             }
         }
@@ -74,12 +76,15 @@ impl StringsFile {
         let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {
             return false;
         };
-        if let Some(language) = self.language() {
-            if language != other.language().unwrap_or_bug() {
-                bug!("Cannot update contents of strings file with another strings file that contains a different language. \
+        if let Some(language) = self.language()
+            && language != other.language().unwrap_or_bug()
+        {
+            bug!(
+                "Cannot update contents of strings file with another strings file that contains a different language. \
                 Expected \"{:?}\", got \"{:?}\".",
-                    self.language(), other.language())
-            }
+                self.language(),
+                other.language()
+            )
         }
 
         let single_yarn_file = other

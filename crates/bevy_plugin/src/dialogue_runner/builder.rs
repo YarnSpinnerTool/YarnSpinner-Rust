@@ -4,7 +4,7 @@ use crate::line_provider::SharedTextProvider;
 use crate::prelude::*;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use rand::{rngs::SmallRng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, rngs::SmallRng};
 use std::any::{Any, TypeId};
 use std::fmt::Debug;
 
@@ -125,10 +125,10 @@ fn create_extended_standard_library() -> YarnLibrary {
     library
         .add_function("random", || SmallRng::from_os_rng().random_range(0.0..1.0))
         .add_function("random_range", |min: f32, max: f32| {
-            if let Some(min) = min.as_int() {
-                if let Some(max_inclusive) = max.as_int() {
-                    return SmallRng::from_os_rng().random_range(min..=max_inclusive) as f32;
-                }
+            if let Some(min) = min.as_int()
+                && let Some(max_inclusive) = max.as_int()
+            {
+                return SmallRng::from_os_rng().random_range(min..=max_inclusive) as f32;
             }
             SmallRng::from_os_rng().random_range(min..max)
         })

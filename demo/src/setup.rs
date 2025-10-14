@@ -1,9 +1,9 @@
 use crate::visual_effects::RotationPhase;
 use crate::yarnspinner_integration::{
-    change_sprite, fade_in, fade_out, move_camera_to_clippy, quit, rotate_character, show_bang,
-    Speaker,
+    Speaker, change_sprite, fade_in, fade_out, move_camera_to_clippy, quit, rotate_character,
+    show_bang,
 };
-use crate::{Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION};
+use crate::{CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION, Sprites};
 use bevy::camera::Exposure;
 use bevy::color::palettes::css;
 use bevy::core_pipeline::tonemapping::Tonemapping;

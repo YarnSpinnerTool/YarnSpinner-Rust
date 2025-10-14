@@ -42,10 +42,10 @@ impl<'a> Reader<'a> {
                 continue;
             }
             string.push(character);
-            if let Some(next) = self.peek_char() {
-                if !next.is_alphanumeric() {
-                    break;
-                }
+            if let Some(next) = self.peek_char()
+                && !next.is_alphanumeric()
+            {
+                break;
             }
         }
         string

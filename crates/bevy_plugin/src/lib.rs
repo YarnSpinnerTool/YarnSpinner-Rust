@@ -114,7 +114,7 @@ pub mod default_impl {
     #[cfg(feature = "audio_assets")]
     pub use crate::line_provider::AudioAssetProvider;
     pub use crate::line_provider::{
-        file_extensions, FileExtensionAssetProvider, StringsFileTextProvider,
+        FileExtensionAssetProvider, StringsFileTextProvider, file_extensions,
     };
     pub use yarnspinner::runtime::{MemoryVariableStorage, StringTableTextProvider};
 }
@@ -157,7 +157,7 @@ pub mod prelude {
 
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};
 pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
-pub use yarnspinner::core::{yarn_fn_type, UntypedYarnFn};
+pub use yarnspinner::core::{UntypedYarnFn, yarn_fn_type};
 pub use yarnspinner::prelude::{
     Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,

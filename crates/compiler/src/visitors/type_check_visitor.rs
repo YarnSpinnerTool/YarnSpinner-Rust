@@ -278,16 +278,16 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
             // we have an existing function but its undefined
             // if we also have a type hint we can use that to update it
-            if function_type.return_type.is_none() {
-                if let Some(hint) = hint {
-                    self.new_declarations.find_remove(&function_declaration);
-                    function_type.set_return_type(hint);
-                    let new_declaration = Declaration {
-                        r#type: Type::from(function_type.clone()),
-                        ..function_declaration.clone()
-                    };
-                    self.new_declarations.push(new_declaration);
-                }
+            if function_type.return_type.is_none()
+                && let Some(hint) = hint
+            {
+                self.new_declarations.find_remove(&function_declaration);
+                function_type.set_return_type(hint);
+                let new_declaration = Declaration {
+                    r#type: Type::from(function_type.clone()),
+                    ..function_declaration.clone()
+                };
+                self.new_declarations.push(new_declaration);
             }
             function_type
         } else {
@@ -587,14 +587,16 @@ impl DeclarationVecExt for Vec<Declaration> {
 
 /// {0} = variable name
 fn format_cannot_determine_variable_type_error(name: &str) -> String {
-    format!("Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement.")
+    format!(
+        "Can't figure out the type of variable {name} given its context. Specify its type with a <<declare>> statement."
+    )
 }
 
 fn get_filename(path: &str) -> &str {
-    if let Some(os_str) = Path::new(path).file_name() {
-        if let Some(file_name) = os_str.to_str() {
-            return file_name;
-        }
+    if let Some(os_str) = Path::new(path).file_name()
+        && let Some(file_name) = os_str.to_str()
+    {
+        return file_name;
     }
     path
 }

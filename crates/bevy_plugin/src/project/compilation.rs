@@ -3,7 +3,7 @@ use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringT
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::fmt::Debug;
@@ -58,17 +58,23 @@ fn load_project(
 ) -> SystemResult {
     for event in events.drain() {
         if *already_loaded {
-            bail!("Yarn project already loaded. Sending multiple LoadYarnProjectEvent is not allowed.");
+            bail!(
+                "Yarn project already loaded. Sending multiple LoadYarnProjectEvent is not allowed."
+            );
         }
-        assert!(!event.yarn_files.is_empty(),
+        assert!(
+            !event.yarn_files.is_empty(),
             "Failed to load Yarn project in deferred mode: no Yarn files were specified. \
             Did run `LoadYarnProjectEvent::empty()` without adding any Yarn files with `LoadYarnProjectEvent::add_yarn_file` and `LoadYarnProjectEvent::add_yarn_files`? \
-            If you wanted to load from the default directory instead, use `LoadYarnProjectEvent::default()`.");
+            If you wanted to load from the default directory instead, use `LoadYarnProjectEvent::default()`."
+        );
         if event.development_file_generation == DevelopmentFileGeneration::Full
             && !is_watching_for_changes.0
         {
-            warn!("Development file generation mode is set to `Full`, but hot reloading is not turned on. \
-                For an optimal development experience, we recommend turning on hot reloading by activating the \"file_watcher\" feature of Bevy");
+            warn!(
+                "Development file generation mode is set to `Full`, but hot reloading is not turned on. \
+                For an optimal development experience, we recommend turning on hot reloading by activating the \"file_watcher\" feature of Bevy"
+            );
         }
 
         commands.insert_resource(YarnProjectConfigToLoad {
@@ -208,31 +214,31 @@ fn compile_loaded_yarn_files(
     };
     let file_count = yarn_files_being_loaded.0.len();
 
-    if development_file_generation == DevelopmentFileGeneration::Full {
-        if let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap() {
-            update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
-                compilation.string_table.clone(),
-            ));
-            for localization in &localizations.translations {
-                let path = localization.strings_file.as_path();
-                let path = asset_root.0.join(path);
+    if development_file_generation == DevelopmentFileGeneration::Full
+        && let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap()
+    {
+        update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
+            compilation.string_table.clone(),
+        ));
+        for localization in &localizations.translations {
+            let path = localization.strings_file.as_path();
+            let path = asset_root.0.join(path);
 
-                if path.is_file() {
-                    continue;
-                }
-                let strings_file = StringsFile::from_string_table(
-                    localization.language.clone(),
-                    compilation.string_table.clone(),
-                )
-                .unwrap_or_default();
-
-                strings_file.write_asset(&path)?;
-                info!(
-                    "Generated \"{}\" (lang: {}).",
-                    path.display(),
-                    localization.language
-                );
+            if path.is_file() {
+                continue;
             }
+            let strings_file = StringsFile::from_string_table(
+                localization.language.clone(),
+                compilation.string_table.clone(),
+            )
+            .unwrap_or_default();
+
+            strings_file.write_asset(&path)?;
+            info!(
+                "Generated \"{}\" (lang: {}).",
+                path.display(),
+                localization.language
+            );
         }
     }
 
@@ -272,22 +278,23 @@ fn compile_yarn_files(
     let yarn_files = yarn_file_handles
         .iter()
         .map(|handle| yarn_files.get(handle).unwrap());
-    if localizations.is_some() {
-        if let Some(untagged_file) = yarn_files
+    if localizations.is_some()
+        && let Some(untagged_file) = yarn_files
             .clone()
             .find(|file| file.string_table.values().any(|v| v.is_implicit_tag))
-        {
-            if development_file_generation == DevelopmentFileGeneration::Full {
-                info!(
-                    "Waiting with compilation until \"{}\" gets its line IDs generated",
-                    untagged_file.file.file_name
-                );
-                return Ok(None);
-            } else {
-                bail!("Failed to compile Yarn files: Localization mode is on, but \"{}\" is not does not have full line IDs. \
+    {
+        if development_file_generation == DevelopmentFileGeneration::Full {
+            info!(
+                "Waiting with compilation until \"{}\" gets its line IDs generated",
+                untagged_file.file.file_name
+            );
+            return Ok(None);
+        } else {
+            bail!(
+                "Failed to compile Yarn files: Localization mode is on, but \"{}\" is not does not have full line IDs. \
                     Cannot generate the line IDs automatically either because we are not in `DevelopmentFileGeneration::Full`",
-                    untagged_file.file.file_name);
-            }
+                untagged_file.file.file_name
+            );
         }
     }
     let inner_yarn_files = yarn_files.map(|file| file.file.clone());

@@ -1,5 +1,5 @@
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use yarnspinner::log::{self, Level, Metadata, Record};
 
 pub(crate) struct TestLogger {

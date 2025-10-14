@@ -2,8 +2,8 @@ use crate::easing::EasedChange;
 use crate::setup::{MainCamera, StageCurtains};
 use crate::visual_effects::{Bang, CameraMovement, FadeCurtainAlpha, RotationPhase};
 use crate::{
-    Sprites, CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION,
-    SECOND_ACT_CAMERA_TRANSLATION,
+    CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION, SECOND_ACT_CAMERA_TRANSLATION,
+    Sprites,
 };
 use bevy::app::AppExit;
 use bevy::light::NotShadowCaster;
@@ -12,8 +12,8 @@ use bevy::prelude::*;
 use bevy_sprite3d::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
 use std::f32::consts::PI;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 #[derive(Component)]
 pub(crate) struct Speaker {

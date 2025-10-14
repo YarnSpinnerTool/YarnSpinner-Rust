@@ -1,7 +1,7 @@
 [package]
 name = "bevy_yarnspinner_demo"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
 keywords = ["gamedev", "dialog", "yarn", "bevy"]

@@ -155,10 +155,13 @@ impl YarnSpinnerPlugin {
 
 impl Plugin for YarnSpinnerPlugin {
     fn build(&self, app: &mut App) {
-        assert!(!self.project.yarn_files.is_empty(), "Cannot initialize Yarn Spinner plugin because no Yarn files were specified. \
+        assert!(
+            !self.project.yarn_files.is_empty(),
+            "Cannot initialize Yarn Spinner plugin because no Yarn files were specified. \
         Did you call `YarnSpinnerPlugin::with_yarn_files()` without any Yarn file sources? \
         If you really want to load no Yarn files right now and do that later, use `YarnSpinnerPlugin::deferred()` instead.\
-        If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::default()`.");
+        If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::default()`."
+        );
         app.add_plugins(Self::deferred())
             .world_mut()
             .write_message(self.project.clone());

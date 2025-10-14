@@ -2,8 +2,8 @@ use bevy::platform::time::Instant;
 use bevy::prelude::*;
 use std::f32::consts::PI;
 use std::fmt::Debug;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[derive(Debug, Clone, Resource)]
 pub(crate) struct EasedChange<T: Debug + Clone> {

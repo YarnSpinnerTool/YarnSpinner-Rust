@@ -6,7 +6,9 @@ fn main() -> Result<()> {
     let include_dir = path(ProjectPath::ThirdPersonYarnSpinner).join("YarnSpinner");
     let proto_file = include_dir.join("yarn_spinner.proto");
     let output_dir = path(ProjectPath::Core).join("src/generated");
-    env::set_var("OUT_DIR", output_dir);
+    unsafe {
+        env::set_var("OUT_DIR", output_dir);
+    }
 
     let mut config = prost_build::Config::new();
 

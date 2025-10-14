@@ -38,9 +38,12 @@ pub struct Command {
 
 impl Command {
     pub(crate) fn parse(input: String) -> Self {
-        assert!(!input.trim().is_empty(), "Failed to parse the command \"{input}\" because it is composed entirely of whitespace. \
+        assert!(
+            !input.trim().is_empty(),
+            "Failed to parse the command \"{input}\" because it is composed entirely of whitespace. \
             Help: You might have passed an expression that evaluates to whitespace, e.g. `{{0}} {{\"  \"}}`. \
-            If you think this is a bug, please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new");
+            If you think this is a bug, please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new"
+        );
 
         let mut components = split_command_text(&input);
         assert_or_bug!(

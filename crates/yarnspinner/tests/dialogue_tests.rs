@@ -61,9 +61,11 @@ fn test_analysis() {
     println!("{diagnoses:#?}");
 
     assert_eq!(1, diagnoses.len());
-    assert!(diagnoses[0]
-        .message
-        .contains("Variable $bar is assigned, but never read from"));
+    assert!(
+        diagnoses[0]
+            .message
+            .contains("Variable $bar is assigned, but never read from")
+    );
 }
 
 /// Split off from `test_analysis`

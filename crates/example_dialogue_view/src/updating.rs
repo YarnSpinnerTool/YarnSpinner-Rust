@@ -1,7 +1,7 @@
+use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use crate::option_selection::OptionSelection;
 use crate::setup::{DialogueContinueNode, DialogueNameNode, UiRootNode};
 use crate::typewriter::{self, Typewriter};
-use crate::ExampleYarnSpinnerDialogueViewSystemSet;
 use bevy::prelude::*;
 use bevy_yarnspinner::{events::*, prelude::*};
 

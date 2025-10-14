@@ -175,21 +175,21 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             // Check that the type we've found is compatible with the
             // type of the value that was provided - if it doesn't,
             // that's a type error
-            if let Some(value) = value.as_ref() {
-                if !value.r#type.is_sub_type_of(&explicit_type) {
-                    let msg = format!(
-                        "Type {} does not match value {} ({})",
-                        declaration_type.get_text(),
-                        value_context.get_text(),
-                        value.r#type.format()
-                    );
-                    self.diagnostics.push(
-                        Diagnostic::from_message(msg)
-                            .with_file_name(&self.file.name)
-                            .with_parser_context(ctx, self.file.tokens()),
-                    );
-                    return;
-                }
+            if let Some(value) = value.as_ref()
+                && !value.r#type.is_sub_type_of(&explicit_type)
+            {
+                let msg = format!(
+                    "Type {} does not match value {} ({})",
+                    declaration_type.get_text(),
+                    value_context.get_text(),
+                    value.r#type.format()
+                );
+                self.diagnostics.push(
+                    Diagnostic::from_message(msg)
+                        .with_file_name(&self.file.name)
+                        .with_parser_context(ctx, self.file.tokens()),
+                );
+                return;
             }
         }
         // We're done creating the declaration!

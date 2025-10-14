@@ -68,7 +68,10 @@ impl Display for VariableStorageError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use VariableStorageError::*;
         match self {
-            InvalidVariableName { name } => write!(f, "{name} is not a valid variable name: Variable names must start with a \'$\'. (Did you mean to use \'${name}\'?)"),
+            InvalidVariableName { name } => write!(
+                f,
+                "{name} is not a valid variable name: Variable names must start with a \'$\'. (Did you mean to use \'${name}\'?)"
+            ),
             VariableNotFound { name } => write!(f, "Variable name {name} is not defined"),
             InternalError { error } => write!(f, "Internal variable storage error: {error}"),
         }

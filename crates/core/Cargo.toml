@@ -1,7 +1,7 @@
 [package]
 name = "yarnspinner_core"
 version = "0.6.0"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
 categories = ["game-development", "compilers"]

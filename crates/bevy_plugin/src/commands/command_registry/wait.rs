@@ -4,8 +4,8 @@
 use crate::prelude::YarnSpinnerSystemSet;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 pub(crate) fn wait_command_plugin(app: &mut App) {

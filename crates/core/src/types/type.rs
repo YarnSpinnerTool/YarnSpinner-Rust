@@ -209,8 +209,9 @@ impl TryFrom<TypeId> for Type {
         let string_types = type_ids![String, &str];
         let bool_types = type_ids![bool];
         let value_types = type_ids![YarnValue];
-        let number_types =
-            type_ids![f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
+        let number_types = type_ids![
+            f32, f64, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,
+        ];
 
         [
             (string_types, Type::String),

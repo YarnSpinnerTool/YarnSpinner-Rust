@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-pub(crate) use command_registry::wait::update_wait;
 pub use command_registry::YarnCommands;
+pub(crate) use command_registry::wait::update_wait;
 pub use command_wrapping::{TaskFinishedIndicator, UntypedYarnCommand, YarnCommand};
 
 mod command_registry;

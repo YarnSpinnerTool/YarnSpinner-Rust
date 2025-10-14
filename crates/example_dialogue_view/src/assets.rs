@@ -1,5 +1,5 @@
-use bevy::asset::load_internal_binary_asset;
 use bevy::asset::RenderAssetUsages;
+use bevy::asset::load_internal_binary_asset;
 use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::prelude::*;
 

@@ -1,5 +1,5 @@
-use crate::commands::command_wrapping::YarnCommandWrapper;
 use crate::commands::UntypedYarnCommand;
+use crate::commands::command_wrapping::YarnCommandWrapper;
 use crate::prelude::*;
 use bevy::prelude::*;
 use std::borrow::Cow;
