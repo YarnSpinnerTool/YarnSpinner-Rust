@@ -226,7 +226,10 @@ impl TuiDialogueRunner {
                             }
 
                             _ => {
-                                return Err(anyhow!("invalid parameters: {:?}", command.parameters));
+                                return Err(anyhow!(
+                                    "invalid parameters: {:?}",
+                                    command.parameters
+                                ));
                             }
                         },
 
