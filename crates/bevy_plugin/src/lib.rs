@@ -18,8 +18,8 @@
 //! that you can use to explore the features of Yarn Spinner and get started quickly.
 //!
 //! Specifically, a dialogue view is required to do the following things
-//! - Handle the [`PresentLineEvent`](crate::events::PresentLineEvent) and draw the line to the screen.
-//! - Handle the [`PresentOptionsEvent`](crate::events::PresentOptionsEvent) and draw the options to the screen.
+//! - Handle the [`PresentLine`](crate::events::PresentLine) event and draw the line to the screen.
+//! - Handle the [`PresentOptions`](crate::events::PresentOptions) event and draw the options to the screen.
 //! - Call [`DialogueRunner::continue_in_next_update`](crate::prelude::DialogueRunner::continue_in_next_update) when the user wishes to continue the dialogue.
 //! - Pass a user's option selection to the right dialogue runner via [`DialogueRunner::select_option`](crate::prelude::DialogueRunner::select_option).
 //!
@@ -120,7 +120,7 @@ pub mod default_impl {
 }
 
 pub mod events {
-    //! Events that are sent by the [`DialogueRunner`](crate::prelude::DialogueRunner). A dialogue view is expected to at least handle [`PresentLineEvent`] and [`PresentOptionsEvent`].
+    //! Events that are sent by the [`DialogueRunner`](crate::prelude::DialogueRunner). A dialogue view is expected to at least handle [`PresentLine`] event and [`PresentOptions`] event.
     pub use crate::dialogue_runner::{
         DialogueCompleted, DialogueStarted, ExecuteCommand, LineHints,
         NodeCompleted, NodeStarted, PresentLine, PresentOptions,

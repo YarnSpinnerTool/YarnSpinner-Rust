@@ -23,7 +23,7 @@ pub(crate) fn ui_updating_plugin(app: &mut App) {
 }
 
 /// Signals that a speaker has changed.
-/// A speaker starts speaking when a new line is presented with a [`PresentLineEvent`] which has a character name.
+/// A speaker starts speaking when a new line is presented with a [`PresentLine`] event which has a character name.
 /// A speaker stops speaking when the line is fully displayed on the screen, which happens over the course of a few seconds
 #[derive(Debug, Eq, PartialEq, Hash, Reflect, Message)]
 #[reflect(Debug, PartialEq, Hash)]
