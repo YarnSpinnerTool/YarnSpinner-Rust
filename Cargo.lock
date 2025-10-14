@@ -6478,7 +6478,7 @@ dependencies = [
 
 [[package]]
 name = "yarnspinner_compiler"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "annotate-snippets",
  "antlr-rust",
@@ -6494,7 +6494,7 @@ dependencies = [
 
 [[package]]
 name = "yarnspinner_core"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "bevy",
  "hashbrown 0.15.5",
@@ -6520,7 +6520,7 @@ version = "0.1.0"
 
 [[package]]
 name = "yarnspinner_runtime"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "bevy",
  "bevy_platform",
