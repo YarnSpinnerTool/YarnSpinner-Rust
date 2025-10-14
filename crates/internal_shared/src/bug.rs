@@ -84,6 +84,7 @@ mod test {
     }
 
     #[test]
+    #[should_panic]
     fn bug_macro_with_str_message() {
         let message = *panic::catch_unwind(|| bug!("This is a str message."))
             .unwrap_err()
@@ -94,6 +95,7 @@ mod test {
     }
 
     #[test]
+    #[should_panic]
     fn bug_macro_with_formatted_message() {
         let message = *panic::catch_unwind(|| bug!("Hello {}", "world."))
             .unwrap_err()

@@ -1,6 +1,10 @@
 [package]
 name = "yarnspinner_internal_shared"
 version = "0.1.0"
-edition = "2021"
-
-[dependencies]
+edition = "2024"
+repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
+homepage = "https://docs.yarnspinner.dev/"
+categories = ["game-development", "compilers"]
+authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
+license = "MIT OR Apache-2.0"
+description = "Shared internals for Yarn Spinner for Rust, the friendly tool for writing game dialogue"

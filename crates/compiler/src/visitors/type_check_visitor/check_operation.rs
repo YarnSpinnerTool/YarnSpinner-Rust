@@ -2,7 +2,7 @@ use crate::parser_rule_context_ext::ParserRuleContextExt;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::*;
 use crate::visitors::type_check_visitor::{
-    format_cannot_determine_variable_type_error, get_filename, DefaultValue,
+    DefaultValue, format_cannot_determine_variable_type_error, get_filename,
 };
 use crate::visitors::*;
 use antlr_rust::rule_context::CustomRuleContext;
@@ -90,9 +90,9 @@ impl<'input> TypeCheckVisitor<'input> {
                             .collect::<Vec<_>>()
                             .join(", or ");
                         let message = format!(
-                        "Type of expression \"{}\" can't be determined without more context (the compiler thinks it could be {type_names}). Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
-                        context.get_text_with_whitespace(self.file.tokens()),
-                    );
+                            "Type of expression \"{}\" can't be determined without more context (the compiler thinks it could be {type_names}). Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
+                            context.get_text_with_whitespace(self.file.tokens()),
+                        );
                         let diagnostic = Diagnostic::from_message(message)
                             .with_file_name(&self.file.name)
                             .with_parser_context(context, self.file.tokens());
@@ -102,9 +102,9 @@ impl<'input> TypeCheckVisitor<'input> {
                     Ordering::Less => {
                         // No types implement this operation (??) [sic]
                         let message = format!(
-                        "Type of expression \"{}\" can't be determined without more context. Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
-                        context.get_text_with_whitespace(self.file.tokens()),
-                    );
+                            "Type of expression \"{}\" can't be determined without more context. Use a type cast on at least one of the terms (e.g. the string(), number(), bool() functions)",
+                            context.get_text_with_whitespace(self.file.tokens()),
+                        );
                         let diagnostic = Diagnostic::from_message(message)
                             .with_file_name(&self.file.name)
                             .with_parser_context(context, self.file.tokens());
@@ -297,7 +297,7 @@ impl<'input> TypeCheckVisitor<'input> {
                 }
                 // Guaranteed to be Some
                 let expression = self.known_types.get_mut(expression.as_ref()).unwrap();
-                if let Type::Function(ref mut function_type) = expression {
+                if let Type::Function(function_type) = expression {
                     function_type.set_return_type(expression_type.clone());
                 }
             }
