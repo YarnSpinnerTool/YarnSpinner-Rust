@@ -12,8 +12,6 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
         Update,
         (
             send_finished_event.run_if(resource_exists::<Typewriter>),
-            despawn.run_if(on_message::<DialogueCompleteEvent>),
-            spawn.run_if(on_message::<DialogueStartEvent>),
             write_text.run_if(resource_exists::<Typewriter>),
             show_continue.run_if(resource_exists::<Typewriter>),
             bob_continue,
@@ -23,6 +21,9 @@ pub(crate) fn typewriter_plugin(app: &mut App) {
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
     .add_message::<TypewriterFinishedEvent>();
+
+    app.add_observer(despawn);
+    app.add_observer(spawn);
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Reflect, Message)]
@@ -148,11 +149,11 @@ fn show_continue(
     }
 }
 
-pub(crate) fn despawn(mut commands: Commands) {
+pub(crate) fn despawn(_ : On<DialogueCompleted>, mut commands: Commands) {
     commands.remove_resource::<Typewriter>();
 }
 
-pub(crate) fn spawn(mut commands: Commands) {
+pub(crate) fn spawn(_: On<DialogueStarted>, mut commands: Commands) {
     commands.init_resource::<Typewriter>();
 }
 

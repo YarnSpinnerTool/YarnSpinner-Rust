@@ -8,20 +8,18 @@ use bevy_yarnspinner::{events::*, prelude::*};
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (
-            hide_dialog,
-            show_dialog.run_if(on_message::<DialogueStartEvent>),
-            present_line.run_if(resource_exists::<Typewriter>.and(on_message::<PresentLineEvent>)),
-            present_options.run_if(on_message::<PresentOptionsEvent>),
-            continue_dialogue.run_if(resource_exists::<Typewriter>),
-        )
-            .chain()
+    continue_dialogue.run_if(resource_exists::<Typewriter>)
             .after(YarnSpinnerSystemSet)
             .after(typewriter::spawn)
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
     )
     .add_message::<SpeakerChangeEvent>()
     .register_type::<SpeakerChangeEvent>();
+
+    app.add_observer(show_dialog);
+    app.add_observer(hide_dialog);
+    app.add_observer(present_line);
+    app.add_observer(present_options);
 }
 
 /// Signals that a speaker has changed.
@@ -37,47 +35,40 @@ pub struct SpeakerChangeEvent {
     pub speaking: bool,
 }
 
-fn show_dialog(mut visibility: Single<&mut Visibility, With<UiRootNode>>) {
+fn show_dialog(_: On<DialogueStarted>, mut visibility: Single<&mut Visibility, With<UiRootNode>>) {
     **visibility = Visibility::Inherited;
 }
 
 fn hide_dialog(
+    _ : On<DialogueCompleted>,
     mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
-    mut dialogue_complete_events: MessageReader<DialogueCompleteEvent>,
 ) {
-    if !dialogue_complete_events.is_empty() {
-        **root_visibility = Visibility::Hidden;
-        dialogue_complete_events.clear();
-    }
+    **root_visibility = Visibility::Hidden;
 }
 
 fn present_line(
-    mut line_events: MessageReader<PresentLineEvent>,
+    event: On<PresentLine>,
     mut speaker_change_events: MessageWriter<SpeakerChangeEvent>,
     mut typewriter: ResMut<Typewriter>,
     name_node: Single<Entity, With<DialogueNameNode>>,
     mut text_writer: TextUiWriter,
 ) {
-    for event in line_events.read() {
-        let name = if let Some(name) = event.line.character_name() {
-            speaker_change_events.write(SpeakerChangeEvent {
-                character_name: name.to_string(),
-                speaking: true,
-            });
-            name.to_string()
-        } else {
-            String::new()
-        };
-        *text_writer.text(*name_node, 0) = name;
-        typewriter.set_line(&event.line);
-    }
+    let name = if let Some(name) = event.line.character_name() {
+        speaker_change_events.write(SpeakerChangeEvent {
+            character_name: name.to_string(),
+            speaking: true,
+        });
+        name.to_string()
+    } else {
+        String::new()
+    };
+    *text_writer.text(*name_node, 0) = name;
+    typewriter.set_line(&event.line);
 }
 
-fn present_options(mut commands: Commands, mut events: MessageReader<PresentOptionsEvent>) {
-    for event in events.read() {
-        let option_selection = OptionSelection::from_option_set(&event.options);
-        commands.insert_resource(option_selection);
-    }
+fn present_options(event: On<PresentOptions>, mut commands: Commands) {
+    let option_selection = OptionSelection::from_option_set(&event.options);
+    commands.insert_resource(option_selection);
 }
 
 fn continue_dialogue(

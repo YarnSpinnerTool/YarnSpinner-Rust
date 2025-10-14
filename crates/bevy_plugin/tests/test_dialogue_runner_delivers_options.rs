@@ -20,15 +20,14 @@ fn errs_on_selection_without_start() -> Result<()> {
 #[test]
 fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(3);
-    asserter.clear_events(&mut app);
+    //asserter.clear_events(&mut app);
     app.continue_dialogue_and_update();
 
-    assert_events!(asserter, app contains [
-        PresentLineEvent (n = 0),
-        PresentOptionsEvent with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
+    assert_events!(app contains [
+        PresentLine (n = 0),
+        PresentOptions with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
     ]);
 
     Ok(())
@@ -60,16 +59,15 @@ fn errs_on_unexpected_selection_value() -> Result<()> {
 #[test]
 fn option_selection_implies_continue() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
-    asserter.clear_events(&mut app);
+    //asserter.clear_events(&mut app);
 
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == lines()[6],
-        PresentOptionsEvent (n = 0),
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == lines()[6],
+        PresentOptions (n = 0),
     ]);
 
     Ok(())
@@ -78,30 +76,29 @@ fn option_selection_implies_continue() -> Result<()> {
 #[test]
 fn can_show_option_selection_as_line() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     {
         let mut dialogue_runner = app.setup_dialogue_runner();
         dialogue_runner.start_node("Start");
         dialogue_runner.run_selected_options_as_lines(true);
     }
     app.continue_dialogue_and_update_n_times(3);
-    asserter.clear_events(&mut app);
+    //asserter.clear_events(&mut app);
     app.continue_dialogue_and_update();
 
-    assert_events!(asserter, app contains [
-        PresentLineEvent (n = 0),
-        PresentOptionsEvent with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
+    assert_events!(app contains [
+        PresentLine (n = 0),
+        PresentOptions with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
     ]);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == "You: Never ever ever?",
-        PresentOptionsEvent (n = 0),
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == "You: Never ever ever?",
+        PresentOptions (n = 0),
     ]);
     app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == lines()[6],
-        PresentOptionsEvent (n = 0),
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == lines()[6],
+        PresentOptions (n = 0),
     ]);
 
     Ok(())
@@ -110,21 +107,20 @@ fn can_show_option_selection_as_line() -> Result<()> {
 #[test]
 fn can_jump_around_nodes() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
-    asserter.clear_events(&mut app);
+    //asserter.clear_events(&mut app);
 
     app.dialogue_runner_mut().select_option(OptionId(1))?;
     app.update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == lines()[10],
-        PresentOptionsEvent (n = 0),
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == lines()[10],
+        PresentOptions (n = 0),
     ]);
     app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent (n = 0),
-        PresentOptionsEvent with |event| event.options.len() == 3,
+    assert_events!(app contains [
+        PresentLine (n = 0),
+        PresentOptions with |event| event.options.len() == 3,
     ]);
 
     Ok(())
@@ -133,26 +129,25 @@ fn can_jump_around_nodes() -> Result<()> {
 #[test]
 fn can_select_unavailable_choice() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.continue_dialogue_and_update();
-    asserter.clear_events(&mut app);
+    //asserter.clear_events(&mut app);
 
     app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent (n = 0),
-        PresentOptionsEvent with |event|
+    assert_events!(app contains [
+        PresentLine (n = 0),
+        PresentOptions with |event|
             event.options.len() == 2
             && event.options.iter().filter(|o| o.is_available).count() == 1
             && event.options.iter().filter(|o| !o.is_available).all(|o| o.id == OptionId(0)),
     ]);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == lines()[6],
-        PresentOptionsEvent (n = 0),
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == lines()[6],
+        PresentOptions (n = 0),
     ]);
 
     Ok(())
@@ -165,14 +160,13 @@ fn generates_files_in_dev_mode() -> Result<()> {
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, yarn_path)?;
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     app.setup_default_plugins_for_path(dir.path())
         .setup_dialogue_runner_in_dev_mode()
         .start_node("Start");
     app.update();
 
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == lines()[0],
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == lines()[0],
     ]);
 
     Ok(())
@@ -189,6 +183,7 @@ impl OptionTestAppExt for App {
             .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
                 "options.yarn",
             )))
+            .add_plugins(AssertionPlugin)
             .dialogue_runner_mut()
     }
 
@@ -201,6 +196,7 @@ impl OptionTestAppExt for App {
                 })
                 .with_development_file_generation(DevelopmentFileGeneration::Full),
         )
+        .add_plugins(AssertionPlugin)
         .dialogue_runner_mut()
     }
 }

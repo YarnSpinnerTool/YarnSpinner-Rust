@@ -122,8 +122,8 @@ pub mod default_impl {
 pub mod events {
     //! Events that are sent by the [`DialogueRunner`](crate::prelude::DialogueRunner). A dialogue view is expected to at least handle [`PresentLineEvent`] and [`PresentOptionsEvent`].
     pub use crate::dialogue_runner::{
-        DialogueCompleteEvent, DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent,
-        NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent,
+        DialogueCompleted, DialogueStarted, ExecuteCommand, LineHints,
+        NodeCompleted, NodeStarted, PresentLine, PresentOptions,
     };
 }
 

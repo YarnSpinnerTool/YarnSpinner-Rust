@@ -15,14 +15,13 @@ fn panics_on_continue_without_start() {
 #[test]
 fn start_implies_continue() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueStartEvent,
-        NodeStartEvent,
-        LineHintsEvent,
-        PresentLineEvent with |event| event.line.text == english_lines()[0],
+    assert_events!(app contains [
+        DialogueStarted,
+        NodeStarted,
+        LineHints,
+        PresentLine with |event| event.line.text == english_lines()[0],
     ]);
 
     Ok(())
@@ -39,25 +38,24 @@ fn stop_without_start_is_allowed() -> Result<()> {
 #[test]
 fn stop_sends_events() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
     app.update();
-    asserter.clear_events(&mut app);
+    //asserter.clear_events(&mut app);
 
     app.dialogue_runner_mut().stop();
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueCompleteEvent,
-        NodeCompleteEvent (n = 0),
-        PresentLineEvent (n = 0)
+    assert_events!(app contains [
+        DialogueCompleted,
+        NodeCompleted (n = 0),
+        PresentLine (n = 0)
     ]);
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueCompleteEvent(n = 0),
-        NodeCompleteEvent (n = 0),
-        PresentLineEvent (n = 0),
-        LineHintsEvent (n = 0),
-        DialogueStartEvent (n = 0),
+    assert_events!(app contains [
+        DialogueCompleted(n = 0),
+        NodeCompleted (n = 0),
+        PresentLine (n = 0),
+        LineHints (n = 0),
+        DialogueStarted (n = 0),
     ]);
 
     Ok(())
@@ -66,33 +64,32 @@ fn stop_sends_events() -> Result<()> {
 #[test]
 fn stop_resets_dialogue() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
 
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueStartEvent,
-        LineHintsEvent,
-        NodeStartEvent,
-        PresentLineEvent with |event| event.line.text == english_lines()[0]
+    assert_events!(app contains [
+        DialogueStarted,
+        LineHints,
+        NodeStarted,
+        PresentLine with |event| event.line.text == english_lines()[0]
     ]);
 
     app.dialogue_runner_mut().stop().start_node("Start");
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueCompleteEvent,
-        LineHintsEvent (n = 0),
-        DialogueStartEvent (n = 0),
-        NodeCompleteEvent (n = 0),
-        PresentLineEvent (n = 0)
+    assert_events!(app contains [
+        DialogueCompleted,
+        LineHints (n = 0),
+        DialogueStarted (n = 0),
+        NodeCompleted (n = 0),
+        PresentLine (n = 0)
     ]);
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueStartEvent,
-        LineHintsEvent,
-        NodeStartEvent,
-        PresentLineEvent with |event| event.line.text == english_lines()[0],
-        DialogueCompleteEvent (n = 0),
+    assert_events!(app contains [
+        DialogueStarted,
+        LineHints,
+        NodeStarted,
+        PresentLine with |event| event.line.text == english_lines()[0],
+        DialogueCompleted (n = 0),
     ]);
 
     Ok(())
@@ -111,23 +108,22 @@ fn panics_on_continue_after_stop() {
 #[test]
 fn presents_all_lines() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
     for i in 1..=12 {
         println!("Line {i}");
         app.continue_dialogue_and_update();
-        assert_events!(asserter, app contains PresentLineEvent);
+        assert_events!(app contains PresentLine);
     }
-    assert_events!(asserter, app contains [
-        NodeCompleteEvent (n = 0),
-        DialogueCompleteEvent (n = 0),
+    assert_events!(app contains [
+        NodeCompleted (n = 0),
+        DialogueCompleted (n = 0),
     ]);
     println!("End of lines");
     app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        NodeCompleteEvent,
-        DialogueCompleteEvent,
-        PresentLineEvent (n = 0),
+    assert_events!(app contains [
+        NodeCompleted,
+        DialogueCompleted,
+        PresentLine (n = 0),
     ]);
     assert!(!app.dialogue_runner().is_running());
     Ok(())
@@ -148,32 +144,31 @@ fn panics_on_continue_after_all_lines() {
 #[cfg(feature = "audio_assets")]
 fn serves_assets_after_loading() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     setup_dialogue_runner_with_localizations(&mut app).start_node("Start");
     app.update();
-    assert_events!(asserter, app contains [
-        DialogueStartEvent,
-        LineHintsEvent,
-        NodeStartEvent (n = 0),
-        PresentLineEvent (n = 0),
+    assert_events!(app contains [
+        DialogueStarted,
+        LineHints,
+        NodeStarted (n = 0),
+        PresentLine (n = 0),
     ]);
 
     app.load_lines();
-    assert_events!(asserter, app contains [
-        DialogueStartEvent (n = 0),
-        LineHintsEvent (n = 0),
-        NodeStartEvent,
-        PresentLineEvent with |event| event.line.text == english_lines()[0] && event.line.assets.is_empty(),
+    assert_events!(app contains [
+        DialogueStarted (n = 0),
+        LineHints (n = 0),
+        NodeStarted,
+        PresentLine with |event| event.line.text == english_lines()[0] && event.line.assets.is_empty(),
     ]);
 
     for _ in 2..=8 {
         app.continue_dialogue_and_update();
-        assert_events!(asserter, app contains
-            PresentLineEvent with |event| event.line.assets.is_empty() );
+        assert_events!(app contains
+            PresentLine with |event| event.line.assets.is_empty() );
     }
     app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains
-        PresentLineEvent with |event| event.line.assets.get_handle::<AudioSource>().is_some());
+    assert_events!(app contains
+        PresentLine with |event| event.line.assets.get_handle::<AudioSource>().is_some());
     Ok(())
 }
 
@@ -181,7 +176,6 @@ fn serves_assets_after_loading() -> Result<()> {
 #[cfg(feature = "audio_assets")]
 fn serves_translations() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     setup_dialogue_runner_with_localizations(&mut app).start_node("Start");
     app.load_lines();
 
@@ -191,25 +185,24 @@ fn serves_translations() -> Result<()> {
     app.dialogue_runner_mut()
         .set_asset_language("de-CH")
         .continue_in_next_update();
-    asserter.clear_events(&mut app);
     app.load_lines();
-    assert_events!(asserter, app contains
-        PresentLineEvent with |event| event.line.text == english_lines()[7] && event.line.assets.get_handle::<AudioSource>().is_some()
+    assert_events!(app contains
+        PresentLine with |event| event.line.text == english_lines()[7] && event.line.assets.get_handle::<AudioSource>().is_some()
     );
 
     app.dialogue_runner_mut()
         .set_text_language("de-CH")
         .continue_in_next_update();
     app.load_lines();
-    assert_events!(asserter, app contains
-        PresentLineEvent with |event| event.line.text == german_lines()[8] && event.line.assets.get_handle::<AudioSource>().is_none()
+    assert_events!(app contains
+        PresentLine with |event| event.line.text == german_lines()[8] && event.line.assets.get_handle::<AudioSource>().is_none()
     );
     app.dialogue_runner_mut()
         .set_language("en-US")
         .continue_in_next_update();
     app.load_lines();
-    assert_events!(asserter, app contains
-        PresentLineEvent with |event| event.line.text == english_lines()[9] && event.line.assets.get_handle::<AudioSource>().is_none()
+    assert_events!(app contains
+        PresentLine with |event| event.line.text == english_lines()[9] && event.line.assets.get_handle::<AudioSource>().is_none()
     );
 
     Ok(())
@@ -260,11 +253,13 @@ fn default_language_is_base_language() {
     }
 }
 
+
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<'_, DialogueRunner> {
     app.setup_default_plugins()
         .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
             "lines.yarn",
         )))
+        .add_plugins(AssertionPlugin)
         .dialogue_runner_mut()
 }
 
@@ -280,6 +275,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<'_, DialogueRu
                 })
                 .with_development_file_generation(DevelopmentFileGeneration::None),
         )
+        .add_plugins(AssertionPlugin)
         .load_project_and_get_dialogue_builder();
 
     #[cfg(feature = "audio_assets")]

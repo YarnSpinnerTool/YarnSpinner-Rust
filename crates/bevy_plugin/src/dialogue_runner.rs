@@ -1,6 +1,6 @@
 pub use self::events::{
-    DialogueCompleteEvent, DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent,
-    NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent,
+    DialogueCompleted, DialogueStarted, ExecuteCommand, LineHints,
+    NodeCompleted, NodeStarted, PresentLine, PresentOptions,
 };
 pub use self::{
     builder::DialogueRunnerBuilder,
@@ -18,7 +18,6 @@ use bevy::{
     platform::collections::{HashMap, HashSet},
     prelude::*,
 };
-pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;
 use yarnspinner::core::Library;
@@ -33,7 +32,6 @@ mod runtime_interaction;
 pub(crate) fn dialogue_plugin(app: &mut App) {
     app.add_plugins(runtime_interaction::runtime_interaction_plugin)
         .add_plugins(localized_line::localized_line_plugin)
-        .add_plugins(events::dialogue_runner_events_plugin)
         .add_plugins(dialogue_option::dialogue_option_plugin)
         .add_plugins(builder::dialogue_runner_builder_plugin)
         .add_plugins(inner::inner_dialogue_runner_plugin);

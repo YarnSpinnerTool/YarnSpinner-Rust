@@ -1,94 +1,83 @@
-use bevy::ecs::message::MessageCursor;
 use bevy::prelude::*;
 use bevy_yarnspinner::events::*;
 
-#[derive(Debug, Default)]
-pub struct EventAsserter {
-    pub present_line_cursor: MessageCursor<PresentLineEvent>,
-    pub present_options_cursor: MessageCursor<PresentOptionsEvent>,
-    pub dialogue_start_cursor: MessageCursor<DialogueStartEvent>,
-    pub dialogue_complete_cursor: MessageCursor<DialogueCompleteEvent>,
-    pub node_start_cursor: MessageCursor<NodeStartEvent>,
-    pub node_complete_cursor: MessageCursor<NodeCompleteEvent>,
-    pub line_hints_cursor: MessageCursor<LineHintsEvent>,
-    pub execute_command_cursor: MessageCursor<ExecuteCommandEvent>,
-}
-
-impl EventAsserter {
-    pub fn new() -> Self {
-        Self::default()
+pub struct AssertionPlugin;
+impl Plugin for AssertionPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(TriggeredEvents::<PresentLine>(Vec::new()))
+        .insert_resource(TriggeredEvents::<PresentOptions>(Vec::new()))
+        .insert_resource(TriggeredEvents::<ExecuteCommand>(Vec::new()))
+        .insert_resource(TriggeredEvents::<NodeCompleted>(Vec::new()))
+        .insert_resource(TriggeredEvents::<NodeStarted>(Vec::new()))
+        .insert_resource(TriggeredEvents::<LineHints>(Vec::new()))
+        .insert_resource(TriggeredEvents::<DialogueStarted>(Vec::new()))
+        .insert_resource(TriggeredEvents::<DialogueCompleted>(Vec::new()))
+        .add_observer(|event: On<PresentLine>, mut triggered_events: ResMut<TriggeredEvents<PresentLine>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<PresentOptions>, mut triggered_events: ResMut<TriggeredEvents<PresentOptions>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<ExecuteCommand>, mut triggered_events: ResMut<TriggeredEvents<ExecuteCommand>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<NodeCompleted>, mut triggered_events: ResMut<TriggeredEvents<NodeCompleted>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<NodeStarted>, mut triggered_events: ResMut<TriggeredEvents<NodeStarted>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<LineHints>, mut triggered_events: ResMut<TriggeredEvents<LineHints>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<DialogueStarted>, mut triggered_events: ResMut<TriggeredEvents<DialogueStarted>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_observer(|event: On<DialogueCompleted>, mut triggered_events: ResMut<TriggeredEvents<DialogueCompleted>>|  {
+            triggered_events.0.push(event.event().clone());
+        })
+        .add_systems(Update, (
+            clear_triggered_events::<PresentLine>,
+            clear_triggered_events::<PresentOptions>,
+            clear_triggered_events::<ExecuteCommand>,
+            clear_triggered_events::<NodeCompleted>,
+            clear_triggered_events::<NodeStarted>,
+            clear_triggered_events::<LineHints>,
+            clear_triggered_events::<DialogueStarted>,
+            clear_triggered_events::<DialogueCompleted>,
+        ));
     }
-
-    pub fn clear_events(&mut self, app: &mut App) {
-        self.present_line_cursor
-            .clear(app.world().resource::<Messages<PresentLineEvent>>());
-        self.present_options_cursor
-            .clear(app.world().resource::<Messages<PresentOptionsEvent>>());
-        self.dialogue_start_cursor
-            .clear(app.world().resource::<Messages<DialogueStartEvent>>());
-        self.dialogue_complete_cursor
-            .clear(app.world().resource::<Messages<DialogueCompleteEvent>>());
-        self.node_start_cursor
-            .clear(app.world().resource::<Messages<NodeStartEvent>>());
-        self.node_complete_cursor
-            .clear(app.world().resource::<Messages<NodeCompleteEvent>>());
-        self.line_hints_cursor
-            .clear(app.world().resource::<Messages<LineHintsEvent>>());
-        self.execute_command_cursor
-            .clear(app.world().resource::<Messages<ExecuteCommandEvent>>());
-    }
+}
+fn clear_triggered_events<T: EntityEvent>(mut bar: ResMut<TriggeredEvents<T>>) {
+    bar.0.clear();
 }
 
-#[macro_export]
-macro_rules! get_cursor {
-    ($asserter:ident, PresentLineEvent) => {
-        &mut $asserter.present_line_cursor
-    };
-    ($asserter:ident, PresentOptionsEvent) => {
-        &mut $asserter.present_options_cursor
-    };
-    ($asserter:ident, DialogueStartEvent) => {
-        &mut $asserter.dialogue_start_cursor
-    };
-    ($asserter:ident, DialogueCompleteEvent) => {
-        &mut $asserter.dialogue_complete_cursor
-    };
-    ($asserter:ident, NodeStartEvent) => {
-        &mut $asserter.node_start_cursor
-    };
-    ($asserter:ident, NodeCompleteEvent) => {
-        &mut $asserter.node_complete_cursor
-    };
-    ($asserter:ident, LineHintsEvent) => {
-        &mut $asserter.line_hints_cursor
-    };
-    ($asserter:ident, ExecuteCommandEvent) => {
-        &mut $asserter.execute_command_cursor
-    };
-}
+
+#[derive(Resource, Debug, Default)]
+pub struct TriggeredEvents<T>(pub Vec<T>);
 
 #[macro_export]
 macro_rules! assert_events {
-    ($asserter:ident, $app:ident contains [$($event:ident $((n = $num:expr))? $(with $pred:expr)?) ,* $(,)?]) => {
+    ($app:ident contains [$($event:ident $((n = $num:expr))? $(with $pred:expr)?) ,* $(,)?]) => {
         $(
-            { assert_events!($asserter, $app contains $event $((n = $num))? $(with $pred)?); }
+            { assert_events!($app contains $event $((n = $num))? $(with $pred)?); }
         )*
     };
-    ($asserter:ident, $app:ident contains $event:ident $(with $pred:expr)?) => {
-        assert_events!($asserter, $app contains $event (n = 1) $(with $pred)?);
+    ($app:ident contains $event:ident $(with $pred:expr)?) => {
+        assert_events!($app contains $event (n = 1) $(with $pred)?);
     };
-    ($asserter:ident, $app:ident contains $event:ident (n = $num:expr) $(with $pred:expr)?) => {
-        let events = $app.world().resource::<bevy::prelude::Messages<$event>>();
-        let cursor = $crate::get_cursor!($asserter, $event);
-        let events: Vec<&$event> = cursor.read(&events).collect();
-        assert_eq!($num, events.len(), "Expected {} events of type {}, but found {}: {events:#?}", stringify!($num), stringify!($event), events.len());
+    ($app:ident contains $event:ident (n = $num:expr) $(with $pred:expr)?) => {
+        let events = $app.world().resource::<TriggeredEvents<$event>>();
+
+
+        assert_eq!($num, events.0.len(), "Expected {} events of type {}, but found {}: {events:#?}", stringify!($num), stringify!($event), events.0.len());
         $(
             {
                 fn get_pred() -> impl Fn(&$event) -> bool {
                     $pred
                 }
                 let pred = get_pred();
-                let actual = events.into_iter().next().unwrap();
+                let actual = events.0.iter().next().unwrap();
                 assert!(pred(actual), "Expected event of type {} to fulfill predicate {}, but found {:#?}", stringify!($event), stringify!($pred), actual);
             }
         )?
