@@ -151,10 +151,12 @@ fn test_variable_declarations_disallow_duplicates() {
     .unwrap_err();
 
     println!("{result}");
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message.contains("$int has already been declared")));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message.contains("$int has already been declared"))
+    );
 }
 
 #[test]
@@ -169,10 +171,12 @@ fn test_expressions_disallow_mismatched_types() {
     .unwrap_err();
 
     println!("{result}");
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message == "$int (Number) cannot be assigned a String"));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message == "$int (Number) cannot be assigned a String")
+    );
 }
 
 #[test]
@@ -243,18 +247,24 @@ fn test_expressions_require_compatible_types() {
 
         let result = Compiler::from_test_source(&source).compile().unwrap();
 
-        assert!(result
-            .declarations
-            .iter()
-            .any(|d| d.name == "$int" && d.r#type == Type::Number));
-        assert!(result
-            .declarations
-            .iter()
-            .any(|d| d.name == "$bool" && d.r#type == Type::Boolean));
-        assert!(result
-            .declarations
-            .iter()
-            .any(|d| d.name == "$str" && d.r#type == Type::String));
+        assert!(
+            result
+                .declarations
+                .iter()
+                .any(|d| d.name == "$int" && d.r#type == Type::Number)
+        );
+        assert!(
+            result
+                .declarations
+                .iter()
+                .any(|d| d.name == "$bool" && d.r#type == Type::Boolean)
+        );
+        assert!(
+            result
+                .declarations
+                .iter()
+                .any(|d| d.name == "$str" && d.r#type == Type::String)
+        );
     }
 }
 
@@ -265,10 +275,12 @@ fn test_null_not_allowed() {
         .unwrap_err();
 
     println!("{result}");
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message.contains("Null is not a permitted type")));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message.contains("Null is not a permitted type"))
+    );
 }
 
 #[test]
@@ -297,10 +309,12 @@ fn test_function_signatures() {
         // type of the variable should be Boolean, because that's the return
         // type of all of the functions we declared.
         assert_eq!(1, result.declarations.len());
-        assert!(result
-            .declarations
-            .iter()
-            .any(|d| d.name == "$bool" && d.r#type == Type::Boolean));
+        assert!(
+            result
+                .declarations
+                .iter()
+                .any(|d| d.name == "$bool" && d.r#type == Type::Boolean)
+        );
     }
 }
 #[test]
@@ -324,10 +338,12 @@ fn test_operators_are_type_checked() {
                 .compile()
                 .unwrap();
 
-            assert!(result
-                .declarations
-                .iter()
-                .any(|d| d.name == "$var" && d.r#type == Type::Number));
+            assert!(
+                result
+                    .declarations
+                    .iter()
+                    .any(|d| d.name == "$var" && d.r#type == Type::Number)
+            );
         }
     }
 }
@@ -379,9 +395,11 @@ fn test_failing_function_signatures() {
             .map(|d| d.message.clone())
             .collect::<Vec<_>>();
 
-        assert!(diagnostic_messages
-            .iter()
-            .any(|m| m.contains(expected_exception_message)));
+        assert!(
+            diagnostic_messages
+                .iter()
+                .any(|m| m.contains(expected_exception_message))
+        );
     }
 }
 
@@ -485,15 +503,21 @@ fn test_explicit_types() {
         .filter(|d| d.name.starts_with('$'))
         .collect();
 
-    assert!(variable_declarations
-        .iter()
-        .any(|d| d.name == "$str" && d.r#type == Type::String));
-    assert!(variable_declarations
-        .iter()
-        .any(|d| d.name == "$int" && d.r#type == Type::Number));
-    assert!(variable_declarations
-        .iter()
-        .any(|d| d.name == "$bool" && d.r#type == Type::Boolean));
+    assert!(
+        variable_declarations
+            .iter()
+            .any(|d| d.name == "$str" && d.r#type == Type::String)
+    );
+    assert!(
+        variable_declarations
+            .iter()
+            .any(|d| d.name == "$int" && d.r#type == Type::Number)
+    );
+    assert!(
+        variable_declarations
+            .iter()
+            .any(|d| d.name == "$bool" && d.r#type == Type::Boolean)
+    );
 }
 
 #[test]
@@ -537,7 +561,7 @@ fn test_variable_declaration_annotations() {
     .compile()
     .unwrap();
 
-    let expected_declarations = vec![
+    let expected_declarations = [
         Declaration::new("$prefix_int", Type::Number)
             .with_default_value(42.0)
             .with_description("prefix: a number"),
@@ -684,10 +708,12 @@ fn test_implicit_variable_declarations() {
             .unwrap();
 
         assert_eq!(1, result.declarations.len());
-        assert!(result
-            .declarations
-            .iter()
-            .any(|d| d.name == "$v" && d.r#type.name() == type_name));
+        assert!(
+            result
+                .declarations
+                .iter()
+                .any(|d| d.name == "$v" && d.r#type.name() == type_name)
+        );
     }
 }
 
@@ -751,10 +777,12 @@ fn test_multiple_implicit_redeclarations_of_function_parameter_type_fail() {
 
     println!("{result}");
 
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message.contains("expects a Number, not a Bool")));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message.contains("expects a Number, not a Bool"))
+    );
 }
 
 #[test]
@@ -778,7 +806,8 @@ fn test_if_statement_expressions_must_be_boolean() {
 
     println!("{result}");
 
-    assert!(result.0.iter().any(|d| d
-        .message
-        .contains("Terms of 'if statement' must be Bool, not String")));
+    assert!(result.0.iter().any(|d| {
+        d.message
+            .contains("Terms of 'if statement' must be Bool, not String")
+    }));
 }

@@ -1,6 +1,6 @@
+use crate::UnderlyingYarnLine;
 use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
-use crate::UnderlyingYarnLine;
 use bevy::asset::{LoadState, LoadedUntypedAsset};
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
@@ -180,28 +180,30 @@ impl AssetProvider for FileExtensionAssetProvider {
     }
 
     fn get_assets(&self, line: &UnderlyingYarnLine) -> LineAssets {
-        if let Some(language) = self.language.as_ref() {
-            if let Some(localizations) = self.localizations.as_ref() {
-                if let Some(localization) = localizations.supported_localization(language) {
-                    let dir = localization.assets_sub_folder.as_path();
-                    let file_name_without_extension = line.id.0.trim_start_matches(LINE_ID_PREFIX);
-                    let assets = self
-                        .file_extensions
-                        .iter()
-                        .filter_map(|(type_id, exts)| {
-                            exts.iter().find_map(|ext| {
-                                let file_name = format!("{file_name_without_extension}.{ext}");
-                                let path = dir.join(file_name);
-                                self.loaded_handles
-                                    .get(&path)
-                                    .map(|handle| (*type_id, handle.clone()))
-                            })
+        if let Some(language) = self.language.as_ref()
+            && let Some(localizations) = self.localizations.as_ref()
+        {
+            if let Some(localization) = localizations.supported_localization(language) {
+                let dir = localization.assets_sub_folder.as_path();
+                let file_name_without_extension = line.id.0.trim_start_matches(LINE_ID_PREFIX);
+                let assets = self
+                    .file_extensions
+                    .iter()
+                    .filter_map(|(type_id, exts)| {
+                        exts.iter().find_map(|ext| {
+                            let file_name = format!("{file_name_without_extension}.{ext}");
+                            let path = dir.join(file_name);
+                            self.loaded_handles
+                                .get(&path)
+                                .map(|handle| (*type_id, handle.clone()))
                         })
-                        .collect::<HashSet<_>>();
-                    return LineAssets::with_assets(assets);
-                } else {
-                    panic!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
-                }
+                    })
+                    .collect::<HashSet<_>>();
+                return LineAssets::with_assets(assets);
+            } else {
+                panic!(
+                    "Tried to find an asset for \"{language}\", which is a language that is not supported by localizations"
+                );
             }
         }
         default()
@@ -210,30 +212,32 @@ impl AssetProvider for FileExtensionAssetProvider {
 
 impl FileExtensionAssetProvider {
     fn reload_assets(&mut self) {
-        if let Some(language) = self.language.as_ref() {
-            if let Some(localizations) = self.localizations.as_ref() {
-                if let Some(localization) = localizations.supported_localization(language) {
-                    let dir = localization.assets_sub_folder.as_path();
-                    self.loading_handles.clear();
-                    self.loaded_handles.clear();
-                    let Some(asset_server) = self.asset_server.as_ref() else {
-                        return;
-                    };
-                    for line_id in self.line_ids.iter() {
-                        for extension in self.file_extensions.values().flatten() {
-                            let file_name = format!(
-                                "{}.{extension}",
-                                line_id.0.trim_start_matches(LINE_ID_PREFIX)
-                            );
-                            let path = dir.join(file_name);
-                            let asset_path = path.to_string_lossy().replace('\\', "/");
-                            let handle = asset_server.load_untyped(asset_path);
-                            self.loading_handles.insert(path, handle);
-                        }
+        if let Some(language) = self.language.as_ref()
+            && let Some(localizations) = self.localizations.as_ref()
+        {
+            if let Some(localization) = localizations.supported_localization(language) {
+                let dir = localization.assets_sub_folder.as_path();
+                self.loading_handles.clear();
+                self.loaded_handles.clear();
+                let Some(asset_server) = self.asset_server.as_ref() else {
+                    return;
+                };
+                for line_id in self.line_ids.iter() {
+                    for extension in self.file_extensions.values().flatten() {
+                        let file_name = format!(
+                            "{}.{extension}",
+                            line_id.0.trim_start_matches(LINE_ID_PREFIX)
+                        );
+                        let path = dir.join(file_name);
+                        let asset_path = path.to_string_lossy().replace('\\', "/");
+                        let handle = asset_server.load_untyped(asset_path);
+                        self.loading_handles.insert(path, handle);
                     }
-                } else {
-                    panic!("Tried to find an asset for \"{language}\", which is a language that is not supported by localizations");
                 }
+            } else {
+                panic!(
+                    "Tried to find an asset for \"{language}\", which is a language that is not supported by localizations"
+                );
             }
         }
     }

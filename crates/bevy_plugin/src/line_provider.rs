@@ -1,6 +1,6 @@
 #[cfg(feature = "audio_assets")]
 pub use asset_provider::AudioAssetProvider;
-pub use asset_provider::{file_extensions, AssetProvider, FileExtensionAssetProvider, LineAssets};
+pub use asset_provider::{AssetProvider, FileExtensionAssetProvider, LineAssets, file_extensions};
 use bevy::prelude::*;
 pub(crate) use text_provider::SharedTextProvider;
 pub use text_provider::{StringsFileTextProvider, TextProvider};

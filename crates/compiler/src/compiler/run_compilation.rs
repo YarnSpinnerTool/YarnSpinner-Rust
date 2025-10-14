@@ -1,9 +1,9 @@
+use crate::Result;
 use crate::compilation_steps::*;
 use crate::output::*;
 use crate::prelude::*;
 use crate::string_table_manager::StringTableManager;
 use crate::visitors::*;
-use crate::Result;
 use std::collections::{HashMap, HashSet};
 
 /// Compile Yarn code, as specified by a compilation job.
@@ -51,8 +51,8 @@ pub(crate) fn compile(compiler: &Compiler) -> Result<Compilation> {
     // Cleaning up diagnostics doesn't change the state but makes sure
     // that diagnostics are unique, there are no errors in the warnings, etc.
     // So we execute it even if we've had early breaks.
-    let result = clean_up_diagnostics(intermediate).result.unwrap();
-    result
+
+    clean_up_diagnostics(intermediate).result.unwrap()
 }
 
 type CompilationStep = dyn Fn(CompilationIntermediate) -> CompilationIntermediate;

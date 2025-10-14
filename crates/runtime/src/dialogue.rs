@@ -241,7 +241,9 @@ impl Dialogue {
     /// also allows unsound parallel mutation of [`Dialogue`]'s state, which would result in a deadlock in our case.
     pub fn continue_(&mut self) -> Result<Vec<DialogueEvent>> {
         #[cfg(feature = "bevy")]
-        bevy::prelude::warn!("Called `continue_` on a dialogue that was compiled with the `bevy` feature. Did you mean to call `continue_with_world` instead?");
+        bevy::prelude::warn!(
+            "Called `continue_` on a dialogue that was compiled with the `bevy` feature. Did you mean to call `continue_with_world` instead?"
+        );
 
         self.vm.continue_(|vm, instruction| {
             vm.run_instruction(instruction, |function, parameters| {

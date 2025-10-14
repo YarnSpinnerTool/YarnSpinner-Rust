@@ -76,11 +76,11 @@ impl StringTableTextProvider {
         StringTable: Extend<T>,
     {
         let language = language.into();
-        if let Some((current_language, translation_table)) = self.translation_table.as_mut() {
-            if language == *current_language {
-                translation_table.extend(string_table);
-                return;
-            }
+        if let Some((current_language, translation_table)) = self.translation_table.as_mut()
+            && language == *current_language
+        {
+            translation_table.extend(string_table);
+            return;
         }
 
         let (language, mut table) = self
@@ -105,16 +105,19 @@ impl TextProvider for StringTableTextProvider {
     }
 
     fn get_text(&self, id: &LineId) -> Option<String> {
-        if let Some(language) = self.translation_language.as_ref() {
-            if let Some((registered_language, translation_table)) = self.translation_table.as_ref()
-            {
-                if registered_language != language {
-                    error!("Didn't find language {language} in translations, falling back to base language.");
-                } else if let Some(line) = translation_table.get(id) {
-                    return Some(line.clone());
-                } else {
-                    error!("No translation found for line {id} in language {language}, falling back to base language.");
-                }
+        if let Some(language) = self.translation_language.as_ref()
+            && let Some((registered_language, translation_table)) = self.translation_table.as_ref()
+        {
+            if registered_language != language {
+                error!(
+                    "Didn't find language {language} in translations, falling back to base language."
+                );
+            } else if let Some(line) = translation_table.get(id) {
+                return Some(line.clone());
+            } else {
+                error!(
+                    "No translation found for line {id} in language {language}, falling back to base language."
+                );
             }
         }
         self.base_language_table.get(id).cloned()

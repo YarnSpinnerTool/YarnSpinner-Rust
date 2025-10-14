@@ -108,13 +108,13 @@ impl LineParser {
             match character {
                 '\\' => {
                     // This may be the start of an escaped bracket ("\[" or "\]"). Peek ahead to see if it is.
-                    if let Some(next_character) = self.peek_next() {
-                        if next_character == '[' || next_character == ']' {
-                            // It is! We'll discard this '\', and read the next character as plain text.
-                            let character = self.read_next().unwrap();
-                            text.push(character);
-                            continue;
-                        }
+                    if let Some(next_character) = self.peek_next()
+                        && (next_character == '[' || next_character == ']')
+                    {
+                        // It is! We'll discard this '\', and read the next character as plain text.
+                        let character = self.read_next().unwrap();
+                        text.push(character);
+                        continue;
                     }
                     // It wasn't an escaped bracket. Continue on, and parse the '\' as a normal character.
                     text.push(character);

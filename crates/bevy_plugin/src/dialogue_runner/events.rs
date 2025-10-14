@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::UnderlyingYarnCommand;
+use crate::prelude::*;
 use bevy::prelude::*;
 
 pub(crate) fn dialogue_runner_events_plugin(app: &mut App) {

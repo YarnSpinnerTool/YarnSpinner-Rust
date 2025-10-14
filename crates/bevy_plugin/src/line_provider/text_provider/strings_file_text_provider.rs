@@ -1,6 +1,6 @@
+use crate::UnderlyingTextProvider;
 use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
-use crate::UnderlyingTextProvider;
 
 use bevy::ecs::message::MessageCursor;
 use bevy::prelude::*;
@@ -66,7 +66,9 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
         let language = language.unwrap();
 
         let Some(localizations) = self.localizations.clone() else {
-            panic!("Set language to {language}, but no localizations have been registered as supported.");
+            panic!(
+                "Set language to {language}, but no localizations have been registered as supported."
+            );
         };
         if language == localizations.base_localization.language {
             self.set_language_invalidating_translation(None);
@@ -78,7 +80,9 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
                 .map(ToString::to_string)
                 .collect::<Vec<_>>()
                 .join(", ");
-            panic!("Set language to {language}, but that language is not supported. Expected one of {languages}.");
+            panic!(
+                "Set language to {language}, but that language is not supported. Expected one of {languages}."
+            );
         };
         let path = localization.strings_file.as_path();
         let asset_path = path.to_string_lossy().replace('\\', "/");
@@ -170,11 +174,12 @@ impl TextProvider for StringsFileTextProvider {
             let expected_language = self.language.as_ref().unwrap();
             if let Some(record) = strings_file.get_offending_language(expected_language) {
                 let path = self.asset_server.get_path(handle).unwrap();
-                panic!("Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
-                           path = path.path().display(),
-                           id = record.id,
-                           actual_language = record.language,
-                    );
+                panic!(
+                    "Expected strings file at {path} to only contain language {expected_language}, but its entry with id \"{id}\" is for language {actual_language}.",
+                    path = path.path().display(),
+                    id = record.id,
+                    actual_language = record.language,
+                );
             }
             let string_table: HashMap<LineId, String> = strings_file
                 .iter()

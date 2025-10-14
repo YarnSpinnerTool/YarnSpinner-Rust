@@ -13,9 +13,10 @@ fn test_malformed_if_statement() {
         .unwrap_err();
 
     println!("{result}");
-    assert!(result.0.iter().any(|d| d
-        .message
-        .contains("Expected an <<endif>> to match the <<if>> statement on line 3")));
+    assert!(result.0.iter().any(|d| {
+        d.message
+            .contains("Expected an <<endif>> to match the <<if>> statement on line 3")
+    }));
 }
 
 #[test]
@@ -33,12 +34,14 @@ fn test_extraneous_else() {
     .unwrap_err();
 
     println!("{result}");
-    assert!(result.0.iter().any(|d| d
-        .message
-        .contains("More than one <<else>> statement in an <<if>> statement isn't allowed")));
-    assert!(result.0.iter().any(|d| d
-        .message
-        .contains("Unexpected \"endif\" while reading a statement")));
+    assert!(result.0.iter().any(|d| {
+        d.message
+            .contains("More than one <<else>> statement in an <<if>> statement isn't allowed")
+    }));
+    assert!(result.0.iter().any(|d| {
+        d.message
+            .contains("Unexpected \"endif\" while reading a statement")
+    }));
 }
 
 #[test]
@@ -48,10 +51,12 @@ fn test_empty_command() {
         .unwrap_err();
     println!("{result}");
 
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message.contains("Command text expected")));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message.contains("Command text expected"))
+    );
 }
 
 #[test]
@@ -61,20 +66,24 @@ fn test_invalid_variable_name_in_set_or_declare() {
         .unwrap_err();
 
     println!("{result}");
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message == "Variable names need to start with a $"));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message == "Variable names need to start with a $")
+    );
 
     let result = Compiler::from_test_source("\n<<declare test = 1>>\n")
         .compile()
         .unwrap_err();
 
     println!("{result}");
-    assert!(result
-        .0
-        .iter()
-        .any(|d| d.message == "Variable names need to start with a $"));
+    assert!(
+        result
+            .0
+            .iter()
+            .any(|d| d.message == "Variable names need to start with a $")
+    );
 }
 
 #[test]
@@ -84,9 +93,10 @@ fn test_invalid_function_call() {
         .unwrap_err();
 
     println!("{result}");
-    assert!(result.0.iter().any(|d| d
-        .message
-        .contains("Unexpected \">>\" while reading a function call")));
+    assert!(result.0.iter().any(|d| {
+        d.message
+            .contains("Unexpected \">>\" while reading a function call")
+    }));
 }
 
 #[test]
@@ -97,7 +107,9 @@ fn test_compiling_same_file_twice_fails() {
         .extend_library(TestBase::new().dialogue.library().clone())
         .compile();
     let diagnostics = result.unwrap_err().0;
-    assert!(diagnostics
-        .iter()
-        .any(|d| d.message.contains("Duplicate line ID line:794945")));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|d| d.message.contains("Duplicate line ID line:794945"))
+    );
 }

@@ -81,9 +81,11 @@ fn generates_line_ids() -> anyhow::Result<()> {
         .string_table;
 
     println!("{string_table_with_line_ids:#?}");
-    assert!(string_table_with_line_ids
-        .values()
-        .all(|string_info| !string_info.is_implicit_tag));
+    assert!(
+        string_table_with_line_ids
+            .values()
+            .all(|string_info| !string_info.is_implicit_tag)
+    );
     assert_eq!(
         string_table_without_line_ids.len(),
         string_table_with_line_ids.len()
@@ -130,9 +132,11 @@ fn generates_strings_file() -> anyhow::Result<()> {
 
     assert_eq!(string_table.len(), strings_file_line_ids.len());
 
-    assert!(strings_file_line_ids
-        .iter()
-        .all(|line_id| string_table.contains_key(&LineId(line_id.to_string()))));
+    assert!(
+        strings_file_line_ids
+            .iter()
+            .all(|line_id| string_table.contains_key(&LineId(line_id.to_string())))
+    );
 
     Ok(())
 }
@@ -199,9 +203,11 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
         strings_file_line_ids.len()
     );
 
-    assert!(string_table
-        .keys()
-        .all(|line_id| strings_file_line_ids.contains(&line_id.0.as_str())));
+    assert!(
+        string_table
+            .keys()
+            .all(|line_id| strings_file_line_ids.contains(&line_id.0.as_str()))
+    );
 
     Ok(())
 }

@@ -35,10 +35,10 @@ pub fn set_panic_hook() {
 }
 
 pub fn poll_input() -> anyhow::Result<Option<KeyCode>> {
-    if let Event::Key(key) = crossterm::event::read()? {
-        if key.kind == KeyEventKind::Press {
-            return Ok(Some(key.code));
-        }
+    if let Event::Key(key) = crossterm::event::read()?
+        && key.kind == KeyEventKind::Press
+    {
+        return Ok(Some(key.code));
     }
 
     Ok(None)

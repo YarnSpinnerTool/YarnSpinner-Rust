@@ -5,8 +5,8 @@ use bevy::asset::LoadedUntypedAsset;
 use bevy::audio::AudioPlugin;
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
-use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner::UnderlyingYarnLine;
+use bevy_yarnspinner::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub mod assertion;

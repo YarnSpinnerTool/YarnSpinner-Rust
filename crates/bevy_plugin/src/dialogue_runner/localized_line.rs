@@ -67,15 +67,13 @@ impl LocalizedLine {
     /// assert_eq!("Great, thanks", line.text);
     /// assert!(line.character_name().is_none());
     pub fn character_name(&self) -> Option<&str> {
-        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE) {
-            if let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY) {
-                let MarkupValue::String(name) = name else {
-                    bug!(
-                        "Attribute \"character\" has a \"name\" property, but it is not a string."
-                    );
-                };
-                return Some(name.as_str());
-            }
+        if let Some(attribute) = self.attribute(CHARACTER_ATTRIBUTE)
+            && let Some(name) = attribute.property(CHARACTER_ATTRIBUTE_NAME_PROPERTY)
+        {
+            let MarkupValue::String(name) = name else {
+                bug!("Attribute \"character\" has a \"name\" property, but it is not a string.");
+            };
+            return Some(name.as_str());
         }
         None
     }

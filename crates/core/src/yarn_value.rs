@@ -135,7 +135,9 @@ macro_rules! impl_whole_number {
     };
 }
 
-impl_whole_number![i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,];
+impl_whole_number![
+    i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, usize, isize,
+];
 
 impl From<YarnValue> for String {
     fn from(value: YarnValue) -> Self {

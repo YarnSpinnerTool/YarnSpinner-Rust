@@ -4,9 +4,9 @@
 //! The `Operand` extensions and the `Operator` enum were moved into upstream crates to make them not depend on the runtime.
 
 pub(crate) use self::{execution_state::*, state::*};
+use crate::Result;
 use crate::markup::{LineParser, ParsedMarkup};
 use crate::prelude::*;
-use crate::Result;
 use core::fmt::Debug;
 use log::*;
 
@@ -415,7 +415,9 @@ impl VirtualMachine {
             }
 
             OpCode::PushNull => {
-                panic!("PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code.");
+                panic!(
+                    "PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code."
+                );
             }
             OpCode::JumpIfFalse => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.

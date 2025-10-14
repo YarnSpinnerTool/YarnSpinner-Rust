@@ -44,7 +44,7 @@ impl Library {
     ///
     /// The original implementation throws an exception if a function with the same name already exists.
     pub fn import(&mut self, other: Self) {
-        self.0.extend(other.0 .0);
+        self.0.extend(other.0.0);
     }
 
     /// Iterates over the names and functions in the library.

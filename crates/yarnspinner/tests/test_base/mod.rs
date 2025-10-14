@@ -19,8 +19,8 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::result::Result;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
@@ -231,12 +231,12 @@ impl TestBase {
                         };
                         test_plan.next();
                         assert_eq!(
-                        ExpectedStepType::Command,
-                        test_plan.next_expected_step,
-                        "Received command {}, but wasn't expecting to select one (was expecting {:?})",
-                        command.raw,
-                        test_plan.next_expected_step
-                    );
+                            ExpectedStepType::Command,
+                            test_plan.next_expected_step,
+                            "Received command {}, but wasn't expecting to select one (was expecting {:?})",
+                            command.raw,
+                            test_plan.next_expected_step
+                        );
 
                         // We don't need to get the composed string for a
                         // command because it's been done for us in the
@@ -257,11 +257,11 @@ impl TestBase {
                         };
                         test_plan.next();
                         assert_eq!(
-                        ExpectedStepType::Stop,
-                        test_plan.next_expected_step,
-                        "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
-                        test_plan.next_expected_step
-                    );
+                            ExpectedStepType::Stop,
+                            test_plan.next_expected_step,
+                            "Stopped dialogue, but wasn't expecting to select it (was expecting {:?})",
+                            test_plan.next_expected_step
+                        );
                     }
                 }
             }

@@ -10,13 +10,13 @@ use super::generated::yarnspinnerlexer::{
 };
 use crate::collections::*;
 use crate::listeners::Diagnostic;
-use crate::prelude::{create_common_token, DiagnosticSeverity, TokenExt};
+use crate::prelude::{DiagnosticSeverity, TokenExt, create_common_token};
 use antlr_rust::token::CommonToken;
 use antlr_rust::{
-    char_stream::CharStream,
-    token::{Token, TOKEN_DEFAULT_CHANNEL},
-    token_factory::{CommonTokenFactory, TokenFactory},
     Lexer, TokenSource,
+    char_stream::CharStream,
+    token::{TOKEN_DEFAULT_CHANNEL, Token},
+    token_factory::{CommonTokenFactory, TokenFactory},
 };
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut, Range};
@@ -447,8 +447,8 @@ mod tests {
     use super::*;
     use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer as GeneratedYarnSpinnerLexer;
     use antlr_rust::{
-        common_token_stream::CommonTokenStream, int_stream::IntStream, token::TOKEN_EOF,
-        InputStream,
+        InputStream, common_token_stream::CommonTokenStream, int_stream::IntStream,
+        token::TOKEN_EOF,
     };
 
     #[test]

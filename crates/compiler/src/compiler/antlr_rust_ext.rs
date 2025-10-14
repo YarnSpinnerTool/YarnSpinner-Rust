@@ -2,11 +2,11 @@
 
 use crate::parser::ActualTokenStream;
 use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParserContext;
+use antlr_rust::InputStream;
 use antlr_rust::int_stream::IntStream;
-use antlr_rust::token::{CommonToken, Token, TOKEN_DEFAULT_CHANNEL};
+use antlr_rust::token::{CommonToken, TOKEN_DEFAULT_CHANNEL, Token};
 use antlr_rust::token_factory::{CommonTokenFactory, TokenFactory};
 use antlr_rust::token_stream::TokenStream;
-use antlr_rust::InputStream;
 use better_any::TidExt;
 use std::rc::Rc;
 

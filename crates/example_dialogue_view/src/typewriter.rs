@@ -1,7 +1,7 @@
-use crate::option_selection::OptionSelection;
-use crate::setup::{create_dialog_text, DialogueContinueNode, DialogueNode, UiRootNode};
-use crate::updating::SpeakerChangeEvent;
 use crate::ExampleYarnSpinnerDialogueViewSystemSet;
+use crate::option_selection::OptionSelection;
+use crate::setup::{DialogueContinueNode, DialogueNode, UiRootNode, create_dialog_text};
+use crate::updating::SpeakerChangeEvent;
 use bevy::platform::time::Instant;
 use bevy::prelude::*;
 use bevy_yarnspinner::{events::*, prelude::*};
@@ -91,11 +91,7 @@ impl Typewriter {
     }
 
     fn graphemes_per_second(&self) -> f32 {
-        if self.fast_typing {
-            120.0
-        } else {
-            40.0
-        }
+        if self.fast_typing { 120.0 } else { 40.0 }
     }
 }
 
@@ -120,13 +116,13 @@ fn write_text(
         // If this is last before options, the `OptionSelection` will make the visibility inherited as soon as it's ready instead
     }
     typewriter.update_current_text();
-    if typewriter.is_finished() {
-        if let Some(name) = typewriter.character_name.as_deref() {
-            speaker_change_events.write(SpeakerChangeEvent {
-                character_name: name.to_string(),
-                speaking: false,
-            });
-        }
+    if typewriter.is_finished()
+        && let Some(name) = typewriter.character_name.as_deref()
+    {
+        speaker_change_events.write(SpeakerChangeEvent {
+            character_name: name.to_string(),
+            speaking: false,
+        });
     }
 
     let current_text = &typewriter.current_text;

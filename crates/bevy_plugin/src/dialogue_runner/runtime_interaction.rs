@@ -75,25 +75,27 @@ fn continue_runtime(
             }
             dialogue_runner.will_continue_in_next_update = false;
 
-            if dialogue_runner.run_selected_options_as_lines {
-                if let Some(option) = dialogue_runner.last_selected_option.take() {
-                    let options = last_options
+            if dialogue_runner.run_selected_options_as_lines
+                && let Some(option) = dialogue_runner.last_selected_option.take()
+            {
+                let options = last_options
                         .remove(&source)
                         .expect_or_bug("Failed to get last presented options when trying to run selected option as line.");
-                    let Some(option) = options.into_iter().find(|o| o.id == option) else {
-                        let expected_options = last_options
-                            .values()
-                            .flat_map(|options| options.iter().map(|option| option.id.to_string()))
-                            .collect::<Vec<_>>()
-                            .join(", ");
-                        bail!("Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}");
-                    };
-                    present_line_events.write(PresentLineEvent {
-                        line: option.line,
-                        source,
-                    });
-                    continue;
-                }
+                let Some(option) = options.into_iter().find(|o| o.id == option) else {
+                    let expected_options = last_options
+                        .values()
+                        .flat_map(|options| options.iter().map(|option| option.id.to_string()))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    bail!(
+                        "Dialogue options does not contain selected option. Expected one of [{expected_options}], but found {option}"
+                    );
+                };
+                present_line_events.write(PresentLineEvent {
+                    line: option.line,
+                    source,
+                });
+                continue;
             }
         }
 

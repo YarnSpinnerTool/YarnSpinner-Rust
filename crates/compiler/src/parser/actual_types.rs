@@ -2,8 +2,8 @@
 
 use crate::error_strategy::ErrorStrategy;
 use crate::prelude::*;
-use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::InputStream;
+use antlr_rust::common_token_stream::CommonTokenStream;
 use generated::yarnspinnerparser::*;
 
 pub(crate) type ActualInputStream<'input> = InputStream<&'input [u32]>;
@@ -15,7 +15,7 @@ pub(crate) type ActualTokenStream<'input> =
 pub(crate) type ActualYarnSpinnerParser<'input> =
     YarnSpinnerParser<'input, ActualTokenStream<'input>, ActualErrorStrategy<'input>>;
 pub(crate) type ActualParserContext<'input> = dyn YarnSpinnerParserContext<
-    'input,
-    Ctx = YarnSpinnerParserContextType,
-    TF = LocalTokenFactory<'input>,
->;
+        'input,
+        Ctx = YarnSpinnerParserContextType,
+        TF = LocalTokenFactory<'input>,
+    >;

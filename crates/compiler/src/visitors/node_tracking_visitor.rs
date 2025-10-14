@@ -47,17 +47,17 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
                 _ => {}
             }
         }
-        if let Some(title) = title {
-            if let Some(tracking) = tracking {
-                match tracking.as_str() {
-                    "always" => {
-                        self.tracking_nodes.insert(title);
-                    }
-                    "never" => {
-                        self.ignoring_nodes.insert(title);
-                    }
-                    _ => {}
+        if let Some(title) = title
+            && let Some(tracking) = tracking
+        {
+            match tracking.as_str() {
+                "always" => {
+                    self.tracking_nodes.insert(title);
                 }
+                "never" => {
+                    self.ignoring_nodes.insert(title);
+                }
+                _ => {}
             }
         }
         if let Some(body) = ctx.body() {
@@ -101,8 +101,8 @@ mod tests {
     use super::*;
     use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParser;
     use crate::prelude::*;
-    use antlr_rust::common_token_stream::CommonTokenStream;
     use antlr_rust::InputStream;
+    use antlr_rust::common_token_stream::CommonTokenStream;
 
     #[test]
     fn finds_title_and_tracking_headers() {
@@ -127,9 +127,11 @@ tracking: always
         assert_eq!(result.tracking_nodes.len(), 2);
         assert_eq!(result.ignoring_nodes.len(), 1);
         assert!(result.tracking_nodes.contains("this one is tracking"));
-        assert!(result
-            .tracking_nodes
-            .contains("This one is tracking, but indecisive"));
+        assert!(
+            result
+                .tracking_nodes
+                .contains("This one is tracking, but indecisive")
+        );
         assert!(result.ignoring_nodes.contains("This one is not tracking"));
     }
 

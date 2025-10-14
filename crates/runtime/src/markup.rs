@@ -11,7 +11,7 @@ mod markup_parse_error;
 mod parsed_markup;
 
 pub use self::line_parser::{
-    Result, CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY, TRIM_WHITESPACE_PROPERTY,
+    CHARACTER_ATTRIBUTE, CHARACTER_ATTRIBUTE_NAME_PROPERTY, Result, TRIM_WHITESPACE_PROPERTY,
 };
 pub(crate) use self::{attribute_marker_processor::*, line_parser::*};
 pub use self::{markup_parse_error::*, parsed_markup::*};
