@@ -97,7 +97,6 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub(crate) fn spawn_dialogue_runner(mut commands: Commands, project: Res<YarnProject>) {
-    info!("spawn dialogue runner");
     let mut dialogue_runner = project.create_dialogue_runner(&mut commands);
     dialogue_runner
         .commands_mut()
