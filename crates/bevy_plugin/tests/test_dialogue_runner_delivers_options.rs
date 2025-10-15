@@ -22,7 +22,6 @@ fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(3);
-    //asserter.clear_events(&mut app);
     app.continue_dialogue_and_update();
 
     assert_events!(app contains [
@@ -61,7 +60,6 @@ fn option_selection_implies_continue() -> Result<()> {
     let mut app = App::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
-    //asserter.clear_events(&mut app);
 
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.update();
@@ -82,7 +80,6 @@ fn can_show_option_selection_as_line() -> Result<()> {
         dialogue_runner.run_selected_options_as_lines(true);
     }
     app.continue_dialogue_and_update_n_times(3);
-    //asserter.clear_events(&mut app);
     app.continue_dialogue_and_update();
 
     assert_events!(app contains [
@@ -109,7 +106,6 @@ fn can_jump_around_nodes() -> Result<()> {
     let mut app = App::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
-    //asserter.clear_events(&mut app);
 
     app.dialogue_runner_mut().select_option(OptionId(1))?;
     app.update();
@@ -133,7 +129,6 @@ fn can_select_unavailable_choice() -> Result<()> {
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.continue_dialogue_and_update();
-    //asserter.clear_events(&mut app);
 
     app.continue_dialogue_and_update();
     assert_events!(app contains [
