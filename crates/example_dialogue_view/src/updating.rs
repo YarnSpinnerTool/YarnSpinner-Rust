@@ -8,7 +8,8 @@ use bevy_yarnspinner::{events::*, prelude::*};
 pub(crate) fn ui_updating_plugin(app: &mut App) {
     app.add_systems(
         Update,
-    continue_dialogue.run_if(resource_exists::<Typewriter>)
+        continue_dialogue
+            .run_if(resource_exists::<Typewriter>)
             .after(YarnSpinnerSystemSet)
             .after(typewriter::spawn)
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
@@ -40,7 +41,7 @@ fn show_dialog(_: On<DialogueStarted>, mut visibility: Single<&mut Visibility, W
 }
 
 fn hide_dialog(
-    _ : On<DialogueCompleted>,
+    _: On<DialogueCompleted>,
     mut root_visibility: Single<&mut Visibility, With<UiRootNode>>,
 ) {
     **root_visibility = Visibility::Hidden;

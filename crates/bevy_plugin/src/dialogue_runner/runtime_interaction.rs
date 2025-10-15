@@ -3,7 +3,7 @@ use crate::dialogue_runner::events::DialogueStarted;
 use crate::events::*;
 use crate::line_provider::LineProviderSystemSet;
 use crate::prelude::*;
-use anyhow::{bail, Ok};
+use anyhow::{Ok, bail};
 use bevy::asset::LoadedUntypedAsset;
 use bevy::ecs::system::SystemState;
 use bevy::platform::{collections::HashMap, hash::FixedHasher};
@@ -12,18 +12,16 @@ use bevy::prelude::*;
 pub(crate) fn runtime_interaction_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (
-            continue_runtime
-                .pipe(panic_on_err)
-                .run_if(resource_exists::<YarnProject>),
-        )
+        (continue_runtime
+            .pipe(panic_on_err)
+            .run_if(resource_exists::<YarnProject>),)
             .chain()
             .after(LineProviderSystemSet)
             .after(update_wait)
             .in_set(DialogueExecutionSystemSet)
             .in_set(YarnSpinnerSystemSet),
     );
-    
+
     app.add_observer(accept_line_hints);
 }
 
@@ -40,11 +38,7 @@ fn continue_runtime(
         Commands,
     )> = SystemState::new(world);
 
-    let (
-        mut dialogue_runners,
-        loaded_untyped_assets,
-        mut commands,
-    ) = system_state.get_mut(world);
+    let (mut dialogue_runners, loaded_untyped_assets, mut commands) = system_state.get_mut(world);
 
     let mut dialogues: HashMap<_, _, FixedHasher> = HashMap::default();
 
@@ -61,7 +55,10 @@ fn continue_runtime(
             }
 
             if let Some(line_ids) = std::mem::take(&mut dialogue_runner.popped_line_hints) {
-                commands.trigger(LineHints { line_ids, entity: source });
+                commands.trigger(LineHints {
+                    line_ids,
+                    entity: source,
+                });
             }
 
             if !(dialogue_runner.will_continue_in_next_update
@@ -128,11 +125,7 @@ fn continue_runtime(
         Commands,
     )> = SystemState::new(world);
 
-    let (
-        mut dialogue_runners,
-        project,
-        mut commands,
-    ) = system_state.get_mut(world);
+    let (mut dialogue_runners, project, mut commands) = system_state.get_mut(world);
 
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         if let Some((dialogue, is_sending_missed_events, _, Some(events))) =
@@ -144,7 +137,7 @@ fn continue_runtime(
                     DialogueEvent::Line(line) => {
                         let assets = dialogue_runner.get_assets(&line);
                         let metadata = project.line_metadata(&line.id).unwrap_or_default().to_vec();
-                        commands.trigger( PresentLine {
+                        commands.trigger(PresentLine {
                             line: LocalizedLine::from_yarn_line(line, assets, metadata),
                             entity: source,
                         });
@@ -162,20 +155,35 @@ fn continue_runtime(
                             })
                             .collect();
                         last_options.insert(source, options.clone());
-                        commands.trigger(PresentOptions { options, entity: source });
+                        commands.trigger(PresentOptions {
+                            options,
+                            entity: source,
+                        });
                     }
                     DialogueEvent::Command(command) => {
-                        commands.trigger(ExecuteCommand { command, entity: source });
+                        commands.trigger(ExecuteCommand {
+                            command,
+                            entity: source,
+                        });
                         dialogue_runner.continue_in_next_update();
                     }
                     DialogueEvent::NodeComplete(node_name) => {
-                        commands.trigger(NodeCompleted { node_name, entity: source });
+                        commands.trigger(NodeCompleted {
+                            node_name,
+                            entity: source,
+                        });
                     }
                     DialogueEvent::NodeStart(node_name) => {
-                        commands.trigger(NodeStarted { node_name, entity: source });
+                        commands.trigger(NodeStarted {
+                            node_name,
+                            entity: source,
+                        });
                     }
                     DialogueEvent::LineHints(line_ids) => {
-                        commands.trigger(LineHints { line_ids, entity: source });
+                        commands.trigger(LineHints {
+                            line_ids,
+                            entity: source,
+                        });
                     }
                     DialogueEvent::DialogueComplete => {
                         if !is_sending_missed_events {
@@ -191,10 +199,7 @@ fn continue_runtime(
     Ok(())
 }
 
-fn accept_line_hints(
-    event: On<LineHints>,
-    mut dialogue_runners: Query<&mut DialogueRunner>,
-) {
+fn accept_line_hints(event: On<LineHints>, mut dialogue_runners: Query<&mut DialogueRunner>) {
     let mut dialogue_runner = dialogue_runners.get_mut(event.entity).unwrap();
     for asset_provider in dialogue_runner.asset_providers.values_mut() {
         asset_provider.accept_line_hints(&event.line_ids);

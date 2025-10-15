@@ -149,7 +149,7 @@ fn show_continue(
     }
 }
 
-pub(crate) fn despawn(_ : On<DialogueCompleted>, mut commands: Commands) {
+pub(crate) fn despawn(_: On<DialogueCompleted>, mut commands: Commands) {
     commands.remove_resource::<Typewriter>();
 }
 

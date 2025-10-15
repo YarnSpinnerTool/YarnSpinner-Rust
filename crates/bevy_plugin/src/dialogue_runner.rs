@@ -1,6 +1,6 @@
 pub use self::events::{
-    DialogueCompleted, DialogueStarted, ExecuteCommand, LineHints,
-    NodeCompleted, NodeStarted, PresentLine, PresentOptions,
+    DialogueCompleted, DialogueStarted, ExecuteCommand, LineHints, NodeCompleted, NodeStarted,
+    PresentLine, PresentOptions,
 };
 pub use self::{
     builder::DialogueRunnerBuilder,

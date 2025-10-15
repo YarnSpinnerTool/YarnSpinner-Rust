@@ -8,9 +8,9 @@ pub(crate) fn command_execution_plugin(app: &mut App) {
 }
 
 fn execute_commands(
-        event: On<ExecuteCommand>, 
-        dialogue_runners: Query<&DialogueRunner>,
-        mut commands: Commands
+    event: On<ExecuteCommand>,
+    dialogue_runners: Query<&DialogueRunner>,
+    mut commands: Commands,
 ) {
     let dialogue_runner = dialogue_runners.get(event.entity).unwrap();
     let Some(mut command) = clone_command(dialogue_runner, &event) else {
@@ -36,7 +36,6 @@ fn clone_command(
         .get(command_name)
         .map(|command| command.clone_box())
 }
-
 
 fn get_dialogue_runner_mut(world: &mut World, entity: Entity) -> Mut<'_, DialogueRunner> {
     let mut dialogue_runners = world.query::<&mut DialogueRunner>();

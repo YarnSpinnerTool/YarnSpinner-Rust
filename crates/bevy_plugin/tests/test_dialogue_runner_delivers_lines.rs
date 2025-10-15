@@ -252,7 +252,6 @@ fn default_language_is_base_language() {
     }
 }
 
-
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<'_, DialogueRunner> {
     app.setup_default_plugins()
         .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(

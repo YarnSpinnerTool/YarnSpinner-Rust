@@ -124,9 +124,8 @@ fn select_option(
     }
 }
 
-fn despawn_options<T: Event>
-(
-    _ : On<T>,
+fn despawn_options<T: Event>(
+    _: On<T>,
     mut commands: Commands,
     options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
     mut dialogue_node_text: Single<&mut Text, With<DialogueNode>>,
