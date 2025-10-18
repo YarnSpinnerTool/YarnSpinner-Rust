@@ -11,11 +11,11 @@ Ancient Reptilian Brain: Never ever.
 title: Hub0
 position: -43,-216
 ---
--> You: Never ever ever? <<if $never == false>>
+-> You: Never ever ever? <<if $never == false>> #line:x1
     Ancient Reptilian Brain: Never ever ever ever, baby!
     <<set $never to true>>
     <<jump Hub0>>
--> You: (Simply keep on non-existing.)
+-> You: (Simply keep on non-existing.) #line:x2
     Ancient Reptilian Brain: An inordinate amount of time passes. It is utterly void of struggle. No ex-wives are contained within it.
 
 <<set $great to false>>

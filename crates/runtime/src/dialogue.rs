@@ -34,6 +34,10 @@ pub enum DialogueError {
         selected_option_id: OptionId,
         max_id: usize,
     },
+    InvalidLineIdError {
+        selected_line_id: LineId,
+        line_ids: Vec<LineId>,
+    },
     UnexpectedOptionSelectionError,
     ContinueOnOptionSelectionError,
     NoNodeSelectedOnContinue,
@@ -66,6 +70,10 @@ impl Display for DialogueError {
             MarkupParseError(e) => Display::fmt(e, f),
             LineProviderError { id, language_code } => write!(f, "Line ID \"{id}\" not found in line provider with language code {language_code:?}"),
             InvalidOptionIdError { selected_option_id, max_id } => write!(f, "{selected_option_id:?} is not a valid option ID (expected a number between 0 and {max_id}."),
+            InvalidLineIdError { selected_line_id, line_ids } => {
+                let line_ids = line_ids.iter().map(|id| id.0.clone()).collect::<Vec<_>>().join(", ");
+                write!(f, "{selected_line_id:?} is not a valid line ID of options (expected line ids: {line_ids}.")
+            },
             UnexpectedOptionSelectionError => f.write_str("An option was selected, but the dialogue wasn't waiting for a selection. This method should only be called after the Dialogue is waiting for the user to select an option."),
             ContinueOnOptionSelectionError => f.write_str("Dialogue was asked to continue running, but it is waiting for the user to select an option first."),
             NoNodeSelectedOnContinue => f.write_str("Cannot continue running dialogue. No node has been selected."),
@@ -473,6 +481,23 @@ impl Dialogue {
     pub fn set_selected_option(&mut self, selected_option_id: OptionId) -> Result<&mut Self> {
         self.vm.set_selected_option(selected_option_id)?;
         Ok(self)
+    }
+
+    /// Signals to the [`Dialogue`] that the user has selected a specified [`DialogueOption`].
+    ///
+    /// This makes dialogue replay more robust than [`self.set_selected_option`] when adding new options.
+    ///
+    /// The ID number that should be passed as the parameter to this method should be the id
+    /// of the [`line`] field in the [`DialogueOption`] that represents the user's selection.
+    ///
+    /// ## Panics
+    /// - If the Dialogue is not expecting an option to be selected.
+    /// - If the line ID is not found in the vector of [`DialogueOption`] provided by [`DialogueEvent::Options`].
+    ///
+    /// ## See Also
+    /// - [`Dialogue::continue_`]
+    pub fn set_selected_option_by_line_id(&mut self, selected_line_id: LineId) -> Result<OptionId> {
+        self.vm.set_selected_option_by_line_id(selected_line_id)
     }
 
     /// Gets a value indicating whether the Dialogue is currently executing Yarn instructions.

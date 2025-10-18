@@ -58,6 +58,18 @@ fn errs_on_unexpected_selection_value() -> Result<()> {
 }
 
 #[test]
+fn errs_on_unexpected_line_id() -> Result<()> {
+    let mut app = App::new();
+    app.setup_dialogue_runner().start_node("Start");
+    app.continue_dialogue_and_update_n_times(4);
+    app.dialogue_runner_mut()
+        .select_option_by_line_id(LineId("line:1".to_string()))
+        .unwrap_err();
+
+    Ok(())
+}
+
+#[test]
 fn option_selection_implies_continue() -> Result<()> {
     let mut app = App::new();
     let mut asserter = EventAsserter::new();
@@ -137,6 +149,35 @@ fn can_select_unavailable_choice() -> Result<()> {
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
+    app.continue_dialogue_and_update();
+    asserter.clear_events(&mut app);
+
+    app.continue_dialogue_and_update();
+    assert_events!(asserter, app contains [
+        PresentLineEvent (n = 0),
+        PresentOptionsEvent with |event|
+            event.options.len() == 2
+            && event.options.iter().filter(|o| o.is_available).count() == 1
+            && event.options.iter().filter(|o| !o.is_available).all(|o| o.id == OptionId(0)),
+    ]);
+    app.dialogue_runner_mut().select_option(OptionId(0))?;
+    app.update();
+    assert_events!(asserter, app contains [
+        PresentLineEvent with |event| event.line.text == lines()[6],
+        PresentOptionsEvent (n = 0),
+    ]);
+
+    Ok(())
+}
+
+#[test]
+fn can_select_by_line_id() -> Result<()> {
+    let mut app = App::new();
+    let mut asserter = EventAsserter::new();
+    app.setup_dialogue_runner().start_node("Start");
+    app.continue_dialogue_and_update_n_times(4);
+    app.dialogue_runner_mut()
+        .select_option_by_line_id(LineId("line:x1".to_string()))?;
     app.continue_dialogue_and_update();
     asserter.clear_events(&mut app);
 
