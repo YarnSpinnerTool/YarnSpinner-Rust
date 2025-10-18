@@ -16,16 +16,17 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             select_option
                 .run_if(resource_exists::<OptionSelection>.and(any_with_component::<PrimaryWindow>))
                 .before(typewriter::despawn),
-            despawn_options,
         )
             .chain()
             .after(YarnSpinnerSystemSet)
             .in_set(ExampleYarnSpinnerDialogueViewSystemSet),
-    )
-    .add_message::<HasSelectedOptionEvent>();
+    );
+
+    app.add_observer(despawn_options::<DialogueCompleted>);
+    app.add_observer(despawn_options::<HasSelectedOptionEvent>);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Message)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Event)]
 struct HasSelectedOptionEvent;
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]
@@ -82,7 +83,6 @@ fn select_option(
     mut text_writer: TextUiWriter,
     option_selection: Res<OptionSelection>,
     window: Single<Entity, With<PrimaryWindow>>,
-    mut selected_option_event: MessageWriter<HasSelectedOptionEvent>,
 ) {
     if !typewriter.is_finished() {
         return;
@@ -120,25 +120,17 @@ fn select_option(
         }
     }
     if has_selected_id {
-        selected_option_event.write(HasSelectedOptionEvent);
+        commands.trigger(HasSelectedOptionEvent);
     }
 }
 
-fn despawn_options(
-    mut has_selected_option_event: MessageReader<HasSelectedOptionEvent>,
-    mut dialogue_complete_event: MessageReader<DialogueCompleteEvent>,
+fn despawn_options<T: Event>(
+    _: On<T>,
     mut commands: Commands,
     options_node: Single<(Entity, &mut Node, &mut Visibility), With<OptionsNode>>,
     mut dialogue_node_text: Single<&mut Text, With<DialogueNode>>,
     mut root_visibility: Single<&mut Visibility, (With<UiRootNode>, Without<OptionsNode>)>,
 ) {
-    let should_despawn =
-        !has_selected_option_event.is_empty() || !dialogue_complete_event.is_empty();
-    if !should_despawn {
-        return;
-    }
-    has_selected_option_event.clear();
-    dialogue_complete_event.clear();
     commands.remove_resource::<OptionSelection>();
     let (entity, mut node, mut visibility) = options_node.into_inner();
     commands.entity(entity).despawn_related::<Children>();
