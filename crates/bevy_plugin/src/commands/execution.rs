@@ -7,10 +7,7 @@ pub(crate) fn command_execution_plugin(app: &mut App) {
     app.add_observer(execute_commands);
 }
 
-fn execute_commands(
-    event: On<ExecuteCommand>,
-    mut commands: Commands,
-) {
+fn execute_commands(event: On<ExecuteCommand>, mut commands: Commands) {
     let event = event.clone();
     commands.queue(move |world: &mut World| {
         let Some(mut command) = clone_command(world, &event) else {
@@ -25,10 +22,7 @@ fn execute_commands(
     });
 }
 
-fn clone_command(
-    world: &mut World,
-    event: &ExecuteCommand,
-) -> Option<Box<dyn UntypedYarnCommand>> {
+fn clone_command(world: &mut World, event: &ExecuteCommand) -> Option<Box<dyn UntypedYarnCommand>> {
     let dialogue_runner = get_dialogue_runner(world, event.entity);
     let command_name = event.command.name.as_str();
     dialogue_runner
@@ -42,7 +36,6 @@ fn get_dialogue_runner(world: &mut World, entity: Entity) -> &DialogueRunner {
 
     (dialogue_runners.get(world, entity).unwrap()) as _
 }
-
 
 fn get_dialogue_runner_mut(world: &mut World, entity: Entity) -> Mut<'_, DialogueRunner> {
     let mut dialogue_runners = world.query::<&mut DialogueRunner>();
