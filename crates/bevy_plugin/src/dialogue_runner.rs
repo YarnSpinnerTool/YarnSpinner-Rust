@@ -102,6 +102,25 @@ impl DialogueRunner {
         Ok(self)
     }
 
+    /// If the dialogue is currently waiting for the user to select an option, this method will select the option with the given id.
+    /// Implies [`DialogueRunner::continue_in_next_update`].
+    pub fn select_option_by_line_id(&mut self, line: LineId) -> Result<&mut Self> {
+        if !self.is_running {
+            bail!(
+                "Can't select option of line id {line}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`."
+            )
+        }
+
+        let option = self
+            .inner_mut()
+            .0
+            .set_selected_option_by_line_id(line)
+            .map_err(Error::from)?;
+        self.last_selected_option.replace(option);
+        self.continue_in_next_update();
+        Ok(self)
+    }
+
     /// Returns whether the dialogue runner is currently running. Returns `false` if:
     /// - The dialogue has not yet been started via [`DialogueRunner::start_node`]
     /// - The dialogue has been stopped via [`DialogueRunner::stop`]
