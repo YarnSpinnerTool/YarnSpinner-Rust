@@ -254,6 +254,36 @@ impl VirtualMachine {
         Ok(())
     }
 
+    pub(crate) fn set_selected_option_by_line_id(
+        &mut self,
+        selected_line_id: LineId,
+    ) -> Result<OptionId> {
+        if self.execution_state != ExecutionState::WaitingOnOptionSelection {
+            return Err(DialogueError::UnexpectedOptionSelectionError);
+        }
+        if let Some(selected_option) = self
+            .state
+            .current_options
+            .iter()
+            .find(|o| o.line.id == selected_line_id)
+        {
+            let selected_option_id = selected_option.id;
+            self.set_selected_option(selected_option_id)
+                .map(|_| selected_option_id)
+        } else {
+            let line_ids = self
+                .state
+                .current_options
+                .iter()
+                .map(|o| o.line.id.clone())
+                .collect();
+            Err(DialogueError::InvalidLineIdError {
+                selected_line_id,
+                line_ids,
+            })
+        }
+    }
+
     pub(crate) fn is_active(&self) -> bool {
         self.execution_state != ExecutionState::Stopped
     }
