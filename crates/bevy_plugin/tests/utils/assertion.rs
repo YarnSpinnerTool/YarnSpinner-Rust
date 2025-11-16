@@ -39,9 +39,8 @@ pub fn event_assertion<T: Event + Debug + Clone>(
     if let Some(predicate) = &event_asserter.predicate {
         assert!(
             predicate(event.event().clone()),
-            "Expected event of type {} to fulfill predicate {}, but found {:#?}",
-            stringify!($event),
-            stringify!($pred),
+            "Expected event of type {} to fulfill predicate, but found {:#?}",
+            stringify!(T),
             event.event()
         );
     }
@@ -64,6 +63,11 @@ macro_rules! assert_events {
     ($app:ident contains $event:ident (n = $num:expr) $(with $pred:expr)?) => {
         let mut event_asserter = EventAsserter::<$event>::default();
         event_asserter.expected_calls = $num;
+        $(
+            {
+                event_asserter.predicate = Some(Box::new($pred));
+            }
+        )?
         $app.world_mut().insert_resource(event_asserter);
     };
 }

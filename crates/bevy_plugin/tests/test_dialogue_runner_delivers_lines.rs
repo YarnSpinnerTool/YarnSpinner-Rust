@@ -159,7 +159,6 @@ fn serves_assets_after_loading() -> Result<()> {
         })),
         ..default()
     });
-
     app.load_lines();
 
     app.clear_and_assert_event::<DialogueStarted>();
@@ -168,11 +167,11 @@ fn serves_assets_after_loading() -> Result<()> {
     app.clear_and_assert_event::<PresentLine>();
 
     for _ in 2..=8 {
-        app.continue_dialogue_and_update();
+        app.dialogue_runner_mut().continue_in_next_update();
         assert_events!(app contains
             PresentLine with |event| event.line.assets.is_empty() );
     }
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains
         PresentLine with |event| event.line.assets.get_handle::<AudioSource>().is_some());
     Ok(())
@@ -191,25 +190,48 @@ fn serves_translations() -> Result<()> {
     app.dialogue_runner_mut()
         .set_asset_language("de-CH")
         .continue_in_next_update();
+
+    app.insert_resource(EventAsserter::<PresentLine> {
+        expected_calls: 1,
+        predicate: Some(Box::new(|event| {
+            event.line.text == english_lines()[7]
+                && event.line.assets.get_handle::<AudioSource>().is_some()
+        })),
+        ..default()
+    });
     app.load_lines();
-    assert_events!(app contains
-        PresentLine with |event| event.line.text == english_lines()[7] && event.line.assets.get_handle::<AudioSource>().is_some()
-    );
+    app.clear_and_assert_event::<PresentLine>();
 
     app.dialogue_runner_mut()
         .set_text_language("de-CH")
         .continue_in_next_update();
+
+    app.insert_resource(EventAsserter::<PresentLine> {
+        expected_calls: 1,
+        predicate: Some(Box::new(|event| {
+            println!("Expected: {}", german_lines()[8]);
+            println!("Actual: {}", event.line.text);
+            event.line.text == german_lines()[8]
+                && event.line.assets.get_handle::<AudioSource>().is_none()
+        })),
+        ..default()
+    });
     app.load_lines();
-    assert_events!(app contains
-        PresentLine with |event| event.line.text == german_lines()[8] && event.line.assets.get_handle::<AudioSource>().is_none()
-    );
+    app.clear_and_assert_event::<PresentLine>();
+
     app.dialogue_runner_mut()
         .set_language("en-US")
         .continue_in_next_update();
+    app.insert_resource(EventAsserter::<PresentLine> {
+        expected_calls: 1,
+        predicate: Some(Box::new(|event| {
+            event.line.text == english_lines()[9]
+                && event.line.assets.get_handle::<AudioSource>().is_none()
+        })),
+        ..default()
+    });
     app.load_lines();
-    assert_events!(app contains
-        PresentLine with |event| event.line.text == english_lines()[9] && event.line.assets.get_handle::<AudioSource>().is_none()
-    );
+    app.clear_and_assert_event::<PresentLine>();
 
     Ok(())
 }
