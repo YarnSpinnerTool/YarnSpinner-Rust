@@ -3,7 +3,6 @@
 use bevy::asset::LoadedUntypedAsset;
 #[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
-use bevy::ecs::resource;
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 use bevy_yarnspinner::UnderlyingYarnLine;
