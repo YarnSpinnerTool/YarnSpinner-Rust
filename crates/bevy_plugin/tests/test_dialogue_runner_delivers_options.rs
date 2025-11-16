@@ -22,7 +22,7 @@ fn delivers_option_set() -> Result<()> {
     let mut app = App::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(3);
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
 
     assert_events!(app contains [
         PresentLine (n = 0),
@@ -74,7 +74,6 @@ fn option_selection_implies_continue() -> Result<()> {
     app.continue_dialogue_and_update_n_times(4);
 
     app.dialogue_runner_mut().select_option(OptionId(0))?;
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == lines()[6],
         PresentOptions (n = 0),
@@ -92,19 +91,19 @@ fn can_show_option_selection_as_line() -> Result<()> {
         dialogue_runner.run_selected_options_as_lines(true);
     }
     app.continue_dialogue_and_update_n_times(3);
-    app.continue_dialogue_and_update();
-
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine (n = 0),
         PresentOptions with |event| event.options.len() == 2 && event.options.iter().all(|o| o.is_available),
     ]);
+
     app.dialogue_runner_mut().select_option(OptionId(0))?;
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "You: Never ever ever?",
         PresentOptions (n = 0),
     ]);
-    app.continue_dialogue_and_update();
+
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == lines()[6],
         PresentOptions (n = 0),
@@ -120,12 +119,11 @@ fn can_jump_around_nodes() -> Result<()> {
     app.continue_dialogue_and_update_n_times(4);
 
     app.dialogue_runner_mut().select_option(OptionId(1))?;
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == lines()[10],
         PresentOptions (n = 0),
     ]);
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine (n = 0),
         PresentOptions with |event| event.options.len() == 3,
@@ -142,7 +140,7 @@ fn can_select_unavailable_choice() -> Result<()> {
     app.dialogue_runner_mut().select_option(OptionId(0))?;
     app.continue_dialogue_and_update();
 
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine (n = 0),
         PresentOptions with |event|
@@ -151,7 +149,6 @@ fn can_select_unavailable_choice() -> Result<()> {
             && event.options.iter().filter(|o| !o.is_available).all(|o| o.id == OptionId(0)),
     ]);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == lines()[6],
         PresentOptions (n = 0),
@@ -163,27 +160,25 @@ fn can_select_unavailable_choice() -> Result<()> {
 #[test]
 fn can_select_by_line_id() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     app.setup_dialogue_runner().start_node("Start");
     app.continue_dialogue_and_update_n_times(4);
     app.dialogue_runner_mut()
         .select_option_by_line_id(LineId("line:x1".to_string()))?;
     app.continue_dialogue_and_update();
-    asserter.clear_events(&mut app);
 
-    app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent (n = 0),
-        PresentOptionsEvent with |event|
+    app.dialogue_runner_mut().continue_in_next_update();
+    assert_events!(app contains [
+        PresentLine (n = 0),
+        PresentOptions with |event|
             event.options.len() == 2
             && event.options.iter().filter(|o| o.is_available).count() == 1
             && event.options.iter().filter(|o| !o.is_available).all(|o| o.id == OptionId(0)),
     ]);
     app.dialogue_runner_mut().select_option(OptionId(0))?;
-    app.update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == lines()[6],
-        PresentOptionsEvent (n = 0),
+
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == lines()[6],
+        PresentOptions (n = 0),
     ]);
 
     Ok(())
@@ -199,7 +194,6 @@ fn generates_files_in_dev_mode() -> Result<()> {
     app.setup_default_plugins_for_path(dir.path())
         .setup_dialogue_runner_in_dev_mode()
         .start_node("Start");
-    app.update();
 
     assert_events!(app contains [
         PresentLine with |event| event.line.text == lines()[0],

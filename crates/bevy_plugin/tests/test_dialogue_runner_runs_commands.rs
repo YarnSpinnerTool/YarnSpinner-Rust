@@ -11,12 +11,12 @@ mod utils;
 fn waits_on_command() -> Result<()> {
     let mut app = App::new();
     app.setup_dialogue_runner_for_wait().start_node("Start");
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Starting wait",
         ExecuteCommand (n = 0),
     ]);
-    app.continue_dialogue_and_update();
+
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine (n = 0),
         ExecuteCommand with |event|
@@ -26,14 +26,14 @@ fn waits_on_command() -> Result<()> {
     ]);
     let now = Instant::now();
     while now.elapsed().as_millis() <= 950 {
-        app.continue_dialogue_and_update();
+        app.dialogue_runner_mut().continue_in_next_update();
         assert_events!(app contains [
             PresentLine (n = 0),
             ExecuteCommand (n = 0),
         ]);
     }
     sleep(std::time::Duration::from_millis(150));
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Ended wait",
         ExecuteCommand (n = 0),
@@ -46,13 +46,16 @@ fn waits_on_command() -> Result<()> {
 fn executes_commands_and_fns() -> Result<()> {
     let mut app = App::new();
     app.setup_dialogue_runner().start_node("Start");
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Setting variable",
         ExecuteCommand (n = 0),
     ]);
 
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == "Calling command",
+        ExecuteCommand (n = 0),
+    ]);
     let data = app
         .dialogue_runner()
         .variable_storage()
@@ -60,14 +63,8 @@ fn executes_commands_and_fns() -> Result<()> {
         .unwrap();
     let string_data: String = data.into();
     assert_eq!("foo", string_data.as_str());
-    assert_events!(app contains [
-        PresentLine with |event| event.line.text == "Calling command",
-        ExecuteCommand (n = 0),
-    ]);
 
-    app.continue_dialogue_and_update();
-    let resource = app.world().resource::<Data>().0.as_str();
-    assert_eq!("foo", resource);
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine (n = 0),
         ExecuteCommand with |event|
@@ -75,20 +72,21 @@ fn executes_commands_and_fns() -> Result<()> {
             event.command.parameters.len() == 1 &&
             String::from(&event.command.parameters[0]).as_str() == "foo",
     ]);
+    let resource = app.world().resource::<Data>().0.as_str();
+    assert_eq!("foo", resource);
 
-    app.update(); // Commands imply continue
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Calling function",
         ExecuteCommand (n = 0),
     ]);
 
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Data three times is foofoofoo",
         ExecuteCommand (n = 0),
     ]);
 
-    app.continue_dialogue_and_update();
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine (n = 0),
         ExecuteCommand with |event|
@@ -99,7 +97,6 @@ fn executes_commands_and_fns() -> Result<()> {
         NodeCompleted (n = 0),
     ]);
 
-    app.update(); // Commands imply continue
     assert_events!(app contains [
         DialogueCompleted,
         NodeCompleted,

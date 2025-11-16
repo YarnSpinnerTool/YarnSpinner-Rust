@@ -16,7 +16,6 @@ fn panics_on_continue_without_start() {
 fn start_implies_continue() -> Result<()> {
     let mut app = App::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
-    app.update();
     assert_events!(app contains [
         DialogueStarted,
         NodeStarted,
@@ -42,13 +41,11 @@ fn stop_sends_events() -> Result<()> {
     app.update();
 
     app.dialogue_runner_mut().stop();
-    app.update();
     assert_events!(app contains [
         DialogueCompleted,
         NodeCompleted (n = 0),
         PresentLine (n = 0)
     ]);
-    app.update();
     assert_events!(app contains [
         DialogueCompleted(n = 0),
         NodeCompleted (n = 0),
@@ -65,7 +62,6 @@ fn stop_resets_dialogue() -> Result<()> {
     let mut app = App::new();
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
 
-    app.update();
     assert_events!(app contains [
         DialogueStarted,
         LineHints,
@@ -74,7 +70,6 @@ fn stop_resets_dialogue() -> Result<()> {
     ]);
 
     app.dialogue_runner_mut().stop().start_node("Start");
-    app.update();
     assert_events!(app contains [
         DialogueCompleted,
         LineHints (n = 0),
@@ -82,7 +77,6 @@ fn stop_resets_dialogue() -> Result<()> {
         NodeCompleted (n = 0),
         PresentLine (n = 0)
     ]);
-    app.update();
     assert_events!(app contains [
         DialogueStarted,
         LineHints,
@@ -110,15 +104,16 @@ fn presents_all_lines() -> Result<()> {
     setup_dialogue_runner_without_localizations(&mut app).start_node("Start");
     for i in 1..=12 {
         println!("Line {i}");
-        app.continue_dialogue_and_update();
-        assert_events!(app contains PresentLine);
+        app.dialogue_runner_mut().continue_in_next_update();
+        assert_events!(app contains [
+            PresentLine,
+            NodeCompleted (n = 0),
+            DialogueCompleted (n = 0)
+        ]);
     }
-    assert_events!(app contains [
-        NodeCompleted (n = 0),
-        DialogueCompleted (n = 0),
-    ]);
     println!("End of lines");
-    app.continue_dialogue_and_update();
+
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         NodeCompleted,
         DialogueCompleted,
@@ -144,7 +139,6 @@ fn panics_on_continue_after_all_lines() {
 fn serves_assets_after_loading() -> Result<()> {
     let mut app = App::new();
     setup_dialogue_runner_with_localizations(&mut app).start_node("Start");
-    app.update();
     assert_events!(app contains [
         DialogueStarted,
         LineHints,
@@ -152,13 +146,26 @@ fn serves_assets_after_loading() -> Result<()> {
         PresentLine (n = 0),
     ]);
 
+    app.insert_resource(EventAsserter::<DialogueStarted>::default());
+    app.insert_resource(EventAsserter::<LineHints>::default());
+    app.insert_resource(EventAsserter::<NodeStarted> {
+        expected_calls: 1,
+        ..default()
+    });
+    app.insert_resource(EventAsserter::<PresentLine> {
+        expected_calls: 1,
+        predicate: Some(Box::new(|event| {
+            event.line.text == english_lines()[0] && event.line.assets.is_empty()
+        })),
+        ..default()
+    });
+
     app.load_lines();
-    assert_events!(app contains [
-        DialogueStarted (n = 0),
-        LineHints (n = 0),
-        NodeStarted,
-        PresentLine with |event| event.line.text == english_lines()[0] && event.line.assets.is_empty(),
-    ]);
+
+    app.clear_and_assert_event::<DialogueStarted>();
+    app.clear_and_assert_event::<LineHints>();
+    app.clear_and_assert_event::<NodeStarted>();
+    app.clear_and_assert_event::<PresentLine>();
 
     for _ in 2..=8 {
         app.continue_dialogue_and_update();

@@ -10,15 +10,16 @@ fn basic_functions() -> Result<()> {
     let mut app = App::new();
     let mut dialogue_runner = app.setup_dialogue_runner();
     dialogue_runner.start_node("Start");
-    app.update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Data = Initial",
     ]);
-    app.continue_dialogue_and_update();
+
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "New Data = After Swap",
     ]);
-    app.continue_dialogue_and_update();
+
+    app.dialogue_runner_mut().continue_in_next_update();
     assert_events!(app contains [
         PresentLine with |event| event.line.text == "Picky, picky: true",
     ]);

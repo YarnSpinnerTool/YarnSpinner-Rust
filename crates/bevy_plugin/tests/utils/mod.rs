@@ -3,11 +3,15 @@
 use bevy::asset::LoadedUntypedAsset;
 #[cfg(feature = "audio_assets")]
 use bevy::audio::AudioPlugin;
+use bevy::ecs::resource;
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 use bevy_yarnspinner::UnderlyingYarnLine;
 use bevy_yarnspinner::prelude::*;
+use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+
+use crate::utils::prelude::EventAsserter;
 
 pub mod assertion;
 
@@ -24,6 +28,8 @@ pub trait AppExt {
     fn load_lines(&mut self) -> &mut App;
 
     fn load_project_and_get_dialogue_builder(&mut self) -> DialogueRunnerBuilder;
+
+    fn clear_and_assert_event<T: Event + Clone + Debug>(&mut self);
 
     fn continue_dialogue_and_update(&mut self) -> &mut App;
     fn continue_dialogue_and_update_n_times(&mut self, n: usize) -> &mut App;
@@ -77,6 +83,24 @@ impl AppExt for App {
             SystemState::new(self.world_mut());
         let (mut commands, yarn_project) = system_state.get_mut(self.world_mut());
         yarn_project.build_dialogue_runner(&mut commands)
+    }
+
+    fn clear_and_assert_event<T: Event + Clone + Debug>(&mut self) {
+        let resource = self.world_mut().remove_resource::<EventAsserter<T>>();
+        assert!(
+            resource.is_some(),
+            "No EventAsserter with type {} registered",
+            stringify!(T)
+        );
+        let resource = resource.unwrap();
+        assert_eq!(
+            resource.expected_calls,
+            resource.actual_calls,
+            "Expected {} events of type {}, but found {}",
+            resource.expected_calls,
+            stringify!(T),
+            resource.actual_calls
+        );
     }
 
     fn continue_dialogue_and_update(&mut self) -> &mut App {
