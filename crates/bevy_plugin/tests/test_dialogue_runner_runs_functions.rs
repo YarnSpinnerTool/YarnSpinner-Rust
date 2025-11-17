@@ -8,20 +8,20 @@ mod utils;
 #[test]
 fn basic_functions() -> Result<()> {
     let mut app = App::new();
-    let mut asserter = EventAsserter::new();
     let mut dialogue_runner = app.setup_dialogue_runner();
     dialogue_runner.start_node("Start");
-    app.update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == "Data = Initial",
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == "Data = Initial",
     ]);
-    app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == "New Data = After Swap",
+
+    app.dialogue_runner_mut().continue_in_next_update();
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == "New Data = After Swap",
     ]);
-    app.continue_dialogue_and_update();
-    assert_events!(asserter, app contains [
-        PresentLineEvent with |event| event.line.text == "Picky, picky: true",
+
+    app.dialogue_runner_mut().continue_in_next_update();
+    assert_events!(app contains [
+        PresentLine with |event| event.line.text == "Picky, picky: true",
     ]);
 
     Ok(())
@@ -48,6 +48,7 @@ impl FunctionAppExt for App {
         self.add_systems(Startup, |mut commands: Commands| {
             commands.spawn(Name::new("Tweedledee"));
         });
+        self.add_plugins(AssertionPlugin);
 
         let picky_function = self.register_system(|_: Single<&Name>| -> bool { true });
 

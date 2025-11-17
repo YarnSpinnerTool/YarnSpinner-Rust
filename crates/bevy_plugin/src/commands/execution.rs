@@ -1,46 +1,29 @@
 use crate::commands::UntypedYarnCommand;
-use crate::dialogue_runner::DialogueExecutionSystemSet;
-use crate::events::ExecuteCommandEvent;
+use crate::events::ExecuteCommand;
 use crate::prelude::*;
-use bevy::ecs::message::MessageCursor;
 use bevy::prelude::*;
 
 pub(crate) fn command_execution_plugin(app: &mut App) {
-    app.add_systems(
-        Update,
-        execute_commands
-            .after(DialogueExecutionSystemSet)
-            .in_set(YarnSpinnerSystemSet),
-    );
+    app.add_observer(execute_commands);
 }
 
-fn execute_commands(world: &mut World, mut cursor: Local<MessageCursor<ExecuteCommandEvent>>) {
-    let events = clone_events(world, &mut cursor);
-    for event in events {
+fn execute_commands(event: On<ExecuteCommand>, mut commands: Commands) {
+    let event = event.clone();
+    commands.queue(move |world: &mut World| {
         let Some(mut command) = clone_command(world, &event) else {
-            continue;
+            return;
         };
+
         let params = event.command.parameters;
         let task_finished_indicator = command.call(params, world);
         if !task_finished_indicator.is_finished() {
-            get_dialogue_runner_mut(world, event.source).add_command_task(task_finished_indicator);
+            get_dialogue_runner_mut(world, event.entity).add_command_task(task_finished_indicator);
         }
-    }
+    });
 }
 
-fn clone_events(
-    world: &World,
-    cursor: &mut MessageCursor<ExecuteCommandEvent>,
-) -> Vec<ExecuteCommandEvent> {
-    let events = world.resource::<Messages<ExecuteCommandEvent>>();
-    cursor.read(events).cloned().collect()
-}
-
-fn clone_command(
-    world: &mut World,
-    event: &ExecuteCommandEvent,
-) -> Option<Box<dyn UntypedYarnCommand>> {
-    let dialogue_runner = get_dialogue_runner(world, event.source);
+fn clone_command(world: &mut World, event: &ExecuteCommand) -> Option<Box<dyn UntypedYarnCommand>> {
+    let dialogue_runner = get_dialogue_runner(world, event.entity);
     let command_name = event.command.name.as_str();
     dialogue_runner
         .commands

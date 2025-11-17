@@ -1,6 +1,6 @@
 pub use self::events::{
-    DialogueCompleteEvent, DialogueStartEvent, ExecuteCommandEvent, LineHintsEvent,
-    NodeCompleteEvent, NodeStartEvent, PresentLineEvent, PresentOptionsEvent,
+    DialogueCompleted, DialogueStarted, ExecuteCommand, LineHints, NodeCompleted, NodeStarted,
+    PresentLine, PresentOptions,
 };
 pub use self::{
     builder::DialogueRunnerBuilder,
@@ -18,7 +18,6 @@ use bevy::{
     platform::collections::{HashMap, HashSet},
     prelude::*,
 };
-pub(crate) use runtime_interaction::DialogueExecutionSystemSet;
 use std::any::TypeId;
 use std::fmt::Debug;
 use yarnspinner::core::Library;
@@ -33,7 +32,6 @@ mod runtime_interaction;
 pub(crate) fn dialogue_plugin(app: &mut App) {
     app.add_plugins(runtime_interaction::runtime_interaction_plugin)
         .add_plugins(localized_line::localized_line_plugin)
-        .add_plugins(events::dialogue_runner_events_plugin)
         .add_plugins(dialogue_option::dialogue_option_plugin)
         .add_plugins(builder::dialogue_runner_builder_plugin)
         .add_plugins(inner::inner_dialogue_runner_plugin);
@@ -90,7 +88,7 @@ impl DialogueRunner {
     pub fn select_option(&mut self, option: OptionId) -> Result<&mut Self> {
         if !self.is_running {
             bail!(
-                "Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptionsEvent`."
+                "Can't select option {option}: the dialogue is currently not running. Please call `DialogueRunner::continue_in_next_update()` only after receiving a `PresentOptions` event."
             )
         }
         self.inner_mut()
@@ -138,7 +136,7 @@ impl DialogueRunner {
         self.inner().0.is_waiting_for_option_selection()
     }
 
-    /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
+    /// If set, every line the user selects will trigger a [`PresentLine`] event. Defaults to `false`.
     pub fn run_selected_options_as_lines(
         &mut self,
         run_selected_options_as_lines: bool,
@@ -147,13 +145,13 @@ impl DialogueRunner {
         self
     }
 
-    /// If set, every line the user selects will emit a [`PresentLineEvent`]. Defaults to `false`.
+    /// If set, every line the user selects will trigger a [`PresentLine`] event. Defaults to `false`.
     #[must_use]
     pub fn runs_selected_options_as_lines(&self) -> bool {
         self.run_selected_options_as_lines
     }
 
-    /// Stops the execution of the dialogue. Any pending dialogue events will still be sent in the next update, including a [`DialogueCompleteEvent`].
+    /// Stops the execution of the dialogue. Any pending dialogue events will still be sent in the next update, including a [`DialogueCompleted`] event.
     /// After this, [`DialogueRunner::start_node`] must be called before the dialogue can be advanced again.
     pub fn stop(&mut self) -> &mut Self {
         self.is_running = false;
