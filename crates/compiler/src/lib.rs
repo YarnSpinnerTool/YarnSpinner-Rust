@@ -17,6 +17,7 @@ pub(crate) mod listeners;
 mod output;
 mod parser;
 pub(crate) mod parser_rule_context_ext;
+#[cfg(feature = "serde")]
 pub mod project;
 mod string_table_manager;
 pub(crate) mod token_ext;
@@ -26,6 +27,8 @@ pub use crate::compiler::Result;
 
 pub mod prelude {
     //! Everything you need to get started with the Yarn Spinner compiler.
+    #[cfg(feature = "serde")]
+    pub use crate::project::*;
     pub(crate) use crate::{
         compiler::antlr_rust_ext::*, compiler::run_compilation::*, compiler::utils::*,
         file_parse_result::*, parser::*, parser_rule_context_ext::*, string_table_manager::*,
@@ -35,7 +38,6 @@ pub mod prelude {
         compiler::{CompilationType, Compiler, File},
         listeners::{Diagnostic, DiagnosticSeverity, DiagnosticVec},
         output::*,
-        project::*,
     };
     pub(crate) use yarnspinner_core::prelude::*;
     pub(crate) use yarnspinner_internal_shared::prelude::*;
