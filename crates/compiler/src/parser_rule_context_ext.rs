@@ -1,9 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/YarnSpinnerRuleContextExt.cs>
 
 use crate::prelude::*;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::token_stream::TokenStream;
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::token_stream::TokenStream;
 use std::iter;
 
 pub(crate) trait ParserRuleContextExt<'input>: ParserRuleContext<'input> {

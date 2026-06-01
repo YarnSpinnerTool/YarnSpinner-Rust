@@ -57,7 +57,8 @@ impl Compiler {
         let rewrote_anything = untagged_line_listener.rewrote_anything.clone();
 
         // Walk the tree with this listener, and generate text replacements containing line tags.
-        YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref());
+        YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref())
+            .expect("Internal error: tree walk failed");
         // Apply these text replacements to the original source and return it.
 
         if rewrote_anything.load(Ordering::Relaxed) {
@@ -119,7 +120,8 @@ impl Compiler {
 
         // Walk the tree with this listener, and generate text replacements containing line tags.
         let untagged_line_listener =
-            YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref());
+            YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref())
+            .expect("Internal error: tree walk failed");
         // Apply these text replacements to the original source and return it.
 
         if rewrote_anything.load(Ordering::Relaxed) {

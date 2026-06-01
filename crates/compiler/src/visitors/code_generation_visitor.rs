@@ -5,9 +5,9 @@ use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::ops::Deref;
 use std::rc::Rc;
 use yarnspinner_core::prelude::OpCode;
@@ -31,7 +31,7 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
             _dummy: Default::default(),
         }
     }
-    pub(crate) fn token_to_operator(token: isize) -> Option<Operator> {
+    pub(crate) fn token_to_operator(token: i32) -> Option<Operator> {
         // operators for the standard expressions
         match token {
             yarnspinnerlexer::OPERATOR_LOGICAL_LESS_THAN_EQUALS => {

@@ -1,6 +1,7 @@
 use crate::parser::generated::yarnspinnerparser::YarnSpinnerParserContext;
-use antlr_rust::interval_set::Interval;
-use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::interval_set::Interval;
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -97,7 +98,15 @@ impl DerefMut for KnownTypes {
 
 pub(crate) trait GetHashableInterval<'input>: ParserRuleContext<'input> {
     fn get_hashable_interval(&self) -> HashableInterval {
-        let interval = self.get_source_interval();
+        // Derive the interval from the context's start/stop token indices, the way
+        // ANTLR's `getSourceInterval` does. We can't call `self.get_source_interval()`:
+        // antlr4rust doesn't override it for parser rule contexts, so it returns the
+        // invalid `(-1, -2)` interval for every context, which would collapse all
+        // `KnownTypes` entries into one.
+        let interval = Interval {
+            a: self.start().get_token_index() as i32,
+            b: self.stop().get_token_index() as i32,
+        };
         HashableInterval(interval)
     }
 }

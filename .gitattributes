@@ -1,7 +1,12 @@
-/crates/compiler/src/parser/generated/*.rs linguist-generated=true
-/crates/compiler/src/parser/generated/*.interp linguist-generated=true
-/crates/compiler/src/parser/generated/*.tokens linguist-generated=true
-/crates/core/src/generated/yarn.rs linguist-generated=true
+# Generated parser/proto files: pin to LF so re-running the codegen step doesn't
+# produce spurious CRLF/LF churn in the diff.
+/crates/compiler/src/parser/generated/*.rs linguist-generated=true text eol=lf
+/crates/compiler/src/parser/generated/*.interp linguist-generated=true text eol=lf
+/crates/compiler/src/parser/generated/*.tokens linguist-generated=true text eol=lf
+/crates/core/src/generated/yarn.rs linguist-generated=true text eol=lf
 /crates/runtime/src/pluralization/icu/**/* linguist-generated=true
 .idea/**/* linguist-generated=true
 Cargo.lock linguist-generated=true
+# Yarn test fixtures must stay LF so lexer golden-output tests are deterministic
+crates/**/*.yarn text eol=lf
+crates/**/*.testplan text eol=lf

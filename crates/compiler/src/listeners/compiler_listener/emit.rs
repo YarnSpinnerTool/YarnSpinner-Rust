@@ -1,6 +1,6 @@
 use crate::listeners::CompilerListener;
 use crate::prelude::*;
-use antlr_rust::token::Token;
+use antlr4rust::token::Token;
 use yarnspinner_core::prelude::OpCode;
 use yarnspinner_core::prelude::*;
 

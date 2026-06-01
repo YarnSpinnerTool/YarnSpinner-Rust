@@ -1,15 +1,16 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/ErrorStrategy.cs>
 
+use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser;
 use crate::prelude::*;
-use antlr_rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
-use antlr_rust::parser::ParserNodeType;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::rule_context::CustomRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
-use antlr_rust::tree::Tree;
-use antlr_rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
+use antlr4rust::errors::{ANTLRError, InputMisMatchError, NoViableAltError};
+use antlr4rust::parser::ParserNodeType;
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::rule_context::CustomRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::token_factory::TokenFactory;
+use antlr4rust::tree::Tree;
+use antlr4rust::{DefaultErrorStrategy, ErrorStrategy as AntlrErrorStrategy, Parser};
 use std::rc::Rc;
 
 pub(crate) struct ErrorStrategy<'input, Ctx: ParserNodeType<'input>> {
@@ -89,15 +90,15 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
         if is_inside_rule(recognizer, yarnspinnerparser::RULE_if_statement)
             && recognizer.get_parser_rule_context().get_rule_index()
                 == yarnspinnerparser::RULE_statement
-            && e.start_token.token_type == yarnspinnerparser::COMMAND_START
-            && e.base.offending_token.token_type == yarnspinnerparser::COMMAND_ELSE
+            && e.start_token.token_type == yarnspinnerlexer::COMMAND_START
+            && e.base.offending_token.token_type == yarnspinnerlexer::COMMAND_ELSE
         {
             // We are inside an if statement, we're attempting to parse a
             // statement, and we got an '<<', 'else', and we weren't able
             // to match that. The programmer included an extra '<<else>>'.
             "More than one <<else>> statement in an <<if>> statement isn't allowed".to_owned()
-        } else if e.start_token.token_type == yarnspinnerparser::COMMAND_START
-            && e.base.offending_token.token_type == yarnspinnerparser::COMMAND_END
+        } else if e.start_token.token_type == yarnspinnerlexer::COMMAND_START
+            && e.base.offending_token.token_type == yarnspinnerlexer::COMMAND_END
         {
             // We saw a << immediately followed by a >>. The programmer
             // forgot to include command text.
@@ -121,7 +122,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
         let msg = match rule_context.get_rule_index() {
             yarnspinnerparser::RULE_if_statement => {
                 match e.base.offending_token.token_type {
-                    yarnspinnerparser::BODY_END => {
+                    yarnspinnerlexer::BODY_END => {
                         // We have exited a body in the middle of an if
                         // statement. The programmer forgot to include an
                         // <<endif>>.
@@ -130,10 +131,10 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
                             rule_context.start().get_line_as_usize()
                         ))
                     }
-                    yarnspinnerparser::COMMAND_ELSE
+                    yarnspinnerlexer::COMMAND_ELSE
                         if recognizer
                             .get_expected_tokens()
-                            .contains(yarnspinnerparser::COMMAND_ENDIF) =>
+                            .contains(yarnspinnerlexer::COMMAND_ENDIF) =>
                     {
                         // We saw an else, but we expected to see an endif. The
                         // programmer wrote an additional <<else>>.
@@ -146,7 +147,7 @@ impl<'input, Ctx: ParserNodeType<'input>> ErrorStrategy<'input, Ctx> {
                 }
             }
             yarnspinnerparser::RULE_variable
-                if e.base.offending_token.token_type == yarnspinnerparser::FUNC_ID =>
+                if e.base.offending_token.token_type == yarnspinnerlexer::FUNC_ID =>
             {
                 // We're parsing a variable (which starts with a '$'),
                 // but we encountered a FUNC_ID (which doesn't). The

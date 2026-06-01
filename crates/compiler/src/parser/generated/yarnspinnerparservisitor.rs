@@ -1,6 +1,6 @@
 #![allow(nonstandard_style)]
-// Generated from third-party\YarnSpinner\YarnSpinner.Compiler\YarnSpinnerParser.g4 by ANTLR 4.8
-use antlr_rust::tree::{ParseTreeVisitor,ParseTreeVisitorCompat};
+// Generated from crates/codegen/src/../../../third-party/YarnSpinner/YarnSpinner.Compiler/YarnSpinnerParser.g4 by ANTLR 4.13.2
+use antlr4rust::tree::{ParseTreeVisitor,ParseTreeVisitorCompat};
 use super::yarnspinnerparser::*;
 
 /**
