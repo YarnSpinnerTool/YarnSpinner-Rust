@@ -195,20 +195,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5192cca8006f1fd4f7237516f40fa183bb07f8fbdfedaa0036de5ea9b0b45e78"
 
 [[package]]
-name = "antlr-rust"
-version = "0.3.0-beta"
+name = "antlr4rust"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfc6ab5594c6b2b7aa8719f4ecb785a268b2e0c2529042046035d5cebe9fa7d7"
+checksum = "093d520274bfff7278d776f7ea12981a0a0a6f96db90964658e0f38fc6e9a6a6"
 dependencies = [
  "better_any",
- "bit-set 0.5.3",
+ "bit-set 0.8.0",
  "byteorder",
  "lazy_static",
  "murmur3",
  "once_cell",
- "parking_lot 0.11.2",
+ "parking_lot",
  "typed-arena",
- "uuid 0.8.2",
+ "uuid",
 ]
 
 [[package]]
@@ -441,7 +441,7 @@ dependencies = [
  "thiserror 2.0.18",
  "thread_local",
  "tracing",
- "uuid 1.21.0",
+ "uuid",
 ]
 
 [[package]]
@@ -537,7 +537,7 @@ dependencies = [
  "stackfuture",
  "thiserror 2.0.18",
  "tracing",
- "uuid 1.21.0",
+ "uuid",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -1140,7 +1140,7 @@ dependencies = [
  "bevy_window",
  "crossbeam-channel",
  "tracing",
- "uuid 1.21.0",
+ "uuid",
 ]
 
 [[package]]
@@ -1223,7 +1223,7 @@ dependencies = [
  "smallvec",
  "smol_str",
  "thiserror 2.0.18",
- "uuid 1.21.0",
+ "uuid",
  "variadics_please",
  "wgpu-types",
 ]
@@ -1239,7 +1239,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
- "uuid 1.21.0",
+ "uuid",
 ]
 
 [[package]]
@@ -1323,7 +1323,7 @@ dependencies = [
  "ron",
  "serde",
  "thiserror 2.0.18",
- "uuid 1.21.0",
+ "uuid",
 ]
 
 [[package]]
@@ -1546,7 +1546,7 @@ dependencies = [
  "taffy",
  "thiserror 2.0.18",
  "tracing",
- "uuid 1.21.0",
+ "uuid",
 ]
 
 [[package]]
@@ -2240,7 +2240,7 @@ dependencies = [
  "derive_more",
  "document-features",
  "mio",
- "parking_lot 0.12.5",
+ "parking_lot",
  "rustix 1.1.4",
  "signal-hook",
  "signal-hook-mio",
@@ -2888,7 +2888,7 @@ dependencies = [
  "fnv",
  "gilrs-core",
  "log",
- "uuid 1.21.0",
+ "uuid",
  "vec_map",
 ]
 
@@ -2906,7 +2906,7 @@ dependencies = [
  "nix 0.30.1",
  "objc2-core-foundation",
  "objc2-io-kit",
- "uuid 1.21.0",
+ "uuid",
  "vec_map",
  "wasm-bindgen",
  "web-sys",
@@ -4366,37 +4366,12 @@ checksum = "f38d5652c16fde515bb1ecef450ab0f6a219d619a7274976324d5e377f7dceba"
 
 [[package]]
 name = "parking_lot"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
-dependencies = [
- "instant",
- "lock_api",
- "parking_lot_core 0.8.6",
-]
-
-[[package]]
-name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
 dependencies = [
  "lock_api",
- "parking_lot_core 0.9.12",
-]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a2cfe6f0ad2bfc16aefa463b497d5c7a5ecd44a23efa72aa342d90177356dc"
-dependencies = [
- "cfg-if",
- "instant",
- "libc",
- "redox_syscall 0.2.16",
- "smallvec",
- "winapi",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -4984,15 +4959,6 @@ name = "rectangle-pack"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a0d463f2884048e7153449a55166f91028d5b0ea53c79377099ce4e8cf0cf9bb"
-
-[[package]]
-name = "redox_syscall"
-version = "0.2.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
-dependencies = [
- "bitflags 1.3.2",
-]
 
 [[package]]
 name = "redox_syscall"
@@ -5988,12 +5954,6 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
-
-[[package]]
-name = "uuid"
 version = "1.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b672338555252d43fd2240c714dc444b8c6fb0a5c5335e65a07bba7742735ddb"
@@ -6318,7 +6278,7 @@ dependencies = [
  "mac_address",
  "sha2",
  "thiserror 1.0.69",
- "uuid 1.21.0",
+ "uuid",
 ]
 
 [[package]]
@@ -6415,7 +6375,7 @@ dependencies = [
  "log",
  "naga",
  "once_cell",
- "parking_lot 0.12.5",
+ "parking_lot",
  "portable-atomic",
  "profiling",
  "raw-window-handle",
@@ -6489,7 +6449,7 @@ dependencies = [
  "objc",
  "once_cell",
  "ordered-float 5.1.0",
- "parking_lot 0.12.5",
+ "parking_lot",
  "portable-atomic",
  "portable-atomic-util",
  "profiling",
@@ -7319,7 +7279,7 @@ name = "yarnspinner_compiler"
 version = "0.8.0"
 dependencies = [
  "annotate-snippets",
- "antlr-rust",
+ "antlr4rust",
  "better_any",
  "bevy",
  "crc32fast",

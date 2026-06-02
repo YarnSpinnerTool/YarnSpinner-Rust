@@ -1,9 +1,9 @@
 //! Adapted from the listener part of <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/Compiler.cs>
 
 use crate::prelude::*;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;

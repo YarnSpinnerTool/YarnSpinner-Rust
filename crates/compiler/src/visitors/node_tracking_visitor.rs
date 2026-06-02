@@ -1,8 +1,9 @@
-use crate::parser::generated::yarnspinnerparser::{self, *};
+use crate::parser::generated::yarnspinnerparser::*;
+use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use std::collections::HashSet;
 
 #[derive(Clone, Default)]
@@ -67,7 +68,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
     }
 
     fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
-        ctx.get_token(yarnspinnerparser::STRING, 0)
+        ctx.get_token(yarnspinnerlexer::STRING, 0)
             .unwrap()
             .get_text()
             .trim_matches('"')
@@ -77,7 +78,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
 
     fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) -> Self::Return {
         let function_name = ctx
-            .get_token(yarnspinnerparser::FUNC_ID, 0)
+            .get_token(yarnspinnerlexer::FUNC_ID, 0)
             .unwrap()
             .get_text();
 
@@ -101,8 +102,8 @@ mod tests {
     use super::*;
     use crate::prelude::generated::yarnspinnerparser::YarnSpinnerParser;
     use crate::prelude::*;
-    use antlr_rust::InputStream;
-    use antlr_rust::common_token_stream::CommonTokenStream;
+    use antlr4rust::InputStream;
+    use antlr4rust::common_token_stream::CommonTokenStream;
 
     #[test]
     fn finds_title_and_tracking_headers() {

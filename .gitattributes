@@ -5,3 +5,9 @@
 /crates/runtime/src/pluralization/icu/**/* linguist-generated=true
 .idea/**/* linguist-generated=true
 Cargo.lock linguist-generated=true
+/crates/compiler/src/parser/generated/*.rs linguist-generated=true text eol=lf
+/crates/compiler/src/parser/generated/*.interp linguist-generated=true text eol=lf
+/crates/compiler/src/parser/generated/*.tokens linguist-generated=true text eol=lf
+/crates/core/src/generated/yarn.rs linguist-generated=true text eol=lf
+crates/**/*.yarn text eol=lf
+crates/**/*.testplan text eol=lf

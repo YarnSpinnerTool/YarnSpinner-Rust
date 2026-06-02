@@ -5,10 +5,10 @@ use crate::visitors::type_check_visitor::{
     DefaultValue, format_cannot_determine_variable_type_error, get_filename,
 };
 use crate::visitors::*;
-use antlr_rust::rule_context::CustomRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr4rust::rule_context::CustomRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::token_factory::TokenFactory;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use better_any::TidExt;
 use std::cmp::Ordering;
 use std::ops::Deref;

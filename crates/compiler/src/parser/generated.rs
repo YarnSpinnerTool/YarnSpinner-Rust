@@ -23,8 +23,8 @@ pub(crate) mod yarnspinnerparservisitor;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use antlr_rust::tree::ParseTree;
-    use antlr_rust::{common_token_stream::CommonTokenStream, *};
+    use antlr4rust::tree::ParseTree;
+    use antlr4rust::{common_token_stream::CommonTokenStream, *};
     use std::ops::Deref;
     use yarnspinnerlexer::*;
     use yarnspinnerparser::*;

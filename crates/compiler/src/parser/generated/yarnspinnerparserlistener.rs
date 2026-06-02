@@ -1,6 +1,6 @@
 #![allow(nonstandard_style)]
-// Generated from third-party\YarnSpinner\YarnSpinner.Compiler\YarnSpinnerParser.g4 by ANTLR 4.8
-use antlr_rust::tree::ParseTreeListener;
+// Generated from third-party/YarnSpinner/YarnSpinner.Compiler/YarnSpinnerParser.g4 by ANTLR 4.13.2
+use antlr4rust::tree::ParseTreeListener;
 use super::yarnspinnerparser::*;
 
 pub trait YarnSpinnerParserListener<'input> : ParseTreeListener<'input,YarnSpinnerParserContextType>{
@@ -453,6 +453,6 @@ fn exit_jumpToExpression(&mut self, _ctx: &JumpToExpressionContext<'input>) { }
 
 }
 
-antlr_rust::coerce_from!{ 'input : YarnSpinnerParserListener<'input> }
+antlr4rust::coerce_from!{ 'input : YarnSpinnerParserListener<'input> }
 
 

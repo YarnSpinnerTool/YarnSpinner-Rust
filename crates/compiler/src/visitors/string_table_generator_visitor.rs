@@ -1,9 +1,9 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/StringTableGeneratorVisitor.cs>
 use crate::prelude::generated::{yarnspinnerparser::*, yarnspinnerparservisitor::*};
 use crate::prelude::*;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -183,8 +183,8 @@ pub(crate) fn get_hashtag_texts(hashtags: &[Rc<HashtagContext>]) -> Vec<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use antlr_rust::InputStream;
-    use antlr_rust::common_token_stream::CommonTokenStream;
+    use antlr4rust::InputStream;
+    use antlr4rust::common_token_stream::CommonTokenStream;
     use yarnspinner_core::prelude::Position;
 
     #[test]
