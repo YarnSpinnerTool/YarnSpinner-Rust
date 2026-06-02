@@ -74,7 +74,8 @@ fn generate_code_for_file<'a, 'b: 'a, 'input: 'a + 'b>(
     let compiler_program = compiler_listener.program.clone();
     let compiler_debug_infos = compiler_listener.debug_infos.clone();
 
-    YarnSpinnerParserTreeWalker::walk(compiler_listener, file.tree.as_ref());
+    YarnSpinnerParserTreeWalker::walk(compiler_listener, file.tree.as_ref())
+        .expect("internal error: tree walk failed");
 
     tracking_nodes.extend(compiler_tracking_nodes.borrow().iter().cloned());
 

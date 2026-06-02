@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::visitors::NodeTrackingVisitor;
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr4rust::tree::ParseTreeVisitorCompat;
 use std::collections::HashSet;
 
 pub(crate) fn find_tracking_nodes(mut state: CompilationIntermediate) -> CompilationIntermediate {

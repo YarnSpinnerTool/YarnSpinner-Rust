@@ -1,4 +1,4 @@
-use antlr_rust::token::Token;
+use antlr4rust::token::Token;
 
 pub(crate) trait TokenExt: Token {
     fn get_line_as_usize(&self) -> usize {

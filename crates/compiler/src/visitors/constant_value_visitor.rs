@@ -3,8 +3,8 @@
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
-use antlr_rust::parser::ParserNodeType;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
+use antlr4rust::parser::ParserNodeType;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use yarnspinner_core::prelude::*;

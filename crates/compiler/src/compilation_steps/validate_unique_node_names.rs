@@ -1,6 +1,6 @@
 use crate::prelude::generated::yarnspinnerparser::{DialogueContextAttrs, NodeContextAttrs};
 use crate::prelude::*;
-use antlr_rust::token::Token;
+use antlr4rust::token::Token;
 use std::collections::HashMap;
 
 pub(crate) fn validate_unique_node_names(

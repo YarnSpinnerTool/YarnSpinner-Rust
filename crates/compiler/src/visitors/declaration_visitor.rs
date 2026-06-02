@@ -4,8 +4,8 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
 use yarnspinner_core::prelude::*;
 use yarnspinner_core::types::*;
@@ -151,7 +151,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             .extend_from_slice(&constant_value_visitor.diagnostics);
 
         // Did the source code name an explicit type?
-        if let Some(declaration_type) = ctx.declaration_type.as_ref() {
+        if let Some(declaration_type) = ctx.type_.as_ref() {
             let explicit_type = match keyword_to_type(declaration_type.get_text()) {
                 Some(builtin_type) => builtin_type,
 

@@ -7,11 +7,11 @@ use crate::prelude::generated::yarnspinnerparser::{
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::prelude::*;
 use crate::visitors::get_hashtag_texts;
-use antlr_rust::int_stream::IntStream;
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::token_stream::TokenStream;
-use antlr_rust::tree::ParseTreeListener;
+use antlr4rust::int_stream::IntStream;
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::token_stream::TokenStream;
+use antlr4rust::tree::ParseTreeListener;
 use rand::RngExt as _;
 use rand::rngs::SysRng;
 use rand::{SeedableRng, rngs::SmallRng};

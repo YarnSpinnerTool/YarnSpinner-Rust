@@ -11,8 +11,8 @@ use super::generated::yarnspinnerlexer::{
 use crate::collections::*;
 use crate::listeners::Diagnostic;
 use crate::prelude::{DiagnosticSeverity, TokenExt, create_common_token};
-use antlr_rust::token::CommonToken;
-use antlr_rust::{
+use antlr4rust::token::CommonToken;
+use antlr4rust::{
     Lexer, TokenSource,
     char_stream::CharStream,
     token::{TOKEN_DEFAULT_CHANNEL, Token},
@@ -27,7 +27,7 @@ use yarnspinner_core::prelude::*;
 #[allow(dead_code)]
 type YarnSpinnerLexer = ();
 
-antlr_rust::tid! { impl<'input, Input> TidAble<'input> for IndentAwareYarnSpinnerLexer<'input, Input> where Input:CharStream<From<'input>> }
+antlr4rust::tid! { impl<'input, Input> TidAble<'input> for IndentAwareYarnSpinnerLexer<'input, Input> where Input:CharStream<From<'input>> }
 
 /// A Lexer subclass that detects newlines and generates indent and dedent tokens accordingly.
 ///
@@ -93,7 +93,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
             self.pending_tokens.dequeue().unwrap()
         } else if self.base.input().size() == 0 {
             self.hit_eof = true;
-            create_common_token(antlr_rust::token::TOKEN_EOF, "<EOF>")
+            create_common_token(antlr4rust::token::TOKEN_EOF, "<EOF>")
         } else {
             // Get the next token, which will enqueue one or more new
             // tokens into the pending tokens queue.
@@ -105,7 +105,7 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
         }
     }
 
-    fn get_input_stream(&mut self) -> Option<&mut dyn antlr_rust::int_stream::IntStream> {
+    fn get_input_stream(&mut self) -> Option<&mut dyn antlr4rust::int_stream::IntStream> {
         self.base.get_input_stream()
     }
 
@@ -115,6 +115,10 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input>
 
     fn get_token_factory(&self) -> &'input Self::TF {
         self.base.get_token_factory()
+    }
+
+    fn get_dfa_string(&self) -> String {
+        self.base.get_dfa_string()
     }
 }
 
@@ -149,7 +153,7 @@ where
             yarnspinnerlexer::NEWLINE => self.handle_newline_token(current.clone()),
             // Insert dedents before the end of the file, and then
             // enqueues the EOF.
-            antlr_rust::token::TOKEN_EOF => self.handle_eof_token(current.clone()),
+            antlr4rust::token::TOKEN_EOF => self.handle_eof_token(current.clone()),
             yarnspinnerlexer::SHORTCUT_ARROW => {
                 self.pending_tokens.enqueue(current.clone());
                 self.line_contains_shortcut = true;
@@ -178,7 +182,7 @@ where
 
     fn handle_newline_token(
         &mut self,
-        current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
+        current_token: Box<antlr4rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) {
         // We're about to go to a new line. Look ahead to see how indented it is.
 
@@ -271,7 +275,7 @@ where
 
     fn handle_eof_token(
         &mut self,
-        current_token: Box<antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
+        current_token: Box<antlr4rust::token::GenericToken<std::borrow::Cow<'input, str>>>,
     ) {
         // We're at the end of the file. Emit as many dedents as we currently have on the stack.
         while let Some(_indent) = self.unbalanced_indents.pop() {
@@ -290,7 +294,7 @@ where
     /// following it by counting the spaces and tabs after it.
     fn get_length_of_newline_token(
         &mut self,
-        current_token: &antlr_rust::token::GenericToken<std::borrow::Cow<'input, str>>,
+        current_token: &antlr4rust::token::GenericToken<std::borrow::Cow<'input, str>>,
     ) -> isize {
         if current_token.token_type != yarnspinnerlexer::NEWLINE {
             panic!("Current token must NOT be newline")
@@ -330,7 +334,7 @@ where
 
     /// Inserts a new token with the given text and type, as though it
     /// had appeared in the input stream.
-    fn insert_token(&mut self, text: impl Into<String>, token_type: isize) {
+    fn insert_token(&mut self, text: impl Into<String>, token_type: i32) {
         // https://www.antlr.org/api/Java/org/antlr/v4/runtime/Lexer.html#_tokenStartCharIndex
         let start_index = self.base.token_start_char_index + self.base.get_text().len() as isize;
 
@@ -446,7 +450,7 @@ mod tests {
     //! ```
     use super::*;
     use crate::prelude::generated::yarnspinnerlexer::YarnSpinnerLexer as GeneratedYarnSpinnerLexer;
-    use antlr_rust::{
+    use antlr4rust::{
         InputStream, common_token_stream::CommonTokenStream, int_stream::IntStream,
         token::TOKEN_EOF,
     };
