@@ -80,7 +80,7 @@ impl AppExt for App {
         }
         let mut system_state: SystemState<(Commands, Res<YarnProject>)> =
             SystemState::new(self.world_mut());
-        let (mut commands, yarn_project) = system_state.get_mut(self.world_mut());
+        let (mut commands, yarn_project) = system_state.get_mut(self.world_mut()).unwrap();
         yarn_project.build_dialogue_runner(&mut commands)
     }
 
@@ -126,7 +126,7 @@ impl AppExt for App {
             self.load_project();
             let mut system_state: SystemState<(Commands, Res<YarnProject>)> =
                 SystemState::new(self.world_mut());
-            let (mut commands, yarn_project) = system_state.get_mut(self.world_mut());
+            let (mut commands, yarn_project) = system_state.get_mut(self.world_mut()).unwrap();
             let dialogue_runner = yarn_project.create_dialogue_runner(&mut commands);
             system_state.apply(self.world_mut());
             self.world_mut().spawn(dialogue_runner).id()

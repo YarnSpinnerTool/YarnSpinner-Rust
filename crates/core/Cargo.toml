@@ -22,7 +22,7 @@ bevy = [ "dep:bevy" ]
 rand = { version = "0.10", default-features = false, features = [ "sys_rng" ] }
 prost = { version = "0.14", default-features = false, features = [ "derive" ] }
 serde = { version = "1", features = [ "derive" ], optional = true }
-bevy = { version = "0.18", default-features = false, optional = true, features = [ "std" ] }
+bevy = { version = "0.19", default-features = false, optional = true, features = [ "std" ] }
 variadics_please = "1.1.0"
 hashbrown = "0.16.1"
 yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
