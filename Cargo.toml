@@ -10,7 +10,7 @@ members = [
     "crates/core",
     "crates/codegen",
     "crates/internal_shared",
-    # "demo", # waiting for bevy_sprite3d to be updated to bevy 0.19
+    "demo",
     "examples/bevy_yarnspinner",
     "examples/yarnspinner_without_bevy",
 ]
