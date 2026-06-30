@@ -230,7 +230,7 @@ impl FileExtensionAssetProvider {
                         );
                         let path = dir.join(file_name);
                         let asset_path = path.to_string_lossy().replace('\\', "/");
-                        let handle = asset_server.load_untyped(asset_path);
+                        let handle = asset_server.load_builder().load_untyped(asset_path);
                         self.loading_handles.insert(path, handle);
                     }
                 }

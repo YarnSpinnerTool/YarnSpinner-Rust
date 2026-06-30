@@ -4,15 +4,14 @@ use crate::yarnspinner_integration::{
     show_bang,
 };
 use crate::{CAMERA_TRANSLATION, CLIPPY_TRANSLATION, FERRIS_TRANSLATION, Sprites};
-use bevy::camera::Exposure;
+use bevy::camera::{Exposure, Hdr};
 use bevy::color::palettes::css;
 use bevy::core_pipeline::tonemapping::Tonemapping;
-use bevy::gltf::Gltf;
+use bevy::gltf::{Gltf, GltfMaterial};
 use bevy::light::CascadeShadowConfigBuilder;
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::post_process::bloom::Bloom;
 use bevy::prelude::*;
-use bevy::render::view::Hdr;
 use bevy_sprite3d::prelude::*;
 use bevy_yarnspinner::prelude::*;
 
@@ -35,14 +34,14 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         MainCamera,
     ));
-    commands.spawn(SceneRoot(
+    commands.spawn(WorldAssetRoot(
         asset_server.load("models/coffee_shop.glb#Scene0"),
     ));
     commands.spawn((
         DirectionalLight {
             color: css::BISQUE.into(),
             illuminance: light_consts::lux::OVERCAST_DAY,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..default()
         },
         CascadeShadowConfigBuilder {
@@ -64,7 +63,7 @@ pub(crate) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             PointLight {
                 color: Color::srgb(1.0, 0.78, 0.45),
                 intensity: 10_000.,
-                shadows_enabled: true,
+                shadow_maps_enabled: true,
                 ..default()
             },
             Transform::from_xyz(x, y, z),
@@ -123,7 +122,7 @@ pub(crate) struct MainCamera;
 
 pub(crate) fn adapt_materials(
     gltfs: Res<Assets<Gltf>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<GltfMaterial>>,
     asset_server: Res<AssetServer>,
     mut done: Local<bool>,
 ) {
@@ -135,7 +134,7 @@ pub(crate) fn adapt_materials(
         return;
     };
     let glass_handle = gltf.named_materials.get("Glass").unwrap();
-    let glass_material = materials.get_mut(glass_handle).unwrap();
+    let mut glass_material = materials.get_mut(glass_handle).unwrap();
     // No way to export this from Blender, unfortunately
     glass_material.alpha_mode = AlphaMode::Add;
     *done = true;

@@ -83,10 +83,7 @@ fn test_variable_declarations_parsed() {
     ];
 
     let actual_declarations = result.declarations;
-    for (expected, actual) in expected_declarations
-        .iter()
-        .zip(actual_declarations.into_iter())
-    {
+    for (expected, actual) in expected_declarations.iter().zip(actual_declarations) {
         assert_eq!(expected.name, actual.name);
         assert_eq!(expected.r#type, actual.r#type);
         assert_eq!(expected.default_value, actual.default_value);

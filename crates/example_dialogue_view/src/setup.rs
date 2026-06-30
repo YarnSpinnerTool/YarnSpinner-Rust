@@ -226,8 +226,8 @@ mod text_style {
     pub(crate) fn standard() -> (TextFont, TextColor) {
         (
             TextFont {
-                font: font_handle::MEDIUM,
-                font_size: 20.0,
+                font: font_handle::MEDIUM.into(),
+                font_size: FontSize::Px(20.0),
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -236,8 +236,8 @@ mod text_style {
     pub(crate) fn name() -> (TextFont, TextColor) {
         (
             TextFont {
-                font: font_handle::MEDIUM,
-                font_size: 18.0,
+                font: font_handle::MEDIUM.into(),
+                font_size: FontSize::Px(18.0),
                 ..standard().0
             },
             standard().1,
@@ -247,7 +247,7 @@ mod text_style {
     pub(crate) fn option_id() -> (TextFont, TextColor) {
         (
             TextFont {
-                font: font_handle::MEDIUM,
+                font: font_handle::MEDIUM.into(),
                 ..option_text().0
             },
             TextColor(css::ALICE_BLUE.into()),
@@ -257,7 +257,7 @@ mod text_style {
     pub(crate) fn option_text() -> (TextFont, TextColor) {
         (
             TextFont {
-                font_size: 18.0,
+                font_size: FontSize::Px(18.0),
                 ..standard().0
             },
             TextColor(css::TOMATO.into()),
