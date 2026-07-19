@@ -398,7 +398,7 @@ impl Dialogue {
     #[must_use]
     pub fn get_tags_for_node(&self, node_name: &str) -> Option<Vec<String>> {
         self.get_node_logging_errors(node_name)
-            .map(|node| node.tags)
+            .map(|node| node.tags())
     }
 
     /// Returns the headers for the node `node_name`.

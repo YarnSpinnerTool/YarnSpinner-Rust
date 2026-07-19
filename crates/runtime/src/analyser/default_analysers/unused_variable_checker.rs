@@ -22,9 +22,10 @@ impl CompiledProgramAnalyser for UnusedVariableChecker {
         let new_variables = program.nodes.values().flat_map(|node| {
             node.instructions
                 .iter()
-                .filter_map(|instruction| match instruction.opcode() {
-                    OpCode::PushVariable | OpCode::StoreVariable => {
-                        Some((instruction.opcode(), instruction.operands[0].clone()))
+                .filter_map(|instruction| match instruction.instruction_type.as_ref() {
+                    Some(InstructionType::PushVariable(PushVariableInstruction { variable_name })) |
+                    Some(InstructionType::StoreVariable(StoreVariableInstruction { variable_name })) => {
+                        Some((instruction.instruction_type.clone().unwrap(), variable_name.clone()))
                     }
                     _ => None,
                 })
@@ -32,10 +33,10 @@ impl CompiledProgramAnalyser for UnusedVariableChecker {
         });
         for (opcode, variable) in new_variables {
             match opcode {
-                OpCode::PushVariable => {
+                InstructionType::PushVariable(_) => {
                     self.read_variables.insert(variable);
                 }
-                OpCode::StoreVariable => {
+                InstructionType::StoreVariable(_) => {
                     self.written_variables.insert(variable);
                 }
                 _ => unreachable!(),

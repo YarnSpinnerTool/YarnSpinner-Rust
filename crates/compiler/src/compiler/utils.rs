@@ -3,13 +3,14 @@
 
 use crate::error_strategy::ErrorStrategy;
 use crate::listeners::*;
-use crate::prelude::generated::yarnspinnerlexer;
+use crate::parser::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::*;
 use antlr4rust::Parser;
 use antlr4rust::common_token_stream::CommonTokenStream;
 use antlr4rust::input_stream::CodePoint32BitCharStream;
 use antlr4rust::token::{TOKEN_DEFAULT_CHANNEL, Token};
+use antlr4rust::tree::{ParseTree, Tree};
 use std::collections::HashSet;
 use std::rc::Rc;
 use yarnspinner_core::prelude::*;

@@ -87,14 +87,12 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
     }
 
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
-        for header in ctx.header_all() {
-            let header_key = header.header_key.as_ref().unwrap();
-            if header_key.get_text() != "title" {
-                continue;
-            }
+        for header in ctx.title_header_all() {
+            let current_node_name = match &header.title {
+                None => continue,
+                Some(title) => title.get_text()
+            };
 
-            let header_value = header.header_value.as_ref().unwrap();
-            let current_node_name = header_value.get_text();
             self.current_node_name = Some(current_node_name.to_owned());
             if self.regex.is_match(current_node_name) {
                 let message =
@@ -142,7 +140,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         // Figure out the value and its type
         let mut constant_value_visitor =
             ConstantValueVisitor::new(self.diagnostics.clone(), self.file.clone());
-        let Some(value_context) = ctx.value() else {
+        let Some(value_context) = ctx.expression() else {
             // no value was provided, declare as undefined and continue
             return;
         };

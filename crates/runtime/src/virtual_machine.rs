@@ -304,20 +304,19 @@ impl VirtualMachine {
         instruction: &Instruction,
         mut function_call_fn: impl FnMut(&dyn UntypedYarnFn, Vec<YarnValue>) -> YarnValue,
     ) -> crate::Result<()> {
-        let opcode: OpCode = instruction.opcode.try_into().unwrap();
-        match opcode {
-            OpCode::JumpTo => {
+        match instruction.instruction_type.as_ref().unwrap_or_bug() {
+            InstructionType::JumpTo(jumpto) => {
                 // Jumps to a named label
                 let label_name: String = instruction.read_operand(0);
                 self.state.program_counter = self.find_instruction_point_for_label(&label_name);
             }
-            OpCode::Jump => {
+            InstructionType::PeekAndJump(_) => {
                 // Jumps to a label whose name is on the stack.
                 let jump_destination: String = self.state.peek();
                 self.state.program_counter =
                     self.find_instruction_point_for_label(&jump_destination);
             }
-            OpCode::RunLine => {
+            InstructionType::RunLine(run_line) => {
                 // Looks up a string from the string table and passes it to the client as a line
 
                 let string_id: String = instruction.read_operand(0);
@@ -343,7 +342,7 @@ impl VirtualMachine {
                 self.set_execution_state(ExecutionState::WaitingForContinue);
                 self.state.program_counter += 1;
             }
-            OpCode::RunCommand => {
+            InstructionType::RunCommand(cmd) => {
                 // Passes a string to the client as a custom command
                 let command_text: String = instruction.read_operand(0);
                 assert_up_to_date_compiler(instruction.operands.len() >= 2);
@@ -366,7 +365,7 @@ impl VirtualMachine {
                 self.set_execution_state(ExecutionState::WaitingForContinue);
                 self.state.program_counter += 1;
             }
-            OpCode::AddOption => {
+            InstructionType::AddOption(opt) => {
                 // Add an option to the current state
                 let string_id: String = instruction.read_operand(0);
                 let string_id: LineId = string_id.into();
@@ -402,7 +401,7 @@ impl VirtualMachine {
                 });
                 self.state.program_counter += 1;
             }
-            OpCode::ShowOptions => {
+            InstructionType::ShowOptions(_) => {
                 // If we have no options to show, immediately stop.
                 if self.state.current_options.is_empty() {
                     self.batched_events.push(DialogueEvent::DialogueComplete);
@@ -425,31 +424,25 @@ impl VirtualMachine {
                 // Not checking the execution state now since we have no line handler to call `continue_` from.
                 self.state.program_counter += 1;
             }
-            OpCode::PushString => {
+            InstructionType::PushString(push) => {
                 // Pushes a string value onto the stack. The operand is an index into the string table, so that's looked up first.
                 let string_table_index: String = instruction.read_operand(0);
                 self.state.push(string_table_index);
                 self.state.program_counter += 1;
             }
-            OpCode::PushFloat => {
+            InstructionType::PushFloat(push) => {
                 // Pushes a floating point onto the stack.
                 let float: f32 = instruction.read_operand(0);
                 self.state.push(float);
                 self.state.program_counter += 1;
             }
-            OpCode::PushBool => {
+            InstructionType::PushBool(push) => {
                 // Pushes a boolean value onto the stack.
                 let boolean: bool = instruction.read_operand(0);
                 self.state.push(boolean);
                 self.state.program_counter += 1;
             }
-
-            OpCode::PushNull => {
-                panic!(
-                    "PushNull is no longer valid op code, because null is no longer a valid value from Yarn Spinner 2.0 onwards. To fix this error, re-compile the original source code."
-                );
-            }
-            OpCode::JumpIfFalse => {
+            InstructionType::JumpIfFalse(jump) => {
                 // Jumps to a named label if the value on the top of the stack evaluates to the boolean value 'false'.
                 let is_top_value_true: bool = self.state.peek();
                 if !is_top_value_true {
@@ -460,12 +453,12 @@ impl VirtualMachine {
                     self.state.program_counter += 1;
                 }
             }
-            OpCode::Pop => {
+            InstructionType::Pop(_) => {
                 // Pops a value from the stack.
                 self.state.pop_value();
                 self.state.program_counter += 1;
             }
-            OpCode::CallFunc => {
+            InstructionType::CallFunc(func) => {
                 let actual_parameter_count: usize = self.state.pop();
                 // Get the parameters, which were pushed in reverse
                 let parameters = {
@@ -512,7 +505,7 @@ impl VirtualMachine {
                 self.state.push(typed_return_value);
                 self.state.program_counter += 1;
             }
-            OpCode::PushVariable => {
+            InstructionType::PushVariable(push) => {
                 // Get the contents of a variable, push that onto the stack.
                 let variable_name: String = instruction.read_operand(0);
                 let loaded_value = self
@@ -544,14 +537,14 @@ impl VirtualMachine {
                 self.state.push(loaded_value);
                 self.state.program_counter += 1;
             }
-            OpCode::StoreVariable => {
+            InstructionType::StoreVariable(store) => {
                 // Store the top value on the stack in a variable.
                 let top_value = self.state.peek_value().clone();
                 let variable_name: String = instruction.read_operand(0);
                 self.variable_storage.set(variable_name, top_value.into())?;
                 self.state.program_counter += 1;
             }
-            OpCode::Stop => {
+            InstructionType::Stop(_) => {
                 // Immediately stop execution, and report that fact.
                 let current_node_name = self.current_node_name.clone().unwrap();
                 self.batched_events
@@ -561,7 +554,7 @@ impl VirtualMachine {
 
                 self.state.program_counter += 1;
             }
-            OpCode::RunNode => {
+            InstructionType::RunNode(run) => {
                 // Run a node
 
                 // Pop a string from the stack, and jump to a node
@@ -572,6 +565,21 @@ impl VirtualMachine {
                 self.set_node(&node_name)?;
 
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
+            }
+            InstructionType::PeekAndDetourToNode(_) => {
+                todo!()
+            }
+            InstructionType::DetourToNode(detour) => {
+                todo!()
+            }
+            InstructionType::AddSaliencyCandidate(_) => {
+                todo!()
+            }
+            InstructionType::AddSaliencyCandidateFromNode(_) => {
+                todo!()
+            }
+            InstructionType::SelectSaliencyCandidate(_) => {
+                todo!()
             }
         }
         Ok(())

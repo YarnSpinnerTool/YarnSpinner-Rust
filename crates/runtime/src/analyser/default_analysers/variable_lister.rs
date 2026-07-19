@@ -21,9 +21,10 @@ impl CompiledProgramAnalyser for VariableLister {
         let new_variables = program.nodes.values().flat_map(|node| {
             node.instructions
                 .iter()
-                .filter_map(|instruction| match instruction.opcode() {
-                    OpCode::PushVariable | OpCode::StoreVariable => {
-                        Some(instruction.operands[0].clone())
+                .filter_map(|instruction| match instruction.instruction_type.as_ref() {
+                    Some(InstructionType::PushVariable(PushVariableInstruction { variable_name })) |
+                    Some(InstructionType::StoreVariable(StoreVariableInstruction { variable_name })) => {
+                        Some(variable_name.clone())
                     }
                     _ => None,
                 })

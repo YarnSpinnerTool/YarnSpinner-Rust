@@ -10,7 +10,7 @@ use antlr4rust::token::Token;
 use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::ops::Deref;
 use std::rc::Rc;
-use yarnspinner_core::prelude::OpCode;
+use antlr4rust::parser::ParserNodeType;
 use yarnspinner_core::prelude::*;
 use yarnspinner_core::types::Type;
 
@@ -84,6 +84,7 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for CodeGenerationVisitor<'a
     }
 }
 
+#[allow(non_snake_case)]
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {
     /// a regular ol' line of text
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
@@ -560,6 +561,17 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             .emit(Emit::from_op_code(OpCode::Pop).with_token(token.deref()));
     }
 
+    fn visit_line_group_statement(
+        &mut self,
+        ctx: &Line_group_statementContext<'input>,
+    ) -> Self::Return {
+        todo!()
+    }
+
+    fn visit_line_group_item(&mut self, ctx: &Line_group_itemContext<'input>) -> Self::Return {
+        todo!()
+    }
+
     fn visit_declare_statement(&mut self, _ctx: &Declare_statementContext<'input>) -> Self::Return {
         // Declare statements do not participate in code generation
     }
@@ -589,6 +601,25 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         self.visit(ctx.expression().unwrap().as_ref());
         self.compiler_listener
             .emit(Emit::from_op_code(OpCode::RunNode).with_token(ctx.start().deref()))
+    }
+
+    /// A <<detour>> command, which immediately jumps to another node, given its name.
+    fn visit_detourToNodeName(&mut self, ctx: &DetourToNodeNameContext<'input>) -> Self::Return {
+        todo!()
+    }
+
+    /// A <<detour>> command, which immediately jumps to another node, given an
+    /// expression that resolves to a node's name.
+    fn visit_detourToExpression(
+        &mut self,
+        ctx: &DetourToExpressionContext<'input>,
+    ) -> Self::Return {
+        todo!()
+    }
+
+    /// A <<return>> command, which immediately returns from a detour or exits a dialogue.
+    fn visit_return_statement(&mut self, ctx: &Return_statementContext<'input>) -> Self::Return {
+        todo!()
     }
 }
 

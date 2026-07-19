@@ -20,6 +20,16 @@ pub(crate) mod yarnspinnerparserlistener;
 #[allow(clippy)]
 pub(crate) mod yarnspinnerparservisitor;
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[allow(warnings)]
+#[allow(clippy)]
+pub(crate) mod yarnspinnerparserbaselistener;
+
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[allow(warnings)]
+#[allow(clippy)]
+pub(crate) mod yarnspinnerparserbasevisitor;
+
 #[cfg(test)]
 mod tests {
     use super::*;

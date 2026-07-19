@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use core::fmt::Debug;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default))]
@@ -21,6 +21,16 @@ pub(crate) struct State {
 
     /// The value stack.
     pub(crate) stack: Vec<InternalValue>,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        State {
+            program_counter: 0,
+            current_options: vec![],
+            stack: vec![]
+        }
+    }
 }
 
 impl State {

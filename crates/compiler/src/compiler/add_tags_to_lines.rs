@@ -134,7 +134,7 @@ impl Compiler {
             string.push('\n');
             Ok(Some((
                 string,
-                untagged_line_listener.existing_line_tags.clone(),
+                untagged_line_listener.existing_line_tags.clone(), // FIXME: unwrap
             )))
         } else {
             Ok(None)

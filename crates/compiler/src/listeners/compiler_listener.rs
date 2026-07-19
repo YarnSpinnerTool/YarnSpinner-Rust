@@ -7,17 +7,13 @@ use antlr4rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;
+use antlr4rust::CoerceTo;
 use yarnspinner_core::prelude::*;
 
-mod emit;
-use crate::parser::generated::yarnspinnerparser::{
-    BodyContext, HeaderContext, NodeContext, YarnSpinnerParserContextType,
-};
+use crate::parser::generated::yarnspinnerparser::{BodyContext, HeaderContext, LineOnceConditionContext, Line_statementContext, NodeContext, Title_headerContext, YarnSpinnerParserContext, YarnSpinnerParserContextType};
 use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::visitors::{CodeGenerationVisitor, KnownTypes};
-pub(crate) use emit::*;
-use yarnspinner_core::prelude::OpCode;
 
 pub(crate) struct CompilerListener<'input> {
     pub(crate) debug_infos: Rc<RefCell<Vec<DebugInfo>>>,
@@ -116,11 +112,19 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         self.is_current_node_raw_text = false;
     }
 
+    fn exit_title_header(&mut self, ctx: &Title_headerContext<'input>) {
+        todo!()
+    }
+
+    fn enter_header(&mut self, _ctx: &HeaderContext<'input>) {
+        ()
+    }
+
     fn exit_header(&mut self, ctx: &HeaderContext<'input>) {
         // have finished with the header so about to enter the node body
         // and all its statements do the initial setup required before
         // compiling that body statements eg emit a new startlabel
-        let header_key = ctx.header_key.as_ref().unwrap().get_text();
+        let header_key = ctx.header_key.as_ref().unwrap().get_text().to_owned();
         let current_node = self.current_node.as_mut().unwrap();
 
         // Use the header value if provided, else fall back to the
@@ -134,22 +138,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
             .map(|v| v.get_text())
             .unwrap_or_default()
             .to_owned();
-        match header_key {
-            "title" => {
-                // Set the name of the node
-                current_node.name.clone_from(&header_value);
-            }
-            "tags" => {
-                // Split the list of tags by spaces, and use that
-                let tags = header_value.split(' ').map(|s| s.to_owned());
-                current_node.tags.extend(tags);
-                if current_node.tags.contains(&"rawText".to_owned()) {
-                    // This is a raw text node. Flag it as such for future compilation.
-                    self.is_current_node_raw_text = true;
-                }
-            }
-            _ => {}
-        }
+
         let header = Header {
             key: header_key.to_owned(),
             value: header_value,
@@ -164,13 +153,7 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
 
         // if it is a regular node
         if !self.is_current_node_raw_text {
-            // This is the start of a node that we can jump to. Add a
-            // label at this point
-            let label = self.register_label(None);
             let current_node = self.current_node.as_mut().unwrap();
-            current_node
-                .labels
-                .insert(label, current_node.instructions.len() as i32);
             let track = (self.tracking_nodes.borrow().contains(&current_node.name))
                 .then(|| Library::generate_unique_visited_variable_for_node(&current_node.name));
 
@@ -181,7 +164,6 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
         } else {
             // We are a rawText node. Don't compile it; instead, note the string
             let current_node = self.current_node.as_mut().unwrap();
-            current_node.source_text_string_id = get_line_id_for_node_name(&current_node.name).0;
         }
     }
 
@@ -206,5 +188,9 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
             line: (ctx.stop().line as usize).saturating_sub(1),
             character: 0,
         }));
+    }
+
+    fn exit_lineOnceCondition(&mut self, ctx: &LineOnceConditionContext<'input>) {
+        todo!()
     }
 }

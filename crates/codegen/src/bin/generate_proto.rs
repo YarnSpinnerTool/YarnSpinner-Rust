@@ -3,7 +3,7 @@ use std::io::Result;
 use yarnspinner_codegen::*;
 
 fn main() -> Result<()> {
-    let include_dir = path(ProjectPath::ThirdPersonYarnSpinner).join("YarnSpinner");
+    let include_dir = path(ProjectPath::ThirdParty);
     let proto_file = include_dir.join("yarn_spinner.proto");
     let output_dir = path(ProjectPath::Core).join("src/generated");
     unsafe {

@@ -1,10 +1,10 @@
 use crate::parser::generated::yarnspinnerparser::*;
-use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use antlr4rust::parser_rule_context::ParserRuleContext;
 use antlr4rust::token::Token;
 use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use std::collections::HashSet;
+use crate::parser::generated::yarnspinnerparser;
 
 #[derive(Clone, Default)]
 pub(crate) struct NodeTrackingVisitor {
@@ -68,7 +68,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
     }
 
     fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) -> Self::Return {
-        ctx.get_token(yarnspinnerlexer::STRING, 0)
+        ctx.get_token(yarnspinnerparser::YarnSpinnerParser_STRING, 0)
             .unwrap()
             .get_text()
             .trim_matches('"')
@@ -78,7 +78,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for NodeTrackingVisitor {
 
     fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) -> Self::Return {
         let function_name = ctx
-            .get_token(yarnspinnerlexer::FUNC_ID, 0)
+            .get_token(yarnspinnerparser::YarnSpinnerParser_FUNC_ID, 0)
             .unwrap()
             .get_text();
 

@@ -41,7 +41,7 @@ pub mod prelude {
 
     pub use crate::{
         generated::{
-            Header, Instruction, InvalidOpCodeError, Node, Operand, Program, instruction::OpCode,
+            Header, Instruction, InvalidOpCodeError, Node, Operand, Program, instruction::*,
             operand::Value as OperandValue,
         },
         internal_value::*,
