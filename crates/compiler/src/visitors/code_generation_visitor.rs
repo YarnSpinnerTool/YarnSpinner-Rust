@@ -145,13 +145,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
         // Evaluate the inline expressions and push the results onto the
         // stack.
-        let line_id_tag = get_line_id_tag(&ctx.hashtag_all())
-            .expect_or_bug("Internal error: line should have an implicit or explicit line ID tag, but none was found.");
-        let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
+        let line_id = get_line_id(ctx);
 
         let mut jump_over = Vec::new();
 
-        let cond = self.evaluate_line_condition(ctx);
+        let (cond, _) = self.evaluate_line_condition(ctx, line_id.clone());
 
         if cond {
             emit! {
@@ -169,7 +167,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         emit! {
             compiler;
             RunLineInstruction {
-                line_id,
+                line_id: line_id.to_string(),
                 substitution_count: expression_count as i32
             }
         };
@@ -530,6 +528,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         ctx: &Shortcut_option_statementContext<'input>,
     ) -> Self::Return {
         let mut options = Vec::new();
+        let mut once_vars = Vec::new();
 
         // For each option, create an internal destination label that, if
         // the user selects the option, control flow jumps to. Then,
@@ -551,7 +550,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 
             let line_statement = shortcut.line_statement().unwrap();
 
-            let has_line_condition = self.evaluate_line_condition(line_statement.deref());
+            // Get the line ID from the hashtags if it has one
+            let line_id = get_line_id(&line_statement);
+
+            let (has_line_condition, once_name) = self.evaluate_line_condition(line_statement.deref(), line_id.clone().into());
+            once_vars.push(once_name);
 
             // We can now prepare and add the option.
 
@@ -561,16 +564,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 line_statement.line_formatted_text().unwrap().get_children(),
             );
 
-            // Get the line ID from the hashtags if it has one
-            let line_id_tag = get_line_id_tag(&line_statement.hashtag_all())
-                .expect_or_bug("Internal error: no line ID provided.");
-            let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
-
             emit! {
                 self.compiler_listener.node_builder.as_mut().unwrap();
                 // And add this option to the list.
                 push options = @AddOptionInstruction {
-                    line_id,
+                    line_id: line_id.to_string(),
                     destination: -1,
                     substitution_count: expression_count as i32,
                     has_condition: has_line_condition
@@ -599,6 +597,15 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
             let addr = compiler.next_address();
             compiler.set_destination_at(option, addr).unwrap();
+
+            // If a "once" variable was set, the emit a store instruction setting the variable to true.
+            if let Some(once_var) = once_vars[option_count].as_ref() {
+                emit! {
+                    self.compiler_listener.node_builder.as_mut().unwrap();
+                    PushBoolInstruction { value: true },
+                    StoreVariableInstruction { variable_name: once_var.clone() }
+                };
+            }
 
             // Run through all the children statements of the shortcut option
             for child in shortcut.statement_all() {
@@ -700,16 +707,33 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 }
 
 impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
-    fn evaluate_line_condition(&mut self, ctx: &Line_statementContext<'input>) -> bool {
+    fn evaluate_line_condition(&mut self, ctx: &Line_statementContext<'input>, line_id: LineId) -> (bool, Option<String>) {
+        let line_visited = self.compiler_listener.get_content_viewed_variable_name(line_id);
+
         match ctx.line_condition().as_ref().map(|c| c.deref()) {
             Some(Line_conditionContextAll::LineOnceConditionContext(once)) => {
-                todo!()
+                // Test to see if the 'once' variable for this content is
+                // false
+
+                emit! {
+                    self.compiler_listener.node_builder.as_mut().unwrap();
+                    PushVariableInstruction { variable_name: line_visited.clone() },
+                };
+                self.emit_operation(Operator::Not, &Type::Boolean, 1).unwrap();
+
+                // If the condition has an expression, evaluate that too
+                // and 'and' it with the 'once' test we just evaluated
+                if let Some(expr) = once.expression() {
+                    self.visit(once);
+                    self.emit_operation(Operator::And, &Type::Boolean, 2).unwrap();
+                }
+                (true, Some(line_visited))
             }
             Some(Line_conditionContextAll::LineConditionContext(normal)) => {
                 self.visit(normal);
-                true
+                (true, None)
             },
-            _ => false
+            _ => (false, None)
         }
     }
 }

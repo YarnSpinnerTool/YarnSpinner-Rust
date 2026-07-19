@@ -32,6 +32,13 @@ pub(crate) fn get_line_id_tag<'a>(
         .cloned()
 }
 
+pub(crate) fn get_line_id<'a>(line: &Line_statementContext) -> LineId {
+    let line_id_tag = get_line_id_tag(&line.hashtag_all())
+        .expect_or_bug("Internal error: line should have an implicit or explicit line ID tag, but none was found.");
+    let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
+    LineId(line_id)
+}
+
 pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
     file: &'b File,
     file_chars: &'a [u32],
@@ -180,8 +187,8 @@ where
 {
     fn ref_to_rc(self) -> Rc<ActualParserContext<'input>> {
         self.get_children()
+            .filter_map(|child| child.get_parent())
             .next()
-            .map(|child| child.get_parent().unwrap())
             .or_else(|| {
                 let interval = self.get_source_interval();
                 self.get_parent()

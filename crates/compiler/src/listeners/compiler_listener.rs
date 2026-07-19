@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::mem;
 use std::ops::Deref;
 use std::rc::Rc;
+use better_any::TidExt;
 use yarnspinner_core::prelude::*;
 
 use crate::parser::generated::yarnspinnerparser::{BodyContext, HeaderContext, LineOnceConditionContext, Line_statementContext, NodeContext, Title_headerContext, YarnSpinnerParserContext, YarnSpinnerParserContextType};
@@ -59,6 +60,10 @@ impl<'input> CompilerListener<'input> {
             program: Default::default(),
             debug_infos: Default::default(),
         }
+    }
+
+    pub fn get_content_viewed_variable_name(&self, line_id: LineId) -> String {
+        format!("$Yarn.Internal.Once.{}", line_id)
     }
 }
 
@@ -194,6 +199,28 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
     }
 
     fn exit_lineOnceCondition(&mut self, ctx: &LineOnceConditionContext<'input>) {
-        todo!()
+
+        let ctx = ctx.ref_to_rc();
+        if let Some(line) = find_parent::<Line_statementContext>(ctx) {
+            let id = get_line_id(line.deref());
+            let variable = self.get_content_viewed_variable_name(id);
+            let mut prog = self.program.borrow_mut();
+            prog.initial_values.insert(variable, Operand::from(false));
+        }
     }
+}
+
+fn find_parent<'input, T: ParserRuleContext<'input> + 'input>(ctx: Rc<dyn YarnSpinnerParserContext<'input>>) -> Option<Rc<T>> {
+    let mut current = Some(ctx);
+
+    while let Some(c) = current {
+
+        if c.self_id() == T::id() {
+            return c.downcast_rc().ok();
+        }
+
+        current = c.get_parent();
+    }
+
+    None
 }
