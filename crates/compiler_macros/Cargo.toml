@@ -1,0 +1,16 @@
+[package]
+name = "yarnspinner_compiler_macros"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[profile.dev.build-override]
+debug = "line-tables-only"
+
+[dependencies]
+syn = "2.0.119"
+quote = "1.0.45"
+proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
+

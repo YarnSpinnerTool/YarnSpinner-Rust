@@ -68,6 +68,29 @@ impl NodeBuilder {
         })
     }
 
+    pub fn append_instruction_static<const Count: usize>(&mut self, instructions: [impl Into<Instruction>; Count]) -> [InstructionAddress; Count] {
+        self.ensure_reserve(Count);
+
+        let mut result = [InstructionAddress::default(); Count];
+
+        for (i, instruction) in instructions.into_iter().enumerate() {
+            let addr = self.append_instruction(instruction.into());
+            result[i] = addr;
+        }
+
+        result
+    }
+
+    pub fn append_instruction_static_mut<const Count: usize>(&mut self, instructions: [impl Into<Instruction>; Count]) -> &mut [InstructionCell; Count] {
+        self.ensure_reserve(Count);
+
+        for instruction in instructions.into_iter() {
+            self.append_instruction(instruction.into());
+        }
+
+        self.instructions.last_chunk_mut().unwrap()
+    }
+
     pub fn set_instruction(&mut self, address: InstructionAddress, instruction: impl Into<Instruction>) -> InstructionAddress {
         let diff = address + 1usize - self.next_address();
         if diff > 0 {
@@ -96,6 +119,16 @@ impl NodeBuilder {
         }
 
         result
+    }
+
+    pub fn reserve_instructions_static<const Count: usize>(&mut self) -> [InstructionAddress; Count] {
+        let result =self.reserve_instructions_static_mut();
+        result.each_ref().map(|cell| cell.address)
+    }
+
+    pub fn reserve_instructions_static_mut<const Count: usize>(&mut self) -> &mut [InstructionCell; Count] {
+        self.reserve_instructions(Count);
+        self.instructions.last_chunk_mut().unwrap()
     }
 
     pub fn reserve_instructions_mut(&mut self, count: usize) -> &mut [InstructionCell] {
