@@ -4,10 +4,12 @@
 use self::{setup::*, visual_effects::*, yarnspinner_integration::*};
 use bevy::asset::AssetMetaCheck;
 use bevy::color::palettes::css;
+use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
 use bevy_sprite3d::Sprite3dPlugin;
+use bevy_yarnspinner::events::DialogueCompleted;
 use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
 
@@ -33,6 +35,11 @@ fn main() {
             })
             .set(AssetPlugin {
                 meta_check: AssetMetaCheck::Never,
+                ..default()
+            })
+            .set(LogPlugin {
+                level: Level::INFO,
+                filter: "yarnspinner_runtime=debug,yarnspinner_compiler=debug,yarnspinner_core=debug".to_owned(),
                 ..default()
             }),
         YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
@@ -62,6 +69,9 @@ fn main() {
             .chain()
             .after(ExampleYarnSpinnerDialogueViewSystemSet),
     )
+        .add_observer(|_: On<DialogueCompleted>, mut app_exit_events: MessageWriter<AppExit>| {
+            app_exit_events.write(AppExit::Success);
+        })
     .run();
 }
 

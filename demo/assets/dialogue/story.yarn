@@ -1,24 +1,39 @@
 title: Start
 position: -157,-193
 ---
-Bartender: Yeah, they're sitting right over there. #line:11330430
+
+<<declare $wallet = false>>
+
+<< if $wallet >>
+    Bartender: I see you've gotten your wallet.
+    Bartender: Your friend is sitting right over there.
+<< else >>
+    Bartender: Yeah, they're sitting right over there. #line:11330430
+<< endif >>
+
+-> Go on...
+-> Detour!
+    <<detour Detouring>>
+-> Hold on, I forgot my wallet... <<once>>
+    <<jump GetWallet>>
 <<fade_in 1.7>>
 <<show_bang ferris 1.0>>
 <<wait 0.8>>
 <<change_sprite ferris ferris_happy>>
 Ferris: Oh, hi there! #line:1768282 
--> Good to see you! #line:11949485 
+Ferris: That's a nice wallet << if $wallet >>
+-> Good to see you! #line:11949485
 <<change_sprite ferris ferris_neutral>>
 Ferris: Nice to see you too! #line:241831 
-<<declare $sadness to 0>>
-<<declare $happyness to 0>>
+<<declare $sadness = 0>>
+<<declare $happyness = 0>>
 Ferris: Thanks for coming, I know you've been busy lately. #line:9767167 
 -> No problem! #line:3857565 
     Ferris: So, how is life treating you? #line:1194739 
 -> Actually, it's been rather tough... #line:117616 
     <<set $sadness to $sadness + 1>>
     Ferris: Hmm, I'm sorry to hear. #line:8556292 
-<<declare $full_time to false>>
+<<declare $full_time = false>>
 Ferris: Since we last spoke, you started doing game development, right?. #line:13408442
 -> As a hobby, yeah. #line:14604755 
     Ferris: Natural development from your gaming and programming hobbies, I venture. #line:8835991 
@@ -177,7 +192,7 @@ Ferris: What do you mean? #line:9979028
         Ferris: Me, your friends, your parents, your teachers, your boss, everyone. #line:13611362 
         Ferris: And that's okay. It's alright to stumble. So game development isn't quite your calling, that's fine. #line:3249308 
         Ferris: You're doing the best you can, and no one can ask more of you than that.  #line:3306653 
-        <<declare $helped to true>>
+        <<declare $helped = true>>
         Ferris: I'm proud of what you achieved so far and I know you *will* find something that makes you as happy. #line:1237066 
         -> I... wow. #line:4375824 
         -> Thanks, Ferris. I really needed to hear that. #line:6927534 
@@ -249,4 +264,28 @@ Ferris: Same for me. It was nice to see both of you! #line:11913139
     Ferris: That's what friends are for! #line:7692224 
 <<fade_out 2.3>>
 <<quit>>
+===
+
+title: Detouring
+---
+Narrator: This is a detour!
+Narrator: A tour de detour!
+-> Ha!
+    Narrator: Ha!
+-> That sucks...
+    Narrator: Oh come on...
+-> I think I should leave...
+    Narrator: Wait!
+    -> Good bye
+        <<stop>>
+    -> Ok, fine...
+        <<return>>
+Narrator: Anyway...
+===
+
+title: GetWallet
+---
+You step out to get your wallet.
+<<set $wallet to true>>
+<<jump Start>>
 ===
