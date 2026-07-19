@@ -27,13 +27,14 @@ pub(crate) struct CompilerListener<'input> {
     pub(crate) types: KnownTypes,
     /// The current node to which instructions are being added.
     pub(crate) current_node: Option<Node>,
+    /// The node builder which emits a node.
+    pub(crate) node_builder: Option<NodeBuilder>,
     /// The current debug information that describes [`current_node`].
     current_debug_info: DebugInfo,
     /// Whether we are currently parsing the
     /// current node as a 'raw text' node, or as a fully syntactic node.
     is_current_node_raw_text: bool,
     file: FileParseResult<'input>,
-    label_count: usize,
 }
 
 impl<'input> CompilerListener<'input> {
@@ -49,11 +50,11 @@ impl<'input> CompilerListener<'input> {
             tracking_nodes: Rc::new(RefCell::new(tracking_nodes)),
             skip_nodes: Rc::new(RefCell::new(skip_nodes)),
             current_node: Default::default(),
+            node_builder: Default::default(),
             current_debug_info: Default::default(),
             is_current_node_raw_text: Default::default(),
             diagnostics: Default::default(),
             program: Default::default(),
-            label_count: Default::default(),
             debug_infos: Default::default(),
         }
     }
@@ -76,11 +77,14 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
     fn enter_node(&mut self, _ctx: &NodeContext<'input>) {
         // we have found a new node set up the currentNode var ready to hold it and otherwise continue
         self.current_node = Some(Node::default());
+        self.node_builder = Some(NodeBuilder::new(""));
         self.current_debug_info = Default::default();
         self.is_current_node_raw_text = false;
     }
 
     fn exit_node(&mut self, ctx: &NodeContext<'input>) {
+        let builder = mem::replace(&mut self.node_builder, None).unwrap();
+        self.current_node = builder.build().into();
         let name = &self.current_node.as_ref().unwrap().name.clone();
         if name.is_empty() {
             // We don't have a name for this node. We can't emit code for it.
@@ -113,7 +117,15 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
     }
 
     fn exit_title_header(&mut self, ctx: &Title_headerContext<'input>) {
-        todo!()
+        let header_value = ctx
+            .title
+            .as_ref()
+            .unwrap()
+            .get_text()
+            .to_owned();
+
+        let builder = self.node_builder.as_mut().unwrap();
+        builder.name.clone_from(&header_value);
     }
 
     fn enter_header(&mut self, _ctx: &HeaderContext<'input>) {
