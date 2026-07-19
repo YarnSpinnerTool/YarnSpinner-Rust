@@ -505,6 +505,13 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                     StopInstruction
                 };
             }
+            "return" => {
+                // "return" is a special command that immediately returns from node
+                emit! {
+                    compiler;
+                    ReturnInstruction
+                };
+            }
             _ => {
                 emit! {
                     compiler;
@@ -660,7 +667,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 
     /// A <<detour>> command, which immediately jumps to another node, given its name.
     fn visit_detourToNodeName(&mut self, ctx: &DetourToNodeNameContext<'input>) -> Self::Return {
-        todo!()
+        if let Some(tracking_enabled) = self.tracking_enabled.clone() {
+            Self::generate_tracking_code(self.compiler_listener.node_builder.as_mut().unwrap(), tracking_enabled);
+        }
+
+        let destination = ctx.destination.as_ref().unwrap();
+        self.emit_jump_to_named_node(destination.get_text().to_owned(), true);
     }
 
     /// A <<detour>> command, which immediately jumps to another node, given an
@@ -669,12 +681,21 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         &mut self,
         ctx: &DetourToExpressionContext<'input>,
     ) -> Self::Return {
-        todo!()
+        if let Some(tracking_enabled) = self.tracking_enabled.clone() {
+            Self::generate_tracking_code(self.compiler_listener.node_builder.as_mut().unwrap(), tracking_enabled);
+        }
+
+        let expr = ctx.expression().unwrap_or_bug();
+        let expr = expr.as_ref();
+        self.emit_jump_to_expression(expr, false)
     }
 
     /// A <<return>> command, which immediately returns from a detour or exits a dialogue.
     fn visit_return_statement(&mut self, ctx: &Return_statementContext<'input>) -> Self::Return {
-        todo!()
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            ReturnInstruction
+        };
     }
 }
 

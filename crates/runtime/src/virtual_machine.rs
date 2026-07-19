@@ -667,10 +667,24 @@ impl VirtualMachine {
                 // No need to increment the program counter, since otherwise we'd skip the first instruction
             }
             InstructionType::PeekAndDetourToNode(_) => {
-                todo!()
+                // Detour to a node
+
+                let node_name: String = self.pop();
+
+                // jump to a node with that name.
+                self.enter_node(node_name)?;
+
+                // No need to increment the program counter, since otherwise we'd skip the first instruction
             }
             InstructionType::DetourToNode(detour) => {
-                todo!()
+                // Detour to a node
+
+                let node_name: String = detour.node_name.clone();
+
+                // jump to a node with that name.
+                self.enter_node(&node_name)?;
+
+                // No need to increment the program counter, since otherwise we'd skip the first instruction
             }
             InstructionType::AddSaliencyCandidate(_) => {
                 todo!()
