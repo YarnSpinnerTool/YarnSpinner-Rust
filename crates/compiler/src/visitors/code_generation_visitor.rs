@@ -1,6 +1,5 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CodeGenerationVisitor.cs>
 
-use crate::listeners::{CompilerListener, Emit};
 use crate::prelude::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
@@ -11,8 +10,10 @@ use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat, Tree};
 use std::ops::Deref;
 use std::rc::Rc;
 use antlr4rust::parser::ParserNodeType;
+use yarnspinner_compiler_macros::emit;
 use yarnspinner_core::prelude::*;
 use yarnspinner_core::types::Type;
+use crate::listeners::CompilerListener;
 
 pub(crate) struct CodeGenerationVisitor<'a, 'input: 'a> {
     compiler_listener: &'a mut CompilerListener<'input>,
@@ -58,20 +59,74 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
     }
 
     // [sic] really ought to make this emit like a list of opcodes actually
-    pub(crate) fn generate_tracking_code(compiler: &mut CompilerListener, variable_name: String) {
+    pub(crate) fn generate_tracking_code(compiler: &mut NodeBuilder, variable_name: String) {
         // pushing the var and the increment onto the stack
-        compiler.emit(Emit::from_op_code(OpCode::PushVariable).with_operand(variable_name.clone()));
-        compiler.emit(Emit::from_op_code(OpCode::PushFloat).with_operand(1.));
 
-        // Indicate that we are pushing this many items for comparison
-        compiler.emit(Emit::from_op_code(OpCode::PushFloat).with_operand(2.));
+        emit! {
+            compiler;
+            PushVariableInstruction { variable_name: variable_name.clone() },
+            PushFloatInstruction { value: 1. },
+            // Indicate that we are pushing this many items for comparison
+            PushFloatInstruction { value: 2. },
+            // calling the function
+            CallFunctionInstruction { function_name: "Number.Add".to_owned() },
+            // now store the variable and clean up the stack
+            StoreVariableInstruction { variable_name },
+            PopInstruction
+        };
+    }
 
-        // calling the function
-        compiler.emit(Emit::from_op_code(OpCode::CallFunc).with_operand("Number.Add".to_owned()));
+    fn emit_function_call(&mut self, fn_name: String, args: usize) -> usize {
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            PushFloatInstruction { value: args as f32 },
+            CallFunctionInstruction { function_name: fn_name }
+        }
+    }
 
-        // now store the variable and clean up the stack
-        compiler.emit(Emit::from_op_code(OpCode::StoreVariable).with_operand(variable_name));
-        compiler.emit(Emit::from_op_code(OpCode::Pop));
+    fn emit_jump_to_named_node(
+        &mut self,
+        name: String,
+        detour: bool,
+    ) -> usize {
+        let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+        if detour {
+            emit! {
+                compiler;
+                DetourToNodeInstruction {
+                    node_name: name
+                }
+            };
+        } else {
+            emit! {
+                compiler;
+                RunNodeInstruction {
+                    node_name: name
+                }
+            };
+        }
+        1
+    }
+
+    fn emit_jump_to_expression(
+        &mut self,
+        expr: &ExpressionContextAll<'input>,
+        detour: bool,
+    ) {
+        self.visit(expr);
+
+        let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+        if detour {
+            emit! {
+                compiler;
+                PeekAndDetourToNode
+            };
+        } else {
+            emit! {
+                compiler;
+                PeekAndRunNodeInstruction
+            };
+        }
     }
 }
 
@@ -98,18 +153,23 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 
         // Evaluate the inline expressions and push the results onto the
         // stack.
-        let formatted_text = ctx.line_formatted_text().unwrap();
-        let expression_count =
-            self.generate_code_for_expressions_in_formatted_text(formatted_text.get_children());
         let line_id_tag = get_line_id_tag(&ctx.hashtag_all())
             .expect_or_bug("Internal error: line should have an implicit or explicit line ID tag, but none was found.");
         let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::RunLine)
-                .with_token(ctx.start().deref())
-                .with_operand(line_id)
-                .with_operand(expression_count),
-        );
+
+        let formatted_text = ctx.line_formatted_text().unwrap();
+        let expression_count =
+            self.generate_code_for_expressions_in_formatted_text(formatted_text.get_children());
+
+        let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+
+        emit! {
+            compiler;
+            RunLineInstruction {
+                line_id,
+                substitution_count: expression_count as i32
+            }
+        };
     }
 
     /// (expression)
@@ -210,27 +270,25 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 
     fn visit_valueNumber(&mut self, ctx: &ValueNumberContext<'input>) -> Self::Return {
         let number: f32 = ctx.NUMBER().unwrap().get_text().parse().unwrap();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushFloat)
-                .with_token(ctx.start().deref())
-                .with_operand(number),
-        )
+
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            PushFloatInstruction { value: number }
+        };
     }
 
-    fn visit_valueTrue(&mut self, ctx: &ValueTrueContext<'input>) -> Self::Return {
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushBool)
-                .with_token(ctx.start().deref())
-                .with_operand(true),
-        )
+    fn visit_valueTrue(&mut self, _ctx: &ValueTrueContext<'input>) -> Self::Return {
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            PushBoolInstruction { value: true }
+        };
     }
 
-    fn visit_valueFalse(&mut self, ctx: &ValueFalseContext<'input>) -> Self::Return {
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushBool)
-                .with_token(ctx.start().deref())
-                .with_operand(false),
-        )
+    fn visit_valueFalse(&mut self, _ctx: &ValueFalseContext<'input>) -> Self::Return {
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            PushBoolInstruction { value: false }
+        };
     }
 
     fn visit_valueVar(&mut self, ctx: &ValueVarContext<'input>) -> Self::Return {
@@ -245,17 +303,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             .get_text()
             .trim_matches('"')
             .to_owned();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushString)
-                .with_token(ctx.start().deref())
-                .with_operand(string_value),
-        )
-    }
 
-    /// null value
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::PushNull).with_token(ctx.start().deref()))
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            PushStringInstruction { value: string_value }
+        };
     }
 
     /// all we need do is visit the function itself, it will handle everything
@@ -265,11 +317,11 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 
     fn visit_variable(&mut self, ctx: &VariableContext<'input>) -> Self::Return {
         let variable_name = ctx.VAR_ID().unwrap().get_text();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushVariable)
-                .with_token(ctx.start().deref())
-                .with_operand(variable_name),
-        )
+
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            PushVariableInstruction { variable_name }
+        };
     }
 
     /// handles emitting the correct instructions for the function
@@ -280,21 +332,15 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             self.visit(parameter.as_ref());
         }
 
-        let token = ctx.start();
-        // push the number of parameters onto the stack
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushFloat)
-                .with_token(token.deref())
-                .with_operand(expressions.len()),
-        );
-
-        // then call the function itself
         let function_name = ctx.FUNC_ID().unwrap().get_text();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::CallFunc)
-                .with_token(token.deref())
-                .with_operand(function_name),
-        );
+
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            // push the number of parameters onto the stack
+            PushFloatInstruction { value: expressions.len() as f32 },
+            // then call the function itself
+            CallFunctionInstruction { function_name }
+        };
     }
 
     /// if statement ifclause (elseifclause)* (elseclause)? <<endif>>
@@ -303,12 +349,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // context.AddErrorNode(null);
 
         // label to give us a jump point for when the if finishes
-        let end_of_if_statement_label = self.compiler_listener.register_label("endif");
+        let mut end_of_if_statements = Vec::new();
 
         // handle the if
         let if_clause = ctx.if_clause().unwrap();
         self.generate_code_for_clause(
-            end_of_if_statement_label.clone(),
+            &mut end_of_if_statements,
             if_clause.as_ref(),
             &if_clause.statement_all(),
             if_clause.expression().unwrap(),
@@ -317,7 +363,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // all elseifs
         for else_if_clause in &ctx.else_if_clause_all() {
             self.generate_code_for_clause(
-                end_of_if_statement_label.clone(),
+                &mut end_of_if_statements,
                 else_if_clause.as_ref(),
                 &else_if_clause.statement_all(),
                 else_if_clause.expression().unwrap(),
@@ -327,18 +373,18 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // the else, if there is one
         if let Some(else_clause) = ctx.else_clause() {
             self.generate_code_for_clause(
-                end_of_if_statement_label.clone(),
+                &mut end_of_if_statements,
                 else_clause.as_ref(),
                 &else_clause.statement_all(),
                 None,
             );
         }
 
-        let current_node = self.compiler_listener.current_node.as_mut().unwrap();
-        current_node.labels.insert(
-            end_of_if_statement_label,
-            current_node.instructions.len() as i32,
-        );
+        let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+        for mut jump in end_of_if_statements {
+            jump.set(JumpToInstruction { destination: compiler.next_address().try_into().unwrap() });
+            compiler.set(jump);
+        }
     }
 
     /// A set command: explicitly setting a value to an expression <<set $foo to 1>>
@@ -356,11 +402,14 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 .get(expression.as_ref())
                 .unwrap()
                 .clone();
+
+            self.visit(expression.clone().as_ref());
+
             self.generate_code_for_operation(
                 op,
                 operator_token.as_ref(),
                 &r#type,
-                &[variable.clone(), expression.clone()],
+                &vec![variable.clone(), expression.clone()],
             )
         };
         match operator_token.get_token_type() {
@@ -391,13 +440,12 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         // now store the variable and clean up the stack
         let variable_name = variable.get_text();
         let token = variable.start();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::StoreVariable)
-                .with_token(token.deref())
-                .with_operand(variable_name),
-        );
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Pop).with_token(token.deref()));
+
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            StoreVariableInstruction { variable_name },
+            PopInstruction
+        };
     }
 
     fn visit_call_statement(&mut self, ctx: &Call_statementContext<'input>) -> Self::Return {
@@ -431,22 +479,26 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
             },
         );
 
+        let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+
         // [sic] TODO: look into replacing this as it seems a bit odd
         match composed_string.as_str() {
             "stop" => {
                 // "stop" is a special command that immediately stops
                 // execution
-                self.compiler_listener.emit(
-                    Emit::from_op_code(OpCode::Stop).with_token(formatted_text.start().deref()),
-                );
+                emit! {
+                    compiler;
+                    StopInstruction
+                };
             }
             _ => {
-                self.compiler_listener.emit(
-                    Emit::from_op_code(OpCode::RunCommand)
-                        .with_token(formatted_text.start().deref())
-                        .with_operand(composed_string)
-                        .with_operand(expression_count),
-                );
+                emit! {
+                    compiler;
+                    RunCommandInstruction {
+                        command_text: composed_string,
+                        substitution_count: expression_count as i32
+                    }
+                };
             }
         }
     }
@@ -456,8 +508,7 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
         &mut self,
         ctx: &Shortcut_option_statementContext<'input>,
     ) -> Self::Return {
-        let end_of_group_label = self.compiler_listener.register_label("group_end");
-        let mut labels = Vec::new();
+        let mut options = Vec::new();
 
         // For each option, create an internal destination label that, if
         // the user selects the option, control flow jumps to. Then,
@@ -476,31 +527,15 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 .as_ref()
                 .map(|node| node.name.clone())
                 .unwrap_or_else(|| "node".to_string());
-            let option_destination_label = self
-                .compiler_listener
-                .register_label(format!("shortcutoption_{name}_{}", option_count + 1).as_str());
-            labels.push(option_destination_label.clone());
 
-            // This line statement may have a condition on it. If it does,
-            // emit code that evaluates the condition, and add a flag on the
-            // 'Add Option' instruction that indicates that a condition exists.
-            let has_line_condition = if let Some(expression) = shortcut
-                .line_statement()
-                .and_then(|ctx| ctx.line_condition())
-                .and_then(|ctx| ctx.expression())
-            {
-                // Evaluate the condition, and leave it on the stack
-                self.visit(expression.as_ref());
-                true
-            } else {
-                false
-            };
+            let line_statement = shortcut.line_statement().unwrap();
+
+            let has_line_condition = self.evaluate_line_condition(line_statement.deref());
 
             // We can now prepare and add the option.
 
             // Start by figuring out the text that we want to add. This will
             // involve evaluating any inline expressions.
-            let line_statement = shortcut.line_statement().unwrap();
             let expression_count = self.generate_code_for_expressions_in_formatted_text(
                 line_statement.line_formatted_text().unwrap().get_children(),
             );
@@ -510,55 +545,63 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 .expect_or_bug("Internal error: no line ID provided.");
             let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
 
-            // And add this option to the list.
-            self.compiler_listener.emit(
-                Emit::from_op_code(OpCode::AddOption)
-                    .with_token(line_statement.start().deref())
-                    .with_operand(line_id)
-                    .with_operand(option_destination_label)
-                    .with_operand(expression_count)
-                    .with_operand(has_line_condition),
-            );
+            emit! {
+                self.compiler_listener.node_builder.as_mut().unwrap();
+                // And add this option to the list.
+                push options = @AddOptionInstruction {
+                    line_id,
+                    destination: -1,
+                    substitution_count: expression_count as i32,
+                    has_condition: has_line_condition
+                }
+            };
         }
-        // All of the options that we intend to show are now ready to go.
-        let token = ctx.stop();
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::ShowOptions).with_token(token.deref()));
 
-        // The top of the stack now contains the name of the label we want
-        // to jump to. Jump to it now.
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Jump).with_token(token.deref()));
+        let token = ctx.stop();
+
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            // All the options that we intend to show are now ready to go.
+            ShowOptionsInstruction,
+            // The top of the stack now contains the name of the label we want
+            // to jump to. Jump to it now.
+            PeekAndJumpInstruction
+        };
+
+        let mut groupEndJumps = Vec::new();
 
         // We'll now emit the labels and code associated with each option.
         for (option_count, shortcut) in ctx.shortcut_option_all().into_iter().enumerate() {
-            // Emit the label for this option's code
-            let current_node = self.compiler_listener.current_node.as_mut().unwrap();
-            current_node.labels.insert(
-                labels[option_count].clone(),
-                current_node.instructions.len() as i32,
-            );
+            // Emit the label for this option's codex
+
+            let option = options[option_count];
+            let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+            let addr = compiler.next_address();
+            compiler.set_destination_at(option, addr).unwrap();
 
             // Run through all the children statements of the shortcut option
             for child in shortcut.statement_all() {
                 self.visit(child.as_ref());
             }
 
-            // Jump to the end of this shortcut option group.
-            self.compiler_listener.emit(
-                Emit::from_op_code(OpCode::JumpTo)
-                    .with_token(shortcut.stop().deref())
-                    .with_operand(end_of_group_label.clone()),
-            );
+            emit! {
+                self.compiler_listener.node_builder.as_mut().unwrap();
+                push groupEndJumps = @JumpToInstruction { destination: -1 }
+            };
         }
 
+        let compiler = self.compiler_listener.node_builder.as_mut().unwrap();
+
         // We made it to the end! Mark the end of the group, so we can jump to it
-        let current_node = self.compiler_listener.current_node.as_mut().unwrap();
-        current_node
-            .labels
-            .insert(end_of_group_label, current_node.instructions.len() as i32);
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::Pop).with_token(token.deref()));
+        for pos in groupEndJumps {
+            let nr = compiler.next_address();
+            compiler.set_destination_at(pos, nr).unwrap();
+        }
+
+        emit! {
+                compiler;
+                PopInstruction
+        };
     }
 
     fn visit_line_group_statement(
@@ -579,28 +622,26 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
     /// A <<jump>> command, which immediately jumps to another node, given its name.
     fn visit_jumpToNodeName(&mut self, ctx: &JumpToNodeNameContext<'input>) -> Self::Return {
         if let Some(tracking_enabled) = self.tracking_enabled.clone() {
-            Self::generate_tracking_code(self.compiler_listener, tracking_enabled);
+            Self::generate_tracking_code(self.compiler_listener.node_builder.as_mut().unwrap(), tracking_enabled);
         }
-        let destination = ctx.destination.as_ref().unwrap();
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushString)
-                .with_token(destination.deref())
-                .with_operand(destination.get_text().to_owned()),
+
+        let destination = ctx.destination.as_ref().unwrap_or_bug();
+        self.emit_jump_to_named_node(
+            destination.get_text().into(),
+            false,
         );
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::RunNode).with_token(ctx.start().deref()))
     }
 
     /// A <<jump>> command, which immediately jumps to another node, given an
     /// expression that resolves to a node's name.
     fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
         if let Some(tracking_enabled) = self.tracking_enabled.clone() {
-            Self::generate_tracking_code(self.compiler_listener, tracking_enabled);
+            Self::generate_tracking_code(self.compiler_listener.node_builder.as_mut().unwrap(), tracking_enabled);
         }
-        // Evaluate the expression, and jump to the result on the stack.
-        self.visit(ctx.expression().unwrap().as_ref());
-        self.compiler_listener
-            .emit(Emit::from_op_code(OpCode::RunNode).with_token(ctx.start().deref()))
+
+        let expr = ctx.expression().unwrap_or_bug();
+        let expr = expr.as_ref();
+        self.emit_jump_to_expression(expr, false)
     }
 
     /// A <<detour>> command, which immediately jumps to another node, given its name.
@@ -624,6 +665,94 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
 }
 
 impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
+    fn evaluate_line_condition(&mut self, ctx: &Line_statementContext<'input>) -> bool {
+        match ctx.line_condition().as_ref().map(|c| c.deref()) {
+            Some(Line_conditionContextAll::LineOnceConditionContext(once)) => {
+                todo!()
+            }
+            Some(Line_conditionContextAll::LineConditionContext(normal)) => {
+                self.visit(normal);
+                true
+            },
+            _ => false
+        }
+    }
+}
+
+impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
+    fn generate_jump(&mut self, to: i32) -> usize {
+        emit! {
+            self.compiler_listener.node_builder.as_mut().unwrap();
+            JumpToInstruction { destination: to }
+        }
+    }
+
+    fn generate_function_call(
+        &mut self,
+        fn_name: String,
+        args: &[Rc<StatementContext<'input>>],
+    ) -> usize {
+        for arg in args {
+            self.visit(arg.deref());
+        }
+
+        let emitted = self.emit_function_call(fn_name, args.len());
+        emitted + 2
+    }
+
+    fn generate_static_function_call(&mut self, fn_name: String, args: Vec<OperandValue>) -> usize {
+        let builder = self.compiler_listener.node_builder.as_mut().unwrap();
+        let mut emitted = 0;
+        for arg in &args {
+            emitted += match arg {
+                OperandValue::StringValue(v) => {
+                    emit! {
+                        builder;
+                        PushStringInstruction { value: v.to_owned() }
+                    }
+                }
+                OperandValue::BoolValue(v) => {
+                    emit! {
+                        builder;
+                        PushBoolInstruction { value: v.to_owned() }
+                    }
+                }
+                OperandValue::FloatValue(v) => {
+                    emit! {
+                        builder;
+                        PushFloatInstruction { value: v.to_owned() }
+                    }
+                }
+            };
+        }
+
+        emitted += self.emit_function_call(fn_name, args.len());
+        emitted
+    }
+
+    fn generate_code_for_random_choice(&mut self, choices: u32) -> usize {
+        let emitted = self.generate_static_function_call(
+            "random".to_owned(),
+            vec![
+                OperandValue::FloatValue(1.0),
+                OperandValue::FloatValue(choices as f32),
+            ],
+        );
+
+        let builder = self.compiler_listener.node_builder.as_mut().unwrap();
+        let pos = builder.last_address().unwrap();
+
+        emitted + { emit! {
+            builder;
+            // Add instruction number to choices
+            PushFloatInstruction { value: pos.value() as f32 + 4.0 },
+            PushFloatInstruction { value: 2.0 },
+            CallFunctionInstruction { function_name: "Add".to_owned() },
+            // Peek and Jump to instruction
+            PeekAndJumpInstruction
+        } }
+    }
+
     fn generate_code_for_expressions_in_formatted_text(
         &mut self,
         nodes: impl Iterator<Item = Rc<ActualParserContext<'input>>>,
@@ -646,29 +775,24 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
     }
 
     /// Emits code that calls a method appropriate for the operator
-    fn generate_code_for_operation(
+    fn emit_operation(
         &mut self,
         op: Operator,
-        operator_token: &impl Token,
         r#type: &Type,
-        operands: &[Rc<ActualParserContext<'input>>],
-    ) {
-        // Generate code for each of the operands, so that their value is
-        // now on the stack.
-        for operand in operands {
-            self.visit(operand.as_ref());
-        }
-
-        // Indicate that we are pushing this many items for comparison
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::PushFloat)
-                .with_token(operator_token)
-                .with_operand(operands.len()),
-        );
-        // Figure out the canonical name for the method that the VM should
-        // invoke in order to perform this work
+        operands: usize,
+    ) -> Result<(), Diagnostic> {
         let method_name = op.to_string();
         let has_method = r#type.has_method(&method_name);
+
+        if !has_method {
+            let msg = format!("Codegen failed to get implementation type for {} given input type {}.",
+                              op,
+                              r#type.name());
+            return Err(Diagnostic::from_message(msg));
+        }
+
+        // Figure out the canonical name for the method that the VM should
+        // invoke in order to perform this work
         assert!(
             has_method,
             "Codegen failed to get implementation type for {} given input type {}.",
@@ -676,33 +800,46 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
             r#type.name(),
         );
         let function_name = r#type.get_canonical_name_for_method(&method_name);
-        // Call that function.
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::CallFunc)
-                .with_token(operator_token)
-                .with_operand(function_name),
-        );
+        self.emit_function_call(function_name, operands);
+        Ok(())
+    }
+
+    /// Emits code that calls a method appropriate for the operator
+    fn generate_code_for_operation(
+        &mut self,
+        op: Operator,
+        operator_token: &impl Token,
+        r#type: &Type,
+        operands: &Vec<Rc<<<Self as ParseTreeVisitorCompat<'input>>::Node as ParserNodeType<'input>>::Type>>,
+    )  {
+        // Generate code for each of the operands, so that their value is
+        // now on the stack.
+        for operand in operands {
+            self.visit(operand.as_ref());
+        }
+
+        self.emit_operation(op, r#type, operands.len()).unwrap();
     }
 
     fn generate_code_for_clause(
         &mut self,
-        jump_label: String,
+        jump_to_end: &mut Vec<InstructionCell>,
         ctx: &impl ParserRuleContext<'input>,
-        children: &[Rc<StatementContext<'input>>],
+        children: &Vec<Rc<StatementContext<'input>>>,
         expression: impl Into<Option<Rc<ExpressionContextAll<'input>>>>,
     ) {
         let expression = expression.into();
-        let end_of_clause_label = self.compiler_listener.register_label("skipclause");
+        let mut jump_to_end_of_clause = None;
+
         // handling the expression (if it has one) will only be called on ifs and elseifs
         if let Some(expression) = expression.clone() {
             // Code-generate the expression
             self.visit(expression.as_ref());
 
-            self.compiler_listener.emit(
-                Emit::from_op_code(OpCode::JumpIfFalse)
-                    .with_token(expression.start().deref())
-                    .with_operand(end_of_clause_label.clone()),
-            );
+            emit! {
+                self.compiler_listener.node_builder.as_mut().unwrap();
+                into jump_to_end_of_clause = @JumpIfFalseInstruction
+            };
         }
 
         // running through all of the children statements
@@ -710,19 +847,24 @@ impl<'a, 'input: 'a> CodeGenerationVisitor<'a, 'input> {
             self.visit(child.as_ref());
         }
 
-        self.compiler_listener.emit(
-            Emit::from_op_code(OpCode::JumpTo)
-                .with_token(ctx.stop().deref())
-                .with_operand(jump_label),
-        );
+        let builder = self.compiler_listener.node_builder.as_mut().unwrap();
+
+        emit! {
+            builder;
+            push &jump_to_end = JumpToInstruction { destination: -1 }
+        };
+
+        if let Some(clause) = jump_to_end_of_clause {
+            builder.set_destination_at(clause, builder.next_address()).unwrap();
+        }
 
         if let Some(expression) = expression {
-            let current_node = self.compiler_listener.current_node.as_mut().unwrap();
-            current_node
-                .labels
-                .insert(end_of_clause_label, current_node.instructions.len() as i32);
-            self.compiler_listener
-                .emit(Emit::from_op_code(OpCode::Pop).with_token(expression.stop().deref()));
+            emit! {
+                builder;
+                PopInstruction
+            };
+        } else {
+            assert!(jump_to_end_of_clause.is_none());
         }
     }
 }

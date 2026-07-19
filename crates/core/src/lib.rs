@@ -43,6 +43,7 @@ pub mod prelude {
         generated::{
             Header, Instruction, InvalidOpCodeError, Node, Operand, Program, instruction::*,
             operand::Value as OperandValue,
+            Destination
         },
         internal_value::*,
         library::*,

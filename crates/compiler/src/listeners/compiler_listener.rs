@@ -3,17 +3,19 @@
 use crate::prelude::*;
 use antlr4rust::parser_rule_context::ParserRuleContext;
 use antlr4rust::token::Token;
-use antlr4rust::tree::{ParseTreeListener, ParseTreeVisitorCompat};
+use antlr4rust::tree::{ParseTreeListener, ParseTreeVisitorCompat, Tree};
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::mem;
+use std::ops::Deref;
 use std::rc::Rc;
-use antlr4rust::CoerceTo;
 use yarnspinner_core::prelude::*;
 
 use crate::parser::generated::yarnspinnerparser::{BodyContext, HeaderContext, LineOnceConditionContext, Line_statementContext, NodeContext, Title_headerContext, YarnSpinnerParserContext, YarnSpinnerParserContextType};
 use crate::prelude::generated::yarnspinnerparser::BodyContextAttrs;
 use crate::prelude::generated::yarnspinnerparserlistener::YarnSpinnerParserListener;
 use crate::visitors::{CodeGenerationVisitor, KnownTypes};
+use yarnspinner_compiler_macros::emit;
 
 pub(crate) struct CompilerListener<'input> {
     pub(crate) debug_infos: Rc<RefCell<Vec<DebugInfo>>>,
@@ -27,13 +29,14 @@ pub(crate) struct CompilerListener<'input> {
     pub(crate) types: KnownTypes,
     /// The current node to which instructions are being added.
     pub(crate) current_node: Option<Node>,
+    /// The node builder which emits a node.
+    pub(crate) node_builder: Option<NodeBuilder>,
     /// The current debug information that describes [`current_node`].
     current_debug_info: DebugInfo,
     /// Whether we are currently parsing the
     /// current node as a 'raw text' node, or as a fully syntactic node.
     is_current_node_raw_text: bool,
     file: FileParseResult<'input>,
-    label_count: usize,
 }
 
 impl<'input> CompilerListener<'input> {
@@ -49,24 +52,13 @@ impl<'input> CompilerListener<'input> {
             tracking_nodes: Rc::new(RefCell::new(tracking_nodes)),
             skip_nodes: Rc::new(RefCell::new(skip_nodes)),
             current_node: Default::default(),
+            node_builder: Default::default(),
             current_debug_info: Default::default(),
             is_current_node_raw_text: Default::default(),
             diagnostics: Default::default(),
             program: Default::default(),
-            label_count: Default::default(),
             debug_infos: Default::default(),
         }
-    }
-
-    /// Generates a unique label name to use in the program.
-    ///
-    /// ## Params
-    /// - `commentary` Any additional text to append to the end of the label.
-    pub(crate) fn register_label<'b>(&mut self, commentary: impl Into<Option<&'b str>>) -> String {
-        let commentary = commentary.into().unwrap_or_default();
-        let label = format!("L{}{}", self.label_count, commentary);
-        self.label_count += 1;
-        label
     }
 }
 
@@ -76,11 +68,14 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
     fn enter_node(&mut self, _ctx: &NodeContext<'input>) {
         // we have found a new node set up the currentNode var ready to hold it and otherwise continue
         self.current_node = Some(Node::default());
+        self.node_builder = Some(NodeBuilder::new(""));
         self.current_debug_info = Default::default();
         self.is_current_node_raw_text = false;
     }
 
     fn exit_node(&mut self, ctx: &NodeContext<'input>) {
+        let builder = mem::replace(&mut self.node_builder, None).unwrap();
+        self.current_node = builder.build().into();
         let name = &self.current_node.as_ref().unwrap().name.clone();
         if name.is_empty() {
             // We don't have a name for this node. We can't emit code for it.
@@ -189,13 +184,13 @@ impl<'input> YarnSpinnerParserListener<'input> for CompilerListener<'input> {
                 .then(|| Library::generate_unique_visited_variable_for_node(name))
         };
         if let Some(track) = track {
-            CodeGenerationVisitor::generate_tracking_code(self, track);
+            CodeGenerationVisitor::generate_tracking_code(self.node_builder.as_mut().unwrap(), track);
         }
-        // We have exited the body; emit a 'stop' opcode here.
-        self.emit(Emit::from_op_code(OpCode::Stop).with_source(Position {
-            line: (ctx.stop().line as usize).saturating_sub(1),
-            character: 0,
-        }));
+
+        // We have exited the body; emit a 'return' opcode here.
+        emit! {
+            self.node_builder.as_mut().unwrap(); ReturnInstruction
+        };
     }
 
     fn exit_lineOnceCondition(&mut self, ctx: &LineOnceConditionContext<'input>) {
