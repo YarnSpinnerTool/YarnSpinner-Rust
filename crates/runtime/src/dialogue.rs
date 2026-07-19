@@ -42,12 +42,17 @@ pub enum DialogueError {
     ContinueOnOptionSelectionError,
     NoNodeSelectedOnContinue,
     NoProgramLoaded,
+    ReturnStackEmpty,
     InvalidNode {
         node_name: String,
     },
     VariableStorageError(VariableStorageError),
     FunctionNotFound {
         function_name: String,
+        library: Library,
+    },
+    LabelNotFound {
+        label_name: String,
         library: Library,
     },
 }
@@ -81,6 +86,8 @@ impl Display for DialogueError {
             InvalidNode { node_name } => write!(f, "No node named \"{node_name}\" has been loaded."),
             VariableStorageError(e) => Display::fmt(e, f),
             FunctionNotFound { function_name, library } => write!(f, "Function \"{function_name}\" not found in library: {library}"),
+            LabelNotFound { label_name, library } => write!(f, "Label \"{label_name}\" not found in library: {library}"),
+            ReturnStackEmpty => write!(f, "Tried to return from node, but return stack is empty")
         }
     }
 }
@@ -337,7 +344,7 @@ impl Dialogue {
     ///
     /// Returns an error if no node with the value of `node_name` has been loaded.
     pub fn set_node(&mut self, node_name: impl Into<String>) -> Result<&mut Self> {
-        self.vm.set_node(node_name)?;
+        self.vm.jump_to_node(node_name)?;
         Ok(self)
     }
 
@@ -434,7 +441,7 @@ impl Dialogue {
     /// If [`Dialogue::continue_`] has never been called, this value will be [`None`].
     #[must_use]
     pub fn current_node(&self) -> Option<String> {
-        self.vm.current_node()
+        self.vm.current_node_name()
     }
 
     /// Analyses the currently loaded Yarn program with the given [`Context`]. Call [`Context::finish_analysis`] afterwards to get the results.

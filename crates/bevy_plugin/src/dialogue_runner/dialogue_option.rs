@@ -19,7 +19,7 @@ pub struct DialogueOption {
     /// The name of the node that will be run if this option is selected.
     ///
     /// The value of this property not be valid if this is a shortcut option.
-    pub destination_node: String,
+    pub destination: usize,
 
     /// Gets a value indicating whether the player should be permitted to select this option.
     ///
@@ -41,7 +41,7 @@ impl DialogueOption {
         Self {
             line: LocalizedLine::from_yarn_line(yarn_dialogue_option.line, assets, metadata),
             id: yarn_dialogue_option.id,
-            destination_node: yarn_dialogue_option.destination_node,
+            destination: yarn_dialogue_option.destination.unwrap(),
             is_available: yarn_dialogue_option.is_available,
         }
     }

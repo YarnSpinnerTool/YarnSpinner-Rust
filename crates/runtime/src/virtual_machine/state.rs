@@ -15,6 +15,8 @@ pub(crate) struct State {
     /// The instruction number in the current node.
     pub(crate) program_counter: usize,
 
+    pub(crate) node_name: String,
+
     /// The current list of options that will be delivered
     /// when the next RunOption instruction is encountered.
     pub(crate) current_options: Vec<DialogueOption>,
@@ -27,6 +29,7 @@ impl Default for State {
     fn default() -> Self {
         State {
             program_counter: 0,
+            node_name: String::default(),
             current_options: vec![],
             stack: vec![]
         }

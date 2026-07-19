@@ -24,7 +24,7 @@ pub struct DialogueOption {
     /// The name of the node that will be run if this option is selected.
     ///
     /// The value of this property not be valid if this is a shortcut option.
-    pub destination_node: String,
+    pub destination: Option<usize>,
 
     /// Gets a value indicating whether the player should be permitted to select this option.
     ///
