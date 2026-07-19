@@ -15,11 +15,12 @@ serde = [ "dep:serde", "dep:serde_json", "bevy?/serialize", "yarnspinner_core/se
 bevy = [ "dep:bevy", "yarnspinner_core/bevy" ]
 
 [dependencies]
-antlr-rust = "=0.3.0-beta"
+antlr4rust = "=0.5.2"
 better_any = "=0.2.0"
 regex = "1"
 yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
 yarnspinner_core = { path = "../core", version = "0.8.0" }
+yarnspinner_compiler_macros = { path = "../compiler_macros", version = "0.1.0" }
 annotate-snippets = "0.12"
 serde = { version = "1", features = [ "derive" ], optional = true }
 serde_json = { version = "1", optional = true }

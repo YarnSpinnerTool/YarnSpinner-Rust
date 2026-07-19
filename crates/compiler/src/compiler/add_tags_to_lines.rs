@@ -34,7 +34,7 @@ impl Compiler {
     pub fn add_tags_to_lines(
         contents: impl Into<String>,
         existing_line_tags: Vec<LineId>,
-    ) -> crate::Result<Option<String>> {
+    ) -> crate::Result<Option<(String, Vec<LineId>)>> {
         let contents = contents.into();
         let chars: Vec<_> = contents.chars().map(|c| c as u32).collect();
         // First, get the parse tree for this source code.
@@ -57,14 +57,19 @@ impl Compiler {
         let rewrote_anything = untagged_line_listener.rewrote_anything.clone();
 
         // Walk the tree with this listener, and generate text replacements containing line tags.
-        YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref());
+        let untagged_line_listener =
+            YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref())
+                .expect("internal error: tree walk failed");
         // Apply these text replacements to the original source and return it.
 
         if rewrote_anything.load(Ordering::Relaxed) {
             let result = rewritten_nodes.take();
             let mut string = result.join("\n");
             string.push('\n');
-            Ok(Some(string))
+            Ok(Some((
+                string,
+                untagged_line_listener.existing_line_tags.clone(),
+            )))
         } else {
             Ok(None)
         }
@@ -119,7 +124,8 @@ impl Compiler {
 
         // Walk the tree with this listener, and generate text replacements containing line tags.
         let untagged_line_listener =
-            YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref());
+            YarnSpinnerParserTreeWalker::walk(untagged_line_listener, tree.as_ref())
+                .expect("interal error: tree walk failed");
         // Apply these text replacements to the original source and return it.
 
         if rewrote_anything.load(Ordering::Relaxed) {
@@ -128,7 +134,7 @@ impl Compiler {
             string.push('\n');
             Ok(Some((
                 string,
-                untagged_line_listener.existing_line_tags.clone(),
+                untagged_line_listener.existing_line_tags.clone(), // FIXME: unwrap
             )))
         } else {
             Ok(None)

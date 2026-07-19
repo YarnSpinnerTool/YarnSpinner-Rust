@@ -3,13 +3,14 @@
 
 use crate::error_strategy::ErrorStrategy;
 use crate::listeners::*;
+use crate::parser::generated::yarnspinnerlexer;
 use crate::prelude::generated::yarnspinnerparser::*;
-use crate::prelude::generated::{yarnspinnerlexer, yarnspinnerparser};
 use crate::prelude::*;
-use antlr_rust::Parser;
-use antlr_rust::common_token_stream::CommonTokenStream;
-use antlr_rust::input_stream::CodePoint32BitCharStream;
-use antlr_rust::token::{TOKEN_DEFAULT_CHANNEL, Token};
+use antlr4rust::Parser;
+use antlr4rust::common_token_stream::CommonTokenStream;
+use antlr4rust::input_stream::CodePoint32BitCharStream;
+use antlr4rust::token::{TOKEN_DEFAULT_CHANNEL, Token};
+use antlr4rust::tree::{ParseTree, Tree};
 use std::collections::HashSet;
 use std::rc::Rc;
 use yarnspinner_core::prelude::*;
@@ -31,6 +32,13 @@ pub(crate) fn get_line_id_tag<'a>(
         .cloned()
 }
 
+pub(crate) fn get_line_id<'a>(line: &Line_statementContext) -> LineId {
+    let line_id_tag = get_line_id_tag(&line.hashtag_all())
+        .expect_or_bug("Internal error: line should have an implicit or explicit line ID tag, but none was found.");
+    let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
+    LineId(line_id)
+}
+
 pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
     file: &'b File,
     file_chars: &'a [u32],
@@ -49,7 +57,7 @@ pub(crate) fn parse_syntax_tree<'a, 'b: 'a>(
     lexer.add_error_listener(Box::new(lexer_error_listener));
 
     let tokens = CommonTokenStream::new(lexer);
-    let mut parser = YarnSpinnerParser::with_strategy(tokens, ErrorStrategy::new());
+    let mut parser = YarnSpinnerParser::with_strategy(tokens, Box::new(ErrorStrategy::new()));
     let parser_error_listener = ParserErrorListener::new(file.clone());
     let parser_error_listener_diagnostics = parser_error_listener.diagnostics.clone();
 
@@ -77,6 +85,13 @@ pub(crate) fn get_line_id_for_node_name(name: &str) -> LineId {
     format!("{LINE_ID_PREFIX}{name}").into()
 }
 
+pub(crate) fn get_comments_channel() -> i32 {
+    yarnspinnerlexer::channelNames
+        .iter()
+        .position(|&name| name == "COMMENTS")
+        .expect("internal error: no comments channel is defined") as i32
+}
+
 /// Gets the text of the documentation comments that either immediately
 /// precede `context`, or are on the same line as `context`.
 ///
@@ -100,10 +115,8 @@ pub(crate) fn get_document_comments<'input>(
         Ctx = YarnSpinnerParserContextType,
     >,
 ) -> String {
-    let subsequent_comments = tokens.get_hidden_tokens_to_right(
-        context.stop().get_token_index(),
-        yarnspinnerlexer::COMMENTS as isize,
-    );
+    let subsequent_comments =
+        tokens.get_hidden_tokens_to_right(context.stop().get_token_index(), get_comments_channel());
 
     let subsequent_doc_comment = subsequent_comments
         .iter()
@@ -121,10 +134,8 @@ pub(crate) fn get_document_comments<'input>(
         return subsequent_doc_comment;
     }
 
-    let preceding_comments = tokens.get_hidden_tokens_to_left(
-        context.start().get_token_index(),
-        yarnspinnerlexer::COMMENTS as isize,
-    );
+    let preceding_comments =
+        tokens.get_hidden_tokens_to_left(context.start().get_token_index(), get_comments_channel());
 
     let preceding_doc_comments: Vec<_> = preceding_comments
         .iter()
@@ -155,7 +166,7 @@ pub(crate) fn add_hashtag_child<'input>(
     text: impl Into<String>,
 ) {
     let parent = parent.ref_to_rc();
-    let string_id_token = create_common_token(yarnspinnerparser::HASHTAG_TEXT, text);
+    let string_id_token = create_common_token(yarnspinnerlexer::HASHTAG_TEXT, text);
     let invoking_state_according_to_original_implementation = 0;
     // `new_with_text` was hacked into the generated parser. Also, `FooContextExt::new` is usually private...
     let hashtag = HashtagContextExt::new_with_text(
@@ -176,8 +187,8 @@ where
 {
     fn ref_to_rc(self) -> Rc<ActualParserContext<'input>> {
         self.get_children()
+            .filter_map(|child| child.get_parent())
             .next()
-            .map(|child| child.get_parent().unwrap())
             .or_else(|| {
                 let interval = self.get_source_interval();
                 self.get_parent()

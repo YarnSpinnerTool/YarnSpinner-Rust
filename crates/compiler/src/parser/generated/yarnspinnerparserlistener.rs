@@ -1,6 +1,6 @@
 #![allow(nonstandard_style)]
-// Generated from third-party\YarnSpinner\YarnSpinner.Compiler\YarnSpinnerParser.g4 by ANTLR 4.8
-use antlr_rust::tree::ParseTreeListener;
+// Generated from third-party/YarnSpinner/YarnSpinner.Compiler/Grammars/YarnSpinnerParser.g4 by ANTLR 4.13.2
+use antlr4rust::tree::ParseTreeListener;
 use super::yarnspinnerparser::*;
 
 pub trait YarnSpinnerParserListener<'input> : ParseTreeListener<'input,YarnSpinnerParserContextType>{
@@ -35,6 +35,26 @@ fn enter_node(&mut self, _ctx: &NodeContext<'input>) { }
  */
 fn exit_node(&mut self, _ctx: &NodeContext<'input>) { }
 /**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#title_header}.
+ * @param ctx the parse tree
+ */
+fn enter_title_header(&mut self, _ctx: &Title_headerContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#title_header}.
+ * @param ctx the parse tree
+ */
+fn exit_title_header(&mut self, _ctx: &Title_headerContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#when_header}.
+ * @param ctx the parse tree
+ */
+fn enter_when_header(&mut self, _ctx: &When_headerContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#when_header}.
+ * @param ctx the parse tree
+ */
+fn exit_when_header(&mut self, _ctx: &When_headerContext<'input>) { }
+/**
  * Enter a parse tree produced by {@link YarnSpinnerParser#header}.
  * @param ctx the parse tree
  */
@@ -44,6 +64,16 @@ fn enter_header(&mut self, _ctx: &HeaderContext<'input>) { }
  * @param ctx the parse tree
  */
 fn exit_header(&mut self, _ctx: &HeaderContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#header_when_expression}.
+ * @param ctx the parse tree
+ */
+fn enter_header_when_expression(&mut self, _ctx: &Header_when_expressionContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#header_when_expression}.
+ * @param ctx the parse tree
+ */
+fn exit_header_when_expression(&mut self, _ctx: &Header_when_expressionContext<'input>) { }
 /**
  * Enter a parse tree produced by {@link YarnSpinnerParser#body}.
  * @param ctx the parse tree
@@ -95,15 +125,29 @@ fn enter_hashtag(&mut self, _ctx: &HashtagContext<'input>) { }
  */
 fn exit_hashtag(&mut self, _ctx: &HashtagContext<'input>) { }
 /**
- * Enter a parse tree produced by {@link YarnSpinnerParser#line_condition}.
+ * Enter a parse tree produced by the {@code lineCondition}
+ * labeled alternative in {@link YarnSpinnerParser#line_condition}.
  * @param ctx the parse tree
  */
-fn enter_line_condition(&mut self, _ctx: &Line_conditionContext<'input>) { }
+fn enter_lineCondition(&mut self, _ctx: &LineConditionContext<'input>) { }
 /**
- * Exit a parse tree produced by {@link YarnSpinnerParser#line_condition}.
+ * Exit a parse tree produced by the {@code lineCondition}
+ * labeled alternative in {@link YarnSpinnerParser#line_condition}.
  * @param ctx the parse tree
  */
-fn exit_line_condition(&mut self, _ctx: &Line_conditionContext<'input>) { }
+fn exit_lineCondition(&mut self, _ctx: &LineConditionContext<'input>) { }
+/**
+ * Enter a parse tree produced by the {@code lineOnceCondition}
+ * labeled alternative in {@link YarnSpinnerParser#line_condition}.
+ * @param ctx the parse tree
+ */
+fn enter_lineOnceCondition(&mut self, _ctx: &LineOnceConditionContext<'input>) { }
+/**
+ * Exit a parse tree produced by the {@code lineOnceCondition}
+ * labeled alternative in {@link YarnSpinnerParser#line_condition}.
+ * @param ctx the parse tree
+ */
+fn exit_lineOnceCondition(&mut self, _ctx: &LineOnceConditionContext<'input>) { }
 /**
  * Enter a parse tree produced by the {@code expParens}
  * labeled alternative in {@link YarnSpinnerParser#expression}.
@@ -273,18 +317,6 @@ fn enter_valueString(&mut self, _ctx: &ValueStringContext<'input>) { }
  */
 fn exit_valueString(&mut self, _ctx: &ValueStringContext<'input>) { }
 /**
- * Enter a parse tree produced by the {@code valueNull}
- * labeled alternative in {@link YarnSpinnerParser#value}.
- * @param ctx the parse tree
- */
-fn enter_valueNull(&mut self, _ctx: &ValueNullContext<'input>) { }
-/**
- * Exit a parse tree produced by the {@code valueNull}
- * labeled alternative in {@link YarnSpinnerParser#value}.
- * @param ctx the parse tree
- */
-fn exit_valueNull(&mut self, _ctx: &ValueNullContext<'input>) { }
-/**
  * Enter a parse tree produced by the {@code valueFunc}
  * labeled alternative in {@link YarnSpinnerParser#value}.
  * @param ctx the parse tree
@@ -296,6 +328,18 @@ fn enter_valueFunc(&mut self, _ctx: &ValueFuncContext<'input>) { }
  * @param ctx the parse tree
  */
 fn exit_valueFunc(&mut self, _ctx: &ValueFuncContext<'input>) { }
+/**
+ * Enter a parse tree produced by the {@code valueTypeMemberReference}
+ * labeled alternative in {@link YarnSpinnerParser#value}.
+ * @param ctx the parse tree
+ */
+fn enter_valueTypeMemberReference(&mut self, _ctx: &ValueTypeMemberReferenceContext<'input>) { }
+/**
+ * Exit a parse tree produced by the {@code valueTypeMemberReference}
+ * labeled alternative in {@link YarnSpinnerParser#value}.
+ * @param ctx the parse tree
+ */
+fn exit_valueTypeMemberReference(&mut self, _ctx: &ValueTypeMemberReferenceContext<'input>) { }
 /**
  * Enter a parse tree produced by {@link YarnSpinnerParser#variable}.
  * @param ctx the parse tree
@@ -316,6 +360,16 @@ fn enter_function_call(&mut self, _ctx: &Function_callContext<'input>) { }
  * @param ctx the parse tree
  */
 fn exit_function_call(&mut self, _ctx: &Function_callContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#typeMemberReference}.
+ * @param ctx the parse tree
+ */
+fn enter_typeMemberReference(&mut self, _ctx: &TypeMemberReferenceContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#typeMemberReference}.
+ * @param ctx the parse tree
+ */
+fn exit_typeMemberReference(&mut self, _ctx: &TypeMemberReferenceContext<'input>) { }
 /**
  * Enter a parse tree produced by {@link YarnSpinnerParser#if_statement}.
  * @param ctx the parse tree
@@ -417,6 +471,26 @@ fn enter_shortcut_option(&mut self, _ctx: &Shortcut_optionContext<'input>) { }
  */
 fn exit_shortcut_option(&mut self, _ctx: &Shortcut_optionContext<'input>) { }
 /**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#line_group_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_line_group_statement(&mut self, _ctx: &Line_group_statementContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#line_group_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_line_group_statement(&mut self, _ctx: &Line_group_statementContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#line_group_item}.
+ * @param ctx the parse tree
+ */
+fn enter_line_group_item(&mut self, _ctx: &Line_group_itemContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#line_group_item}.
+ * @param ctx the parse tree
+ */
+fn exit_line_group_item(&mut self, _ctx: &Line_group_itemContext<'input>) { }
+/**
  * Enter a parse tree produced by {@link YarnSpinnerParser#declare_statement}.
  * @param ctx the parse tree
  */
@@ -426,6 +500,26 @@ fn enter_declare_statement(&mut self, _ctx: &Declare_statementContext<'input>) {
  * @param ctx the parse tree
  */
 fn exit_declare_statement(&mut self, _ctx: &Declare_statementContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#enum_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_enum_statement(&mut self, _ctx: &Enum_statementContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#enum_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_enum_statement(&mut self, _ctx: &Enum_statementContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#enum_case_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_enum_case_statement(&mut self, _ctx: &Enum_case_statementContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#enum_case_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_enum_case_statement(&mut self, _ctx: &Enum_case_statementContext<'input>) { }
 /**
  * Enter a parse tree produced by the {@code jumpToNodeName}
  * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
@@ -450,9 +544,93 @@ fn enter_jumpToExpression(&mut self, _ctx: &JumpToExpressionContext<'input>) { }
  * @param ctx the parse tree
  */
 fn exit_jumpToExpression(&mut self, _ctx: &JumpToExpressionContext<'input>) { }
+/**
+ * Enter a parse tree produced by the {@code detourToNodeName}
+ * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_detourToNodeName(&mut self, _ctx: &DetourToNodeNameContext<'input>) { }
+/**
+ * Exit a parse tree produced by the {@code detourToNodeName}
+ * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_detourToNodeName(&mut self, _ctx: &DetourToNodeNameContext<'input>) { }
+/**
+ * Enter a parse tree produced by the {@code detourToExpression}
+ * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_detourToExpression(&mut self, _ctx: &DetourToExpressionContext<'input>) { }
+/**
+ * Exit a parse tree produced by the {@code detourToExpression}
+ * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_detourToExpression(&mut self, _ctx: &DetourToExpressionContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#return_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_return_statement(&mut self, _ctx: &Return_statementContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#return_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_return_statement(&mut self, _ctx: &Return_statementContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#once_statement}.
+ * @param ctx the parse tree
+ */
+fn enter_once_statement(&mut self, _ctx: &Once_statementContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#once_statement}.
+ * @param ctx the parse tree
+ */
+fn exit_once_statement(&mut self, _ctx: &Once_statementContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#once_primary_clause}.
+ * @param ctx the parse tree
+ */
+fn enter_once_primary_clause(&mut self, _ctx: &Once_primary_clauseContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#once_primary_clause}.
+ * @param ctx the parse tree
+ */
+fn exit_once_primary_clause(&mut self, _ctx: &Once_primary_clauseContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#once_alternate_clause}.
+ * @param ctx the parse tree
+ */
+fn enter_once_alternate_clause(&mut self, _ctx: &Once_alternate_clauseContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#once_alternate_clause}.
+ * @param ctx the parse tree
+ */
+fn exit_once_alternate_clause(&mut self, _ctx: &Once_alternate_clauseContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#structured_command}.
+ * @param ctx the parse tree
+ */
+fn enter_structured_command(&mut self, _ctx: &Structured_commandContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#structured_command}.
+ * @param ctx the parse tree
+ */
+fn exit_structured_command(&mut self, _ctx: &Structured_commandContext<'input>) { }
+/**
+ * Enter a parse tree produced by {@link YarnSpinnerParser#structured_command_value}.
+ * @param ctx the parse tree
+ */
+fn enter_structured_command_value(&mut self, _ctx: &Structured_command_valueContext<'input>) { }
+/**
+ * Exit a parse tree produced by {@link YarnSpinnerParser#structured_command_value}.
+ * @param ctx the parse tree
+ */
+fn exit_structured_command_value(&mut self, _ctx: &Structured_command_valueContext<'input>) { }
 
 }
 
-antlr_rust::coerce_from!{ 'input : YarnSpinnerParserListener<'input> }
+antlr4rust::coerce_from!{ 'input : YarnSpinnerParserListener<'input> }
 
 

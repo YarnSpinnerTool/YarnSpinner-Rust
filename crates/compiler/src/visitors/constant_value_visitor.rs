@@ -3,8 +3,8 @@
 use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
-use antlr_rust::parser::ParserNodeType;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
+use antlr4rust::parser::ParserNodeType;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat, VisitChildren};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use yarnspinner_core::prelude::*;
@@ -91,16 +91,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
         InternalValue::from(text.trim_matches('"')).into()
     }
 
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
-        let message = "Null is not a permitted type in Yarn Spinner 2.0 and later";
-        self.diagnostics.push(
-            Diagnostic::from_message(message)
-                .with_file_name(&self.file.name)
-                .with_parser_context(ctx, self.file.tokens()),
-        );
-        ConstantValue::non_panicking_default()
-    }
-
     fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
         let text = ctx.get_text();
         let message =
@@ -111,6 +101,10 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for ConstantValueVisitor<'in
                 .with_parser_context(ctx, self.file.tokens()),
         );
         ConstantValue::non_panicking_default()
+    }
+
+    fn visit_expValue(&mut self, ctx: &ExpValueContext<'input>) -> Self::Return {
+        self.visit(ctx.value().unwrap().deref())
     }
 }
 

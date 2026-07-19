@@ -5,7 +5,6 @@ use crate::prelude::*;
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Program {
     /// The name of the program.
@@ -32,29 +31,15 @@ use crate::prelude::*;
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Node {
     /// The name of this node.
     #[prost(string, tag = "1")]
     pub name: ::prost::alloc::string::String,
     /// The list of instructions in this node.
-    #[prost(message, repeated, tag = "2")]
+    #[prost(message, repeated, tag = "7")]
     pub instructions: ::prost::alloc::vec::Vec<Instruction>,
-    /// A jump table, mapping the names of labels to positions in the
-    /// instructions list.
-    #[prost(btree_map = "string, int32", tag = "3")]
-    pub labels: ::prost::alloc::collections::BTreeMap<
-        ::prost::alloc::string::String,
-        i32,
-    >,
-    /// The tags associated with this node.
-    #[prost(string, repeated, tag = "4")]
-    pub tags: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    /// the entry in the program's string table that contains the original
-    /// text of this node; null if this is not available
-    #[prost(string, tag = "5")]
-    pub source_text_string_id: ::prost::alloc::string::String,
+    /// The headers present on this node.
     #[prost(message, repeated, tag = "6")]
     pub headers: ::prost::alloc::vec::Vec<Header>,
 }
@@ -63,13 +48,438 @@ use crate::prelude::*;
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Header {
+    /// The name of the header.
     #[prost(string, tag = "1")]
     pub key: ::prost::alloc::string::String,
+    /// The value of the header.
     #[prost(string, tag = "2")]
     pub value: ::prost::alloc::string::String,
+}
+use crate::prelude::*;
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
+#[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+#[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Instruction {
+    #[prost(
+        oneof = "instruction::InstructionType",
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23"
+    )]
+    pub instruction_type: ::core::option::Option<instruction::InstructionType>,
+}
+/// Nested message and enum types in `Instruction`.
+pub mod instruction {
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PeekAndJumpInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PeekAndRunNodeInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct ShowOptionsInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PushStringInstruction {
+        /// The value to push.
+        #[prost(string, tag = "1")]
+        pub value: ::prost::alloc::string::String,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, ::prost::Message)]
+    pub struct PushFloatInstruction {
+        /// The value to push.
+        #[prost(float, tag = "1")]
+        pub value: f32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PushBoolInstruction {
+        /// The value to push.
+        #[prost(bool, tag = "1")]
+        pub value: bool,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct JumpToInstruction {
+        /// The instruction number in the current node to jump to.
+        #[prost(int32, tag = "1")]
+        pub destination: i32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct RunLineInstruction {
+        /// The ID of the localised content that should be shown for this line.
+        #[prost(string, tag = "1")]
+        pub line_id: ::prost::alloc::string::String,
+        /// The number of substitutions present in this line that must be popped
+        /// off the stack.
+        #[prost(int32, tag = "2")]
+        pub substitution_count: i32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct RunCommandInstruction {
+        /// The text of the command to send to the client.
+        #[prost(string, tag = "1")]
+        pub command_text: ::prost::alloc::string::String,
+        /// The number of substitutions present in this command that must be popped
+        /// off the stack.
+        #[prost(int32, tag = "2")]
+        pub substitution_count: i32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct AddOptionInstruction {
+        /// The ID of the content that should be shown for this option.
+        #[prost(string, tag = "1")]
+        pub line_id: ::prost::alloc::string::String,
+        /// The instruction number in the current node to jump to if this option
+        /// is selected.
+        #[prost(int32, tag = "2")]
+        pub destination: i32,
+        /// The number of substitutions present in this option that must be popped
+        /// off the stack.
+        #[prost(int32, tag = "3")]
+        pub substitution_count: i32,
+        /// A value indicating whether this instruction has a line condition on
+        /// it, whose evaluated value must be popped off the stack.
+        #[prost(bool, tag = "4")]
+        pub has_condition: bool,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct JumpIfFalseInstruction {
+        /// The instruction number in the current node to jump to.
+        #[prost(int32, tag = "1")]
+        pub destination: i32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PopInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct CallFunctionInstruction {
+        /// The name of the function to call.
+        #[prost(string, tag = "1")]
+        pub function_name: ::prost::alloc::string::String,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PushVariableInstruction {
+        /// The name of the variable whose value should be pushed onto the stack.
+        #[prost(string, tag = "1")]
+        pub variable_name: ::prost::alloc::string::String,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct StoreVariableInstruction {
+        /// The name of the variable whose value should be updated with the value
+        /// currently on top of the stack.
+        #[prost(string, tag = "1")]
+        pub variable_name: ::prost::alloc::string::String,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct StopInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct RunNodeInstruction {
+        /// The name of the node to begin running.
+        #[prost(string, tag = "1")]
+        pub node_name: ::prost::alloc::string::String,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct DetourToNodeInstruction {
+        #[prost(string, tag = "1")]
+        pub node_name: ::prost::alloc::string::String,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PeekAndDetourToNode {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct ReturnInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct AddSaliencyCandidateInstruction {
+        /// The unique ID for this piece of content, such as a line ID.
+        #[prost(string, tag = "1")]
+        pub content_id: ::prost::alloc::string::String,
+        /// The complexity score of the candidate.
+        #[prost(int32, tag = "2")]
+        pub complexity_score: i32,
+        /// The instruction number in the current node to jump to if this
+        /// candidate is selected.
+        #[prost(int32, tag = "3")]
+        pub destination: i32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct AddSaliencyCandidateFromNodeInstruction {
+        /// The name of the node to get saliency information from.
+        #[prost(string, tag = "1")]
+        pub node_name: ::prost::alloc::string::String,
+        /// The instruction number in the current node to jump to if this
+        /// candidate is selected.
+        #[prost(int32, tag = "2")]
+        pub destination: i32,
+    }
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct SelectSaliencyCandidateInstruction {}
+    use crate::prelude::*;
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "bevy", derive(Reflect))]
+    #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
+    #[cfg_attr(
+        all(feature = "bevy", feature = "serde"),
+        reflect(Serialize, Deserialize)
+    )]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum InstructionType {
+        /// Jumps to a specified position in the current node.
+        #[prost(message, tag = "1")]
+        JumpTo(JumpToInstruction),
+        /// Peeks a number on the stack, and jumps to that position in the
+        /// current node.
+        #[prost(message, tag = "2")]
+        PeekAndJump(PeekAndJumpInstruction),
+        /// Runs a line of dialogue.
+        #[prost(message, tag = "3")]
+        RunLine(RunLineInstruction),
+        /// Runs a command.
+        #[prost(message, tag = "4")]
+        RunCommand(RunCommandInstruction),
+        /// Adds an option to the 'pending options' list.
+        #[prost(message, tag = "5")]
+        AddOption(AddOptionInstruction),
+        /// Shows all options in the 'pending options' list, then clears the list.
+        #[prost(message, tag = "6")]
+        ShowOptions(ShowOptionsInstruction),
+        /// Pushes a string onto the stack.
+        #[prost(message, tag = "7")]
+        PushString(PushStringInstruction),
+        /// Pushes a floating point number onto the stack.
+        #[prost(message, tag = "8")]
+        PushFloat(PushFloatInstruction),
+        /// Pushes a boolean onto the stack.
+        #[prost(message, tag = "9")]
+        PushBool(PushBoolInstruction),
+        /// Peeks a boolean on the stack, and if it's false, jumps to the
+        /// indicated position in the current node.
+        #[prost(message, tag = "10")]
+        JumpIfFalse(JumpIfFalseInstruction),
+        /// Pops a value of any kind off the stack.
+        #[prost(message, tag = "11")]
+        Pop(PopInstruction),
+        /// Calls a named function.
+        #[prost(message, tag = "12")]
+        CallFunc(CallFunctionInstruction),
+        /// Pushes the value of the named variable onto the stack.
+        #[prost(message, tag = "13")]
+        PushVariable(PushVariableInstruction),
+        /// Peeks a value of any kind on the stack, and stores it in the
+        /// indicated variable.
+        #[prost(message, tag = "14")]
+        StoreVariable(StoreVariableInstruction),
+        /// Halts execution.
+        #[prost(message, tag = "15")]
+        Stop(StopInstruction),
+        /// Jumps to the start of a named node.
+        #[prost(message, tag = "16")]
+        RunNode(RunNodeInstruction),
+        /// Peeks a string on the stack, and jumps to the start of that node.
+        #[prost(message, tag = "17")]
+        PeekAndRunNode(PeekAndRunNodeInstruction),
+        #[prost(message, tag = "18")]
+        DetourToNode(DetourToNodeInstruction),
+        #[prost(message, tag = "19")]
+        PeekAndDetourToNode(PeekAndDetourToNode),
+        #[prost(message, tag = "20")]
+        Return(ReturnInstruction),
+        /// Pops a boolean from the stack, and adds a saliency candidate to the
+        /// current list.
+        #[prost(message, tag = "21")]
+        AddSaliencyCandidate(AddSaliencyCandidateInstruction),
+        /// Add a saliency candidate to the current list, given a node name.
+        #[prost(message, tag = "22")]
+        AddSaliencyCandidateFromNode(AddSaliencyCandidateFromNodeInstruction),
+        /// Attempt to select a single saliency candidate from the current list:
+        /// - if one is selected, pushes the destination of that candidate and
+        ///    the value 'true'
+        /// - if none is selected, pushes the value 'false'
+        ///
+        /// In all circumstances, clears the saliency candidate list before
+        /// returning.
+        #[prost(message, tag = "23")]
+        SelectSaliencyCandidate(SelectSaliencyCandidateInstruction),
+    }
 }
 /// A single Yarn instruction.
 use crate::prelude::*;
@@ -77,18 +487,17 @@ use crate::prelude::*;
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Instruction {
+pub struct InstructionV1 {
     /// The operation that this instruction will perform.
-    #[prost(enumeration = "instruction::OpCode", tag = "1")]
+    #[prost(enumeration = "instruction_v1::OpCode", tag = "1")]
     pub opcode: i32,
     /// The list of operands, if any, that this instruction uses.
     #[prost(message, repeated, tag = "2")]
     pub operands: ::prost::alloc::vec::Vec<Operand>,
 }
-/// Nested message and enum types in `Instruction`.
-pub mod instruction {
+/// Nested message and enum types in `InstructionV1`.
+pub mod instruction_v1 {
     /// The type of instruction that this is.
     use crate::prelude::*;
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -184,23 +593,23 @@ pub mod instruction {
         /// (if the ProtoBuf definition does not change) and safe for programmatic use.
         pub fn as_str_name(&self) -> &'static str {
             match self {
-                OpCode::JumpTo => "JUMP_TO",
-                OpCode::Jump => "JUMP",
-                OpCode::RunLine => "RUN_LINE",
-                OpCode::RunCommand => "RUN_COMMAND",
-                OpCode::AddOption => "ADD_OPTION",
-                OpCode::ShowOptions => "SHOW_OPTIONS",
-                OpCode::PushString => "PUSH_STRING",
-                OpCode::PushFloat => "PUSH_FLOAT",
-                OpCode::PushBool => "PUSH_BOOL",
-                OpCode::PushNull => "PUSH_NULL",
-                OpCode::JumpIfFalse => "JUMP_IF_FALSE",
-                OpCode::Pop => "POP",
-                OpCode::CallFunc => "CALL_FUNC",
-                OpCode::PushVariable => "PUSH_VARIABLE",
-                OpCode::StoreVariable => "STORE_VARIABLE",
-                OpCode::Stop => "STOP",
-                OpCode::RunNode => "RUN_NODE",
+                Self::JumpTo => "JUMP_TO",
+                Self::Jump => "JUMP",
+                Self::RunLine => "RUN_LINE",
+                Self::RunCommand => "RUN_COMMAND",
+                Self::AddOption => "ADD_OPTION",
+                Self::ShowOptions => "SHOW_OPTIONS",
+                Self::PushString => "PUSH_STRING",
+                Self::PushFloat => "PUSH_FLOAT",
+                Self::PushBool => "PUSH_BOOL",
+                Self::PushNull => "PUSH_NULL",
+                Self::JumpIfFalse => "JUMP_IF_FALSE",
+                Self::Pop => "POP",
+                Self::CallFunc => "CALL_FUNC",
+                Self::PushVariable => "PUSH_VARIABLE",
+                Self::StoreVariable => "STORE_VARIABLE",
+                Self::Stop => "STOP",
+                Self::RunNode => "RUN_NODE",
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
@@ -234,7 +643,6 @@ use crate::prelude::*;
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq))]
 #[cfg_attr(all(feature = "bevy", feature = "serde"), reflect(Serialize, Deserialize))]
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Operand {
     /// The type of operand this is.
@@ -252,7 +660,6 @@ pub mod operand {
         all(feature = "bevy", feature = "serde"),
         reflect(Serialize, Deserialize)
     )]
-    #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Value {
         /// A string.

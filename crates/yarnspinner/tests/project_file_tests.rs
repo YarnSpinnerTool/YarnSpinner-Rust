@@ -15,7 +15,7 @@ fn test_project_file_can_be_loaded() {
     let project = Project::load_from_file(path.clone()).unwrap();
 
     // Then
-    assert_eq!(project.project_file_version, 2);
+    assert_eq!(project.project_file_version, 3);
     assert_eq!(project.path, Some(path));
     assert_eq!(project.source_file_patterns, vec!["**/*.yarn"]);
 
@@ -156,4 +156,22 @@ fn test_projects_can_be_modified_and_saved() {
     assert_eq!(project.base_language, loaded_project.base_language);
     assert_eq!(project.definitions, loaded_project.definitions);
     assert_eq!(project.compiler_options, loaded_project.compiler_options);
+}
+
+#[test]
+fn test_project_files_can_all_preview_features() {
+    let project_source = "
+{
+    \"projectFileVersion\": 2,
+    \"sourceFiles\": [\"**/*.yarn\"],
+    \"baseLanguage\": \"en\",
+    \"compilerOptions\": {
+        \"allowPreviewFeatures\": true
+    }
+}
+    ";
+
+    let project = Project::load_from_string(project_source.into()).unwrap();
+
+    assert!(project.allow_language_preview_features());
 }

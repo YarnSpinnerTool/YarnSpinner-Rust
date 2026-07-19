@@ -1,6 +1,6 @@
 #![allow(nonstandard_style)]
-// Generated from third-party\YarnSpinner\YarnSpinner.Compiler\YarnSpinnerParser.g4 by ANTLR 4.8
-use antlr_rust::tree::{ParseTreeVisitor,ParseTreeVisitorCompat};
+// Generated from third-party/YarnSpinner/YarnSpinner.Compiler/Grammars/YarnSpinnerParser.g4 by ANTLR 4.13.2
+use antlr4rust::tree::{ParseTreeVisitor,ParseTreeVisitorCompat};
 use super::yarnspinnerparser::*;
 
 /**
@@ -27,10 +27,28 @@ pub trait YarnSpinnerParserVisitor<'input>: ParseTreeVisitor<'input,YarnSpinnerP
 	fn visit_node(&mut self, ctx: &NodeContext<'input>) { self.visit_children(ctx) }
 
 	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#title_header}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_title_header(&mut self, ctx: &Title_headerContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#when_header}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_when_header(&mut self, ctx: &When_headerContext<'input>) { self.visit_children(ctx) }
+
+	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#header}.
 	 * @param ctx the parse tree
 	 */
 	fn visit_header(&mut self, ctx: &HeaderContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#header_when_expression}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_header_when_expression(&mut self, ctx: &Header_when_expressionContext<'input>) { self.visit_children(ctx) }
 
 	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#body}.
@@ -63,10 +81,18 @@ pub trait YarnSpinnerParserVisitor<'input>: ParseTreeVisitor<'input,YarnSpinnerP
 	fn visit_hashtag(&mut self, ctx: &HashtagContext<'input>) { self.visit_children(ctx) }
 
 	/**
-	 * Visit a parse tree produced by {@link YarnSpinnerParser#line_condition}.
+	 * Visit a parse tree produced by the {@code lineCondition}
+	 * labeled alternative in {@link YarnSpinnerParser#line_condition}.
 	 * @param ctx the parse tree
 	 */
-	fn visit_line_condition(&mut self, ctx: &Line_conditionContext<'input>) { self.visit_children(ctx) }
+	fn visit_lineCondition(&mut self, ctx: &LineConditionContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by the {@code lineOnceCondition}
+	 * labeled alternative in {@link YarnSpinnerParser#line_condition}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_lineOnceCondition(&mut self, ctx: &LineOnceConditionContext<'input>) { self.visit_children(ctx) }
 
 	/**
 	 * Visit a parse tree produced by the {@code expParens}
@@ -167,18 +193,18 @@ pub trait YarnSpinnerParserVisitor<'input>: ParseTreeVisitor<'input,YarnSpinnerP
 	fn visit_valueString(&mut self, ctx: &ValueStringContext<'input>) { self.visit_children(ctx) }
 
 	/**
-	 * Visit a parse tree produced by the {@code valueNull}
-	 * labeled alternative in {@link YarnSpinnerParser#value}.
-	 * @param ctx the parse tree
-	 */
-	fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) { self.visit_children(ctx) }
-
-	/**
 	 * Visit a parse tree produced by the {@code valueFunc}
 	 * labeled alternative in {@link YarnSpinnerParser#value}.
 	 * @param ctx the parse tree
 	 */
 	fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by the {@code valueTypeMemberReference}
+	 * labeled alternative in {@link YarnSpinnerParser#value}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_valueTypeMemberReference(&mut self, ctx: &ValueTypeMemberReferenceContext<'input>) { self.visit_children(ctx) }
 
 	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#variable}.
@@ -191,6 +217,12 @@ pub trait YarnSpinnerParserVisitor<'input>: ParseTreeVisitor<'input,YarnSpinnerP
 	 * @param ctx the parse tree
 	 */
 	fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#typeMemberReference}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_typeMemberReference(&mut self, ctx: &TypeMemberReferenceContext<'input>) { self.visit_children(ctx) }
 
 	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#if_statement}.
@@ -253,10 +285,34 @@ pub trait YarnSpinnerParserVisitor<'input>: ParseTreeVisitor<'input,YarnSpinnerP
 	fn visit_shortcut_option(&mut self, ctx: &Shortcut_optionContext<'input>) { self.visit_children(ctx) }
 
 	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#line_group_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_line_group_statement(&mut self, ctx: &Line_group_statementContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#line_group_item}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_line_group_item(&mut self, ctx: &Line_group_itemContext<'input>) { self.visit_children(ctx) }
+
+	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#declare_statement}.
 	 * @param ctx the parse tree
 	 */
 	fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#enum_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_enum_statement(&mut self, ctx: &Enum_statementContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#enum_case_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_enum_case_statement(&mut self, ctx: &Enum_case_statementContext<'input>) { self.visit_children(ctx) }
 
 	/**
 	 * Visit a parse tree produced by the {@code jumpToNodeName}
@@ -271,6 +327,56 @@ pub trait YarnSpinnerParserVisitor<'input>: ParseTreeVisitor<'input,YarnSpinnerP
 	 * @param ctx the parse tree
 	 */
 	fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by the {@code detourToNodeName}
+	 * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_detourToNodeName(&mut self, ctx: &DetourToNodeNameContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by the {@code detourToExpression}
+	 * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_detourToExpression(&mut self, ctx: &DetourToExpressionContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#return_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_return_statement(&mut self, ctx: &Return_statementContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#once_statement}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_once_statement(&mut self, ctx: &Once_statementContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#once_primary_clause}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_once_primary_clause(&mut self, ctx: &Once_primary_clauseContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#once_alternate_clause}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_once_alternate_clause(&mut self, ctx: &Once_alternate_clauseContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#structured_command}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_structured_command(&mut self, ctx: &Structured_commandContext<'input>) { self.visit_children(ctx) }
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#structured_command_value}.
+	 * @param ctx the parse tree
+	 */
+	fn visit_structured_command_value(&mut self, ctx: &Structured_command_valueContext<'input>) { self.visit_children(ctx) }
 
 }
 
@@ -300,10 +406,34 @@ pub trait YarnSpinnerParserVisitorCompat<'input>:ParseTreeVisitorCompat<'input, 
 		}
 
 	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#title_header}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_title_header(&mut self, ctx: &Title_headerContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#when_header}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_when_header(&mut self, ctx: &When_headerContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#header}.
 	 * @param ctx the parse tree
 	 */
 		fn visit_header(&mut self, ctx: &HeaderContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#header_when_expression}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_header_when_expression(&mut self, ctx: &Header_when_expressionContext<'input>) -> Self::Return {
 			self.visit_children(ctx)
 		}
 
@@ -348,10 +478,20 @@ pub trait YarnSpinnerParserVisitorCompat<'input>:ParseTreeVisitorCompat<'input, 
 		}
 
 	/**
-	 * Visit a parse tree produced by {@link YarnSpinnerParser#line_condition}.
+	 * Visit a parse tree produced by the {@code lineCondition}
+	 * labeled alternative in {@link YarnSpinnerParser#line_condition}.
 	 * @param ctx the parse tree
 	 */
-		fn visit_line_condition(&mut self, ctx: &Line_conditionContext<'input>) -> Self::Return {
+		fn visit_lineCondition(&mut self, ctx: &LineConditionContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by the {@code lineOnceCondition}
+	 * labeled alternative in {@link YarnSpinnerParser#line_condition}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_lineOnceCondition(&mut self, ctx: &LineOnceConditionContext<'input>) -> Self::Return {
 			self.visit_children(ctx)
 		}
 
@@ -482,20 +622,20 @@ pub trait YarnSpinnerParserVisitorCompat<'input>:ParseTreeVisitorCompat<'input, 
 		}
 
 	/**
-	 * Visit a parse tree produced by the {@code valueNull}
-	 * labeled alternative in {@link YarnSpinnerParser#value}.
-	 * @param ctx the parse tree
-	 */
-		fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
-			self.visit_children(ctx)
-		}
-
-	/**
 	 * Visit a parse tree produced by the {@code valueFunc}
 	 * labeled alternative in {@link YarnSpinnerParser#value}.
 	 * @param ctx the parse tree
 	 */
 		fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by the {@code valueTypeMemberReference}
+	 * labeled alternative in {@link YarnSpinnerParser#value}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_valueTypeMemberReference(&mut self, ctx: &ValueTypeMemberReferenceContext<'input>) -> Self::Return {
 			self.visit_children(ctx)
 		}
 
@@ -512,6 +652,14 @@ pub trait YarnSpinnerParserVisitorCompat<'input>:ParseTreeVisitorCompat<'input, 
 	 * @param ctx the parse tree
 	 */
 		fn visit_function_call(&mut self, ctx: &Function_callContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#typeMemberReference}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_typeMemberReference(&mut self, ctx: &TypeMemberReferenceContext<'input>) -> Self::Return {
 			self.visit_children(ctx)
 		}
 
@@ -596,10 +744,42 @@ pub trait YarnSpinnerParserVisitorCompat<'input>:ParseTreeVisitorCompat<'input, 
 		}
 
 	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#line_group_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_line_group_statement(&mut self, ctx: &Line_group_statementContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#line_group_item}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_line_group_item(&mut self, ctx: &Line_group_itemContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
 	 * Visit a parse tree produced by {@link YarnSpinnerParser#declare_statement}.
 	 * @param ctx the parse tree
 	 */
 		fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#enum_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_enum_statement(&mut self, ctx: &Enum_statementContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#enum_case_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_enum_case_statement(&mut self, ctx: &Enum_case_statementContext<'input>) -> Self::Return {
 			self.visit_children(ctx)
 		}
 
@@ -618,6 +798,72 @@ pub trait YarnSpinnerParserVisitorCompat<'input>:ParseTreeVisitorCompat<'input, 
 	 * @param ctx the parse tree
 	 */
 		fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by the {@code detourToNodeName}
+	 * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_detourToNodeName(&mut self, ctx: &DetourToNodeNameContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by the {@code detourToExpression}
+	 * labeled alternative in {@link YarnSpinnerParser#jump_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_detourToExpression(&mut self, ctx: &DetourToExpressionContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#return_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_return_statement(&mut self, ctx: &Return_statementContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#once_statement}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_once_statement(&mut self, ctx: &Once_statementContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#once_primary_clause}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_once_primary_clause(&mut self, ctx: &Once_primary_clauseContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#once_alternate_clause}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_once_alternate_clause(&mut self, ctx: &Once_alternate_clauseContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#structured_command}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_structured_command(&mut self, ctx: &Structured_commandContext<'input>) -> Self::Return {
+			self.visit_children(ctx)
+		}
+
+	/**
+	 * Visit a parse tree produced by {@link YarnSpinnerParser#structured_command_value}.
+	 * @param ctx the parse tree
+	 */
+		fn visit_structured_command_value(&mut self, ctx: &Structured_command_valueContext<'input>) -> Self::Return {
 			self.visit_children(ctx)
 		}
 
@@ -642,8 +888,23 @@ where
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
+	fn visit_title_header(&mut self, ctx: &Title_headerContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_title_header(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_when_header(&mut self, ctx: &When_headerContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_when_header(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
 	fn visit_header(&mut self, ctx: &HeaderContext<'input>){
 		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_header(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_header_when_expression(&mut self, ctx: &Header_when_expressionContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_header_when_expression(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
@@ -672,8 +933,13 @@ where
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
-	fn visit_line_condition(&mut self, ctx: &Line_conditionContext<'input>){
-		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_line_condition(self, ctx);
+	fn visit_lineCondition(&mut self, ctx: &LineConditionContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_lineCondition(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_lineOnceCondition(&mut self, ctx: &LineOnceConditionContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_lineOnceCondition(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
@@ -747,13 +1013,13 @@ where
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
-	fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>){
-		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_valueNull(self, ctx);
+	fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_valueFunc(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
-	fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>){
-		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_valueFunc(self, ctx);
+	fn visit_valueTypeMemberReference(&mut self, ctx: &ValueTypeMemberReferenceContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_valueTypeMemberReference(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
@@ -764,6 +1030,11 @@ where
 
 	fn visit_function_call(&mut self, ctx: &Function_callContext<'input>){
 		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_function_call(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_typeMemberReference(&mut self, ctx: &TypeMemberReferenceContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_typeMemberReference(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
@@ -817,8 +1088,28 @@ where
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
+	fn visit_line_group_statement(&mut self, ctx: &Line_group_statementContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_line_group_statement(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_line_group_item(&mut self, ctx: &Line_group_itemContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_line_group_item(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
 	fn visit_declare_statement(&mut self, ctx: &Declare_statementContext<'input>){
 		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_declare_statement(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_enum_statement(&mut self, ctx: &Enum_statementContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_enum_statement(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_enum_case_statement(&mut self, ctx: &Enum_case_statementContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_enum_case_statement(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 
@@ -829,6 +1120,46 @@ where
 
 	fn visit_jumpToExpression(&mut self, ctx: &JumpToExpressionContext<'input>){
 		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_jumpToExpression(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_detourToNodeName(&mut self, ctx: &DetourToNodeNameContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_detourToNodeName(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_detourToExpression(&mut self, ctx: &DetourToExpressionContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_detourToExpression(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_return_statement(&mut self, ctx: &Return_statementContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_return_statement(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_once_statement(&mut self, ctx: &Once_statementContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_once_statement(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_once_primary_clause(&mut self, ctx: &Once_primary_clauseContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_once_primary_clause(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_once_alternate_clause(&mut self, ctx: &Once_alternate_clauseContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_once_alternate_clause(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_structured_command(&mut self, ctx: &Structured_commandContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_structured_command(self, ctx);
+        *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
+	}
+
+	fn visit_structured_command_value(&mut self, ctx: &Structured_command_valueContext<'input>){
+		let result = <Self as YarnSpinnerParserVisitorCompat>::visit_structured_command_value(self, ctx);
         *<Self as ParseTreeVisitorCompat>::temp_result(self) = result;
 	}
 

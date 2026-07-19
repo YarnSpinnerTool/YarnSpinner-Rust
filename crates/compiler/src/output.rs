@@ -1,7 +1,7 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/da39c7195107d8211f21c263e4084f773b84eaff/YarnSpinner.Compiler/CompilationResult.cs>
 
 use crate::listeners::*;
-pub use crate::output::{debug_info::*, declaration::*, string_info::*};
+pub use crate::output::{debug_info::*, declaration::*, string_info::*, node_builder::*, instruction_address::*};
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::error::Error;
@@ -11,6 +11,8 @@ use yarnspinner_core::prelude::*;
 mod debug_info;
 mod declaration;
 mod string_info;
+mod node_builder;
+mod instruction_address;
 
 /// The result of a compilation.
 ///

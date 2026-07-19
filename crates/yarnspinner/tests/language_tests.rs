@@ -112,7 +112,7 @@ fn test_node_headers() {
     assert_eq!(program.nodes.len(), 6);
 
     for tag in &["one", "two", "three"].map(|s| s.to_owned()) {
-        assert!(program.nodes["Tags"].tags.contains(tag));
+        assert!(program.nodes["Tags"].tags().contains(tag));
     }
 
     let headers: HashMap<_, _> = vec![

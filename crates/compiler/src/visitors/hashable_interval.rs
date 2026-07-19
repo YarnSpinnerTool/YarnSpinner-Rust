@@ -1,6 +1,7 @@
 use crate::parser::generated::yarnspinnerparser::YarnSpinnerParserContext;
-use antlr_rust::interval_set::Interval;
-use antlr_rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::interval_set::Interval;
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -97,7 +98,12 @@ impl DerefMut for KnownTypes {
 
 pub(crate) trait GetHashableInterval<'input>: ParserRuleContext<'input> {
     fn get_hashable_interval(&self) -> HashableInterval {
-        let interval = self.get_source_interval();
+        // FIXME: The get_source_interval function only seems to return INVALID values.
+        //        I'm not sure if this is a bug in antlr4rust of an issue with the types in this function.
+        let interval = Interval {
+            a: self.start().get_token_index() as i32,
+            b: self.stop().get_token_index() as i32,
+        };
         HashableInterval(interval)
     }
 }

@@ -5,9 +5,9 @@
 //! [`Range`] has been replaced with the more idiomatic [`Range<Position>`].
 
 use crate::prelude::*;
-use antlr_rust::rule_context::CustomRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::token_factory::TokenFactory;
+use antlr4rust::rule_context::CustomRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::token_factory::TokenFactory;
 use std::fmt::{Debug, Display};
 use std::ops::Range;
 use yarnspinner_core::prelude::*;

@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ProjectPath {
+    ThirdParty,
     ThirdPersonYarnSpinner,
     MainCrate,
     Core,
@@ -15,6 +16,7 @@ pub fn path(path: ProjectPath) -> PathBuf {
     let current_dir = Path::new(file!()).parent().unwrap();
     let crates_dir = current_dir.join("../..");
     let fragment = match path {
+        ProjectPath::ThirdParty => "../third-party",
         ProjectPath::ThirdPersonYarnSpinner => "../third-party/YarnSpinner",
         ProjectPath::MainCrate => "yarnspinner",
         ProjectPath::Core => "core",

@@ -4,8 +4,8 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
 use crate::visitors::constant_value_visitor::ConstantValueVisitor;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use regex::Regex;
 use yarnspinner_core::prelude::*;
 use yarnspinner_core::types::*;
@@ -87,14 +87,12 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
     }
 
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
-        for header in ctx.header_all() {
-            let header_key = header.header_key.as_ref().unwrap();
-            if header_key.get_text() != "title" {
-                continue;
-            }
+        for header in ctx.title_header_all() {
+            let current_node_name = match &header.title {
+                None => continue,
+                Some(title) => title.get_text()
+            };
 
-            let header_value = header.header_value.as_ref().unwrap();
-            let current_node_name = header_value.get_text();
             self.current_node_name = Some(current_node_name.to_owned());
             if self.regex.is_match(current_node_name) {
                 let message =
@@ -142,7 +140,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
         // Figure out the value and its type
         let mut constant_value_visitor =
             ConstantValueVisitor::new(self.diagnostics.clone(), self.file.clone());
-        let Some(value_context) = ctx.value() else {
+        let Some(value_context) = ctx.expression() else {
             // no value was provided, declare as undefined and continue
             return;
         };
@@ -151,7 +149,7 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for DeclarationVisitor<'inpu
             .extend_from_slice(&constant_value_visitor.diagnostics);
 
         // Did the source code name an explicit type?
-        if let Some(declaration_type) = ctx.declaration_type.as_ref() {
+        if let Some(declaration_type) = ctx.type_.as_ref() {
             let explicit_type = match keyword_to_type(declaration_type.get_text()) {
                 Some(builtin_type) => builtin_type,
 

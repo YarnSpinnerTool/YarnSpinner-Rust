@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use core::fmt::Debug;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bevy", reflect(Debug, PartialEq, Default))]
@@ -15,12 +15,25 @@ pub(crate) struct State {
     /// The instruction number in the current node.
     pub(crate) program_counter: usize,
 
+    pub(crate) node_name: String,
+
     /// The current list of options that will be delivered
     /// when the next RunOption instruction is encountered.
     pub(crate) current_options: Vec<DialogueOption>,
 
     /// The value stack.
     pub(crate) stack: Vec<InternalValue>,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        State {
+            program_counter: 0,
+            node_name: String::default(),
+            current_options: vec![],
+            stack: vec![]
+        }
+    }
 }
 
 impl State {

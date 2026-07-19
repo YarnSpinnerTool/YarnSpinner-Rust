@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use antlr_rust::token::Token;
+use antlr4rust::token::Token;
 
 use crate::parser::generated::yarnspinnerparser::{
     BodyContextAttrs, DialogueContextAttrs, NodeContextAttrs,

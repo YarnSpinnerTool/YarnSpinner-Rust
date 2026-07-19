@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::visitors::{LastLineBeforeOptionsVisitor, StringTableGeneratorVisitor};
-use antlr_rust::tree::ParseTreeVisitorCompat;
+use antlr4rust::tree::ParseTreeVisitorCompat;
 
 pub(crate) fn register_strings(mut state: CompilationIntermediate) -> CompilationIntermediate {
     // First pass: parse all files, generate their syntax trees,

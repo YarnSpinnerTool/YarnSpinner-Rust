@@ -6,9 +6,9 @@ use crate::prelude::generated::yarnspinnerparser::*;
 use crate::prelude::generated::yarnspinnerparservisitor::YarnSpinnerParserVisitorCompat;
 use crate::prelude::*;
 use crate::visitors::{CodeGenerationVisitor, KnownTypes};
-use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::token::Token;
-use antlr_rust::tree::{ParseTree, ParseTreeVisitorCompat};
+use antlr4rust::parser_rule_context::ParserRuleContext;
+use antlr4rust::token::Token;
+use antlr4rust::tree::{ParseTree, ParseTreeVisitorCompat};
 use check_operation::*;
 use std::path::Path;
 use yarnspinner_core::prelude::*;
@@ -119,11 +119,10 @@ impl<'input> ParseTreeVisitorCompat<'input> for TypeCheckVisitor<'input> {
 
 impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input> {
     fn visit_node(&mut self, ctx: &NodeContext<'input>) -> Self::Return {
-        for header in ctx.header_all() {
-            let key = header.header_key.as_ref().unwrap_or_bug().get_text();
-            if key == "title" {
-                let value = header.header_value.as_ref().unwrap_or_bug().get_text();
-                self.current_node_name = Some(value.to_owned());
+        for header in ctx.title_header_all() {
+            match &header.title {
+                None => {}
+                Some(title) => { self.current_node_name = Some(title.get_text().to_owned()) }
             }
         }
         if let Some(body) = ctx.body() {
@@ -246,16 +245,6 @@ impl<'input> YarnSpinnerParserVisitorCompat<'input> for TypeCheckVisitor<'input>
 
     fn visit_valueString(&mut self, _ctx: &ValueStringContext<'input>) -> Self::Return {
         Some(Type::String)
-    }
-
-    fn visit_valueNull(&mut self, ctx: &ValueNullContext<'input>) -> Self::Return {
-        self.diagnostics.push(
-            Diagnostic::from_message("Null is not a permitted type in Yarn Spinner 2.0 and later")
-                .with_file_name(&self.file.name)
-                .with_parser_context(ctx, self.file.tokens()),
-        );
-
-        None
     }
 
     fn visit_valueFunc(&mut self, ctx: &ValueFuncContext<'input>) -> Self::Return {
