@@ -143,19 +143,22 @@ impl<'a, 'input: 'a> ParseTreeVisitorCompat<'input> for CodeGenerationVisitor<'a
 impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVisitor<'a, 'input> {
     /// a regular ol' line of text
     fn visit_line_statement(&mut self, ctx: &Line_statementContext<'input>) -> Self::Return {
-        // [sic] TODO: add support for line conditions:
-        //
-        // Mae: here's a line <<if true>>
-        //
-        // is identical to
-        //
-        // <<if true>> Mae: here's a line <<endif>>
-
         // Evaluate the inline expressions and push the results onto the
         // stack.
         let line_id_tag = get_line_id_tag(&ctx.hashtag_all())
             .expect_or_bug("Internal error: line should have an implicit or explicit line ID tag, but none was found.");
         let line_id = line_id_tag.text.as_ref().unwrap().get_text().to_owned();
+
+        let mut jump_over = Vec::new();
+
+        let cond = self.evaluate_line_condition(ctx);
+
+        if cond {
+            emit! {
+                self.compiler_listener.node_builder.as_mut().unwrap();
+                push jump_over = @JumpIfFalseInstruction
+            };
+        }
 
         let formatted_text = ctx.line_formatted_text().unwrap();
         let expression_count =
@@ -170,6 +173,17 @@ impl<'a, 'input: 'a> YarnSpinnerParserVisitorCompat<'input> for CodeGenerationVi
                 substitution_count: expression_count as i32
             }
         };
+
+        if ctx.line_condition().is_some() {
+            emit! {
+                compiler;
+                PopInstruction
+            };
+        }
+
+        for jump in jump_over {
+            compiler.set_destination_at(jump, compiler.next_address()).unwrap();
+        }
     }
 
     /// (expression)
