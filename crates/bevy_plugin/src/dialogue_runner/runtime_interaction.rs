@@ -38,7 +38,8 @@ fn continue_runtime(
         Commands,
     )> = SystemState::new(world);
 
-    let (mut dialogue_runners, loaded_untyped_assets, mut commands) = system_state.get_mut(world);
+    let (mut dialogue_runners, loaded_untyped_assets, mut commands) =
+        system_state.get_mut(world)?;
 
     let mut dialogues: HashMap<_, _, FixedHasher> = HashMap::default();
 
@@ -125,7 +126,7 @@ fn continue_runtime(
         Commands,
     )> = SystemState::new(world);
 
-    let (mut dialogue_runners, project, mut commands) = system_state.get_mut(world);
+    let (mut dialogue_runners, project, mut commands) = system_state.get_mut(world)?;
 
     for (source, mut dialogue_runner) in dialogue_runners.iter_mut() {
         if let Some((dialogue, is_sending_missed_events, _, Some(events))) =

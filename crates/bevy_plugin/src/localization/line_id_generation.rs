@@ -15,9 +15,10 @@ pub(crate) fn line_id_generation_plugin(app: &mut App) {
         (
             handle_yarn_file_events
                 .pipe(panic_on_err)
-                .run_if(in_development.and(has_localizations)),
+                .run_if(in_development.and_then(has_localizations)),
             handle_yarn_file_events_outside_development.run_if(
-                resource_exists::<YarnProject>.and(not(in_development.and(has_localizations))),
+                resource_exists::<YarnProject>
+                    .and_then(not(in_development.and_then(has_localizations))),
             ),
         )
             .chain()
@@ -135,7 +136,7 @@ fn handle_yarn_file_events(
         if is_watching {
             added_tags.insert(*id);
         } else {
-            let yarn_file = assets.get_mut(*id).unwrap();
+            let mut yarn_file = assets.get_mut(*id).unwrap();
             yarn_file.file.source = source_with_added_ids;
 
             let string_table = YarnCompiler::new()
