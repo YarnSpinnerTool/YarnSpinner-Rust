@@ -13,9 +13,9 @@ pub(crate) fn strings_file_updating_plugin(app: &mut App) {
                 .in_set(YarnSpinnerSystemSet)
                 .run_if(
                     in_development
-                        .and(has_localizations)
-                        .and(resource_exists::<YarnProject>)
-                        .and(events_in_queue::<UpdateAllStringsFilesForStringTableEvent>()),
+                        .and_then(has_localizations)
+                        .and_then(resource_exists::<YarnProject>)
+                        .and_then(events_in_queue::<UpdateAllStringsFilesForStringTableEvent>()),
                 ),)
                 .chain(),
         );
@@ -77,9 +77,9 @@ fn update_all_strings_files_for_string_table(
             .collect();
         let file_names = file_names.into_iter().collect::<Vec<_>>().join(", ");
         for (language, strings_file_handle) in languages_to_handles.clone() {
-            let strings_file = strings_files.get_mut(&strings_file_handle).unwrap();
+            let mut strings_file = strings_files.get_mut(&strings_file_handle).unwrap();
             lint_strings_file(
-                strings_file,
+                &strings_file,
                 &expected_file_names,
                 &asset_server,
                 &strings_file_handle,

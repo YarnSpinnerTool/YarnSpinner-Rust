@@ -4,6 +4,7 @@ use crate::typewriter::{Typewriter, TypewriterFinishedEvent};
 use bevy::color::palettes::css;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
+use bevy::text::TextLayoutInfo;
 use bevy::window::{CursorIcon, PrimaryWindow, SystemCursorIcon};
 use bevy_yarnspinner::{events::*, prelude::*};
 
@@ -12,9 +13,10 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
         Update,
         (
             create_options.run_if(resource_added::<OptionSelection>),
+            hack_sync_option_text_min_height.run_if(resource_exists::<OptionSelection>),
             show_options,
             select_option.run_if(
-                resource_exists::<OptionSelection>.and(any_with_component::<PrimaryWindow>),
+                resource_exists::<OptionSelection>.and_then(any_with_component::<PrimaryWindow>),
             ),
         )
             .chain()
@@ -62,6 +64,19 @@ fn create_options(
         **root_visibility = Visibility::Inherited;
         let mut entity_commands = commands.entity(entity);
         spawn_options(&mut entity_commands, &option_selection.options);
+    }
+}
+
+/// Looks like something is layouting the box for just one line instead of multiple ones
+/// when text is wrapped. So let's force sync stuff.
+fn hack_sync_option_text_min_height(
+    mut option_texts: Query<(&TextLayoutInfo, &mut Node), With<OptionButton>>,
+) {
+    for (layout_info, mut node) in &mut option_texts {
+        let min_height = Val::Px(layout_info.size.y);
+        if node.min_height != min_height {
+            node.min_height = min_height;
+        }
     }
 }
 

@@ -33,10 +33,7 @@ impl<'a> Reader<'a> {
     /// Parse the next T from this string, ignoring leading whitespace
     fn read_next_raw(&mut self) -> String {
         let mut string = String::new();
-        loop {
-            let Some(character) = self.read_char() else {
-                break;
-            };
+        while let Some(character) = self.read_char() {
             if character.is_whitespace() {
                 // eat leading whitespace
                 continue;

@@ -174,6 +174,7 @@ fn appends_to_pre_existing_strings_file() -> anyhow::Result<()> {
     let handle = app
         .world()
         .resource::<AssetServer>()
+        .load_builder()
         .load_untyped("dialogue/de-CH.strings.csv");
     while app
         .world()
@@ -241,16 +242,16 @@ fn replaces_entries_in_strings_file() -> anyhow::Result<()> {
             .world_mut()
             .get_resource_mut::<Assets<YarnFile>>()
             .unwrap();
-        let yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
+        let mut yarn_file = yarn_file_assets.get_mut(&handle).unwrap();
 
         let strings_file_source =
             fs::read_to_string(&strings_file_path)?.replace("*third*", "*dritter*");
         fs::write(&strings_file_path, strings_file_source)?;
 
-        let mut lines: Vec<_> = yarn_file.content().lines().collect();
-        *lines.get_mut(2).unwrap() = "Changed line without translation #line:1";
-        *lines.get_mut(3).unwrap() = "Changed line with prior translation#line:2";
-        lines.insert(4, "Inserted line #line:13");
+        let mut lines: Vec<_> = yarn_file.content().lines().map(str::to_owned).collect();
+        *lines.get_mut(2).unwrap() = "Changed line without translation #line:1".to_owned();
+        *lines.get_mut(3).unwrap() = "Changed line with prior translation#line:2".to_owned();
+        lines.insert(4, "Inserted line #line:13".to_owned());
         lines.remove(6);
         yarn_file.set_content(lines.join("\n"))?;
     }
