@@ -109,7 +109,7 @@ impl StringsFile {
                     && !record.text.starts_with(UPDATE_PREFIX)
                     && !text_is_copied_from_base_language
                 {
-                    format!("{UPDATE_PREFIX}{}", &record.text)
+                    format!("{UPDATE_PREFIX}{}", record.text)
                 } else if !text_is_copied_from_base_language {
                     // not `other_record` because that one might not contain (NEEDS UPDATE)
                     record.text.clone()
