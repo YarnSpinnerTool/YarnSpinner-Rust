@@ -20,7 +20,7 @@ pub(crate) fn ui_assets_plugin(app: &mut App) {
 }
 
 fn load_font(bytes: &[u8], _path: String) -> Font {
-    Font::try_from_bytes(bytes.to_vec()).unwrap()
+    Font::from_bytes(bytes.to_vec())
 }
 
 fn load_image(bytes: &[u8], _path: String) -> Image {

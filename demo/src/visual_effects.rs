@@ -47,7 +47,7 @@ pub(crate) fn rotate_sprite(
 
         let rotation_half_way_done = output >= 0.5;
         if rotation_half_way_done && let Some(new_sprite) = sprite.take() {
-            let material = materials.get_mut(material).unwrap();
+            let mut material = materials.get_mut(material).unwrap();
             material.base_color_texture.replace(new_sprite);
         }
         if change.is_done() {
@@ -126,7 +126,7 @@ pub(crate) fn ease_bang(
     mut commands: Commands,
 ) {
     for (entity, bang, mut transform, material) in bangs.iter_mut() {
-        let material = standard_materials.get_mut(material).unwrap();
+        let mut material = standard_materials.get_mut(material).unwrap();
         if bang.0.start_time.elapsed().as_secs_f32() >= bang.0.duration * 3.0 {
             commands.entity(entity).despawn();
             material.base_color.set_alpha(0.0);

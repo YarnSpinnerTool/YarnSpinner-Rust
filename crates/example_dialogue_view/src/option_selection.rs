@@ -14,7 +14,7 @@ pub(crate) fn option_selection_plugin(app: &mut App) {
             create_options.run_if(resource_added::<OptionSelection>),
             show_options,
             select_option.run_if(
-                resource_exists::<OptionSelection>.and(any_with_component::<PrimaryWindow>),
+                resource_exists::<OptionSelection>.and_then(any_with_component::<PrimaryWindow>),
             ),
         )
             .chain()

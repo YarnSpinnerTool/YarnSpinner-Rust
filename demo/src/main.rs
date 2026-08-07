@@ -5,8 +5,8 @@ use self::{setup::*, visual_effects::*, yarnspinner_integration::*};
 use bevy::asset::AssetMetaCheck;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
-use bevy::scene::SceneInstance;
 use bevy::window::PresentMode;
+use bevy::world_serialization::WorldInstance;
 use bevy_sprite3d::Sprite3dPlugin;
 use bevy_yarnspinner::prelude::*;
 use bevy_yarnspinner_example_dialogue_view::prelude::*;
@@ -45,7 +45,7 @@ fn main() {
         Update,
         (
             spawn_dialogue_runner.run_if(resource_added::<YarnProject>),
-            adapt_materials.run_if(any_with_component::<SceneInstance>),
+            adapt_materials.run_if(any_with_component::<WorldInstance>),
             spawn_sprites.run_if(sprites_have_loaded),
         ),
     )
