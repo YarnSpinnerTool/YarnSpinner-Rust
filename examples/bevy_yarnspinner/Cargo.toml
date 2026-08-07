@@ -11,8 +11,8 @@ publish = false
 
 [dependencies]
 bevy = { version = "0.19", features = ["file_watcher"] }
-bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.8" }
-bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.8" }
+bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.9" }
+bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.9" }
 
 [[bin]]
 name = "access_variables"

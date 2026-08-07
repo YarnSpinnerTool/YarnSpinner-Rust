@@ -1,6 +1,6 @@
 [package]
 name = "bevy_yarnspinner"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -21,7 +21,7 @@ anyhow = "1"
 csv = "1"
 serde = { version = "1", features = [ "derive" ] }
 yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
-yarnspinner = { path = "../yarnspinner", features = [ "bevy", "serde" ], version = "0.8.0" }
+yarnspinner = { path = "../yarnspinner", features = [ "bevy", "serde" ], version = "0.9.0" }
 sha2 = "0.10"
 variadics_please = "1"
 

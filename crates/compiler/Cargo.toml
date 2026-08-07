@@ -1,6 +1,6 @@
 [package]
 name = "yarnspinner_compiler"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -19,7 +19,7 @@ antlr-rust = "=0.3.0-beta"
 better_any = "=0.2.0"
 regex = "1"
 yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
-yarnspinner_core = { path = "../core", version = "0.8.0" }
+yarnspinner_core = { path = "../core", version = "0.9.0" }
 annotate-snippets = "0.12"
 serde = { version = "1", features = [ "derive" ], optional = true }
 serde_json = { version = "1", optional = true }
