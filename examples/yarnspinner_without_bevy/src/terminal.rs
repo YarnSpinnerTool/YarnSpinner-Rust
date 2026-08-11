@@ -1,7 +1,7 @@
 //! This module is here for using ratatui to interact with the terminal and
 //! crossterm to listen to input. It does not contain any code specific to yarnspinner
 
-use std::io::Stdout;
+use std::{io::Stdout, time::Duration};
 
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
@@ -35,7 +35,8 @@ pub fn set_panic_hook() {
 }
 
 pub fn poll_input() -> anyhow::Result<Option<KeyCode>> {
-    if let Event::Key(key) = crossterm::event::read()?
+    if crossterm::event::poll(Duration::from_millis(100))?
+        && let Event::Key(key) = crossterm::event::read()?
         && key.kind == KeyEventKind::Press
     {
         return Ok(Some(key.code));
