@@ -11,6 +11,7 @@ fn execute_commands(event: On<ExecuteCommand>, mut commands: Commands) {
     let event = event.clone();
     commands.queue(move |world: &mut World| {
         let Some(mut command) = clone_command(world, &event) else {
+            error!("no such command available: '{}'", event.command.name);
             return;
         };
 
