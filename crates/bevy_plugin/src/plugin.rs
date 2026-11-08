@@ -251,7 +251,10 @@ impl YarnApp for App {
         let path_str = asset_plugin.file_path.clone();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let path = FileAssetReader::get_base_path().join(path_str);
+        let path = {
+            let path = FileAssetReader::get_base_path().join(path_str);
+            std::path::absolute(&path).unwrap_or(path)
+        };
         #[cfg(target_arch = "wasm32")]
         let path = PathBuf::from(path_str);
 
