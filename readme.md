@@ -133,25 +133,11 @@ cd demo
 cargo run
 ```
 
-## Bevy 0.20 migration branch
-
-This development branch targets Bevy 0.20. Package versions remain 0.9.0 until
-an upstream release is prepared. The plugin and example dialogue view migrate
-error-context handling and UI button activation to the Bevy 0.20 APIs.
-
-The upstream 3D demo also needs a compatible `bevy_sprite3d`. For local testing,
-the workspace patches that dependency to `../bevy_sprite3d` on its `bevy-0.20`
-branch. Before upstream publication, replace this local patch with an accepted
-compatible release or a published Git revision.
-
-Fetch the pinned upstream test fixtures with `git submodule update --init --recursive`.
-Validate the plugin/UI with `cargo test -p bevy_yarnspinner -p bevy_yarnspinner_example_dialogue_view --all-features -j 2`.
-Check examples and the demo with `cargo check --workspace --all-targets -j 2`.
-
 ## Version Table
 
 | Bevy        | Yarn Spinner for Rust | Yarn Spinner | 
 |-------------|---------------------- |--------------|
+| 0.20        | 0.10                  | 2.5.0        |
 | 0.19        | 0.9                   | 2.5.0        |
 | 0.18        | 0.8                   | 2.5.0        |
 | 0.18        | 0.7                   | 2.3.0        |
