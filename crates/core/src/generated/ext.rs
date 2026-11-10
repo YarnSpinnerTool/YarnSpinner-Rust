@@ -3,6 +3,7 @@
 use crate::prelude::*;
 use core::error::Error;
 use core::fmt::{Debug, Display};
+use prost::Message;
 
 impl From<String> for Operand {
     fn from(s: String) -> Self {
@@ -112,6 +113,19 @@ impl Display for InvalidOpCodeError {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
+#[cfg_attr(feature = "bevy", reflect(opaque, Debug, PartialEq))]
+pub struct DecodeError(prost::DecodeError);
+
+impl Error for DecodeError {}
+
+impl Display for DecodeError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Could not decode program: {:?} ", self.0)
+    }
+}
+
 impl Program {
     /// Creates a new Program by merging multiple Programs together.
     ///
@@ -133,6 +147,16 @@ impl Program {
             output.initial_values.extend(program.initial_values);
         }
         Some(output)
+    }
+
+    /// Loader for compiled `.yarnc` files.
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, DecodeError> {
+        Self::decode(bytes).map_err(DecodeError)
+    }
+
+    /// Encodes this [`Program`] into bytes, which can be saved as a `.yarnc` file.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.encode_to_vec()
     }
 }
 

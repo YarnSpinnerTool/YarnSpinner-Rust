@@ -16,3 +16,5 @@
 *.zip
 *.wasm
 tools
+*.yarnc
+*.csv
