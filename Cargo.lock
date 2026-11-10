@@ -7962,6 +7962,7 @@ version = "0.10.0"
 dependencies = [
  "bevy",
  "bevy_platform",
+ "csv-core",
  "fixed_decimal",
  "icu_locale_core",
  "icu_plurals",

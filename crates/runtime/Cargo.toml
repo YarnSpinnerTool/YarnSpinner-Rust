@@ -41,6 +41,7 @@ regex = "1"
 serde = { version = "1", features = ["derive"], optional = true }
 bevy = { version = "0.20.0", default-features = false,  features = ["bevy_log"], optional = true }
 bevy_platform = { version = "0.20.0", features = ["alloc"] }
+csv-core = "0.1.13"
 
 [lints.clippy]
 std_instead_of_core = "warn"

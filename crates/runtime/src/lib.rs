@@ -15,6 +15,7 @@ extern crate std;
 
 mod analyser;
 mod command;
+mod compiled_project;
 mod dialogue;
 mod dialogue_option;
 mod events;
