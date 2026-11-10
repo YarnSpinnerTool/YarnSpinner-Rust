@@ -1,6 +1,6 @@
 [package]
 name = "bevy_yarnspinner_example_dialogue_view"
-version = "0.9.0"
+version = "0.10.0"
 edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
@@ -14,11 +14,11 @@ readme = "../../readme.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy_yarnspinner = { path = "../bevy_plugin", version = "0.9.0" }
+bevy_yarnspinner = { path = "../bevy_plugin", version = "0.10.0" }
 unicode-segmentation = "1"
 
 [dependencies.bevy]
-version = "0.19"
+version = "0.20"
 default-features = false
 features = [
     "bevy_ui",
@@ -28,4 +28,6 @@ features = [
     "png",
     "bevy_asset",
     "bevy_window",
+    "bevy_ui_widgets",
+    "ui_picking",
 ]

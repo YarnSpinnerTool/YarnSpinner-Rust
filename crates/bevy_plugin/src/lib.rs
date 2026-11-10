@@ -144,7 +144,7 @@ pub mod prelude {
         yarn_file_asset::YarnFile,
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};
-    pub(crate) use anyhow::{Context, Error};
+    pub(crate) use anyhow::Error;
     pub(crate) use serde::{Deserialize, Serialize};
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{

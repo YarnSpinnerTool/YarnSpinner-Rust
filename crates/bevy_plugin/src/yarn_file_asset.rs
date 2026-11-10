@@ -98,14 +98,13 @@ impl AssetLoader for YarnFileAssetLoader {
 
 fn read_yarn_file(bytes: Vec<u8>, load_context: &LoadContext) -> Result<YarnFile, Error> {
     let source = String::from_utf8(bytes)?;
-    let file_name = load_context
-        .path()
-        .path()
-        .file_name()
-        .context("Yarn file has no filename")?
-        .to_str()
-        .context("Yarn file name is not valid UTF-8")?
-        .to_owned();
+    let file_name = anyhow::Context::context(
+        load_context.path().path().file_name(),
+        "Yarn file has no filename",
+    )?;
+    let file_name =
+        anyhow::Context::context(file_name.to_str(), "Yarn file name is not valid UTF-8")?
+            .to_owned();
     let file = InnerYarnFile { file_name, source };
     let string_table = YarnCompiler::new()
         .with_compilation_type(CompilationType::StringsOnly)

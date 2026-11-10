@@ -70,7 +70,7 @@ impl Diagnostic {
         T: ParserRuleContextExt<'input>,
     <<<<T as CustomRuleContext<'input>>::TF as TokenFactory<'input>>::Inner as Token>::Data as ToOwned>::Owned:
         Into<String>
-    {
+{
         let lines_above_and_below_offending_line = 2;
         let lines_around = ctx.get_lines_around(token_stream, lines_above_and_below_offending_line);
         let range = ctx.range();

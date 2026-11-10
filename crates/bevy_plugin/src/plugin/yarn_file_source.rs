@@ -59,7 +59,9 @@ impl YarnFileSource {
         match self {
             Self::Handle(handle) => Ok(vec![handle.clone()]),
             Self::InMemory(yarn_file) => Ok(vec![assets.add(yarn_file.clone())]),
-            Self::File(path) => Ok(vec![asset_server.load(path.clone())]),
+            // A PathBuf becomes a default-source AssetPath in Bevy. Parse its
+            // string form instead so named sources such as game:// survive.
+            Self::File(path) => Ok(vec![asset_server.load(path.to_string_lossy().into_owned())]),
             #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
             Self::Folder(path) => Self::load_folder(asset_server, path.as_path(), asset_root),
         }
@@ -77,20 +79,22 @@ impl YarnFileSource {
             "Failed to load Yarn file folder {path}.\nHelp: Does the folder exist?",
             path = path.display()
         );
-        let handles: Result<Vec<_>> =
-            glob(path.join("**/*.yarn").to_str().with_context(|| {
+        let handles: Result<Vec<_>> = glob(anyhow::Context::with_context(
+            path.join("**/*.yarn").to_str(),
+            || {
                 format!(
                     "Failed to create string from path: {path}",
                     path = path.display(),
                 )
-            })?)?
-            .map(|entry| {
-                let full_path = entry?;
-                let path = full_path.strip_prefix(&asset_root.0)?;
-                let asset_path = path.to_string_lossy().replace('\\', "/");
-                Ok(asset_server.load(asset_path))
-            })
-            .collect();
+            },
+        )?)?
+        .map(|entry| {
+            let full_path = entry?;
+            let path = full_path.strip_prefix(&asset_root.0)?;
+            let asset_path = path.to_string_lossy().replace('\\', "/");
+            Ok(asset_server.load(asset_path))
+        })
+        .collect();
         let handles = handles?;
 
         if handles.is_empty() {

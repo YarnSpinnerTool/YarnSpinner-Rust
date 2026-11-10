@@ -113,17 +113,22 @@ fn handle_yarn_file_events(
         if added_tags.contains(id) {
             continue;
         }
-        let asset_path = asset_server
-            .get_path(*id)
-            .with_context(|| format!("Failed to overwrite Yarn file \"{}\" with new IDs because it was not found on disk",
-                                     yarn_file.file_name()))?;
+        let asset_path = anyhow::Context::with_context(asset_server.get_path(*id), || {
+            format!(
+                "Failed to overwrite Yarn file \"{}\" with new IDs because it was not found on disk",
+                yarn_file.file_name()
+            )
+        })?;
         let path = asset_root.0.join(asset_path.path());
 
-        std::fs::write(&path, &source_with_added_ids)
-                    .context(
-                        format!("Failed to overwrite Yarn file at {} with new line IDs. \
+        anyhow::Context::context(
+            std::fs::write(&path, &source_with_added_ids),
+            format!(
+                "Failed to overwrite Yarn file at {} with new line IDs. \
                                  Aborting because localization requires all lines to have IDs, but this file is missing some.",
-                                path.display()))?;
+                path.display()
+            ),
+        )?;
 
         info!(
             "Automatically generated line IDs for Yarn file at {}",

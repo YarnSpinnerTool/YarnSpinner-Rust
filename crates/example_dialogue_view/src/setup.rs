@@ -1,6 +1,8 @@
 use crate::assets::{font_handle, image_handle};
 use bevy::ecs::system::EntityCommands;
+use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy_yarnspinner::prelude::*;
 
 pub(crate) fn ui_setup_plugin(app: &mut App) {
@@ -178,6 +180,7 @@ where
                         .spawn((
                             fmt_name("option text"),
                             Button,
+                            Hovered::default(),
                             Text::default(),
                             style::options(),
                             ImageNode::default().with_color(Color::NONE),

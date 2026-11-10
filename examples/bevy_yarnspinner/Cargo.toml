@@ -10,9 +10,9 @@ authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 publish = false
 
 [dependencies]
-bevy = { version = "0.19", features = ["file_watcher"] }
-bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.9" }
-bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.9" }
+bevy = { version = "0.20", features = ["file_watcher"] }
+bevy_yarnspinner = { path = "../../crates/bevy_plugin", version = "0.10" }
+bevy_yarnspinner_example_dialogue_view = { path = "../../crates/example_dialogue_view", version = "0.10" }
 
 [[bin]]
 name = "access_variables"
