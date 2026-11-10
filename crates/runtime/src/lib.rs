@@ -15,7 +15,6 @@ extern crate std;
 
 mod analyser;
 mod command;
-mod compiled;
 mod dialogue;
 mod dialogue_option;
 mod events;
@@ -44,7 +43,6 @@ pub mod prelude {
     pub use crate::{
         analyser::*,
         command::*,
-        compiled::*,
         dialogue::{Dialogue, DialogueError},
         dialogue_option::*,
         events::*,

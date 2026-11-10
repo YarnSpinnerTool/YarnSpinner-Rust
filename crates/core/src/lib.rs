@@ -13,6 +13,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+mod compiled;
 mod feature_gates;
 mod generated;
 mod internal_value;
@@ -40,6 +41,7 @@ pub mod prelude {
     };
 
     pub use crate::{
+        compiled::*,
         generated::{
             Header, Instruction, InvalidOpCodeError, Node, Operand, Program, instruction::OpCode,
             operand::Value as OperandValue,
