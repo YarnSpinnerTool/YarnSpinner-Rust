@@ -44,6 +44,7 @@ pub mod prelude {
     pub use crate::{
         analyser::*,
         command::*,
+        compiled_project::*,
         dialogue::{Dialogue, DialogueError},
         dialogue_option::*,
         events::*,

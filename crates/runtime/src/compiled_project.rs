@@ -1,22 +1,22 @@
 use core::{
     error::Error,
     ops::{Deref, DerefMut},
+    str::Utf8Error,
 };
-
-use alloc::string::FromUtf8Error;
+use std::collections::HashMap;
 
 use crate::prelude::*;
 
 pub struct CompiledProject {
-    program: Program,
-    lines: Lines,
-    metadata: Metadata,
+    pub program: Program,
+    pub lines: Lines,
+    pub metadata: Metadata,
 }
 
 #[derive(Debug)]
 pub enum CsvParseError {
     BadLine(usize, usize, Option<String>),
-    Utf8(FromUtf8Error),
+    Utf8(Utf8Error),
 }
 
 impl core::fmt::Display for CsvParseError {
@@ -32,8 +32,8 @@ impl core::fmt::Display for CsvParseError {
 }
 impl Error for CsvParseError {}
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Line {
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct YscLine {
     id: LineId,
     text: String,
     file: String,
@@ -41,7 +41,8 @@ pub struct Line {
     line_number: usize,
 }
 
-pub struct Csv<const FIELDS: usize>(Vec<Vec<String>>);
+#[derive(Debug)]
+struct Csv<const FIELDS: usize>(Vec<Vec<String>>);
 impl<const FIELD_COUNT: usize> Csv<FIELD_COUNT> {
     fn from_bytes(bytes: &[u8]) -> core::result::Result<Self, CsvParseError> {
         let mut this = Self(vec![]);
@@ -61,8 +62,9 @@ impl<const FIELD_COUNT: usize> Csv<FIELD_COUNT> {
                     buf.resize(buf.len() * 2, 0);
                 }
                 csv_core::ReadFieldResult::Field { record_end } => {
-                    let res = String::from_utf8(buf[..out_len].to_vec())
-                        .map_err(|e| CsvParseError::Utf8(e))?;
+                    let res = core::str::from_utf8(&buf)
+                        .map_err(CsvParseError::Utf8)?
+                        .to_owned();
                     fields.push(res);
                     out_len = 0;
 
@@ -83,8 +85,7 @@ impl<const FIELD_COUNT: usize> Csv<FIELD_COUNT> {
                                 )),
                             ));
                         }
-                        this.0.push(fields.clone());
-                        fields.clear();
+                        this.0.push(core::mem::take(&mut fields));
                     }
                 }
                 csv_core::ReadFieldResult::End => break,
@@ -94,15 +95,15 @@ impl<const FIELD_COUNT: usize> Csv<FIELD_COUNT> {
     }
 }
 
-#[derive(Debug)]
-pub struct Lines(Vec<Line>);
+#[derive(Debug, Clone)]
+pub struct Lines(Vec<YscLine>);
 impl DerefMut for Lines {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 impl Deref for Lines {
-    type Target = Vec<Line>;
+    type Target = Vec<YscLine>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -115,9 +116,9 @@ impl Lines {
         let mut record_count = 0;
         for mut record in csv.0 {
             // guaranteed len of 5
-            record.reverse();
-            let mut next = || record.pop().unwrap();
-            let line = Line {
+            let mut record = record.iter_mut().rev();
+            let mut next = || core::mem::take(record.next().take().unwrap());
+            let line = YscLine {
                 id: LineId(next()),
                 text: next(),
                 file: next(),
@@ -131,6 +132,13 @@ impl Lines {
         }
         Ok(this)
     }
+    #[cfg(feature = "std")]
+    pub fn to_string_table(self) -> HashMap<LineId, String> {
+        self.0
+            .into_iter()
+            .map(|line| (line.id, line.text))
+            .collect()
+    }
 }
 
 #[test]
@@ -143,7 +151,7 @@ line:123abc,"Hello World!",fake/path/hello_world.yarn,HelloWorld,3
     assert!(!lines.is_empty());
     assert_eq!(
         lines.first().unwrap(),
-        &Line {
+        &YscLine {
             id: LineId("line:123abc".to_string()),
             text: "Hello World!".to_string(),
             file: "fake/path/hello_world.yarn".to_string(),
@@ -153,7 +161,7 @@ line:123abc,"Hello World!",fake/path/hello_world.yarn,HelloWorld,3
     );
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct MetadataLine {
     id: LineId,
     node: String,
@@ -161,6 +169,7 @@ pub struct MetadataLine {
     tags: Vec<String>, // space-separated
 }
 
+#[derive(Debug, Clone)]
 pub struct Metadata(Vec<MetadataLine>);
 impl core::ops::DerefMut for Metadata {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -181,16 +190,24 @@ impl Metadata {
         let mut this = Self(vec![]);
         let mut record_count = 0;
         for mut record in csv.0 {
-            // guaranteed len of 5
-            record.reverse();
-            let mut next = || record.pop().unwrap();
+            let mut record = record.iter_mut().rev();
+            let mut next = || core::mem::take(record.next().take().unwrap());
+            let id = LineId(next());
+            let node = next();
+            let line_number = next().parse().map_err(|e: core::num::ParseIntError| {
+                CsvParseError::BadLine(record_count, 4, Some(e.to_string()))
+            })?;
+            let tags_raw = next();
+            let tags = if tags_raw.is_empty() {
+                vec![]
+            } else {
+                tags_raw.split_whitespace().map(|s| s.to_string()).collect()
+            };
             let line = MetadataLine {
-                id: LineId(next()),
-                node: next(),
-                line_number: next().parse().map_err(|e: core::num::ParseIntError| {
-                    CsvParseError::BadLine(record_count, 5, Some(e.to_string()))
-                })?,
-                tags: next().split(" ").map(|s| s.to_string()).collect(),
+                id,
+                node,
+                line_number,
+                tags,
             };
             this.0.push(line);
             record_count += 1;
@@ -214,6 +231,25 @@ line:123abc,Start,3,a b c
             node: "Start".to_string(),
             line_number: 3,
             tags: ["a", "b", "c"].iter().map(|s| s.to_string()).collect()
+        }
+    );
+}
+
+#[test]
+fn test_metadata_no_tags() {
+    let bytes = r#"
+id,node,lineNumber,tags
+line:123abc,Start,3,
+"#;
+    let metadata = Metadata::from_bytes(bytes.as_bytes()).unwrap();
+    assert!(!metadata.is_empty());
+    assert_eq!(
+        metadata.first().unwrap(),
+        &MetadataLine {
+            id: LineId("line:123abc".to_string()),
+            node: "Start".to_string(),
+            line_number: 3,
+            tags: vec![],
         }
     );
 }
