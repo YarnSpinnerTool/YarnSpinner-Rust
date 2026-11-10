@@ -7,9 +7,15 @@ use std::collections::HashMap;
 
 use crate::prelude::*;
 
-pub struct CompiledProject {
+/// A bundle of data for a yarn file as output from `ysc`. Useful for loading in
+/// precompiled assets.
+#[derive(Debug)]
+pub struct CompiledFile {
+    /// The [`Program`] associated with a single yarn file.
     pub program: Program,
+    /// Compiled [`YscLine`] data. Typically converted to [`Line`]s using [`YscLine::to_string_table`]
     pub lines: Lines,
+    /// Compiled [`MetadataLine`]s for a yarn file.
     pub metadata: Metadata,
 }
 
