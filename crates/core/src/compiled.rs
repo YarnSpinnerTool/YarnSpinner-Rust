@@ -1,10 +1,11 @@
 use core::{
-    error::Error,
     ops::{Deref, DerefMut},
     str::Utf8Error,
 };
 #[cfg(feature = "std")]
 use std::collections::HashMap;
+
+use thiserror::Error;
 
 use crate::prelude::*;
 
@@ -21,26 +22,15 @@ pub struct CompiledFile {
 }
 
 /// A CSV file failed to parse.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CsvParseError {
     /// Describes a bad line at (row, column) with an optional message.
+    #[error("Could not parse CSV at line {0}, field {1}. More info: {2:?}")]
     BadLine(usize, usize, Option<String>),
     /// A UTF-8 error occurred when reading the data.
+    #[error("A UTF-8 error occured. Details: {0:?}")]
     Utf8(Utf8Error),
 }
-
-impl core::fmt::Display for CsvParseError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            CsvParseError::BadLine(record_count, field_count, extra) => f.write_fmt(format_args!(
-                "Could not parse CSV at line {record_count} field {field_count} {}",
-                extra.as_ref().unwrap_or(&String::new())
-            )),
-            CsvParseError::Utf8(error) => f.write_str(&error.to_string()),
-        }
-    }
-}
-impl Error for CsvParseError {}
 
 /// A line from a `ysc` compiled yarn file's `-Lines.csv` file.
 #[derive(Debug, PartialEq, Eq, Clone)]

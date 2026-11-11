@@ -142,6 +142,15 @@ have included the YarnSpinner-Console repo as a submodule and have a script at
 path. See the version table below to check if you have the right `ysc` already
 installed.
 
+Set up:
+
+```sh
+git clone --recursive https://github.com/YarnSpinnerTool/YarnSpinner-Rust
+cd YarnSpinner-Rust
+./scripts/install-ysc.sh
+./tools/ysc --version
+```
+
 ## Version Table
 
 | Bevy        | Yarn Spinner for Rust | Yarn Spinner | 
