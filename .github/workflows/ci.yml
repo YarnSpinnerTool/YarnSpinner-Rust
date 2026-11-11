@@ -187,6 +187,17 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
+      - name: get ysc rev
+        id: ysc-rev
+        run: echo "rev=$(git -C third-party/YarnSpinner-Console rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: get ysc from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tools
+          key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
+          fail-on-cache-miss: true
+
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Run cargo test for non-bevy
@@ -214,17 +225,6 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-
-      - name: get ysc rev
-        id: ysc-rev
-        run: echo "rev=$(git -C third-party/YarnSpinner-Console rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: get ysc from cache
-        uses: actions/cache/restore@v4
-        with:
-          path: tools
-          key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
-          fail-on-cache-miss: true
 
       - name: Install Bevy CLI
         run: cargo install --git=https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli

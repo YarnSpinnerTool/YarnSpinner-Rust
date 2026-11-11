@@ -133,6 +133,15 @@ cd demo
 cargo run
 ```
 
+## Development
+
+You will need to have the correct version of `ysc` installed in your path. We
+have included the YarnSpinner-Console repo as a submodule and have a script at
+`./scripts/install-ysc.sh` to make this as easy as possible. We recommend using
+[direnv](https://direnv.net/) to automatically add the compiled `ysc` to your
+path. See the version table below to check if you have the right `ysc` already
+installed.
+
 ## Version Table
 
 | Bevy        | Yarn Spinner for Rust | Yarn Spinner | 
