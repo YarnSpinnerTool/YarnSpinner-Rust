@@ -26,6 +26,8 @@ bevy = { version = "0.20", default-features = false, optional = true, features =
 variadics_please = "1.1.0"
 hashbrown = "0.16.1"
 yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
+csv-core = "0.1.13"
+thiserror = { version = "2.0.21", default-features = false }
 
 [dev-dependencies]
 static_assertions = "1.1.0"

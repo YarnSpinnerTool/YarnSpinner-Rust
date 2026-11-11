@@ -10,6 +10,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  install-ysc:
+    name: Install YSC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - name: get ysc rev
+        id: ysc-rev
+        run: echo "rev=$(git -C third-party/YarnSpinner-Console rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: cache ysc
+        id: ysc-cache
+        uses: actions/cache@v4
+        with:
+          path: tools
+          key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
+
+      - name: Run install script
+        if: steps.ysc-cache.outputs.cache-hit != 'true'
+        run: |
+          "$GITHUB_WORKSPACE/scripts/install-ysc.sh"
+          echo "$GITHUB_WORKSPACE/tools" >> "$GITHUB_PATH"
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -80,10 +105,23 @@ jobs:
     name: Test with Bevy
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: [ install-ysc ]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: "true"
+
+      - name: get ysc rev
+        id: ysc-rev
+        run: echo "rev=$(git -C third-party/YarnSpinner-Console rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: get ysc from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tools
+          key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
+          fail-on-cache-miss: true
+
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -148,6 +186,17 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: get ysc rev
+        id: ysc-rev
+        run: echo "rev=$(git -C third-party/YarnSpinner-Console rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: get ysc from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tools
+          key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
+          fail-on-cache-miss: true
 
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
