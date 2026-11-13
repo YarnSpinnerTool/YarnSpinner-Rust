@@ -7,6 +7,7 @@ pub(crate) use compilation::{
 };
 use std::fmt::Debug;
 use std::iter;
+use yarnspinner::core::CompiledFile;
 
 mod compilation;
 
@@ -19,6 +20,9 @@ pub(crate) fn project_plugin(app: &mut App) {
 pub(crate) struct CompilationSystemSet;
 
 /// The compiled Yarn project built from the Yarn files passed to the [`YarnSpinnerPlugin`], or, in the deferred loading case, the Yarn files passed to the [`LoadYarnProjectEvent`].
+///
+/// Not to be confused with [`YarnProjectFile`], which corresponds to the `.yarnproject` file.
+///
 /// This [`Resource`](bevy::prelude::Resource) is inserted into the world automatically for you once all files have been loaded and compiled. You can react to this by configuring a system like this:
 /// ```rust
 /// # use bevy::prelude::*;
@@ -34,10 +38,9 @@ pub(crate) struct CompilationSystemSet;
 #[derive(Resource, Debug)]
 pub struct YarnProject {
     pub(crate) yarn_files: HashSet<Handle<YarnFile>>,
-    pub(crate) compilation: Compilation,
+    pub(crate) compilation: CompiledFile,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: SkipDebug<AssetServer>,
-    pub(crate) metadata: HashMap<LineId, Vec<String>>,
     pub(crate) watching_for_changes: bool,
     pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
@@ -48,12 +51,12 @@ impl YarnProject {
         self.yarn_files.iter()
     }
 
-    /// Returns the underlying [`Compilation`] of this project. This is advanced functionality.
-    pub fn compilation(&self) -> &Compilation {
+    /// Returns the underlying [`CompiledFile`] of this project. This is advanced functionality.
+    pub fn compiled_file(&self) -> &CompiledFile {
         &self.compilation
     }
 
-    /// Returns the [`Localizations`] of this project, if any. These come from [`YarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
+    /// Returns the [`Localizations`] of this project, if any. These come from [`ManualYarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
     pub fn localizations(&self) -> Option<&Localizations> {
         self.localizations.as_ref()
     }
@@ -71,15 +74,21 @@ impl YarnProject {
 
     /// Returns the metadata associated with the given [`LineId`], if any. This can also be accessed on a given [`LocalizedLine`] via its `metadata` field.
     pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
-        self.metadata.get(line_id).map(|v| v.as_slice())
+        self.compilation.line_metadata(line_id)
+    }
+
+    /// Builds a table from each [`LineId`] to its base-language text. Consumed by [`TextProvider`]s.
+    pub(crate) fn text_table(&self) -> std::collections::HashMap<LineId, String> {
+        self.compilation
+            .texts()
+            .map(|(id, text)| (id.clone(), text.to_owned()))
+            .collect()
     }
 
     /// Returns the headers associated with the given node, if it exists.
     pub fn headers_for_node(&self, node_name: &str) -> Option<HashMap<&str, Vec<&str>>> {
         self.compilation
             .program
-            .as_ref()
-            .unwrap()
             .nodes
             .get(node_name)?
             .headers
@@ -146,7 +155,7 @@ impl LoadYarnProjectEvent {
         Self::with_yarn_sources(iter::once(yarn_file_source))
     }
 
-    /// See [`YarnSpinnerPlugin::add_yarn_source`].
+    /// See [`ManualYarnSpinnerPlugin::add_yarn_source`].
     #[must_use]
     pub fn add_yarn_source(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.yarn_files.insert(yarn_file.into());
@@ -164,7 +173,7 @@ impl LoadYarnProjectEvent {
         self
     }
 
-    /// See [`YarnSpinnerPlugin::with_localizations`].
+    /// See [`ManualYarnSpinnerPlugin::with_localizations`].
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
@@ -172,7 +181,7 @@ impl LoadYarnProjectEvent {
         self
     }
 
-    /// See [`YarnSpinnerPlugin::with_development_file_generation`].
+    /// See [`ManualYarnSpinnerPlugin::with_development_file_generation`].
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn with_development_file_generation(

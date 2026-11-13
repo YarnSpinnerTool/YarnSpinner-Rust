@@ -24,6 +24,7 @@ yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0" }
 yarnspinner = { path = "../yarnspinner", features = [ "bevy", "serde" ], version = "0.10.0" }
 sha2 = "0.10"
 variadics_please = "1"
+serde_json = "1.0.154"
 
 [dependencies.bevy]
 version = "0.20"
