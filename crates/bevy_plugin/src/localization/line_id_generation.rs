@@ -101,9 +101,13 @@ fn handle_yarn_file_events(
             }
             last_recompiled_yarn_file.replace(yarn_file.clone());
             for mut dialogue_runner in dialogue_runners.iter_mut() {
-                dialogue_runner
-                    .text_provider
-                    .extend_base_string_table(yarn_file.string_table.clone());
+                dialogue_runner.text_provider.extend_base_string_table(
+                    yarn_file
+                        .string_table
+                        .iter()
+                        .map(|(id, info)| (id.clone(), info.text.clone()))
+                        .collect(),
+                );
             }
             added_tags.remove(id);
             recompilation_needed = true;

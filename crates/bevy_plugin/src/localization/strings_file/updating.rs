@@ -63,9 +63,9 @@ fn update_all_strings_files_for_string_table(
         expected_file_names.extend(
             project
                 .compilation
-                .string_table
-                .values()
-                .map(|string_info| string_info.file_name.clone()),
+                .lines
+                .iter()
+                .map(|line| line.file.clone()),
         );
     }
 
