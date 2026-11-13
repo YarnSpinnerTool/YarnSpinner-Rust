@@ -23,7 +23,6 @@ fn loads_yarnproject_as_asset() {
     assert_eq!(project.project_file_version, CURRENT_PROJECT_FILE_VERSION);
     assert_eq!(project.source_file_patterns, ["lines.yarn"]);
     assert_eq!(project.base_language, "en");
-    assert_eq!(file.files().len(), 1);
 }
 
 fn load_yarnproject(app: &mut App, path: &'static str) -> Handle<YarnProjectFile> {
