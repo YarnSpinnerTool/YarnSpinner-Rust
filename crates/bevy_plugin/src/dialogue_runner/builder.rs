@@ -6,6 +6,7 @@ use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use std::any::{Any, TypeId};
 use std::fmt::Debug;
+use yarnspinner::core::CompiledFile;
 
 pub(crate) fn dialogue_runner_builder_plugin(_app: &mut App) {}
 
@@ -17,7 +18,7 @@ pub struct DialogueRunnerBuilder {
     asset_providers: HashMap<TypeId, Box<dyn AssetProvider>>,
     library: YarnLibrary,
     commands: YarnCommands,
-    compilation: Compilation,
+    compilation: CompiledFile,
     localizations: Option<Localizations>,
     asset_server: SkipDebug<AssetServer>,
 }
@@ -33,7 +34,7 @@ impl DialogueRunnerBuilder {
             asset_providers: HashMap::default(),
             library: YarnLibrary::standard_library(),
             commands: YarnCommands::builtin_commands(commands),
-            compilation: yarn_project.compilation().clone(),
+            compilation: yarn_project.compiled_file().clone(),
             localizations: yarn_project.localizations().cloned(),
             asset_server: yarn_project.asset_server.clone(),
         }
@@ -77,7 +78,7 @@ impl DialogueRunnerBuilder {
             .set_line_hints_enabled(true)
             .library_mut()
             .extend(self.library);
-        dialogue.add_program(self.compilation.program.unwrap());
+        dialogue.add_program(self.compilation.program);
 
         for asset_provider in self.asset_providers.values_mut() {
             if let Some(ref localizations) = self.localizations {

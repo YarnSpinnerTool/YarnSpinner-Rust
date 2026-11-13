@@ -62,7 +62,6 @@ fn update_all_strings_files_for_string_table(
     if expected_file_names.is_empty() {
         expected_file_names.extend(
             project
-                .compilation
                 .string_table
                 .values()
                 .map(|string_info| string_info.file_name.clone()),

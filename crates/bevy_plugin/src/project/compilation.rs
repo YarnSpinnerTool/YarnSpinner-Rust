@@ -7,6 +7,7 @@ use anyhow::{Result, anyhow, bail};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::fmt::Debug;
+use yarnspinner::core::CompiledFile;
 
 pub(crate) fn project_compilation_plugin(app: &mut App) {
     app.register_type::<YarnFilesToLoad>()
@@ -136,14 +137,12 @@ fn recompile_loaded_yarn_files(
     else {
         return Ok(());
     };
-    let metadata = compilation
-        .string_table
-        .iter()
-        .map(|(line_id, string_info)| (line_id.clone(), string_info.metadata.clone()))
-        .collect();
-    yarn_project.compilation = compilation;
-    yarn_project.metadata = metadata;
-    let program = yarn_project.compilation.program.clone().unwrap();
+
+    let file = CompiledFile::from_compilation(compilation);
+    yarn_project.string_table = file.string_table();
+    yarn_project.compilation = file;
+
+    let program = yarn_project.compilation.program.clone();
     for mut dialogue_runner in dialogue_runners.iter_mut() {
         let current_node = dialogue_runner.current_node();
         dialogue_runner
@@ -152,7 +151,7 @@ fn recompile_loaded_yarn_files(
             .replace_program(program.clone());
         dialogue_runner
             .text_provider
-            .set_base_string_table(yarn_project.compilation.string_table.clone());
+            .set_base_string_table(yarn_project.string_table.clone());
         if let Some(current_node) = current_node {
             dialogue_runner
                 .stop()
@@ -242,19 +241,15 @@ fn compile_loaded_yarn_files(
         }
     }
 
-    let metadata = compilation
-        .string_table
-        .iter()
-        .map(|(line_id, string_info)| (line_id.clone(), string_info.metadata.clone()))
-        .collect();
+    let compiled_file = CompiledFile::from_compilation(compilation);
     commands.insert_resource(YarnProject {
         yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
-        compilation,
+        string_table: compiled_file.string_table(),
+        compilation: compiled_file,
         localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         asset_server: SkipDebug(asset_server.clone()),
         watching_for_changes: yarn_project_config_to_load.watching_for_changes,
         development_file_generation,
-        metadata,
     });
 
     let file_plural = if file_count == 1 { "file" } else { "files" };

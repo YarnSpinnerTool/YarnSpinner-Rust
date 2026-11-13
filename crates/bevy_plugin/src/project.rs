@@ -7,6 +7,7 @@ pub(crate) use compilation::{
 };
 use std::fmt::Debug;
 use std::iter;
+use yarnspinner::core::CompiledFile;
 
 mod compilation;
 
@@ -34,10 +35,10 @@ pub(crate) struct CompilationSystemSet;
 #[derive(Resource, Debug)]
 pub struct YarnProject {
     pub(crate) yarn_files: HashSet<Handle<YarnFile>>,
-    pub(crate) compilation: Compilation,
+    pub(crate) compilation: CompiledFile,
+    pub(crate) string_table: std::collections::HashMap<LineId, StringInfo>,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: SkipDebug<AssetServer>,
-    pub(crate) metadata: HashMap<LineId, Vec<String>>,
     pub(crate) watching_for_changes: bool,
     pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
@@ -48,8 +49,8 @@ impl YarnProject {
         self.yarn_files.iter()
     }
 
-    /// Returns the underlying [`Compilation`] of this project. This is advanced functionality.
-    pub fn compilation(&self) -> &Compilation {
+    /// Returns the underlying [`CompiledFile`] of this project. This is advanced functionality.
+    pub fn compiled_file(&self) -> &CompiledFile {
         &self.compilation
     }
 
@@ -71,15 +72,15 @@ impl YarnProject {
 
     /// Returns the metadata associated with the given [`LineId`], if any. This can also be accessed on a given [`LocalizedLine`] via its `metadata` field.
     pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
-        self.metadata.get(line_id).map(|v| v.as_slice())
+        self.string_table
+            .get(line_id)
+            .map(|info| info.metadata.as_slice())
     }
 
     /// Returns the headers associated with the given node, if it exists.
     pub fn headers_for_node(&self, node_name: &str) -> Option<HashMap<&str, Vec<&str>>> {
         self.compilation
             .program
-            .as_ref()
-            .unwrap()
             .nodes
             .get(node_name)?
             .headers

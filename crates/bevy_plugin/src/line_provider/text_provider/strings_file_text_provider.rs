@@ -116,7 +116,7 @@ impl StringsFileTextProvider {
             asset_server: yarn_project.asset_server.clone(),
             localizations: yarn_project.localizations.clone(),
             language: None,
-            base_string_table: yarn_project.compilation.string_table.clone(),
+            base_string_table: yarn_project.string_table.clone(),
             strings_file_handle: None,
             translation_string_table: None,
             event_cursor: Default::default(),
