@@ -20,7 +20,7 @@ pub struct StringsFileTextProvider {
     asset_server: SkipDebug<AssetServer>,
     localizations: Option<Localizations>,
     language: Option<Language>,
-    base_string_table: HashMap<LineId, StringInfo>,
+    base_string_table: HashMap<LineId, String>,
     strings_file_handle: Option<Handle<StringsFile>>,
     translation_string_table: Option<HashMap<LineId, String>>,
     event_cursor: Arc<RwLock<MessageCursor<AssetEvent<StringsFile>>>>,
@@ -37,7 +37,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
 
     fn get_text(&self, id: &LineId) -> Option<String> {
         if self.is_base_language() {
-            return self.base_string_table.get(id).map(|info| info.text.clone());
+            return self.base_string_table.get(id).cloned();
         }
 
         self.translation_string_table
@@ -50,7 +50,7 @@ impl UnderlyingTextProvider for StringsFileTextProvider {
                 } else {
                     warn!("Did not find translation for line {id} in language {language} because the strings file has not been loaded yet, falling back to base language.");
                 }
-                self.base_string_table.get(id).map(|info| info.text.clone())
+                self.base_string_table.get(id).cloned()
             })
     }
 
@@ -116,7 +116,7 @@ impl StringsFileTextProvider {
             asset_server: yarn_project.asset_server.clone(),
             localizations: yarn_project.localizations.clone(),
             language: None,
-            base_string_table: yarn_project.string_table.clone(),
+            base_string_table: yarn_project.text_table(),
             strings_file_handle: None,
             translation_string_table: None,
             event_cursor: Default::default(),
@@ -139,11 +139,11 @@ impl StringsFileTextProvider {
 }
 
 impl TextProvider for StringsFileTextProvider {
-    fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+    fn set_base_string_table(&mut self, string_table: HashMap<LineId, String>) {
         self.base_string_table = string_table;
     }
 
-    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, String>) {
         self.base_string_table.extend(string_table);
     }
 

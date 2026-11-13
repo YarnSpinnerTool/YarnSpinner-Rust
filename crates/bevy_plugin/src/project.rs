@@ -36,7 +36,6 @@ pub(crate) struct CompilationSystemSet;
 pub struct YarnProject {
     pub(crate) yarn_files: HashSet<Handle<YarnFile>>,
     pub(crate) compilation: CompiledFile,
-    pub(crate) string_table: std::collections::HashMap<LineId, StringInfo>,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: SkipDebug<AssetServer>,
     pub(crate) watching_for_changes: bool,
@@ -72,9 +71,15 @@ impl YarnProject {
 
     /// Returns the metadata associated with the given [`LineId`], if any. This can also be accessed on a given [`LocalizedLine`] via its `metadata` field.
     pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
-        self.string_table
-            .get(line_id)
-            .map(|info| info.metadata.as_slice())
+        self.compilation.line_metadata(line_id)
+    }
+
+    /// Builds a table from each [`LineId`] to its base-language text. Consumed by [`TextProvider`]s.
+    pub(crate) fn text_table(&self) -> std::collections::HashMap<LineId, String> {
+        self.compilation
+            .texts()
+            .map(|(id, text)| (id.clone(), text.to_owned()))
+            .collect()
     }
 
     /// Returns the headers associated with the given node, if it exists.

@@ -20,6 +20,18 @@ pub struct CompiledFile {
     pub metadata: YscMetadata,
 }
 
+impl CompiledFile {
+    /// Iterates over each line's [`LineId`] and its base-language text.
+    pub fn texts(&self) -> impl Iterator<Item = (&LineId, &str)> {
+        self.lines.iter().map(|line| (&line.id, line.text.as_str()))
+    }
+
+    /// Returns the tags associated with the given [`LineId`], if any.
+    pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
+        self.metadata.tags(line_id)
+    }
+}
+
 /// A CSV file failed to parse.
 #[derive(Debug, Error)]
 pub enum CsvParseError {

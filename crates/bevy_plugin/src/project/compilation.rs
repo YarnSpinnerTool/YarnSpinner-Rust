@@ -138,9 +138,7 @@ fn recompile_loaded_yarn_files(
         return Ok(());
     };
 
-    let file = CompiledFile::from_compilation(compilation);
-    yarn_project.string_table = file.string_table();
-    yarn_project.compilation = file;
+    yarn_project.compilation = CompiledFile::from_compilation(compilation);
 
     let program = yarn_project.compilation.program.clone();
     for mut dialogue_runner in dialogue_runners.iter_mut() {
@@ -151,7 +149,7 @@ fn recompile_loaded_yarn_files(
             .replace_program(program.clone());
         dialogue_runner
             .text_provider
-            .set_base_string_table(yarn_project.string_table.clone());
+            .set_base_string_table(yarn_project.text_table());
         if let Some(current_node) = current_node {
             dialogue_runner
                 .stop()
@@ -241,11 +239,9 @@ fn compile_loaded_yarn_files(
         }
     }
 
-    let compiled_file = CompiledFile::from_compilation(compilation);
     commands.insert_resource(YarnProject {
         yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
-        string_table: compiled_file.string_table(),
-        compilation: compiled_file,
+        compilation: CompiledFile::from_compilation(compilation),
         localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
         asset_server: SkipDebug(asset_server.clone()),
         watching_for_changes: yarn_project_config_to_load.watching_for_changes,
