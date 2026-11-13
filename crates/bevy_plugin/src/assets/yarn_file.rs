@@ -66,7 +66,7 @@ impl Hash for YarnFile {
     }
 }
 
-pub(crate) fn yarnspinner_asset_loader_plugin(app: &mut App) {
+pub(crate) fn plugin(app: &mut App) {
     app.init_asset::<YarnFile>()
         .register_asset_reflect::<YarnFile>()
         .init_asset_loader::<YarnFileAssetLoader>();

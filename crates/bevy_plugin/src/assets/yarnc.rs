@@ -74,7 +74,7 @@ add_loader!(
     "[AssetLoader] for a [YscMetadata] file."
 );
 
-pub(crate) fn yarnc_assets_plugin(app: &mut App) {
+pub(crate) fn plugin(app: &mut App) {
     app.init_asset::<YscProgram>()
         .register_asset_reflect::<YscProgram>()
         .init_asset_loader::<YscProgramLoader>();
