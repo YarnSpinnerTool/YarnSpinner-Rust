@@ -41,7 +41,7 @@
 #![warn(missing_docs, missing_debug_implementations)]
 
 use bevy::prelude::*;
-use bevy_yarnspinner::prelude::YarnSpinnerPlugin;
+use bevy_yarnspinner::deferred_loading::DeferredYarnSpinnerPlugin;
 pub use setup::UiRootNode;
 pub use updating::SpeakerChangeEvent;
 
@@ -79,7 +79,7 @@ mod updating;
 impl Plugin for ExampleYarnSpinnerDialogueViewPlugin {
     fn build(&self, app: &mut App) {
         assert!(
-            app.is_plugin_added::<YarnSpinnerPlugin>(),
+            app.is_plugin_added::<DeferredYarnSpinnerPlugin>(),
             "YarnSpinnerPlugin must be added before ExampleYarnSpinnerDialogueViewPlugin"
         );
         app.add_plugins(assets::ui_assets_plugin)

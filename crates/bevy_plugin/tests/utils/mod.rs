@@ -10,8 +10,6 @@ use bevy_yarnspinner::prelude::*;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
-use crate::utils::prelude::EventAsserter;
-
 pub mod assertion;
 
 pub mod prelude {
@@ -85,7 +83,9 @@ impl AppExt for App {
     }
 
     fn clear_and_assert_event<T: Event + Clone + Debug>(&mut self) {
-        let resource = self.world_mut().remove_resource::<EventAsserter<T>>();
+        let resource = self
+            .world_mut()
+            .remove_resource::<assertion::EventAsserter<T>>();
         assert!(
             resource.is_some(),
             "No EventAsserter with type {} registered",

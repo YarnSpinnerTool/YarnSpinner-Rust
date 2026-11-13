@@ -64,7 +64,7 @@
 //!         // Add the Yarn Spinner plugin.
 //!         // As soon as this plugin is built, a Yarn project will be compiled
 //!         // from all Yarn files found under assets/dialog/*.yarn
-//!         YarnSpinnerPlugin::new(),
+//!         YarnSpinnerPlugin::manual(),
 //!         // Initialize the bundled example UI. Requires the `bevy_yarnspinner_example_dialogue_view` crate.
 //!         // ExampleYarnSpinnerDialogueViewPlugin::new(),
 //!     ))
@@ -137,6 +137,7 @@ pub mod prelude {
         assets::{
             yarn_file::YarnFile,
             yarnc::{YscLines, YscMetadata, YscProgram},
+            yarnproject::YarnProjectFile,
         },
         commands::{YarnCommand, YarnCommands},
         compiled_file::CompiledFileExt,
@@ -145,7 +146,10 @@ pub mod prelude {
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{Localization, Localizations},
-        plugin::{YarnFileSource, YarnSpinnerPlugin, YarnSpinnerSystemSet},
+        plugin::{
+            ManualYarnSpinnerPlugin, ProjectYarnSpinnerPlugin, YarnFileSource, YarnProjectSource,
+            YarnSpinnerPlugin, YarnSpinnerSystemSet,
+        },
         project::YarnProject,
     };
     pub(crate) use crate::{localization::StringsFile, utils::*};

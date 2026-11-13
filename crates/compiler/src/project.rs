@@ -3,6 +3,8 @@
 use std::path::Path;
 use std::{collections::HashMap, path::PathBuf};
 
+#[cfg(feature = "bevy")]
+use bevy::prelude::*;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -13,9 +15,10 @@ pub const CURRENT_PROJECT_FILE_VERSION: u32 = 2;
 
 /// Yarn Projects represent instructions on where to find Yarn scripts and
 /// associated assets, and how they should be compiled.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "bevy", derive(Reflect))]
 pub struct Project {
     /// Gets or sets the file version of the project.
     ///
@@ -85,6 +88,7 @@ fn default_source_files() -> Vec<String> {
 /// string table for a Yarn Project may be found.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bevy", derive(bevy::prelude::Reflect))]
 pub struct LocalizationInfo {
     /// Gets or sets the location at which localized assets may be found.
     #[cfg_attr(feature = "serde", serde(default))]
@@ -232,5 +236,10 @@ impl Project {
         let source_matcher = self.build_source_globset();
         let exclude_matcher = self.build_exclude_globset();
         source_matcher.is_match(&full_path) && !exclude_matcher.is_match(&full_path)
+    }
+
+    /// Checks a path relative to the project's root. Does not check that the root itself exists.
+    pub fn is_matching_path_relative<P: AsRef<Path>>(&self, path: P) -> bool {
+        self.build_source_globset().is_match(&path) && !self.build_exclude_globset().is_match(&path)
     }
 }
