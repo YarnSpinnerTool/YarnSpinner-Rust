@@ -1,6 +1,10 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+// TEMP:
+// This whole module should move to `core` once we get ysc compilation support.
+// That implies that ysc compilation output types should live in core as well.
+
 /// Additional functionality on [`CompiledFile`]
 pub trait CompiledFileExt {
     /// Generates a table from [`LineId`] to [`StringInfo`]
@@ -13,7 +17,6 @@ impl CompiledFileExt for CompiledFile {
     /// Converts this raw line data to something more useful.
     /// This returns owned data by cloning.
     fn string_table(&self) -> HashMap<LineId, StringInfo> {
-        let tags = self.metadata.tags_by_id();
         self.lines
             .iter()
             .map(|line| {
@@ -23,8 +26,9 @@ impl CompiledFileExt for CompiledFile {
                     line_number: line.line_number,
                     file_name: line.file.clone(),
                     is_implicit_tag: false, // ysc already gave every line an ID
-                    metadata: tags
-                        .get(&line.id)
+                    metadata: self
+                        .metadata
+                        .tags(&line.id)
                         .map(|tags| tags.to_vec())
                         .unwrap_or_default(),
                 };
@@ -55,8 +59,8 @@ impl CompiledFileExt for CompiledFile {
         }
         Self {
             program: c.program.expect("full compilation has a program"),
-            lines: lines.into(),
-            metadata: metadata.into(),
+            lines: yarnspinner::core::YscLines::new(lines),
+            metadata: yarnspinner::core::YscMetadata::new(metadata),
         }
     }
 }
