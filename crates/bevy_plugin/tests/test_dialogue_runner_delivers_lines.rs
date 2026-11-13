@@ -283,7 +283,7 @@ fn default_language_is_base_language() {
 
 fn setup_dialogue_runner_without_localizations(app: &mut App) -> Mut<'_, DialogueRunner> {
     app.setup_default_plugins()
-        .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
+        .add_plugins(ManualYarnSpinnerPlugin::with_yarn_source(YarnFileSource::file(
             "lines.yarn",
         )))
         .add_plugins(AssertionPlugin)
@@ -295,7 +295,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<'_, DialogueRu
     let mut dialogue_runner_builder = app
         .setup_default_plugins()
         .add_plugins(
-            YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
+            ManualYarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("lines_with_ids.yarn"))
                 .with_localizations(Localizations {
                     base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],

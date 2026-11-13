@@ -35,7 +35,7 @@ fn main() {
                 meta_check: AssetMetaCheck::Never,
                 ..default()
             }),
-        YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
+        ManualYarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("dialogue/story.yarn")),
         ExampleYarnSpinnerDialogueViewPlugin::new(),
         Sprite3dPlugin,
     ))

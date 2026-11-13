@@ -20,6 +20,9 @@ pub(crate) fn project_plugin(app: &mut App) {
 pub(crate) struct CompilationSystemSet;
 
 /// The compiled Yarn project built from the Yarn files passed to the [`YarnSpinnerPlugin`], or, in the deferred loading case, the Yarn files passed to the [`LoadYarnProjectEvent`].
+///
+/// Not to be confused with [`YarnProjectFile`], which corresponds to the `.yarnproject` file.
+///
 /// This [`Resource`](bevy::prelude::Resource) is inserted into the world automatically for you once all files have been loaded and compiled. You can react to this by configuring a system like this:
 /// ```rust
 /// # use bevy::prelude::*;
@@ -53,7 +56,7 @@ impl YarnProject {
         &self.compilation
     }
 
-    /// Returns the [`Localizations`] of this project, if any. These come from [`YarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
+    /// Returns the [`Localizations`] of this project, if any. These come from [`ManualYarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
     pub fn localizations(&self) -> Option<&Localizations> {
         self.localizations.as_ref()
     }
@@ -152,7 +155,7 @@ impl LoadYarnProjectEvent {
         Self::with_yarn_sources(iter::once(yarn_file_source))
     }
 
-    /// See [`YarnSpinnerPlugin::add_yarn_source`].
+    /// See [`ManualYarnSpinnerPlugin::add_yarn_source`].
     #[must_use]
     pub fn add_yarn_source(mut self, yarn_file: impl Into<YarnFileSource>) -> Self {
         self.yarn_files.insert(yarn_file.into());
@@ -170,7 +173,7 @@ impl LoadYarnProjectEvent {
         self
     }
 
-    /// See [`YarnSpinnerPlugin::with_localizations`].
+    /// See [`ManualYarnSpinnerPlugin::with_localizations`].
     #[must_use]
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
@@ -178,7 +181,7 @@ impl LoadYarnProjectEvent {
         self
     }
 
-    /// See [`YarnSpinnerPlugin::with_development_file_generation`].
+    /// See [`ManualYarnSpinnerPlugin::with_development_file_generation`].
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn with_development_file_generation(
