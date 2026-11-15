@@ -72,7 +72,9 @@ impl<T, E: Debug> UnwrapExt for Result<T, E> {
 pub const BUG_MESSAGE: &str = "This is a bug. Please report it at https://github.com/YarnSpinnerTool/YarnSpinner-Rust/issues/new";
 
 #[cfg(test)]
+#[cfg(feature = "std")]
 mod test {
+    use alloc::{format, string::String};
     use std::panic;
 
     use super::*;
