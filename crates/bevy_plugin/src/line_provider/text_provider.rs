@@ -26,10 +26,10 @@ pub(crate) fn text_provider_plugin(app: &mut App) {
 /// For most users however, the default is fine.
 pub trait TextProvider: UnderlyingTextProvider {
     /// Stores a string table containing the base language strings, i.e. the strings found in the Yarn files themselves.
-    fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
+    fn set_base_string_table(&mut self, string_table: HashMap<LineId, String>);
 
     /// Extends the string table set by [`TextProvider::set_base_string_table`] with additional strings.
-    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>);
+    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, String>);
 
     /// Stores the assets fetched by [`TextProvider::fetch_assets`].
     /// This functionality is split into two functions because [`TextProvider::take_fetched_assets`] is mutable,

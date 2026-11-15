@@ -25,11 +25,11 @@ impl SharedTextProvider {
 }
 
 impl TextProvider for SharedTextProvider {
-    fn set_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+    fn set_base_string_table(&mut self, string_table: HashMap<LineId, String>) {
         self.0.write().unwrap().set_base_string_table(string_table)
     }
 
-    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, StringInfo>) {
+    fn extend_base_string_table(&mut self, string_table: HashMap<LineId, String>) {
         self.0
             .write()
             .unwrap()

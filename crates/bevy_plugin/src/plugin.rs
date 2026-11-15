@@ -227,7 +227,7 @@ impl YarnApp for App {
     }
 
     fn register_sub_plugins(&mut self) -> &mut Self {
-        self.add_plugins(crate::yarn_file_asset::yarnspinner_asset_loader_plugin)
+        self.add_plugins(crate::assets::plugin)
             .add_plugins(crate::localization::localization_plugin)
             .add_plugins(crate::dialogue_runner::dialogue_plugin)
             .add_plugins(crate::line_provider::line_provider_plugin)
