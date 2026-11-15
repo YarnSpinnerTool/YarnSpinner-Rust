@@ -1,3 +1,9 @@
+#![no_std]
+
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
+
 pub mod bug;
 
 pub mod prelude {
