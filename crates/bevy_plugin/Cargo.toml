@@ -15,6 +15,7 @@ readme = "../../readme.md"
 [features]
 default = [  ]
 audio_assets = [ "bevy/bevy_audio", "bevy/vorbis" ]
+compiler = [ "yarnspinner/compiler" ]
 
 [dependencies]
 anyhow = "1"
