@@ -2,18 +2,26 @@ use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
-pub(crate) use compilation::{
-    RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
-};
 use std::fmt::Debug;
 use std::iter;
 use yarnspinner::core::CompiledFile;
 
+/// Splits compilation backend between rust implementation and external ysc call
+/// based on whether the `compiler` feature flag is set.
+pub(crate) mod backend;
 mod compilation;
+pub(crate) use compilation::{
+    RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
+};
+#[cfg(not(feature = "compiler"))]
+mod ysc;
 
 pub(crate) fn project_plugin(app: &mut App) {
-    app.add_plugins(compilation::project_compilation_plugin)
-        .add_message::<LoadYarnProjectEvent>();
+    #[cfg(feature = "compiler")]
+    app.add_plugins(compilation::plugin);
+    #[cfg(not(feature = "compiler"))]
+    app.add_plugins(ysc::plugin);
+    app.add_message::<LoadYarnProjectEvent>();
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
@@ -112,6 +120,7 @@ pub struct LoadYarnProjectEvent {
     pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
+// TODO: Don't glob yarn files by default. Populate this from the .yarnproject instead.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 impl Default for LoadYarnProjectEvent {
     fn default() -> Self {
@@ -124,7 +133,7 @@ impl Default for LoadYarnProjectEvent {
 }
 
 impl LoadYarnProjectEvent {
-    /// See [`YarnSpinnerPlugin::new`]. Shares the same limitations regarding platform support.
+    /// See [`ManualYarnSpinnerPlugin::new`]. Shares the same limitations regarding platform support.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn new() -> Self {

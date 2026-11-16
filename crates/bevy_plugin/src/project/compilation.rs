@@ -1,15 +1,16 @@
-use crate::fmt_utils::SkipDebug;
 use crate::localization::{LineIdUpdateSystemSet, UpdateAllStringsFilesForStringTableEvent};
 use crate::plugin::AssetRoot;
 use crate::prelude::*;
-use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
+#[cfg(feature = "compiler")]
+use crate::project::backend::compile_yarn_files;
+use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges, backend};
 use anyhow::{Result, anyhow, bail};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::fmt::Debug;
 use yarnspinner::core::CompiledFile;
 
-pub(crate) fn project_compilation_plugin(app: &mut App) {
+pub(crate) fn plugin(app: &mut App) {
     app.register_type::<YarnFilesToLoad>()
         .init_resource::<YarnFilesToLoad>()
         .init_resource::<YarnFilesBeingLoaded>()
@@ -128,6 +129,8 @@ fn recompile_loaded_yarn_files(
     let Some(mut yarn_project) = yarn_project else {
         return Ok(());
     };
+    // TODO: FIXME
+    #[cfg(feature = "compiler")]
     let Some(compilation) = compile_yarn_files(
         &yarn_project.yarn_files,
         &yarn_files,
@@ -166,6 +169,8 @@ fn recompile_loaded_yarn_files(
     Ok(())
 }
 
+/// Compiles the loaded yarn files, then emits [`UpdateAllStringsFilesForStringTableEvent`]
+/// and inserts the [`YarnProject`] resource.
 fn compile_loaded_yarn_files(
     mut commands: Commands,
     mut yarn_files_being_loaded: ResMut<YarnFilesBeingLoaded>,
@@ -176,6 +181,7 @@ fn compile_loaded_yarn_files(
     asset_server: Res<AssetServer>,
     asset_root: Res<AssetRoot>,
 ) -> SystemResult {
+    // guard clause: early exit if we don't need to update anything
     if yarn_files_being_loaded.is_changed() {
         *dirty = true;
     }
@@ -193,6 +199,7 @@ fn compile_loaded_yarn_files(
         return Ok(());
     }
 
+    // load the project config
     let yarn_project_config_to_load = yarn_project_config_to_load.unwrap();
     let localizations = yarn_project_config_to_load
         .localizations
@@ -200,56 +207,28 @@ fn compile_loaded_yarn_files(
         .unwrap()
         .as_ref();
     let development_file_generation = yarn_project_config_to_load.development_file_generation;
-    let Some(compilation) = compile_yarn_files(
-        &yarn_files_being_loaded.0,
+
+    // TODO: Modify this when we support multiple projects.
+    #[cfg(feature = "compiler")]
+    let res = backend::generate_yarn_project(
+        &mut yarn_files_being_loaded,
+        &yarn_project_config_to_load,
         &yarn_files,
         localizations,
         development_file_generation,
-    )?
-    else {
+        &mut update_strings_files_writer,
+        &asset_root,
+        &asset_server,
+    )?;
+
+    #[cfg(not(feature = "compiler"))]
+    let res = backend::generate_yarn_project().map_err(|e| e.into())?;
+
+    if let Some(yarn_project) = res {
+        commands.insert_resource(yarn_project);
+    } else {
         return Ok(());
-    };
-    let file_count = yarn_files_being_loaded.0.len();
-
-    if development_file_generation == DevelopmentFileGeneration::Full
-        && let Some(localizations) = yarn_project_config_to_load.localizations.as_ref().unwrap()
-    {
-        update_strings_files_writer.write(UpdateAllStringsFilesForStringTableEvent(
-            compilation.string_table.clone(),
-        ));
-        for localization in &localizations.translations {
-            let path = localization.strings_file.as_path();
-            let path = asset_root.0.join(path);
-
-            if path.is_file() {
-                continue;
-            }
-            let strings_file = StringsFile::from_string_table(
-                localization.language.clone(),
-                compilation.string_table.clone(),
-            )
-            .unwrap_or_default();
-
-            strings_file.write_asset(&path)?;
-            info!(
-                "Generated \"{}\" (lang: {}).",
-                path.display(),
-                localization.language
-            );
-        }
     }
-
-    commands.insert_resource(YarnProject {
-        yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
-        compilation: CompiledFile::from_compilation(compilation),
-        localizations: yarn_project_config_to_load.localizations.clone().unwrap(),
-        asset_server: SkipDebug(asset_server.clone()),
-        watching_for_changes: yarn_project_config_to_load.watching_for_changes,
-        development_file_generation,
-    });
-
-    let file_plural = if file_count == 1 { "file" } else { "files" };
-    info!("Successfully compiled {file_count} Yarn {file_plural}");
 
     *dirty = false;
     Ok(())
@@ -258,37 +237,4 @@ fn compile_loaded_yarn_files(
 fn clear_temp_yarn_project(mut commands: Commands) {
     // Done here instead of `compile_loaded_yarn_files` so that systems can access the global resources during the same frame
     commands.remove_resource::<YarnProjectConfigToLoad>();
-}
-
-fn compile_yarn_files(
-    yarn_file_handles: &HashSet<Handle<YarnFile>>,
-    yarn_files: &Res<Assets<YarnFile>>,
-    localizations: Option<&Localizations>,
-    development_file_generation: DevelopmentFileGeneration,
-) -> Result<Option<Compilation>> {
-    let yarn_files = yarn_file_handles
-        .iter()
-        .map(|handle| yarn_files.get(handle).unwrap());
-    if localizations.is_some()
-        && let Some(untagged_file) = yarn_files
-            .clone()
-            .find(|file| file.string_table.values().any(|v| v.is_implicit_tag))
-    {
-        if development_file_generation == DevelopmentFileGeneration::Full {
-            info!(
-                "Waiting with compilation until \"{}\" gets its line IDs generated",
-                untagged_file.file.file_name
-            );
-            return Ok(None);
-        } else {
-            bail!(
-                "Failed to compile Yarn files: Localization mode is on, but \"{}\" is not does not have full line IDs. \
-                    Cannot generate the line IDs automatically either because we are not in `DevelopmentFileGeneration::Full`",
-                untagged_file.file.file_name
-            );
-        }
-    }
-    let inner_yarn_files = yarn_files.map(|file| file.file.clone());
-    let compilation = YarnCompiler::new().add_files(inner_yarn_files).compile()?;
-    Ok(Some(compilation))
 }
