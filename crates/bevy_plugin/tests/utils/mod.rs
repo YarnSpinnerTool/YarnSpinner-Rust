@@ -194,3 +194,16 @@ impl DialogueRunnerExt for DialogueRunner {
             .collect()
     }
 }
+
+/// signature: (commands: Commands, condition: bool, message: format str)
+/// Will send an AppExit::error() and early exit on failure.
+#[macro_export]
+macro_rules! cmd_assert {
+    ($commands:expr, $condition:expr, $message:expr) => {
+        if !$condition {
+            error!($message);
+            $commands.write_message(AppExit::error());
+            return;
+        }
+    };
+}

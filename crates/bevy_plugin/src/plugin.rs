@@ -21,7 +21,10 @@ impl YarnSpinnerPlugin {
     /// See [`YarnSpinnerPlugin::manual`].
     // Eventually switch this to prefer yarnproject loading.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-    #[allow(clippy::new_ret_no_self)]
+    #[expect(
+        clippy::new_ret_no_self,
+        reason = "Returns ManualYarnSpinnerPlugin because YarnSpinnerPlugin is just a convenient front for a multifacted API."
+    )]
     pub fn new() -> ManualYarnSpinnerPlugin {
         Self::manual()
     }
@@ -223,9 +226,9 @@ impl Plugin for ManualYarnSpinnerPlugin {
         assert!(
             !self.project.yarn_files.is_empty(),
             "Cannot initialize Yarn Spinner plugin because no Yarn files were specified. \
-        Did you call `YarnSpinnerPlugin::with_yarn_files()` without any Yarn file sources? \
+        Did you call `ManualYarnSpinnerPlugin::default()` without any Yarn file sources? \
         If you really want to load no Yarn files right now and do that later, use `YarnSpinnerPlugin::deferred()` instead.\
-        If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::default()`."
+        If you wanted to load from the default directory instead, use `YarnSpinnerPlugin::manual()`."
         );
         app.add_plugins(DeferredYarnSpinnerPlugin)
             .world_mut()
@@ -296,26 +299,6 @@ fn watch_yarnproject_load(
     commands.insert_resource(AllYarnProjectsLoaded);
 
     let file = file_assets.get(source).unwrap();
-    // let base_localization = Localization::with_language(&file.project.base_language);
-    // let translations = file
-    //     .project
-    //     .localisation
-    //     .iter()
-    //     .map(|(str, info)| {
-    //         let mut loc = Localization::with_language(str);
-    //         if let Some(ref assets) = info.assets {
-    //             loc = loc.with_assets_sub_folder(assets);
-    //         }
-    //         if let Some(ref strings) = info.strings {
-    //             loc = loc.with_strings_file(strings);
-    //         }
-    //         loc
-    //     })
-    //     .collect();
-    // let localizations = Localizations {
-    //     base_localization,
-    //     translations,
-    // };
     commands.write_message(LoadYarnProjectEvent {
         yarn_files: file
             .files
