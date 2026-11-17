@@ -17,13 +17,13 @@ compiler = ["dep:yarnspinner_compiler"]
 
 serde = [
     "yarnspinner_core/serde",
-    "yarnspinner_compiler/serde",
+    "yarnspinner_compiler?/serde",
     "yarnspinner_runtime/serde",
 ]
 
 bevy = [
     "yarnspinner_core/bevy",
-    "yarnspinner_compiler/bevy",
+    "yarnspinner_compiler?/bevy",
     "yarnspinner_runtime/bevy",
     "dep:bevy",
 ]
@@ -39,3 +39,4 @@ bevy = { version = "0.20", default-features = false, optional = true }
 regex = "1"
 anyhow = "1"
 bevy_platform = "0.20"
+yarnspinner = { path = ".", features = ["compiler"]}

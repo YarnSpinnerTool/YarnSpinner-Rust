@@ -9,6 +9,7 @@ pub use log;
 
 pub mod prelude {
     //! Everything you need to get started using Yarn Spinner.
+    #[cfg(feature = "compiler")]
     pub use crate::compiler::{
         Compilation, CompilationType, Compiler as YarnCompiler, CompilerError, File as YarnFile,
         LineInfo, Result as YarnCompilerResult, StringInfo,
@@ -35,6 +36,7 @@ pub mod core {
         yarn_library,
     };
 }
+#[cfg(feature = "compiler")]
 pub mod compiler {
     //! Types and traits used by the compiler, in particular the [`Compiler`] struct.
     pub use yarnspinner_compiler::Result;
