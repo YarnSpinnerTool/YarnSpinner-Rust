@@ -14,8 +14,8 @@ getrandom = { version = "0.4", features = [ "wasm_js" ] }
 
 [features]
 default = [ "std" ]
-std = [ "prost/std" ]
-serde = [ "dep:serde", "bevy?/serialize", "hashbrown/serde" ]
+std = [ "prost/std", "dep:globset", "dep:walkdir" ]
+serde = [ "dep:serde", "bevy?/serialize", "hashbrown/serde", "dep:serde_json" ]
 bevy = [ "dep:bevy" ]
 
 [dependencies]
@@ -28,6 +28,9 @@ hashbrown = "0.16.1"
 yarnspinner_internal_shared = { path = "../internal_shared", version = "0.1.0", default-features = false }
 csv-core = "0.1.13"
 thiserror = { version = "2.0.21", default-features = false }
+globset = { version = "0.4.21", optional = true }
+walkdir = { version = "2.5.0", optional = true }
+serde_json = { version = "1.0.154", optional = true }
 
 [dev-dependencies]
 static_assertions = "1.1.0"

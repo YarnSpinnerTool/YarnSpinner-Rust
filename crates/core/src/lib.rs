@@ -13,6 +13,12 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+/// Types needed for YSC interactions which are NOT no_std compatible.
+/// This is usually because they require filesystem interactions.
+/// Moved from `compiler` crate ahead of deprecation.
+#[cfg(feature = "std")]
+pub mod ysc;
+
 mod compiled;
 mod feature_gates;
 mod generated;
@@ -21,6 +27,7 @@ mod library;
 mod line_id;
 mod operator;
 mod position;
+
 pub mod types;
 mod yarn_fn;
 mod yarn_value;
@@ -29,6 +36,9 @@ pub mod prelude {
     //! Types and functions used all throughout the runtime and compiler.
     #[cfg(any(feature = "bevy", feature = "serde"))]
     pub use crate::feature_gates::*;
+
+    #[cfg(feature = "std")]
+    pub use crate::ysc::*;
 
     // Re-export alloc types for internal use only
     pub(crate) use crate::{

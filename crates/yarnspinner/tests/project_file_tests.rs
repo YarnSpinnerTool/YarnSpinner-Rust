@@ -4,7 +4,6 @@
 use std::env;
 
 use test_base::prelude::*;
-use yarnspinner::compiler::*;
 
 mod test_base;
 

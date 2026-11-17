@@ -13,14 +13,9 @@ mod compilation;
 pub(crate) use compilation::{
     RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
 };
-#[cfg(not(feature = "compiler"))]
-mod ysc;
 
 pub(crate) fn project_plugin(app: &mut App) {
-    #[cfg(feature = "compiler")]
     app.add_plugins(compilation::plugin);
-    #[cfg(not(feature = "compiler"))]
-    app.add_plugins(ysc::plugin);
     app.add_message::<LoadYarnProjectEvent>();
 }
 

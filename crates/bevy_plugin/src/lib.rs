@@ -155,7 +155,9 @@ pub mod prelude {
     pub(crate) use crate::{localization::StringsFile, utils::*};
     pub(crate) use anyhow::Error;
     pub(crate) use serde::{Deserialize, Serialize};
-    pub use yarnspinner::core::{CompiledFile, MetadataLine, YscLine};
+    pub use yarnspinner::core::{
+        CURRENT_PROJECT_FILE_VERSION, CompiledFile, MetadataLine, Project, YscLine,
+    };
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
