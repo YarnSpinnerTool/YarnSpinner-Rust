@@ -15,7 +15,7 @@ fn test_project_file_can_be_loaded() {
     let project = Project::load_from_file(path.clone()).unwrap();
 
     // Then
-    assert_eq!(project.project_file_version, 2);
+    assert_eq!(project.project_file_version, CURRENT_PROJECT_FILE_VERSION);
     assert_eq!(project.path, Some(path));
     assert_eq!(project.source_file_patterns, vec!["**/*.yarn"]);
 
