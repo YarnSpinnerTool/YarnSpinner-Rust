@@ -1,29 +1,67 @@
 use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
+use bevy::asset::AssetPath;
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
-pub(crate) use compilation::{
-    RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
-};
 use std::fmt::Debug;
 use std::iter;
 use yarnspinner::core::CompiledFile;
 
 mod compilation;
+pub(crate) mod ysc;
+pub(crate) use compilation::{CompilationStep, YarnFilesBeingLoaded, YarnProjectConfigToLoad};
+pub use ysc::YscSettings;
 
-pub(crate) fn project_plugin(app: &mut App) {
-    app.add_plugins(compilation::project_compilation_plugin)
-        .add_message::<LoadYarnProjectEvent>();
+pub(crate) fn plugin(app: &mut App) {
+    app.add_plugins((compilation::plugin, ysc::plugin));
+    app.add_message::<LoadYarnProjectEvent>();
+}
+
+/// Swaps a freshly compiled program into `project` and restarts every running
+/// [`DialogueRunner`] at the node it was on. Used by hot reloading.
+pub(crate) fn apply_compiled_file(
+    project: &mut YarnProject,
+    compiled: CompiledFile,
+    dialogue_runners: &mut Query<&mut DialogueRunner>,
+) {
+    project.compilation = compiled;
+    let program = project.compilation.program.clone();
+    for mut dialogue_runner in dialogue_runners.iter_mut() {
+        let current_node = dialogue_runner.current_node();
+        dialogue_runner
+            .inner_mut()
+            .0
+            .replace_program(program.clone());
+        dialogue_runner
+            .text_provider
+            .set_base_string_table(project.text_table());
+        if let Some(current_node) = current_node {
+            dialogue_runner
+                .stop()
+                .try_start_node(current_node)
+                .map(|_| ())
+                .ok()
+                .unwrap_or_else(|| {
+                    dialogue_runner.start_node("Start");
+                });
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
 pub(crate) struct CompilationSystemSet;
 
-/// The compiled Yarn project built from the Yarn files passed to the [`YarnSpinnerPlugin`], or, in the deferred loading case, the Yarn files passed to the [`LoadYarnProjectEvent`].
+/// The compiled Yarn project built from the Yarn files passed to the
+/// [`YarnSpinnerPlugin`], or, in the deferred loading case, the Yarn files
+/// passed to the [`LoadYarnProjectEvent`].
 ///
-/// Not to be confused with [`YarnProjectFile`], which corresponds to the `.yarnproject` file.
+/// Not to be confused with [`YarnProjectFile`], which corresponds to the
+/// `.yarnproject` file.
 ///
-/// This [`Resource`](bevy::prelude::Resource) is inserted into the world automatically for you once all files have been loaded and compiled. You can react to this by configuring a system like this:
+/// This [`Resource`](bevy::prelude::Resource) is inserted into the world
+/// automatically for you once all files have been loaded and compiled. You can
+/// react to this by configuring a system like this:
+///
 /// ```rust
 /// # use bevy::prelude::*;
 /// # use bevy_yarnspinner::prelude::*;
@@ -42,42 +80,67 @@ pub struct YarnProject {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: SkipDebug<AssetServer>,
     pub(crate) watching_for_changes: bool,
-    pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
 impl YarnProject {
-    /// Iterates over the [`YarnFile`]s that were used to compile this project. These will be the files passed to the [`YarnSpinnerPlugin`] or the [`LoadYarnProjectEvent`].
+    pub(crate) fn new(
+        config: &YarnProjectConfigToLoad,
+        yarn_files: HashSet<Handle<YarnFile>>,
+        compilation: CompiledFile,
+        asset_server: &AssetServer,
+    ) -> Self {
+        YarnProject {
+            yarn_files,
+            compilation,
+            localizations: config.localizations.clone().flatten(),
+            asset_server: SkipDebug(asset_server.clone()),
+            watching_for_changes: config.watching_for_changes,
+        }
+    }
+
+    /// Iterates over the [`YarnFile`]s that were used to compile this project.
+    /// These will be the files passed to the [`YarnSpinnerPlugin`] or the
+    /// [`LoadYarnProjectEvent`].
     pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
         self.yarn_files.iter()
     }
 
-    /// Returns the underlying [`CompiledFile`] of this project. This is advanced functionality.
+    /// Returns the underlying [`CompiledFile`] of this project. This is
+    /// advanced functionality.
     pub fn compiled_file(&self) -> &CompiledFile {
         &self.compilation
     }
 
-    /// Returns the [`Localizations`] of this project, if any. These come from [`ManualYarnSpinnerPlugin::with_localizations`] or [`LoadYarnProjectEvent::with_localizations`].
+    /// Returns the [`Localizations`] of this project, if any. These come from
+    /// [`ManualYarnSpinnerPlugin::with_localizations`] or
+    /// [`LoadYarnProjectEvent::with_localizations`].
     pub fn localizations(&self) -> Option<&Localizations> {
         self.localizations.as_ref()
     }
 
-    /// Constructs a [`DialogueRunner`] from this project using all defaults of [`DialogueRunnerBuilder`] .
-    /// This is a convenience method for calling [`DialogueRunnerBuilder::build`] on an unconfigured builder returned by [`YarnProject::build_dialogue_runner`].
+    /// Constructs a [`DialogueRunner`] from this project using all defaults of
+    /// [`DialogueRunnerBuilder`] . This is a convenience method for calling
+    /// [`DialogueRunnerBuilder::build`] on an unconfigured builder returned by
+    /// [`YarnProject::build_dialogue_runner`].
     pub fn create_dialogue_runner(&self, commands: &mut Commands) -> DialogueRunner {
         self.build_dialogue_runner(commands).build()
     }
 
-    /// Constructs a [`DialogueRunnerBuilder`] that can be used to customize the construction of a [`DialogueRunner`] from this project.
+    /// Constructs a [`DialogueRunnerBuilder`] that can be used to customize the
+    /// construction of a [`DialogueRunner`] from this project.
     pub fn build_dialogue_runner(&self, commands: &mut Commands) -> DialogueRunnerBuilder {
         DialogueRunnerBuilder::from_yarn_project(self, commands)
     }
 
-    /// Returns the metadata associated with the given [`LineId`], if any. This can also be accessed on a given [`LocalizedLine`] via its `metadata` field.
+    /// Returns the metadata associated with the given [`LineId`], if any. This
+    /// can also be accessed on a given [`LocalizedLine`] via its `metadata`
+    /// field.
     pub fn line_metadata(&self, line_id: &LineId) -> Option<&[String]> {
         self.compilation.line_metadata(line_id)
     }
 
-    /// Builds a table from each [`LineId`] to its base-language text. Consumed by [`TextProvider`]s.
+    /// Builds a table from each [`LineId`] to its base-language text. Consumed
+    /// by [`TextProvider`]s.
     pub(crate) fn text_table(&self) -> std::collections::HashMap<LineId, String> {
         self.compilation
             .texts()
@@ -103,28 +166,31 @@ impl YarnProject {
     }
 }
 
-/// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSpinnerPlugin::deferred`].
-/// If you know the Yarn files at the start of the game, you should use [`YarnSpinnerPlugin::with_yarn_sources`] instead.
+/// Used to late initialize a [`YarnProject`] with a set of Yarn files when
+/// using [`YarnSpinnerPlugin::deferred`]. If you know the Yarn files at the
+/// start of the game, you should use [`YarnSpinnerPlugin::with_yarn_sources`]
+/// instead.
 #[derive(Debug, Clone, PartialEq, Eq, Message)]
 pub struct LoadYarnProjectEvent {
+    pub(crate) yarnproject: Option<AssetPath<'static>>,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,
-    pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
+// TODO: Don't glob yarn files by default. Populate this from the .yarnproject instead.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 impl Default for LoadYarnProjectEvent {
     fn default() -> Self {
         Self {
+            yarnproject: None,
             localizations: None,
             yarn_files: HashSet::from_iter([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
-            development_file_generation: default(),
         }
     }
 }
 
 impl LoadYarnProjectEvent {
-    /// See [`YarnSpinnerPlugin::new`]. Shares the same limitations regarding platform support.
+    /// See [`ManualYarnSpinnerPlugin::new`]. Shares the same limitations regarding platform support.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
     #[must_use]
     pub fn new() -> Self {
@@ -143,9 +209,9 @@ impl LoadYarnProjectEvent {
             .map(|yarn_file| yarn_file.into())
             .collect();
         Self {
+            yarnproject: None,
             localizations: None,
             yarn_files,
-            development_file_generation: default(),
         }
     }
 
@@ -180,17 +246,6 @@ impl LoadYarnProjectEvent {
         self.localizations = localizations;
         self
     }
-
-    /// See [`ManualYarnSpinnerPlugin::with_development_file_generation`].
-    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-    #[must_use]
-    pub fn with_development_file_generation(
-        mut self,
-        development_file_generation: DevelopmentFileGeneration,
-    ) -> Self {
-        self.development_file_generation = development_file_generation;
-        self
-    }
 }
 
 impl<T, U> From<T> for LoadYarnProjectEvent
@@ -206,4 +261,5 @@ where
 #[derive(Debug, Clone, Resource, Default)]
 pub(crate) struct WatchingForChanges(pub(crate) bool);
 
+// TODO: This should be a resource, not hardcoded.
 pub(crate) const DEFAULT_ASSET_DIR: &str = "dialogue";

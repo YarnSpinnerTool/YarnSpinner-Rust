@@ -6,7 +6,6 @@ members = [
     "crates/bevy_plugin",
     "crates/yarnspinner",
     "crates/runtime",
-    "crates/compiler",
     "crates/core",
     "crates/codegen",
     "crates/internal_shared",

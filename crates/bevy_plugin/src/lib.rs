@@ -99,8 +99,6 @@
 
 mod assets;
 mod commands;
-mod compiled_file;
-mod development_file_generation;
 mod dialogue_runner;
 mod fmt_utils;
 mod line_provider;
@@ -133,6 +131,7 @@ pub mod prelude {
 
     #[cfg(feature = "audio_assets")]
     pub use crate::default_impl::AudioAssetProvider;
+    pub use crate::project::YscSettings;
     pub use crate::{
         assets::{
             yarn_file::YarnFile,
@@ -140,9 +139,7 @@ pub mod prelude {
             yarnproject::YarnProjectFile,
         },
         commands::{YarnCommand, YarnCommands},
-        compiled_file::CompiledFileExt,
         default_impl::FileExtensionAssetProvider,
-        development_file_generation::DevelopmentFileGeneration,
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{Localization, Localizations},
@@ -155,7 +152,10 @@ pub mod prelude {
     pub(crate) use crate::{localization::StringsFile, utils::*};
     pub(crate) use anyhow::Error;
     pub(crate) use serde::{Deserialize, Serialize};
-    pub use yarnspinner::core::{CompiledFile, MetadataLine, YscLine};
+    pub use yarnspinner::core::{
+        CURRENT_PROJECT_FILE_VERSION, CompiledFile, MetadataLine, Project, SUPPORTED_YSC_VERSION,
+        YscLine,
+    };
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
@@ -170,7 +170,7 @@ pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};
 pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
 pub use yarnspinner::core::{UntypedYarnFn, yarn_fn_type};
 pub use yarnspinner::prelude::{
-    Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
+    TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,
 };
 

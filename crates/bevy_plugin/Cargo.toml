@@ -5,7 +5,7 @@ edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
 keywords = [ "gamedev", "dialog", "yarn", "bevy" ]
-categories = [ "game-development", "compilers" ]
+categories = [ "game-development" ]
 authors = [ "Jan Hohenheim <jan@hohenheim.ch>" ]
 license = "MIT OR Apache-2.0"
 exclude = [ "assets", "wasm" ]
@@ -38,7 +38,7 @@ static_assertions = "1.1.0"
 [dev-dependencies.bevy]
 version = "0.20"
 default-features = false
-features = [ "bevy_core_pipeline", "bevy_audio" ]
+features = [ "bevy_core_pipeline", "bevy_audio", "file_watcher" ]
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies]
 glob = "0.3.3"

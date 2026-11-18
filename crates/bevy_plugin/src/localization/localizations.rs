@@ -2,7 +2,7 @@ use crate::prelude::*;
 use crate::project::DEFAULT_ASSET_DIR;
 use bevy::prelude::*;
 use std::iter;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub(crate) fn localization_config_plugin(_app: &mut App) {}
 
@@ -56,13 +56,6 @@ impl Localizations {
                 .iter()
                 .map(|localization| &localization.language),
         )
-    }
-
-    pub(crate) fn strings_file_path(&self, language: impl Into<Language>) -> Option<&Path> {
-        let language = language.into();
-        self.translations
-            .iter()
-            .find_map(|t| (t.language == language).then_some(t.strings_file.as_path()))
     }
 }
 
