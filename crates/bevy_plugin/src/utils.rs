@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::project::YarnProjectConfigToLoad;
 use bevy::prelude::*;
 
 pub(crate) fn panic_on_err(In(result): In<SystemResult>) {
@@ -14,9 +13,10 @@ pub(crate) fn log_error(In(result): In<SystemResult>) {
     }
 }
 
+#[cfg(feature = "compiler")]
 pub(crate) fn in_development(
     project: Option<Res<YarnProject>>,
-    project_to_load: Option<Res<YarnProjectConfigToLoad>>,
+    project_to_load: Option<Res<crate::project::YarnProjectConfigToLoad>>,
 ) -> bool {
     if let Some(project) = project {
         return project.development_file_generation == DevelopmentFileGeneration::Full;
@@ -27,9 +27,10 @@ pub(crate) fn in_development(
     false
 }
 
+#[cfg(feature = "compiler")]
 pub(crate) fn has_localizations(
     project: Option<Res<YarnProject>>,
-    project_to_load: Option<Res<YarnProjectConfigToLoad>>,
+    project_to_load: Option<Res<crate::project::YarnProjectConfigToLoad>>,
 ) -> bool {
     if let Some(project) = project {
         return project.localizations.is_some();
@@ -40,6 +41,7 @@ pub(crate) fn has_localizations(
     false
 }
 
+#[cfg(feature = "compiler")]
 pub(crate) fn events_in_queue<T: Message>() -> impl FnMut(MessageReader<T>) -> bool + Clone {
     move |reader: MessageReader<T>| !reader.is_empty()
 }

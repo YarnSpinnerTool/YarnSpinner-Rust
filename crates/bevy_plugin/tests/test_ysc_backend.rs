@@ -1,0 +1,189 @@
+//! Spike tests for the `ysc` backend (the `compiler` feature is off).
+//!
+//! Fixtures live in `assets/ysc/`. `assets/ysc/compiled/` was built with
+//! `tools/ysc compile project.yarnproject -o compiled` (run from `assets/ysc/`).
+//!
+//! The tests that run `ysc` use `tools/ysc` (installed by `scripts/install-ysc.sh`) and work on a
+//! copy of the fixtures, because `ysc` writes its output next to them.
+#![cfg(not(feature = "compiler"))]
+
+use bevy::prelude::*;
+use bevy_yarnspinner::prelude::*;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::time::{Duration, Instant};
+use tempfile::tempdir;
+use utils::prelude::*;
+
+mod utils;
+
+const TIMEOUT: Duration = Duration::from_secs(30);
+
+/// `tools/ysc`, after checking it's the version we support.
+fn ysc() -> PathBuf {
+    let path = project_root_path().join("../../tools/ysc");
+    let output = Command::new(&path)
+        .arg("version")
+        .output()
+        .unwrap_or_else(|e| {
+            panic!(
+                "Failed to run {} ({e}). Install it with scripts/install-ysc.sh.",
+                path.display()
+            )
+        });
+    // `ysc version` prints the CLI version (stale: 2.4.0 at the v2.5.0 tag) and the
+    // versions of the Yarn Spinner libraries it was built with; the latter is what matters.
+    let version = String::from_utf8_lossy(&output.stdout);
+    let expected = format!("YarnSpinner.Compiler.dll version {SUPPORTED_YSC_VERSION}");
+    assert!(
+        version.contains(&expected),
+        "{} is not ysc {SUPPORTED_YSC_VERSION}:\n{version}",
+        path.display()
+    );
+    path
+}
+
+/// Copies the fixture sources (not the precompiled output) to `{dest}/ysc/`.
+fn copy_fixture_sources(dest: &Path) {
+    let from = project_root_path().join("assets/ysc");
+    let to = dest.join("ysc");
+    fs::create_dir_all(&to).unwrap();
+    for file in ["start.yarn", "shop.yarn", "project.yarnproject"] {
+        fs::copy(from.join(file), to.join(file)).unwrap();
+    }
+}
+
+fn texts(project: &YarnProject) -> Vec<String> {
+    let mut texts: Vec<_> = project
+        .compiled_file()
+        .texts()
+        .map(|(_, text)| text.to_owned())
+        .collect();
+    texts.sort();
+    texts
+}
+
+fn time_out(mut start: Local<Option<Instant>>, mut commands: Commands) {
+    let start = *start.get_or_insert_with(Instant::now);
+    cmd_assert!(commands, start.elapsed() < TIMEOUT, "Timed out");
+}
+
+#[test]
+fn loads_precompiled_project_without_ysc() {
+    let mut app = App::new();
+    app.setup_default_plugins()
+        .insert_resource(YscSettings {
+            ysc_path: "/definitely/not/ysc".into(),
+            output_dir: "ysc/compiled".into(),
+        })
+        .add_plugins(YarnSpinnerPlugin::from_yarnproject(
+            YarnProjectSource::file("ysc/project.yarnproject"),
+        ))
+        .add_systems(
+            Update,
+            (
+                time_out,
+                check_precompiled_project.run_if(resource_exists::<YarnProject>),
+            ),
+        );
+    assert!(app.run().is_success());
+}
+
+fn check_precompiled_project(project: Res<YarnProject>, mut commands: Commands) {
+    let texts = texts(&project);
+    cmd_assert!(
+        commands,
+        texts
+            == [
+                "Go to the shop",
+                "Leave",
+                "Narrator: Welcome.",
+                "Shopkeeper: What'll it be?"
+            ],
+        "Wrong texts: {texts:?}"
+    );
+    let metadata = project.line_metadata(&LineId("line:shop_1".into()));
+    cmd_assert!(
+        commands,
+        metadata == Some(&["line:shop_1".to_owned(), "mood:grumpy".to_owned()][..]),
+        "Wrong metadata: {metadata:?}"
+    );
+    commands.write_message(AppExit::Success);
+}
+
+#[test]
+fn compiles_manual_file_list_on_startup_when_watching() {
+    let ysc = ysc();
+    let dir = tempdir().unwrap();
+    copy_fixture_sources(dir.path());
+    let compiled = dir.path().join("ysc/compiled/Output.yarnc");
+
+    let mut app = App::new();
+    app.setup_default_plugins_for_path_with_watching(dir.path(), true)
+        .insert_resource(YscSettings {
+            ysc_path: ysc,
+            output_dir: "ysc/compiled".into(),
+        })
+        .add_plugins(YarnSpinnerPlugin::with_yarn_sources([
+            YarnFileSource::file("ysc/start.yarn"),
+            YarnFileSource::file("ysc/shop.yarn"),
+        ]))
+        .add_systems(
+            Update,
+            (
+                time_out,
+                (move |project: Res<YarnProject>, mut commands: Commands| {
+                    cmd_assert!(commands, compiled.is_file(), "ysc wrote no program");
+                    let count = texts(&project).len();
+                    cmd_assert!(commands, count == 4, "Expected 4 lines, got {count}");
+                    commands.write_message(AppExit::Success);
+                })
+                .run_if(resource_exists::<YarnProject>),
+            ),
+        );
+    assert!(app.run().is_success());
+}
+
+#[test]
+fn recompiles_project_when_a_source_changes() {
+    let ysc = ysc();
+    let dir = tempdir().unwrap();
+    copy_fixture_sources(dir.path());
+    let start = dir.path().join("ysc/start.yarn");
+
+    let mut app = App::new();
+    app.setup_default_plugins_for_path_with_watching(dir.path(), true)
+        .insert_resource(YscSettings {
+            ysc_path: ysc,
+            output_dir: "ysc/compiled".into(),
+        })
+        .add_plugins(YarnSpinnerPlugin::from_yarnproject(
+            YarnProjectSource::file("ysc/project.yarnproject"),
+        ))
+        .add_systems(
+            Update,
+            (
+                time_out,
+                (move |project: Res<YarnProject>,
+                       mut edited: Local<bool>,
+                       mut commands: Commands| {
+                    let texts = texts(&project);
+                    if !*edited {
+                        cmd_assert!(
+                            commands,
+                            texts.contains(&"Narrator: Welcome.".to_owned()),
+                            "Wrong initial texts: {texts:?}"
+                        );
+                        let source = fs::read_to_string(&start).unwrap();
+                        fs::write(&start, source.replace("Welcome.", "Welcome back.")).unwrap();
+                        *edited = true;
+                    } else if texts.contains(&"Narrator: Welcome back.".to_owned()) {
+                        commands.write_message(AppExit::Success);
+                    }
+                })
+                .run_if(resource_exists::<YarnProject>),
+            ),
+        );
+    assert!(app.run().is_success());
+}

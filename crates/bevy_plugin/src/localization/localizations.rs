@@ -2,7 +2,7 @@ use crate::prelude::*;
 use crate::project::DEFAULT_ASSET_DIR;
 use bevy::prelude::*;
 use std::iter;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub(crate) fn localization_config_plugin(_app: &mut App) {}
 
@@ -58,7 +58,11 @@ impl Localizations {
         )
     }
 
-    pub(crate) fn strings_file_path(&self, language: impl Into<Language>) -> Option<&Path> {
+    #[cfg(feature = "compiler")]
+    pub(crate) fn strings_file_path(
+        &self,
+        language: impl Into<Language>,
+    ) -> Option<&std::path::Path> {
         let language = language.into();
         self.translations
             .iter()

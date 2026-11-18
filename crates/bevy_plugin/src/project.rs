@@ -79,10 +79,28 @@ pub struct YarnProject {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: SkipDebug<AssetServer>,
     pub(crate) watching_for_changes: bool,
+    #[cfg(feature = "compiler")]
     pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
 impl YarnProject {
+    pub(crate) fn new(
+        config: &YarnProjectConfigToLoad,
+        yarn_files: HashSet<Handle<YarnFile>>,
+        compilation: CompiledFile,
+        asset_server: &AssetServer,
+    ) -> Self {
+        YarnProject {
+            yarn_files,
+            compilation,
+            localizations: config.localizations.clone().flatten(),
+            asset_server: SkipDebug(asset_server.clone()),
+            watching_for_changes: config.watching_for_changes,
+            #[cfg(feature = "compiler")]
+            development_file_generation: config.development_file_generation,
+        }
+    }
+
     /// Iterates over the [`YarnFile`]s that were used to compile this project. These will be the files passed to the [`YarnSpinnerPlugin`] or the [`LoadYarnProjectEvent`].
     pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
         self.yarn_files.iter()

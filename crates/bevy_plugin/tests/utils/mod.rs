@@ -40,6 +40,11 @@ pub trait AppExt {
     fn dialogue_runner_mut(&mut self) -> Mut<'_, DialogueRunner>;
     fn setup_default_plugins(&mut self) -> &mut App;
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App;
+    fn setup_default_plugins_for_path_with_watching(
+        &mut self,
+        asset_folder: impl AsRef<Path>,
+        watch_for_changes: bool,
+    ) -> &mut App;
 
     #[must_use]
     fn clone_loaded_untyped_assets(&self) -> Assets<LoadedUntypedAsset>;
@@ -148,9 +153,17 @@ impl AppExt for App {
     }
 
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App {
+        self.setup_default_plugins_for_path_with_watching(asset_folder, false)
+    }
+
+    fn setup_default_plugins_for_path_with_watching(
+        &mut self,
+        asset_folder: impl AsRef<Path>,
+        watch_for_changes: bool,
+    ) -> &mut App {
         self.add_plugins(MinimalPlugins).add_plugins(AssetPlugin {
             file_path: asset_folder.as_ref().to_string_lossy().to_string(),
-            watch_for_changes_override: Some(false),
+            watch_for_changes_override: Some(watch_for_changes),
             ..default()
         });
 

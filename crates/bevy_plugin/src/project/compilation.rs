@@ -6,7 +6,6 @@ use crate::plugin::AssetRoot;
 use crate::prelude::*;
 use crate::project::{CompilationSystemSet, LoadYarnProjectEvent, WatchingForChanges};
 use anyhow::{Result, anyhow, bail};
-use bevy::asset::AssetPath;
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::fmt::Debug;
@@ -60,9 +59,10 @@ pub(crate) fn plugin(app: &mut App) {
 pub(crate) struct YarnProjectConfigToLoad {
     pub(crate) localizations: Option<Option<Localizations>>,
     pub(crate) watching_for_changes: bool,
+    #[cfg(feature = "compiler")]
     pub(crate) development_file_generation: DevelopmentFileGeneration,
-    #[allow(dead_code, reason = "only read by the ysc backend")]
-    pub(crate) yarnproject: Option<AssetPath<'static>>,
+    #[cfg(not(feature = "compiler"))]
+    pub(crate) yarnproject: Option<bevy::asset::AssetPath<'static>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Resource, Reflect)]
@@ -103,7 +103,9 @@ fn load_project(
         commands.insert_resource(YarnProjectConfigToLoad {
             localizations: Some(event.localizations),
             watching_for_changes: is_watching_for_changes.0,
+            #[cfg(feature = "compiler")]
             development_file_generation: event.development_file_generation,
+            #[cfg(not(feature = "compiler"))]
             yarnproject: event.yarnproject,
         });
         commands.insert_resource(YarnFilesToLoad(event.yarn_files));

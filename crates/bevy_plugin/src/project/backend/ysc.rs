@@ -13,9 +13,6 @@
 //! `{name}-Lines.csv` and `{name}-Metadata.csv`, using ysc's default `{name}`;
 //! see [`output_name`].
 
-use crate::fmt_utils::SkipDebug;
-// use crate::assets::yarn_file::YarnFile;
-// use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 use crate::project::YarnProject;
@@ -100,7 +97,6 @@ pub(crate) fn plugin(app: &mut App) {
             recompile_on_source_change
                 .pipe(log_error)
                 .run_if(resource_exists::<YarnProject>),
-            reload_compiled_outputs.run_if(resource_exists::<YarnProject>),
         )
             .chain()
             .in_set(CompilationStep::Compile),
@@ -156,12 +152,10 @@ struct CompiledOutputs(Option<OutputHandles>);
 
 /// What gets passed to `ysc`. Kept around after loading for recompilation.
 #[derive(Debug, Default, Resource)]
-#[cfg_attr(
-    any(target_arch = "wasm32", target_os = "android"),
-    expect(dead_code, reason = "ysc is never run on these platforms")
-)]
 struct YscInputs {
     yarnproject: Option<AssetPath<'static>>,
+    /// see [`output_name`]
+    name: String,
 }
 
 /// The running `ysc` process, if any. `ysc` runs off the main thread so it doesn't stall
@@ -169,7 +163,7 @@ struct YscInputs {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 #[derive(Default, Resource)]
 struct YscJob {
-    task: Option<Task<anyhow::Result<()>>>,
+    task: Option<Task<anyhow::Result<CompiledFile>>>,
     /// A source changed while `ysc` was running; run it again once it finishes.
     rerun: bool,
 }
@@ -177,7 +171,7 @@ struct YscJob {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 impl YscJob {
     /// Returns the result of the running `ysc`, if it just finished.
-    fn poll(&mut self) -> Option<anyhow::Result<()>> {
+    fn poll(&mut self) -> Option<anyhow::Result<CompiledFile>> {
         let result = check_ready(self.task.as_mut()?)?;
         self.task = None;
         Some(result)
@@ -211,9 +205,12 @@ fn build_yarn_project(
 ) -> SystemResult {
     let Some(handles) = &outputs.0 else {
         inputs.yarnproject = config.yarnproject.clone();
+        inputs.name = output_name(&inputs, yarn_files_being_loaded.0.iter());
+
+        // Hot reloading: compile, then use what ysc wrote directly.
         #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
         if config.watching_for_changes {
-            match job.poll() {
+            let compilation = match job.poll() {
                 // Still compiling.
                 None if job.task.is_some() => return Ok(()),
                 None => {
@@ -225,13 +222,18 @@ fn build_yarn_project(
                     return Ok(());
                 }
                 Some(result) => result?,
-            }
+            };
+            let files = std::mem::take(&mut yarn_files_being_loaded.0);
+            commands.insert_resource(YarnProject::new(&config, files, compilation, &asset_server));
+            info!("Compiled Yarn project with ysc.");
+            return Ok(());
         }
-        let name = output_name(&inputs, yarn_files_being_loaded.0.iter());
+
+        // Otherwise: load the precompiled outputs as assets.
         outputs.0 = Some(OutputHandles::load(
             &asset_server,
             &settings.output_dir,
-            &name,
+            &inputs.name,
         ));
         return Ok(());
     };
@@ -250,14 +252,8 @@ fn build_yarn_project(
         return Ok(());
     };
 
-    commands.insert_resource(YarnProject {
-        yarn_files: std::mem::take(&mut yarn_files_being_loaded.0),
-        compilation,
-        localizations: config.localizations.clone().flatten(),
-        asset_server: SkipDebug(asset_server.clone()),
-        watching_for_changes: config.watching_for_changes,
-        development_file_generation: config.development_file_generation,
-    });
+    let files = std::mem::take(&mut yarn_files_being_loaded.0);
+    commands.insert_resource(YarnProject::new(&config, files, compilation, &asset_server));
     info!(
         "Loaded compiled Yarn project from {}",
         settings.output_dir.display()
@@ -265,13 +261,15 @@ fn build_yarn_project(
     Ok(())
 }
 
-/// Reruns `ysc` when a source changes. Bevy's file watcher then reloads the outputs,
-/// which [`reload_compiled_outputs`] picks up.
+/// Reruns `ysc` when a source changes. Swaps in the new program once it succeeds.
+///
+/// This happens once `ysc` has finished compiling so we don't need to watch assets and debounce.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 fn recompile_on_source_change(
     mut yarn_file_events: MessageReader<AssetEvent<YarnFile>>,
     mut yarnproject_events: MessageReader<AssetEvent<YarnProjectFile>>,
-    project: Res<YarnProject>,
+    mut project: ResMut<YarnProject>,
+    mut dialogue_runners: Query<&mut DialogueRunner>,
     settings: Res<YscSettings>,
     inputs: Res<YscInputs>,
     asset_root: Res<crate::plugin::AssetRoot>,
@@ -285,12 +283,15 @@ fn recompile_on_source_change(
     let project_changed = yarnproject_events
         .read()
         .any(|m| matches!(m, AssetEvent::Modified { .. }));
+    yarn_file_events.clear();
+    yarnproject_events.clear();
 
     if project.watching_for_changes && (yarn_file_changed || project_changed) {
         job.rerun = true;
     }
     if let Some(result) = job.poll() {
-        result?;
+        apply_compiled_file(&mut project, result?, &mut dialogue_runners);
+        info!("Reloaded compiled Yarn project.");
     }
     if job.task.is_none() && std::mem::take(&mut job.rerun) {
         job.task = Some(spawn_ysc(
@@ -303,53 +304,15 @@ fn recompile_on_source_change(
     Ok(())
 }
 
-/// Swaps in the new program when any of the `ysc` outputs change on disk.
-fn reload_compiled_outputs(
-    mut project: ResMut<YarnProject>,
-    outputs: Res<CompiledOutputs>,
-    mut program_events: MessageReader<AssetEvent<YscProgram>>,
-    mut lines_events: MessageReader<AssetEvent<YscLines>>,
-    mut metadata_events: MessageReader<AssetEvent<YscMetadata>>,
-    programs: Res<Assets<YscProgram>>,
-    lines: Res<Assets<YscLines>>,
-    metadata: Res<Assets<YscMetadata>>,
-    mut dialogue_runners: Query<&mut DialogueRunner>,
-) {
-    let Some(handles) = &outputs.0 else {
-        return;
-    };
-    let program_changed = program_events
-        .read()
-        .any(|m| m.is_modified(&handles.program));
-    program_events.clear();
-
-    let lines_changed = lines_events.read().any(|m| m.is_modified(&handles.lines));
-    lines_events.clear();
-
-    let metadata_changed = metadata_events
-        .read()
-        .any(|m| m.is_modified(&handles.metadata));
-    metadata_events.clear();
-
-    if !program_changed && !lines_changed && !metadata_changed {
-        return;
-    }
-    // TODO: Use a sentinel value instead of debouncing here.
-    let Some(compiled) = handles.get(&programs, &lines, &metadata) else {
-        return;
-    };
-    apply_compiled_file(&mut project, compiled, &mut dialogue_runners);
-    info!("Reloaded compiled Yarn project.");
-}
-
-/// Spawns `ysc compile {inputs} -o {output_dir}` on the compute task pool.
+/// Spawns `ysc compile {inputs} -o {output_dir}` on the compute task pool. The task then reads
+/// the outputs back.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 fn spawn_ysc<'a>(
     settings: &YscSettings,
     asset_root: &crate::plugin::AssetRoot,
     inputs: &YscInputs,
     yarn_files: impl Iterator<Item = &'a Handle<YarnFile>>,
-) -> anyhow::Result<Task<anyhow::Result<()>>> {
+) -> anyhow::Result<Task<anyhow::Result<CompiledFile>>> {
     use anyhow::anyhow;
     use bevy::asset::io::AssetSourceId;
 
@@ -378,8 +341,11 @@ fn spawn_ysc<'a>(
 
     let ysc_path = settings.ysc_path.clone();
     let output_dir = asset_root.0.join(&settings.output_dir);
-    Ok(AsyncComputeTaskPool::get()
-        .spawn(async move { run_ysc(&ysc_path, &input_paths, &output_dir) }))
+    let name = inputs.name.clone();
+    Ok(AsyncComputeTaskPool::get().spawn(async move {
+        run_ysc(&ysc_path, &input_paths, &output_dir)?;
+        read_outputs(&output_dir, &name)
+    }))
 }
 
 /// Runs `ysc`, blocking until it finishes. Call through [`spawn_ysc`].
@@ -415,4 +381,21 @@ fn run_ysc(ysc_path: &Path, input_paths: &[PathBuf], output_dir: &Path) -> anyho
         output_dir.display()
     );
     Ok(())
+}
+
+/// Reads and parses the three files ysc wrote to `{output_dir}/{name}*`.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+fn read_outputs(output_dir: &Path, name: &str) -> anyhow::Result<CompiledFile> {
+    use anyhow::anyhow;
+    use yarnspinner::core::{Program, YscLines, YscMetadata};
+
+    let read = |suffix: &str| {
+        let path = output_dir.join(format!("{name}{suffix}"));
+        std::fs::read(&path).map_err(|e| anyhow!("Failed to read {}: {e}", path.display()))
+    };
+    Ok(CompiledFile {
+        program: Program::from_bytes(&read(".yarnc")?)?,
+        lines: YscLines::from_bytes(&read("-Lines.csv")?)?,
+        metadata: YscMetadata::from_bytes(&read("-Metadata.csv")?)?,
+    })
 }

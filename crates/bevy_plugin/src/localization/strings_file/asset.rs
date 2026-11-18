@@ -67,10 +67,24 @@ impl StringsFile {
         Ok(Self(records))
     }
 
+    #[cfg_attr(
+        not(feature = "compiler"),
+        expect(
+            dead_code,
+            reason = "only used to update strings files, which needs the compiler"
+        )
+    )]
     pub(crate) fn language(&self) -> Option<&Language> {
         self.0.iter().next().map(|(_id, record)| &record.language)
     }
 
+    #[cfg_attr(
+        not(feature = "compiler"),
+        expect(
+            dead_code,
+            reason = "only used to update strings files, which needs the compiler"
+        )
+    )]
     pub(crate) fn update_file(&mut self, mut other: Self) -> bool {
         let mut removed_lines = Vec::new();
         let Some(file) = other.0.iter().next().map(|(_, rec)| rec.file.clone()) else {
@@ -174,6 +188,13 @@ impl StringsFile {
         Ok(Self(records))
     }
 
+    #[cfg_attr(
+        not(feature = "compiler"),
+        expect(
+            dead_code,
+            reason = "only used to update strings files, which needs the compiler"
+        )
+    )]
     pub(crate) fn write_asset(&self, path: &Path) -> Result<()> {
         if let Some(parent_dir) = path.parent() {
             fs::create_dir_all(parent_dir).map_err(|e| {
@@ -212,11 +233,25 @@ impl StringsFile {
         self.0.iter()
     }
 
+    #[cfg_attr(
+        not(feature = "compiler"),
+        expect(
+            dead_code,
+            reason = "only used to update strings files, which needs the compiler"
+        )
+    )]
     pub(crate) fn records(&self) -> impl Iterator<Item = &StringsFileRecord> {
         self.0.values()
     }
 }
 
+#[cfg_attr(
+    not(feature = "compiler"),
+    expect(
+        dead_code,
+        reason = "only used to update strings files, which needs the compiler"
+    )
+)]
 fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecord) -> bool {
     lhs.language == rhs.language
         && lhs.id == rhs.id
@@ -226,8 +261,15 @@ fn records_equal_except_for_text(lhs: &StringsFileRecord, rhs: &StringsFileRecor
         && lhs.lock == rhs.lock
         && lhs.comment == rhs.comment
 }
+#[cfg_attr(
+    not(feature = "compiler"),
+    expect(
+        dead_code,
+        reason = "only used to update strings files, which needs the compiler"
+    )
+)]
 const UPDATE_PREFIX: &str = "(NEEDS UPDATE) ";
-
+//
 fn combine_comments(full_old_comment: &str, new_metadata: &str) -> String {
     let translator_comment = extract_translator_comment(full_old_comment);
     let new_metadata = (!new_metadata.is_empty()).then_some(new_metadata);
@@ -293,6 +335,13 @@ pub(crate) struct Lock(String);
 
 impl Lock {
     /// Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Importers/YarnImporter.cs#L149>
+    #[cfg_attr(
+        not(feature = "compiler"),
+        expect(
+            dead_code,
+            reason = "only used to update strings files, which needs the compiler"
+        )
+    )]
     pub(crate) fn compute_from(text: &str) -> Self {
         const MAX_CHARS: usize = 8;
         let hash = Sha256::digest(text);
@@ -312,6 +361,13 @@ impl Lock {
 /// piece of metadata separated by whitespace. If no metadata exists or
 /// only the line ID is part of the metadata, returns an empty string
 /// instead.
+#[cfg_attr(
+    not(feature = "compiler"),
+    expect(
+        dead_code,
+        reason = "only used to update strings files, which needs the compiler"
+    )
+)]
 fn read_comments(metadata: impl IntoIterator<Item = String>) -> String {
     // Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner-Unity/blob/462c735766a4c4881cd1ef1f15de28c83b2ba0a8/Editor/Importers/YarnProjectImporter.cs#L652>
     let cleaned_metadata: Vec<_> = metadata
