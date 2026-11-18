@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use utils::prelude::*;
-use yarnspinner::core::CURRENT_PROJECT_FILE_VERSION;
 
 mod utils;
 

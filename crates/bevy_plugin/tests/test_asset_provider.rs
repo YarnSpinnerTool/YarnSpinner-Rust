@@ -51,8 +51,7 @@ fn does_not_load_invalid_asset_id() -> Result<()> {
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec![],
-            })
-            .with_development_file_generation(DevelopmentFileGeneration::None),
+            }),
     );
 
     let project = app.load_project();
@@ -82,8 +81,7 @@ fn loads_asset_from_base_language_localization() -> Result<()> {
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec![],
-            })
-            .with_development_file_generation(DevelopmentFileGeneration::None),
+            }),
     );
 
     let project = app.load_project();
@@ -117,8 +115,7 @@ fn loads_asset_from_translated_localization() -> Result<()> {
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
-            })
-            .with_development_file_generation(DevelopmentFileGeneration::None),
+            }),
     );
 
     let project = app.load_project();
@@ -154,8 +151,7 @@ fn panics_on_invalid_language() {
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec!["de-CH".into()],
-            })
-            .with_development_file_generation(DevelopmentFileGeneration::None),
+            }),
     );
 
     let project = app.load_project();
@@ -180,8 +176,7 @@ fn does_not_load_asset_with_invalid_type() -> Result<()> {
             .with_localizations(Localizations {
                 base_localization: "en-US".into(),
                 translations: vec![],
-            })
-            .with_development_file_generation(DevelopmentFileGeneration::None),
+            }),
     );
 
     let project = app.load_project();

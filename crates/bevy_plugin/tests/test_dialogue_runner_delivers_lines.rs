@@ -299,8 +299,7 @@ fn setup_dialogue_runner_with_localizations(app: &mut App) -> Mut<'_, DialogueRu
                 .with_localizations(Localizations {
                     base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],
-                })
-                .with_development_file_generation(DevelopmentFileGeneration::None),
+                }),
         )
         .add_plugins(AssertionPlugin)
         .load_project_and_get_dialogue_builder();
