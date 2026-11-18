@@ -27,6 +27,7 @@ fn loads_yarn_assets() {
     assert_eq!("lines.yarn", yarn_file.file_name());
 }
 
+#[cfg(feature = "compiler")]
 #[test]
 #[should_panic]
 fn panics_on_localization_without_line_ids_in_production() {
@@ -44,6 +45,7 @@ fn panics_on_localization_without_line_ids_in_production() {
     let _yarn_file = app.load_project();
 }
 
+#[cfg(feature = "compiler")]
 #[test]
 fn generates_line_ids() -> anyhow::Result<()> {
     let dir = tempdir()?;
