@@ -29,7 +29,7 @@ fn test_example_script() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "already contains a node named")]
 fn test_merging_nodes() {
     let sally_path = space_demo_scripts_path().join("Sally.yarn");
     let ship_path = space_demo_scripts_path().join("Ship.yarn");
@@ -163,7 +163,7 @@ fn test_sources() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "composed entirely of whitespace")]
 fn crashes_on_command_expression_evaluating_whitespace() {
     let result = compile_test_source("<<{\"\"}{\"   \"}>>").unwrap();
     TestBase::new()

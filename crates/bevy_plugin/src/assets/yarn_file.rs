@@ -34,10 +34,11 @@ impl YarnFile {
         &self.source
     }
 
-    /// Overrides the content of the Yarn file. Note that for Yarn files loaded with an [`AssetServer`], this will *not* change the file on disk.
-    pub fn set_content(&mut self, content: String) -> Result<&mut Self> {
+    /// Overrides the content of the Yarn file. Note that for Yarn files loaded
+    /// with an [`AssetServer`], this will *not* change the file on disk.
+    pub fn set_content(&mut self, content: String) -> &mut Self {
         self.source = content;
-        Ok(self)
+        self
     }
 }
 
