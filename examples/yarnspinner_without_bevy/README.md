@@ -6,7 +6,7 @@ The dialogue has to be compiled with [`ysc`](https://github.com/YarnSpinnerTool/
 first (`scripts/install-ysc.sh` installs it into `tools/`). From this directory:
 
 ```sh
-for f in assets/dialogue/*.yarn; do ysc compile "$f" -o assets/dialogue/compiled; done
+for f in assets/dialogue/*.yarn; do ysc compile "$f" -o assets/dialogue/; done
 cargo run --bin hello_world
 ```
 
