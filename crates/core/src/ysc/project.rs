@@ -1,6 +1,8 @@
 //! Adapted from <https://github.com/YarnSpinnerTool/YarnSpinner/blob/v2.5.0/YarnSpinner.Compiler/Project.cs>
 
-use alloc::vec::Vec;
+#[cfg(feature = "serde")]
+use crate::prelude::format;
+use crate::prelude::{String, ToOwned, Vec, vec};
 use std::path::Path;
 use std::{collections::HashMap, path::PathBuf};
 
