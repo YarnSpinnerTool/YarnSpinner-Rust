@@ -1,4 +1,4 @@
-//! The core components of Yarn Spinner, used for both the compiler and the runtime. These mostly follow the same structure as in the original Yarn Spinner.
+//! The core components of Yarn Spinner, used by the runtime and engine integrations. These mostly follow the same structure as in the original Yarn Spinner.
 //!
 //! You probably don't want to use this crate directly.
 //! - If you're a game developer, you'll want to use a crate that is already designed for your game engine of choice,
@@ -15,7 +15,6 @@ extern crate std;
 
 /// Types needed for YSC interactions which are NOT no_std compatible.
 /// This is usually because they require filesystem interactions.
-/// Moved from `compiler` crate ahead of deprecation.
 #[cfg(feature = "std")]
 pub mod ysc;
 
@@ -33,7 +32,7 @@ mod yarn_fn;
 mod yarn_value;
 
 pub mod prelude {
-    //! Types and functions used all throughout the runtime and compiler.
+    //! Types and functions used all throughout the runtime.
     #[cfg(any(feature = "bevy", feature = "serde"))]
     pub use crate::feature_gates::*;
 
@@ -53,8 +52,8 @@ pub mod prelude {
     pub use crate::{
         compiled::*,
         generated::{
-            Header, Instruction, InvalidOpCodeError, Node, Operand, Program, instruction::OpCode,
-            operand::Value as OperandValue,
+            DecodeError, Header, Instruction, InvalidOpCodeError, Node, Operand, Program,
+            instruction::OpCode, operand::Value as OperandValue,
         },
         internal_value::*,
         library::*,

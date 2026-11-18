@@ -31,9 +31,6 @@ pub const STANDALONE_YARN_FILES: &[&str] = &[
 ];
 
 pub fn compile_yarn(asset_root: impl AsRef<Path>, inputs: &[&str], output_dir: impl AsRef<Path>) {
-    if cfg!(feature = "compiler") {
-        return;
-    }
     let asset_root = asset_root.as_ref();
     let output_dir = asset_root.join(output_dir);
     let inputs: Vec<_> = inputs.iter().map(|input| asset_root.join(input)).collect();

@@ -99,9 +99,6 @@
 
 mod assets;
 mod commands;
-#[cfg(feature = "compiler")]
-mod compiled_file;
-mod development_file_generation;
 mod dialogue_runner;
 mod fmt_utils;
 mod line_provider;
@@ -132,11 +129,8 @@ pub mod events {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Spinner.
 
-    #[cfg(feature = "compiler")]
-    pub use crate::compiled_file::CompiledFileExt;
     #[cfg(feature = "audio_assets")]
     pub use crate::default_impl::AudioAssetProvider;
-    #[cfg(not(feature = "compiler"))]
     pub use crate::project::YscSettings;
     pub use crate::{
         assets::{
@@ -146,7 +140,6 @@ pub mod prelude {
         },
         commands::{YarnCommand, YarnCommands},
         default_impl::FileExtensionAssetProvider,
-        development_file_generation::DevelopmentFileGeneration,
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
         line_provider::{AssetProvider, LineAssets, TextProvider},
         localization::{Localization, Localizations},
@@ -176,8 +169,6 @@ pub mod prelude {
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};
 pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
 pub use yarnspinner::core::{UntypedYarnFn, yarn_fn_type};
-#[cfg(feature = "compiler")]
-pub use yarnspinner::prelude::{Compilation, StringInfo};
 pub use yarnspinner::prelude::{
     TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,

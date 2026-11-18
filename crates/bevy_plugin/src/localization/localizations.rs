@@ -57,17 +57,6 @@ impl Localizations {
                 .map(|localization| &localization.language),
         )
     }
-
-    #[cfg(feature = "compiler")]
-    pub(crate) fn strings_file_path(
-        &self,
-        language: impl Into<Language>,
-    ) -> Option<&std::path::Path> {
-        let language = language.into();
-        self.translations
-            .iter()
-            .find_map(|t| (t.language == language).then_some(t.strings_file.as_path()))
-    }
 }
 
 /// A supported localization inside [`Localizations`]. Created with [`Localization::with_language`].

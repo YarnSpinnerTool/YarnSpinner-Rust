@@ -344,7 +344,7 @@ fn spawn_ysc<'a>(
     let name = inputs.name.clone();
     Ok(AsyncComputeTaskPool::get().spawn(async move {
         run_ysc(&ysc_path, &input_paths, &output_dir)?;
-        read_outputs(&output_dir, &name)
+        Ok(CompiledFile::read(&output_dir, &name)?)
     }))
 }
 
@@ -381,21 +381,4 @@ fn run_ysc(ysc_path: &Path, input_paths: &[PathBuf], output_dir: &Path) -> anyho
         output_dir.display()
     );
     Ok(())
-}
-
-/// Reads and parses the three files ysc wrote to `{output_dir}/{name}*`.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-fn read_outputs(output_dir: &Path, name: &str) -> anyhow::Result<CompiledFile> {
-    use anyhow::anyhow;
-    use yarnspinner::core::{Program, YscLines, YscMetadata};
-
-    let read = |suffix: &str| {
-        let path = output_dir.join(format!("{name}{suffix}"));
-        std::fs::read(&path).map_err(|e| anyhow!("Failed to read {}: {e}", path.display()))
-    };
-    Ok(CompiledFile {
-        program: Program::from_bytes(&read(".yarnc")?)?,
-        lines: YscLines::from_bytes(&read("-Lines.csv")?)?,
-        metadata: YscMetadata::from_bytes(&read("-Metadata.csv")?)?,
-    })
 }

@@ -185,7 +185,7 @@ fn can_select_by_line_id() -> Result<()> {
 }
 
 #[test]
-fn generates_files_in_dev_mode() -> Result<()> {
+fn delivers_options_with_localizations_from_another_asset_root() -> Result<()> {
     let dir = tempdir()?;
     let original_yarn_path = project_root_path().join("assets/options.yarn");
     let yarn_path = dir.path().join("options.yarn");
@@ -193,7 +193,7 @@ fn generates_files_in_dev_mode() -> Result<()> {
     compile_yarn(dir.path(), &["options.yarn"], DEFAULT_COMPILED_DIR);
     let mut app = App::new();
     app.setup_default_plugins_for_path(dir.path())
-        .setup_dialogue_runner_in_dev_mode()
+        .setup_dialogue_runner_with_localizations()
         .start_node("Start");
 
     assert_events!(app contains [
@@ -205,7 +205,7 @@ fn generates_files_in_dev_mode() -> Result<()> {
 
 trait OptionTestAppExt {
     fn setup_dialogue_runner(&mut self) -> Mut<'_, DialogueRunner>;
-    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<'_, DialogueRunner>;
+    fn setup_dialogue_runner_with_localizations(&mut self) -> Mut<'_, DialogueRunner>;
 }
 
 impl OptionTestAppExt for App {
@@ -218,14 +218,13 @@ impl OptionTestAppExt for App {
             .dialogue_runner_mut()
     }
 
-    fn setup_dialogue_runner_in_dev_mode(&mut self) -> Mut<'_, DialogueRunner> {
+    fn setup_dialogue_runner_with_localizations(&mut self) -> Mut<'_, DialogueRunner> {
         self.add_plugins(
             YarnSpinnerPlugin::with_yarn_source(YarnFileSource::file("options.yarn"))
                 .with_localizations(Localizations {
                     base_localization: "en-US".into(),
                     translations: vec!["de-CH".into()],
-                })
-                .with_development_file_generation(DevelopmentFileGeneration::Full),
+                }),
         )
         .add_plugins(AssertionPlugin)
         .dialogue_runner_mut()

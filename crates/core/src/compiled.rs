@@ -115,13 +115,6 @@ impl<const FIELD_COUNT: usize> Csv<FIELD_COUNT> {
 #[cfg_attr(feature = "bevy", derive(Reflect))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct YscLines(Vec<YscLine>);
-impl YscLines {
-    // TODO: Remove this once we use stop using [`compiler::Compilation`]
-    /// Creates a new [`YscLines`] from a vec of [`YscLine`]
-    pub fn new(lines: Vec<YscLine>) -> Self {
-        Self(lines)
-    }
-}
 impl DerefMut for YscLines {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
@@ -200,19 +193,6 @@ pub struct YscMetadata {
     #[cfg_attr(feature = "serde", serde(skip))]
     #[cfg_attr(feature = "bevy", reflect(ignore))]
     tags: HashMap<LineId, usize>,
-}
-impl YscMetadata {
-    // TODO: Remove this once we use stop using [`compiler::Compilation`]
-    /// Creates a new [`YscMetadata`] from a vec of [`MetadataLine`]
-    pub fn new(lines: Vec<MetadataLine>) -> Self {
-        let tags = lines
-            .iter()
-            .enumerate()
-            // duplicates storage of line ids; tradeoff for hashed indexing of tag metadata
-            .map(|(idx, line)| (line.id.clone(), idx))
-            .collect();
-        Self { lines, tags }
-    }
 }
 impl YscMetadata {
     /// Get tags by line_id

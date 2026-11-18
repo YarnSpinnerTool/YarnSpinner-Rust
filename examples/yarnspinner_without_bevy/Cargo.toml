@@ -5,7 +5,7 @@ edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
 keywords = ["gamedev", "dialog", "yarn", "bevy"]
-categories = ["game-development", "compilers"]
+categories = ["game-development"]
 authors = ["Joe Clay <27cupsofcoffee@gmail.com>"]
 publish = false
 
@@ -13,7 +13,7 @@ publish = false
 crossterm = "0.29"
 ratatui = "0.30"
 anyhow = "1.0"
-yarnspinner = { path = "../../crates/yarnspinner", version = "0.10.0", features=["compiler"] }
+yarnspinner = { path = "../../crates/yarnspinner", version = "0.10.0" }
 
 [[bin]]
 name = "access_variables"

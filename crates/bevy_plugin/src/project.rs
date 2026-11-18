@@ -7,13 +7,9 @@ use std::fmt::Debug;
 use std::iter;
 use yarnspinner::core::CompiledFile;
 
-/// Splits compilation backend between rust implementation and external ysc call
-/// based on whether the `compiler` feature flag is set.
+/// Compiles with the external `ysc` executable.
 pub(crate) mod backend;
 mod compilation;
-#[cfg(feature = "compiler")]
-pub(crate) use backend::RecompileLoadedYarnFilesEvent;
-#[cfg(not(feature = "compiler"))]
 pub use backend::YscSettings;
 pub(crate) use compilation::{CompilationStep, YarnFilesBeingLoaded, YarnProjectConfigToLoad};
 
@@ -23,7 +19,7 @@ pub(crate) fn project_plugin(app: &mut App) {
 }
 
 /// Swaps a freshly compiled program into `project` and restarts every running
-/// [`DialogueRunner`] at the node it was on. Shared by both backends' hot reloading.
+/// [`DialogueRunner`] at the node it was on. Used by hot reloading.
 pub(crate) fn apply_compiled_file(
     project: &mut YarnProject,
     compiled: CompiledFile,
@@ -79,12 +75,9 @@ pub struct YarnProject {
     pub(crate) localizations: Option<Localizations>,
     pub(crate) asset_server: SkipDebug<AssetServer>,
     pub(crate) watching_for_changes: bool,
-    #[cfg(feature = "compiler")]
-    pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
 impl YarnProject {
-    #[cfg_attr(feature = "compiler", expect(dead_code, reason = "only used for ysc"))]
     pub(crate) fn new(
         config: &YarnProjectConfigToLoad,
         yarn_files: HashSet<Handle<YarnFile>>,
@@ -97,8 +90,6 @@ impl YarnProject {
             localizations: config.localizations.clone().flatten(),
             asset_server: SkipDebug(asset_server.clone()),
             watching_for_changes: config.watching_for_changes,
-            #[cfg(feature = "compiler")]
-            development_file_generation: config.development_file_generation,
         }
     }
 
@@ -168,7 +159,6 @@ pub struct LoadYarnProjectEvent {
     pub(crate) yarnproject: Option<AssetPath<'static>>,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,
-    pub(crate) development_file_generation: DevelopmentFileGeneration,
 }
 
 // TODO: Don't glob yarn files by default. Populate this from the .yarnproject instead.
@@ -179,7 +169,6 @@ impl Default for LoadYarnProjectEvent {
             yarnproject: None,
             localizations: None,
             yarn_files: HashSet::from_iter([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
-            development_file_generation: default(),
         }
     }
 }
@@ -207,7 +196,6 @@ impl LoadYarnProjectEvent {
             yarnproject: None,
             localizations: None,
             yarn_files,
-            development_file_generation: default(),
         }
     }
 
@@ -240,17 +228,6 @@ impl LoadYarnProjectEvent {
     pub fn with_localizations(mut self, localizations: impl Into<Option<Localizations>>) -> Self {
         let localizations = localizations.into();
         self.localizations = localizations;
-        self
-    }
-
-    /// See [`ManualYarnSpinnerPlugin::with_development_file_generation`].
-    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-    #[must_use]
-    pub fn with_development_file_generation(
-        mut self,
-        development_file_generation: DevelopmentFileGeneration,
-    ) -> Self {
-        self.development_file_generation = development_file_generation;
         self
     }
 }

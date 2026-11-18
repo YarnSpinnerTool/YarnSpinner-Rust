@@ -59,9 +59,6 @@ pub(crate) fn plugin(app: &mut App) {
 pub(crate) struct YarnProjectConfigToLoad {
     pub(crate) localizations: Option<Option<Localizations>>,
     pub(crate) watching_for_changes: bool,
-    #[cfg(feature = "compiler")]
-    pub(crate) development_file_generation: DevelopmentFileGeneration,
-    #[cfg(not(feature = "compiler"))]
     pub(crate) yarnproject: Option<bevy::asset::AssetPath<'static>>,
 }
 
@@ -91,21 +88,10 @@ fn load_project(
             Did run `LoadYarnProjectEvent::empty()` without adding any Yarn files with `LoadYarnProjectEvent::add_yarn_file` and `LoadYarnProjectEvent::add_yarn_files`? \
             If you wanted to load from the default directory instead, use `LoadYarnProjectEvent::default()`."
         );
-        if event.development_file_generation == DevelopmentFileGeneration::Full
-            && !is_watching_for_changes.0
-        {
-            warn!(
-                "Development file generation mode is set to `Full`, but hot reloading is not turned on. \
-                For an optimal development experience, we recommend turning on hot reloading by activating the \"file_watcher\" feature of Bevy"
-            );
-        }
 
         commands.insert_resource(YarnProjectConfigToLoad {
             localizations: Some(event.localizations),
             watching_for_changes: is_watching_for_changes.0,
-            #[cfg(feature = "compiler")]
-            development_file_generation: event.development_file_generation,
-            #[cfg(not(feature = "compiler"))]
             yarnproject: event.yarnproject,
         });
         commands.insert_resource(YarnFilesToLoad(event.yarn_files));

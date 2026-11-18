@@ -1,5 +1,3 @@
-#![cfg(not(feature = "compiler"))]
-
 use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use std::fs;
