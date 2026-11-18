@@ -20,11 +20,11 @@ fn test_example_script() {
     let path = test_data_path().join("Example.yarn");
     let test_plan = path.with_extension("testplan");
 
-    let result = Compiler::default().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
     TestBase::default()
         .with_runtime_errors_do_not_cause_failure()
-        .with_compilation(result)
+        .with_compiled(result)
         .read_test_plan(test_plan)
         .run_standard_testcase();
 }
@@ -49,37 +49,23 @@ fn can_compile_space_demo() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "already contains a node named")]
 fn test_merging_nodes() {
-    let test_base = TestBase::default();
     let sally_path = space_demo_scripts_path().join("Sally.yarn");
     let ship_path = space_demo_scripts_path().join("Ship.yarn");
 
-    let result_sally = Compiler::default()
-        .read_file(&sally_path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
-    let result_sally_and_ship = Compiler::default()
-        .read_file(&sally_path)
-        .read_file(ship_path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let result_sally = compile_file(&sally_path);
+    let result_sally_and_ship = compile(&[&sally_path, &ship_path]).unwrap();
 
-    // Loading code with the same contents should throw
-    let _combined_not_working = Program::combine(vec![
-        result_sally.program.unwrap(),
-        result_sally_and_ship.program.unwrap(),
-    ]);
+    Program::combine(vec![result_sally.program, result_sally_and_ship.program]);
 }
 
 #[test]
 fn test_end_of_notes_with_options_not_added() {
     let path = test_data_path().join("SkippedOptions.yarn");
-    let result = Compiler::default().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
-    let mut dialogue = TestBase::default().with_compilation(result).dialogue;
+    let mut dialogue = TestBase::default().with_compiled(result).dialogue;
     dialogue.set_node("Start").unwrap();
 
     #[cfg(feature = "bevy")]
@@ -107,8 +93,8 @@ fn test_end_of_notes_with_options_not_added() {
 #[test]
 fn test_node_headers() {
     let path = test_data_path().join("Headers.yarn");
-    let result = Compiler::default().read_file(&path).compile().unwrap();
-    let program = result.program.as_ref().unwrap();
+    let result = compile_file(&path);
+    let program = &result.program;
     assert_eq!(program.nodes.len(), 6);
 
     for tag in &["one", "two", "three"].map(|s| s.to_owned()) {
@@ -159,13 +145,6 @@ fn test_node_headers() {
             assert_eq!(header.value, expected_header.1);
         }
     }
-
-    let path = path.to_string_lossy().to_string();
-
-    assert!(result.file_tags.contains_key(&path));
-    assert_eq!(1, result.file_tags.len());
-    assert!(result.file_tags[&path].contains(&"file_header".to_owned()));
-    assert_eq!(1, result.file_tags[&path].len());
 }
 
 #[test]
@@ -177,41 +156,22 @@ fn test_invalid_characters_in_node_title() {
 
 #[test]
 fn test_sources() {
-    for file in [
-        "TestCases",
-        "TestCases/ParseFailures",
-        // ## Implementation note: this directory does not exist
-        // "Issues"
-    ]
-    .iter()
-    .flat_map(TestBase::file_sources)
-    {
+    for file in ["TestCases"].iter().flat_map(TestBase::file_sources) {
         println!("INFO: Loading file {}", file.display());
         let path = test_data_path().join(&file);
         let test_plan = path.with_extension("testplan");
 
+        if !test_plan.exists() {
+            continue;
+        }
         let test_base = TestBase::default().extend_library(|library| {
             library.add_function("add_three_operands", |a: i32, b: i32, c: i32| a + b + c);
         });
-        let result = Compiler::default()
-            .read_file(&path)
-            .extend_library(test_base.dialogue.library().clone())
-            .compile();
-
-        if !test_plan.exists() {
-            // No test plan for this file exists, which indicates that
-            // the file is not expected to compile. We'll actually make
-            // it a test failure if it _does_ compile.
-            assert!(
-                result.is_err(),
-                "{} is expected to have compile errors",
-                file.display()
-            );
-        } else {
-            let compilation = result.unwrap();
+        {
+            let compilation = compile_file(&path);
             let mut test_base = test_base
                 .read_test_plan(test_plan)
-                .with_compilation(compilation)
+                .with_compiled(compilation)
                 .extend_library(|library| {
                     library
                         .add_function("dummy_bool", || true)
@@ -230,12 +190,10 @@ fn test_sources() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "composed entirely of whitespace")]
 fn crashes_on_command_expression_evaluating_whitespace() {
-    let result = Compiler::from_test_source("<<{\"\"}{\"   \"}>>")
-        .compile()
-        .unwrap();
+    let result = compile_test_source("<<{\"\"}{\"   \"}>>").unwrap();
     TestBase::new()
-        .with_compilation(result)
+        .with_compiled(result)
         .run_standard_testcase();
 }

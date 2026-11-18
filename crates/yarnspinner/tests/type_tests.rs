@@ -459,13 +459,13 @@ fn test_variable_storage_extended_with_program_initial_values() {
         <<declare $bool = true>>
     ";
 
-    let result = Compiler::from_test_source(source).compile().unwrap();
+    let result = compile_test_source(source).unwrap();
 
     let mut dialogue = Dialogue::new(
         Box::new(MemoryVariableStorage::new()),
         Box::new(StringTableTextProvider::new()),
     );
-    dialogue.replace_program(result.program.unwrap());
+    dialogue.replace_program(result.program);
 
     let variable_storage = dialogue.variable_storage();
     assert_eq!(
@@ -615,12 +615,9 @@ fn test_type_conversion() {
             .expect_line("bool and bool(string): true")
             .expect_line("bool and bool(number): true"),
     );
-    let result = Compiler::from_test_source(source)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let result = compile_test_source(source).unwrap();
 
-    test_base.with_compilation(result).run_standard_testcase();
+    test_base.with_compiled(result).run_standard_testcase();
 }
 
 #[test]
@@ -629,11 +626,8 @@ fn test_type_conversion_failure_to_number() {
     let source = "{number(\"hello\")}";
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
-    let result = Compiler::from_test_source(source)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
-    test_base.with_compilation(result).run_standard_testcase();
+    let result = compile_test_source(source).unwrap();
+    test_base.with_compiled(result).run_standard_testcase();
 }
 
 #[test]
@@ -642,11 +636,8 @@ fn test_type_conversion_failure_to_bool() {
     let source = "{bool(\"hello\")}";
     let test_base =
         TestBase::new().with_test_plan(TestPlan::new().expect_line("test failure if seen"));
-    let result = Compiler::from_test_source(source)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
-    test_base.with_compilation(result).run_standard_testcase();
+    let result = compile_test_source(source).unwrap();
+    test_base.with_compiled(result).run_standard_testcase();
 }
 
 #[test]

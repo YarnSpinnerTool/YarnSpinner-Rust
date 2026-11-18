@@ -4,18 +4,19 @@
 //!
 //! The implementation is annotated with various comments explaining what each API does - start at
 //! TuiDialogueRunner::new, and follow along from there!
+//!
+//! The dialogue must be compiled with `ysc` first; see this crate's README.
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;
 use std::str::FromStr;
 
-use anyhow::{Context, anyhow};
+use anyhow::anyhow;
 use crossterm::event::KeyCode;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::{Color, Stylize};
-use yarnspinner::compiler::Compiler;
-use yarnspinner::core::{IntoYarnValueFromNonYarnValue, LineId, YarnFn, YarnValue};
+use yarnspinner::core::{CompiledFile, IntoYarnValueFromNonYarnValue, LineId, YarnFn, YarnValue};
 use yarnspinner::runtime::{
     Dialogue, DialogueEvent, Line, MemoryVariableStorage, StringTableTextProvider,
 };
@@ -42,24 +43,25 @@ pub struct TuiDialogueRunner {
 
 impl TuiDialogueRunner {
     pub fn new(
-        source_path: impl AsRef<Path>,
+        compiled_dir: impl AsRef<Path>,
+        name: &str,
         start_node: &str,
     ) -> anyhow::Result<TuiDialogueRunner> {
-        // Before we can run our dialogue, we need to compile it.
-        //
-        // In a real game, you might want to consider doing this as part of your asset
-        // pipeline, rather than at runtime..
-        let compilation = Compiler::new().read_file(source_path).compile()?;
+        // should be compiled ahead of time
+        let compiled = CompiledFile::read(compiled_dir, name)?;
 
-        // One of the outputs of compiling is a string table, containing all of the
-        // text (and associated metadata) for our dialogue.
-        let mut base_language_string_table = HashMap::<LineId, String>::default();
-        let mut metadata = HashMap::<LineId, Vec<String>>::default();
-
-        for (k, v) in compilation.string_table {
-            base_language_string_table.insert(k.clone(), v.text);
-            metadata.insert(k, v.metadata);
-        }
+        let base_language_string_table: HashMap<LineId, String> = compiled
+            .texts()
+            .map(|(id, text)| (id.clone(), text.to_owned()))
+            .collect();
+        let metadata: HashMap<LineId, Vec<String>> = compiled
+            .lines
+            .iter()
+            .map(|line| {
+                let tags = compiled.line_metadata(&line.id).unwrap_or_default();
+                (line.id.clone(), tags.to_vec())
+            })
+            .collect();
 
         // In order to create a Dialogue object, we need two things.
         //
@@ -88,7 +90,7 @@ impl TuiDialogueRunner {
         // compiled program, and tell it which node to start running from.
         //
         // To see how we actually drive this at runtime, scroll down to `fn update`!
-        dialogue.add_program(compilation.program.context("no program compiled")?);
+        dialogue.add_program(compiled.program);
         dialogue.set_node(start_node)?;
 
         Ok(TuiDialogueRunner {
