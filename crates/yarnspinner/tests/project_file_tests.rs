@@ -2,8 +2,10 @@
 #![cfg(feature = "serde")]
 
 use std::env;
+use yarnspinner::core::*;
 
 use test_base::prelude::*;
+use yarnspinner_core::ysc::LocalizationInfo;
 
 mod test_base;
 
