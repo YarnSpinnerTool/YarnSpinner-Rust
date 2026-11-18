@@ -84,6 +84,7 @@ pub struct YarnProject {
 }
 
 impl YarnProject {
+    #[cfg_attr(feature = "compiler", expect(dead_code, reason = "only used for ysc"))]
     pub(crate) fn new(
         config: &YarnProjectConfigToLoad,
         yarn_files: HashSet<Handle<YarnFile>>,
