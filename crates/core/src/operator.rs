@@ -56,7 +56,8 @@ pub enum Operator {
     /// ## Implementation note
     ///
     /// This is called `UnaryMinus` in the original implementation, but was
-    /// renamed for consistency with the other operators.
+    /// renamed for consistency with the other operators. It still displays as
+    /// `UnaryMinus`, because compiled programs call functions by that name.
     UnarySubtract,
 
     /// A binary operator that represents addition.
@@ -68,7 +69,8 @@ pub enum Operator {
     /// ## Implementation note
     ///
     /// This is called `Minus` in the original implementation, but was
-    /// renamed for consistency with the other operators.
+    /// renamed for consistency with the other operators. It still displays as
+    /// `Minus`, because compiled programs call functions by that name.
     Subtract,
 
     /// A binary operator that represents
@@ -96,9 +98,9 @@ impl fmt::Display for Operator {
             Operator::And => f.write_str("And"),
             Operator::Xor => f.write_str("Xor"),
             Operator::Not => f.write_str("Not"),
-            Operator::UnarySubtract => f.write_str("UnarySubtract"),
+            Operator::UnarySubtract => f.write_str("UnaryMinus"),
             Operator::Add => f.write_str("Add"),
-            Operator::Subtract => f.write_str("Subtract"),
+            Operator::Subtract => f.write_str("Minus"),
             Operator::Multiply => f.write_str("Multiply"),
             Operator::Divide => f.write_str("Divide"),
             Operator::Modulo => f.write_str("Modulo"),

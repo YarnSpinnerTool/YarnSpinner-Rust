@@ -11,7 +11,7 @@ use bevy::{
     prelude::*,
     tasks::futures_lite::StreamExt,
 };
-use yarnspinner::compiler::{CURRENT_PROJECT_FILE_VERSION, Project};
+use yarnspinner::core::{CURRENT_PROJECT_FILE_VERSION, Project};
 
 /// A .yarnproject file.
 #[derive(Debug, Clone, PartialEq, Reflect, Asset)]
