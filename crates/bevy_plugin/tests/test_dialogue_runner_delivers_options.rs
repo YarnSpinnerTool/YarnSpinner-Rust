@@ -190,6 +190,7 @@ fn generates_files_in_dev_mode() -> Result<()> {
     let original_yarn_path = project_root_path().join("assets/options.yarn");
     let yarn_path = dir.path().join("options.yarn");
     fs::copy(original_yarn_path, yarn_path)?;
+    compile_yarn(dir.path(), &["options.yarn"], DEFAULT_COMPILED_DIR);
     let mut app = App::new();
     app.setup_default_plugins_for_path(dir.path())
         .setup_dialogue_runner_in_dev_mode()

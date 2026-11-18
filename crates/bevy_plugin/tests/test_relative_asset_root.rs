@@ -9,6 +9,11 @@ mod utils;
 fn loads_folder_with_relative_asset_root() {
     // SAFETY: this binary has a single test, so no other thread reads the environment.
     unsafe { std::env::set_var("BEVY_ASSET_ROOT", "./") };
+    compile_yarn(
+        project_root_path().join("assets"),
+        &["folder/folder.yarn"],
+        DEFAULT_COMPILED_DIR,
+    );
     let mut app = App::new();
     app.setup_default_plugins_for_path("assets")
         .add_plugins(YarnSpinnerPlugin::with_yarn_source(YarnFileSource::folder(

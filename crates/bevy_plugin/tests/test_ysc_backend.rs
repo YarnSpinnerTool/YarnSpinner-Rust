@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
 use utils::prelude::*;
@@ -41,14 +40,7 @@ fn time_out(mut start: Local<Option<Instant>>, mut commands: Commands) {
 fn loads_precompiled_project_without_ysc() {
     let dir = tempdir().unwrap();
     copy_fixture_sources(dir.path());
-    let fixture = dir.path().join("ysc");
-    fs::create_dir_all(fixture.join("compiled")).unwrap();
-    let status = Command::new("ysc")
-        .current_dir(&fixture)
-        .args(["compile", "project.yarnproject", "-o", "compiled"])
-        .status()
-        .unwrap();
-    assert!(status.success(), "ysc failed: {status}");
+    compile_yarn(dir.path(), &["ysc/project.yarnproject"], "ysc/compiled");
 
     let mut app = App::new();
     app.setup_default_plugins_for_path(dir.path())

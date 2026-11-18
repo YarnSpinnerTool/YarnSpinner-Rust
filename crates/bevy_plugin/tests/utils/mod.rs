@@ -9,12 +9,64 @@ use bevy_yarnspinner::UnderlyingYarnLine;
 use bevy_yarnspinner::prelude::*;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 pub mod assertion;
 
 pub mod prelude {
     #[allow(unused_imports)] // False positive
     pub use super::{assertion::*, *};
+}
+
+pub const DEFAULT_COMPILED_DIR: &str = "dialogue/compiled";
+
+pub const STANDALONE_YARN_FILES: &[&str] = &[
+    "commands.yarn",
+    "functions.yarn",
+    "lines.yarn",
+    "lines_with_ids.yarn",
+    "options.yarn",
+    "wait.yarn",
+    "folder/folder.yarn",
+];
+
+pub fn compile_yarn(asset_root: impl AsRef<Path>, inputs: &[&str], output_dir: impl AsRef<Path>) {
+    if cfg!(feature = "compiler") {
+        return;
+    }
+    let asset_root = asset_root.as_ref();
+    let output_dir = asset_root.join(output_dir);
+    let inputs: Vec<_> = inputs.iter().map(|input| asset_root.join(input)).collect();
+
+    let name = match inputs.as_slice() {
+        [input] => input.file_stem().unwrap().to_string_lossy().into_owned(),
+        _ => "Output".to_owned(),
+    };
+    let outputs = [".yarnc", "-Lines.csv", "-Metadata.csv"]
+        .map(|suffix| output_dir.join(format!("{name}{suffix}")));
+    if outputs.iter().all(|output| output.is_file()) {
+        return;
+    }
+
+    let staging = tempfile::tempdir_in(asset_root).unwrap();
+    let output = Command::new("ysc")
+        .arg("compile")
+        .args(&inputs)
+        .arg("-o")
+        .arg(staging.path())
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "ysc failed to compile {inputs:?}:\n{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    std::fs::create_dir_all(&output_dir).unwrap();
+    for entry in std::fs::read_dir(staging.path()).unwrap() {
+        let entry = entry.unwrap();
+        std::fs::rename(entry.path(), output_dir.join(entry.file_name())).unwrap();
+    }
 }
 
 pub trait AppExt {
@@ -149,7 +201,11 @@ impl AppExt for App {
     }
 
     fn setup_default_plugins(&mut self) -> &mut App {
-        self.setup_default_plugins_for_path(project_root_path().join("assets"))
+        let assets = project_root_path().join("assets");
+        for file in STANDALONE_YARN_FILES {
+            compile_yarn(&assets, &[file], DEFAULT_COMPILED_DIR);
+        }
+        self.setup_default_plugins_for_path(assets)
     }
 
     fn setup_default_plugins_for_path(&mut self, asset_folder: impl AsRef<Path>) -> &mut App {
