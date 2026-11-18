@@ -69,6 +69,30 @@ pub fn compile_yarn(asset_root: impl AsRef<Path>, inputs: &[&str], output_dir: i
     }
 }
 
+pub struct TimeoutPlugin(pub std::time::Duration);
+
+impl Default for TimeoutPlugin {
+    fn default() -> Self {
+        Self(std::time::Duration::from_secs(30))
+    }
+}
+
+impl Plugin for TimeoutPlugin {
+    fn build(&self, app: &mut App) {
+        let timeout = self.0;
+        app.add_systems(
+            Last,
+            move |mut start: Local<Option<std::time::Instant>>, mut commands: Commands| {
+                let start = *start.get_or_insert_with(std::time::Instant::now);
+                if start.elapsed() > timeout {
+                    error!("Timed out after {timeout:?}");
+                    commands.write_message(AppExit::error());
+                }
+            },
+        );
+    }
+}
+
 pub trait AppExt {
     fn load_project(&mut self) -> &YarnProject;
     #[must_use]
@@ -217,11 +241,13 @@ impl AppExt for App {
         asset_folder: impl AsRef<Path>,
         watch_for_changes: bool,
     ) -> &mut App {
-        self.add_plugins(MinimalPlugins).add_plugins(AssetPlugin {
-            file_path: asset_folder.as_ref().to_string_lossy().to_string(),
-            watch_for_changes_override: Some(watch_for_changes),
-            ..default()
-        });
+        self.add_plugins(MinimalPlugins)
+            .add_plugins(AssetPlugin {
+                file_path: asset_folder.as_ref().to_string_lossy().to_string(),
+                watch_for_changes_override: Some(watch_for_changes),
+                ..default()
+            })
+            .add_plugins(TimeoutPlugin::default());
 
         #[cfg(feature = "audio_assets")]
         self.add_plugins(AudioPlugin::default());

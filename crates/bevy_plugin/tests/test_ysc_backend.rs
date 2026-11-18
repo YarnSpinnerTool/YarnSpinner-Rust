@@ -4,13 +4,10 @@ use bevy::prelude::*;
 use bevy_yarnspinner::prelude::*;
 use std::fs;
 use std::path::Path;
-use std::time::{Duration, Instant};
 use tempfile::tempdir;
 use utils::prelude::*;
 
 mod utils;
-
-const TIMEOUT: Duration = Duration::from_secs(30);
 
 fn copy_fixture_sources(dest: &Path) {
     let from = project_root_path().join("assets/ysc");
@@ -31,11 +28,6 @@ fn texts(project: &YarnProject) -> Vec<String> {
     texts
 }
 
-fn time_out(mut start: Local<Option<Instant>>, mut commands: Commands) {
-    let start = *start.get_or_insert_with(Instant::now);
-    cmd_assert!(commands, start.elapsed() < TIMEOUT, "Timed out");
-}
-
 #[test]
 fn loads_precompiled_project_without_ysc() {
     let dir = tempdir().unwrap();
@@ -53,10 +45,7 @@ fn loads_precompiled_project_without_ysc() {
         ))
         .add_systems(
             Update,
-            (
-                time_out,
-                check_precompiled_project.run_if(resource_exists::<YarnProject>),
-            ),
+            check_precompiled_project.run_if(resource_exists::<YarnProject>),
         );
     assert!(app.run().is_success());
 }
@@ -101,16 +90,13 @@ fn compiles_manual_file_list_on_startup_when_watching() {
         ]))
         .add_systems(
             Update,
-            (
-                time_out,
-                (move |project: Res<YarnProject>, mut commands: Commands| {
-                    cmd_assert!(commands, compiled.is_file(), "ysc wrote no program");
-                    let count = texts(&project).len();
-                    cmd_assert!(commands, count == 4, "Expected 4 lines, got {count}");
-                    commands.write_message(AppExit::Success);
-                })
-                .run_if(resource_exists::<YarnProject>),
-            ),
+            (move |project: Res<YarnProject>, mut commands: Commands| {
+                cmd_assert!(commands, compiled.is_file(), "ysc wrote no program");
+                let count = texts(&project).len();
+                cmd_assert!(commands, count == 4, "Expected 4 lines, got {count}");
+                commands.write_message(AppExit::Success);
+            })
+            .run_if(resource_exists::<YarnProject>),
         );
     assert!(app.run().is_success());
 }
@@ -132,27 +118,22 @@ fn recompiles_project_when_a_source_changes() {
         ))
         .add_systems(
             Update,
-            (
-                time_out,
-                (move |project: Res<YarnProject>,
-                       mut edited: Local<bool>,
-                       mut commands: Commands| {
-                    let texts = texts(&project);
-                    if !*edited {
-                        cmd_assert!(
-                            commands,
-                            texts.contains(&"Narrator: Welcome.".to_owned()),
-                            "Wrong initial texts: {texts:?}"
-                        );
-                        let source = fs::read_to_string(&start).unwrap();
-                        fs::write(&start, source.replace("Welcome.", "Welcome back.")).unwrap();
-                        *edited = true;
-                    } else if texts.contains(&"Narrator: Welcome back.".to_owned()) {
-                        commands.write_message(AppExit::Success);
-                    }
-                })
-                .run_if(resource_exists::<YarnProject>),
-            ),
+            (move |project: Res<YarnProject>, mut edited: Local<bool>, mut commands: Commands| {
+                let texts = texts(&project);
+                if !*edited {
+                    cmd_assert!(
+                        commands,
+                        texts.contains(&"Narrator: Welcome.".to_owned()),
+                        "Wrong initial texts: {texts:?}"
+                    );
+                    let source = fs::read_to_string(&start).unwrap();
+                    fs::write(&start, source.replace("Welcome.", "Welcome back.")).unwrap();
+                    *edited = true;
+                } else if texts.contains(&"Narrator: Welcome back.".to_owned()) {
+                    commands.write_message(AppExit::Success);
+                }
+            })
+            .run_if(resource_exists::<YarnProject>),
         );
     assert!(app.run().is_success());
 }
