@@ -29,11 +29,12 @@ pub mod prelude {
 pub mod core {
     //! Core types and traits that are used by both the compiler and runtime.
     pub use yarnspinner_core::prelude::{
-        CURRENT_PROJECT_FILE_VERSION, CompiledFile, Header, Instruction, SUPPORTED_YSC_VERSION,
+        CURRENT_PROJECT_FILE_VERSION, CompiledFile, Header, Instruction,
         IntoYarnValueFromNonYarnValue, InvalidOpCodeError, Library, LineId, MetadataLine, Node,
-        Position, Program, Project, Type, UntypedYarnFn, YarnFn, YarnFnParam, YarnFnParamItem,
-        YarnValue, YarnValueCastError, YarnValueWrapper, YarnValueWrapperIter, YscLine, YscLines,
-        YscMetadata, optionality, yarn_fn_type, yarn_library,
+        Position, Program, Project, SUPPORTED_YSC_VERSION, Type, UntypedYarnFn, YarnFn,
+        YarnFnParam, YarnFnParamItem, YarnValue, YarnValueCastError, YarnValueWrapper,
+        YarnValueWrapperIter, YscLine, YscLines, YscMetadata, optionality, yarn_fn_type,
+        yarn_library,
     };
 }
 #[cfg(feature = "compiler")]
