@@ -21,7 +21,6 @@ use std::path::{Path, PathBuf};
 use std::result::Result;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
 
@@ -108,17 +107,6 @@ impl TestBase {
         self.runtime_errors_cause_failure
             .store(false, Ordering::Relaxed);
         self
-    }
-
-    #[must_use]
-    pub fn with_compilation(self, compilation: Compilation) -> Self {
-        let string_table = compilation
-            .string_table
-            .into_iter()
-            .map(|(id, info)| (id, info.text))
-            .collect();
-        self.with_program(compilation.program.unwrap())
-            .with_string_table(string_table)
     }
 
     #[must_use]

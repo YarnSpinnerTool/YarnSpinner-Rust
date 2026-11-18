@@ -5,7 +5,7 @@ edition = "2024"
 repository = "https://github.com/YarnSpinnerTool/YarnSpinner-Rust"
 homepage = "https://docs.yarnspinner.dev/"
 keywords = ["gamedev", "dialog", "yarn"]
-categories = ["game-development", "compilers"]
+categories = ["game-development"]
 authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
 license = "MIT OR Apache-2.0"
 description = "The friendly tool for writing game dialogue"
@@ -16,20 +16,17 @@ default = []
 
 serde = [
     "yarnspinner_core/serde",
-    "yarnspinner_compiler/serde",
     "yarnspinner_runtime/serde",
 ]
 
 bevy = [
     "yarnspinner_core/bevy",
-    "yarnspinner_compiler/bevy",
     "yarnspinner_runtime/bevy",
     "dep:bevy",
 ]
 
 [dependencies]
 yarnspinner_core = { path = "../core", version = "0.10.0" }
-yarnspinner_compiler = { path = "../compiler", version = "0.10.0" }
 yarnspinner_runtime = { path = "../runtime", version = "0.10.0" }
 log = { version = "0.4", features = ["std"] }
 bevy = { version = "0.20", default-features = false, optional = true }

@@ -51,30 +51,7 @@ pub(crate) fn plugin(app: &mut App) {
                     .run_if(resource_added::<YarnProject>)
                     .in_set(CompilationStep::Cleanup),
             ),
-<<<<<<< HEAD
         );
-||||||| parent of 9a5e2b3b (bevy_yarnspinner: compile with ysc)
-                load_project.pipe(panic_on_err),
-                add_yarn_files_to_load_queue
-                    .pipe(panic_on_err)
-                    .run_if(resource_exists_and_changed::<YarnFilesToLoad>),
-                compile_loaded_yarn_files
-                    .pipe(panic_on_err)
-                    .run_if(resource_exists::<YarnFilesToLoad>),
-                recompile_loaded_yarn_files
-                    .pipe(log_error)
-                    .run_if(events_in_queue::<RecompileLoadedYarnFilesEvent>()),
-                clear_temp_yarn_project.run_if(resource_added::<YarnProject>),
-            )
-                .chain()
-                .after(LineIdUpdateSystemSet)
-                .in_set(CompilationSystemSet)
-                .in_set(YarnSpinnerSystemSet),
-        );
-=======
-        )
-        .add_plugins(super::backend::plugin);
->>>>>>> 9a5e2b3b (bevy_yarnspinner: compile with ysc)
 }
 
 #[derive(Debug, Resource)]

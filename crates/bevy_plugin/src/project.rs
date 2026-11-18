@@ -7,8 +7,6 @@ use std::fmt::Debug;
 use std::iter;
 use yarnspinner::core::CompiledFile;
 
-/// Compiles with the external `ysc` executable.
-pub(crate) mod backend;
 mod compilation;
 pub(crate) mod ysc;
 pub(crate) use compilation::{CompilationStep, YarnFilesBeingLoaded, YarnProjectConfigToLoad};
@@ -100,15 +98,9 @@ impl YarnProject {
         }
     }
 
-<<<<<<< HEAD
     /// Iterates over the [`YarnFile`]s that were used to compile this project.
     /// These will be the files passed to the [`YarnSpinnerPlugin`] or the
     /// [`LoadYarnProjectEvent`].
-||||||| parent of 9a5e2b3b (bevy_yarnspinner: compile with ysc)
-    /// Iterates over the [`YarnFile`]s that were used to compile this project. These will be the files passed to the [`YarnSpinnerPlugin`] or the [`LoadYarnProjectEvent`].
-=======
-    /// Iterates over the [`YarnFile`]s that were used to compile this project. These will be the files passed to the [`YarnSpinnerPlugin`] or the [`LoadYarnProjectEvent`].
->>>>>>> 9a5e2b3b (bevy_yarnspinner: compile with ysc)
     pub fn yarn_files(&self) -> impl Iterator<Item = &Handle<YarnFile>> {
         self.yarn_files.iter()
     }

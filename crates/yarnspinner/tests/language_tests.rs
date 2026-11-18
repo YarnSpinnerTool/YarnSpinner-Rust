@@ -9,7 +9,6 @@
 use bevy::prelude::World;
 use std::collections::HashMap;
 use test_base::prelude::*;
-use yarnspinner::compiler::*;
 use yarnspinner::core::*;
 use yarnspinner::runtime::*;
 
@@ -27,25 +26,6 @@ fn test_example_script() {
         .with_compiled(result)
         .read_test_plan(test_plan)
         .run_standard_testcase();
-}
-
-#[test]
-fn can_compile_space_demo() {
-    let test_base = TestBase::default();
-    let sally_path = space_demo_scripts_path().join("Sally.yarn");
-    let ship_path = space_demo_scripts_path().join("Ship.yarn");
-
-    let _result_sally = Compiler::new()
-        .read_file(&sally_path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
-    let _result_sally_and_ship = Compiler::new()
-        .read_file(&sally_path)
-        .read_file(ship_path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
 }
 
 #[test]
@@ -145,13 +125,6 @@ fn test_node_headers() {
             assert_eq!(header.value, expected_header.1);
         }
     }
-}
-
-#[test]
-fn test_invalid_characters_in_node_title() {
-    let path = test_data_path().join("InvalidNodeTitle.yarn");
-    let result = Compiler::default().read_file(path).compile();
-    assert!(result.is_err());
 }
 
 #[test]
