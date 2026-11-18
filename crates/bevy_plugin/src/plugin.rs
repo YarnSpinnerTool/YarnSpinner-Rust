@@ -300,6 +300,7 @@ fn watch_yarnproject_load(
 
     let file = file_assets.get(source).unwrap();
     commands.write_message(LoadYarnProjectEvent {
+        yarnproject: handles.0.path().cloned(),
         yarn_files: file
             .files
             .iter()
@@ -338,8 +339,8 @@ trait YarnApp {
 }
 impl YarnApp for App {
     fn register_yarn_types(&mut self) -> &mut Self {
+        #[cfg(feature = "compiler")]
         self.register_type::<YarnCompiler>()
-            .register_type::<YarnFile>()
             .register_type::<CompilationType>()
             .register_type::<Compilation>()
             .register_type::<CompilerError>()
@@ -349,7 +350,8 @@ impl YarnApp for App {
             .register_type::<LineInfo>()
             .register_type::<yarnspinner::compiler::Declaration>()
             .register_type::<yarnspinner::compiler::DeclarationSource>()
-            .register_type::<StringInfo>()
+            .register_type::<StringInfo>();
+        self.register_type::<YarnFile>()
             .register_type::<LineId>()
             .register_type::<yarnspinner::core::Position>()
             .register_type::<YarnValue>()

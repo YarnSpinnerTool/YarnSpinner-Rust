@@ -1,5 +1,6 @@
 use crate::fmt_utils::SkipDebug;
 use crate::prelude::*;
+use bevy::asset::AssetPath;
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use std::fmt::Debug;
@@ -10,13 +11,46 @@ use yarnspinner::core::CompiledFile;
 /// based on whether the `compiler` feature flag is set.
 pub(crate) mod backend;
 mod compilation;
-pub(crate) use compilation::{
-    RecompileLoadedYarnFilesEvent, YarnFilesBeingLoaded, YarnProjectConfigToLoad,
-};
+#[cfg(feature = "compiler")]
+pub(crate) use backend::RecompileLoadedYarnFilesEvent;
+#[cfg(not(feature = "compiler"))]
+pub use backend::YscSettings;
+pub(crate) use compilation::{CompilationStep, YarnFilesBeingLoaded, YarnProjectConfigToLoad};
 
 pub(crate) fn project_plugin(app: &mut App) {
     app.add_plugins(compilation::plugin);
     app.add_message::<LoadYarnProjectEvent>();
+}
+
+/// Swaps a freshly compiled program into `project` and restarts every running
+/// [`DialogueRunner`] at the node it was on. Shared by both backends' hot reloading.
+pub(crate) fn apply_compiled_file(
+    project: &mut YarnProject,
+    compiled: CompiledFile,
+    dialogue_runners: &mut Query<&mut DialogueRunner>,
+) {
+    project.compilation = compiled;
+    let program = project.compilation.program.clone();
+    for mut dialogue_runner in dialogue_runners.iter_mut() {
+        let current_node = dialogue_runner.current_node();
+        dialogue_runner
+            .inner_mut()
+            .0
+            .replace_program(program.clone());
+        dialogue_runner
+            .text_provider
+            .set_base_string_table(project.text_table());
+        if let Some(current_node) = current_node {
+            dialogue_runner
+                .stop()
+                .try_start_node(current_node)
+                .map(|_| ())
+                .ok()
+                .unwrap_or_else(|| {
+                    dialogue_runner.start_node("Start");
+                });
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, SystemSet)]
@@ -106,10 +140,13 @@ impl YarnProject {
     }
 }
 
-/// Used to late initialize a [`YarnProject`] with a set of Yarn files when using [`YarnSpinnerPlugin::deferred`].
-/// If you know the Yarn files at the start of the game, you should use [`YarnSpinnerPlugin::with_yarn_sources`] instead.
+/// Used to late initialize a [`YarnProject`] with a set of Yarn files when
+/// using [`YarnSpinnerPlugin::deferred`]. If you know the Yarn files at the
+/// start of the game, you should use [`YarnSpinnerPlugin::with_yarn_sources`]
+/// instead.
 #[derive(Debug, Clone, PartialEq, Eq, Message)]
 pub struct LoadYarnProjectEvent {
+    pub(crate) yarnproject: Option<AssetPath<'static>>,
     pub(crate) localizations: Option<Localizations>,
     pub(crate) yarn_files: HashSet<YarnFileSource>,
     pub(crate) development_file_generation: DevelopmentFileGeneration,
@@ -120,6 +157,7 @@ pub struct LoadYarnProjectEvent {
 impl Default for LoadYarnProjectEvent {
     fn default() -> Self {
         Self {
+            yarnproject: None,
             localizations: None,
             yarn_files: HashSet::from_iter([YarnFileSource::Folder(DEFAULT_ASSET_DIR.into())]),
             development_file_generation: default(),
@@ -147,6 +185,7 @@ impl LoadYarnProjectEvent {
             .map(|yarn_file| yarn_file.into())
             .collect();
         Self {
+            yarnproject: None,
             localizations: None,
             yarn_files,
             development_file_generation: default(),
@@ -210,4 +249,5 @@ where
 #[derive(Debug, Clone, Resource, Default)]
 pub(crate) struct WatchingForChanges(pub(crate) bool);
 
+// TODO: This should be a resource, not hardcoded.
 pub(crate) const DEFAULT_ASSET_DIR: &str = "dialogue";

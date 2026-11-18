@@ -99,6 +99,7 @@
 
 mod assets;
 mod commands;
+#[cfg(feature = "compiler")]
 mod compiled_file;
 mod development_file_generation;
 mod dialogue_runner;
@@ -131,8 +132,12 @@ pub mod events {
 pub mod prelude {
     //! Everything you need to get starting using Yarn Spinner.
 
+    #[cfg(feature = "compiler")]
+    pub use crate::compiled_file::CompiledFileExt;
     #[cfg(feature = "audio_assets")]
     pub use crate::default_impl::AudioAssetProvider;
+    #[cfg(not(feature = "compiler"))]
+    pub use crate::project::YscSettings;
     pub use crate::{
         assets::{
             yarn_file::YarnFile,
@@ -140,7 +145,6 @@ pub mod prelude {
             yarnproject::YarnProjectFile,
         },
         commands::{YarnCommand, YarnCommands},
-        compiled_file::CompiledFileExt,
         default_impl::FileExtensionAssetProvider,
         development_file_generation::DevelopmentFileGeneration,
         dialogue_runner::{DialogueOption, DialogueRunner, DialogueRunnerBuilder, LocalizedLine},
@@ -156,7 +160,8 @@ pub mod prelude {
     pub(crate) use anyhow::Error;
     pub(crate) use serde::{Deserialize, Serialize};
     pub use yarnspinner::core::{
-        CURRENT_PROJECT_FILE_VERSION, CompiledFile, MetadataLine, Project, YscLine,
+        CURRENT_PROJECT_FILE_VERSION, CompiledFile, MetadataLine, Project, SUPPORTED_YSC_VERSION,
+        YscLine,
     };
     pub(crate) use yarnspinner::prelude::*;
     pub use yarnspinner::prelude::{
@@ -171,8 +176,10 @@ pub mod prelude {
 pub use crate::commands::{TaskFinishedIndicator, UntypedYarnCommand};
 pub use crate::dialogue_runner::{InnerDialogue, InnerDialogueMut};
 pub use yarnspinner::core::{UntypedYarnFn, yarn_fn_type};
+#[cfg(feature = "compiler")]
+pub use yarnspinner::prelude::{Compilation, StringInfo};
 pub use yarnspinner::prelude::{
-    Compilation, StringInfo, TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
+    TextProvider as UnderlyingTextProvider, YarnAnalysisContext,
     YarnCommand as UnderlyingYarnCommand, YarnLine as UnderlyingYarnLine,
 };
 
