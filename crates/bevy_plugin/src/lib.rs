@@ -161,6 +161,7 @@ pub mod prelude {
         IntoYarnValueFromNonYarnValue, Language, LineId, MarkupAttribute, MarkupValue, OptionId,
         VariableStorage, YarnFn, YarnLibrary, YarnValue,
     };
+    pub use yarnspinner::runtime::VariableStorageError;
     pub(crate) type SystemResult = anyhow::Result<()>;
     pub(crate) use yarnspinner_internal_shared::prelude::*;
 }
