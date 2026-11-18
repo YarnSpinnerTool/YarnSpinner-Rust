@@ -1,0 +1,7 @@
+title: Start
+---
+Narrator: Welcome. #line:start_1
+-> Go to the shop #line:start_2
+    <<jump Shop>>
+-> Leave #line:start_3
+===

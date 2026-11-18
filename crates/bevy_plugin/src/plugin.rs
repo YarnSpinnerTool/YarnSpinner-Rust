@@ -205,20 +205,6 @@ impl ManualYarnSpinnerPlugin {
         self.project = self.project.with_localizations(localizations);
         self
     }
-
-    /// Sets the development file generation mode, which determines how aggressively Yarn Spinner will generate files that aid in development.
-    /// Defaults to [`DevelopmentFileGeneration::TRY_FULL`] in debug builds, [`DevelopmentFileGeneration::None`] otherwise.
-    #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-    #[must_use]
-    pub fn with_development_file_generation(
-        mut self,
-        development_file_generation: DevelopmentFileGeneration,
-    ) -> Self {
-        self.project = self
-            .project
-            .with_development_file_generation(development_file_generation);
-        self
-    }
 }
 
 impl Plugin for ManualYarnSpinnerPlugin {
@@ -300,6 +286,7 @@ fn watch_yarnproject_load(
 
     let file = file_assets.get(source).unwrap();
     commands.write_message(LoadYarnProjectEvent {
+        yarnproject: handles.0.path().cloned(),
         yarn_files: file
             .files
             .iter()
@@ -308,8 +295,6 @@ fn watch_yarnproject_load(
         // TODO: Enabling this fails because we need to generate the line numbers.
         // This will come with ysc support.
         localizations: None, //Some(localizations),
-        // TEMP: Set to None. This will eventually be replace with ysc's external metadata files.
-        development_file_generation: DevelopmentFileGeneration::None,
     });
 }
 
@@ -338,18 +323,7 @@ trait YarnApp {
 }
 impl YarnApp for App {
     fn register_yarn_types(&mut self) -> &mut Self {
-        self.register_type::<YarnCompiler>()
-            .register_type::<YarnFile>()
-            .register_type::<CompilationType>()
-            .register_type::<Compilation>()
-            .register_type::<CompilerError>()
-            .register_type::<yarnspinner::compiler::Diagnostic>()
-            .register_type::<yarnspinner::compiler::DiagnosticSeverity>()
-            .register_type::<yarnspinner::compiler::DebugInfo>()
-            .register_type::<LineInfo>()
-            .register_type::<yarnspinner::compiler::Declaration>()
-            .register_type::<yarnspinner::compiler::DeclarationSource>()
-            .register_type::<StringInfo>()
+        self.register_type::<YarnFile>()
             .register_type::<LineId>()
             .register_type::<yarnspinner::core::Position>()
             .register_type::<YarnValue>()
@@ -376,9 +350,8 @@ impl YarnApp for App {
             .add_plugins(crate::localization::localization_plugin)
             .add_plugins(crate::dialogue_runner::dialogue_plugin)
             .add_plugins(crate::line_provider::line_provider_plugin)
-            .add_plugins(crate::project::project_plugin)
+            .add_plugins(crate::project::plugin)
             .add_plugins(crate::commands::commands_plugin)
-            .add_plugins(crate::development_file_generation::development_file_generation_plugin)
     }
 
     fn register_watching_for_changes(&mut self) -> &mut Self {

@@ -2,8 +2,11 @@ use yarnspinner_without_bevy_examples::TuiDialogueRunner;
 
 fn main() -> anyhow::Result<()> {
     // See lib.rs for more details on how this works!
-    let mut runner =
-        TuiDialogueRunner::new("./assets/dialogue/custom_function.yarn", "CustomFunction")?;
+    let mut runner = TuiDialogueRunner::new(
+        "./assets/dialogue/compiled",
+        "custom_function",
+        "CustomFunction",
+    )?;
 
     runner.add_function("pow", pow);
     runner.run()?;

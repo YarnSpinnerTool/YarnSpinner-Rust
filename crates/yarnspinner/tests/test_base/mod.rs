@@ -112,8 +112,22 @@ impl TestBase {
 
     #[must_use]
     pub fn with_compilation(self, compilation: Compilation) -> Self {
-        let string_table = compilation.string_table;
+        let string_table = compilation
+            .string_table
+            .into_iter()
+            .map(|(id, info)| (id, info.text))
+            .collect();
         self.with_program(compilation.program.unwrap())
+            .with_string_table(string_table)
+    }
+
+    #[must_use]
+    pub fn with_compiled(self, compiled: CompiledFile) -> Self {
+        let string_table = compiled
+            .texts()
+            .map(|(id, text)| (id.clone(), text.to_owned()))
+            .collect();
+        self.with_program(compiled.program)
             .with_string_table(string_table)
     }
 
@@ -131,11 +145,7 @@ impl TestBase {
     }
 
     #[must_use]
-    pub fn with_string_table(mut self, string_table: HashMap<LineId, StringInfo>) -> Self {
-        let string_table: HashMap<_, _> = string_table
-            .into_iter()
-            .map(|(id, info)| (id, info.text))
-            .collect();
+    pub fn with_string_table(mut self, string_table: HashMap<LineId, String>) -> Self {
         let mut string_table_provider = StringTableTextProvider::new();
         string_table_provider.extend_base_language(string_table.clone());
         string_table_provider.extend_translation("en-US", string_table);
