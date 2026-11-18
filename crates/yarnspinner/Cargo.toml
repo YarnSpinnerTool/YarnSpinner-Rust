@@ -36,5 +36,6 @@ bevy = { version = "0.20", default-features = false, optional = true }
 
 [dev-dependencies]
 regex = "1"
+tempfile = "3"
 anyhow = "1"
 bevy_platform = "0.20"

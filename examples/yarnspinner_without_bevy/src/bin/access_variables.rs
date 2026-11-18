@@ -3,8 +3,11 @@ use yarnspinner_without_bevy_examples::TuiDialogueRunner;
 
 fn main() -> anyhow::Result<()> {
     // See lib.rs for more details on how this works!
-    let mut runner =
-        TuiDialogueRunner::new("./assets/dialogue/access_variables.yarn", "AccessVariables")?;
+    let mut runner = TuiDialogueRunner::new(
+        "./assets/dialogue/compiled",
+        "access_variables",
+        "AccessVariables",
+    )?;
 
     runner.set_variable("$foo", YarnValue::Number(0.0))?;
 

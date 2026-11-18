@@ -7,7 +7,6 @@
 use bevy::prelude::World;
 use bevy_platform::collections::HashMap;
 use test_base::prelude::*;
-use yarnspinner::compiler::*;
 use yarnspinner::runtime::*;
 
 mod test_base;
@@ -17,14 +16,10 @@ fn test_node_exists() {
     let path = space_demo_scripts_path().join("Sally.yarn");
     let test_base = TestBase::new();
 
-    let result = Compiler::new()
-        .read_file(path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let result = compile_file(path);
 
     let mut dialogue = test_base.dialogue;
-    dialogue.replace_program(result.program.unwrap());
+    dialogue.replace_program(result.program);
     assert!(dialogue.node_exists("Sally"));
 
     // Test clearing everything
@@ -42,14 +37,10 @@ fn test_analysis() {
     // $bar is written to but never read
     // this means that there should be one diagnosis result
     let path = test_data_path().join("AnalysisTest.yarn");
-    let result = Compiler::new()
-        .read_file(path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let result = compile_file(path);
 
     test_base
-        .with_compilation(result)
+        .with_compiled(result)
         .dialogue
         .analyse(&mut context);
 
@@ -72,15 +63,12 @@ fn test_analysis() {
 #[test]
 fn test_analysis_has_no_false_positives() {
     let test_base = TestBase::new();
-    let result = Compiler::new()
-        .read_file(space_demo_scripts_path().join("Sally.yarn"))
-        .read_file(space_demo_scripts_path().join("Ship.yarn"))
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let sally = space_demo_scripts_path().join("Sally.yarn");
+    let ship = space_demo_scripts_path().join("Ship.yarn");
+    let result = compile(&[&sally, &ship]).unwrap();
     let mut context = Context::default_analysers();
     test_base
-        .with_compilation(result)
+        .with_compiled(result)
         .dialogue
         .analyse(&mut context);
 
@@ -97,10 +85,10 @@ fn test_analysis_has_no_false_positives() {
 fn test_missing_node() {
     let path = test_data_path().join("TestCases").join("Smileys.yarn");
 
-    let result = Compiler::new().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
     let mut test_base = TestBase::new()
-        .with_program(result.program.unwrap())
+        .with_program(result.program)
         .with_runtime_errors_do_not_cause_failure();
     let result = test_base.dialogue.set_node("THIS NODE DOES NOT EXIST");
     assert!(result.is_err());
@@ -111,14 +99,10 @@ fn test_getting_current_node_name() {
     let path = space_demo_scripts_path().join("Sally.yarn");
     let test_base = TestBase::new();
 
-    let result = Compiler::new()
-        .read_file(path)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let result = compile_file(path);
 
     let mut dialogue = test_base.dialogue;
-    dialogue.replace_program(result.program.unwrap());
+    dialogue.replace_program(result.program);
 
     // dialogue should not be running yet
     assert!(dialogue.current_node().is_none());
@@ -141,9 +125,9 @@ fn test_getting_raw_source() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let result = Compiler::new().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
-    test_base = test_base.with_compilation(result);
+    test_base = test_base.with_compiled(result);
     let dialogue = &test_base.dialogue;
 
     let source_id = dialogue.get_line_id_for_node("LearnMore").unwrap();
@@ -157,9 +141,9 @@ fn test_getting_tags() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let result = Compiler::new().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
-    test_base = test_base.with_program(result.program.unwrap());
+    test_base = test_base.with_program(result.program);
     let dialogue = &test_base.dialogue;
 
     let tags = dialogue.get_tags_for_node("LearnMore").unwrap();
@@ -172,9 +156,9 @@ fn test_getting_headers() {
     let path = test_data_path().join("Example.yarn");
     let mut test_base = TestBase::new();
 
-    let result = Compiler::new().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
-    test_base = test_base.with_program(result.program.unwrap());
+    test_base = test_base.with_program(result.program);
     let dialogue = &test_base.dialogue;
 
     let headers = dialogue.get_headers_for_node("LearnMore").unwrap();
@@ -194,9 +178,9 @@ fn test_getting_headers() {
 fn test_line_hints() {
     let path = test_data_path().join("TaggedLines.yarn");
 
-    let result = Compiler::new().read_file(path).compile().unwrap();
+    let result = compile_file(path);
 
-    let mut dialogue = TestBase::new().with_compilation(result).dialogue;
+    let mut dialogue = TestBase::new().with_compiled(result).dialogue;
     dialogue
         .set_line_hints_enabled(true)
         .set_node("Start")
@@ -250,13 +234,10 @@ fn test_function_argument_type_inference() {
     <<set $bool = NegateBool(true)>>
     ";
 
-    let result = Compiler::from_test_source(source)
-        .extend_library(test_base.dialogue.library().clone())
-        .compile()
-        .unwrap();
+    let result = compile_test_source(source).unwrap();
 
     let storage = test_base
-        .with_compilation(result)
+        .with_compiled(result)
         .run_standard_testcase()
         .variable_storage
         .clone_shallow();
@@ -277,9 +258,7 @@ fn test_function_argument_type_inference() {
 
 #[test]
 fn test_selecting_option_from_inside_option_callback() {
-    let result = Compiler::from_test_source("-> option 1\n->option 2\nfinal line\n")
-        .compile()
-        .unwrap();
+    let result = compile_test_source("-> option 1\n->option 2\nfinal line\n").unwrap();
 
     let mut test_base = TestBase::new()
         .with_test_plan(
@@ -289,7 +268,7 @@ fn test_selecting_option_from_inside_option_callback() {
                 .then_select(0)
                 .expect_line("final line"),
         )
-        .with_compilation(result);
+        .with_compiled(result);
     test_base.dialogue.set_node("Start").unwrap();
 
     #[cfg(feature = "bevy")]

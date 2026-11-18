@@ -122,6 +122,7 @@ jobs:
           key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
           fail-on-cache-miss: true
 
+      - run: echo "$GITHUB_WORKSPACE/tools" >> "$GITHUB_PATH"
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -173,6 +174,7 @@ jobs:
     name: Test without Bevy
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: [install-ysc]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -197,6 +199,8 @@ jobs:
           path: tools
           key: ysc-${{runner.os}}-${{steps.ysc-rev.outputs.rev}}
           fail-on-cache-miss: true
+
+      - run: echo "$GITHUB_WORKSPACE/tools" >> "$GITHUB_PATH"
 
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
